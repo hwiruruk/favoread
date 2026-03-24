@@ -1,3 +1,242 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>최애의 독서 | Archive</title>
+  <meta name="google-site-verification" content="Xp_wp7z_jzyn988v7pST0Yvh1nYHCJnKaxip3Bx_FK0" />
+
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+KR:wght@200;400;600;900&family=Space+Grotesk:wght@400;700&display=swap" rel="stylesheet">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
+
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: {
+            serif: ['"Noto Serif KR"', 'serif'],
+            sans:  ['"Space Grotesk"', 'sans-serif'],
+          },
+          colors: {
+            ink:        '#000000',
+            paper:      '#ffffff',
+            'paper-dark': '#f4f4f0',
+            muted:      '#666666',
+            'neo-mint':   '#a7f3d0',
+            'neo-pink':   '#fbcfe8',
+            'neo-yellow': '#fde047',
+          },
+          boxShadow: {
+            neo:    '4px 4px 0px 0px rgba(0,0,0,1)',
+            'neo-lg': '8px 8px 0px 0px rgba(0,0,0,1)',
+            'neo-sm': '2px 2px 0px 0px rgba(0,0,0,1)',
+          },
+          keyframes: {
+            fadeIn: {
+              '0%':   { opacity: '0', transform: 'translateY(15px)' },
+              '100%': { opacity: '1', transform: 'translateY(0)' },
+            }
+          },
+          animation: {
+            'fade-in':         'fadeIn 0.8s ease-out forwards',
+            'fade-in-delayed': 'fadeIn 1s ease-out 0.2s forwards',
+            'fade-in-fast':    'fadeIn 0.5s ease-out forwards',
+          }
+        }
+      }
+    }
+  </script>
+
+  <style>
+    html, body { min-height: 100%; }
+    body {
+      background-color: #fcfaf5;
+      color: #000;
+      -webkit-font-smoothing: antialiased;
+      overflow-x: hidden;
+    }
+    ::selection        { background: #fde047; color: #000; }
+    ::-webkit-scrollbar { width: 0; background: transparent; }
+
+    .celeb-portrait { transition: transform .4s ease, filter .4s ease; }
+    .group:hover .celeb-portrait { transform: scale(1.05); filter: brightness(1.05); }
+
+    .modal-overlay {
+      opacity: 0; visibility: hidden;
+      transition: opacity .3s ease, visibility .3s ease;
+    }
+    .modal-overlay.active { opacity: 1; visibility: visible; }
+
+    .swiper-track {
+      transition: transform .45s cubic-bezier(.25,.46,.45,.94);
+    }
+
+    @media (max-width: 767px) {
+      #modal-inner {
+        position: fixed !important;
+        bottom: 0; left: 0; right: 0;
+        top: auto !important;
+        transform: none !important;
+        width: 100% !important;
+        max-width: 100% !important;
+        max-height: 90svh;
+        height: auto;
+        border-radius: 16px 16px 0 0;
+        border: 2px solid #000;
+        border-bottom: none;
+        flex-direction: column !important;
+        overflow: hidden;
+        box-shadow: 0 -8px 40px rgba(0,0,0,.18);
+      }
+
+      #modal-left {
+        width: 100% !important;
+        flex-direction: row !important;
+        align-items: center !important;
+        justify-content: flex-start !important;
+        border-bottom: 2px solid #000 !important;
+        border-right: none !important;
+        padding: 10px 14px !important;
+        gap: 10px !important;
+      }
+      #modal-photo-wrap {
+        width: 44px !important;
+        height: 56px !important;
+        flex-shrink: 0;
+        border: 1.5px solid #000;
+        overflow: hidden;
+      }
+      #modal-meta {
+        flex: 1;
+        min-width: 0;
+        flex-direction: row !important;
+        align-items: center !important;
+        gap: 8px !important;
+        padding-right: 0 !important;
+      }
+      #modal-name  { font-size: 15px !important; }
+      #modal-count { font-size: 8px !important; white-space: nowrap; }
+      #share-btn   { font-size: 11px !important; padding: 5px 10px !important; margin: 0 !important; }
+
+      #modal-right {
+        width: 100% !important;
+        padding: 0 !important;
+      }
+      #modal-archive-label { padding: 8px 14px 6px !important; font-size: 9px !important; }
+      #swiper-viewport { height: 280px !important; margin: 0 !important; }
+      #modal-nav-bar { padding: 8px 14px !important; }
+    }
+
+    #modal-inner {
+      overflow: hidden;
+      max-height: 88svh;
+      height: auto;
+    }
+    #swiper-viewport {
+      height: 380px;
+      overflow: hidden;
+      flex-shrink: 0;
+    }
+
+    .slide-area {
+      height: 100%;
+      overflow-y: auto; overflow-x: hidden;
+      -webkit-overflow-scrolling: touch;
+      overscroll-behavior: contain;
+    }
+
+    .book-link {
+      display: inline-flex; align-items: center; gap: 3px;
+      font-family: 'Space Grotesk', sans-serif;
+      font-size: 10px; font-weight: 700; letter-spacing: .08em;
+      color: #000; border-bottom: 1.5px solid #000;
+      padding-bottom: 1px; text-decoration: none;
+      transition: opacity .15s;
+    }
+    .book-link:hover { opacity: .45; }
+  </style>
+</head>
+
+<body class="font-serif relative selection:bg-neo-yellow selection:text-ink">
+
+<main id="app-root" class="max-w-5xl mx-auto px-4 sm:px-6 py-12 md:py-24">
+
+  <header class="flex flex-col items-center mb-16 md:mb-20 opacity-0 animate-fade-in">
+    <h1 class="text-4xl sm:text-5xl md:text-6xl font-black tracking-tight mb-3 text-ink text-center">최애의 독서</h1>
+    <p class="text-ink font-sans font-bold text-sm sm:text-base tracking-wide mb-6 text-center">당신이 좋아하는, 그들이 읽은 책📕</p>
+    
+    <p class="text-ink font-sans font-bold text-xs sm:text-sm tracking-[.15em] mb-8 uppercase bg-neo-yellow border-2 border-ink px-4 py-1 shadow-neo-sm text-center">Archive of their reads</p>
+    <div id="status-indicator" class="flex items-center gap-2 text-[10px] sm:text-xs font-sans font-bold tracking-wider text-ink border-2 border-ink bg-white px-3 py-1.5 shadow-neo-sm">
+      <span id="status-dot" class="w-2 h-2 rounded-full bg-ink animate-pulse"></span>
+      <span id="status-text">Loading...</span>
+    </div>
+  </header>
+
+  <div class="max-w-xl mx-auto mb-16 md:mb-20 opacity-0 animate-fade-in-delayed">
+    <input id="search-input" type="text"
+      class="w-full bg-white border-2 border-ink shadow-neo px-4 sm:px-6 py-3 sm:py-4 text-center text-base sm:text-lg focus:outline-none focus:shadow-neo-lg focus:-translate-y-1 transition-all placeholder:text-muted/50 tracking-wide font-sans font-bold"
+      placeholder="Search by name or title">
+  </div>
+
+  <div id="grid-container" class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-x-4 sm:gap-x-6 gap-y-8 sm:gap-y-12"></div>
+  <div id="empty-state" class="hidden text-center py-20 text-ink font-sans font-bold tracking-widest">No results found.</div>
+
+</main>
+
+<div id="modal-overlay" class="modal-overlay fixed inset-0 bg-ink/75 z-50 flex items-center justify-center md:p-8 backdrop-blur-sm">
+
+  <div id="modal-inner" class="w-full max-w-5xl bg-paper border-4 border-ink shadow-neo-lg relative flex flex-col md:flex-row">
+
+    <button id="close-modal"
+      class="absolute top-2 right-2 z-50 w-9 h-9 flex items-center justify-center bg-neo-pink border-2 border-ink shadow-neo-sm text-ink font-sans font-black text-base hover:bg-neo-yellow active:shadow-none transition-all">✕</button>
+
+    <div id="modal-left"
+      class="w-full md:w-64 lg:w-72 flex-shrink-0 flex flex-col justify-center items-center bg-white border-b-4 md:border-b-0 md:border-r-4 border-ink p-6 md:p-10 gap-0">
+
+      <div id="modal-photo-wrap" class="w-40 h-52 md:w-44 md:h-56 overflow-hidden border-2 border-ink shadow-neo bg-paper-dark mb-6">
+        <img id="modal-image" src="" class="w-full h-full object-cover" alt="">
+      </div>
+
+      <div id="modal-meta" class="flex flex-col items-center mb-6 md:mb-10 w-full text-center">
+        <h2 id="modal-name" class="text-2xl md:text-3xl font-black tracking-tight mb-2 line-clamp-2 leading-snug"></h2>
+        <p  id="modal-count" class="font-sans font-bold bg-neo-yellow border-2 border-ink px-3 py-1 text-xs tracking-widest uppercase"></p>
+      </div>
+
+      <button id="share-btn"
+        class="font-sans font-bold text-xs tracking-widest border-2 border-ink bg-white shadow-neo-sm px-5 py-2.5 hover:bg-neo-mint hover:-translate-y-0.5 hover:shadow-neo active:shadow-neo-sm transition-all">
+        SHARE LINK
+      </button>
+    </div>
+
+    <div id="modal-right" class="flex flex-col flex-1 bg-[#fafaf8] min-w-0">
+
+      <div id="modal-archive-label"
+        class="flex-shrink-0 font-sans font-bold text-[9px] md:text-xs tracking-widest text-ink border-b border-ink/10 px-5 md:px-10 pt-4 md:pt-7 pb-2">
+        READING ARCHIVE
+      </div>
+
+      <div id="swiper-viewport" class="mx-4 md:mx-8 mt-2 md:mt-4 cursor-grab active:cursor-grabbing">
+        <div id="swiper-track" class="swiper-track h-full flex"></div>
+      </div>
+
+      <div id="modal-nav-bar"
+        class="flex-shrink-0 flex justify-between items-center border-t border-ink/10 px-5 md:px-8 py-3 md:py-4">
+        <button id="prev-btn"
+          class="font-sans font-bold text-[9px] md:text-xs tracking-widest border-2 border-ink bg-white shadow-neo-sm px-3 py-1.5 md:px-4 md:py-2 hover:bg-neo-yellow disabled:opacity-30 transition-all">◀ PREV</button>
+        <div id="dots-container" class="flex gap-1.5 flex-wrap justify-center" style="max-width:50%"></div>
+        <button id="next-btn"
+          class="font-sans font-bold text-[9px] md:text-xs tracking-widest border-2 border-ink bg-white shadow-neo-sm px-3 py-1.5 md:px-4 md:py-2 hover:bg-neo-yellow disabled:opacity-30 transition-all">NEXT ▶</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div id="toast"
+  class="fixed bottom-10 left-1/2 -translate-x-1/2 bg-ink text-neo-yellow font-sans font-bold border-2 border-ink px-6 py-3 text-xs tracking-widest opacity-0 translate-y-4 shadow-neo transition-all duration-300 z-[100] pointer-events-none w-max max-w-[90vw]">
+  LINK COPIED TO CLIPBOARD.
+</div>
+
 <script>
 (function App() {
   'use strict';
@@ -14,6 +253,7 @@
   let celebMap = {};
   let entries  = [];
   let modal    = { open: false, name: '', books: [], idx: 0 };
+  
   let filteredEntries = [];
   let renderIndex = 0;
   const CHUNK_SIZE = 24; 
@@ -62,14 +302,17 @@
     const map = {};
     if (!rows.length) return map;
     const keys = Object.keys(rows[0]);
+    const col  = (kws, fb) => keys.find(k => kws.some(w => k.toLowerCase().includes(w))) || keys[fb];
     
-    // 열 인덱스 찾기 (H열은 보통 7번 인덱스지만, 이름으로 찾도록 설정)
-    const col = (kws, fb) => keys.find(k => kws.some(w => k.toLowerCase().includes(w))) || keys[fb];
+    // H열(이미지 주소)을 포함한 컬럼 매핑
     const C = {
-      celeb: col(['이름','연예인','인물'],0), title: col(['도서명','제목','책'],1),
-      auth:  col(['저자','작가'],2),          pub:   col(['출판사'],3),
-      src:   col(['출처','근거'],4),            cmt:   col(['코멘트','한마디'],8),
-      cImg:  col(['연예인이미지','photo','이미지주소'],7), // H열 참조용 키워드 추가
+      celeb: col(['이름','연예인','인물'],0), 
+      title: col(['도서명','제목','책'],1),
+      auth:  col(['저자','작가'],2),          
+      pub:   col(['출판사'],3),
+      src:   col(['출처','근거'],4),            
+      cmt:   col(['코멘트','한마디'],8),
+      cImg:  col(['연예인이미지','photo','이미지주소'],7), // H열 우선 참조
       bImg:  col(['도서이미지','표지'],6),
       link:  col(['링크','url'],5),
     };
@@ -78,9 +321,9 @@
       const n = (r[C.celeb]||'').trim(), t = (r[C.title]||'').trim();
       if (!n || !t) return;
       
-      // H열에 데이터가 있는지 확인 (http로 시작하는지 체크)
-      const hColImage = (r[C.cImg] || '').trim();
-      const validImage = hColImage.startsWith('http') ? hColImage : '';
+      // H열 데이터(이미지주소)가 유효한 URL인지 확인
+      const hColVal = (r[C.cImg] || '').trim();
+      const validImage = hColVal.startsWith('http') ? hColVal : '';
 
       if (!map[n]) map[n] = { imageUrl: validImage, books: [] };
       map[n].books.push({
@@ -92,7 +335,6 @@
     return map;
   }
 
-  // 위키백과 검색 API (보조 수단)
   async function wikiImg(name) {
     try {
       const u = `${WIKI_API}?action=query&generator=search&gsrsearch=${encodeURIComponent(name)}&gsrlimit=5&prop=pageimages&piprop=thumbnail&pithumbsize=500&format=json&origin=*`;
@@ -113,7 +355,7 @@
         const name = card.dataset.name;
         obs.unobserve(card); 
         
-        // 시트에 이미지가 없을 때만 위키 검색 실행
+        // H열에 이미지가 없는 경우에만 위키 검색 실행
         if (!celebMap[name].imageUrl) {
           loadWikiImage(name, card);
         }
@@ -133,7 +375,7 @@
       const url = await wikiImg(name);
       if (url) {
         celebMap[name].imageUrl = url;
-        const wrap = card.querySelector('.celeb-img-container');
+        const wrap = card.querySelector('.celeb-photo-wrap');
         if (wrap) {
           wrap.innerHTML = `<img src="${url}" alt="${name}" loading="lazy" class="celeb-portrait w-full h-full object-cover opacity-0 transition-opacity duration-500">`;
           setTimeout(() => wrap.querySelector('img')?.classList.remove('opacity-0'), 50);
@@ -164,13 +406,12 @@
       card.className = 'group cursor-pointer flex flex-col bg-white border-2 border-ink shadow-neo hover:shadow-neo-lg hover:-translate-y-1 transition-all duration-200 opacity-0 animate-fade-in-fast';
       card.dataset.name = name;
 
-      // 이미지가 H열에 있으면 바로 표시, 없으면 로딩 대기 상태
-      const imgContent = data.imageUrl
+      const img = data.imageUrl
         ? `<img src="${data.imageUrl}" alt="${name}" loading="lazy" class="celeb-portrait w-full h-full object-cover">`
-        : `<div class="w-full h-full bg-paper-dark flex items-center justify-center font-sans font-bold text-[10px] tracking-widest text-muted">SEARCHING...</div>`;
+        : `<div class="w-full h-full bg-paper-dark flex items-center justify-center font-sans font-bold text-[10px] tracking-widest text-muted">PHOTO</div>`;
       
       card.innerHTML = `
-        <div class="celeb-img-container w-full aspect-[3/4] overflow-hidden border-b-2 border-ink bg-paper-dark relative">${imgContent}</div>
+        <div class="celeb-photo-wrap w-full aspect-[3/4] overflow-hidden border-b-2 border-ink bg-paper-dark relative">${img}</div>
         <div class="p-3 sm:p-5 flex flex-col items-center group-hover:bg-neo-mint transition-colors duration-200">
           <h3 class="text-base sm:text-xl font-bold tracking-tight mb-1 sm:mb-2 text-ink text-center line-clamp-1">${name}</h3>
           <p class="text-[8px] sm:text-[10px] tracking-widest text-ink uppercase font-sans font-bold bg-white border border-ink px-1.5 sm:px-2 py-0.5">${data.books.length} records</p>
@@ -178,9 +419,8 @@
       
       card.addEventListener('click', () => openModal(name));
       
-      // 이미지가 없는 경우에만 관찰 시작 (나중에 위키에서 가져오기 위해)
+      // H열 이미지가 없는 행만 관찰하여 위키 API 호출
       if (!data.imageUrl) imgObserver.observe(card);
-      
       D.grid.appendChild(card);
     });
 
@@ -190,16 +430,15 @@
     }
   }
 
-  // 모달 및 기타 이벤트 함수는 기존과 동일하게 유지...
-  // (생략된 부분은 기존 코드와 같습니다)
-  
   function openModal(name) {
     const data = celebMap[name];
     modal = { open: true, name, books: data.books, idx: 0 };
+
     D.mImg.src = data.imageUrl || '';
     D.mImg.parentElement.style.display = data.imageUrl ? '' : 'none';
     D.mName.textContent  = name;
     D.mCount.textContent = `${data.books.length} records`;
+
     buildSlides();
     D.overlay.classList.add('active');
     document.body.style.overflow = 'hidden';
@@ -272,6 +511,7 @@
   async function init() {
     bindEvents();
     setStatus('loading', 'Loading data...');
+
     try {
       const rows  = await fetchSheet();
       celebMap = transform(rows);
@@ -327,3 +567,5 @@
   document.addEventListener('DOMContentLoaded', init);
 })();
 </script>
+</body>
+</html>
