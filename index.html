@@ -1,0 +1,556 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>최애의 독서 | Archive</title>
+  <meta name="google-site-verification" content="Xp_wp7z_jzyn988v7pST0Yvh1nYHCJnKaxip3Bx_FK0" />
+
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+KR:wght@200;400;600;900&family=Space+Grotesk:wght@400;700&display=swap" rel="stylesheet">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
+
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: {
+            serif: ['"Noto Serif KR"', 'serif'],
+            sans:  ['"Space Grotesk"', 'sans-serif'],
+          },
+          colors: {
+            ink:        '#000000',
+            paper:      '#ffffff',
+            'paper-dark': '#f4f4f0',
+            muted:      '#666666',
+            'neo-mint':   '#a7f3d0',
+            'neo-pink':   '#fbcfe8',
+            'neo-yellow': '#fde047',
+          },
+          boxShadow: {
+            neo:    '4px 4px 0px 0px rgba(0,0,0,1)',
+            'neo-lg': '8px 8px 0px 0px rgba(0,0,0,1)',
+            'neo-sm': '2px 2px 0px 0px rgba(0,0,0,1)',
+          },
+          keyframes: {
+            fadeIn: {
+              '0%':   { opacity: '0', transform: 'translateY(15px)' },
+              '100%': { opacity: '1', transform: 'translateY(0)' },
+            }
+          },
+          animation: {
+            'fade-in':         'fadeIn 0.8s ease-out forwards',
+            'fade-in-delayed': 'fadeIn 1s ease-out 0.2s forwards',
+            'fade-in-fast':    'fadeIn 0.5s ease-out forwards',
+          }
+        }
+      }
+    }
+  </script>
+
+  <style>
+    html, body { min-height: 100%; }
+    body {
+      background-color: #fcfaf5;
+      color: #000;
+      -webkit-font-smoothing: antialiased;
+      overflow-x: hidden;
+    }
+    ::selection        { background: #fde047; color: #000; }
+    ::-webkit-scrollbar { width: 0; background: transparent; }
+
+    .celeb-portrait { transition: transform .4s ease, filter .4s ease; }
+    .group:hover .celeb-portrait { transform: scale(1.05); filter: brightness(1.05); }
+
+    .modal-overlay {
+      opacity: 0; visibility: hidden;
+      transition: opacity .3s ease, visibility .3s ease;
+    }
+    .modal-overlay.active { opacity: 1; visibility: visible; }
+
+    .swiper-track {
+      transition: transform .45s cubic-bezier(.25,.46,.45,.94);
+    }
+
+    @media (max-width: 767px) {
+      #modal-inner {
+        position: fixed !important;
+        bottom: 0; left: 0; right: 0;
+        top: auto !important;
+        transform: none !important;
+        width: 100% !important;
+        max-width: 100% !important;
+        max-height: 90svh;
+        height: auto;
+        border-radius: 16px 16px 0 0;
+        border: 2px solid #000;
+        border-bottom: none;
+        flex-direction: column !important;
+        overflow: hidden;
+        box-shadow: 0 -8px 40px rgba(0,0,0,.18);
+      }
+
+      #modal-left {
+        width: 100% !important;
+        flex-direction: row !important;
+        align-items: center !important;
+        justify-content: flex-start !important;
+        border-bottom: 2px solid #000 !important;
+        border-right: none !important;
+        padding: 10px 14px !important;
+        gap: 10px !important;
+      }
+      #modal-photo-wrap {
+        width: 44px !important;
+        height: 56px !important;
+        flex-shrink: 0;
+        border: 1.5px solid #000;
+        overflow: hidden;
+      }
+      #modal-meta {
+        flex: 1;
+        min-width: 0;
+        flex-direction: row !important;
+        align-items: center !important;
+        gap: 8px !important;
+        padding-right: 0 !important;
+      }
+      #modal-name  { font-size: 15px !important; }
+      #modal-count { font-size: 8px !important; white-space: nowrap; }
+      #share-btn   { font-size: 11px !important; padding: 5px 10px !important; margin: 0 !important; }
+
+      #modal-right {
+        width: 100% !important;
+        padding: 0 !important;
+      }
+      #modal-archive-label { padding: 8px 14px 6px !important; font-size: 9px !important; }
+      #swiper-viewport { height: 280px !important; margin: 0 !important; }
+      #modal-nav-bar { padding: 8px 14px !important; }
+    }
+
+    #modal-inner {
+      overflow: hidden;
+      max-height: 88svh;
+      height: auto;
+    }
+    #swiper-viewport {
+      height: 380px;
+      overflow: hidden;
+      flex-shrink: 0;
+    }
+
+    .slide-area {
+      height: 100%;
+      overflow-y: auto; overflow-x: hidden;
+      -webkit-overflow-scrolling: touch;
+      overscroll-behavior: contain;
+    }
+
+    .book-link {
+      display: inline-flex; align-items: center; gap: 3px;
+      font-family: 'Space Grotesk', sans-serif;
+      font-size: 10px; font-weight: 700; letter-spacing: .08em;
+      color: #000; border-bottom: 1.5px solid #000;
+      padding-bottom: 1px; text-decoration: none;
+      transition: opacity .15s;
+    }
+    .book-link:hover { opacity: .45; }
+  </style>
+</head>
+
+<body class="font-serif relative selection:bg-neo-yellow selection:text-ink">
+
+<main id="app-root" class="max-w-5xl mx-auto px-4 sm:px-6 py-12 md:py-24">
+
+  <header class="flex flex-col items-center mb-16 md:mb-20 opacity-0 animate-fade-in">
+    <h1 class="text-4xl sm:text-5xl md:text-6xl font-black tracking-tight mb-3 text-ink text-center">최애의 독서</h1>
+    <p class="text-ink font-sans font-bold text-sm sm:text-base tracking-wide mb-6 text-center">당신이 좋아하는, 그들이 읽은 책📕</p>
+    
+    <p class="text-ink font-sans font-bold text-xs sm:text-sm tracking-[.15em] mb-8 uppercase bg-neo-yellow border-2 border-ink px-4 py-1 shadow-neo-sm text-center">Archive of their reads</p>
+    <div id="status-indicator" class="flex items-center gap-2 text-[10px] sm:text-xs font-sans font-bold tracking-wider text-ink border-2 border-ink bg-white px-3 py-1.5 shadow-neo-sm">
+      <span id="status-dot" class="w-2 h-2 rounded-full bg-ink animate-pulse"></span>
+      <span id="status-text">Loading...</span>
+    </div>
+  </header>
+
+  <div class="max-w-xl mx-auto mb-16 md:mb-20 opacity-0 animate-fade-in-delayed">
+    <input id="search-input" type="text"
+      class="w-full bg-white border-2 border-ink shadow-neo px-4 sm:px-6 py-3 sm:py-4 text-center text-base sm:text-lg focus:outline-none focus:shadow-neo-lg focus:-translate-y-1 transition-all placeholder:text-muted/50 tracking-wide font-sans font-bold"
+      placeholder="Search by name or title">
+  </div>
+
+  <div id="grid-container" class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-x-4 sm:gap-x-6 gap-y-8 sm:gap-y-12"></div>
+  <div id="empty-state" class="hidden text-center py-20 text-ink font-sans font-bold tracking-widest">No results found.</div>
+
+</main>
+
+<div id="modal-overlay" class="modal-overlay fixed inset-0 bg-ink/75 z-50 flex items-center justify-center md:p-8 backdrop-blur-sm">
+
+  <div id="modal-inner" class="w-full max-w-5xl bg-paper border-4 border-ink shadow-neo-lg relative flex flex-col md:flex-row">
+
+    <button id="close-modal"
+      class="absolute top-2 right-2 z-50 w-9 h-9 flex items-center justify-center bg-neo-pink border-2 border-ink shadow-neo-sm text-ink font-sans font-black text-base hover:bg-neo-yellow active:shadow-none transition-all">✕</button>
+
+    <div id="modal-left"
+      class="w-full md:w-64 lg:w-72 flex-shrink-0 flex flex-col justify-center items-center bg-white border-b-4 md:border-b-0 md:border-r-4 border-ink p-6 md:p-10 gap-0">
+
+      <div id="modal-photo-wrap" class="w-40 h-52 md:w-44 md:h-56 overflow-hidden border-2 border-ink shadow-neo bg-paper-dark mb-6">
+        <img id="modal-image" src="" class="w-full h-full object-cover" alt="">
+      </div>
+
+      <div id="modal-meta" class="flex flex-col items-center mb-6 md:mb-10 w-full text-center">
+        <h2 id="modal-name" class="text-2xl md:text-3xl font-black tracking-tight mb-2 line-clamp-2 leading-snug"></h2>
+        <p  id="modal-count" class="font-sans font-bold bg-neo-yellow border-2 border-ink px-3 py-1 text-xs tracking-widest uppercase"></p>
+      </div>
+
+      <button id="share-btn"
+        class="font-sans font-bold text-xs tracking-widest border-2 border-ink bg-white shadow-neo-sm px-5 py-2.5 hover:bg-neo-mint hover:-translate-y-0.5 hover:shadow-neo active:shadow-neo-sm transition-all">
+        SHARE LINK
+      </button>
+    </div>
+
+    <div id="modal-right" class="flex flex-col flex-1 bg-[#fafaf8] min-w-0">
+
+      <div id="modal-archive-label"
+        class="flex-shrink-0 font-sans font-bold text-[9px] md:text-xs tracking-widest text-ink border-b border-ink/10 px-5 md:px-10 pt-4 md:pt-7 pb-2">
+        READING ARCHIVE
+      </div>
+
+      <div id="swiper-viewport" class="mx-4 md:mx-8 mt-2 md:mt-4 cursor-grab active:cursor-grabbing">
+        <div id="swiper-track" class="swiper-track h-full flex"></div>
+      </div>
+
+      <div id="modal-nav-bar"
+        class="flex-shrink-0 flex justify-between items-center border-t border-ink/10 px-5 md:px-8 py-3 md:py-4">
+        <button id="prev-btn"
+          class="font-sans font-bold text-[9px] md:text-xs tracking-widest border-2 border-ink bg-white shadow-neo-sm px-3 py-1.5 md:px-4 md:py-2 hover:bg-neo-yellow disabled:opacity-30 transition-all">◀ PREV</button>
+        <div id="dots-container" class="flex gap-1.5 flex-wrap justify-center" style="max-width:50%"></div>
+        <button id="next-btn"
+          class="font-sans font-bold text-[9px] md:text-xs tracking-widest border-2 border-ink bg-white shadow-neo-sm px-3 py-1.5 md:px-4 md:py-2 hover:bg-neo-yellow disabled:opacity-30 transition-all">NEXT ▶</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div id="toast"
+  class="fixed bottom-10 left-1/2 -translate-x-1/2 bg-ink text-neo-yellow font-sans font-bold border-2 border-ink px-6 py-3 text-xs tracking-widest opacity-0 translate-y-4 shadow-neo transition-all duration-300 z-[100] pointer-events-none w-max max-w-[90vw]">
+  LINK COPIED TO CLIPBOARD.
+</div>
+
+<script>
+(function App() {
+  'use strict';
+
+  /* ── CONFIG ─────────────────────────────────────────────── */
+  // 인터넷 주소 대신, 같은 폴더에 있는 파일 이름을 바로 적어줍니다.
+  const SHEET_URL = 'data.csv'; 
+  const WIKI_API  = 'https://ko.wikipedia.org/w/api.php';
+  const SITE_URL  = (() => {
+    try { if (document.referrer?.includes('sites.google.com')) return document.referrer.split('?')[0]; } catch {}
+    return location.href.split('?')[0];
+  })();
+
+  /* ── STATE ──────────────────────────────────────────────── */
+  let celebMap = {};
+  let entries  = [];
+  let modal    = { open: false, name: '', books: [], idx: 0 };
+  
+  let filteredEntries = [];
+  let renderIndex = 0;
+  const CHUNK_SIZE = 24; 
+
+  /* ── DOM ────────────────────────────────────────────────── */
+  const D = {
+    statusDot:  document.getElementById('status-dot'),
+    statusText: document.getElementById('status-text'),
+    search:     document.getElementById('search-input'),
+    grid:       document.getElementById('grid-container'),
+    empty:      document.getElementById('empty-state'),
+    overlay:    document.getElementById('modal-overlay'),
+    mImg:       document.getElementById('modal-image'),
+    mName:      document.getElementById('modal-name'),
+    mCount:     document.getElementById('modal-count'),
+    shareBtn:   document.getElementById('share-btn'),
+    closeBtn:   document.getElementById('close-modal'),
+    viewport:   document.getElementById('swiper-viewport'),
+    track:      document.getElementById('swiper-track'),
+    prevBtn:    document.getElementById('prev-btn'),
+    nextBtn:    document.getElementById('next-btn'),
+    dots:       document.getElementById('dots-container'),
+    toast:      document.getElementById('toast'),
+  };
+
+  /* ── STATUS ─────────────────────────────────────────────── */
+  function setStatus(type, msg) {
+    D.statusText.textContent = msg;
+    D.statusDot.className = 'w-2 h-2 rounded-full ' + (
+      type === 'loading' ? 'bg-neo-yellow animate-pulse' :
+      type === 'error'   ? 'bg-neo-pink' : 'bg-green-400'
+    );
+  }
+
+  /* ── DATA ───────────────────────────────────────────────── */
+  async function fetchSheet() {
+    // 이제 로컬에 있는 data.csv 파일을 아주 빠르게 읽어옵니다.
+    const r = await fetch(SHEET_URL);
+    if (!r.ok) throw new Error();
+    const text = await r.text();
+    return new Promise((ok, fail) =>
+      Papa.parse(text, { header: true, skipEmptyLines: true,
+        complete: r => ok(r.data), error: fail }));
+  }
+
+  function transform(rows) {
+    const map = {};
+    if (!rows.length) return map;
+    const keys = Object.keys(rows[0]);
+    const col  = (kws, fb) => keys.find(k => kws.some(w => k.toLowerCase().includes(w))) || keys[fb];
+    const C = {
+      celeb: col(['이름','연예인','인물'],0), title: col(['도서명','제목','책'],1),
+      auth:  col(['저자','작가'],2),          pub:   col(['출판사'],3),
+      src:   col(['출처','근거'],4),            cmt:   col(['코멘트','한마디'],8),
+      cImg:  col(['연예인이미지','photo'],7),  bImg:  col(['도서이미지','표지'],6),
+      link:  col(['링크','url'],5),
+    };
+    rows.forEach(r => {
+      const n = (r[C.celeb]||'').trim(), t = (r[C.title]||'').trim();
+      if (!n || !t) return;
+      if (!map[n]) map[n] = { imageUrl: r[C.cImg]||'', books: [] };
+      map[n].books.push({
+        title: t, author: r[C.auth]||'', publisher: r[C.pub]||'',
+        source: r[C.src]||'', comment: r[C.cmt]||'',
+        coverUrl: r[C.bImg]||'', link: r[C.link]||'',
+      });
+    });
+    return map;
+  }
+
+  async function wikiImg(name) {
+    try {
+      const u = `${WIKI_API}?action=query&generator=search&gsrsearch=${encodeURIComponent(name)}&gsrlimit=5&prop=pageimages&piprop=thumbnail&pithumbsize=500&format=json&origin=*`;
+      const d = await (await fetch(u)).json();
+      const pages = Object.values(d?.query?.pages || {});
+      const kw = ['가수','배우','방송인','아이돌','뮤지션'];
+      const best = pages.find(p => p.title === name)
+        || pages.find(p => kw.some(k => p.title.includes(k) && p.title.includes(name)))
+        || pages.find(p => p.title.includes(name));
+      return best?.thumbnail?.source || '';
+    } catch { return ''; }
+  }
+
+  const imgObserver = new IntersectionObserver((entries, obs) => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting) {
+        const card = entry.target;
+        const name = card.dataset.name;
+        obs.unobserve(card); 
+        loadWikiImage(name, card);
+      }
+    });
+  }, { rootMargin: '100px' }); 
+
+  const scrollObserver = new IntersectionObserver((entries, obs) => {
+    if (entries[0].isIntersecting) {
+      obs.unobserve(entries[0].target);
+      renderNextChunk();
+    }
+  }, { rootMargin: '300px' });
+
+  async function loadWikiImage(name, card) {
+    try {
+      const url = await wikiImg(name);
+      if (url) {
+        celebMap[name].imageUrl = url;
+        const wrap = card.querySelector('.aspect-\\[3\\/4\\]');
+        if (wrap) {
+          wrap.innerHTML = `<img src="${url}" alt="${name}" loading="lazy" class="celeb-portrait w-full h-full object-cover opacity-0 transition-opacity duration-500">`;
+          setTimeout(() => wrap.querySelector('img').classList.remove('opacity-0'), 50);
+        }
+      }
+    } catch(e) {}
+  }
+
+  function filterEntries(kw = '') {
+    const q = kw.toLowerCase();
+    filteredEntries = entries.filter(([name, data]) => {
+      if (!q) return true;
+      const str = `${name} ${data.books.map(b => b.title).join(' ')}`.toLowerCase();
+      return str.includes(q);
+    });
+    
+    D.grid.innerHTML = '';
+    renderIndex = 0;
+    D.empty.classList.toggle('hidden', filteredEntries.length > 0);
+    renderNextChunk();
+  }
+
+  function renderNextChunk() {
+    const slice = filteredEntries.slice(renderIndex, renderIndex + CHUNK_SIZE);
+    
+    slice.forEach(([name, data]) => {
+      const card = document.createElement('article');
+      card.className = 'group cursor-pointer flex flex-col bg-white border-2 border-ink shadow-neo hover:shadow-neo-lg hover:-translate-y-1 transition-all duration-200 opacity-0 animate-fade-in-fast';
+      card.dataset.name = name;
+
+      const img = data.imageUrl
+        ? `<img src="${data.imageUrl}" alt="${name}" loading="lazy" class="celeb-portrait w-full h-full object-cover">`
+        : `<div class="w-full h-full bg-paper-dark flex items-center justify-center font-sans font-bold text-[10px] tracking-widest text-muted">NO PHOTO</div>`;
+      
+      card.innerHTML = `
+        <div class="w-full aspect-[3/4] overflow-hidden border-b-2 border-ink bg-paper-dark relative">${img}</div>
+        <div class="p-3 sm:p-5 flex flex-col items-center group-hover:bg-neo-mint transition-colors duration-200">
+          <h3 class="text-base sm:text-xl font-bold tracking-tight mb-1 sm:mb-2 text-ink text-center line-clamp-1">${name}</h3>
+          <p class="text-[8px] sm:text-[10px] tracking-widest text-ink uppercase font-sans font-bold bg-white border border-ink px-1.5 sm:px-2 py-0.5">${data.books.length} records</p>
+        </div>`;
+      
+      card.addEventListener('click', () => openModal(name));
+      if (!data.imageUrl) imgObserver.observe(card);
+      D.grid.appendChild(card);
+    });
+
+    renderIndex += CHUNK_SIZE;
+    if (renderIndex < filteredEntries.length) {
+      scrollObserver.observe(D.grid.lastElementChild);
+    }
+  }
+
+  function openModal(name) {
+    const data = celebMap[name];
+    modal = { open: true, name, books: data.books, idx: 0 };
+
+    D.mImg.src = data.imageUrl || '';
+    D.mImg.parentElement.style.display = data.imageUrl ? '' : 'none';
+    D.mName.textContent  = name;
+    D.mCount.textContent = `${data.books.length} records`;
+
+    buildSlides();
+    D.overlay.classList.add('active');
+    document.body.style.overflow = 'hidden';
+  }
+
+  function closeModal() {
+    modal.open = false;
+    D.overlay.classList.remove('active');
+    document.body.style.overflow = '';
+    setTimeout(() => { D.track.innerHTML = ''; D.dots.innerHTML = ''; }, 300);
+  }
+
+  function buildSlides() {
+    D.track.innerHTML = '';
+    D.dots.innerHTML  = '';
+    modal.books.forEach((book, i) => {
+      const slide = document.createElement('div');
+      slide.className = 'slide-area w-full flex-shrink-0 flex flex-col md:flex-row gap-4 md:gap-8 items-center md:items-start px-4 py-4 md:px-6';
+
+      const cover = book.coverUrl
+        ? `<img src="${book.coverUrl}" class="w-24 md:w-36 lg:w-44 object-cover border-2 border-ink shadow-neo flex-shrink-0 mx-auto md:mx-0" alt="표지" loading="lazy">`
+        : `<div class="w-24 md:w-36 lg:w-44 aspect-[2/3] border-2 border-ink bg-white flex items-center justify-center font-sans font-bold text-xs text-muted shadow-neo flex-shrink-0 mx-auto md:mx-0">COVER</div>`;
+
+      const quote = book.comment
+        ? `<blockquote class="text-xs md:text-sm leading-relaxed text-ink mb-3 bg-neo-yellow border-2 border-ink p-3 md:p-4 shadow-neo-sm font-medium">"${book.comment}"</blockquote>`
+        : '';
+
+      const pub = book.publisher
+        ? `<span class="opacity-40 mx-1.5">|</span><span class="text-ink/70">${book.publisher}</span>` : '';
+
+      const src = book.source?.startsWith('http')
+        ? `<a href="${book.source}" target="_blank" class="book-link">↗ 출처</a>` : '';
+      const lnk = book.link && book.link !== '#'
+        ? `<a href="${book.link}" target="_blank" class="book-link">↗ 도서 정보</a>` : '';
+      const links = (src || lnk)
+        ? `<div class="flex gap-4 flex-wrap justify-center md:justify-start mt-2">${src}${lnk}</div>` : '';
+
+      slide.innerHTML = `
+        ${cover}
+        <div class="flex flex-col w-full text-center md:text-left min-w-0">
+          <h4 class="text-lg sm:text-xl md:text-2xl lg:text-3xl font-black tracking-tight leading-snug mb-1.5 md:mb-2">${book.title}</h4>
+          <p class="text-xs md:text-sm font-bold mb-3">${book.author}${pub}</p>
+          ${quote}${links}
+        </div>`;
+
+      D.track.appendChild(slide);
+
+      const dot = document.createElement('button');
+      dot.className = `w-1.5 h-1.5 rounded-none border border-ink transition-all ${i === 0 ? 'bg-ink scale-125' : 'bg-white hover:bg-neo-pink'}`;
+      dot.addEventListener('click', () => goSlide(i));
+      D.dots.appendChild(dot);
+    });
+    updateSlide();
+  }
+
+  function goSlide(i) {
+    modal.idx = Math.max(0, Math.min(i, modal.books.length - 1));
+    updateSlide();
+  }
+
+  function updateSlide() {
+    D.track.style.transform = `translateX(-${modal.idx * 100}%)`;
+    D.prevBtn.disabled = modal.idx === 0;
+    D.nextBtn.disabled = modal.idx === modal.books.length - 1;
+    Array.from(D.dots.children).forEach((d, i) => {
+      d.className = `w-1.5 h-1.5 rounded-none border border-ink transition-all ${i === modal.idx ? 'bg-ink scale-125 shadow-neo-sm' : 'bg-white hover:bg-neo-pink'}`;
+    });
+  }
+
+  async function init() {
+    bindEvents();
+    setStatus('loading', 'Loading data...');
+
+    try {
+      // 이제는 저장된 캐시 없이 무조건 폴더 안의 새 파일을 읽습니다.
+      const rows  = await fetchSheet();
+      celebMap = transform(rows);
+      entries  = Object.entries(celebMap).sort(() => Math.random() - .5);
+      filterEntries(); 
+      setStatus('success', `${entries.length} RECORDS`);
+    } catch {
+      setStatus('error', '데이터 파일을 찾을 수 없습니다.');
+    }
+  }
+
+  function bindEvents() {
+    D.search.addEventListener('input', e => filterEntries(e.target.value));
+    D.closeBtn.addEventListener('click', closeModal);
+    D.overlay.addEventListener('click', e => { if (e.target === D.overlay) closeModal(); });
+    D.shareBtn.addEventListener('click', () => {
+      try {
+        const ta = document.createElement('textarea');
+        ta.value = SITE_URL;
+        ta.style.cssText = 'position:fixed;top:-9999px;left:-9999px';
+        document.body.appendChild(ta); ta.focus(); ta.select();
+        document.execCommand('copy');
+        document.body.removeChild(ta);
+        D.toast.classList.remove('opacity-0','translate-y-4');
+        setTimeout(() => D.toast.classList.add('opacity-0','translate-y-4'), 3000);
+      } catch { prompt('링크 복사:', SITE_URL); }
+    });
+    D.prevBtn.addEventListener('click', () => goSlide(modal.idx - 1));
+    D.nextBtn.addEventListener('click', () => goSlide(modal.idx + 1));
+
+    document.addEventListener('keydown', e => {
+      if (!modal.open) return;
+      if (e.key === 'Escape')     closeModal();
+      if (e.key === 'ArrowLeft')  goSlide(modal.idx - 1);
+      if (e.key === 'ArrowRight') goSlide(modal.idx + 1);
+    });
+
+    let sx = 0, sw = false;
+    D.viewport.addEventListener('touchstart', e => { sx = e.touches[0].clientX; sw = true; }, { passive: true });
+    D.viewport.addEventListener('touchend',   e => {
+      if (!sw) return; sw = false;
+      const dx = sx - e.changedTouches[0].clientX;
+      if (Math.abs(dx) > 44) goSlide(modal.idx + (dx > 0 ? 1 : -1));
+    });
+    D.viewport.addEventListener('mousedown', e => { sx = e.clientX; sw = true; });
+    document.addEventListener('mouseup',     e => {
+      if (!sw) return; sw = false;
+      const dx = sx - e.clientX;
+      if (Math.abs(dx) > 44) goSlide(modal.idx + (dx > 0 ? 1 : -1));
+    });
+  }
+
+  document.addEventListener('DOMContentLoaded', init);
+})();
+</script>
+</body>
+</html>
