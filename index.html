@@ -1,0 +1,24 @@
+---
+layout: default
+title: 최애의 독서
+---
+<main class="max-w-5xl mx-auto px-4 py-12 md:py-24">
+  <header class="flex flex-col items-center mb-16 md:mb-20">
+    <h1 class="text-4xl sm:text-5xl md:text-6xl font-black tracking-tight mb-3 text-ink text-center">최애의 독서</h1>
+    <p class="text-ink font-sans font-bold text-sm sm:text-base tracking-wide mb-6">당신이 좋아하는, 그들이 읽은 책📕</p>
+  </header>
+
+  <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6 md:gap-12">
+    {% for celeb in site.celebs %}
+    <a href="{{ celeb.url | relative_url }}" class="group flex flex-col bg-white border-2 border-ink shadow-neo hover:shadow-neo-lg hover:-translate-y-1 transition-all">
+      <div class="w-full aspect-[3/4] overflow-hidden border-b-2 border-ink bg-paper-dark">
+        <!-- 위키 이미지를 불러오는 자바스크립트는 기존 방식을 활용할 수 있습니다 -->
+        <div class="w-full h-full flex items-center justify-center font-sans font-bold text-xs text-muted">PHOTO</div>
+      </div>
+      <div class="p-4 flex flex-col items-center group-hover:bg-neo-mint transition-colors">
+        <h3 class="text-xl font-bold tracking-tight mb-2 text-ink line-clamp-1">{{ celeb.title }}</h3>
+      </div>
+    </a>
+    {% endfor %}
+  </div>
+</main>
