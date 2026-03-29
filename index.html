@@ -13,9 +13,34 @@ layout: default
 
   <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6 md:gap-12">
     {% for celeb in site.celebs %}
-    <a href="{{ celeb.url | relative_url }}" class="celeb-card group flex flex-col bg-white border-2 border-ink shadow-neo hover:shadow-neo-lg hover:-translate-y-1 transition-all" data-name="{{ celeb.title }}">
+      {% assign current_celeb = celeb.title %}
+      {% assign celeb_img = "" %}
+      
+      {% comment %} CSV 파일에서 이미지가 있는지 우선 검색합니다. {% endcomment %}
+      {% for row in site.data.list %}
+        {% assign r_name = "" %}
+        {% for field in row %}
+          {% if field[0] contains "이름" or field[0] contains "연예인" %}
+            {% assign r_name = field[1] | strip %}
+          {% endif %}
+        {% endfor %}
+        
+        {% if r_name == current_celeb %}
+          {% assign img_col = row["연예인이미지"] | default: row["이미지주소"] | default: row["photo"] %}
+          {% if img_col != "" and img_col != nil %}
+            {% assign celeb_img = img_col %}
+            {% break %}
+          {% endif %}
+        {% endif %}
+      {% endfor %}
+
+    <a href="{{ celeb.url | relative_url }}" class="celeb-card group flex flex-col bg-white border-2 border-ink shadow-neo hover:shadow-neo-lg hover:-translate-y-1 transition-all" data-name="{{ celeb.title }}" data-img="{{ celeb_img }}">
       <div class="celeb-photo-wrap w-full aspect-[3/4] overflow-hidden border-b-2 border-ink bg-paper-dark relative">
-        <div class="w-full h-full flex items-center justify-center font-sans font-bold text-[10px] tracking-widest text-muted">PHOTO</div>
+        {% if celeb_img != "" %}
+          <img src="{{ celeb_img }}" class="celeb-portrait w-full h-full object-cover">
+        {% else %}
+          <div class="w-full h-full flex items-center justify-center font-sans font-bold text-[10px] tracking-widest text-muted">PHOTO</div>
+        {% endif %}
       </div>
       <div class="p-4 flex flex-col items-center group-hover:bg-neo-mint transition-colors">
         <h3 class="text-xl font-bold tracking-tight text-ink line-clamp-1 text-center">{{ celeb.title }}</h3>
@@ -26,10 +51,13 @@ layout: default
 </main>
 
 <script>
-  // 위키백과 사진 자동 로딩 스크립트
+  // CSV 이미지가 없을 경우에만 위키백과 사진을 로딩하는 스크립트
   async function loadWikiImages() {
     const cards = document.querySelectorAll('.celeb-card');
     for (const card of cards) {
+      // 이미지가 이미 있으면 위키 호출을 건너뜁니다.
+      if (card.dataset.img && card.dataset.img.length > 0) continue;
+      
       const name = card.dataset.name;
       try {
         const u = `https://ko.wikipedia.org/w/api.php?action=query&generator=search&gsrsearch=${encodeURIComponent(name)}&gsrlimit=1&prop=pageimages&pithumbsize=500&format=json&origin=*`;
