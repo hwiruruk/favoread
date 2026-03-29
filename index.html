@@ -5,8 +5,8 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>최애의 독서 | Archive</title>
   <meta name="google-site-verification" content="RGTC9c8GtMgvT1HtDz5vzgXPGl9f-DSDOq1lCW95In8" />
-  <meta name="description" content="아이돌, 셀럽, 스타 그리고 나의 최애가 읽은 책들을 한곳에 모았습니다. 그들의 독서생활을 살펴보세요.">
-  <meta name="keywords" content="아이돌, 셀럽, 최애, 독서, 책, 읽는, 책 추천, 인생책, 읽은 책">
+  <meta name="description" content="아이돌, 셀럽, 그리고 나의 최애가 읽은 책들을 한곳에 모았습니다.">
+  <meta name="keywords" content="아이돌, 셀럽, 최애, 독서, 책, 읽는, 책 추천, 인생책, 읽은 책책">
   
   <script src="https://cdn.tailwindcss.com"></script>
   <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+KR:wght@200;400;600;900&family=Space+Grotesk:wght@400;700&display=swap" rel="stylesheet">
@@ -99,7 +99,6 @@
         justify-content: flex-start !important;
         border-bottom: 2px solid #000 !important;
         border-right: none !important;
-        /* SHARE LINK 버튼과 X(닫기) 버튼이 겹치지 않도록 오른쪽 패딩을 48px로 넓힘 */
         padding: 10px 48px 10px 14px !important;
         gap: 10px !important;
       }
@@ -171,20 +170,16 @@
     </div>
     
     <div class="p-5 font-serif text-sm text-ink space-y-6 max-h-[60vh] overflow-y-auto">
-      
-     <!-- 첫 번째 질문 -->
       <div>
         <h4 class="font-bold bg-neo-yellow inline-block px-2 py-1 mb-2 shadow-neo-sm border-2 border-ink">Q. 최애의 책, 어떤 기준으로 올라오나요?</h4>
         <p class="leading-relaxed text-muted mt-1 font-sans font-bold text-sm">A. 미디어나 SNS 등에서 언급했던 책, 혹은 손에 들고 있던 책 등등 기준은 없습니다!</p>
       </div>
 
-      <!-- 두 번째 질문 -->
       <div class="mt-4">
         <h4 class="font-bold bg-neo-pink inline-block px-2 py-1 mb-2 shadow-neo-sm border-2 border-ink">Q. 제가 아는 최애의 책을 제보해도 되나요?</h4>
         <p class="leading-relaxed text-muted mt-1 font-sans font-bold text-sm">A. 제보는 환영입니다! 대신 정확한 기록을 위해 출처가 꼭 필요해요. <a href="https://forms.gle/Sd3ZQTahZNbUjbdz7" target="_blank" class="underline decoration-2 hover:text-neo-pink">(링크)</a> 이쪽으로 제보해주시면, 제가 시간이 날 때마다 틈틈이 확인해서 업데이트해 둘게요.</p>
       </div>
 
-      <!-- 당부의 말 -->
       <div class="mt-6 p-4 bg-white border-2 border-ink border-dashed">
         <h4 class="font-bold text-ink mb-1">📌 당부드리는 점</h4>
         <p class="leading-relaxed text-muted mt-1 font-sans font-bold text-xs">대부분 출처를 확인하고 올리지만, 가끔 부정확할 때도 있어요. 도서 정보도 출판사에 따라 판본이 정말 다양한 경우도 있으니 너른 마음으로 이해해 주시길 부탁드릴게요～</p>
@@ -251,7 +246,6 @@
       </div>
 
       <div id="modal-meta" class="flex flex-col items-center mb-6 md:mb-10 w-full text-center">
-        <!-- SEO를 위해 이름이 포함된 제목이 여기에 들어갑니다. -->
         <h2 id="modal-name" class="text-2xl md:text-3xl font-black tracking-tight mb-2 line-clamp-2 leading-snug"></h2>
         <p  id="modal-count" class="font-sans font-bold bg-neo-yellow border-2 border-ink px-3 py-1 text-xs tracking-widest uppercase"></p>
       </div>
@@ -277,7 +271,6 @@
         class="flex-shrink-0 flex justify-between items-center border-t border-ink/10 px-5 md:px-8 py-3 md:py-4">
         <button id="prev-btn"
           class="font-sans font-bold text-[9px] md:text-xs tracking-widest border-2 border-ink bg-white shadow-neo-sm px-3 py-1.5 md:px-4 md:py-2 hover:bg-neo-yellow disabled:opacity-30 transition-all">◀ PREV</button>
-        <!-- 여러 개의 네모 점을 네모 하나(진행률 박스)로 변경했습니다 -->
         <div id="dots-container" class="flex items-center justify-center"></div>
         <button id="next-btn"
           class="font-sans font-bold text-[9px] md:text-xs tracking-widest border-2 border-ink bg-white shadow-neo-sm px-3 py-1.5 md:px-4 md:py-2 hover:bg-neo-yellow disabled:opacity-30 transition-all">NEXT ▶</button>
@@ -298,9 +291,10 @@
   /* ── CONFIG ─────────────────────────────────────────────── */
   const SHEET_URL = 'data.csv'; 
   const WIKI_API  = 'https://ko.wikipedia.org/w/api.php';
+  const BASE_PATH = window.location.pathname; // URL 조작을 위해 추가
   const SITE_URL  = (() => {
     try { if (document.referrer?.includes('sites.google.com')) return document.referrer.split('?')[0]; } catch {}
-    return location.href.split('?')[0];
+    return location.origin + BASE_PATH;
   })();
 
   /* ── STATE ──────────────────────────────────────────────── */
@@ -334,17 +328,12 @@
   };
 
   /* ── UTILS ──────────────────────────────────────────────── */
-  // 한글 받침 유무를 판별하여 알맞은 조사(이/가)를 붙여 반환하는 함수
   function getJosaForTitle(name) {
     if (!name) return '';
     const lastChar = name.charCodeAt(name.length - 1);
-    // 한글(가~힣) 범위가 아니면 기본적으로 '~의 책' 사용
     if (lastChar < 0xAC00 || lastChar > 0xD7A3) {
       return name + '의 책';
     }
-    // 종성(받침) 유무 확인
-    const hasJongseong = (lastChar - 0xAC00) % 28 > 0;
-    return name + (hasJongseong ? '이 읽은 책' : '가 읽은 책');
   }
 
   /* ── STATUS ─────────────────────────────────────────────── */
@@ -372,7 +361,6 @@
     const keys = Object.keys(rows[0]);
     const col  = (kws, fb) => keys.find(k => kws.some(w => k.toLowerCase().includes(w))) || keys[fb];
     
-    // H열(이미지 주소)을 포함한 컬럼 매핑
     const C = {
       celeb: col(['이름','연예인','인물'],0), 
       title: col(['도서명','제목','책'],1),
@@ -380,7 +368,7 @@
       pub:   col(['출판사'],3),
       src:   col(['출처','근거'],4),            
       cmt:   col(['코멘트','한마디'],8),
-      cImg:  col(['연예인이미지','photo','이미지주소'],7), // H열 우선 참조
+      cImg:  col(['연예인이미지','photo','이미지주소'],7), 
       bImg:  col(['도서이미지','표지'],6),
       link:  col(['링크','url'],5),
     };
@@ -389,7 +377,6 @@
       const n = (r[C.celeb]||'').trim(), t = (r[C.title]||'').trim();
       if (!n || !t) return;
       
-      // H열 데이터(이미지주소)가 유효한 URL인지 확인
       const hColVal = (r[C.cImg] || '').trim();
       const validImage = hColVal.startsWith('http') ? hColVal : '';
 
@@ -423,7 +410,6 @@
         const name = card.dataset.name;
         obs.unobserve(card); 
         
-        // H열에 이미지가 없는 경우에만 위키 검색 실행
         if (!celebMap[name].imageUrl) {
           loadWikiImage(name, card);
         }
@@ -485,9 +471,13 @@
           <p class="text-[8px] sm:text-[10px] tracking-widest text-ink uppercase font-sans font-bold bg-white border border-ink px-1.5 sm:px-2 py-0.5">${data.books.length} records</p>
         </div>`;
       
-      card.addEventListener('click', () => openModal(name));
+      card.addEventListener('click', () => {
+        openModal(name);
+        // 브라우저 주소창에 파라미터 추가 (SEO 및 공유용)
+        const newUrl = `${BASE_PATH}?celeb=${encodeURIComponent(name)}`;
+        history.pushState({ celeb: name }, '', newUrl);
+      });
       
-      // H열 이미지가 없는 행만 관찰하여 위키 API 호출
       if (!data.imageUrl) imgObserver.observe(card);
       D.grid.appendChild(card);
     });
@@ -498,14 +488,15 @@
     }
   }
 
-  function openModal(name) {
+  // isHistoryNav 매번 뒤로가기를 할 때 state를 다시 푸시하지 않도록 막는 플래그
+  function openModal(name, isHistoryNav = false) {
+    if (!celebMap[name]) return;
     const data = celebMap[name];
     modal = { open: true, name, books: data.books, idx: 0 };
 
     D.mImg.src = data.imageUrl || '';
     D.mImg.parentElement.style.display = data.imageUrl ? '' : 'none';
     
-    // SEO 최적화 및 자연스러운 조사가 반영된 제목 설정
     D.mName.textContent  = getJosaForTitle(name);
     D.mCount.textContent = `${data.books.length} records`;
 
@@ -514,16 +505,21 @@
     document.body.style.overflow = 'hidden';
   }
 
-  function closeModal() {
+  function closeModal(isHistoryNav = false) {
     modal.open = false;
     D.overlay.classList.remove('active');
     document.body.style.overflow = '';
+    
+    if (!isHistoryNav) {
+      // 주소창 파라미터 제거하여 메인 주소로 복귀
+      history.pushState(null, '', BASE_PATH);
+    }
+
     setTimeout(() => { D.track.innerHTML = ''; D.dots.innerHTML = ''; }, 300);
   }
 
   function buildSlides() {
     D.track.innerHTML = '';
-    // 여러 개의 점 대신 단일 페이지네이션 텍스트 박스로 생성
     D.dots.innerHTML  = '<div id="page-indicator" class="font-sans font-bold text-[10px] md:text-xs bg-white border-2 border-ink px-3 md:px-4 py-1.5 md:py-2 text-ink shadow-neo-sm tracking-widest"></div>';
     
     modal.books.forEach((book, i) => {
@@ -571,7 +567,6 @@
     D.prevBtn.disabled = modal.idx === 0;
     D.nextBtn.disabled = modal.idx === modal.books.length - 1;
     
-    // 현재 표시중인 책의 번호를 단일 네모 상자에 반영합니다.
     const indicator = document.getElementById('page-indicator');
     if (indicator) {
       indicator.textContent = `${modal.idx + 1} / ${modal.books.length}`;
@@ -588,6 +583,13 @@
       entries  = Object.entries(celebMap).sort(() => Math.random() - .5);
       filterEntries(); 
       setStatus('success', `${entries.length} RECORDS`);
+
+      // 초기 로드 시 파라미터 확인 후 해당 인물 모달 자동 열기
+      const urlParams = new URLSearchParams(window.location.search);
+      const targetCeleb = urlParams.get('celeb');
+      if (targetCeleb && celebMap[targetCeleb]) {
+        openModal(targetCeleb, true);
+      }
     } catch {
       setStatus('error', '데이터 파일을 찾을 수 없습니다.');
     }
@@ -595,20 +597,24 @@
 
   function bindEvents() {
     D.search.addEventListener('input', e => filterEntries(e.target.value));
-    D.closeBtn.addEventListener('click', closeModal);
-    D.overlay.addEventListener('click', e => { if (e.target === D.overlay) closeModal(); });
+    D.closeBtn.addEventListener('click', () => closeModal(false));
+    D.overlay.addEventListener('click', e => { if (e.target === D.overlay) closeModal(false); });
+    
     D.shareBtn.addEventListener('click', () => {
+      // 현재 열려있는 모달의 인물을 포함한 고유 URL 생성
+      const shareUrl = `${window.location.origin}${BASE_PATH}?celeb=${encodeURIComponent(modal.name)}`;
       try {
         const ta = document.createElement('textarea');
-        ta.value = SITE_URL;
+        ta.value = shareUrl;
         ta.style.cssText = 'position:fixed;top:-9999px;left:-9999px';
         document.body.appendChild(ta); ta.focus(); ta.select();
         document.execCommand('copy');
         document.body.removeChild(ta);
         D.toast.classList.remove('opacity-0','translate-y-4');
         setTimeout(() => D.toast.classList.add('opacity-0','translate-y-4'), 3000);
-      } catch { prompt('링크 복사:', SITE_URL); }
+      } catch { prompt('링크 복사:', shareUrl); }
     });
+
     D.prevBtn.addEventListener('click', () => goSlide(modal.idx - 1));
     D.nextBtn.addEventListener('click', () => goSlide(modal.idx + 1));
 
@@ -617,6 +623,15 @@
       if (e.key === 'Escape')     closeModal();
       if (e.key === 'ArrowLeft')  goSlide(modal.idx - 1);
       if (e.key === 'ArrowRight') goSlide(modal.idx + 1);
+    });
+
+    // 브라우저 뒤로가기/앞으로가기 버튼 연동
+    window.addEventListener('popstate', (e) => {
+      if (e.state && e.state.celeb) {
+        openModal(e.state.celeb, true);
+      } else {
+        closeModal(true);
+      }
     });
 
     let sx = 0, sw = false;
