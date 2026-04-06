@@ -22,50 +22,7 @@
   <meta property="og:image:alt" content="최애의 독서 로고">
   <meta property="og:locale" content="ko_KR">
 
-  <meta name="twitter:card" content="summary">
-  <meta name="twitter:title" content="최애의 독서 | 당신이 좋아하는, 그들이 읽은 책">
-  <meta name="twitter:description" content="아이돌, 셀럽, 그리고 나의 최애가 읽은 책들을 한곳에 모았습니다.">
-  <meta name="twitter:image" content="https://hwiruruk.github.io/favoread/favicon.png">
-
   <link rel="canonical" href="https://hwiruruk.github.io/favoread/">
-  <meta name="robots" content="index, follow">
-
-  <script type="application/ld+json">
-  {
-    "@context": "https://schema.org",
-    "@type": "WebSite",
-    "name": "최애의 독서",
-    "url": "https://hwiruruk.github.io/favoread/",
-    "description": "아이돌, 셀럽, 그리고 나의 최애가 읽은 책들을 한곳에 모았습니다.",
-    "image": "https://hwiruruk.github.io/favoread/favicon.png",
-    "inLanguage": "ko-KR",
-    "potentialAction": {
-      "@type": "SearchAction",
-      "target": {
-        "@type": "EntryPoint",
-        "urlTemplate": "https://hwiruruk.github.io/favoread/?celeb={celeb_name}"
-      },
-      "query-input": "required name=celeb_name"
-    }
-  }
-  </script>
-
-  <script type="application/ld+json">
-  {
-    "@context": "https://schema.org",
-    "@type": "WebPage",
-    "name": "최애의 독서 | 당신이 좋아하는, 그들이 읽은 책",
-    "url": "https://hwiruruk.github.io/favoread/",
-    "description": "아이돌, 셀럽, 그리고 나의 최애가 읽은 책들을 한곳에 모았습니다.",
-    "image": "https://hwiruruk.github.io/favoread/favicon.png",
-    "inLanguage": "ko-KR",
-    "isPartOf": {
-      "@type": "WebSite",
-      "name": "Reading Lab",
-      "url": "https://hwiruruk.github.io/readinglab/"
-    }
-  }
-  </script>
   
   <script src="https://cdn.tailwindcss.com"></script>
   <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+KR:wght@200;400;600;900&family=Space+Grotesk:wght@400;700&display=swap" rel="stylesheet">
@@ -110,127 +67,70 @@
   </script>
 
   <style>
-    html, body { min-height: 100%; }
+    html, body { min-height: 100%; scroll-behavior: smooth; }
     body {
       background-color: #fcfaf5;
       color: #000;
       -webkit-font-smoothing: antialiased;
       overflow-x: hidden;
     }
-    ::selection        { background: #fde047; color: #000; }
+    ::selection { background: #fde047; color: #000; }
     ::-webkit-scrollbar { width: 0; background: transparent; }
 
     .celeb-portrait { transition: transform .4s ease, filter .4s ease; }
     .group:hover .celeb-portrait { transform: scale(1.05); filter: brightness(1.05); }
+    .heavy-card:hover { transform: translate(-2px,-2px); box-shadow: 6px 6px 0 #000 !important; }
 
-    .modal-overlay {
-      opacity: 0; visibility: hidden;
-      transition: opacity .3s ease, visibility .3s ease;
-    }
+    .modal-overlay { opacity: 0; visibility: hidden; transition: opacity .3s ease, visibility .3s ease; }
     .modal-overlay.active { opacity: 1; visibility: visible; }
-
-    .swiper-track {
-      transition: transform .45s cubic-bezier(.25,.46,.45,.94);
-    }
+    .swiper-track { transition: transform .45s cubic-bezier(.25,.46,.45,.94); }
 
     @media (max-width: 767px) {
       #modal-inner {
-        position: fixed !important;
-        bottom: 0; left: 0; right: 0;
-        top: auto !important;
-        transform: none !important;
-        width: 100% !important;
-        max-width: 100% !important;
-        max-height: 90svh;
-        height: auto;
-        border-radius: 16px 16px 0 0;
-        border: 2px solid #000;
-        border-bottom: none;
-        flex-direction: column !important;
-        overflow: hidden;
-        box-shadow: 0 -8px 40px rgba(0,0,0,.18);
+        position: fixed !important; bottom: 0; left: 0; right: 0; top: auto !important;
+        transform: none !important; width: 100% !important; max-width: 100% !important;
+        max-height: 90svh; height: auto; border-radius: 16px 16px 0 0;
+        border: 2px solid #000; border-bottom: none; flex-direction: column !important;
+        overflow: hidden; box-shadow: 0 -8px 40px rgba(0,0,0,.18);
       }
-
       #modal-left {
-        width: 100% !important;
-        flex-direction: row !important;
-        align-items: flex-start !important;
-        justify-content: flex-start !important;
-        border-bottom: 2px solid #000 !important;
-        border-right: none !important;
-        padding: 16px !important;
-        gap: 14px !important;
+        width: 100% !important; flex-direction: row !important; align-items: flex-start !important;
+        justify-content: flex-start !important; border-bottom: 2px solid #000 !important;
+        border-right: none !important; padding: 16px !important; gap: 14px !important;
       }
-      #modal-photo-wrap {
-        width: 56px !important;
-        height: 76px !important;
-        flex-shrink: 0;
-        border: 1.5px solid #000;
-        margin-bottom: 0 !important;
-      }
-      #modal-meta {
-        flex: 1;
-        min-width: 0;
-        flex-direction: column !important;
-        align-items: flex-start !important;
-        text-align: left !important;
-        gap: 6px !important;
-        margin-bottom: 0 !important;
-      }
-      #modal-name  { font-size: 18px !important; line-height: 1.3 !important; }
+      #modal-photo-wrap { width: 56px !important; height: 76px !important; flex-shrink: 0; border: 1.5px solid #000; margin-bottom: 0 !important; }
+      #modal-meta { flex: 1; min-width: 0; flex-direction: column !important; align-items: flex-start !important; text-align: left !important; gap: 6px !important; margin-bottom: 0 !important; }
+      #modal-name { font-size: 18px !important; line-height: 1.3 !important; }
       #modal-count { font-size: 9px !important; padding: 2px 6px !important; }
-      #share-btn   { font-size: 9px !important; padding: 2px 8px !important; }
-
-      #modal-right {
-        width: 100% !important;
-        padding: 0 !important;
-      }
+      #share-btn { font-size: 9px !important; padding: 2px 8px !important; }
+      #modal-right { width: 100% !important; padding: 0 !important; }
       #modal-archive-label { padding: 8px 14px 6px !important; font-size: 9px !important; }
       #swiper-viewport { height: 280px !important; margin: 0 !important; }
       #modal-nav-bar { padding: 8px 14px !important; }
     }
 
-    #modal-inner {
-      overflow: hidden;
-      max-height: 88svh;
-      height: auto;
-    }
-    #swiper-viewport {
-      height: 380px;
-      overflow: hidden;
-      flex-shrink: 0;
-    }
-
-    .slide-area {
-      height: 100%;
-      overflow-y: auto; overflow-x: hidden;
-      -webkit-overflow-scrolling: touch;
-      overscroll-behavior: contain;
-    }
+    #modal-inner { overflow: hidden; max-height: 88svh; height: auto; }
+    #swiper-viewport { height: 380px; overflow: hidden; flex-shrink: 0; }
+    .slide-area { height: 100%; overflow-y: auto; overflow-x: hidden; -webkit-overflow-scrolling: touch; overscroll-behavior: contain; }
 
     .book-link {
-      display: inline-flex; align-items: center; gap: 3px;
-      font-family: 'Space Grotesk', sans-serif;
-      font-size: 10px; font-weight: 700; letter-spacing: .08em;
-      color: #000; border-bottom: 1.5px solid #000;
-      padding-bottom: 1px; text-decoration: none;
-      transition: opacity .15s;
+      display: inline-flex; align-items: center; gap: 3px; font-family: 'Space Grotesk', sans-serif;
+      font-size: 10px; font-weight: 700; letter-spacing: .08em; color: #000;
+      border-bottom: 1.5px solid #000; padding-bottom: 1px; text-decoration: none; transition: opacity .15s;
     }
     .book-link:hover { opacity: .45; }
 
-    /* 접기/펼치기 높이 제한 CSS */
-    #fav-wrapper { max-height: 920px; } /* 약 3줄 제한 */
-    #main-grid-wrapper { max-height: 1900px; } /* 모바일 약 6줄 제한 */
-    @media (min-width: 768px) { #main-grid-wrapper { max-height: 2400px; } } /* 데스크탑 약 6줄 제한 */
+    /* 동적 접기/펼치기 CSS */
+    #heavy-wrapper { max-height: 920px; transition: max-height 0.5s ease; }
+    #main-grid-wrapper { max-height: 1900px; transition: max-height 0.5s ease; }
+    @media (min-width: 768px) { #main-grid-wrapper { max-height: 2400px; } }
   </style>
 </head>
 
 <body class="font-serif relative selection:bg-neo-yellow selection:text-ink">
 
 <div id="floating-menus" class="absolute top-4 right-4 md:top-8 md:right-8 z-[40] flex flex-col items-end gap-4 transition-opacity duration-300">
-  <a href="https://hwiruruk.github.io/readinglab/" 
-     title="Reading Lab 메인으로 돌아가기"
-     class="block w-[50px] h-[50px] md:w-[60px] md:h-[60px] transition-transform hover:-translate-y-0.5 hover:-translate-x-0.5 hover:scale-105 active:scale-95">
+  <a href="https://hwiruruk.github.io/readinglab/" title="Reading Lab 메인으로 돌아가기" class="block w-[50px] h-[50px] md:w-[60px] md:h-[60px] transition-transform hover:-translate-y-0.5 hover:-translate-x-0.5 hover:scale-105 active:scale-95">
       <svg viewBox="0 0 100 100" style="width: 100%; height: 100%; filter: drop-shadow(4px 4px 0px rgba(0,0,0,1));">
           <rect x="10" y="60" width="70" height="25" fill="#FFFFFF" stroke="black" stroke-width="4" />
           <rect x="15" y="38" width="75" height="22" fill="#93B6CC" stroke="black" stroke-width="4" />
@@ -239,37 +139,6 @@
           <line x1="15" y1="49" x2="90" y2="49" stroke="black" stroke-width="3" />
       </svg>
   </a>
-
-  <div class="relative flex flex-col items-end">
-    <div id="faq-window" class="hidden bg-paper border-4 border-ink shadow-neo-lg w-80 mb-4 flex-col transition-all absolute top-[60px] right-0 md:top-[70px]">
-      <div class="flex justify-between items-center border-b-4 border-ink p-3 bg-neo-mint">
-        <h3 class="font-sans font-black text-lg tracking-widest text-ink">FAQ</h3>
-        <button onclick="document.getElementById('faq-window').classList.toggle('hidden')" class="text-ink font-black text-xl hover:text-white transition-colors">✕</button>
-      </div>
-      
-      <div class="p-5 font-serif text-sm text-ink space-y-6 max-h-[60vh] overflow-y-auto">
-        <div>
-          <h4 class="font-bold bg-neo-yellow inline-block px-2 py-1 mb-2 shadow-neo-sm border-2 border-ink">Q. 최애의 책, 어떤 기준으로 올라오나요?</h4>
-          <p class="leading-relaxed text-muted mt-1 font-sans font-bold text-sm">A. 미디어나 SNS 등에서 언급했던 책, 혹은 손에 들고 있던 책 등등 기준은 없습니다!</p>
-        </div>
-
-        <div class="mt-4">
-          <h4 class="font-bold bg-neo-pink inline-block px-2 py-1 mb-2 shadow-neo-sm border-2 border-ink">Q. 제가 아는 최애의 책을 제보해도 되나요?</h4>
-          <p class="leading-relaxed text-muted mt-1 font-sans font-bold text-sm">A. 제보는 환영입니다! 대신 정확한 기록을 위해 출처가 꼭 필요해요. <a href="https://forms.gle/Sd3ZQTahZNbUjbdz7" target="_blank" class="underline decoration-2 hover:text-neo-pink">(링크)</a> 이쪽으로 제보해주시면, 제가 시간이 날 때마다 틈틈이 확인해서 업데이트해 둘게요.</p>
-        </div>
-
-        <div class="mt-6 p-4 bg-white border-2 border-ink border-dashed">
-          <h4 class="font-bold text-ink mb-1">📌 당부드리는 점</h4>
-          <p class="leading-relaxed text-muted mt-1 font-sans font-bold text-xs">대부분 출처를 확인하고 올리지만, 가끔 부정확할 때도 있어요. 도서 정보도 출판사에 따라 판본이 정말 다양한 경우도 있으니 너른 마음으로 이해해 주시길 부탁드릴게요～</p>
-        </div>
-      </div>
-    </div>
-
-    <button onclick="document.getElementById('faq-window').classList.toggle('hidden')" 
-            class="w-12 h-12 md:w-14 md:h-14 bg-neo-yellow border-4 border-ink shadow-neo hover:bg-neo-pink hover:-translate-y-1 active:shadow-none transition-all rounded-full flex items-center justify-center font-sans font-black text-ink text-xl md:text-2xl">
-      ?
-    </button>
-  </div>
 </div>  
 
 <main id="app-root" class="max-w-5xl mx-auto px-4 sm:px-6 py-12 md:py-24">
@@ -285,126 +154,95 @@
     </div>
   </header>
 
-<section id="seo-content" style="padding:0 0 32px;max-width:960px;margin:0 auto;" class="opacity-0 animate-fade-in-delayed">
-  <h2 style="font-size:1.25rem;font-weight:800;margin:0 0 10px;">최애의 독서란?</h2>
-  <p style="font-size:0.93rem;color:#444;line-height:1.9;margin:0 0 48px;">
-    아이돌, 배우, 뮤지션 등 셀럽이 직접 언급하거나 손에 들고 있던 책들을 모은 아카이브입니다.
-    인터뷰, SNS, 유튜브에서 확인된 출처 기반으로 기록하며, 지속적으로 도서가 업데이트 되고 있습니다.
-  </p>
+  <section id="section-intro" style="padding:0 0 32px;max-width:960px;margin:0 auto;" class="opacity-0 animate-fade-in-delayed hidden">
+    <h2 style="font-size:1.25rem;font-weight:800;margin:0 0 10px;">최애의 독서란?</h2>
+    <p style="font-size:0.93rem;color:#444;line-height:1.9;margin:0;">
+      아이돌, 배우, 뮤지션 등 셀럽이 직접 언급하거나 손에 들고 있던 책들을 모은 아카이브입니다.
+      인터뷰, SNS, 유튜브 등에서 확인된 출처를 기반으로 기록하며, 계속 업데이트할게요!.
+      현재 <strong id="intro-celeb-count">0</strong>명의 셀럽과 <strong id="intro-book-count">0</strong>권의 도서가 등록되어 있습니다.
+    </p>
+  </section>
 
-  <h2 style="font-size:1.4rem;font-weight:900;margin:0 0 6px;">내 최애가 읽은 책이 이렇게 많다니 😍</h2>
-  <p style="font-size:0.88rem;color:#666;margin:0 0 28px;">10권 이상 읽은 셀럽들이에요 (모든 사람들이 책을 읽고 인증하진 않으니 참고만 해주세요 😅) — 클릭하면 해당 셀럽 카드로 이동해요 👤</p>
-
-  <div id="fav-wrapper" class="relative overflow-hidden transition-all duration-500">
-    <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:20px;">
+  <section id="section-search-grid" class="opacity-0 animate-fade-in-delayed">
+    <div class="max-w-xl mx-auto mb-10 flex flex-col gap-4 relative">
+      <input id="search-input" type="text"
+        class="w-full bg-white border-2 border-ink shadow-neo px-4 sm:px-6 py-3 sm:py-4 text-center text-base sm:text-lg focus:outline-none focus:shadow-neo-lg focus:-translate-y-1 transition-all placeholder:text-muted/50 tracking-wide font-sans font-bold scroll-mt-24"
+        placeholder="Search name, title, author, publisher">
+      
+      <div class="flex justify-center gap-3">
+        <button id="btn-grid" class="font-sans font-bold text-[10px] sm:text-xs tracking-widest uppercase border-2 border-ink bg-neo-yellow shadow-neo-sm px-5 py-2 hover:-translate-y-0.5 transition-all">■ GRID</button>
+        <button id="btn-list" class="font-sans font-bold text-[10px] sm:text-xs tracking-widest uppercase border-2 border-ink bg-white hover:bg-neo-yellow shadow-neo-sm px-5 py-2 hover:-translate-y-0.5 transition-all">≡ LIST</button>
       </div>
-    <div id="fav-fade" class="absolute bottom-0 left-0 w-full h-32 bg-gradient-to-t from-[#fcfaf5] to-transparent flex items-end justify-center pb-2 pointer-events-none z-10">
-      <button onclick="document.getElementById('fav-wrapper').style.maxHeight='none'; document.getElementById('fav-fade').style.display='none';" class="font-sans font-bold text-xs sm:text-sm tracking-widest border-2 border-ink bg-neo-yellow shadow-neo-sm px-6 py-3 hover:-translate-y-0.5 transition-all pointer-events-auto cursor-pointer">더보기 ▼</button>
-    </div>
-  </div>
-</section>
-
-<section id="seo-tags" style="padding:0 0 48px;max-width:960px;margin:0 auto;" class="opacity-0 animate-fade-in-delayed">
-  <h2 style="font-size:1.25rem;font-weight:800;margin:0 0 8px;">여러 셀럽이 함께 읽은 책</h2>
-  <p style="font-size:0.83rem;color:#666;margin:0 0 14px;">두 명 이상의 셀럽이 언급한 도서 — 클릭하면 바로 검색돼요 🔍</p>
-  <div style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:48px;">
     </div>
 
-  <h2 style="font-size:1.25rem;font-weight:800;margin:0 0 8px;">등록된 셀럽 · 아이돌 · 배우 전체 목록</h2>
-  <p style="font-size:0.83rem;color:#666;margin:0 0 14px;">독서 기록이 확인된 전체 셀럽 리스트</p>
-  <div style="display:flex;flex-wrap:wrap;gap:8px;">
+    <div id="main-grid-wrapper" class="relative overflow-hidden transition-all duration-500 mb-20">
+      <div id="grid-container" class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-x-4 sm:gap-x-6 gap-y-8 sm:gap-y-12"></div>
+      <div id="main-grid-fade" class="absolute bottom-0 left-0 w-full h-48 bg-gradient-to-t from-[#fcfaf5] to-transparent flex items-end justify-center pb-4 z-10 pointer-events-none">
+        <button onclick="expandSection('main-grid-wrapper', 'main-grid-fade')" class="font-sans font-bold text-xs sm:text-sm tracking-widest border-2 border-ink bg-neo-yellow shadow-neo px-8 py-3 hover:-translate-y-0.5 transition-all pointer-events-auto cursor-pointer">전체 카드 더보기 ▼</button>
+      </div>
     </div>
-</section>
+    <div id="empty-state" class="hidden text-center py-10 text-ink font-sans font-bold tracking-widest mb-20">No results found.</div>
+  </section>
 
-<script>
-function seoSearchBook(title) {
-  var input = document.getElementById('search-input');
-  if (!input) return;
-  input.value = title;
-  input.dispatchEvent(new Event('input', {bubbles:true}));
-  window.scrollTo({top:0, behavior:'smooth'});
-}
-function seoGoToCeleb(e, name) {
-  e.preventDefault();
-  window.location.href = window.location.pathname + '?celeb=' + encodeURIComponent(name);
-}
-</script>
-<div class="max-w-xl mx-auto mb-16 md:mb-20 opacity-0 animate-fade-in-delayed flex flex-col gap-4">
-    <input id="search-input" type="text"
-      class="w-full bg-white border-2 border-ink shadow-neo px-4 sm:px-6 py-3 sm:py-4 text-center text-base sm:text-lg focus:outline-none focus:shadow-neo-lg focus:-translate-y-1 transition-all placeholder:text-muted/50 tracking-wide font-sans font-bold"
-      placeholder="Search name, title, author, publisher">
-    
-    <div class="flex justify-center gap-3">
-      <button id="btn-grid" class="font-sans font-bold text-[10px] sm:text-xs tracking-widest uppercase border-2 border-ink bg-neo-yellow shadow-neo-sm px-5 py-2 hover:-translate-y-0.5 transition-all">■ GRID</button>
-      <button id="btn-list" class="font-sans font-bold text-[10px] sm:text-xs tracking-widest uppercase border-2 border-ink bg-white hover:bg-neo-yellow shadow-neo-sm px-5 py-2 hover:-translate-y-0.5 transition-all">≡ LIST</button>
-    </div>
-  </div>
+  <section id="section-heavy" style="max-width:960px;margin:0 auto 48px;" class="opacity-0 animate-fade-in-delayed hidden">
+    <h2 style="font-size:1.4rem;font-weight:900;margin:0 0 6px;">내 최애가 읽은 책이 이렇게 많다니 😍</h2>
+    <p style="font-size:0.88rem;color:#666;margin:0 0 28px;">10권 이상 읽은 셀럽들이에요 (모든 사람들이 책을 읽고 인증하진 않으니 참고만 해주세요 😅)</p>
 
-  <div id="main-grid-wrapper" class="relative overflow-hidden transition-all duration-500">
-    <div id="grid-container" class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-x-4 sm:gap-x-6 gap-y-8 sm:gap-y-12"></div>
-    <div id="main-grid-fade" class="absolute bottom-0 left-0 w-full h-48 bg-gradient-to-t from-[#fcfaf5] to-transparent flex items-end justify-center pb-4 z-10 pointer-events-none">
-      <button onclick="expandMainGrid()" class="font-sans font-bold text-xs sm:text-sm tracking-widest border-2 border-ink bg-neo-yellow shadow-neo px-8 py-3 hover:-translate-y-0.5 transition-all pointer-events-auto cursor-pointer">전체 카드 더보기 ▼</button>
+    <div id="heavy-wrapper" class="relative overflow-hidden transition-all duration-500">
+      <div id="heavy-grid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:20px;">
+        </div>
+      <div id="heavy-fade" class="absolute bottom-0 left-0 w-full h-32 bg-gradient-to-t from-[#fcfaf5] to-transparent flex items-end justify-center pb-2 pointer-events-none z-10">
+        <button onclick="expandSection('heavy-wrapper', 'heavy-fade')" class="font-sans font-bold text-xs sm:text-sm tracking-widest border-2 border-ink bg-neo-yellow shadow-neo-sm px-6 py-3 hover:-translate-y-0.5 transition-all pointer-events-auto cursor-pointer">더보기 ▼</button>
+      </div>
     </div>
-  </div>
-  
-  <div id="empty-state" class="hidden text-center py-20 text-ink font-sans font-bold tracking-widest">No results found.</div>
+  </section>
+
+  <section id="section-popular" style="max-width:960px;margin:0 auto 48px;" class="opacity-0 animate-fade-in-delayed hidden">
+    <h2 style="font-size:1.25rem;font-weight:800;margin:0 0 8px;">여러 셀럽이 함께 읽은 책</h2>
+    <p style="font-size:0.83rem;color:#666;margin:0 0 20px;">두 명 이상의 셀럽이 언급한 도서 🔍</p>
+    <div id="popular-books-container" class="flex flex-wrap gap-4 sm:gap-6 justify-center md:justify-start">
+      </div>
+  </section>
+
+  <section id="section-alltags" style="max-width:960px;margin:0 auto 48px;" class="opacity-0 animate-fade-in-delayed hidden">
+    <h2 style="font-size:1.25rem;font-weight:800;margin:0 0 8px;">등록된 셀럽 · 아이돌 · 배우 전체 목록</h2>
+    <p style="font-size:0.83rem;color:#666;margin:0 0 14px;">전체 셀럽 리스트</p>
+    <div id="alltags-container" style="display:flex;flex-wrap:wrap;gap:8px;">
+      </div>
+  </section>
 
 </main>
 
 <div id="modal-overlay" class="modal-overlay fixed inset-0 bg-ink/75 z-50 flex items-center justify-center md:p-8 backdrop-blur-sm">
-
   <div id="modal-inner" class="w-full max-w-5xl bg-paper border-4 border-ink shadow-neo-lg relative flex flex-col md:flex-row">
-
-    <button id="close-modal"
-      class="absolute top-2 right-2 z-50 w-9 h-9 flex items-center justify-center bg-neo-pink border-2 border-ink shadow-neo-sm text-ink font-sans font-black text-base hover:bg-neo-yellow active:shadow-none transition-all">✕</button>
-
-    <div id="modal-left"
-      class="w-full md:w-64 lg:w-72 flex-shrink-0 flex flex-col justify-center items-center bg-white border-b-4 md:border-b-0 md:border-r-4 border-ink p-6 md:p-10 gap-0">
-
+    <button id="close-modal" class="absolute top-2 right-2 z-50 w-9 h-9 flex items-center justify-center bg-neo-pink border-2 border-ink shadow-neo-sm text-ink font-sans font-black text-base hover:bg-neo-yellow active:shadow-none transition-all">✕</button>
+    <div id="modal-left" class="w-full md:w-64 lg:w-72 flex-shrink-0 flex flex-col justify-center items-center bg-white border-b-4 md:border-b-0 md:border-r-4 border-ink p-6 md:p-10 gap-0">
       <div id="modal-photo-wrap" class="w-40 h-52 md:w-44 md:h-56 overflow-hidden border-2 border-ink shadow-neo bg-paper-dark mb-6">
         <img id="modal-image" src="" class="w-full h-full object-cover" alt="">
       </div>
-
       <div id="modal-meta" class="flex flex-col items-center mb-6 w-full text-center">
         <h2 id="modal-name" class="text-2xl md:text-3xl font-black tracking-tight mb-3 line-clamp-2 leading-snug"></h2>
-        
         <div class="flex gap-2 justify-center items-stretch h-7 md:h-8">
           <p id="modal-count" class="font-sans font-bold bg-neo-yellow border-2 border-ink px-3 text-xs tracking-widest uppercase flex items-center justify-center m-0 leading-none shadow-neo-sm"></p>
-          <button id="share-btn"
-            class="font-sans font-bold text-xs tracking-widest border-2 border-ink bg-white shadow-neo-sm px-4 hover:bg-neo-mint hover:-translate-y-0.5 hover:shadow-neo active:shadow-neo-sm transition-all flex items-center justify-center m-0 leading-none">
-            공유하기
-          </button>
+          <button id="share-btn" class="font-sans font-bold text-xs tracking-widest border-2 border-ink bg-white shadow-neo-sm px-4 hover:bg-neo-mint hover:-translate-y-0.5 hover:shadow-neo active:shadow-neo-sm transition-all flex items-center justify-center m-0 leading-none">공유하기</button>
         </div>
       </div>
     </div>
-
     <div id="modal-right" class="flex flex-col flex-1 bg-[#fafaf8] min-w-0">
-
-      <div id="modal-archive-label"
-        class="flex-shrink-0 font-sans font-bold text-[9px] md:text-xs tracking-widest text-ink border-b border-ink/10 px-5 md:px-10 pt-4 md:pt-7 pb-2">
-        READING ARCHIVE
-      </div>
-
+      <div id="modal-archive-label" class="flex-shrink-0 font-sans font-bold text-[9px] md:text-xs tracking-widest text-ink border-b border-ink/10 px-5 md:px-10 pt-4 md:pt-7 pb-2">READING ARCHIVE</div>
       <div id="swiper-viewport" class="mx-4 md:mx-8 mt-2 md:mt-4 cursor-grab active:cursor-grabbing">
         <div id="swiper-track" class="swiper-track h-full flex"></div>
       </div>
-
-      <div id="modal-nav-bar"
-        class="flex-shrink-0 flex justify-between items-center border-t border-ink/10 px-5 md:px-8 py-3 md:py-4">
-        <button id="prev-btn"
-          class="font-sans font-bold text-[9px] md:text-xs tracking-widest border-2 border-ink bg-white shadow-neo-sm px-3 py-1.5 md:px-4 md:py-2 hover:bg-neo-yellow disabled:opacity-30 transition-all">◀ PREV</button>
+      <div id="modal-nav-bar" class="flex-shrink-0 flex justify-between items-center border-t border-ink/10 px-5 md:px-8 py-3 md:py-4">
+        <button id="prev-btn" class="font-sans font-bold text-[9px] md:text-xs tracking-widest border-2 border-ink bg-white shadow-neo-sm px-3 py-1.5 md:px-4 md:py-2 hover:bg-neo-yellow disabled:opacity-30 transition-all">◀ PREV</button>
         <div id="dots-container" class="flex items-center justify-center"></div>
-        <button id="next-btn"
-          class="font-sans font-bold text-[9px] md:text-xs tracking-widest border-2 border-ink bg-white shadow-neo-sm px-3 py-1.5 md:px-4 md:py-2 hover:bg-neo-yellow disabled:opacity-30 transition-all">NEXT ▶</button>
+        <button id="next-btn" class="font-sans font-bold text-[9px] md:text-xs tracking-widest border-2 border-ink bg-white shadow-neo-sm px-3 py-1.5 md:px-4 md:py-2 hover:bg-neo-yellow disabled:opacity-30 transition-all">NEXT ▶</button>
       </div>
     </div>
   </div>
 </div>
 
-<div id="toast"
-  class="fixed bottom-10 left-1/2 -translate-x-1/2 bg-ink text-neo-yellow font-sans font-bold border-2 border-ink px-6 py-3 text-xs tracking-widest opacity-0 translate-y-4 shadow-neo transition-all duration-300 z-[100] pointer-events-none w-max max-w-[90vw]">
-  링크가 복사되었습니다.
-</div>
+<div id="toast" class="fixed bottom-10 left-1/2 -translate-x-1/2 bg-ink text-neo-yellow font-sans font-bold border-2 border-ink px-6 py-3 text-xs tracking-widest opacity-0 translate-y-4 shadow-neo transition-all duration-300 z-[100] pointer-events-none w-max max-w-[90vw]">링크가 복사되었습니다.</div>
 
 <script>
 (function App() {
@@ -414,16 +252,12 @@ function seoGoToCeleb(e, name) {
   const SHEET_URL = 'data.csv'; 
   const WIKI_API  = 'https://ko.wikipedia.org/w/api.php';
   const BASE_PATH = window.location.pathname;
-  const SITE_URL  = (() => {
-    try { if (document.referrer?.includes('sites.google.com')) return document.referrer.split('?')[0]; } catch {}
-    return location.origin + BASE_PATH;
-  })();
 
   /* ── STATE ──────────────────────────────────────────────── */
   let celebMap = {};
+  let allBooksMap = {}; // { title: { count: int, coverUrl: str } }
   let entries  = [];
   let modal    = { open: false, name: '', books: [], idx: 0 };
-  
   let filteredEntries = [];
   let renderIndex = 0;
   const CHUNK_SIZE = 24; 
@@ -448,116 +282,9 @@ function seoGoToCeleb(e, name) {
     nextBtn:    document.getElementById('next-btn'),
     dots:       document.getElementById('dots-container'),
     toast:      document.getElementById('toast'),
-    floatMenus: document.getElementById('floating-menus'),
     btnGrid:    document.getElementById('btn-grid'),
     btnList:    document.getElementById('btn-list'),
   };
-
-  /* ── UTILS ──────────────────────────────────────────────── */
-  function updateSEO(name) {
-    const defaultTitle = '최애의 독서 | 당신이 좋아하는, 그들이 읽은 책';
-    const defaultDesc  = '아이돌, 셀럽, 그리고 나의 최애가 읽은 책들을 한곳에 모았습니다.';
-    const defaultImage = 'https://hwiruruk.github.io/favoread/favicon.png';
-    const BASE = 'https://hwiruruk.github.io/favoread/';
-
-    const title    = name ? `${name} 읽은 책 인생책 추천 | 최애의 독서` : defaultTitle;
-    
-    // 해당 인물이 읽은 책의 권수를 계산
-    const bookCount = (name && celebMap[name]) ? celebMap[name].books.length : 0;
-    
-    // 이름과 권수를 반영한 인스타그램 감성의 메타 설명글 적용
-    const desc = name ? `${name}의 읽은 책이 궁금하다면? ✨ 총 ${bookCount}권의 읽은 책과 추천하는 책, 인생책까지 확인해 보세요. #${name} #책추천 #읽은책 #독서 #도서 📕` : defaultDesc;
-    
-    const canonical = name ? `${BASE}?celeb=${encodeURIComponent(name)}` : BASE;
-
-    // 인물 사진이 있으면 해당 사진으로, 없으면 기본 파비콘으로 설정 (인물 페이지 검색 결과 사진 노출용)
-    let imageUrl = defaultImage;
-    if (name && celebMap[name] && celebMap[name].imageUrl) {
-      imageUrl = celebMap[name].imageUrl;
-    }
-
-    // title
-    document.title = title;
-
-    // description
-    document.querySelector('meta[name="description"]')?.setAttribute('content', desc);
-
-    // og tags
-    document.querySelector('meta[property="og:title"]')?.setAttribute('content', title);
-    document.querySelector('meta[property="og:description"]')?.setAttribute('content', desc);
-    document.querySelector('meta[property="og:url"]')?.setAttribute('content', canonical);
-    
-    // 동적으로 og:image 업데이트 (검색 결과에 인물 사진 노출되도록 반영)
-    document.querySelector('meta[property="og:image"]')?.setAttribute('content', imageUrl);
-
-    // twitter tags
-    document.querySelector('meta[name="twitter:title"]')?.setAttribute('content', title);
-    document.querySelector('meta[name="twitter:description"]')?.setAttribute('content', desc);
-    
-    // 동적으로 twitter:image 업데이트
-    document.querySelector('meta[name="twitter:image"]')?.setAttribute('content', imageUrl);
-
-    // 동적으로 썸네일(thumbnail) 메타 태그 업데이트
-    let thumbTag = document.querySelector('meta[name="thumbnail"]');
-    if (thumbTag) {
-      thumbTag.setAttribute('content', imageUrl);
-    }
-
-    // canonical ← 셀럽 페이지가 독립적으로 색인되는 핵심
-    document.querySelector('link[rel="canonical"]')?.setAttribute('href', canonical);
-    
-    /* ── 동적 스키마(구조화 데이터) 생성 ── */
-    const existingScript = document.getElementById('dynamic-schema');
-    if (existingScript) existingScript.remove();
-
-    if (name && celebMap[name]) {
-      // 해당 연예인의 책 제목들을 배열로 추출 후 콤마로 연결
-      const books = celebMap[name].books.map(b => b.title).join(', ');
-
-      const schema = {
-        "@context": "https://schema.org",
-        "@type": "ProfilePage",
-        "mainEntity": {
-          "@type": "Person",
-          "name": name,
-          "description": `${name}의 읽은 책/추천 책 목록: ${books}`,
-          "image": imageUrl
-        }
-      };
-
-      const script = document.createElement('script');
-      script.id = 'dynamic-schema';
-      script.type = 'application/ld+json';
-      script.textContent = JSON.stringify(schema);
-      document.head.appendChild(script);
-    }
-  }
-
-  function setViewMode(mode) {
-    if (viewMode === mode) return;
-    viewMode = mode;
-    
-    if (mode === 'grid') {
-      D.btnGrid.classList.replace('bg-white', 'bg-neo-yellow');
-      D.btnList.classList.replace('bg-neo-yellow', 'bg-white');
-      D.grid.className = 'grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-x-4 sm:gap-x-6 gap-y-8 sm:gap-y-12';
-    } else {
-      D.btnList.classList.replace('bg-white', 'bg-neo-yellow');
-      D.btnGrid.classList.replace('bg-neo-yellow', 'bg-white');
-      D.grid.className = 'flex flex-col gap-3 max-w-2xl mx-auto w-full';
-    }
-    
-    filterEntries(D.search.value);
-  }
-
-  /* ── STATUS ─────────────────────────────────────────────── */
-  function setStatus(type, msg) {
-    D.statusText.textContent = msg;
-    D.statusDot.className = 'w-2 h-2 rounded-full ' + (
-      type === 'loading' ? 'bg-neo-yellow animate-pulse' :
-      type === 'error'   ? 'bg-neo-pink' : 'bg-green-400'
-    );
-  }
 
   /* ── DATA ───────────────────────────────────────────────── */
   async function fetchSheet() {
@@ -591,28 +318,37 @@ function seoGoToCeleb(e, name) {
       const n = (r[C.celeb]||'').trim(), t = (r[C.title]||'').trim();
       if (!n || !t) return;
       
-      const hColVal = (r[C.cImg] || '').trim();
-      const validImage = hColVal.startsWith('http') ? hColVal : '';
+      const cImgUrl = (r[C.cImg] || '').trim();
+      const validCImg = cImgUrl.startsWith('http') ? cImgUrl : '';
+      
+      const bImgUrl = (r[C.bImg] || '').trim();
+      const validBImg = bImgUrl.startsWith('http') ? bImgUrl : '';
 
-      if (!map[n]) map[n] = { imageUrl: validImage, books: [] };
+      // Celeb Map 구성
+      if (!map[n]) map[n] = { imageUrl: validCImg, books: [] };
       map[n].books.push({
         title: t, author: r[C.auth]||'', publisher: r[C.pub]||'',
         source: r[C.src]||'', comment: r[C.cmt]||'',
-        coverUrl: r[C.bImg]||'', link: r[C.link]||'',
+        coverUrl: validBImg, link: r[C.link]||'',
       });
+
+      // All Books Map 구성 (통계용)
+      if (!allBooksMap[t]) allBooksMap[t] = { count: 0, coverUrl: validBImg };
+      allBooksMap[t].count++;
+      // 표지가 비어있었는데 나중에 들어온 행에 표지가 있으면 업데이트
+      if (!allBooksMap[t].coverUrl && validBImg) allBooksMap[t].coverUrl = validBImg;
     });
     return map;
   }
 
+  // 위키 이미지 지연 로딩
   async function wikiImg(name) {
     try {
       const u = `${WIKI_API}?action=query&generator=search&gsrsearch=${encodeURIComponent(name)}&gsrlimit=5&prop=pageimages&piprop=thumbnail&pithumbsize=500&format=json&origin=*`;
       const d = await (await fetch(u)).json();
       const pages = Object.values(d?.query?.pages || {});
       const kw = ['가수','배우','방송인','아이돌','뮤지션'];
-      const best = pages.find(p => p.title === name)
-        || pages.find(p => kw.some(k => p.title.includes(k) && p.title.includes(name)))
-        || pages.find(p => p.title.includes(name));
+      const best = pages.find(p => p.title === name) || pages.find(p => kw.some(k => p.title.includes(k) && p.title.includes(name))) || pages.find(p => p.title.includes(name));
       return best?.thumbnail?.source || '';
     } catch { return ''; }
   }
@@ -623,8 +359,7 @@ function seoGoToCeleb(e, name) {
         const card = entry.target;
         const name = card.dataset.name;
         obs.unobserve(card); 
-        
-        if (!celebMap[name].imageUrl && viewMode === 'grid') {
+        if (!celebMap[name].imageUrl) {
           loadWikiImage(name, card);
         }
       }
@@ -643,26 +378,118 @@ function seoGoToCeleb(e, name) {
       const url = await wikiImg(name);
       if (url) {
         celebMap[name].imageUrl = url;
-        const wrap = card.querySelector('.celeb-photo-wrap');
-        if (wrap) {
+        const wraps = document.querySelectorAll(`[data-name="${name}"] .celeb-photo-wrap`);
+        wraps.forEach(wrap => {
           wrap.innerHTML = `<img src="${url}" alt="${name} 책 추천" loading="lazy" class="celeb-portrait w-full h-full object-cover opacity-0 transition-opacity duration-500">`;
           setTimeout(() => wrap.querySelector('img')?.classList.remove('opacity-0'), 50);
-        }
+        });
       }
     } catch(e) {}
   }
 
+  /* ── DYNAMIC SECTIONS BUILDER ───────────────────────────── */
+  function buildDynamicSections() {
+    const allCelebs = Object.keys(celebMap).sort();
+    
+    // 1. 인트로 섹션 업데이트
+    document.getElementById('intro-celeb-count').textContent = allCelebs.length;
+    document.getElementById('intro-book-count').textContent = Object.keys(allBooksMap).length;
+    document.getElementById('section-intro').classList.remove('hidden');
+
+    // 3. 내 최애가 읽은 책 (다독 셀럽 >= 10권)
+    const heavyReaders = entries.filter(([name, data]) => data.books.length >= 10);
+    heavyReaders.sort((a,b) => b[1].books.length - a[1].books.length);
+    
+    const heavyGrid = document.getElementById('heavy-grid');
+    heavyGrid.innerHTML = heavyReaders.map(([name, data]) => {
+      const booksList = data.books.slice(0,3).map(b => b.title).join(' · ') + (data.books.length > 3 ? ` 외 ${data.books.length - 3}권` : '');
+      const imgHtml = data.imageUrl
+        ? `<img src="${data.imageUrl}" alt="${name} 프로필" loading="lazy" style="width:100%;height:100%;object-fit:cover;object-position:top;">`
+        : `<div class="celeb-photo-wrap w-full h-full bg-paper-dark relative"><img src="" class="celeb-portrait w-full h-full object-cover opacity-0" alt="${name}"></div>`;
+      
+      return `
+        <a href="?celeb=${encodeURIComponent(name)}" onclick="seoGoToCeleb(event,'${name.replace(/'/g, "\\'")}')" data-name="${name}" class="heavy-card block border-2 border-ink bg-white shadow-neo cursor-pointer transition-all duration-150" style="border-radius:12px;overflow:hidden;">
+          <div style="aspect-ratio:1/1;overflow:hidden;background:#f0f0f0;">${imgHtml}</div>
+          <div style="padding:14px;">
+            <p style="font-weight:800;font-size:0.95rem;margin:0 0 4px;">${name}</p>
+            <p style="font-size:0.78rem;color:#666;margin:0 0 8px;">📕 ${data.books.length}권 읽음</p>
+            <p style="font-size:0.76rem;color:#444;line-height:1.6;margin:0;">${booksList}</p>
+          </div>
+        </a>`;
+    }).join('');
+
+    // 이미지가 없는 셀럽 카드에 옵저버 달기
+    document.querySelectorAll('#heavy-grid .heavy-card').forEach(card => {
+      if (!celebMap[card.dataset.name].imageUrl) imgObserver.observe(card);
+    });
+    document.getElementById('section-heavy').classList.remove('hidden');
+
+    // 4. 여러 셀럽이 읽은 책 (인기 도서 + 책 표지)
+    const popularBooks = Object.entries(allBooksMap)
+      .filter(([title, info]) => info.count >= 2)
+      .sort((a,b) => b[1].count - a[1].count)
+      .slice(0, 30); // 상위 30권 정도 노출
+
+    const popContainer = document.getElementById('popular-books-container');
+    popContainer.innerHTML = popularBooks.map(([title, info]) => {
+      const safeTitle = title.replace(/'/g, "\\'");
+      const coverHtml = info.coverUrl
+        ? `<img src="${info.coverUrl}" class="w-16 h-24 sm:w-20 sm:h-28 object-cover border-2 border-ink shadow-neo transition-transform group-hover:-translate-y-1" loading="lazy" alt="${title} 표지">`
+        : `<div class="w-16 h-24 sm:w-20 sm:h-28 bg-white border-2 border-ink shadow-neo flex items-center justify-center text-[9px] font-sans font-bold text-muted transition-transform group-hover:-translate-y-1">COVER</div>`;
+      
+      return `
+        <div onclick="seoSearchBook('${safeTitle}')" class="group cursor-pointer flex flex-col items-center gap-2 w-16 sm:w-20 text-center" title="${title}">
+          ${coverHtml}
+          <div class="text-[10px] sm:text-xs font-bold text-ink line-clamp-2 leading-tight group-hover:bg-neo-yellow px-1 transition-colors">${title}</div>
+          <div class="text-[9px] font-sans font-bold bg-neo-yellow border border-ink px-1.5 shadow-neo-sm">${info.count} 읽음</div>
+        </div>`;
+    }).join('');
+    document.getElementById('section-popular').classList.remove('hidden');
+
+    // 5. 등록된 전체 셀럽 태그
+    const tagsContainer = document.getElementById('alltags-container');
+    tagsContainer.innerHTML = allCelebs.map(name => {
+      return `<span onclick="seoGoToCeleb(event, '${name.replace(/'/g, "\\'")}')" style="display:inline-block;padding:4px 10px;border:1px solid #ccc;border-radius:4px;font-size:0.82rem;color:#333;cursor:pointer;transition:background .15s;" onmouseover="this.style.background='#fde047'" onmouseout="this.style.background=''"><span style="font-size:0.7rem;margin-right:3px;opacity:.5;">👤</span>${name}</span>`;
+    }).join('');
+    document.getElementById('section-alltags').classList.remove('hidden');
+  }
+
+  /* ── GLOBAL HELPERS FOR HTML ────────────────────────────── */
+  window.expandSection = function(wrapperId, fadeId) {
+    const wrapper = document.getElementById(wrapperId);
+    const fade = document.getElementById(fadeId);
+    if (wrapper) wrapper.style.maxHeight = 'none';
+    if (fade) fade.style.display = 'none';
+    
+    if (wrapperId === 'main-grid-wrapper' && D.grid && D.grid.lastElementChild && renderIndex < filteredEntries.length) {
+      scrollObserver.observe(D.grid.lastElementChild);
+    }
+  };
+
+  window.seoSearchBook = function(title) {
+    if (!D.search) return;
+    D.search.value = title;
+    D.search.dispatchEvent(new Event('input', {bubbles:true}));
+    D.search.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    setTimeout(() => D.search.focus(), 500); // 스크롤 후 포커스
+  };
+
+  window.seoGoToCeleb = function(e, name) {
+    e.preventDefault();
+    openModal(name);
+    history.pushState({ celeb: name }, '', `${BASE_PATH}?celeb=${encodeURIComponent(name)}`);
+  };
+
+  /* ── MAIN LOGIC ─────────────────────────────────────────── */
   function filterEntries(kw = '') {
     const q = kw.toLowerCase();
     
-    // 뷰 모드에 따라 정렬(리스트 뷰는 가나다순, 그리드는 섞인 상태 유지)
     let currentEntries = viewMode === 'list'
       ? [...entries].sort((a, b) => a[0].localeCompare(b[0], 'ko'))
       : entries;
 
     filteredEntries = currentEntries.filter(([name, data]) => {
       if (!q) return true;
-      // 검색 범위: 인물 이름, 도서명, 작가, 출판사 통합
       const str = `${name} ${data.books.map(b => `${b.title} ${b.author} ${b.publisher}`).join(' ')}`.toLowerCase();
       return str.includes(q);
     });
@@ -671,7 +498,6 @@ function seoGoToCeleb(e, name) {
     renderIndex = 0;
     D.empty.classList.toggle('hidden', filteredEntries.length > 0);
 
-    // 검색어 입력 시 전체 카드 자동 펼치기
     const fade = document.getElementById('main-grid-fade');
     const wrapper = document.getElementById('main-grid-wrapper');
     if (fade && wrapper) {
@@ -679,7 +505,7 @@ function seoGoToCeleb(e, name) {
         wrapper.style.maxHeight = 'none';
         fade.style.display = 'none';
       } else {
-        wrapper.style.maxHeight = ''; // CSS 기본값으로 복원
+        wrapper.style.maxHeight = ''; 
         fade.style.display = 'flex';
       }
     }
@@ -700,10 +526,10 @@ function seoGoToCeleb(e, name) {
         card.className = 'group cursor-pointer flex flex-col bg-white border-2 border-ink shadow-neo hover:shadow-neo-lg hover:-translate-y-1 transition-all duration-200 opacity-0 animate-fade-in-fast block';
         const img = data.imageUrl
           ? `<img src="${data.imageUrl}" alt="${name} 책 추천" loading="lazy" class="celeb-portrait w-full h-full object-cover">`
-          : `<div class="w-full h-full bg-paper-dark flex items-center justify-center font-sans font-bold text-[10px] tracking-widest text-muted">PHOTO</div>`;
+          : `<div class="celeb-photo-wrap w-full h-full bg-paper-dark relative"><img src="" class="celeb-portrait w-full h-full object-cover opacity-0 transition-opacity duration-500" alt="${name}"></div>`;
         
         card.innerHTML = `
-          <div class="celeb-photo-wrap w-full aspect-[3/4] overflow-hidden border-b-2 border-ink bg-paper-dark relative">${img}</div>
+          <div class="w-full aspect-[3/4] overflow-hidden border-b-2 border-ink bg-paper-dark relative">${img}</div>
           <div class="p-3 sm:p-5 flex flex-col items-center group-hover:bg-neo-mint transition-colors duration-200">
             <h3 class="text-base sm:text-xl font-bold tracking-tight mb-1 sm:mb-2 text-ink text-center line-clamp-1">${name}</h3>
             <p class="text-[8px] sm:text-[10px] tracking-widest text-ink uppercase font-sans font-bold bg-white border border-ink px-1.5 sm:px-2 py-0.5">${data.books.length} records</p>
@@ -711,7 +537,6 @@ function seoGoToCeleb(e, name) {
           
         if (!data.imageUrl) imgObserver.observe(card);
       } else {
-        // 리스트 뷰(사진 없음, 텍스트만)
         card.className = 'group cursor-pointer flex justify-between items-center bg-white border-2 border-ink shadow-neo-sm hover:shadow-neo hover:bg-neo-mint hover:-translate-y-0.5 transition-all duration-200 opacity-0 animate-fade-in-fast block px-4 py-3 sm:px-6 sm:py-4';
         card.innerHTML = `
           <h3 class="text-base sm:text-lg font-bold tracking-tight text-ink group-hover:underline decoration-2 underline-offset-4">${name}</h3>
@@ -719,13 +544,7 @@ function seoGoToCeleb(e, name) {
         `;
       }
       
-      card.addEventListener('click', (e) => {
-        if (e.ctrlKey || e.metaKey || e.shiftKey) return;
-        e.preventDefault(); 
-        openModal(name);
-        history.pushState({ celeb: name }, '', celebUrl);
-      });
-      
+      card.addEventListener('click', (e) => seoGoToCeleb(e, name));
       D.grid.appendChild(card);
     });
 
@@ -735,6 +554,23 @@ function seoGoToCeleb(e, name) {
     }
   }
 
+  function setViewMode(mode) {
+    if (viewMode === mode) return;
+    viewMode = mode;
+    
+    if (mode === 'grid') {
+      D.btnGrid.classList.replace('bg-white', 'bg-neo-yellow');
+      D.btnList.classList.replace('bg-neo-yellow', 'bg-white');
+      D.grid.className = 'grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-x-4 sm:gap-x-6 gap-y-8 sm:gap-y-12';
+    } else {
+      D.btnList.classList.replace('bg-white', 'bg-neo-yellow');
+      D.btnGrid.classList.replace('bg-neo-yellow', 'bg-white');
+      D.grid.className = 'flex flex-col gap-3 max-w-2xl mx-auto w-full';
+    }
+    filterEntries(D.search.value);
+  }
+
+  // 모달 제어
   function openModal(name, isHistoryNav = false) {
     if (!celebMap[name]) return;
     const data = celebMap[name];
@@ -743,38 +579,27 @@ function seoGoToCeleb(e, name) {
     D.mImg.src = data.imageUrl || '';
     D.mImg.alt = data.imageUrl ? `${name} 책 추천` : '';
     D.mImg.parentElement.style.display = data.imageUrl ? '' : 'none';
-    
     D.mName.textContent  = name; 
     D.mCount.textContent = `${data.books.length} records`;
 
     buildSlides();
     D.overlay.classList.add('active');
-    D.floatMenus.classList.add('opacity-0', 'pointer-events-none'); 
     document.body.style.overflow = 'hidden';
-    
-    updateSEO(name); 
   }
 
   function closeModal(isHistoryNav = false) {
     modal.open = false;
     D.overlay.classList.remove('active');
-    D.floatMenus.classList.remove('opacity-0', 'pointer-events-none'); 
     document.body.style.overflow = '';
-    
-    if (!isHistoryNav) {
-      history.pushState(null, '', BASE_PATH);
-    }
-
+    if (!isHistoryNav) history.pushState(null, '', BASE_PATH);
     setTimeout(() => { D.track.innerHTML = ''; D.dots.innerHTML = ''; }, 300);
-    
-    updateSEO(null); 
   }
 
   function buildSlides() {
     D.track.innerHTML = '';
     D.dots.innerHTML  = '<div id="page-indicator" class="font-sans font-bold text-[10px] md:text-xs bg-white border-2 border-ink px-3 md:px-4 py-1.5 md:py-2 text-ink shadow-neo-sm tracking-widest"></div>';
     
-    modal.books.forEach((book, i) => {
+    modal.books.forEach((book) => {
       const slide = document.createElement('div');
       slide.className = 'slide-area w-full flex-shrink-0 flex flex-col md:flex-row gap-4 md:gap-8 items-center md:items-start px-4 py-4 md:px-6';
 
@@ -782,19 +607,11 @@ function seoGoToCeleb(e, name) {
         ? `<img src="${book.coverUrl}" class="w-24 md:w-36 lg:w-44 object-cover border-2 border-ink shadow-neo flex-shrink-0 mx-auto md:mx-0" alt="${book.title} 표지" loading="lazy">`
         : `<div class="w-24 md:w-36 lg:w-44 aspect-[2/3] border-2 border-ink bg-white flex items-center justify-center font-sans font-bold text-xs text-muted shadow-neo flex-shrink-0 mx-auto md:mx-0">COVER</div>`;
 
-      const quote = book.comment
-        ? `<blockquote class="text-xs md:text-sm leading-relaxed text-ink mb-3 bg-neo-yellow border-2 border-ink p-3 md:p-4 shadow-neo-sm font-medium">"${book.comment}"</blockquote>`
-        : '';
-
-      const pub = book.publisher
-        ? `<span class="opacity-40 mx-1.5">|</span><span class="text-ink/70">${book.publisher}</span>` : '';
-
-      const src = book.source?.startsWith('http')
-        ? `<a href="${book.source}" target="_blank" class="book-link">↗ 출처</a>` : '';
-      const lnk = book.link && book.link !== '#'
-        ? `<a href="${book.link}" target="_blank" class="book-link">↗ 도서 정보</a>` : '';
-      const links = (src || lnk)
-        ? `<div class="flex gap-4 flex-wrap justify-center md:justify-start mt-2">${src}${lnk}</div>` : '';
+      const quote = book.comment ? `<blockquote class="text-xs md:text-sm leading-relaxed text-ink mb-3 bg-neo-yellow border-2 border-ink p-3 md:p-4 shadow-neo-sm font-medium">"${book.comment}"</blockquote>` : '';
+      const pub = book.publisher ? `<span class="opacity-40 mx-1.5">|</span><span class="text-ink/70">${book.publisher}</span>` : '';
+      const src = book.source?.startsWith('http') ? `<a href="${book.source}" target="_blank" class="book-link">↗ 출처</a>` : '';
+      const lnk = book.link && book.link !== '#' ? `<a href="${book.link}" target="_blank" class="book-link">↗ 도서 정보</a>` : '';
+      const links = (src || lnk) ? `<div class="flex gap-4 flex-wrap justify-center md:justify-start mt-2">${src}${lnk}</div>` : '';
 
       slide.innerHTML = `
         ${cover}
@@ -803,7 +620,6 @@ function seoGoToCeleb(e, name) {
           <p class="text-xs md:text-sm font-bold mb-3">${book.author}${pub}</p>
           ${quote}${links}
         </div>`;
-
       D.track.appendChild(slide);
     });
     updateSlide();
@@ -818,29 +634,28 @@ function seoGoToCeleb(e, name) {
     D.track.style.transform = `translateX(-${modal.idx * 100}%)`;
     D.prevBtn.disabled = modal.idx === 0;
     D.nextBtn.disabled = modal.idx === modal.books.length - 1;
-    
     const indicator = document.getElementById('page-indicator');
-    if (indicator) {
-      indicator.textContent = `${modal.idx + 1} / ${modal.books.length}`;
-    }
+    if (indicator) indicator.textContent = `${modal.idx + 1} / ${modal.books.length}`;
   }
 
+  /* ── INIT & BIND EVENTS ─────────────────────────────────── */
   async function init() {
     bindEvents();
     setStatus('loading', 'Loading data...');
 
     try {
-      const rows  = await fetchSheet();
+      const rows = await fetchSheet();
       celebMap = transform(rows);
       entries  = Object.entries(celebMap).sort(() => Math.random() - .5);
+      
+      buildDynamicSections(); // 파이썬 없이 JS로 섹션 그리기
       filterEntries(); 
+      
       setStatus('success', `${entries.length} RECORDS`);
 
       const urlParams = new URLSearchParams(window.location.search);
       const targetCeleb = urlParams.get('celeb');
-      if (targetCeleb && celebMap[targetCeleb]) {
-        openModal(targetCeleb, true);
-      }
+      if (targetCeleb && celebMap[targetCeleb]) openModal(targetCeleb, true);
     } catch {
       setStatus('error', '목록 파일을 찾을 수 없습니다.');
     }
@@ -858,11 +673,8 @@ function seoGoToCeleb(e, name) {
       const shareUrl = `${window.location.origin}${BASE_PATH}?celeb=${encodeURIComponent(modal.name)}`;
       try {
         const ta = document.createElement('textarea');
-        ta.value = shareUrl;
-        ta.style.cssText = 'position:fixed;top:-9999px;left:-9999px';
-        document.body.appendChild(ta); ta.focus(); ta.select();
-        document.execCommand('copy');
-        document.body.removeChild(ta);
+        ta.value = shareUrl; ta.style.cssText = 'position:fixed;top:-9999px;left:-9999px';
+        document.body.appendChild(ta); ta.focus(); ta.select(); document.execCommand('copy'); document.body.removeChild(ta);
         D.toast.classList.remove('opacity-0','translate-y-4');
         setTimeout(() => D.toast.classList.add('opacity-0','translate-y-4'), 3000);
       } catch { prompt('링크 복사:', shareUrl); }
@@ -873,17 +685,14 @@ function seoGoToCeleb(e, name) {
 
     document.addEventListener('keydown', e => {
       if (!modal.open) return;
-      if (e.key === 'Escape')     closeModal();
-      if (e.key === 'ArrowLeft')  goSlide(modal.idx - 1);
+      if (e.key === 'Escape') closeModal();
+      if (e.key === 'ArrowLeft') goSlide(modal.idx - 1);
       if (e.key === 'ArrowRight') goSlide(modal.idx + 1);
     });
 
     window.addEventListener('popstate', (e) => {
-      if (e.state && e.state.celeb) {
-        openModal(e.state.celeb, true);
-      } else {
-        closeModal(true);
-      }
+      if (e.state && e.state.celeb) openModal(e.state.celeb, true);
+      else closeModal(true);
     });
 
     let sx = 0, sw = false;
@@ -900,19 +709,6 @@ function seoGoToCeleb(e, name) {
       if (Math.abs(dx) > 44) goSlide(modal.idx + (dx > 0 ? 1 : -1));
     });
   }
-
-  // 전역 함수로 등록하여 HTML에서 호출 가능하도록 함
-  window.expandMainGrid = function() {
-    const wrapper = document.getElementById('main-grid-wrapper');
-    const fade = document.getElementById('main-grid-fade');
-    if (wrapper) wrapper.style.maxHeight = 'none';
-    if (fade) fade.style.display = 'none';
-    
-    // 접기가 풀리면 숨겨져 있던 마지막 요소를 감지할 수 있도록 옵저버 재실행
-    if (D.grid && D.grid.lastElementChild && renderIndex < filteredEntries.length) {
-      scrollObserver.observe(D.grid.lastElementChild);
-    }
-  };
 
   document.addEventListener('DOMContentLoaded', init);
 })();
