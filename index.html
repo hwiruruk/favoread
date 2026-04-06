@@ -8,10 +8,12 @@
   <meta name="description" content="아이돌, 셀럽, 그리고 나의 최애가 읽은 책들을 한곳에 모았습니다.">
   <meta name="keywords" content="아이돌, 셀럽, 연예인, 최애, 독서, 책, 읽는, 책 추천, 인생책, 읽은 책, 책추천, kpop star reading, kpop star book">
   
-  <!-- 검색 결과에 로고(파비콘) 띄우기 -->
-  <link rel="icon" href="favicon.png" type="image/png">
+  <link rel="icon" href="https://hwiruruk.github.io/favoread/favicon.png" type="image/png">
+  <link rel="apple-touch-icon" href="https://hwiruruk.github.io/favoread/favicon.png">
+  <link rel="shortcut icon" href="https://hwiruruk.github.io/favoread/favicon.png">
   
-  <!-- 검색 결과 및 링크 공유 시 보여질 정보 명시 (Open Graph) -->
+  <meta name="thumbnail" content="https://hwiruruk.github.io/favoread/favicon.png" />
+  
   <meta property="og:site_name" content="최애의 독서">
   <meta property="og:title" content="최애의 독서 | 당신이 좋아하는, 그들이 읽은 책">
   <meta property="og:description" content="아이돌, 셀럽, 연예인, 배우, 나의 최애가 읽은 책들을 한곳에 모은 최애의 독서">
@@ -21,19 +23,15 @@
   <meta property="og:image:alt" content="최애의 독서 로고">
   <meta property="og:locale" content="ko_KR">
 
-  <!-- Twitter / X 카드 -->
   <meta name="twitter:card" content="summary">
   <meta name="twitter:title" content="최애의 독서 | 당신이 좋아하는, 그들이 읽은 책">
   <meta name="twitter:description" content="아이돌, 셀럽, 그리고 나의 최애가 읽은 책들을 한곳에 모았습니다.">
   <meta name="twitter:image" content="https://hwiruruk.github.io/favoread/favicon.png">
 
-  <!-- 정규 URL (중복 색인 방지) -->
   <link rel="canonical" href="https://hwiruruk.github.io/favoread/">
 
-  <!-- 크롤러 지시 -->
   <meta name="robots" content="index, follow">
 
-  <!-- 구글이 잘못된 이름을 쓰지 못하게 명시하는 코드 -->
   <script type="application/ld+json">
   {
     "@context": "https://schema.org",
@@ -41,6 +39,7 @@
     "name": "최애의 독서",
     "url": "https://hwiruruk.github.io/favoread/",
     "description": "아이돌, 셀럽, 그리고 나의 최애가 읽은 책들을 한곳에 모았습니다.",
+    "image": "https://hwiruruk.github.io/favoread/favicon.png",
     "inLanguage": "ko-KR",
     "potentialAction": {
       "@type": "SearchAction",
@@ -53,7 +52,6 @@
   }
   </script>
 
-  <!-- 웹페이지 상세 스키마 -->
   <script type="application/ld+json">
   {
     "@context": "https://schema.org",
@@ -61,6 +59,7 @@
     "name": "최애의 독서 | 당신이 좋아하는, 그들이 읽은 책",
     "url": "https://hwiruruk.github.io/favoread/",
     "description": "아이돌, 셀럽, 그리고 나의 최애가 읽은 책들을 한곳에 모았습니다.",
+    "image": "https://hwiruruk.github.io/favoread/favicon.png",
     "inLanguage": "ko-KR",
     "isPartOf": {
       "@type": "WebSite",
@@ -225,7 +224,6 @@
 
 <body class="font-serif relative selection:bg-neo-yellow selection:text-ink">
 
-<!-- 상단 메뉴 버튼들 (스크롤에 따라오지 않고 상단에 고정) -->
 <div id="floating-menus" class="absolute top-4 right-4 md:top-8 md:right-8 z-[40] flex flex-col items-end gap-4 transition-opacity duration-300">
   
   <a href="https://hwiruruk.github.io/readinglab/" 
@@ -286,12 +284,10 @@
   </header>
 
   <div class="max-w-xl mx-auto mb-16 md:mb-20 opacity-0 animate-fade-in-delayed flex flex-col gap-4">
-    <!-- 검색창: placeholder 수정 (작가, 출판사 추가) -->
     <input id="search-input" type="text"
       class="w-full bg-white border-2 border-ink shadow-neo px-4 sm:px-6 py-3 sm:py-4 text-center text-base sm:text-lg focus:outline-none focus:shadow-neo-lg focus:-translate-y-1 transition-all placeholder:text-muted/50 tracking-wide font-sans font-bold"
       placeholder="Search name, title, author, publisher">
     
-    <!-- 뷰 모드 토글 버튼 -->
     <div class="flex justify-center gap-3">
       <button id="btn-grid" class="font-sans font-bold text-[10px] sm:text-xs tracking-widest uppercase border-2 border-ink bg-neo-yellow shadow-neo-sm px-5 py-2 hover:-translate-y-0.5 transition-all">■ GRID</button>
       <button id="btn-list" class="font-sans font-bold text-[10px] sm:text-xs tracking-widest uppercase border-2 border-ink bg-white hover:bg-neo-yellow shadow-neo-sm px-5 py-2 hover:-translate-y-0.5 transition-all">≡ LIST</button>
@@ -409,38 +405,56 @@
   function updateSEO(name) {
     const defaultTitle = '최애의 독서 | 당신이 좋아하는, 그들이 읽은 책';
     const defaultDesc  = '아이돌, 셀럽, 그리고 나의 최애가 읽은 책들을 한곳에 모았습니다.';
+    const defaultImage = 'https://hwiruruk.github.io/favoread/favicon.png';
     const BASE = 'https://hwiruruk.github.io/favoread/';
 
     const title    = name ? `${name} 읽은 책 인생책 추천 | 최애의 독서` : defaultTitle;
-    const desc     = name ? `${name}이(가) 읽은 책과 추천 도서 리스트. 최애의 독서에서 모아볼 수 있습니다.` : defaultDesc;
+    
+    // 해당 인물이 읽은 책의 권수를 계산
+    const bookCount = (name && celebMap[name]) ? celebMap[name].books.length : 0;
+    
+    // 이름과 권수를 반영한 인스타그램 감성의 메타 설명글 적용
+    const desc = name ? `${name}이(가) 읽은 책이 궁금하다면? ✨ 총 ${bookCount}권의 읽은 책과 추천하는 책, 인생책까지 확인해 보세요. #${name} #책추천 #읽은책 #독서 #도서 📕` : defaultDesc;
+    
     const canonical = name ? `${BASE}?celeb=${encodeURIComponent(name)}` : BASE;
+
+    // 인물 사진이 있으면 해당 사진으로, 없으면 기본 파비콘으로 설정 (인물 페이지 검색 결과 사진 노출용)
+    let imageUrl = defaultImage;
+    if (name && celebMap[name] && celebMap[name].imageUrl) {
+      imageUrl = celebMap[name].imageUrl;
+    }
 
     // title
     document.title = title;
 
     // description
-    document.querySelector('meta[name="description"]')
-      ?.setAttribute('content', desc);
+    document.querySelector('meta[name="description"]')?.setAttribute('content', desc);
 
     // og tags
-    document.querySelector('meta[property="og:title"]')
-      ?.setAttribute('content', title);
-    document.querySelector('meta[property="og:description"]')
-      ?.setAttribute('content', desc);
-    document.querySelector('meta[property="og:url"]')
-      ?.setAttribute('content', canonical);
+    document.querySelector('meta[property="og:title"]')?.setAttribute('content', title);
+    document.querySelector('meta[property="og:description"]')?.setAttribute('content', desc);
+    document.querySelector('meta[property="og:url"]')?.setAttribute('content', canonical);
+    
+    // 동적으로 og:image 업데이트 (검색 결과에 인물 사진 노출되도록 반영)
+    document.querySelector('meta[property="og:image"]')?.setAttribute('content', imageUrl);
 
     // twitter tags
-    document.querySelector('meta[name="twitter:title"]')
-      ?.setAttribute('content', title);
-    document.querySelector('meta[name="twitter:description"]')
-      ?.setAttribute('content', desc);
+    document.querySelector('meta[name="twitter:title"]')?.setAttribute('content', title);
+    document.querySelector('meta[name="twitter:description"]')?.setAttribute('content', desc);
+    
+    // 동적으로 twitter:image 업데이트
+    document.querySelector('meta[name="twitter:image"]')?.setAttribute('content', imageUrl);
+
+    // 동적으로 썸네일(thumbnail) 메타 태그 업데이트
+    let thumbTag = document.querySelector('meta[name="thumbnail"]');
+    if (thumbTag) {
+      thumbTag.setAttribute('content', imageUrl);
+    }
 
     // canonical ← 셀럽 페이지가 독립적으로 색인되는 핵심
-    document.querySelector('link[rel="canonical"]')
-      ?.setAttribute('href', canonical);
+    document.querySelector('link[rel="canonical"]')?.setAttribute('href', canonical);
     
-    /* ── [추가된 코드] 동적 스키마(구조화 데이터) 생성 ── */
+    /* ── 동적 스키마(구조화 데이터) 생성 ── */
     const existingScript = document.getElementById('dynamic-schema');
     if (existingScript) existingScript.remove();
 
@@ -454,7 +468,8 @@
         "mainEntity": {
           "@type": "Person",
           "name": name,
-          "description": `${name}이(가) 추천하거나 읽은 책 목록: ${books}`
+          "description": `${name}이(가) 추천하거나 읽은 책 목록: ${books}`,
+          "image": imageUrl
         }
       };
 
@@ -588,7 +603,7 @@
   function filterEntries(kw = '') {
     const q = kw.toLowerCase();
     
-    // 뷰 모드에 따라 데이터 정렬(리스트 뷰는 가나다순, 그리드는 섞인 상태 유지)
+    // 뷰 모드에 따라 정렬(리스트 뷰는 가나다순, 그리드는 섞인 상태 유지)
     let currentEntries = viewMode === 'list'
       ? [...entries].sort((a, b) => a[0].localeCompare(b[0], 'ko'))
       : entries;
@@ -761,7 +776,7 @@
         openModal(targetCeleb, true);
       }
     } catch {
-      setStatus('error', '데이터 파일을 찾을 수 없습니다.');
+      setStatus('error', '목록 파일을 찾을 수 없습니다.');
     }
   }
 
