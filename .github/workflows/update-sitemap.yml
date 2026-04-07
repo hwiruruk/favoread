@@ -1,4 +1,4 @@
-name: Update Sitemap & Request Indexing
+name: Update Site Data
 
 on:
   push:
@@ -6,7 +6,7 @@ on:
       - 'data.csv'   # data.csv가 바뀔 때만 실행
 
 jobs:
-  sitemap-and-index:
+  build:
     runs-on: ubuntu-latest
     permissions:
       contents: write
@@ -16,47 +16,195 @@ jobs:
         with:
           fetch-depth: 2
 
-      - name: Generate sitemap and share pages
+      - name: Generate data.json, sitemap, share pages, index.html 정적 목록
         run: |
           python3 - <<'EOF'
-          import csv, datetime, os, json
+          import csv, datetime, os, json, re
           from urllib.parse import quote
 
-          BASE = "https://hwiruruk.github.io/favoread/"
+          BASE  = "https://hwiruruk.github.io/favoread/"
           TODAY = datetime.date.today().isoformat()
+          LINK_CLASS = (
+            'inline-block px-3 py-1.5 border-2 border-ink rounded-none '
+            'bg-white hover:bg-neo-yellow shadow-neo-sm hover:shadow-neo '
+            'hover:-translate-y-0.5 transition-all text-[11px] sm:text-xs '
+            'font-bold font-sans text-ink'
+          )
 
-          # 인물별 정보 및 도서 목록 저장용
+          # ── 1. CSV 파싱 ──────────────────────────────────────────────
           celebs = {}
-          
+
           with open("data.csv", encoding="utf-8") as f:
               reader = csv.reader(f)
               headers = next(reader)
-              
-              # 열 인덱스 찾기 (연예인:0, 도서명:1, 이미지:7)
-              img_col = 7 
-              for i, h in enumerate(headers):
-                  if any(w in h.lower() for w in ['연예인이미지', 'photo', '이미지주소']):
-                      img_col = i
-                      break
-                      
-              for row in reader:
-                  if row and row[0].strip():
-                      name = row[0].strip()
-                      book_title = row[1].strip() if len(row) > 1 else ""
-                      img_url = row[img_col].strip() if len(row) > img_col else ""
-                      
-                      if not img_url.startswith('http'):
-                          img_url = f"{BASE}favicon.png"
-                      
-                      if name not in celebs:
-                          celebs[name] = {'img': img_url, 'books': []}
-                      
-                      if book_title:
-                          celebs[name]['books'].append(book_title)
 
-          # share 폴더 만들기
-          os.makedirs("share", exist_ok=True)
-          
+              def find_col(keywords, fallback):
+                  for i, h in enumerate(headers):
+                      if any(w in h.lower() for w in keywords):
+                          return i
+                  return fallback
+
+              C = {
+                  'name':    find_col(['연예인','이름','인물'], 0),
+                  'title':   find_col(['도서명','제목','책'],   1),
+                  'author':  find_col(['저자','작가'],          2),
+                  'pub':     find_col(['출판사'],               3),
+                  'src':     find_col(['출처','근거'],          4),
+                  'link':    find_col(['도서 정보','링크','url'], 5),
+                  'cover':   find_col(['도서 이미지','표지'],   6),
+                  'img':     find_col(['연예인이미지','photo','이미지주소'], 7),
+                  'comment': find_col(['코멘트','한마디'],      8),
+              }
+
+              for row in reader:
+                  if not row or not row[C['name']].strip():
+                      continue
+                  name  = row[C['name']].strip()
+                  title = row[C['title']].strip() if len(row) > C['title'] else ''
+                  if not title:
+                      continue
+
+                  def get(col):
+                      return row[col].strip() if len(row) > col else ''
+
+                  img_url = get(C['img'])
+                  if not img_url.startswith('http'):
+                      img_url = f"{BASE}favicon.png"
+
+                  if name not in celebs:
+                      celebs[name] = {'img': img_url, 'books': []}
+
+                  celebs[name]['books'].append({
+                      'title':     title,
+                      'author':    get(C['author']),
+                      'publisher': get(C['pub']),
+                      'source':    get(C['src']),
+                      'link':      get(C['link']),
+                      'coverUrl':  get(C['cover']),
+                      'comment':   get(C['comment']),
+                  })
+
+          # ── 2. data.json 생성 ────────────────────────────────────────
+          data_json = {
+              'generated': TODAY,
+              'celebs': {
+                  name: {
+                      'imageUrl': info['img'],
+                      'books': info['books'],
+                  }
+                  for name, info in celebs.items()
+              }
+          }
+          with open('data.json', 'w', encoding='utf-8') as f:
+              json.dump(data_json, f, ensure_ascii=False, separators=(',', ':'))
+          print(f"data.json 생성: {len(celebs)}명")
+
+          # ── 3. index.html 정적 셀럽 목록 갱신 ──────────────────────
+          sorted_names = sorted(celebs.keys(), key=lambda x: x.lower())
+
+          new_links = '\n'.join(
+              f'      <a href="?celeb={quote(n, safe="()")}" class="{LINK_CLASS}">{n}</a>'
+              for n in sorted_names
+          )
+
+          with open('index.html', 'r', encoding='utf-8') as f:
+              html = f.read()
+
+          html = re.sub(
+              r'등록된 셀럽 · 아이돌 · 배우 전체 목록 \d+명',
+              f'등록된 셀럽 · 아이돌 · 배우 전체 목록 {len(celebs)}명',
+              html
+          )
+
+          html = re.sub(
+              r'(<div id="all-celebs-container"[^>]*>).*?(</div>\s*</section>\s*</main>)',
+              lambda m: f'{m.group(1)}\n{new_links}\n    {m.group(2)}',
+              html,
+              flags=re.DOTALL
+          )
+
+          with open('index.html', 'w', encoding='utf-8') as f:
+              f.write(html)
+          print(f"index.html 목록 갱신: {len(sorted_names)}명")
+
+          # ── 4. share 페이지 생성 ────────────────────────────────────
+          os.makedirs('share', exist_ok=True)
+
+          for name, info in celebs.items():
+              img      = info['img']
+              books    = info['books']
+              safe     = quote(name, safe='()')
+              file_name = name.replace('/', '_').replace('\\', '_')
+              page_url  = f"{BASE}share/{quote(file_name, safe='()')}.html"
+
+              json_ld = {
+                  '@context': 'https://schema.org',
+                  '@type': 'ProfilePage',
+                  'name': f'{name}의 독서 리스트 | 최애의 독서',
+                  'url': page_url,
+                  'mainEntity': {
+                      '@type': 'Person',
+                      'name': name,
+                      'image': img,
+                      'description': f'{name}이(가) 읽거나 추천한 책 {len(books)}권',
+                      'knowsAbout': {
+                          '@type': 'ItemList',
+                          'numberOfItems': len(books),
+                          'itemListElement': [
+                              {'@type': 'ListItem', 'position': i+1, 'name': b['title']}
+                              for i, b in enumerate(books)
+                          ]
+                      }
+                  }
+              }
+
+              book_rows = '\n'.join(
+                  f'      <tr><td>{i+1}</td><td>{b["title"]}</td>'
+                  f'<td>{b["author"]}</td><td>{b["publisher"]}</td></tr>'
+                  for i, b in enumerate(books)
+              )
+
+              html_content = f"""<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8">
+  <title>{name}의 독서 리스트 | 최애의 독서</title>
+  <meta name="description" content="{name}이(가) 읽거나 추천한 책 {len(books)}권을 확인해보세요.">
+  <meta property="og:title" content="{name} | 최애의 독서">
+  <meta property="og:description" content="{name}의 독서 기록과 추천 책 {len(books)}권을 확인해보세요!">
+  <meta property="og:image" content="{img}">
+  <meta property="og:url" content="{page_url}">
+  <meta property="og:type" content="profile">
+  <meta name="twitter:card" content="summary_large_image">
+  <link rel="canonical" href="{page_url}">
+  <script type="application/ld+json">
+  {json.dumps(json_ld, ensure_ascii=False, indent=2)}
+  </script>
+</head>
+<body>
+  <h1>{name}의 독서 리스트</h1>
+  <p>{name}이(가) 읽거나 추천한 책 {len(books)}권입니다.</p>
+  <table>
+    <thead><tr><th>#</th><th>도서명</th><th>저자</th><th>출판사</th></tr></thead>
+    <tbody>
+{book_rows}
+    </tbody>
+  </table>
+  <p><a href="{BASE}?celeb={safe}">최애의 독서에서 {name} 전체 목록 보기</a></p>
+  <script>
+    if (!/bot|crawl|spider/i.test(navigator.userAgent)) {{
+      window.location.replace("{BASE}?celeb={safe}");
+    }}
+  </script>
+</body>
+</html>"""
+
+              with open(f'share/{file_name}.html', 'w', encoding='utf-8') as f:
+                  f.write(html_content)
+
+          print(f"share 페이지 생성: {len(celebs)}개")
+
+          # ── 5. sitemap.xml 생성 ─────────────────────────────────────
           lines = [
               '<?xml version="1.0" encoding="UTF-8"?>',
               '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">',
@@ -71,86 +219,26 @@ jobs:
               '    <priority>1.0</priority>',
               '  </url>',
           ]
-
-          for name, info in celebs.items():
-              img = info['img']
-              books = info['books']
-              safe_name = quote(name, safe="()")
-              
-              # JSON-LD 구조화 데이터 생성 (Person + ItemList)
-              item_list = []
-              for i, b in enumerate(books):
-                  item_list.append({
-                      "@type": "ListItem",
-                      "position": i + 1,
-                      "name": b
-                  })
-
-              json_ld = {
-                  "@context": "https://schema.org",
-                  "@type": "Person",
-                  "name": name,
-                  "image": img,
-                  "description": f"{name}님이 읽거나 추천한 책들의 리스트입니다.",
-                  "mainEntityOfPage": {
-                      "@type": "WebPage",
-                      "@id": f"{BASE}share/{name}.html"
-                  },
-                  "knowsAbout": {
-                      "@type": "ItemList",
-                      "numberOfItems": len(books),
-                      "itemListElement": item_list
-                  }
-              }
-
-              # 1. 인물별 고유 HTML 페이지 생성
-              html = f"""<!DOCTYPE html>
-          <html lang="ko">
-          <head>
-              <meta charset="utf-8">
-              <title>{name}의 독서 리스트 | 최애의 독서</title>
-              <meta property="og:title" content="{name} | 최애의 독서">
-              <meta property="og:description" content="당신이 좋아하는 {name}의 독서 기록과 추천 책 {len(books)}권을 확인해보세요!">
-              <meta property="og:image" content="{img}">
-              <meta property="og:url" content="{BASE}share/{name}.html">
-              <meta name="twitter:card" content="summary_large_image">
-              
-              <script type="application/ld+json">
-              {json.dumps(json_ld, ensure_ascii=False, indent=2)}
-              </script>
-
-              <meta http-equiv="refresh" content="0; url={BASE}?celeb={safe_name}">
-          </head>
-          <body>
-              <script>window.location.replace("{BASE}?celeb={safe_name}");</script>
-          </body>
-          </html>"""
-              
-              # 파일명에 포함될 수 없는 문자 처리하여 저장
-              file_name = name.replace("/", "_").replace("\\", "_")
-              with open(f"share/{file_name}.html", "w", encoding="utf-8") as f:
-                  f.write(html)
-              
-              # 2. 사이트맵 추가
+          for name in celebs:
+              fn = name.replace('/', '_').replace('\\', '_')
               lines += [
                   '  <url>',
-                  f'    <loc>{BASE}share/{quote(file_name, safe="()")}.html</loc>',
+                  f'    <loc>{BASE}share/{quote(fn, safe="()")}.html</loc>',
                   f'    <lastmod>{TODAY}</lastmod>',
                   '    <priority>0.7</priority>',
                   '  </url>',
               ]
-
           lines.append('</urlset>')
-          with open("sitemap.xml", "w", encoding="utf-8") as f:
+          with open('sitemap.xml', 'w', encoding='utf-8') as f:
               f.write('\n'.join(lines) + '\n')
+          print(f"sitemap.xml 생성: {len(celebs) + 2}개 URL")
 
-          print(f"✅ 공유 페이지 및 사이트맵 생성 완료: 총 {len(celebs)}명")
           EOF
 
-      - name: Commit & push sitemap and share pages
+      - name: Commit & push
         run: |
           git config user.name  "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
-          git add sitemap.xml share/
-          git diff --cached --quiet || git commit -m "chore: sitemap 및 개별 공유 페이지 자동 갱신 (JSON-LD ItemList 포함)"
+          git add data.json sitemap.xml share/ index.html
+          git diff --cached --quiet || git commit -m "chore: data.json·sitemap·share·index 자동 갱신 [$(date +%Y-%m-%d)]"
           git push
