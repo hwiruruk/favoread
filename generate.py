@@ -48,7 +48,7 @@ with open("data.csv", encoding="utf-8") as f:
 
         img_url = get(C['img'])
         if not img_url.startswith('http'):
-            img_url = BASE + 'favicon.png'
+            img_url = BASE + 'og-image.jpg'
 
         if name not in celebs:
             celebs[name] = {'img': img_url, 'books': []}
@@ -84,7 +84,7 @@ print(f"✅ data.json 생성: {os.path.getsize('data.json') // 1024}KB")
 sorted_names = sorted(celebs.keys(), key=lambda x: x.lower())
 
 new_links = '\n'.join(
-    '      <a href="?celeb=' + quote(n, safe='()') + '" class="' + LINK_CLASS + '">' + n + '</a>'
+    '      <a href="share/' + quote(n.replace('/', '_').replace('\\', '_'), safe='') + '.html" class="' + LINK_CLASS + '">' + n + '</a>'
     for n in sorted_names
 )
 
@@ -113,9 +113,9 @@ os.makedirs('share', exist_ok=True)
 for name, info in celebs.items():
     img       = info['img']
     books     = info['books']
-    safe      = quote(name, safe='()')
+    safe      = quote(name, safe='')
     file_name = name.replace('/', '_').replace('\\', '_')
-    page_url  = BASE + 'share/' + quote(file_name, safe='()') + '.html'
+    page_url  = BASE + 'share/' + quote(file_name, safe='') + '.html'
 
     json_ld = {
         '@context': 'https://schema.org',
@@ -193,13 +193,9 @@ lines = [
     '<?xml version="1.0" encoding="UTF-8"?>',
     '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">',
     '  <url>',
-    '    <loc>https://hwiruruk.github.io/readinglab/</loc>',
-    '    <lastmod>' + TODAY + '</lastmod>',
-    '    <priority>0.8</priority>',
-    '  </url>',
-    '  <url>',
     '    <loc>' + BASE + '</loc>',
     '    <lastmod>' + TODAY + '</lastmod>',
+    '    <changefreq>daily</changefreq>',
     '    <priority>1.0</priority>',
     '  </url>',
 ]
@@ -207,8 +203,9 @@ for name in celebs:
     fn = name.replace('/', '_').replace('\\', '_')
     lines += [
         '  <url>',
-        '    <loc>' + BASE + 'share/' + quote(fn, safe='()') + '.html</loc>',
+        '    <loc>' + BASE + 'share/' + quote(fn, safe='') + '.html</loc>',
         '    <lastmod>' + TODAY + '</lastmod>',
+        '    <changefreq>weekly</changefreq>',
         '    <priority>0.7</priority>',
         '  </url>',
     ]
@@ -216,4 +213,4 @@ lines.append('</urlset>')
 
 with open('sitemap.xml', 'w', encoding='utf-8') as f:
     f.write('\n'.join(lines) + '\n')
-print(f"✅ sitemap.xml 생성: {len(celebs) + 2}개 URL")
+print(f"✅ sitemap.xml 생성: {len(celebs) + 1}개 URL")
