@@ -120,7 +120,7 @@ print(f"✅ data.json 생성: {os.path.getsize('data.json') // 1024}KB")
 sorted_names = sorted(celebs.keys(), key=lambda x: x.lower())
 
 new_links = '\n'.join(
-    '    <a href="share/' + quote(safe_filename(n), safe='') + '.html" class="' + LINK_CLASS + '">' + esc(n) + '</a>'
+    '    <a href="share/' + quote(safe_filename(n), safe='') + '.html" class="' + LINK_CLASS + '">' + n + '</a>'
     for n in sorted_names
 )
 
@@ -139,6 +139,20 @@ idx_html = re.sub(
     idx_html,
     flags=re.DOTALL
 )
+
+# JS 에러 핸들링 패치: renderDynamicSections/setupQuiz 에러가
+# "목록 파일을 찾을 수 없습니다" 메시지를 덮어쓰지 않도록 개별 try-catch 처리
+patched = re.sub(
+    r'renderDynamicSections\(\);\s*setupQuiz\(\);',
+    'try { renderDynamicSections(); } catch(e) { console.warn("renderDynamicSections:", e); }\n        try { setupQuiz(); } catch(e) { console.warn("setupQuiz:", e); }',
+    idx_html,
+    count=1
+)
+if patched != idx_html:
+    idx_html = patched
+    print("✅ JS 에러 핸들링 패치 적용")
+else:
+    print("⚠️ JS 패치 대상을 찾지 못함 (이미 적용되었거나 구조가 다름)")
 
 with open('index.html', 'w', encoding='utf-8') as f:
     f.write(idx_html)
