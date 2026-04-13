@@ -344,7 +344,7 @@ for name, info in celebs.items():
         '    </tbody>\n'
         '  </table>\n'
         '\n'
-        '  <p style="margin-top:24px"><a href="' + redirect_url + '">최애의 독서에서 ' + esc(name) + ' 전체 목록 보기 →</a></p>\n'
+        '  <p style="margin-top:24px"><a href="' + redirect_url + '" rel="nofollow">최애의 독서에서 ' + esc(name) + ' 전체 목록 보기 →</a></p>\n'
         '\n'
         '</body>\n'
         '</html>'
@@ -424,12 +424,13 @@ for title, binfo in book_celebs.items():
         '@context': 'https://schema.org',
         '@type': 'Book',
         'name': title,
+        'url': page_url,
         'description': str(celeb_count) + '명의 셀럽이 읽은 책',
     }
-    if binfo['author']:
-        json_ld['author'] = {'@type': 'Person', 'name': binfo['author']}
-    if binfo['publisher']:
-        json_ld['publisher'] = {'@type': 'Organization', 'name': binfo['publisher']}
+    if binfo['author'] and binfo['author'].strip():
+        json_ld['author'] = {'@type': 'Person', 'name': binfo['author'].strip()}
+    if binfo['publisher'] and binfo['publisher'].strip():
+        json_ld['publisher'] = {'@type': 'Organization', 'name': binfo['publisher'].strip()}
     if binfo['coverUrl'] and binfo['coverUrl'].startswith('http'):
         json_ld['image'] = binfo['coverUrl']
 
@@ -451,9 +452,17 @@ for title, binfo in book_celebs.items():
         '  <meta property="og:type" content="book">\n'
         '  <meta property="og:site_name" content="최애의 독서">\n'
         '  <meta property="og:locale" content="ko_KR">\n'
-        + ('  <meta property="og:image" content="' + esc(binfo['coverUrl']) + '">\n' if binfo['coverUrl'] and binfo['coverUrl'].startswith('http') else '')
+        + ('  <meta property="og:image" content="' + esc(binfo['coverUrl']) + '">\n'
+           '  <meta property="og:image:alt" content="' + esc(title) + ' 표지">\n'
+           if binfo['coverUrl'] and binfo['coverUrl'].startswith('http')
+           else '  <meta property="og:image" content="' + BASE + 'og-image.jpg">\n')
         + '  <meta name="twitter:card" content="summary">\n'
-        '  <link rel="canonical" href="' + esc(page_url) + '">\n'
+        '  <meta name="twitter:title" content="' + esc(title) + ' | ' + str(celeb_count) + '명의 셀럽이 읽은 책">\n'
+        '  <meta name="twitter:description" content="' + celeb_names_str + ' 등 ' + str(celeb_count) + '명이 읽은 책">\n'
+        + ('  <meta name="twitter:image" content="' + esc(binfo['coverUrl']) + '">\n'
+           if binfo['coverUrl'] and binfo['coverUrl'].startswith('http')
+           else '  <meta name="twitter:image" content="' + BASE + 'og-image.jpg">\n')
+        + '  <link rel="canonical" href="' + esc(page_url) + '">\n'
         '  <link rel="icon" href="' + BASE + 'favicon.png" type="image/png">\n'
         '  <link rel="alternate" type="application/rss+xml" title="최애의 독서 RSS" href="' + BASE + 'feed.xml">\n'
         '\n'
@@ -583,9 +592,15 @@ ranking_page = (
     '  <meta property="og:type" content="website">\n'
     '  <meta property="og:site_name" content="최애의 독서">\n'
     '  <meta property="og:locale" content="ko_KR">\n'
-    '  <meta name="twitter:card" content="summary">\n'
+    '  <meta property="og:image" content="' + BASE + 'og-image.jpg">\n'
+    '  <meta property="og:image:width" content="1200">\n'
+    '  <meta property="og:image:height" content="630">\n'
+    '  <meta property="og:image:alt" content="셀럽 독서 랭킹 - 최애의 독서">\n'
+    '  <meta name="twitter:card" content="summary_large_image">\n'
     '  <meta name="twitter:title" content="셀럽 독서 랭킹 | 최애의 독서">\n'
     '  <meta name="twitter:description" content="셀럽이 가장 많이 읽은 책·저자·출판사 랭킹">\n'
+    '  <meta name="twitter:image" content="' + BASE + 'og-image.jpg">\n'
+    '  <meta name="twitter:image:alt" content="셀럽 독서 랭킹 - 최애의 독서">\n'
     '\n'
     '  <link rel="canonical" href="' + ranking_url + '">\n'
     '  <link rel="icon" href="' + BASE + 'favicon.png" type="image/png">\n'
