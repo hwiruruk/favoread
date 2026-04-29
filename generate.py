@@ -246,15 +246,19 @@ for name, info in celebs.items():
         + esc(name) + ' 책 추천 리스트 전체 확인.'
     )
 
-    # 검색 키워드 변형(타이틀/메타에 노출되지 않는 변형 포함)
+    # 검색 키워드 변형: 셀럽별 정확 매칭 + 일반 검색어(연예인/아이돌/셀럽 + 읽은 책/추천 책/추천 도서/인생책)
     keyword_variants = ', '.join([
         esc(name) + ' 읽은 책',
         esc(name) + ' 추천 책',
+        esc(name) + ' 추천 도서',
         esc(name) + ' 인생책',
         esc(name) + ' 책',
         esc(name) + ' 책 추천',
         esc(name) + ' 도서',
-        '셀럽 독서', '아이돌 책 추천', '연예인 인생책', '최애의 독서',
+        '연예인 읽은 책', '아이돌 읽은 책', '셀럽 읽은 책',
+        '연예인 추천 책', '아이돌 추천 도서', '연예인 추천 도서',
+        '연예인 인생책', '아이돌 인생책', '셀럽 인생책',
+        '책 추천', '인생책', '추천 도서', '최애의 독서',
     ])
 
     page_title = esc(name) + ' 읽은 책·추천 책 ' + str(n_books) + '권 | 최애의 독서'
@@ -418,7 +422,9 @@ for name, info in celebs.items():
         '  <meta name="twitter:image:alt" content="' + esc(name) + ' 읽은 책 추천 책 리스트">\n'
         '\n'
         '  <link rel="canonical" href="' + esc(page_url) + '">\n'
-        '  <link rel="icon" href="' + BASE + 'favicon.png" type="image/png">\n'
+        '  <link rel="icon" href="' + BASE + 'favicon.svg" type="image/svg+xml">\n'
+        '  <link rel="icon" href="' + BASE + 'favicon.png" type="image/png" sizes="192x192">\n'
+        '  <link rel="apple-touch-icon" href="' + BASE + 'favicon.png">\n'
         '  <link rel="alternate" type="application/rss+xml" title="최애의 독서 RSS" href="' + BASE + 'feed.xml">\n'
         '\n'
         '  <link rel="preconnect" href="https://image.aladin.co.kr">\n'
@@ -599,7 +605,9 @@ for title, binfo in book_celebs.items():
            if binfo['coverUrl'] and binfo['coverUrl'].startswith('http')
            else '  <meta name="twitter:image" content="' + BASE + 'og-image.jpg">\n')
         + '  <link rel="canonical" href="' + esc(page_url) + '">\n'
-        '  <link rel="icon" href="' + BASE + 'favicon.png" type="image/png">\n'
+        '  <link rel="icon" href="' + BASE + 'favicon.svg" type="image/svg+xml">\n'
+        '  <link rel="icon" href="' + BASE + 'favicon.png" type="image/png" sizes="192x192">\n'
+        '  <link rel="apple-touch-icon" href="' + BASE + 'favicon.png">\n'
         '  <link rel="alternate" type="application/rss+xml" title="최애의 독서 RSS" href="' + BASE + 'feed.xml">\n'
         '\n'
         '  <link rel="preconnect" href="https://image.aladin.co.kr">\n'
@@ -738,7 +746,9 @@ ranking_page = (
     '  <meta name="twitter:image:alt" content="셀럽 독서 랭킹 - 최애의 독서">\n'
     '\n'
     '  <link rel="canonical" href="' + ranking_url + '">\n'
-    '  <link rel="icon" href="' + BASE + 'favicon.png" type="image/png">\n'
+    '  <link rel="icon" href="' + BASE + 'favicon.svg" type="image/svg+xml">\n'
+    '  <link rel="icon" href="' + BASE + 'favicon.png" type="image/png" sizes="192x192">\n'
+    '  <link rel="apple-touch-icon" href="' + BASE + 'favicon.png">\n'
     '  <link rel="alternate" type="application/rss+xml" title="최애의 독서 RSS" href="' + BASE + 'feed.xml">\n'
     '\n'
     '  <script type="application/ld+json">\n'
