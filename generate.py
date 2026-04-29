@@ -272,29 +272,32 @@ for name, info in celebs.items():
             'image': img,
             'description': name + '이(가) 읽은 책과 추천 책 ' + str(n_books) + '권 전체 목록',
         },
-        'mainEntityOfPage': {
-            '@type': 'ItemList',
-            'name': name + '이 읽은 책 ' + str(n_books) + '권',
-            'numberOfItems': n_books,
-            'itemListElement': [
-                {
-                    '@type': 'ListItem',
-                    'position': i + 1,
-                    'item': {
-                        '@type': 'Book',
-                        'name': b['title'],
-                        'author': {'@type': 'Person', 'name': b['author']} if b['author'] else None,
-                        'publisher': {'@type': 'Organization', 'name': b['publisher']} if b['publisher'] else None,
-                    }
-                }
-                for i, b in enumerate(books)
-            ]
-        },
         'isPartOf': {
             '@type': 'WebSite',
             'name': '최애의 독서',
             'url': BASE
         }
+    }
+
+    # ItemList는 별도 JSON-LD 블록으로 분리 (GSC가 mainEntityOfPage 안의 ItemList를 인식 못함)
+    itemlist_ld = {
+        '@context': 'https://schema.org',
+        '@type': 'ItemList',
+        'name': name + '이 읽은 책 ' + str(n_books) + '권',
+        'numberOfItems': n_books,
+        'itemListElement': [
+            {
+                '@type': 'ListItem',
+                'position': i + 1,
+                'item': {
+                    '@type': 'Book',
+                    'name': b['title'],
+                    'author': {'@type': 'Person', 'name': b['author']} if b['author'] else None,
+                    'publisher': {'@type': 'Organization', 'name': b['publisher']} if b['publisher'] else None,
+                }
+            }
+            for i, b in enumerate(books)
+        ]
     }
 
     # JSON-LD에서 None 값 정리
@@ -306,6 +309,7 @@ for name, info in celebs.items():
         return obj
 
     json_ld = clean_none(json_ld)
+    itemlist_ld = clean_none(itemlist_ld)
 
     breadcrumb_ld = {
         '@context': 'https://schema.org',
@@ -426,12 +430,18 @@ for name, info in celebs.items():
         '  <script type="application/ld+json">\n'
         '  ' + json.dumps(breadcrumb_ld, ensure_ascii=False, indent=2) + '\n'
         '  </script>\n'
+        '  <script type="application/ld+json">\n'
+        '  ' + json.dumps(itemlist_ld, ensure_ascii=False, indent=2) + '\n'
+        '  </script>\n'
         '\n'
         '  <style>\n'
         '    body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; max-width: 860px; margin: 0 auto; padding: 20px; color: #222; line-height: 1.6; }\n'
         '    nav { margin-bottom: 16px; font-size: 13px; }\n'
         '    .celeb-header { display: flex; align-items: center; gap: 20px; margin-bottom: 16px; flex-wrap: wrap; }\n'
-        '    .celeb-img { width: 120px; height: 120px; border-radius: 50%; object-fit: cover; flex-shrink: 0; }\n'
+        '    .celeb-photo-wrap { position: relative; flex-shrink: 0; }\n'
+        '    .celeb-img { width: 120px; height: 120px; border-radius: 50%; object-fit: cover; display: block; }\n'
+        '    .img-credit { position: absolute; bottom: 0; right: 0; font-size: 10px; line-height: 1; padding: 2px 4px; background: rgba(255,255,255,0.85); border: 1px solid #ccc; border-radius: 999px; text-decoration: none; color: #555; opacity: 0.55; transition: opacity .15s; }\n'
+        '    .img-credit:hover { opacity: 1; }\n'
         '    h1 { font-size: 26px; margin: 0 0 8px; }\n'
         '    h2 { font-size: 19px; margin: 32px 0 12px; padding-bottom: 4px; border-bottom: 2px solid #222; }\n'
         '    .intro { background: #f8f8f5; border-left: 3px solid #222; padding: 14px 16px; margin: 16px 0 24px; font-size: 15px; }\n'
@@ -449,7 +459,11 @@ for name, info in celebs.items():
         '  <nav><a href="' + BASE + '">← 최애의 독서 홈</a> · <a href="' + BASE + 'share/ranking.html">셀럽 독서 랭킹</a></nav>\n'
         '\n'
         '  <header class="celeb-header">\n'
-        '    <img class="celeb-img" src="' + esc(img) + '" alt="' + esc(name) + ' 프로필 사진" width="120" height="120">\n'
+        '    <div class="celeb-photo-wrap">\n'
+        '      <img class="celeb-img" src="' + esc(img) + '" alt="' + esc(name) + ' 프로필 사진" width="120" height="120">\n'
+        + (('      <a class="img-credit" href="' + esc(img) + '" target="_blank" rel="nofollow noopener noreferrer" title="이미지 출처">📷</a>\n')
+           if img and img.startswith('http') else '')
+        + '    </div>\n'
         '    <div>\n'
         '      <h1>' + h1_text + '</h1>\n'
         '      <p style="margin:0;color:#666;font-size:14px">총 <strong>' + str(n_books) + '권</strong>의 도서</p>\n'
