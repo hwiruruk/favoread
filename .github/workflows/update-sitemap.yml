@@ -14,7 +14,8 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
-          fetch-depth: 2
+          # lastmod 정확도를 위해 git 히스토리 전체 필요
+          fetch-depth: 0
 
       - name: Run generator
         run: python3 generate.py
@@ -23,6 +24,6 @@ jobs:
         run: |
           git config user.name  "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
-          git add data.json sitemap.xml share/ index.html
+          git add -A data.json sitemap.xml share/ index.html robots.txt feed.xml
           git diff --cached --quiet || git commit -m "chore: data.json·sitemap·share·index 자동 갱신 [$(date +%Y-%m-%d)]"
           git push
