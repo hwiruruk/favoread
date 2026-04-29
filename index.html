@@ -632,12 +632,17 @@
     <div id="modal-left"
       class="w-full md:w-64 lg:w-72 flex-shrink-0 flex flex-col justify-center items-center bg-white border-b-4 md:border-b-0 md:border-r-4 border-ink p-6 md:p-10 gap-0">
 
-      <div id="modal-photo-wrap" class="w-40 h-52 md:w-44 md:h-56 overflow-hidden border-2 border-ink shadow-neo bg-paper-dark mb-6">
+      <div id="modal-photo-wrap" class="w-40 h-52 md:w-44 md:h-56 overflow-hidden border-2 border-ink shadow-neo bg-paper-dark mb-6 relative">
         <img id="modal-image" src="" class="w-full h-full object-cover" alt="">
+        <a id="modal-credit-link" href="#" target="_blank" rel="nofollow noopener noreferrer"
+          title="이미지 출처"
+          class="hidden absolute bottom-1 right-1 text-[10px] leading-none px-1.5 py-1 bg-white/85 border border-ink/40 rounded-full text-ink/70 hover:text-ink hover:bg-white opacity-60 hover:opacity-100 transition no-underline">📷</a>
       </div>
 
       <div id="modal-meta" class="flex flex-col items-center mb-6 w-full text-center">
-        <h2 id="modal-name" class="text-2xl md:text-3xl font-black tracking-tight mb-3 line-clamp-2 leading-snug"></h2>
+        <a id="modal-name-link" href="#" class="block hover:underline decoration-2 underline-offset-4">
+          <h2 id="modal-name" class="text-2xl md:text-3xl font-black tracking-tight mb-3 line-clamp-2 leading-snug"></h2>
+        </a>
         
         <div class="flex gap-2 justify-center items-stretch h-7 md:h-8">
           <p id="modal-count" class="font-sans font-bold bg-neo-yellow border-2 border-ink px-3 text-xs tracking-widest uppercase flex items-center justify-center m-0 leading-none shadow-neo-sm"></p>
@@ -715,6 +720,8 @@
     overlay:    document.getElementById('modal-overlay'),
     mImg:       document.getElementById('modal-image'),
     mName:      document.getElementById('modal-name'),
+    mNameLink:  document.getElementById('modal-name-link'),
+    mCredit:    document.getElementById('modal-credit-link'),
     mCount:     document.getElementById('modal-count'),
     shareBtn:   document.getElementById('share-btn'),
     closeBtn:   document.getElementById('close-modal'),
@@ -961,8 +968,17 @@
     D.mImg.src = data.imageUrl || '';
     D.mImg.alt = data.imageUrl ? `${name} 책 추천` : '';
     D.mImg.parentElement.style.display = data.imageUrl ? '' : 'none';
-    
-    D.mName.textContent  = name; 
+
+    if (data.imageUrl) {
+      D.mCredit.href = data.imageUrl;
+      D.mCredit.classList.remove('hidden');
+    } else {
+      D.mCredit.classList.add('hidden');
+    }
+
+    D.mName.textContent  = name;
+    const safeFn = name.replace(/\//g, '_').replace(/\\/g, '_');
+    D.mNameLink.href = `share/${encodeURIComponent(safeFn)}.html`;
     D.mCount.textContent = `${data.books.length} records`;
 
     buildSlides();
