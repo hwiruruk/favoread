@@ -77,6 +77,42 @@ def make_book_url(title):
     """책 share 페이지 URL"""
     return BASE + 'share/book/' + quote(safe_book_filename(title), safe='') + '.html'
 
+# ── 영문 페이지용 헬퍼 ───────────────────────────────────────────────
+import unicodedata
+
+def safe_en_filename(text):
+    """영문 텍스트를 ASCII 슬러그로. 'The Vegetarian' → 'the-vegetarian'."""
+    text = (text or '').lstrip('?').strip()
+    text = unicodedata.normalize('NFKD', text)
+    text = text.encode('ascii', 'ignore').decode('ascii')
+    text = re.sub(r"[^\w\s-]", '', text).strip().lower()
+    text = re.sub(r"[\s_]+", '-', text)
+    text = re.sub(r"-+", '-', text)
+    return text or 'untitled'
+
+def clean_en(value):
+    """`?The Vegetarian` 같은 미검수 제안값은 None 반환. 검수 완료 값만 사용."""
+    if not value:
+        return None
+    v = value.strip()
+    if not v or v.startswith('?'):
+        return None
+    return v
+
+def make_en_celeb_url(name_en):
+    return BASE + 'en/share/' + safe_en_filename(name_en) + '.html'
+
+def make_en_book_url(title_en):
+    return BASE + 'en/share/book/' + safe_en_filename(title_en) + '.html'
+
+def clean_none(obj):
+    """JSON-LD에서 None 값 재귀적으로 제거."""
+    if isinstance(obj, dict):
+        return {k: clean_none(v) for k, v in obj.items() if v is not None}
+    if isinstance(obj, list):
+        return [clean_none(i) for i in obj]
+    return obj
+
 # ── 1. CSV 파싱 ──────────────────────────────────────────────────────
 
 celebs = {}
@@ -91,6 +127,9 @@ with open("data.csv", encoding="utf-8") as f:
                 return i
         return fallback
 
+    def find_exact(col_name):
+        return headers.index(col_name) if col_name in headers else None
+
     C = {
         'name':    find_col(['연예인', '이름', '인물'], 0),
         'title':   find_col(['도서명', '제목', '책'], 1),
@@ -101,6 +140,8 @@ with open("data.csv", encoding="utf-8") as f:
         'cover':   find_col(['도서 이미지', '표지'], 6),
         'img':     find_col(['연예인이미지', 'photo', '이미지주소'], 7),
         'comment': find_col(['코멘트', '한마디'], 8),
+        'name_en':  find_exact('연예인_en'),
+        'title_en': find_exact('도서명_en'),
     }
 
     for row in reader:
@@ -118,8 +159,14 @@ with open("data.csv", encoding="utf-8") as f:
         if not img_url.startswith('http'):
             img_url = BASE + 'og-image.jpg'
 
+        name_en  = clean_en(get(C['name_en']))  if C['name_en']  is not None else None
+        title_en = clean_en(get(C['title_en'])) if C['title_en'] is not None else None
+
         if name not in celebs:
-            celebs[name] = {'img': img_url, 'books': []}
+            celebs[name] = {'img': img_url, 'books': [], 'name_en': name_en}
+        # 같은 셀럽의 name_en이 행마다 다르면 첫 비어있지 않은 값 우선
+        if name_en and not celebs[name].get('name_en'):
+            celebs[name]['name_en'] = name_en
 
         celebs[name]['books'].append({
             'title':     title,
@@ -129,6 +176,7 @@ with open("data.csv", encoding="utf-8") as f:
             'link':      get(C['link']),
             'coverUrl':  get(C['cover']),
             'comment':   get(C['comment']),
+            'title_en':  title_en,
         })
 
 print(f"CSV 파싱 완료: {len(celebs)}명")
@@ -217,6 +265,14 @@ for _name, _info in celebs.items():
 # 2명 이상이 읽은 책만 책 페이지가 생성됨 → 그 책 제목 set
 books_with_pages = {t for t, bi in book_celebs.items() if len(bi['celebs']) >= 2}
 
+# 책 제목 → 영문 제목 매핑 (검수 완료된 첫 비어있지 않은 값)
+book_title_en = {}
+for _name, _info in celebs.items():
+    for _b in _info['books']:
+        _t = _b['title'].strip()
+        if _b.get('title_en') and _t not in book_title_en:
+            book_title_en[_t] = _b['title_en']
+
 # sitemap 이미지 정보 수집용
 sitemap_images = {}  # { url: [image_url, ...] }
 
@@ -304,14 +360,6 @@ for name, info in celebs.items():
         ]
     }
 
-    # JSON-LD에서 None 값 정리
-    def clean_none(obj):
-        if isinstance(obj, dict):
-            return {k: clean_none(v) for k, v in obj.items() if v is not None}
-        if isinstance(obj, list):
-            return [clean_none(i) for i in obj]
-        return obj
-
     json_ld = clean_none(json_ld)
     itemlist_ld = clean_none(itemlist_ld)
 
@@ -390,6 +438,17 @@ for name, info in celebs.items():
     else:
         author_summary = ''
 
+    # 영문 페이지가 있으면 hreflang 링크 추가
+    name_en = info.get('name_en')
+    hreflang_block = ''
+    if name_en:
+        en_url = make_en_celeb_url(name_en)
+        hreflang_block = (
+            '  <link rel="alternate" hreflang="ko" href="' + esc(page_url) + '">\n'
+            '  <link rel="alternate" hreflang="en" href="' + esc(en_url) + '">\n'
+            '  <link rel="alternate" hreflang="x-default" href="' + esc(page_url) + '">\n'
+        )
+
     page = (
         '<!DOCTYPE html>\n'
         '<html lang="ko">\n'
@@ -422,6 +481,7 @@ for name, info in celebs.items():
         '  <meta name="twitter:image:alt" content="' + esc(name) + ' 읽은 책 추천 책 리스트">\n'
         '\n'
         '  <link rel="canonical" href="' + esc(page_url) + '">\n'
+        + hreflang_block +
         '  <link rel="icon" href="' + BASE + 'favicon.svg" type="image/svg+xml">\n'
         '  <link rel="icon" href="' + BASE + 'favicon.png" type="image/png" sizes="192x192">\n'
         '  <link rel="apple-touch-icon" href="' + BASE + 'favicon.png">\n'
@@ -462,7 +522,9 @@ for name, info in celebs.items():
         '  </style>\n'
         '</head>\n'
         '<body>\n'
-        '  <nav><a href="' + BASE + '">← 최애의 독서 홈</a> · <a href="' + BASE + 'share/ranking.html">셀럽 독서 랭킹</a></nav>\n'
+        '  <nav><a href="' + BASE + '">← 최애의 독서 홈</a> · <a href="' + BASE + 'share/ranking.html">셀럽 독서 랭킹</a>'
+        + ((' · <a href="' + esc(make_en_celeb_url(name_en)) + '" hreflang="en">English</a>') if name_en else '')
+        + '</nav>\n'
         '\n'
         '  <header class="celeb-header">\n'
         '    <div class="celeb-photo-wrap">\n'
@@ -576,6 +638,17 @@ for title, binfo in book_celebs.items():
     if binfo['coverUrl'] and binfo['coverUrl'].startswith('http'):
         json_ld['image'] = binfo['coverUrl']
 
+    # 영문 책 페이지가 있으면 hreflang 추가
+    title_en = book_title_en.get(title)
+    book_hreflang = ''
+    if title_en:
+        en_book_url = make_en_book_url(title_en)
+        book_hreflang = (
+            '  <link rel="alternate" hreflang="ko" href="' + esc(page_url) + '">\n'
+            '  <link rel="alternate" hreflang="en" href="' + esc(en_book_url) + '">\n'
+            '  <link rel="alternate" hreflang="x-default" href="' + esc(page_url) + '">\n'
+        )
+
     page = (
         '<!DOCTYPE html>\n'
         '<html lang="ko">\n'
@@ -605,6 +678,7 @@ for title, binfo in book_celebs.items():
            if binfo['coverUrl'] and binfo['coverUrl'].startswith('http')
            else '  <meta name="twitter:image" content="' + BASE + 'og-image.jpg">\n')
         + '  <link rel="canonical" href="' + esc(page_url) + '">\n'
+        + book_hreflang +
         '  <link rel="icon" href="' + BASE + 'favicon.svg" type="image/svg+xml">\n'
         '  <link rel="icon" href="' + BASE + 'favicon.png" type="image/png" sizes="192x192">\n'
         '  <link rel="apple-touch-icon" href="' + BASE + 'favicon.png">\n'
@@ -627,7 +701,9 @@ for title, binfo in book_celebs.items():
         '  </style>\n'
         '</head>\n'
         '<body>\n'
-        '  <nav><a href="' + BASE + '">← 최애의 독서 홈</a></nav>\n'
+        '  <nav><a href="' + BASE + '">← 최애의 독서 홈</a>'
+        + ((' · <a href="' + esc(make_en_book_url(title_en)) + '" hreflang="en">English</a>') if title_en else '')
+        + '</nav>\n'
         '\n'
         '  <h1>' + esc(title) + '</h1>\n'
         '  <p>' + esc(binfo['author']) + ((' · ' + esc(binfo['publisher'])) if binfo['publisher'] else '') + '</p>\n'
@@ -645,6 +721,331 @@ for title, binfo in book_celebs.items():
     book_pages.append((fn, title))
 
 print(f"✅ 책 역방향 페이지 생성: {len(book_pages)}개")
+
+# ── 5.5. /en/ 영문 페이지 생성 ──────────────────────────────────────
+# 영문 메타데이터(검수 완료된 `연예인_en`, `도서명_en`)가 있는 행만 노출.
+# 자동 제안값(`?` 접두사)은 clean_en()에서 None으로 처리되어 노출되지 않음.
+
+os.makedirs('en', exist_ok=True)
+os.makedirs('en/share', exist_ok=True)
+os.makedirs('en/share/book', exist_ok=True)
+
+EN_BASE = BASE + 'en/'
+
+en_celeb_pages = []   # [(slug, name_en, name_ko)]
+en_book_pages  = []   # [(slug, title_en, title_ko)]
+
+# 영문 페이지가 노출될 책 제목 set (≥2 셀럽 + title_en 검수 완료)
+en_books_with_pages = {t for t in book_title_en.keys() if t in books_with_pages}
+
+for name, info in celebs.items():
+    name_en = info.get('name_en')
+    if not name_en:
+        continue
+
+    # 영문 제목이 있는 책만 노출
+    en_books = [b for b in info['books'] if b.get('title_en')]
+    if not en_books:
+        continue
+
+    slug = safe_en_filename(name_en)
+    en_celeb_pages.append((slug, name_en, name))
+
+    page_url = make_en_celeb_url(name_en)
+    ko_url   = make_celeb_url(name)
+    img      = info['img']
+    n        = len(en_books)
+
+    # 책 행 (영문 제목 + 한국어 원제 부기)
+    rows = ''
+    for i, b in enumerate(en_books):
+        cover_td = ''
+        if b['coverUrl'] and b['coverUrl'].startswith('http'):
+            cover_td = ('<img src="' + esc(b['coverUrl']) + '" alt="' + esc(b['title_en'])
+                        + ' cover" width="60" height="85" loading="lazy" style="object-fit:cover">')
+        if b['title'] in en_books_with_pages:
+            t_html = ('<a href="book/' + safe_en_filename(b['title_en']) + '.html">'
+                      + esc(b['title_en']) + '</a>')
+        else:
+            t_html = esc(b['title_en'])
+        t_html += ' <span style="color:#888;font-size:12px">(' + esc(b['title']) + ')</span>'
+        src_html = ''
+        if b['source'] and b['source'].startswith('http'):
+            src_html = '<a href="' + esc(b['source']) + '" rel="nofollow noopener noreferrer" target="_blank">source →</a>'
+        rows += ('    <tr><td>' + str(i+1) + '</td><td>' + cover_td + '</td><td>' + t_html
+                 + '</td><td>' + esc(b['author']) + '</td><td class="src">' + src_html + '</td></tr>\n')
+
+    title_text = name_en + ' — Books Read & Recommended (' + str(n) + ')'
+    desc_text  = (name_en + ' (Korean: ' + esc(name) + ') has read and recommended '
+                  + str(n) + ' books. See the full reading list with sources.')
+
+    json_ld = clean_none({
+        '@context': 'https://schema.org',
+        '@type': 'ProfilePage',
+        'name': title_text,
+        'url': page_url,
+        'inLanguage': 'en',
+        'description': desc_text,
+        'mainEntity': {
+            '@type': 'Person',
+            'name': name_en,
+            'alternateName': name,
+            'image': img if img.startswith('http') else None,
+        },
+        'isPartOf': {'@type': 'WebSite', 'name': 'Favoread', 'url': EN_BASE},
+    })
+    breadcrumb_ld = {
+        '@context': 'https://schema.org',
+        '@type': 'BreadcrumbList',
+        'itemListElement': [
+            {'@type': 'ListItem', 'position': 1, 'name': 'Home', 'item': EN_BASE},
+            {'@type': 'ListItem', 'position': 2, 'name': name_en + "'s Reading List", 'item': page_url},
+        ],
+    }
+
+    page = (
+        '<!DOCTYPE html>\n'
+        '<html lang="en">\n'
+        '<head>\n'
+        '  <meta charset="utf-8">\n'
+        '  <meta name="viewport" content="width=device-width, initial-scale=1">\n'
+        '  <title>' + esc(title_text) + ' | Favoread</title>\n'
+        '  <meta name="description" content="' + esc(desc_text) + '">\n'
+        '  <meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1">\n'
+        '  <meta property="og:title" content="' + esc(title_text) + '">\n'
+        '  <meta property="og:description" content="' + esc(desc_text) + '">\n'
+        '  <meta property="og:image" content="' + esc(img) + '">\n'
+        '  <meta property="og:url" content="' + esc(page_url) + '">\n'
+        '  <meta property="og:type" content="profile">\n'
+        '  <meta property="og:locale" content="en_US">\n'
+        '  <meta property="og:site_name" content="Favoread">\n'
+        '  <meta name="twitter:card" content="summary_large_image">\n'
+        '  <link rel="canonical" href="' + esc(page_url) + '">\n'
+        '  <link rel="alternate" hreflang="en" href="' + esc(page_url) + '">\n'
+        '  <link rel="alternate" hreflang="ko" href="' + esc(ko_url) + '">\n'
+        '  <link rel="alternate" hreflang="x-default" href="' + esc(ko_url) + '">\n'
+        '  <link rel="icon" href="' + BASE + 'favicon.svg" type="image/svg+xml">\n'
+        '  <link rel="icon" href="' + BASE + 'favicon.png" type="image/png" sizes="192x192">\n'
+        '  <script type="application/ld+json">\n  '
+        + json.dumps(json_ld, ensure_ascii=False, indent=2) + '\n  </script>\n'
+        '  <script type="application/ld+json">\n  '
+        + json.dumps(breadcrumb_ld, ensure_ascii=False, indent=2) + '\n  </script>\n'
+        '  <style>\n'
+        '    body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; max-width: 860px; margin: 0 auto; padding: 20px; color: #222; line-height: 1.6; }\n'
+        '    nav { margin-bottom: 16px; font-size: 13px; }\n'
+        '    .celeb-header { display: flex; align-items: center; gap: 20px; margin-bottom: 16px; flex-wrap: wrap; }\n'
+        '    .celeb-img { width: 120px; height: 120px; border-radius: 50%; object-fit: cover; }\n'
+        '    h1 { font-size: 26px; margin: 0 0 8px; }\n'
+        '    h2 { font-size: 19px; margin: 32px 0 12px; padding-bottom: 4px; border-bottom: 2px solid #222; }\n'
+        '    .intro { background: #f8f8f5; border-left: 3px solid #222; padding: 14px 16px; margin: 16px 0 24px; font-size: 15px; }\n'
+        '    table { width: 100%; border-collapse: collapse; font-size: 14px; }\n'
+        '    th, td { border: 1px solid #ddd; padding: 8px 10px; text-align: left; vertical-align: middle; }\n'
+        '    th { background: #f5f5f5; font-size: 13px; }\n'
+        '    a { color: #2563eb; text-decoration: none; }\n'
+        '    a:hover { text-decoration: underline; }\n'
+        '  </style>\n'
+        '</head>\n'
+        '<body>\n'
+        '  <nav><a href="' + EN_BASE + '">← Favoread Home</a> · <a href="' + esc(ko_url) + '" hreflang="ko">한국어</a></nav>\n'
+        '  <header class="celeb-header">\n'
+        '    <img class="celeb-img" src="' + esc(img) + '" alt="' + esc(name_en) + ' profile photo" width="120" height="120">\n'
+        '    <div>\n'
+        '      <h1>' + esc(name_en) + '</h1>\n'
+        '      <p style="margin:0;color:#666;font-size:14px">Korean: <strong>' + esc(name) + '</strong> · '
+        + str(n) + ' book' + ('s' if n != 1 else '') + '</p>\n'
+        '    </div>\n'
+        '  </header>\n'
+        '  <section class="intro">\n'
+        '    <p style="margin:0">' + str(n) + ' book' + ('s' if n != 1 else '')
+        + ' read or recommended by ' + esc(name_en) + ' (' + esc(name)
+        + '), gathered from interviews, YouTube, and SNS sources.</p>\n'
+        '  </section>\n'
+        '  <section>\n'
+        '    <h2>Reading list</h2>\n'
+        '    <table>\n'
+        '      <thead><tr><th>#</th><th>Cover</th><th>Title</th><th>Author</th><th>Source</th></tr></thead>\n'
+        '      <tbody>\n' + rows +
+        '      </tbody>\n'
+        '    </table>\n'
+        '  </section>\n'
+        '  <footer style="margin-top:48px;padding-top:16px;border-top:1px solid #ddd;font-size:13px;color:#666">\n'
+        '    <p>Curated from public Korean-language sources (interviews, YouTube, SNS). Korean original: <a href="'
+        + esc(ko_url) + '" hreflang="ko">' + esc(name) + '</a>.</p>\n'
+        '  </footer>\n'
+        '</body>\n'
+        '</html>'
+    )
+    write_if_changed('en/share/' + slug + '.html', page)
+
+print(f"✅ /en/ 셀럽 페이지: {len(en_celeb_pages)}개")
+
+# 영문 책 페이지 (≥2 셀럽 읽은 책 + title_en 검수 완료)
+for title, t_en in book_title_en.items():
+    if title not in books_with_pages:
+        continue
+    binfo = book_celebs[title]
+    slug = safe_en_filename(t_en)
+    page_url = make_en_book_url(t_en)
+    ko_url   = make_book_url(title)
+    n_celebs = len(binfo['celebs'])
+
+    # 셀럽 목록: name_en이 있으면 영문, 없으면 KO 그대로 + KO 페이지로 링크
+    celeb_items = []
+    for c in sorted(binfo['celebs']):
+        c_en = celebs[c].get('name_en')
+        if c_en:
+            celeb_items.append('    <li><a href="../' + safe_en_filename(c_en) + '.html">'
+                               + esc(c_en) + '</a> <span style="color:#888;font-size:12px">('
+                               + esc(c) + ')</span></li>')
+        else:
+            celeb_items.append('    <li><a href="' + esc(make_celeb_url(c)) + '" hreflang="ko">'
+                               + esc(c) + '</a></li>')
+    celeb_list = '\n'.join(celeb_items)
+
+    cover_html = ''
+    if binfo['coverUrl'] and binfo['coverUrl'].startswith('http'):
+        cover_html = ('  <img src="' + esc(binfo['coverUrl']) + '" alt="' + esc(t_en)
+                      + ' cover" width="200" height="280" loading="lazy" '
+                      'style="object-fit:cover; margin:16px 0">\n')
+
+    title_text = t_en + ' — Read by ' + str(n_celebs) + ' Korean Celebrities'
+    desc_text  = (t_en + ' (Korean: ' + esc(title) + ') was read by ' + str(n_celebs)
+                  + ' Korean celebrities, idols, and actors.')
+
+    json_ld = clean_none({
+        '@context': 'https://schema.org',
+        '@type': 'Book',
+        'name': t_en,
+        'alternateName': title,
+        'url': page_url,
+        'inLanguage': 'en',
+        'description': str(n_celebs) + ' Korean celebrities have read this book.',
+        'author': {'@type': 'Person', 'name': binfo['author']} if binfo['author'].strip() else None,
+        'publisher': {'@type': 'Organization', 'name': binfo['publisher']} if binfo['publisher'].strip() else None,
+        'image': binfo['coverUrl'] if binfo['coverUrl'].startswith('http') else None,
+    })
+
+    page = (
+        '<!DOCTYPE html>\n'
+        '<html lang="en">\n'
+        '<head>\n'
+        '  <meta charset="utf-8">\n'
+        '  <meta name="viewport" content="width=device-width, initial-scale=1">\n'
+        '  <title>' + esc(title_text) + ' | Favoread</title>\n'
+        '  <meta name="description" content="' + esc(desc_text) + '">\n'
+        '  <meta name="robots" content="index, follow, max-image-preview:large">\n'
+        '  <meta property="og:title" content="' + esc(title_text) + '">\n'
+        '  <meta property="og:description" content="' + esc(desc_text) + '">\n'
+        '  <meta property="og:url" content="' + esc(page_url) + '">\n'
+        '  <meta property="og:type" content="book">\n'
+        '  <meta property="og:locale" content="en_US">\n'
+        + (('  <meta property="og:image" content="' + esc(binfo['coverUrl']) + '">\n')
+           if binfo['coverUrl'].startswith('http') else '')
+        + '  <link rel="canonical" href="' + esc(page_url) + '">\n'
+        '  <link rel="alternate" hreflang="en" href="' + esc(page_url) + '">\n'
+        '  <link rel="alternate" hreflang="ko" href="' + esc(ko_url) + '">\n'
+        '  <link rel="alternate" hreflang="x-default" href="' + esc(ko_url) + '">\n'
+        '  <link rel="icon" href="' + BASE + 'favicon.svg" type="image/svg+xml">\n'
+        '  <script type="application/ld+json">\n  '
+        + json.dumps(json_ld, ensure_ascii=False, indent=2) + '\n  </script>\n'
+        '  <style>\n'
+        '    body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; max-width: 800px; margin: 0 auto; padding: 20px; color: #333; }\n'
+        '    ul { line-height: 2; }\n'
+        '    a { color: #2563eb; text-decoration: none; }\n'
+        '    a:hover { text-decoration: underline; }\n'
+        '  </style>\n'
+        '</head>\n'
+        '<body>\n'
+        '  <nav><a href="' + EN_BASE + '">← Favoread Home</a> · <a href="' + esc(ko_url) + '" hreflang="ko">한국어</a></nav>\n'
+        '  <h1>' + esc(t_en) + '</h1>\n'
+        '  <p style="color:#666">Korean original: <strong>' + esc(title) + '</strong>'
+        + ((' · ' + esc(binfo['author'])) if binfo['author'].strip() else '')
+        + ((' · ' + esc(binfo['publisher'])) if binfo['publisher'].strip() else '')
+        + '</p>\n'
+        + cover_html
+        + '  <h2>Read by ' + str(n_celebs) + ' Korean celebrities</h2>\n'
+        '  <ul>\n' + celeb_list + '\n  </ul>\n'
+        '  <p><a href="' + EN_BASE + '">← Back to Favoread</a></p>\n'
+        '</body>\n'
+        '</html>'
+    )
+    write_if_changed('en/share/book/' + slug + '.html', page)
+    en_book_pages.append((slug, t_en, title))
+
+print(f"✅ /en/ 책 페이지: {len(en_book_pages)}개")
+
+# /en/index.html — 영문 랜딩 페이지
+en_celeb_pages.sort(key=lambda x: x[1].lower())  # name_en 알파벳 정렬
+
+en_celeb_links = '\n'.join(
+    '    <li><a href="share/' + slug + '.html">' + esc(name_en)
+    + '</a> <span style="color:#888;font-size:12px">(' + esc(name_ko) + ')</span></li>'
+    for slug, name_en, name_ko in en_celeb_pages
+)
+en_book_links = '\n'.join(
+    '    <li><a href="share/book/' + slug + '.html">' + esc(t_en)
+    + '</a> <span style="color:#888;font-size:12px">(' + esc(t_ko) + ')</span></li>'
+    for slug, t_en, t_ko in sorted(en_book_pages, key=lambda x: x[1].lower())
+)
+
+en_index = (
+    '<!DOCTYPE html>\n'
+    '<html lang="en">\n'
+    '<head>\n'
+    '  <meta charset="utf-8">\n'
+    '  <meta name="viewport" content="width=device-width, initial-scale=1">\n'
+    '  <title>Favoread — Books Read by Korean Celebrities, Idols & Actors</title>\n'
+    '  <meta name="description" content="A curated archive of books read and recommended by Korean celebrities, K-pop idols, and actors. Sourced from interviews, YouTube, and SNS.">\n'
+    '  <meta name="robots" content="index, follow, max-image-preview:large">\n'
+    '  <meta property="og:title" content="Favoread — Books Read by Korean Celebrities">\n'
+    '  <meta property="og:description" content="What are Korean celebrities, idols, and actors reading? See their full reading lists.">\n'
+    '  <meta property="og:url" content="' + EN_BASE + '">\n'
+    '  <meta property="og:type" content="website">\n'
+    '  <meta property="og:locale" content="en_US">\n'
+    '  <meta property="og:image" content="' + BASE + 'og-image.jpg">\n'
+    '  <link rel="canonical" href="' + EN_BASE + '">\n'
+    '  <link rel="alternate" hreflang="en" href="' + EN_BASE + '">\n'
+    '  <link rel="alternate" hreflang="ko" href="' + BASE + '">\n'
+    '  <link rel="alternate" hreflang="x-default" href="' + BASE + '">\n'
+    '  <link rel="icon" href="' + BASE + 'favicon.svg" type="image/svg+xml">\n'
+    '  <link rel="icon" href="' + BASE + 'favicon.png" type="image/png" sizes="192x192">\n'
+    '  <style>\n'
+    '    body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; max-width: 860px; margin: 0 auto; padding: 20px; color: #222; line-height: 1.6; }\n'
+    '    nav { font-size: 13px; margin-bottom: 16px; }\n'
+    '    h1 { font-size: 30px; margin-bottom: 8px; }\n'
+    '    h2 { font-size: 20px; margin: 32px 0 12px; padding-bottom: 4px; border-bottom: 2px solid #222; }\n'
+    '    .intro { background: #f8f8f5; border-left: 3px solid #222; padding: 14px 16px; margin: 16px 0 24px; }\n'
+    '    ul { columns: 2; column-gap: 24px; padding-left: 20px; }\n'
+    '    @media (max-width: 600px) { ul { columns: 1; } }\n'
+    '    li { break-inside: avoid; }\n'
+    '    a { color: #2563eb; text-decoration: none; }\n'
+    '    a:hover { text-decoration: underline; }\n'
+    '  </style>\n'
+    '</head>\n'
+    '<body>\n'
+    '  <nav><a href="' + BASE + '" hreflang="ko">한국어</a></nav>\n'
+    '  <h1>Favoread</h1>\n'
+    '  <p style="color:#666;margin-top:0">Books read by Korean celebrities, K-pop idols, and actors</p>\n'
+    '  <section class="intro">\n'
+    '    <p style="margin:0">A curated archive of reading lists from Korean celebrities — gathered from interviews, YouTube videos, and SNS posts. Names follow IMDb / Kpop Wiki conventions; book titles use the official English edition where available.</p>\n'
+    '  </section>\n'
+    '  <section>\n'
+    '    <h2>Celebrities (' + str(len(en_celeb_pages)) + ')</h2>\n'
+    + ('    <ul>\n' + en_celeb_links + '\n    </ul>\n' if en_celeb_links
+       else '    <p style="color:#888">No English profiles available yet. <a href="' + BASE + '" hreflang="ko">Browse the full Korean archive →</a></p>\n')
+    + '  </section>\n'
+    + ('  <section>\n'
+       '    <h2>Books read by 2+ celebrities (' + str(len(en_book_pages)) + ')</h2>\n'
+       '    <ul>\n' + en_book_links + '\n    </ul>\n'
+       '  </section>\n' if en_book_links else '')
+    + '  <footer style="margin-top:48px;padding-top:16px;border-top:1px solid #ddd;font-size:13px;color:#666">\n'
+    '    <p>This is an English-language gateway to <a href="' + BASE + '" hreflang="ko">최애의 독서</a>, a Korean reading-list archive. The full archive (' + str(len(celebs)) + ' celebrities) is available in Korean.</p>\n'
+    '  </footer>\n'
+    '</body>\n'
+    '</html>'
+)
+write_if_changed('en/index.html', en_index)
+print(f"✅ /en/index.html 생성")
 
 # ── 6. 랭킹 페이지 (share/ranking.html) ─────────────────────────────
 
@@ -818,6 +1219,21 @@ for f in os.listdir('share/book'):
     if os.path.isfile(p) and f.endswith('.html') and p not in generated_book_paths:
         os.remove(p)
         removed += 1
+
+# /en/ 영문 페이지 고아 정리
+generated_en_celeb_paths = {'en/share/' + slug + '.html' for slug, _, _ in en_celeb_pages}
+generated_en_book_paths  = {'en/share/book/' + slug + '.html' for slug, _, _ in en_book_pages}
+keep_en_top = generated_en_celeb_paths
+for f in os.listdir('en/share'):
+    p = 'en/share/' + f
+    if os.path.isfile(p) and f.endswith('.html') and p not in keep_en_top:
+        os.remove(p)
+        removed += 1
+for f in os.listdir('en/share/book'):
+    p = 'en/share/book/' + f
+    if os.path.isfile(p) and f.endswith('.html') and p not in generated_en_book_paths:
+        os.remove(p)
+        removed += 1
 print(f"✅ 고아 share 파일 정리: {removed}개 삭제")
 
 # ── 7. sitemap.xml 생성 (이미지 사이트맵 포함) ──────────────────────
@@ -914,11 +1330,44 @@ for fn, title in book_pages:
 
     lines.append('  </url>')
 
+# /en/ 영문 페이지 (영문 데이터가 있을 때만)
+if en_celeb_pages or en_book_pages:
+    en_index_lastmod = lastmod_for('en/index.html')
+    lines += [
+        '  <url>',
+        '    <loc>' + EN_BASE + '</loc>',
+        '    <lastmod>' + en_index_lastmod + '</lastmod>',
+        '    <changefreq>weekly</changefreq>',
+        '    <priority>0.7</priority>',
+        '  </url>',
+    ]
+    for slug, name_en, name_ko in en_celeb_pages:
+        url = make_en_celeb_url(name_en)
+        lines += [
+            '  <url>',
+            '    <loc>' + esc_xml(url) + '</loc>',
+            '    <lastmod>' + lastmod_for('en/share/' + slug + '.html') + '</lastmod>',
+            '    <changefreq>weekly</changefreq>',
+            '    <priority>0.6</priority>',
+            '  </url>',
+        ]
+    for slug, t_en, t_ko in en_book_pages:
+        url = make_en_book_url(t_en)
+        lines += [
+            '  <url>',
+            '    <loc>' + esc_xml(url) + '</loc>',
+            '    <lastmod>' + lastmod_for('en/share/book/' + slug + '.html') + '</lastmod>',
+            '    <changefreq>weekly</changefreq>',
+            '    <priority>0.5</priority>',
+            '  </url>',
+        ]
+
 lines.append('</urlset>')
 
 write_if_changed('sitemap.xml', '\n'.join(lines) + '\n')
 
-total_urls = 1 + 1 + len(celebs) + len(book_pages)
+total_urls = (1 + 1 + len(celebs) + len(book_pages)
+              + (1 + len(en_celeb_pages) + len(en_book_pages) if en_celeb_pages or en_book_pages else 0))
 print(f"✅ sitemap.xml 생성: {total_urls}개 URL (이미지 사이트맵 포함)")
 
 # ── 8. robots.txt 생성 (사이트맵 위치 명시) ─────────────────────────
