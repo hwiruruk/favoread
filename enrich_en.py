@@ -2,16 +2,19 @@
 data.csv의 영문 메타데이터(`연예인_en`, `도서명_en`)를 자동/수동 하이브리드로 채우는 스크립트.
 
 워크플로우:
-  1. 로컬에서 `python3 enrich_en.py` 실행
-  2. 비어있는 `도서명_en`에 대해 Google Books → Open Library 순으로 영문 제목 탐색
-  3. 자동 제안값은 `?` 접두사를 붙여 사람이 검수해야 함을 명시 (예: `?The Vegetarian`)
-  4. 사람이 CSV를 열어 검수 후 `?` 제거 → 빌드시 정식 제목으로 사용
-  5. `연예인_en`은 자동화 정확도가 낮아 자동 채움 안 함 (수동 입력)
+  1. (로컬 또는 GitHub Actions에서) `python3 enrich_en.py` 실행
+  2. 비어있는 `도서명_en` → Google Books → Open Library 순으로 영문판 제목 탐색
+  3. 비어있는 `연예인_en` → 한국어 Wikipedia → Wikidata 영문 라벨 조회
+  4. 자동 제안값은 `?` 접두사를 붙여 사람 검수가 필요함을 명시 (예: `?The Vegetarian`)
+  5. 검수 후 `?` 제거 → 빌드시 정식 값으로 사용
 
 옵션:
-  --limit N    : 최대 N개 행만 처리 (기본 무제한)
-  --dry-run    : CSV에 쓰지 않고 결과만 출력
-  --refresh    : `?` 접두사 붙은 기존 제안도 다시 조회
+  --limit N         : 책 제목 최대 처리 행 수 (0=무제한)
+  --celeb-limit N   : 셀럽 이름 최대 처리 행 수 (0=무제한)
+  --dry-run         : CSV에 쓰지 않고 결과만 출력
+  --refresh         : `?` 접두사 붙은 기존 제안도 다시 조회
+  --skip-books      : 책 제목 조회 건너뛰기
+  --skip-celebs     : 셀럽 이름 조회 건너뛰기
 
 빈 칸으로 두면 해당 행은 영문 페이지에 노출되지 않습니다.
 """
@@ -19,6 +22,8 @@ import csv, json, sys, time, urllib.parse, urllib.request, argparse
 
 GOOGLE_BOOKS_API = "https://www.googleapis.com/books/v1/volumes"
 OPEN_LIBRARY_API = "https://openlibrary.org/search.json"
+KO_WIKI_API      = "https://ko.wikipedia.org/w/api.php"
+WIKIDATA_API     = "https://www.wikidata.org/w/api.php"
 
 
 def http_get_json(url, timeout=10):
@@ -91,12 +96,78 @@ def find_en_title(title_ko, author_ko):
     return None, None
 
 
+def lookup_celeb_en(name_ko):
+    """한국어 위키피디아에서 인물 페이지 → Wikidata Q-id → 영문 라벨.
+
+    한국 연예인은 대부분 한국어 위키 페이지가 있고, 거기에 Wikidata link가 걸려있음.
+    그룹 표기가 포함된 경우 (예: '아이린(레드벨벳)') 괄호 부분 제거 후 시도.
+    """
+    # 그룹/괄호 제거: '아이린(레드벨벳)' → '아이린', 'V(BTS)' → 'V'
+    base_name = name_ko.split('(')[0].strip()
+
+    # 1. 한국어 Wikipedia에서 페이지 검색 (정확 매칭)
+    params = {
+        'action': 'query',
+        'format': 'json',
+        'titles': base_name,
+        'prop': 'pageprops',
+        'redirects': '1',
+    }
+    url = KO_WIKI_API + '?' + urllib.parse.urlencode(params)
+    try:
+        data = http_get_json(url)
+    except Exception as e:
+        return None, f'wiki error: {e}'
+
+    pages = (data.get('query') or {}).get('pages') or {}
+    qid = None
+    for _pid, p in pages.items():
+        pp = p.get('pageprops') or {}
+        if pp.get('wikibase_item'):
+            qid = pp['wikibase_item']
+            break
+
+    if not qid:
+        return None, 'no wikidata link'
+
+    # 2. Wikidata에서 영문 라벨 조회
+    params2 = {
+        'action': 'wbgetentities',
+        'format': 'json',
+        'ids': qid,
+        'props': 'labels',
+        'languages': 'en',
+    }
+    url2 = WIKIDATA_API + '?' + urllib.parse.urlencode(params2)
+    try:
+        data2 = http_get_json(url2)
+    except Exception as e:
+        return None, f'wikidata error: {e}'
+
+    entity = (data2.get('entities') or {}).get(qid) or {}
+    labels = entity.get('labels') or {}
+    en_label = (labels.get('en') or {}).get('value')
+    if not en_label:
+        return None, 'no en label'
+
+    # 그룹 정보를 괄호로 부기 (원래 한국어에 있었으면)
+    if '(' in name_ko and ')' in name_ko:
+        group = name_ko[name_ko.find('(')+1:name_ko.rfind(')')].strip()
+        if group and group not in en_label:
+            en_label = en_label + ' (' + group + ')'
+
+    return en_label, 'wikidata'
+
+
 def main():
     ap = argparse.ArgumentParser()
-    ap.add_argument('--limit', type=int, default=0, help='최대 처리 행 수 (0=무제한)')
+    ap.add_argument('--limit', type=int, default=0, help='책 제목 최대 처리 행 수 (0=무제한)')
+    ap.add_argument('--celeb-limit', type=int, default=0, help='셀럽 이름 최대 처리 수 (0=무제한)')
     ap.add_argument('--dry-run', action='store_true')
     ap.add_argument('--refresh', action='store_true', help='?접두사 제안도 재조회')
     ap.add_argument('--sleep', type=float, default=0.3, help='요청 간격(초)')
+    ap.add_argument('--skip-books', action='store_true', help='책 제목 조회 건너뛰기')
+    ap.add_argument('--skip-celebs', action='store_true', help='셀럽 이름 조회 건너뛰기')
     args = ap.parse_args()
 
     with open('data.csv', encoding='utf-8', newline='') as f:
@@ -105,6 +176,7 @@ def main():
     headers = rows[0]
     try:
         col_name   = headers.index('연예인')
+        col_name_en = headers.index('연예인_en')
         col_title  = headers.index('도서명')
         col_title_en = headers.index('도서명_en')
         col_author = headers.index('저자')
@@ -113,53 +185,97 @@ def main():
         print(f"  현재 헤더: {headers}")
         sys.exit(1)
 
-    processed = filled = skipped = 0
-    seen_titles = {}  # 중복 책 제목은 첫 결과 재사용
+    # ── 1. 책 제목 영문 조회 ──────────────────────────────────────
+    book_processed = book_filled = book_skipped = 0
+    seen_titles = {}
 
-    for i, row in enumerate(rows[1:], start=1):
-        while len(row) < len(headers):
-            row.append('')
+    if not args.skip_books:
+        print("\n=== 책 제목 (도서명_en) ===")
+        for i, row in enumerate(rows[1:], start=1):
+            while len(row) < len(headers):
+                row.append('')
 
-        title_ko  = row[col_title].strip()
-        author_ko = row[col_author].strip()
-        existing  = row[col_title_en].strip()
+            title_ko  = row[col_title].strip()
+            author_ko = row[col_author].strip()
+            existing  = row[col_title_en].strip()
 
-        if not title_ko:
-            continue
+            if not title_ko:
+                continue
 
-        # 이미 사람이 확정한 값(? 없음)은 건드리지 않음
-        if existing and not existing.startswith('?'):
-            skipped += 1
-            continue
-        # ? 제안값은 --refresh일 때만 다시 조회
-        if existing.startswith('?') and not args.refresh:
-            skipped += 1
-            continue
+            if existing and not existing.startswith('?'):
+                book_skipped += 1
+                continue
+            if existing.startswith('?') and not args.refresh:
+                book_skipped += 1
+                continue
 
-        if args.limit and processed >= args.limit:
-            break
+            if args.limit and book_processed >= args.limit:
+                break
 
-        # 같은 책 제목+저자 조합은 캐시
-        cache_key = (title_ko, author_ko)
-        if cache_key in seen_titles:
-            t, src = seen_titles[cache_key]
-        else:
-            t, src = find_en_title(title_ko, author_ko)
-            seen_titles[cache_key] = (t, src)
-            time.sleep(args.sleep)
+            cache_key = (title_ko, author_ko)
+            if cache_key in seen_titles:
+                t, src = seen_titles[cache_key]
+            else:
+                t, src = find_en_title(title_ko, author_ko)
+                seen_titles[cache_key] = (t, src)
+                time.sleep(args.sleep)
 
-        processed += 1
-        if t:
-            row[col_title_en] = '?' + t
-            filled += 1
-            print(f"  [{i:4d}] {title_ko} → ?{t}  ({src})")
-        else:
-            print(f"  [{i:4d}] {title_ko} → (no match)")
+            book_processed += 1
+            if t:
+                row[col_title_en] = '?' + t
+                book_filled += 1
+                print(f"  [{i:4d}] {title_ko} → ?{t}  ({src})")
+            else:
+                print(f"  [{i:4d}] {title_ko} → (no match)")
 
-    print(f"\n처리: {processed}, 채움: {filled}, 건너뜀(기존값): {skipped}")
+        print(f"책 제목: 처리 {book_processed}, 채움 {book_filled}, 건너뜀 {book_skipped}")
+
+    # ── 2. 셀럽 영문명 조회 (Wikipedia/Wikidata) ──────────────────
+    celeb_processed = celeb_filled = celeb_skipped = 0
+    seen_celebs = {}  # name_ko → (name_en, src)
+
+    if not args.skip_celebs:
+        print("\n=== 셀럽 이름 (연예인_en) ===")
+        # 동일 셀럽이 여러 행에 등장하므로, 한 번 조회한 결과를 모든 행에 적용
+        for i, row in enumerate(rows[1:], start=1):
+            while len(row) < len(headers):
+                row.append('')
+
+            name_ko  = row[col_name].strip()
+            existing = row[col_name_en].strip()
+
+            if not name_ko:
+                continue
+
+            if existing and not existing.startswith('?'):
+                celeb_skipped += 1
+                continue
+            if existing.startswith('?') and not args.refresh:
+                celeb_skipped += 1
+                continue
+
+            if args.celeb_limit and celeb_processed >= args.celeb_limit:
+                break
+
+            if name_ko in seen_celebs:
+                en, src = seen_celebs[name_ko]
+            else:
+                en, src = lookup_celeb_en(name_ko)
+                seen_celebs[name_ko] = (en, src)
+                time.sleep(args.sleep)
+
+            celeb_processed += 1
+            if en:
+                row[col_name_en] = '?' + en
+                celeb_filled += 1
+                print(f"  [{i:4d}] {name_ko} → ?{en}  ({src})")
+            else:
+                print(f"  [{i:4d}] {name_ko} → (no match: {src})")
+
+        print(f"셀럽 이름: 처리 {celeb_processed}, 채움 {celeb_filled}, 건너뜀 {celeb_skipped}")
 
     if args.dry_run:
-        print("--dry-run: data.csv 변경 안 함")
+        print("\n--dry-run: data.csv 변경 안 함")
         return
 
     with open('data.csv', 'w', encoding='utf-8', newline='') as f:
@@ -169,7 +285,7 @@ def main():
             while len(r) < len(headers):
                 r.append('')
             w.writerow(r)
-    print(f"✅ data.csv 업데이트 완료. ?접두사 제안값을 검수 후 ? 를 제거하세요.")
+    print(f"\n✅ data.csv 업데이트 완료. ?접두사 제안값을 검수 후 ? 를 제거하세요.")
 
 
 if __name__ == '__main__':
