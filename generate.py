@@ -138,7 +138,7 @@ with open("data.csv", encoding="utf-8") as f:
         'src':     find_col(['출처', '근거'], 4),
         'link':    find_col(['도서 정보', '링크', 'url'], 5),
         'cover':   find_col(['도서 이미지', '표지'], 6),
-        'img':     find_col(['연예인이미지', 'photo', '이미지주소'], 7),
+        'img':     find_col(['연예인 이미지', '연예인이미지', 'photo', '이미지주소'], 7),
         'comment': find_col(['코멘트', '한마디'], 8),
         'name_en':  find_exact('연예인_en'),
         'title_en': find_exact('도서명_en'),
@@ -501,30 +501,36 @@ for name, info in celebs.items():
         '  </script>\n'
         '\n'
         '  <style>\n'
-        '    body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; max-width: 860px; margin: 0 auto; padding: 20px; color: #222; line-height: 1.6; }\n'
-        '    nav { margin-bottom: 16px; font-size: 13px; }\n'
+        '    body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; max-width: 860px; margin: 0 auto; padding: 20px; color: #222; line-height: 1.6; background: #fcfaf5; }\n'
+        '    .lang-toggle { position: absolute; top: 16px; right: 16px; display: flex; gap: 6px; }\n'
+        '    .lang-btn { padding: 6px 12px; border: 2px solid #000; background: #fff; box-shadow: 2px 2px 0 0 #000; font-size: 12px; font-weight: 700; text-decoration: none; color: #000; transition: transform .1s, box-shadow .1s; }\n'
+        '    .lang-btn:hover { transform: translate(-1px,-1px); box-shadow: 3px 3px 0 0 #000; background: #fde047; text-decoration: none; }\n'
+        '    .lang-btn.active { background: #000; color: #fff; }\n'
+        '    nav { margin: 50px 0 16px; font-size: 13px; }\n'
         '    .celeb-header { display: flex; align-items: center; gap: 20px; margin-bottom: 16px; flex-wrap: wrap; }\n'
         '    .celeb-photo-wrap { position: relative; flex-shrink: 0; }\n'
-        '    .celeb-img { width: 120px; height: 120px; border-radius: 50%; object-fit: cover; display: block; }\n'
+        '    .celeb-img { width: 120px; height: 120px; border-radius: 50%; object-fit: cover; display: block; border: 2px solid #000; }\n'
         '    .img-credit { position: absolute; bottom: 0; right: 0; font-size: 10px; line-height: 1; padding: 2px 4px; background: rgba(255,255,255,0.85); border: 1px solid #ccc; border-radius: 999px; text-decoration: none; color: #555; opacity: 0.55; transition: opacity .15s; }\n'
         '    .img-credit:hover { opacity: 1; }\n'
-        '    h1 { font-size: 26px; margin: 0 0 8px; }\n'
-        '    h2 { font-size: 19px; margin: 32px 0 12px; padding-bottom: 4px; border-bottom: 2px solid #222; }\n'
-        '    .intro { background: #f8f8f5; border-left: 3px solid #222; padding: 14px 16px; margin: 16px 0 24px; font-size: 15px; }\n'
-        '    table { width: 100%; border-collapse: collapse; font-size: 14px; }\n'
-        '    th, td { border: 1px solid #ddd; padding: 8px 10px; text-align: left; vertical-align: middle; }\n'
-        '    th { background: #f5f5f5; font-size: 13px; }\n'
+        '    h1 { font-size: 26px; margin: 0 0 8px; font-weight: 900; }\n'
+        '    h2 { font-size: 19px; margin: 32px 0 12px; padding-bottom: 4px; border-bottom: 2px solid #000; font-weight: 800; }\n'
+        '    .intro { background: #fff; border: 2px solid #000; box-shadow: 4px 4px 0 0 #000; padding: 14px 16px; margin: 16px 0 24px; font-size: 15px; }\n'
+        '    table { width: 100%; border-collapse: collapse; font-size: 14px; background: #fff; border: 2px solid #000; }\n'
+        '    th, td { border: 1px solid #000; padding: 8px 10px; text-align: left; vertical-align: middle; }\n'
+        '    th { background: #fde047; font-size: 13px; font-weight: 800; }\n'
         '    td.src a { font-size: 12px; }\n'
         '    a { color: #2563eb; text-decoration: none; }\n'
         '    a:hover { text-decoration: underline; }\n'
-        '    .related { margin-top: 24px; padding: 14px 16px; background: #fff8e7; border: 1px solid #f0d878; font-size: 14px; }\n'
-        '    footer { margin-top: 48px; padding-top: 16px; border-top: 1px solid #ddd; font-size: 13px; color: #666; }\n'
+        '    .related { margin-top: 24px; padding: 14px 16px; background: #fff8e7; border: 2px solid #000; box-shadow: 4px 4px 0 0 #000; font-size: 14px; }\n'
+        '    footer { margin-top: 48px; padding-top: 16px; border-top: 2px solid #000; font-size: 13px; color: #666; }\n'
         '  </style>\n'
         '</head>\n'
         '<body>\n'
-        '  <nav><a href="' + BASE + '">← 최애의 독서 홈</a> · <a href="' + BASE + 'share/ranking.html">셀럽 독서 랭킹</a>'
-        + ((' · <a href="' + esc(make_en_celeb_url(name_en)) + '" hreflang="en">English</a>') if name_en else '')
-        + '</nav>\n'
+        + (('  <div class="lang-toggle">\n'
+            '    <span class="lang-btn active">한국어</span>\n'
+            '    <a class="lang-btn" href="' + esc(make_en_celeb_url(name_en)) + '" hreflang="en">EN</a>\n'
+            '  </div>\n') if name_en else '')
+        + '  <nav><a href="' + BASE + '">← 최애의 독서 홈</a> · <a href="' + BASE + 'share/ranking.html">셀럽 독서 랭킹</a></nav>\n'
         '\n'
         '  <header class="celeb-header">\n'
         '    <div class="celeb-photo-wrap">\n'
@@ -695,15 +701,25 @@ for title, binfo in book_celebs.items():
         '  </script>\n'
         '\n'
         '  <style>\n'
-        '    body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; max-width: 800px; margin: 0 auto; padding: 20px; color: #333; }\n'
-        '    ul { line-height: 2; }\n'
-        '    a { color: #2563eb; }\n'
+        '    body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; max-width: 800px; margin: 0 auto; padding: 20px; color: #222; background: #fcfaf5; line-height: 1.6; }\n'
+        '    .lang-toggle { position: absolute; top: 16px; right: 16px; display: flex; gap: 6px; }\n'
+        '    .lang-btn { padding: 6px 12px; border: 2px solid #000; background: #fff; box-shadow: 2px 2px 0 0 #000; font-size: 12px; font-weight: 700; text-decoration: none; color: #000; transition: transform .1s, box-shadow .1s; }\n'
+        '    .lang-btn:hover { transform: translate(-1px,-1px); box-shadow: 3px 3px 0 0 #000; background: #fde047; text-decoration: none; }\n'
+        '    .lang-btn.active { background: #000; color: #fff; }\n'
+        '    nav { margin: 50px 0 16px; font-size: 13px; }\n'
+        '    h1 { font-size: 28px; margin: 0 0 6px; font-weight: 900; }\n'
+        '    h2 { font-size: 19px; margin: 32px 0 12px; padding-bottom: 4px; border-bottom: 2px solid #000; font-weight: 800; }\n'
+        '    ul { line-height: 2; padding-left: 22px; }\n'
+        '    a { color: #2563eb; text-decoration: none; }\n'
+        '    a:hover { text-decoration: underline; }\n'
         '  </style>\n'
         '</head>\n'
         '<body>\n'
-        '  <nav><a href="' + BASE + '">← 최애의 독서 홈</a>'
-        + ((' · <a href="' + esc(make_en_book_url(title_en)) + '" hreflang="en">English</a>') if title_en else '')
-        + '</nav>\n'
+        + (('  <div class="lang-toggle">\n'
+            '    <span class="lang-btn active">한국어</span>\n'
+            '    <a class="lang-btn" href="' + esc(make_en_book_url(title_en)) + '" hreflang="en">EN</a>\n'
+            '  </div>\n') if title_en else '')
+        + '  <nav><a href="' + BASE + '">← 최애의 독서 홈</a></nav>\n'
         '\n'
         '  <h1>' + esc(title) + '</h1>\n'
         '  <p>' + esc(binfo['author']) + ((' · ' + esc(binfo['publisher'])) if binfo['publisher'] else '') + '</p>\n'
@@ -831,33 +847,41 @@ for name, info in celebs.items():
         '  <script type="application/ld+json">\n  '
         + json.dumps(breadcrumb_ld, ensure_ascii=False, indent=2) + '\n  </script>\n'
         '  <style>\n'
-        '    body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; max-width: 860px; margin: 0 auto; padding: 20px; color: #222; line-height: 1.6; }\n'
-        '    nav { margin-bottom: 16px; font-size: 13px; }\n'
+        '    body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; max-width: 860px; margin: 0 auto; padding: 20px; color: #222; line-height: 1.6; background: #fcfaf5; }\n'
+        '    .lang-toggle { position: absolute; top: 16px; right: 16px; display: flex; gap: 6px; }\n'
+        '    .lang-btn { padding: 6px 12px; border: 2px solid #000; background: #fff; box-shadow: 2px 2px 0 0 #000; font-size: 12px; font-weight: 700; text-decoration: none; color: #000; transition: transform .1s, box-shadow .1s; }\n'
+        '    .lang-btn:hover { transform: translate(-1px,-1px); box-shadow: 3px 3px 0 0 #000; background: #fde047; text-decoration: none; }\n'
+        '    .lang-btn.active { background: #000; color: #fff; }\n'
+        '    nav { margin: 50px 0 16px; font-size: 13px; }\n'
         '    .celeb-header { display: flex; align-items: center; gap: 20px; margin-bottom: 16px; flex-wrap: wrap; }\n'
-        '    .celeb-img { width: 120px; height: 120px; border-radius: 50%; object-fit: cover; }\n'
-        '    h1 { font-size: 26px; margin: 0 0 8px; }\n'
-        '    h2 { font-size: 19px; margin: 32px 0 12px; padding-bottom: 4px; border-bottom: 2px solid #222; }\n'
-        '    .intro { background: #f8f8f5; border-left: 3px solid #222; padding: 14px 16px; margin: 16px 0 24px; font-size: 15px; }\n'
-        '    table { width: 100%; border-collapse: collapse; font-size: 14px; }\n'
-        '    th, td { border: 1px solid #ddd; padding: 8px 10px; text-align: left; vertical-align: middle; }\n'
-        '    th { background: #f5f5f5; font-size: 13px; }\n'
+        '    .celeb-img { width: 120px; height: 120px; border-radius: 50%; object-fit: cover; border: 2px solid #000; }\n'
+        '    h1 { font-size: 28px; margin: 0 0 8px; font-weight: 900; }\n'
+        '    h2 { font-size: 19px; margin: 32px 0 12px; padding-bottom: 4px; border-bottom: 2px solid #000; font-weight: 800; }\n'
+        '    .intro { background: #fff; border: 2px solid #000; box-shadow: 4px 4px 0 0 #000; padding: 14px 16px; margin: 16px 0 24px; font-size: 15px; }\n'
+        '    table { width: 100%; border-collapse: collapse; font-size: 14px; background: #fff; border: 2px solid #000; }\n'
+        '    th, td { border: 1px solid #000; padding: 8px 10px; text-align: left; vertical-align: middle; }\n'
+        '    th { background: #fde047; font-size: 13px; font-weight: 800; }\n'
         '    a { color: #2563eb; text-decoration: none; }\n'
         '    a:hover { text-decoration: underline; }\n'
+        '    footer { margin-top: 48px; padding-top: 16px; border-top: 2px solid #000; font-size: 13px; color: #666; }\n'
         '  </style>\n'
         '</head>\n'
         '<body>\n'
-        '  <nav><a href="' + EN_BASE + '">← Favoread Home</a> · <a href="' + esc(ko_url) + '" hreflang="ko">한국어</a></nav>\n'
+        '  <div class="lang-toggle">\n'
+        '    <a class="lang-btn" href="' + esc(ko_url) + '" hreflang="ko">한국어</a>\n'
+        '    <span class="lang-btn active">EN</span>\n'
+        '  </div>\n'
+        '  <nav><a href="' + EN_BASE + '">← Favoread Home</a></nav>\n'
         '  <header class="celeb-header">\n'
         '    <img class="celeb-img" src="' + esc(img) + '" alt="' + esc(name_en) + ' profile photo" width="120" height="120">\n'
         '    <div>\n'
-        '      <h1>' + esc(name_en) + '</h1>\n'
-        '      <p style="margin:0;color:#666;font-size:14px">Korean: <strong>' + esc(name) + '</strong> · '
-        + str(n) + ' book' + ('s' if n != 1 else '') + '</p>\n'
+        '      <h1>' + esc(name_en) + ' <span style="font-weight:400;color:#666;font-size:18px">(' + esc(name) + ')</span></h1>\n'
+        '      <p style="margin:0;color:#666;font-size:14px">' + str(n) + ' book' + ('s' if n != 1 else '') + ' read &amp; recommended</p>\n'
         '    </div>\n'
         '  </header>\n'
         '  <section class="intro">\n'
         '    <p style="margin:0">' + str(n) + ' book' + ('s' if n != 1 else '')
-        + ' read or recommended by ' + esc(name_en) + ' (' + esc(name)
+        + ' read or recommended by <strong>' + esc(name_en) + '</strong> (' + esc(name)
         + '), gathered from interviews, YouTube, and SNS sources.</p>\n'
         '  </section>\n'
         '  <section>\n'
@@ -868,8 +892,8 @@ for name, info in celebs.items():
         '      </tbody>\n'
         '    </table>\n'
         '  </section>\n'
-        '  <footer style="margin-top:48px;padding-top:16px;border-top:1px solid #ddd;font-size:13px;color:#666">\n'
-        '    <p>Curated from public Korean-language sources (interviews, YouTube, SNS). Korean original: <a href="'
+        '  <footer>\n'
+        '    <p>Curated from public Korean-language sources. Korean original page: <a href="'
         + esc(ko_url) + '" hreflang="ko">' + esc(name) + '</a>.</p>\n'
         '  </footer>\n'
         '</body>\n'
@@ -889,24 +913,30 @@ for title, t_en in book_title_en.items():
     ko_url   = make_book_url(title)
     n_celebs = len(binfo['celebs'])
 
-    # 셀럽 목록: name_en이 있으면 영문, 없으면 KO 그대로 + KO 페이지로 링크
+    # 셀럽 목록: 모두 "EnglishName (Korean)" 형식으로 통일.
+    # name_en 있으면 EN 셀럽 페이지로 링크, 없으면 KO 페이지로 링크.
     celeb_items = []
     for c in sorted(binfo['celebs']):
         c_en = celebs[c].get('name_en')
         if c_en:
-            celeb_items.append('    <li><a href="../' + safe_en_filename(c_en) + '.html">'
-                               + esc(c_en) + '</a> <span style="color:#888;font-size:12px">('
-                               + esc(c) + ')</span></li>')
+            celeb_items.append(
+                '    <li><a href="../' + safe_en_filename(c_en) + '.html">'
+                + esc(c_en) + '</a> <span style="color:#888;font-size:13px">('
+                + esc(c) + ')</span></li>'
+            )
         else:
-            celeb_items.append('    <li><a href="' + esc(make_celeb_url(c)) + '" hreflang="ko">'
-                               + esc(c) + '</a></li>')
+            # name_en 없으면 한국어 이름만 KO 페이지로. 향후 enrich으로 채워짐.
+            celeb_items.append(
+                '    <li><a href="' + esc(make_celeb_url(c)) + '" hreflang="ko">'
+                + esc(c) + '</a> <span style="color:#888;font-size:12px">(English name pending)</span></li>'
+            )
     celeb_list = '\n'.join(celeb_items)
 
     cover_html = ''
     if binfo['coverUrl'] and binfo['coverUrl'].startswith('http'):
         cover_html = ('  <img src="' + esc(binfo['coverUrl']) + '" alt="' + esc(t_en)
                       + ' cover" width="200" height="280" loading="lazy" '
-                      'style="object-fit:cover; margin:16px 0">\n')
+                      'style="object-fit:cover; margin:16px 0; border:2px solid #000">\n')
 
     title_text = t_en + ' — Read by ' + str(n_celebs) + ' Korean Celebrities'
     desc_text  = (t_en + ' (Korean: ' + esc(title) + ') was read by ' + str(n_celebs)
@@ -949,23 +979,35 @@ for title, t_en in book_title_en.items():
         '  <script type="application/ld+json">\n  '
         + json.dumps(json_ld, ensure_ascii=False, indent=2) + '\n  </script>\n'
         '  <style>\n'
-        '    body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; max-width: 800px; margin: 0 auto; padding: 20px; color: #333; }\n'
-        '    ul { line-height: 2; }\n'
+        '    body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; max-width: 800px; margin: 0 auto; padding: 20px; color: #222; background: #fcfaf5; line-height: 1.6; }\n'
+        '    .lang-toggle { position: absolute; top: 16px; right: 16px; display: flex; gap: 6px; }\n'
+        '    .lang-btn { padding: 6px 12px; border: 2px solid #000; background: #fff; box-shadow: 2px 2px 0 0 #000; font-size: 12px; font-weight: 700; text-decoration: none; color: #000; transition: transform .1s, box-shadow .1s; }\n'
+        '    .lang-btn:hover { transform: translate(-1px,-1px); box-shadow: 3px 3px 0 0 #000; background: #fde047; text-decoration: none; }\n'
+        '    .lang-btn.active { background: #000; color: #fff; }\n'
+        '    nav { margin: 50px 0 16px; font-size: 13px; }\n'
+        '    h1 { font-size: 28px; margin: 0 0 6px; font-weight: 900; }\n'
+        '    h2 { font-size: 19px; margin: 32px 0 12px; padding-bottom: 4px; border-bottom: 2px solid #000; font-weight: 800; }\n'
+        '    .meta { color: #666; margin: 0 0 16px; }\n'
+        '    ul { line-height: 2; padding-left: 22px; }\n'
         '    a { color: #2563eb; text-decoration: none; }\n'
         '    a:hover { text-decoration: underline; }\n'
         '  </style>\n'
         '</head>\n'
         '<body>\n'
-        '  <nav><a href="' + EN_BASE + '">← Favoread Home</a> · <a href="' + esc(ko_url) + '" hreflang="ko">한국어</a></nav>\n'
+        '  <div class="lang-toggle">\n'
+        '    <a class="lang-btn" href="' + esc(ko_url) + '" hreflang="ko">한국어</a>\n'
+        '    <span class="lang-btn active">EN</span>\n'
+        '  </div>\n'
+        '  <nav><a href="' + EN_BASE + '">← Favoread Home</a></nav>\n'
         '  <h1>' + esc(t_en) + '</h1>\n'
-        '  <p style="color:#666">Korean original: <strong>' + esc(title) + '</strong>'
+        '  <p class="meta">Korean: <strong>' + esc(title) + '</strong>'
         + ((' · ' + esc(binfo['author'])) if binfo['author'].strip() else '')
         + ((' · ' + esc(binfo['publisher'])) if binfo['publisher'].strip() else '')
         + '</p>\n'
         + cover_html
         + '  <h2>Read by ' + str(n_celebs) + ' Korean celebrities</h2>\n'
         '  <ul>\n' + celeb_list + '\n  </ul>\n'
-        '  <p><a href="' + EN_BASE + '">← Back to Favoread</a></p>\n'
+        '  <p style="margin-top:32px"><a href="' + EN_BASE + '">← Back to Favoread</a></p>\n'
         '</body>\n'
         '</html>'
     )
@@ -974,73 +1016,167 @@ for title, t_en in book_title_en.items():
 
 print(f"✅ /en/ 책 페이지: {len(en_book_pages)}개")
 
-# /en/index.html — 영문 랜딩 페이지
+# /en/index.html — 영문 랜딩 페이지 (메인 한국어 사이트와 동일한 Tailwind/Neo 디자인)
 en_celeb_pages.sort(key=lambda x: x[1].lower())  # name_en 알파벳 정렬
 
-en_celeb_links = '\n'.join(
-    '    <li><a href="share/' + slug + '.html">' + esc(name_en)
-    + '</a> <span style="color:#888;font-size:12px">(' + esc(name_ko) + ')</span></li>'
+EN_LINK_CLASS = 'inline-block px-3 py-1.5 border-2 border-ink rounded-none bg-white hover:bg-neo-yellow shadow-neo-sm hover:shadow-neo hover:-translate-y-0.5 transition-all text-[11px] sm:text-xs font-bold font-sans text-ink'
+
+en_celeb_buttons = '\n'.join(
+    '    <a href="share/' + slug + '.html" class="' + EN_LINK_CLASS + '">'
+    + esc(name_en) + ' <span class="text-muted font-normal">(' + esc(name_ko) + ')</span></a>'
     for slug, name_en, name_ko in en_celeb_pages
 )
-en_book_links = '\n'.join(
-    '    <li><a href="share/book/' + slug + '.html">' + esc(t_en)
-    + '</a> <span style="color:#888;font-size:12px">(' + esc(t_ko) + ')</span></li>'
+en_book_buttons = '\n'.join(
+    '    <a href="share/book/' + slug + '.html" class="' + EN_LINK_CLASS + '">'
+    + esc(t_en) + ' <span class="text-muted font-normal">(' + esc(t_ko) + ')</span></a>'
     for slug, t_en, t_ko in sorted(en_book_pages, key=lambda x: x[1].lower())
 )
+
+en_index_jsonld = json.dumps({
+    '@context': 'https://schema.org',
+    '@type': 'WebSite',
+    'name': 'Favoread',
+    'alternateName': ['최애의 독서', 'Favoread English'],
+    'url': EN_BASE,
+    'description': 'A curated archive of books read by Korean celebrities, K-pop idols, and actors.',
+    'image': BASE + 'og-image.jpg',
+    'inLanguage': 'en-US',
+}, ensure_ascii=False, indent=2)
 
 en_index = (
     '<!DOCTYPE html>\n'
     '<html lang="en">\n'
     '<head>\n'
-    '  <meta charset="utf-8">\n'
-    '  <meta name="viewport" content="width=device-width, initial-scale=1">\n'
-    '  <title>Favoread — Books Read by Korean Celebrities, Idols & Actors</title>\n'
-    '  <meta name="description" content="A curated archive of books read and recommended by Korean celebrities, K-pop idols, and actors. Sourced from interviews, YouTube, and SNS.">\n'
-    '  <meta name="robots" content="index, follow, max-image-preview:large">\n'
-    '  <meta property="og:title" content="Favoread — Books Read by Korean Celebrities">\n'
-    '  <meta property="og:description" content="What are Korean celebrities, idols, and actors reading? See their full reading lists.">\n'
-    '  <meta property="og:url" content="' + EN_BASE + '">\n'
+    '  <meta charset="UTF-8">\n'
+    '  <meta name="viewport" content="width=device-width, initial-scale=1.0">\n'
+    '  <title>Favoread | Books Read by Korean Celebrities, K-pop Idols & Actors</title>\n'
+    '  <meta name="description" content="What are Korean celebrities, K-pop idols, and actors reading? A curated archive of reading lists from BTS RM, IU, and more — sourced from interviews, YouTube, and SNS.">\n'
+    '  <meta name="keywords" content="kpop idol books, korean celebrity reading, korean actor books, BTS RM reading list, IU books, kpop star recommendations, korean celebrity book recommendations">\n'
+    '  <meta name="referrer" content="no-referrer">\n'
+    '\n'
+    '  <link rel="icon" href="' + BASE + 'favicon.svg" type="image/svg+xml">\n'
+    '  <link rel="icon" href="' + BASE + 'favicon.png" type="image/png" sizes="192x192">\n'
+    '  <link rel="apple-touch-icon" href="' + BASE + 'favicon.png">\n'
+    '\n'
+    '  <meta property="og:site_name" content="Favoread">\n'
+    '  <meta property="og:title" content="Favoread | Books Read by Korean Celebrities, K-pop Idols & Actors">\n'
+    '  <meta property="og:description" content="What are Korean celebrities, K-pop idols, and actors reading? Curated reading lists from interviews, YouTube, and SNS.">\n'
     '  <meta property="og:type" content="website">\n'
-    '  <meta property="og:locale" content="en_US">\n'
+    '  <meta property="og:url" content="' + EN_BASE + '">\n'
     '  <meta property="og:image" content="' + BASE + 'og-image.jpg">\n'
+    '  <meta property="og:image:width" content="1200">\n'
+    '  <meta property="og:image:height" content="630">\n'
+    '  <meta property="og:image:alt" content="Favoread — books read by Korean celebrities">\n'
+    '  <meta property="og:locale" content="en_US">\n'
+    '  <meta property="og:locale:alternate" content="ko_KR">\n'
+    '\n'
+    '  <meta name="twitter:card" content="summary_large_image">\n'
+    '  <meta name="twitter:title" content="Favoread | Books Read by Korean Celebrities">\n'
+    '  <meta name="twitter:description" content="What are Korean celebrities, K-pop idols, and actors reading?">\n'
+    '  <meta name="twitter:image" content="' + BASE + 'og-image.jpg">\n'
+    '\n'
     '  <link rel="canonical" href="' + EN_BASE + '">\n'
     '  <link rel="alternate" hreflang="en" href="' + EN_BASE + '">\n'
     '  <link rel="alternate" hreflang="ko" href="' + BASE + '">\n'
     '  <link rel="alternate" hreflang="x-default" href="' + BASE + '">\n'
-    '  <link rel="icon" href="' + BASE + 'favicon.svg" type="image/svg+xml">\n'
-    '  <link rel="icon" href="' + BASE + 'favicon.png" type="image/png" sizes="192x192">\n'
+    '\n'
+    '  <meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1">\n'
+    '  <meta name="theme-color" content="#ffffff">\n'
+    '\n'
+    '  <link rel="alternate" type="application/rss+xml" title="Favoread RSS" href="' + BASE + 'feed.xml">\n'
+    '\n'
+    '  <link rel="preconnect" href="https://fonts.googleapis.com">\n'
+    '  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>\n'
+    '\n'
+    '  <script type="application/ld+json">\n  ' + en_index_jsonld + '\n  </script>\n'
+    '\n'
+    '  <script src="https://cdn.tailwindcss.com"></script>\n'
+    '  <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+KR:wght@200;400;600;900&family=Space+Grotesk:wght@400;700&display=swap" rel="stylesheet">\n'
+    '\n'
+    '  <script>\n'
+    '    tailwind.config = {\n'
+    '      theme: {\n'
+    '        extend: {\n'
+    '          fontFamily: {\n'
+    '            serif: [\'"Noto Serif KR"\', \'serif\'],\n'
+    '            sans:  [\'"Space Grotesk"\', \'sans-serif\'],\n'
+    '          },\n'
+    '          colors: {\n'
+    '            ink:        \'#000000\',\n'
+    '            paper:      \'#ffffff\',\n'
+    '            \'paper-dark\': \'#f4f4f0\',\n'
+    '            muted:      \'#666666\',\n'
+    '            \'neo-mint\':   \'#a7f3d0\',\n'
+    '            \'neo-pink\':   \'#fbcfe8\',\n'
+    '            \'neo-yellow\': \'#fde047\',\n'
+    '          },\n'
+    '          boxShadow: {\n'
+    '            neo:    \'4px 4px 0px 0px rgba(0,0,0,1)\',\n'
+    '            \'neo-lg\': \'8px 8px 0px 0px rgba(0,0,0,1)\',\n'
+    '            \'neo-sm\': \'2px 2px 0px 0px rgba(0,0,0,1)\',\n'
+    '          },\n'
+    '        }\n'
+    '      }\n'
+    '    }\n'
+    '  </script>\n'
+    '\n'
     '  <style>\n'
-    '    body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; max-width: 860px; margin: 0 auto; padding: 20px; color: #222; line-height: 1.6; }\n'
-    '    nav { font-size: 13px; margin-bottom: 16px; }\n'
-    '    h1 { font-size: 30px; margin-bottom: 8px; }\n'
-    '    h2 { font-size: 20px; margin: 32px 0 12px; padding-bottom: 4px; border-bottom: 2px solid #222; }\n'
-    '    .intro { background: #f8f8f5; border-left: 3px solid #222; padding: 14px 16px; margin: 16px 0 24px; }\n'
-    '    ul { columns: 2; column-gap: 24px; padding-left: 20px; }\n'
-    '    @media (max-width: 600px) { ul { columns: 1; } }\n'
-    '    li { break-inside: avoid; }\n'
-    '    a { color: #2563eb; text-decoration: none; }\n'
-    '    a:hover { text-decoration: underline; }\n'
+    '    html, body { min-height: 100%; }\n'
+    '    body {\n'
+    '      background-color: #fcfaf5;\n'
+    '      color: #000;\n'
+    '      -webkit-font-smoothing: antialiased;\n'
+    '    }\n'
+    '    ::selection { background: #fde047; color: #000; }\n'
+    '    .word-break-keep { word-break: keep-all; }\n'
     '  </style>\n'
     '</head>\n'
-    '<body>\n'
-    '  <nav><a href="' + BASE + '" hreflang="ko">한국어</a></nav>\n'
-    '  <h1>Favoread</h1>\n'
-    '  <p style="color:#666;margin-top:0">Books read by Korean celebrities, K-pop idols, and actors</p>\n'
-    '  <section class="intro">\n'
-    '    <p style="margin:0">A curated archive of reading lists from Korean celebrities — gathered from interviews, YouTube videos, and SNS posts. Names follow IMDb / Kpop Wiki conventions; book titles use the official English edition where available.</p>\n'
-    '  </section>\n'
-    '  <section>\n'
-    '    <h2>Celebrities (' + str(len(en_celeb_pages)) + ')</h2>\n'
-    + ('    <ul>\n' + en_celeb_links + '\n    </ul>\n' if en_celeb_links
-       else '    <p style="color:#888">No English profiles available yet. <a href="' + BASE + '" hreflang="ko">Browse the full Korean archive →</a></p>\n')
-    + '  </section>\n'
-    + ('  <section>\n'
-       '    <h2>Books read by 2+ celebrities (' + str(len(en_book_pages)) + ')</h2>\n'
-       '    <ul>\n' + en_book_links + '\n    </ul>\n'
-       '  </section>\n' if en_book_links else '')
-    + '  <footer style="margin-top:48px;padding-top:16px;border-top:1px solid #ddd;font-size:13px;color:#666">\n'
-    '    <p>This is an English-language gateway to <a href="' + BASE + '" hreflang="ko">최애의 독서</a>, a Korean reading-list archive. The full archive (' + str(len(celebs)) + ' celebrities) is available in Korean.</p>\n'
+    '<body class="font-serif relative selection:bg-neo-yellow selection:text-ink">\n'
+    '\n'
+    '<div class="absolute top-4 right-4 md:top-8 md:right-8 z-40 flex gap-2">\n'
+    '  <a href="' + BASE + '" hreflang="ko" class="px-3 py-1.5 bg-white border-2 border-ink shadow-neo-sm hover:bg-neo-yellow hover:shadow-neo hover:-translate-y-0.5 transition-all font-sans font-bold text-xs text-ink">한국어</a>\n'
+    '  <span class="px-3 py-1.5 bg-ink border-2 border-ink shadow-neo-sm font-sans font-bold text-xs text-paper">EN</span>\n'
+    '</div>\n'
+    '\n'
+    '<main class="max-w-5xl mx-auto px-4 sm:px-6 py-12 md:py-24 flex flex-col gap-12 md:gap-16">\n'
+    '\n'
+    '  <header class="flex flex-col items-center pt-10 md:pt-0 text-center">\n'
+    '    <p class="font-sans font-bold text-xs tracking-[0.2em] text-muted mb-4">FAVOREAD · ENGLISH</p>\n'
+    '    <h1 class="text-4xl sm:text-5xl md:text-6xl font-black mb-4 word-break-keep">\n'
+    '      Books Read by<br>\n'
+    '      <span class="bg-neo-yellow border-2 border-ink shadow-neo-sm px-3 inline-block">Korean Celebrities</span>\n'
+    '    </h1>\n'
+    '    <p class="text-base md:text-lg font-bold text-muted max-w-xl mx-auto word-break-keep mt-4">\n'
+    '      A curated archive of reading lists from K-pop idols, actors, and Korean celebrities. Sourced from interviews, YouTube, and SNS.\n'
+    '    </p>\n'
+    '    <p class="font-sans text-xs text-muted mt-3">\n'
+    '      Names follow <a href="https://kpop.fandom.com/" target="_blank" rel="noopener" class="underline">Kpop Wiki</a> / <a href="https://www.imdb.com/" target="_blank" rel="noopener" class="underline">IMDb</a> conventions · Book titles use the official English edition where available\n'
+    '    </p>\n'
+    '  </header>\n'
+    '\n'
+    + ('  <section class="border-t-4 border-ink pt-12 md:pt-16">\n'
+       '    <h2 class="text-2xl md:text-3xl font-black mb-2 word-break-keep">Celebrities (' + str(len(en_celeb_pages)) + ')</h2>\n'
+       '    <p class="text-sm md:text-base font-bold text-muted mb-8 word-break-keep">Click a name to see their full reading list.</p>\n'
+       '    <div class="flex flex-wrap gap-2 md:gap-3">\n'
+       + en_celeb_buttons + '\n'
+       '    </div>\n'
+       '  </section>\n\n' if en_celeb_buttons
+       else '  <section class="border-t-4 border-ink pt-12 md:pt-16 text-center">\n'
+       '    <p class="font-bold text-muted">No English profiles available yet. <a href="' + BASE + '" hreflang="ko" class="underline decoration-2 hover:text-ink">Browse the full Korean archive →</a></p>\n'
+       '  </section>\n\n')
+    + ('  <section class="border-t-4 border-ink pt-12 md:pt-16">\n'
+       '    <h2 class="text-2xl md:text-3xl font-black mb-2 word-break-keep">Books Read by 2+ Celebrities (' + str(len(en_book_pages)) + ')</h2>\n'
+       '    <p class="text-sm md:text-base font-bold text-muted mb-8 word-break-keep">Books that show up across multiple celebrity reading lists.</p>\n'
+       '    <div class="flex flex-wrap gap-2 md:gap-3">\n'
+       + en_book_buttons + '\n'
+       '    </div>\n'
+       '  </section>\n\n' if en_book_buttons else '')
+    + '  <footer class="border-t-4 border-ink pt-8 text-center font-sans text-xs text-muted">\n'
+    '    <p>This is an English gateway to <a href="' + BASE + '" hreflang="ko" class="underline decoration-2 hover:text-ink">최애의 독서</a> — the full archive of <strong>' + str(len(celebs)) + ' Korean celebrities</strong> is available in Korean.</p>\n'
     '  </footer>\n'
+    '\n'
+    '</main>\n'
+    '\n'
     '</body>\n'
     '</html>'
 )
