@@ -140,8 +140,9 @@ with open("data.csv", encoding="utf-8") as f:
         'cover':   find_col(['도서 이미지', '표지'], 6),
         'img':     find_col(['연예인 이미지', '연예인이미지', 'photo', '이미지주소'], 7),
         'comment': find_col(['코멘트', '한마디'], 8),
-        'name_en':  find_exact('연예인_en'),
-        'title_en': find_exact('도서명_en'),
+        'name_en':   find_exact('연예인_en'),
+        'title_en':  find_exact('도서명_en'),
+        'author_en': find_exact('저자_en'),
     }
 
     for row in reader:
@@ -159,8 +160,9 @@ with open("data.csv", encoding="utf-8") as f:
         if not img_url.startswith('http'):
             img_url = BASE + 'og-image.jpg'
 
-        name_en  = clean_en(get(C['name_en']))  if C['name_en']  is not None else None
-        title_en = clean_en(get(C['title_en'])) if C['title_en'] is not None else None
+        name_en   = clean_en(get(C['name_en']))   if C['name_en']   is not None else None
+        title_en  = clean_en(get(C['title_en']))  if C['title_en']  is not None else None
+        author_en = clean_en(get(C['author_en'])) if C['author_en'] is not None else None
 
         if name not in celebs:
             celebs[name] = {'img': img_url, 'books': [], 'name_en': name_en}
@@ -177,6 +179,7 @@ with open("data.csv", encoding="utf-8") as f:
             'coverUrl':  get(C['cover']),
             'comment':   get(C['comment']),
             'title_en':  title_en,
+            'author_en': author_en,
         })
 
 print(f"CSV 파싱 완료: {len(celebs)}명")
@@ -267,11 +270,15 @@ books_with_pages = {t for t, bi in book_celebs.items() if len(bi['celebs']) >= 2
 
 # 책 제목 → 영문 제목 매핑 (검수 완료된 첫 비어있지 않은 값)
 book_title_en = {}
+# 책 제목 → 영문 작가 매핑
+book_author_en = {}
 for _name, _info in celebs.items():
     for _b in _info['books']:
         _t = _b['title'].strip()
         if _b.get('title_en') and _t not in book_title_en:
             book_title_en[_t] = _b['title_en']
+        if _b.get('author_en') and _t not in book_author_en:
+            book_author_en[_t] = _b['author_en']
 
 # sitemap 이미지 정보 수집용
 sitemap_images = {}  # { url: [image_url, ...] }
@@ -788,8 +795,14 @@ for name, info in celebs.items():
         src_html = ''
         if b['source'] and b['source'].startswith('http'):
             src_html = '<a href="' + esc(b['source']) + '" rel="nofollow noopener noreferrer" target="_blank">source →</a>'
+        # 영문 작가 이름이 있으면 우선 사용, 없으면 한국어 그대로
+        a_en = b.get('author_en')
+        if a_en:
+            author_html = esc(a_en)
+        else:
+            author_html = esc(b['author'])
         rows += ('    <tr><td>' + str(i+1) + '</td><td>' + cover_td + '</td><td>' + t_html
-                 + '</td><td>' + esc(b['author']) + '</td><td class="src">' + src_html + '</td></tr>\n')
+                 + '</td><td>' + author_html + '</td><td class="src">' + src_html + '</td></tr>\n')
 
     title_text = name_en + ' — Books Read & Recommended (' + str(n) + ')'
     desc_text  = (name_en + ' (Korean: ' + esc(name) + ') has read and recommended '
@@ -942,6 +955,10 @@ for title, t_en in book_title_en.items():
     desc_text  = (t_en + ' (Korean: ' + esc(title) + ') was read by ' + str(n_celebs)
                   + ' Korean celebrities, idols, and actors.')
 
+    # 영문 작가 이름이 있으면 우선 사용
+    author_en = book_author_en.get(title)
+    author_display = author_en if author_en else binfo['author']
+
     json_ld = clean_none({
         '@context': 'https://schema.org',
         '@type': 'Book',
@@ -950,7 +967,7 @@ for title, t_en in book_title_en.items():
         'url': page_url,
         'inLanguage': 'en',
         'description': str(n_celebs) + ' Korean celebrities have read this book.',
-        'author': {'@type': 'Person', 'name': binfo['author']} if binfo['author'].strip() else None,
+        'author': {'@type': 'Person', 'name': author_display} if author_display.strip() else None,
         'publisher': {'@type': 'Organization', 'name': binfo['publisher']} if binfo['publisher'].strip() else None,
         'image': binfo['coverUrl'] if binfo['coverUrl'].startswith('http') else None,
     })
@@ -1001,7 +1018,7 @@ for title, t_en in book_title_en.items():
         '  <nav><a href="' + EN_BASE + '">← Favoread Home</a></nav>\n'
         '  <h1>' + esc(t_en) + '</h1>\n'
         '  <p class="meta">Korean: <strong>' + esc(title) + '</strong>'
-        + ((' · ' + esc(binfo['author'])) if binfo['author'].strip() else '')
+        + ((' · ' + esc(author_display)) if author_display.strip() else '')
         + ((' · ' + esc(binfo['publisher'])) if binfo['publisher'].strip() else '')
         + '</p>\n'
         + cover_html
@@ -1019,18 +1036,50 @@ print(f"✅ /en/ 책 페이지: {len(en_book_pages)}개")
 # /en/index.html — 영문 랜딩 페이지 (메인 한국어 사이트와 동일한 Tailwind/Neo 디자인)
 en_celeb_pages.sort(key=lambda x: x[1].lower())  # name_en 알파벳 정렬
 
-EN_LINK_CLASS = 'inline-block px-3 py-1.5 border-2 border-ink rounded-none bg-white hover:bg-neo-yellow shadow-neo-sm hover:shadow-neo hover:-translate-y-0.5 transition-all text-[11px] sm:text-xs font-bold font-sans text-ink'
+# 셀럽 카드 (사진 + 이름 + 책 권수). 책 권수는 영문 책만 카운트.
+en_celeb_cards = []
+for slug, name_en, name_ko in en_celeb_pages:
+    info = celebs[name_ko]
+    en_book_count = sum(1 for b in info['books'] if b.get('title_en'))
+    img = info['img']
+    en_celeb_cards.append(
+        '    <a href="share/' + slug + '.html" class="group flex flex-col">\n'
+        '      <div class="aspect-square overflow-hidden border-2 border-ink shadow-neo-sm bg-white group-hover:shadow-neo group-hover:-translate-y-0.5 transition-all">\n'
+        '        <img src="' + esc(img) + '" alt="' + esc(name_en) + ' profile" loading="lazy" '
+        'class="w-full h-full object-cover" referrerpolicy="no-referrer">\n'
+        '      </div>\n'
+        '      <div class="mt-2">\n'
+        '        <p class="font-black text-sm md:text-base leading-tight word-break-keep">' + esc(name_en) + '</p>\n'
+        '        <p class="font-sans text-[10px] md:text-xs text-muted">' + esc(name_ko) + ' · '
+        + str(en_book_count) + ' book' + ('s' if en_book_count != 1 else '') + '</p>\n'
+        '      </div>\n'
+        '    </a>'
+    )
+en_celeb_grid = '\n'.join(en_celeb_cards)
 
-en_celeb_buttons = '\n'.join(
-    '    <a href="share/' + slug + '.html" class="' + EN_LINK_CLASS + '">'
-    + esc(name_en) + ' <span class="text-muted font-normal">(' + esc(name_ko) + ')</span></a>'
-    for slug, name_en, name_ko in en_celeb_pages
-)
-en_book_buttons = '\n'.join(
-    '    <a href="share/book/' + slug + '.html" class="' + EN_LINK_CLASS + '">'
-    + esc(t_en) + ' <span class="text-muted font-normal">(' + esc(t_ko) + ')</span></a>'
-    for slug, t_en, t_ko in sorted(en_book_pages, key=lambda x: x[1].lower())
-)
+# 책 카드 (커버 + 제목 + 셀럽 수)
+en_book_cards = []
+for slug, t_en, t_ko in sorted(en_book_pages, key=lambda x: x[1].lower()):
+    binfo = book_celebs[t_ko]
+    cover = binfo.get('coverUrl', '')
+    cover_img = ''
+    if cover and cover.startswith('http'):
+        cover_img = ('<img src="' + esc(cover) + '" alt="' + esc(t_en) + ' cover" loading="lazy" '
+                     'class="w-full h-full object-cover">')
+    n_celebs = len(binfo['celebs'])
+    en_book_cards.append(
+        '    <a href="share/book/' + slug + '.html" class="group flex flex-col">\n'
+        '      <div class="aspect-[3/4] overflow-hidden border-2 border-ink shadow-neo-sm bg-paper-dark group-hover:shadow-neo group-hover:-translate-y-0.5 transition-all">\n'
+        '        ' + cover_img + '\n'
+        '      </div>\n'
+        '      <div class="mt-2">\n'
+        '        <p class="font-black text-xs md:text-sm leading-tight word-break-keep">' + esc(t_en) + '</p>\n'
+        '        <p class="font-sans text-[10px] text-muted">' + esc(t_ko) + ' · '
+        + str(n_celebs) + ' celebs</p>\n'
+        '      </div>\n'
+        '    </a>'
+    )
+en_book_grid = '\n'.join(en_book_cards)
 
 en_index_jsonld = json.dumps({
     '@context': 'https://schema.org',
@@ -1133,46 +1182,54 @@ en_index = (
     '</head>\n'
     '<body class="font-serif relative selection:bg-neo-yellow selection:text-ink">\n'
     '\n'
-    '<div class="absolute top-4 right-4 md:top-8 md:right-8 z-40 flex gap-2">\n'
-    '  <a href="' + BASE + '" hreflang="ko" class="px-3 py-1.5 bg-white border-2 border-ink shadow-neo-sm hover:bg-neo-yellow hover:shadow-neo hover:-translate-y-0.5 transition-all font-sans font-bold text-xs text-ink">한국어</a>\n'
-    '  <span class="px-3 py-1.5 bg-ink border-2 border-ink shadow-neo-sm font-sans font-bold text-xs text-paper">EN</span>\n'
-    '</div>\n'
-    '\n'
     '<main class="max-w-5xl mx-auto px-4 sm:px-6 py-12 md:py-24 flex flex-col gap-12 md:gap-16">\n'
     '\n'
-    '  <header class="flex flex-col items-center pt-10 md:pt-0 text-center">\n'
-    '    <p class="font-sans font-bold text-xs tracking-[0.2em] text-muted mb-4">FAVOREAD · ENGLISH</p>\n'
-    '    <h1 class="text-4xl sm:text-5xl md:text-6xl font-black mb-4 word-break-keep">\n'
-    '      Books Read by<br>\n'
-    '      <span class="bg-neo-yellow border-2 border-ink shadow-neo-sm px-3 inline-block">Korean Celebrities</span>\n'
-    '    </h1>\n'
-    '    <p class="text-base md:text-lg font-bold text-muted max-w-xl mx-auto word-break-keep mt-4">\n'
-    '      A curated archive of reading lists from K-pop idols, actors, and Korean celebrities. Sourced from interviews, YouTube, and SNS.\n'
-    '    </p>\n'
-    '    <p class="font-sans text-xs text-muted mt-3">\n'
-    '      Names follow <a href="https://kpop.fandom.com/" target="_blank" rel="noopener" class="underline">Kpop Wiki</a> / <a href="https://www.imdb.com/" target="_blank" rel="noopener" class="underline">IMDb</a> conventions · Book titles use the official English edition where available\n'
-    '    </p>\n'
+    '  <header class="flex flex-col items-center pt-6 md:pt-0 text-center">\n'
+    '    <h1 class="text-4xl sm:text-5xl md:text-6xl font-black tracking-tight mb-3 text-ink">Favoread</h1>\n'
+    '    <p class="text-ink font-sans font-bold text-sm sm:text-base tracking-wide mb-3">Books read by your faves📕</p>\n'
+    '    <p class="text-muted text-xs sm:text-sm mb-6 max-w-xl mx-auto px-4 word-break-keep">Reading lists from K-pop idols, Korean actors, and celebrities — gathered from interviews, YouTube, and SNS.</p>\n'
+    '    <p class="text-ink font-sans font-bold text-xs sm:text-sm tracking-[.15em] mb-6 uppercase bg-neo-yellow border-2 border-ink px-4 py-1 shadow-neo-sm">Archive of their reads</p>\n'
+    '    <div class="flex items-center gap-2 text-[10px] sm:text-xs font-sans font-bold tracking-wider text-ink border-2 border-ink bg-white px-3 py-1.5 shadow-neo-sm">\n'
+    '      <span class="w-2 h-2 rounded-full bg-ink"></span>\n'
+    '      <span>' + str(len(en_celeb_pages)) + ' RECORDS</span>\n'
+    '    </div>\n'
+    '    <div class="flex gap-2 mt-5">\n'
+    '      <a href="' + BASE + '" hreflang="ko" class="px-4 py-1.5 bg-white border-2 border-ink shadow-neo-sm hover:bg-neo-yellow hover:-translate-y-0.5 transition-all font-sans font-bold text-xs tracking-widest text-ink">KOR</a>\n'
+    '      <span class="px-4 py-1.5 bg-ink text-paper border-2 border-ink shadow-neo-sm font-sans font-bold text-xs tracking-widest">ENG</span>\n'
+    '    </div>\n'
     '  </header>\n'
     '\n'
-    + ('  <section class="border-t-4 border-ink pt-12 md:pt-16">\n'
-       '    <h2 class="text-2xl md:text-3xl font-black mb-2 word-break-keep">Celebrities (' + str(len(en_celeb_pages)) + ')</h2>\n'
-       '    <p class="text-sm md:text-base font-bold text-muted mb-8 word-break-keep">Click a name to see their full reading list.</p>\n'
-       '    <div class="flex flex-wrap gap-2 md:gap-3">\n'
-       + en_celeb_buttons + '\n'
+    '  <section class="text-center max-w-2xl mx-auto border-4 border-ink p-6 md:p-8 bg-white shadow-neo w-full">\n'
+    '    <h2 class="text-xl md:text-2xl font-black mb-4 bg-neo-pink inline-block px-3 py-1 border-2 border-ink shadow-neo-sm">What is Favoread?</h2>\n'
+    '    <p class="text-sm md:text-base font-bold leading-relaxed text-ink word-break-keep mb-3">\n'
+    '      From K-POP idols like <strong>BTS, IVE, SEVENTEEN</strong> to Korean drama actors and musicians — '
+    '      a curated archive of <strong>books they read, recommend, and call life-changing</strong>.\n'
+    '    </p>\n'
+    '    <p class="text-sm md:text-base font-bold leading-relaxed text-ink word-break-keep">\n'
+    '      Only entries with verified sources (YouTube, interviews, SNS) are listed.<br>\n'
+    '      Names follow <a href="https://kpop.fandom.com/" target="_blank" rel="noopener" class="underline decoration-2">Kpop Wiki</a> / <a href="https://www.imdb.com/" target="_blank" rel="noopener" class="underline decoration-2">IMDb</a> conventions.\n'
+    '    </p>\n'
+    '  </section>\n'
+    '\n'
+    + ('  <section class="w-full">\n'
+       '    <h2 class="text-2xl md:text-3xl font-black mb-2 word-break-keep">Browse Celebrities (' + str(len(en_celeb_pages)) + ')</h2>\n'
+       '    <p class="text-sm md:text-base font-bold text-muted mb-8 word-break-keep">Click a card to see their full reading list.</p>\n'
+       '    <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-x-4 sm:gap-x-6 gap-y-8 sm:gap-y-12">\n'
+       + en_celeb_grid + '\n'
        '    </div>\n'
-       '  </section>\n\n' if en_celeb_buttons
+       '  </section>\n\n' if en_celeb_cards
        else '  <section class="border-t-4 border-ink pt-12 md:pt-16 text-center">\n'
        '    <p class="font-bold text-muted">No English profiles available yet. <a href="' + BASE + '" hreflang="ko" class="underline decoration-2 hover:text-ink">Browse the full Korean archive →</a></p>\n'
        '  </section>\n\n')
-    + ('  <section class="border-t-4 border-ink pt-12 md:pt-16">\n'
-       '    <h2 class="text-2xl md:text-3xl font-black mb-2 word-break-keep">Books Read by 2+ Celebrities (' + str(len(en_book_pages)) + ')</h2>\n'
-       '    <p class="text-sm md:text-base font-bold text-muted mb-8 word-break-keep">Books that show up across multiple celebrity reading lists.</p>\n'
-       '    <div class="flex flex-wrap gap-2 md:gap-3">\n'
-       + en_book_buttons + '\n'
+    + ('  <section class="border-t-4 border-ink pt-12 md:pt-16 w-full">\n'
+       '    <h2 class="text-2xl md:text-3xl font-black mb-2 word-break-keep">Books Read by 2+ Celebrities</h2>\n'
+       '    <p class="text-sm md:text-base font-bold text-muted mb-8 word-break-keep">Titles that appear across multiple reading lists (' + str(len(en_book_pages)) + ' books).</p>\n'
+       '    <div class="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 gap-4 md:gap-5">\n'
+       + en_book_grid + '\n'
        '    </div>\n'
-       '  </section>\n\n' if en_book_buttons else '')
+       '  </section>\n\n' if en_book_cards else '')
     + '  <footer class="border-t-4 border-ink pt-8 text-center font-sans text-xs text-muted">\n'
-    '    <p>This is an English gateway to <a href="' + BASE + '" hreflang="ko" class="underline decoration-2 hover:text-ink">최애의 독서</a> — the full archive of <strong>' + str(len(celebs)) + ' Korean celebrities</strong> is available in Korean.</p>\n'
+    '    <p>An English gateway to <a href="' + BASE + '" hreflang="ko" class="underline decoration-2 hover:text-ink">최애의 독서</a> — full archive of <strong>' + str(len(celebs)) + ' Korean celebrities</strong> in Korean.</p>\n'
     '  </footer>\n'
     '\n'
     '</main>\n'

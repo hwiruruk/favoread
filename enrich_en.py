@@ -33,7 +33,7 @@ def http_get_json(url, timeout=10):
 
 
 def lookup_google_books(title_ko, author_ko):
-    """Google Books에서 한국어 제목으로 검색 → 영문판이 있으면 그 제목 반환."""
+    """Google Books에서 한국어 제목으로 검색 → (title, authors) 반환."""
     q_parts = ['intitle:' + title_ko]
     if author_ko:
         q_parts.append('inauthor:' + author_ko)
@@ -46,7 +46,7 @@ def lookup_google_books(title_ko, author_ko):
     try:
         data = http_get_json(url)
     except Exception as e:
-        return None, f"google_books error: {e}"
+        return None, None, f"google_books error: {e}"
 
     for item in data.get('items', []):
         info = item.get('volumeInfo', {})
@@ -55,12 +55,13 @@ def lookup_google_books(title_ko, author_ko):
         t = info.get('title')
         if not t:
             continue
-        # subtitle이 있으면 합침
         subtitle = info.get('subtitle')
         if subtitle:
             t = t + ': ' + subtitle
-        return t, None
-    return None, "google_books no en match"
+        authors = info.get('authors') or []
+        author_en = ', '.join(authors) if authors else None
+        return t, author_en, None
+    return None, None, "google_books no en match"
 
 
 def lookup_open_library(title_ko, author_ko):
@@ -86,14 +87,14 @@ def lookup_open_library(title_ko, author_ko):
 
 
 def find_en_title(title_ko, author_ko):
-    """두 소스 순차 시도. 결과는 (title|None, source|None)."""
-    t, _err = lookup_google_books(title_ko, author_ko)
+    """두 소스 순차 시도. 결과는 (title|None, author_en|None, source|None)."""
+    t, a, _err = lookup_google_books(title_ko, author_ko)
     if t:
-        return t, 'google_books'
+        return t, a, 'google_books'
     t, _err = lookup_open_library(title_ko, author_ko)
     if t:
-        return t, 'open_library'
-    return None, None
+        return t, None, 'open_library'
+    return None, None, None
 
 
 def lookup_celeb_en(name_ko):
@@ -185,12 +186,16 @@ def main():
         print(f"  현재 헤더: {headers}")
         sys.exit(1)
 
-    # ── 1. 책 제목 영문 조회 ──────────────────────────────────────
+    # 저자_en 컬럼 (옵션)
+    col_author_en = headers.index('저자_en') if '저자_en' in headers else None
+
+    # ── 1. 책 제목 + 작가 영문 조회 ───────────────────────────────
     book_processed = book_filled = book_skipped = 0
-    seen_titles = {}
+    author_filled = 0
+    seen_titles = {}  # (title_ko, author_ko) → (title_en, author_en, src)
 
     if not args.skip_books:
-        print("\n=== 책 제목 (도서명_en) ===")
+        print("\n=== 책 제목 (도서명_en) + 작가 (저자_en) ===")
         for i, row in enumerate(rows[1:], start=1):
             while len(row) < len(headers):
                 row.append('')
@@ -202,10 +207,12 @@ def main():
             if not title_ko:
                 continue
 
-            if existing and not existing.startswith('?'):
-                book_skipped += 1
-                continue
-            if existing.startswith('?') and not args.refresh:
+            need_title  = not existing or (existing.startswith('?') and args.refresh)
+            existing_au = row[col_author_en].strip() if col_author_en is not None else ''
+            need_author = (col_author_en is not None and author_ko
+                           and (not existing_au or (existing_au.startswith('?') and args.refresh)))
+
+            if not need_title and not need_author:
                 book_skipped += 1
                 continue
 
@@ -214,21 +221,28 @@ def main():
 
             cache_key = (title_ko, author_ko)
             if cache_key in seen_titles:
-                t, src = seen_titles[cache_key]
+                t, a, src = seen_titles[cache_key]
             else:
-                t, src = find_en_title(title_ko, author_ko)
-                seen_titles[cache_key] = (t, src)
+                t, a, src = find_en_title(title_ko, author_ko)
+                seen_titles[cache_key] = (t, a, src)
                 time.sleep(args.sleep)
 
             book_processed += 1
-            if t:
+            if need_title and t:
                 row[col_title_en] = '?' + t
                 book_filled += 1
-                print(f"  [{i:4d}] {title_ko} → ?{t}  ({src})")
+            if need_author and a:
+                row[col_author_en] = '?' + a
+                author_filled += 1
+            if t or a:
+                msg = []
+                if t: msg.append(f"title=?{t}")
+                if a: msg.append(f"author=?{a}")
+                print(f"  [{i:4d}] {title_ko} / {author_ko} → {', '.join(msg)}  ({src})")
             else:
                 print(f"  [{i:4d}] {title_ko} → (no match)")
 
-        print(f"책 제목: 처리 {book_processed}, 채움 {book_filled}, 건너뜀 {book_skipped}")
+        print(f"책 제목: 처리 {book_processed}, 채움 {book_filled}, 작가 채움 {author_filled}, 건너뜀 {book_skipped}")
 
     # ── 2. 셀럽 영문명 조회 (Wikipedia/Wikidata) ──────────────────
     celeb_processed = celeb_filled = celeb_skipped = 0
