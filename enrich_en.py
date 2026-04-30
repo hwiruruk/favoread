@@ -32,35 +32,79 @@ def http_get_json(url, timeout=10):
         return json.loads(r.read())
 
 
-def lookup_google_books(title_ko, author_ko):
-    """Google Books에서 한국어 제목으로 검색 → (title, authors) 반환."""
-    q_parts = ['intitle:' + title_ko]
-    if author_ko:
-        q_parts.append('inauthor:' + author_ko)
-    params = {
-        'q': ' '.join(q_parts),
-        'langRestrict': 'en',
-        'maxResults': '5',
+def is_foreign_author(author_en):
+    """영문 작가명이 외국인일 가능성이 높은지. Korean romanization은 보통
+    'Kim/Lee/Park/Han/Choi/Jung/Yoon ...' 등의 성으로 시작."""
+    if not author_en:
+        return False
+    KOREAN_SURNAMES = {
+        'kim', 'lee', 'park', 'choi', 'jung', 'jeong', 'cho', 'jo', 'jang',
+        'han', 'kang', 'yoon', 'yun', 'shin', 'song', 'suh', 'seo', 'oh',
+        'hwang', 'ahn', 'an', 'no', 'noh', 'bae', 'baek', 'paik', 'son',
+        'sohn', 'go', 'ko', 'gu', 'koo', 'ku', 'min', 'sung', 'seung',
+        'hong', 'moon', 'mun', 'cha', 'do', 'do', 'ryu', 'yu', 'yoo', 'ha',
     }
+    first_word = author_en.strip().split()[0].lower().rstrip(',')
+    return first_word not in KOREAN_SURNAMES
+
+
+def title_similarity(title_a, title_b):
+    """대소문자/공백 무시하고 단어 교집합 비율로 유사도 측정 (0~1)."""
+    if not title_a or not title_b:
+        return 0
+    def tokens(s):
+        s = s.lower()
+        s = re.sub(r'[^\w가-힣]+', ' ', s)
+        return set(t for t in s.split() if len(t) > 1)
+    a, b = tokens(title_a), tokens(title_b)
+    if not a or not b:
+        return 0
+    return len(a & b) / max(len(a), len(b))
+
+
+import re
+
+
+def google_books_query(query, lang_restrict=True, max_results=10):
+    """Google Books 일반 쿼리 — 결과 list 반환.
+    각 결과: {'title', 'subtitle', 'authors', 'language', 'ratingsCount'}
+    """
+    params = {'q': query, 'maxResults': str(max_results)}
+    if lang_restrict:
+        params['langRestrict'] = 'en'
     url = GOOGLE_BOOKS_API + '?' + urllib.parse.urlencode(params)
     try:
         data = http_get_json(url)
-    except Exception as e:
-        return None, None, f"google_books error: {e}"
-
+    except Exception:
+        return []
+    results = []
     for item in data.get('items', []):
         info = item.get('volumeInfo', {})
-        if info.get('language') != 'en':
+        if lang_restrict and info.get('language') != 'en':
             continue
         t = info.get('title')
         if not t:
             continue
-        subtitle = info.get('subtitle')
-        if subtitle:
-            t = t + ': ' + subtitle
+        sub = info.get('subtitle')
+        full_title = (t + ': ' + sub) if sub else t
         authors = info.get('authors') or []
-        author_en = ', '.join(authors) if authors else None
-        return t, author_en, None
+        results.append({
+            'title': full_title,
+            'authors': ', '.join(authors) if authors else None,
+            'language': info.get('language'),
+            'ratings': info.get('ratingsCount', 0) or 0,
+        })
+    return results
+
+
+def lookup_google_books(title_ko, author_ko):
+    """레거시 시그니처 호환. 단순 한국어 검색만 사용."""
+    q = 'intitle:' + title_ko
+    if author_ko:
+        q += ' inauthor:' + author_ko
+    res = google_books_query(q, lang_restrict=True, max_results=5)
+    if res:
+        return res[0]['title'], res[0]['authors'], None
     return None, None, "google_books no en match"
 
 
@@ -86,78 +130,240 @@ def lookup_open_library(title_ko, author_ko):
     return None, "open_library no en match"
 
 
-def find_en_title(title_ko, author_ko):
-    """두 소스 순차 시도. 결과는 (title|None, author_en|None, source|None)."""
-    t, a, _err = lookup_google_books(title_ko, author_ko)
-    if t:
-        return t, a, 'google_books'
+def find_en_title(title_ko, author_ko, author_en=None):
+    """다단계 폴백 검색. 결과는 (title|None, author_en|None, source|None).
+
+    전략 순서:
+      1. 영문 작가 + 한국어 제목 검색 (가장 정확)
+      2. 외국 작가의 책: 작가만으로 검색 → 가장 popular 결과
+      3. 한국 작가의 책: 작가 영문명만으로 검색 → 첫 결과
+      4. 한국어 검색 (기존 방식)
+      5. langRestrict 제거하고 메타에서 영문 표기 추출
+      6. Open Library 폴백
+    """
+
+    # 전략 1: 영문 작가 + 한국어 제목
+    if author_en:
+        res = google_books_query(
+            'intitle:' + title_ko + ' inauthor:' + author_en,
+            lang_restrict=True, max_results=5,
+        )
+        if res:
+            return res[0]['title'], res[0]['authors'], 'gb:title+author_en'
+
+    # 전략 2 & 3: 작가 영문명만으로 검색
+    if author_en:
+        res = google_books_query(
+            'inauthor:' + author_en,
+            lang_restrict=True, max_results=20,
+        )
+        if res:
+            # 외국 작가 → ratings 많은 것 중 제목 유사도 best
+            # 한국 작가 → 같은 사람의 책이 적으니 유사도 best
+            scored = []
+            for r in res:
+                sim = title_similarity(title_ko, r['title'])
+                # ratings는 log scale로 가중 (있으면 유리, 없어도 OK)
+                ratings_boost = (r['ratings'] ** 0.3) if r['ratings'] else 0
+                scored.append((sim * 10 + ratings_boost, sim, r))
+            scored.sort(reverse=True)
+            best_score, best_sim, best = scored[0]
+            # 유사도 0이어도 외국 작가면 popular한 책 채택 (검수 단계에서 거름)
+            if is_foreign_author(author_en) or best_sim > 0.3:
+                src = 'gb:author_en_only' + (' (foreign)' if is_foreign_author(author_en) else '')
+                return best['title'], best['authors'], src
+
+    # 전략 4: 기존 방식 (한국어 제목+한국어 작가)
+    res = google_books_query(
+        'intitle:' + title_ko + (' inauthor:' + author_ko if author_ko else ''),
+        lang_restrict=True, max_results=5,
+    )
+    if res:
+        return res[0]['title'], res[0]['authors'], 'gb:title_ko+author_ko'
+
+    # 전략 5: langRestrict 제거 — 한글판이 잡혀도 영문 메타 있을 수 있음
+    res = google_books_query(
+        'intitle:' + title_ko + (' inauthor:' + author_ko if author_ko else ''),
+        lang_restrict=False, max_results=5,
+    )
+    for r in res:
+        # ASCII 비율 높은 제목/작가만 채택
+        if sum(1 for c in r['title'] if ord(c) < 128) / max(len(r['title']), 1) > 0.85:
+            return r['title'], r['authors'], 'gb:relaxed'
+
+    # 전략 6: Open Library
     t, _err = lookup_open_library(title_ko, author_ko)
     if t:
         return t, None, 'open_library'
+
     return None, None, None
 
 
-def lookup_celeb_en(name_ko):
-    """한국어 위키피디아에서 인물 페이지 → Wikidata Q-id → 영문 라벨.
+# Hangul 음절 분해 + Revised Romanization (간단 버전).
+# 한국 인명에서 자주 쓰이는 관습적 표기는 surname overrides로 처리.
+HANGUL_INITIALS = ['g','kk','n','d','tt','r','m','b','pp','s','ss','','j','jj','ch','k','t','p','h']
+HANGUL_VOWELS = ['a','ae','ya','yae','eo','e','yeo','ye','o','wa','wae','oe','yo','u','wo','we','wi','yu','eu','ui','i']
+HANGUL_FINALS = ['','k','k','ks','n','nj','nh','t','l','lk','lm','lp','ls','lt','lp','lh','m','p','ps','t','t','ng','t','t','k','t','p','t']
 
-    한국 연예인은 대부분 한국어 위키 페이지가 있고, 거기에 Wikidata link가 걸려있음.
-    그룹 표기가 포함된 경우 (예: '아이린(레드벨벳)') 괄호 부분 제거 후 시도.
-    """
-    # 그룹/괄호 제거: '아이린(레드벨벳)' → '아이린', 'V(BTS)' → 'V'
-    base_name = name_ko.split('(')[0].strip()
+# 한국 인명 관습 표기 (RR 표기보다 우선)
+KOREAN_SURNAME_OVERRIDES = {
+    '김': 'Kim', '이': 'Lee', '박': 'Park', '최': 'Choi', '정': 'Jung',
+    '강': 'Kang', '조': 'Cho', '윤': 'Yoon', '장': 'Jang', '임': 'Lim',
+    '한': 'Han', '신': 'Shin', '오': 'Oh', '서': 'Seo', '권': 'Kwon',
+    '황': 'Hwang', '안': 'Ahn', '송': 'Song', '전': 'Jeon', '홍': 'Hong',
+    '유': 'Yoo', '고': 'Ko', '문': 'Moon', '양': 'Yang', '손': 'Son',
+    '배': 'Bae', '백': 'Baek', '허': 'Heo', '남': 'Nam', '심': 'Shim',
+    '노': 'Noh', '하': 'Ha', '곽': 'Kwak', '성': 'Sung', '차': 'Cha',
+    '주': 'Joo', '우': 'Woo', '구': 'Koo', '나': 'Na', '민': 'Min',
+    '진': 'Jin', '지': 'Ji', '엄': 'Eom', '채': 'Chae', '원': 'Won',
+    '천': 'Chun', '방': 'Bang', '공': 'Gong', '현': 'Hyun', '함': 'Ham',
+    '변': 'Byun', '염': 'Yeom', '여': 'Yeo', '추': 'Choo', '도': 'Do',
+    '소': 'So', '신': 'Shin', '석': 'Seok', '선': 'Sun', '설': 'Seol',
+    '마': 'Ma', '길': 'Gil', '연': 'Yeon', '위': 'Wi', '표': 'Pyo',
+}
 
-    # 1. 한국어 Wikipedia에서 페이지 검색 (정확 매칭)
+
+def romanize_korean_syllable(ch):
+    """한글 음절 1자 → 로마자."""
+    code = ord(ch) - 0xAC00
+    if code < 0 or code > 11171:
+        return ch
+    initial = code // 588
+    vowel = (code % 588) // 28
+    final = code % 28
+    return HANGUL_INITIALS[initial] + HANGUL_VOWELS[vowel] + HANGUL_FINALS[final]
+
+
+def romanize_korean_name(name_ko):
+    """한국 인명을 영문으로 (Surname Firstname 형식). 검수 필요."""
+    name_ko = name_ko.strip()
+    if not name_ko:
+        return None
+    # 첫 글자 = 성 (관습 표기 우선)
+    surname = KOREAN_SURNAME_OVERRIDES.get(name_ko[0])
+    if surname:
+        rest = name_ko[1:].strip()
+    else:
+        # 관습 표기에 없는 성은 RR 그대로
+        surname = romanize_korean_syllable(name_ko[0]).capitalize()
+        rest = name_ko[1:].strip()
+    if not rest:
+        return surname
+    # 이름은 RR로, 첫 글자만 대문자, 음절 사이 하이픈
+    given_parts = [romanize_korean_syllable(c) for c in rest if 0xAC00 <= ord(c) <= 0xD7A3]
+    if not given_parts:
+        return surname
+    given = '-'.join(p.capitalize() if i == 0 else p for i, p in enumerate(given_parts))
+    given = given_parts[0].capitalize() + ('-' + given_parts[1].lower() if len(given_parts) > 1 else '')
+    if len(given_parts) > 2:
+        given += '-' + '-'.join(p.lower() for p in given_parts[2:])
+    return surname + ' ' + given
+
+
+def _wikidata_label_from_qid(qid):
+    """Q-id → 영문 라벨."""
     params = {
-        'action': 'query',
-        'format': 'json',
-        'titles': base_name,
-        'prop': 'pageprops',
-        'redirects': '1',
-    }
-    url = KO_WIKI_API + '?' + urllib.parse.urlencode(params)
-    try:
-        data = http_get_json(url)
-    except Exception as e:
-        return None, f'wiki error: {e}'
-
-    pages = (data.get('query') or {}).get('pages') or {}
-    qid = None
-    for _pid, p in pages.items():
-        pp = p.get('pageprops') or {}
-        if pp.get('wikibase_item'):
-            qid = pp['wikibase_item']
-            break
-
-    if not qid:
-        return None, 'no wikidata link'
-
-    # 2. Wikidata에서 영문 라벨 조회
-    params2 = {
         'action': 'wbgetentities',
         'format': 'json',
         'ids': qid,
         'props': 'labels',
         'languages': 'en',
     }
-    url2 = WIKIDATA_API + '?' + urllib.parse.urlencode(params2)
+    url = WIKIDATA_API + '?' + urllib.parse.urlencode(params)
     try:
-        data2 = http_get_json(url2)
-    except Exception as e:
-        return None, f'wikidata error: {e}'
-
-    entity = (data2.get('entities') or {}).get(qid) or {}
+        data = http_get_json(url)
+    except Exception:
+        return None
+    entity = (data.get('entities') or {}).get(qid) or {}
     labels = entity.get('labels') or {}
-    en_label = (labels.get('en') or {}).get('value')
-    if not en_label:
-        return None, 'no en label'
+    return (labels.get('en') or {}).get('value')
 
-    # 그룹 정보를 괄호로 부기 (원래 한국어에 있었으면)
+
+def _wiki_qid_from_title(title):
+    """한국어 Wikipedia 페이지 제목 → Wikidata Q-id."""
+    params = {
+        'action': 'query',
+        'format': 'json',
+        'titles': title,
+        'prop': 'pageprops',
+        'redirects': '1',
+    }
+    url = KO_WIKI_API + '?' + urllib.parse.urlencode(params)
+    try:
+        data = http_get_json(url)
+    except Exception:
+        return None
+    pages = (data.get('query') or {}).get('pages') or {}
+    for _pid, p in pages.items():
+        pp = p.get('pageprops') or {}
+        if pp.get('wikibase_item'):
+            return pp['wikibase_item']
+    return None
+
+
+def _wiki_search_top_pages(query, limit=3):
+    """한국어 Wiki 검색 → 상위 N개 페이지 제목."""
+    params = {
+        'action': 'query',
+        'format': 'json',
+        'list': 'search',
+        'srsearch': query,
+        'srlimit': str(limit),
+    }
+    url = KO_WIKI_API + '?' + urllib.parse.urlencode(params)
+    try:
+        data = http_get_json(url)
+    except Exception:
+        return []
+    return [s['title'] for s in (data.get('query') or {}).get('search') or []]
+
+
+def lookup_celeb_en(name_ko):
+    """다단계 폴백:
+      1. 한국어 Wiki 정확 매칭 → Wikidata 영문 라벨
+      2. Wiki 검색(broad) 상위 결과들 시도
+      3. 한국어 로마자화 (Surname overrides + RR)
+
+    그룹 표기('아이린(레드벨벳)')는 괄호 부분 제거 후 시도.
+    """
+    base_name = name_ko.split('(')[0].strip()
+    group_suffix = ''
     if '(' in name_ko and ')' in name_ko:
         group = name_ko[name_ko.find('(')+1:name_ko.rfind(')')].strip()
-        if group and group not in en_label:
-            en_label = en_label + ' (' + group + ')'
+        if group:
+            group_suffix = ' (' + group + ')'
 
-    return en_label, 'wikidata'
+    def _attach_group(label):
+        if group_suffix and group_suffix.strip(' ()') not in label:
+            return label + group_suffix
+        return label
+
+    # 전략 1: 정확 매칭
+    qid = _wiki_qid_from_title(base_name)
+    if qid:
+        en = _wikidata_label_from_qid(qid)
+        if en:
+            return _attach_group(en), 'wikidata:exact'
+
+    # 전략 2: Wiki 검색 (broad). 상위 결과 중 Q-id 있고 영문 라벨 잡히는 첫 항목
+    candidates = _wiki_search_top_pages(base_name, limit=3)
+    for cand in candidates:
+        qid = _wiki_qid_from_title(cand)
+        if not qid:
+            continue
+        en = _wikidata_label_from_qid(qid)
+        if en:
+            # 결과 라벨이 ASCII 위주여야 (한국어 라벨이면 의미 없음)
+            ascii_ratio = sum(1 for c in en if ord(c) < 128) / max(len(en), 1)
+            if ascii_ratio > 0.7:
+                return _attach_group(en), 'wikidata:search'
+
+    # 전략 3: 한국어 로마자화 (마지막 폴백)
+    rom = romanize_korean_name(base_name)
+    if rom:
+        return _attach_group(rom), 'romanized'
+
+    return None, 'no match'
 
 
 def main():
@@ -216,14 +422,17 @@ def main():
                 book_skipped += 1
                 continue
 
+            # 검수 완료된 영문 작가가 있으면 그걸 검색에 활용 (전략 1~3)
+            confirmed_author_en = (existing_au if existing_au and not existing_au.startswith('?') else None)
+
             if args.limit and book_processed >= args.limit:
                 break
 
-            cache_key = (title_ko, author_ko)
+            cache_key = (title_ko, author_ko, confirmed_author_en)
             if cache_key in seen_titles:
                 t, a, src = seen_titles[cache_key]
             else:
-                t, a, src = find_en_title(title_ko, author_ko)
+                t, a, src = find_en_title(title_ko, author_ko, confirmed_author_en)
                 seen_titles[cache_key] = (t, a, src)
                 time.sleep(args.sleep)
 
