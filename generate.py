@@ -138,7 +138,7 @@ with open("data.csv", encoding="utf-8") as f:
         'src':     find_col(['출처', '근거'], 4),
         'link':    find_col(['도서 정보', '링크', 'url'], 5),
         'cover':   find_col(['도서 이미지', '표지'], 6),
-        'img':     find_col(['연예인이미지', 'photo', '이미지주소'], 7),
+        'img':     find_col(['연예인 이미지', '연예인이미지', 'photo', '이미지주소'], 7),
         'comment': find_col(['코멘트', '한마디'], 8),
         'name_en':  find_exact('연예인_en'),
         'title_en': find_exact('도서명_en'),
