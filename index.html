@@ -265,6 +265,45 @@
     .book-link:hover { opacity: .45; }
     
     .word-break-keep { word-break: keep-all; }
+
+    /* Scroll-spy 탭 (Neo-brutalism) */
+    .spy-tab {
+      display: inline-block;
+      padding: 6px 10px;
+      background: #fff;
+      border: 2px solid #000;
+      box-shadow: 2px 2px 0 0 #000;
+      font-family: 'Space Grotesk', sans-serif;
+      font-weight: 700;
+      font-size: 11px;
+      letter-spacing: .05em;
+      text-decoration: none;
+      color: #000;
+      white-space: nowrap;
+      transition: transform .1s, box-shadow .1s, background .1s;
+      flex-shrink: 0;
+    }
+    .spy-tab:hover {
+      transform: translate(-1px, -1px);
+      box-shadow: 3px 3px 0 0 #000;
+      background: #fde047;
+    }
+    .spy-tab.active {
+      background: #000;
+      color: #fff;
+    }
+    @media (min-width: 768px) {
+      #side-tabs .spy-tab { min-width: 56px; text-align: center; }
+    }
+    .scrollbar-hide::-webkit-scrollbar { display: none; }
+    .scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }
+
+    /* 모바일 sticky 탭이 anchor jump 시 가리지 않도록 scroll-margin-top */
+    @media (max-width: 767px) {
+      #hero, #about, #search, #grid, #seo-top-readers, #common-books, #all-celebs {
+        scroll-margin-top: 60px;
+      }
+    }
   </style>
 </head>
 
@@ -316,9 +355,31 @@
   </div>
 </div>  
 
+<!-- Scroll-spy 사이드 탭 (데스크탑) -->
+<nav id="side-tabs" class="hidden md:flex fixed left-4 lg:left-6 top-1/2 -translate-y-1/2 z-30 flex-col gap-2 pointer-events-auto">
+  <a href="#hero" data-spy="hero" class="spy-tab active">홈</a>
+  <a href="#about" data-spy="about" class="spy-tab">소개</a>
+  <a href="#search" data-spy="search" class="spy-tab">검색</a>
+  <a href="#seo-top-readers" data-spy="seo-top-readers" class="spy-tab">TOP</a>
+  <a href="#common-books" data-spy="common-books" class="spy-tab">책</a>
+  <a href="#all-celebs" data-spy="all-celebs" class="spy-tab">목록</a>
+</nav>
+
+<!-- Scroll-spy 가로 탭 (모바일) -->
+<nav id="top-tabs" class="md:hidden sticky top-0 z-30 bg-paper border-b-2 border-ink">
+  <div class="flex overflow-x-auto gap-2 px-3 py-2 scrollbar-hide">
+    <a href="#hero" data-spy="hero" class="spy-tab active">홈</a>
+    <a href="#about" data-spy="about" class="spy-tab">소개</a>
+    <a href="#search" data-spy="search" class="spy-tab">검색</a>
+    <a href="#seo-top-readers" data-spy="seo-top-readers" class="spy-tab">TOP</a>
+    <a href="#common-books" data-spy="common-books" class="spy-tab">책</a>
+    <a href="#all-celebs" data-spy="all-celebs" class="spy-tab">목록</a>
+  </div>
+</nav>
+
 <main id="app-root" class="max-w-5xl mx-auto px-4 sm:px-6 py-12 md:py-24 flex flex-col gap-12 md:gap-16">
 
-  <header class="flex flex-col items-center opacity-0 animate-fade-in pt-10 md:pt-0">
+  <header id="hero" class="flex flex-col items-center opacity-0 animate-fade-in pt-10 md:pt-0">
     <h1 class="text-4xl sm:text-5xl md:text-6xl font-black tracking-tight mb-3 text-ink text-center">최애의 독서</h1>
     <p class="text-ink font-sans font-bold text-sm sm:text-base tracking-wide mb-3 text-center">당신이 좋아하는, 그들이 읽은 책📕</p>
     <p class="text-muted text-xs sm:text-sm mb-6 text-center max-w-xl mx-auto px-4 word-break-keep">연예인 읽은 책 · 아이돌 추천 도서 · 셀럽 인생책을 한곳에서 만나보세요</p>
@@ -335,7 +396,7 @@
     </div>
   </header>
 
-  <section class="opacity-0 animate-fade-in-delayed text-center max-w-2xl mx-auto border-4 border-ink p-6 md:p-8 bg-white shadow-neo w-full">
+  <section id="about" class="opacity-0 animate-fade-in-delayed text-center max-w-2xl mx-auto border-4 border-ink p-6 md:p-8 bg-white shadow-neo w-full">
     <h2 class="text-xl md:text-2xl font-black mb-4 bg-neo-pink inline-block px-3 py-1 border-2 border-ink shadow-neo-sm">최애의 독서란?</h2>
     <p class="text-sm md:text-base font-bold leading-relaxed text-ink word-break-keep mb-3">
       BTS·아이브·세븐틴 같은 K-POP 아이돌부터 한국 드라마 배우, 뮤지션까지 —
@@ -347,7 +408,7 @@
     </p>
   </section>
 
-  <section class="max-w-xl mx-auto w-full opacity-0 animate-fade-in-delayed flex flex-col gap-4">
+  <section id="search" class="max-w-xl mx-auto w-full opacity-0 animate-fade-in-delayed flex flex-col gap-4">
     <input id="search-input" type="text"
       class="w-full bg-white border-2 border-ink shadow-neo px-4 sm:px-6 py-3 sm:py-4 text-center text-base sm:text-lg focus:outline-none focus:shadow-neo-lg focus:-translate-y-1 transition-all placeholder:text-muted/50 tracking-wide font-sans font-bold"
       placeholder="Search name, title, author, publisher">
@@ -358,7 +419,7 @@
     </div>
   </section>
 
-  <section class="w-full">
+  <section id="grid" class="w-full">
     <div id="grid-container" class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-x-4 sm:gap-x-6 gap-y-8 sm:gap-y-12"></div>
     <div id="empty-state" class="hidden text-center py-20 text-ink font-sans font-bold tracking-widest">No results found.</div>
     
@@ -1416,6 +1477,30 @@
   }
 
   document.addEventListener('DOMContentLoaded', init);
+})();
+</script>
+
+<script>
+// Scroll-spy: 현재 보이는 섹션의 탭에 .active 부여
+(function() {
+  const ids = ['hero', 'about', 'search', 'seo-top-readers', 'common-books', 'all-celebs'];
+  const sections = ids.map(id => document.getElementById(id)).filter(Boolean);
+  const tabs = document.querySelectorAll('.spy-tab');
+  if (!sections.length || !tabs.length) return;
+
+  const setActive = (id) => {
+    tabs.forEach(t => t.classList.toggle('active', t.dataset.spy === id));
+  };
+
+  const observer = new IntersectionObserver((entries) => {
+    // 가장 위에 보이는 섹션을 active로
+    const visible = entries
+      .filter(e => e.isIntersecting)
+      .sort((a, b) => a.boundingClientRect.top - b.boundingClientRect.top);
+    if (visible.length) setActive(visible[0].target.id);
+  }, { rootMargin: '-20% 0px -60% 0px', threshold: 0 });
+
+  sections.forEach(s => observer.observe(s));
 })();
 </script>
 </body>

@@ -804,9 +804,10 @@ for name, info in celebs.items():
         rows += ('    <tr><td>' + str(i+1) + '</td><td>' + cover_td + '</td><td>' + t_html
                  + '</td><td>' + author_html + '</td><td class="src">' + src_html + '</td></tr>\n')
 
-    title_text = name_en + ' — Books Read & Recommended (' + str(n) + ')'
-    desc_text  = (name_en + ' (Korean: ' + esc(name) + ') has read and recommended '
-                  + str(n) + ' books. See the full reading list with sources.')
+    title_text = name_en + ' Reading List · ' + str(n) + ' Books ' + name_en + ' Has Read'
+    desc_text  = ('What is ' + name_en + ' (Korean: ' + esc(name) + ') reading? '
+                  + str(n) + ' books recommended by ' + name_en
+                  + ' from interviews, YouTube, and SNS — full reading list with sources.')
 
     json_ld = clean_none({
         '@context': 'https://schema.org',
@@ -821,7 +822,7 @@ for name, info in celebs.items():
             'alternateName': name,
             'image': img if img.startswith('http') else None,
         },
-        'isPartOf': {'@type': 'WebSite', 'name': 'Favoread', 'url': EN_BASE},
+        'isPartOf': {'@type': 'WebSite', 'name': 'Favorbook', 'url': EN_BASE},
     })
     breadcrumb_ld = {
         '@context': 'https://schema.org',
@@ -838,8 +839,12 @@ for name, info in celebs.items():
         '<head>\n'
         '  <meta charset="utf-8">\n'
         '  <meta name="viewport" content="width=device-width, initial-scale=1">\n'
-        '  <title>' + esc(title_text) + ' | Favoread</title>\n'
+        '  <title>' + esc(title_text) + ' | Favorbook</title>\n'
         '  <meta name="description" content="' + esc(desc_text) + '">\n'
+        '  <meta name="keywords" content="'
+        + esc(name_en) + ' books, ' + esc(name_en) + ' reading list, ' + esc(name_en) + ' book recommendations, '
+        'what does ' + esc(name_en) + ' read, ' + esc(name_en) + ' favorite books, '
+        'kpop idol books, korean celebrity books, k-drama actor books, kpop reading list">\n'
         '  <meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1">\n'
         '  <meta property="og:title" content="' + esc(title_text) + '">\n'
         '  <meta property="og:description" content="' + esc(desc_text) + '">\n'
@@ -847,7 +852,7 @@ for name, info in celebs.items():
         '  <meta property="og:url" content="' + esc(page_url) + '">\n'
         '  <meta property="og:type" content="profile">\n'
         '  <meta property="og:locale" content="en_US">\n'
-        '  <meta property="og:site_name" content="Favoread">\n'
+        '  <meta property="og:site_name" content="Favorbook">\n'
         '  <meta name="twitter:card" content="summary_large_image">\n'
         '  <link rel="canonical" href="' + esc(page_url) + '">\n'
         '  <link rel="alternate" hreflang="en" href="' + esc(page_url) + '">\n'
@@ -884,7 +889,7 @@ for name, info in celebs.items():
         '    <a class="lang-btn" href="' + esc(ko_url) + '" hreflang="ko">한국어</a>\n'
         '    <span class="lang-btn active">EN</span>\n'
         '  </div>\n'
-        '  <nav><a href="' + EN_BASE + '">← Favoread Home</a></nav>\n'
+        '  <nav><a href="' + EN_BASE + '">← Favorbook Home</a></nav>\n'
         '  <header class="celeb-header">\n'
         '    <img class="celeb-img" src="' + esc(img) + '" alt="' + esc(name_en) + ' profile photo" width="120" height="120">\n'
         '    <div>\n'
@@ -951,9 +956,21 @@ for title, t_en in book_title_en.items():
                       + ' cover" width="200" height="280" loading="lazy" '
                       'style="object-fit:cover; margin:16px 0; border:2px solid #000">\n')
 
-    title_text = t_en + ' — Read by ' + str(n_celebs) + ' Korean Celebrities'
-    desc_text  = (t_en + ' (Korean: ' + esc(title) + ') was read by ' + str(n_celebs)
-                  + ' Korean celebrities, idols, and actors.')
+    # SEO: 어떤 셀럽이 읽었는지 제목/설명에 노출 (영문명 우선 3명)
+    celeb_names_en = []
+    for c in sorted(binfo['celebs']):
+        c_en = celebs[c].get('name_en')
+        if c_en:
+            celeb_names_en.append(c_en)
+    if not celeb_names_en:
+        # 영문명 없으면 한국어 그대로
+        celeb_names_en = sorted(binfo['celebs'])
+    top_celebs_str = ', '.join(celeb_names_en[:3])
+
+    title_text = t_en + ' · Read by ' + top_celebs_str + (', and more' if n_celebs > 3 else '')
+    desc_text  = (t_en + ' (Korean: ' + esc(title) + ') is a book read and recommended by '
+                  + str(n_celebs) + ' K-pop idols and Korean celebrities including '
+                  + top_celebs_str + '. See who, when, and why.')
 
     # 영문 작가 이름이 있으면 우선 사용
     author_en = book_author_en.get(title)
@@ -978,8 +995,13 @@ for title, t_en in book_title_en.items():
         '<head>\n'
         '  <meta charset="utf-8">\n'
         '  <meta name="viewport" content="width=device-width, initial-scale=1">\n'
-        '  <title>' + esc(title_text) + ' | Favoread</title>\n'
+        '  <title>' + esc(title_text) + ' | Favorbook</title>\n'
         '  <meta name="description" content="' + esc(desc_text) + '">\n'
+        '  <meta name="keywords" content="'
+        + esc(t_en) + ', ' + esc(t_en) + ' kpop, ' + esc(t_en) + ' korean celebrity, '
+        + 'books read by ' + esc(top_celebs_str) + ', '
+        + ', '.join((esc(c) + ' books') for c in celeb_names_en[:3]) + ', '
+        + 'kpop idol books, korean celebrity book recommendations, kpop reading list">\n'
         '  <meta name="robots" content="index, follow, max-image-preview:large">\n'
         '  <meta property="og:title" content="' + esc(title_text) + '">\n'
         '  <meta property="og:description" content="' + esc(desc_text) + '">\n'
@@ -1015,7 +1037,7 @@ for title, t_en in book_title_en.items():
         '    <a class="lang-btn" href="' + esc(ko_url) + '" hreflang="ko">한국어</a>\n'
         '    <span class="lang-btn active">EN</span>\n'
         '  </div>\n'
-        '  <nav><a href="' + EN_BASE + '">← Favoread Home</a></nav>\n'
+        '  <nav><a href="' + EN_BASE + '">← Favorbook Home</a></nav>\n'
         '  <h1>' + esc(t_en) + '</h1>\n'
         '  <p class="meta">Korean: <strong>' + esc(title) + '</strong>'
         + ((' · ' + esc(author_display)) if author_display.strip() else '')
@@ -1024,7 +1046,7 @@ for title, t_en in book_title_en.items():
         + cover_html
         + '  <h2>Read by ' + str(n_celebs) + ' Korean celebrities</h2>\n'
         '  <ul>\n' + celeb_list + '\n  </ul>\n'
-        '  <p style="margin-top:32px"><a href="' + EN_BASE + '">← Back to Favoread</a></p>\n'
+        '  <p style="margin-top:32px"><a href="' + EN_BASE + '">← Back to Favorbook</a></p>\n'
         '</body>\n'
         '</html>'
     )
@@ -1084,10 +1106,10 @@ en_book_grid = '\n'.join(en_book_cards)
 en_index_jsonld = json.dumps({
     '@context': 'https://schema.org',
     '@type': 'WebSite',
-    'name': 'Favoread',
-    'alternateName': ['최애의 독서', 'Favoread English'],
+    'name': 'Favorbook',
+    'alternateName': ['최애의 독서', 'Favorbook English', 'K-pop Idol Books'],
     'url': EN_BASE,
-    'description': 'A curated archive of books read by Korean celebrities, K-pop idols, and actors.',
+    'description': 'What K-pop idols and Korean celebrities are reading. BTS, IVE, SEVENTEEN, NewJeans, K-drama actors and their book recommendations from interviews, YouTube, and SNS.',
     'image': BASE + 'og-image.jpg',
     'inLanguage': 'en-US',
 }, ensure_ascii=False, indent=2)
@@ -1098,30 +1120,30 @@ en_index = (
     '<head>\n'
     '  <meta charset="UTF-8">\n'
     '  <meta name="viewport" content="width=device-width, initial-scale=1.0">\n'
-    '  <title>Favoread | Books Read by Korean Celebrities, K-pop Idols & Actors</title>\n'
-    '  <meta name="description" content="What are Korean celebrities, K-pop idols, and actors reading? A curated archive of reading lists from BTS RM, IU, and more — sourced from interviews, YouTube, and SNS.">\n'
-    '  <meta name="keywords" content="kpop idol books, korean celebrity reading, korean actor books, BTS RM reading list, IU books, kpop star recommendations, korean celebrity book recommendations">\n'
+    '  <title>What K-pop Idols Read · BTS, IVE, NewJeans Reading Lists | Favorbook</title>\n'
+    '  <meta name="description" content="Discover what K-pop idols and Korean celebrities are reading. BTS RM, IU, IVE, SEVENTEEN, NewJeans, K-drama actors — verified book recommendations and reading lists from interviews, YouTube, and SNS.">\n'
+    '  <meta name="keywords" content="kpop idol books, what bts reads, BTS reading list, RM book recommendations, IU books, what kpop idols read, kpop star reading, korean celebrity books, k-drama actor books, IVE books, NewJeans reading list, SEVENTEEN books, kpop idol favorite books, korean idol book recommendations, kpop reading list, books read by kpop idols, korean drama actor reading list, kdrama books, kpop fandom books">\n'
     '  <meta name="referrer" content="no-referrer">\n'
     '\n'
     '  <link rel="icon" href="' + BASE + 'favicon.svg" type="image/svg+xml">\n'
     '  <link rel="icon" href="' + BASE + 'favicon.png" type="image/png" sizes="192x192">\n'
     '  <link rel="apple-touch-icon" href="' + BASE + 'favicon.png">\n'
     '\n'
-    '  <meta property="og:site_name" content="Favoread">\n'
-    '  <meta property="og:title" content="Favoread | Books Read by Korean Celebrities, K-pop Idols & Actors">\n'
-    '  <meta property="og:description" content="What are Korean celebrities, K-pop idols, and actors reading? Curated reading lists from interviews, YouTube, and SNS.">\n'
+    '  <meta property="og:site_name" content="Favorbook">\n'
+    '  <meta property="og:title" content="What K-pop Idols Read · BTS, IVE, NewJeans Reading Lists | Favorbook">\n'
+    '  <meta property="og:description" content="Discover what K-pop idols and Korean celebrities are reading. BTS RM, IU, IVE, SEVENTEEN, NewJeans — verified book recommendations from interviews, YouTube, and SNS.">\n'
     '  <meta property="og:type" content="website">\n'
     '  <meta property="og:url" content="' + EN_BASE + '">\n'
     '  <meta property="og:image" content="' + BASE + 'og-image.jpg">\n'
     '  <meta property="og:image:width" content="1200">\n'
     '  <meta property="og:image:height" content="630">\n'
-    '  <meta property="og:image:alt" content="Favoread — books read by Korean celebrities">\n'
+    '  <meta property="og:image:alt" content="Favorbook — what K-pop idols and Korean celebrities are reading">\n'
     '  <meta property="og:locale" content="en_US">\n'
     '  <meta property="og:locale:alternate" content="ko_KR">\n'
     '\n'
     '  <meta name="twitter:card" content="summary_large_image">\n'
-    '  <meta name="twitter:title" content="Favoread | Books Read by Korean Celebrities">\n'
-    '  <meta name="twitter:description" content="What are Korean celebrities, K-pop idols, and actors reading?">\n'
+    '  <meta name="twitter:title" content="What K-pop Idols Read · BTS, IVE, NewJeans Reading Lists | Favorbook">\n'
+    '  <meta name="twitter:description" content="What are K-pop idols and Korean celebrities reading? BTS RM, IU, IVE, NewJeans, SEVENTEEN, K-drama actors and their book picks.">\n'
     '  <meta name="twitter:image" content="' + BASE + 'og-image.jpg">\n'
     '\n'
     '  <link rel="canonical" href="' + EN_BASE + '">\n'
@@ -1132,7 +1154,7 @@ en_index = (
     '  <meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1">\n'
     '  <meta name="theme-color" content="#ffffff">\n'
     '\n'
-    '  <link rel="alternate" type="application/rss+xml" title="Favoread RSS" href="' + BASE + 'feed.xml">\n'
+    '  <link rel="alternate" type="application/rss+xml" title="Favorbook RSS" href="' + BASE + 'feed.xml">\n'
     '\n'
     '  <link rel="preconnect" href="https://fonts.googleapis.com">\n'
     '  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>\n'
@@ -1178,16 +1200,54 @@ en_index = (
     '    }\n'
     '    ::selection { background: #fde047; color: #000; }\n'
     '    .word-break-keep { word-break: keep-all; }\n'
+    '\n'
+    '    /* Scroll-spy tabs (Neo-brutalism) */\n'
+    '    .spy-tab {\n'
+    '      display: inline-block; padding: 6px 10px;\n'
+    '      background: #fff; border: 2px solid #000;\n'
+    '      box-shadow: 2px 2px 0 0 #000;\n'
+    '      font-family: \'Space Grotesk\', sans-serif;\n'
+    '      font-weight: 700; font-size: 11px; letter-spacing: .05em;\n'
+    '      text-decoration: none; color: #000; white-space: nowrap;\n'
+    '      transition: transform .1s, box-shadow .1s, background .1s;\n'
+    '      flex-shrink: 0;\n'
+    '    }\n'
+    '    .spy-tab:hover { transform: translate(-1px,-1px); box-shadow: 3px 3px 0 0 #000; background: #fde047; }\n'
+    '    .spy-tab.active { background: #000; color: #fff; }\n'
+    '    @media (min-width: 768px) { #side-tabs .spy-tab { min-width: 64px; text-align: center; } }\n'
+    '    .scrollbar-hide::-webkit-scrollbar { display: none; }\n'
+    '    .scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }\n'
+    '    @media (max-width: 767px) {\n'
+    '      #hero, #about, #celebs, #books { scroll-margin-top: 60px; }\n'
+    '    }\n'
     '  </style>\n'
     '</head>\n'
     '<body class="font-serif relative selection:bg-neo-yellow selection:text-ink">\n'
     '\n'
+    '<!-- Scroll-spy 사이드 탭 (데스크탑) -->\n'
+    '<nav id="side-tabs" class="hidden md:flex fixed left-4 lg:left-6 top-1/2 -translate-y-1/2 z-30 flex-col gap-2 pointer-events-auto">\n'
+    '  <a href="#hero" data-spy="hero" class="spy-tab active">Home</a>\n'
+    '  <a href="#about" data-spy="about" class="spy-tab">About</a>\n'
+    '  <a href="#celebs" data-spy="celebs" class="spy-tab">Celebs</a>\n'
+    '  <a href="#books" data-spy="books" class="spy-tab">Books</a>\n'
+    '</nav>\n'
+    '\n'
+    '<!-- Scroll-spy 가로 탭 (모바일) -->\n'
+    '<nav id="top-tabs" class="md:hidden sticky top-0 z-30 bg-paper border-b-2 border-ink">\n'
+    '  <div class="flex overflow-x-auto gap-2 px-3 py-2 scrollbar-hide">\n'
+    '    <a href="#hero" data-spy="hero" class="spy-tab active">Home</a>\n'
+    '    <a href="#about" data-spy="about" class="spy-tab">About</a>\n'
+    '    <a href="#celebs" data-spy="celebs" class="spy-tab">Celebs</a>\n'
+    '    <a href="#books" data-spy="books" class="spy-tab">Books</a>\n'
+    '  </div>\n'
+    '</nav>\n'
+    '\n'
     '<main class="max-w-5xl mx-auto px-4 sm:px-6 py-12 md:py-24 flex flex-col gap-12 md:gap-16">\n'
     '\n'
-    '  <header class="flex flex-col items-center pt-6 md:pt-0 text-center">\n'
-    '    <h1 class="text-4xl sm:text-5xl md:text-6xl font-black tracking-tight mb-3 text-ink">Favoread</h1>\n'
-    '    <p class="text-ink font-sans font-bold text-sm sm:text-base tracking-wide mb-3">Books read by your faves📕</p>\n'
-    '    <p class="text-muted text-xs sm:text-sm mb-6 max-w-xl mx-auto px-4 word-break-keep">Reading lists from K-pop idols, Korean actors, and celebrities — gathered from interviews, YouTube, and SNS.</p>\n'
+    '  <header id="hero" class="flex flex-col items-center pt-6 md:pt-0 text-center">\n'
+    '    <h1 class="text-4xl sm:text-5xl md:text-6xl font-black tracking-tight mb-3 text-ink">Favorbook</h1>\n'
+    '    <p class="text-ink font-sans font-bold text-sm sm:text-base tracking-wide mb-3">What your fave K-pop idol is reading📕</p>\n'
+    '    <p class="text-muted text-xs sm:text-sm mb-6 max-w-xl mx-auto px-4 word-break-keep">Verified reading lists from K-pop idols (BTS, IVE, NewJeans, SEVENTEEN), K-drama actors, and Korean celebrities — sourced from interviews, YouTube, and SNS.</p>\n'
     '    <p class="text-ink font-sans font-bold text-xs sm:text-sm tracking-[.15em] mb-6 uppercase bg-neo-yellow border-2 border-ink px-4 py-1 shadow-neo-sm">Archive of their reads</p>\n'
     '    <div class="flex items-center gap-2 text-[10px] sm:text-xs font-sans font-bold tracking-wider text-ink border-2 border-ink bg-white px-3 py-1.5 shadow-neo-sm">\n'
     '      <span class="w-2 h-2 rounded-full bg-ink"></span>\n'
@@ -1199,8 +1259,8 @@ en_index = (
     '    </div>\n'
     '  </header>\n'
     '\n'
-    '  <section class="text-center max-w-2xl mx-auto border-4 border-ink p-6 md:p-8 bg-white shadow-neo w-full">\n'
-    '    <h2 class="text-xl md:text-2xl font-black mb-4 bg-neo-pink inline-block px-3 py-1 border-2 border-ink shadow-neo-sm">What is Favoread?</h2>\n'
+    '  <section id="about" class="text-center max-w-2xl mx-auto border-4 border-ink p-6 md:p-8 bg-white shadow-neo w-full">\n'
+    '    <h2 class="text-xl md:text-2xl font-black mb-4 bg-neo-pink inline-block px-3 py-1 border-2 border-ink shadow-neo-sm">What is Favorbook?</h2>\n'
     '    <p class="text-sm md:text-base font-bold leading-relaxed text-ink word-break-keep mb-3">\n'
     '      From K-POP idols like <strong>BTS, IVE, SEVENTEEN</strong> to Korean drama actors and musicians — '
     '      a curated archive of <strong>books they read, recommend, and call life-changing</strong>.\n'
@@ -1211,7 +1271,7 @@ en_index = (
     '    </p>\n'
     '  </section>\n'
     '\n'
-    + ('  <section class="w-full">\n'
+    + ('  <section id="celebs" class="w-full">\n'
        '    <h2 class="text-2xl md:text-3xl font-black mb-2 word-break-keep">Browse Celebrities (' + str(len(en_celeb_pages)) + ')</h2>\n'
        '    <p class="text-sm md:text-base font-bold text-muted mb-8 word-break-keep">Click a card to see their full reading list.</p>\n'
        '    <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-x-4 sm:gap-x-6 gap-y-8 sm:gap-y-12">\n'
@@ -1221,7 +1281,7 @@ en_index = (
        else '  <section class="border-t-4 border-ink pt-12 md:pt-16 text-center">\n'
        '    <p class="font-bold text-muted">No English profiles available yet. <a href="' + BASE + '" hreflang="ko" class="underline decoration-2 hover:text-ink">Browse the full Korean archive →</a></p>\n'
        '  </section>\n\n')
-    + ('  <section class="border-t-4 border-ink pt-12 md:pt-16 w-full">\n'
+    + ('  <section id="books" class="border-t-4 border-ink pt-12 md:pt-16 w-full">\n'
        '    <h2 class="text-2xl md:text-3xl font-black mb-2 word-break-keep">Books Read by 2+ Celebrities</h2>\n'
        '    <p class="text-sm md:text-base font-bold text-muted mb-8 word-break-keep">Titles that appear across multiple reading lists (' + str(len(en_book_pages)) + ' books).</p>\n'
        '    <div class="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 gap-4 md:gap-5">\n'
@@ -1233,6 +1293,22 @@ en_index = (
     '  </footer>\n'
     '\n'
     '</main>\n'
+    '\n'
+    '<script>\n'
+    '(function() {\n'
+    '  const ids = ["hero", "about", "celebs", "books"];\n'
+    '  const sections = ids.map(id => document.getElementById(id)).filter(Boolean);\n'
+    '  const tabs = document.querySelectorAll(".spy-tab");\n'
+    '  if (!sections.length || !tabs.length) return;\n'
+    '  const setActive = (id) => tabs.forEach(t => t.classList.toggle("active", t.dataset.spy === id));\n'
+    '  const observer = new IntersectionObserver((entries) => {\n'
+    '    const visible = entries.filter(e => e.isIntersecting)\n'
+    '      .sort((a, b) => a.boundingClientRect.top - b.boundingClientRect.top);\n'
+    '    if (visible.length) setActive(visible[0].target.id);\n'
+    '  }, { rootMargin: "-20% 0px -60% 0px", threshold: 0 });\n'
+    '  sections.forEach(s => observer.observe(s));\n'
+    '})();\n'
+    '</script>\n'
     '\n'
     '</body>\n'
     '</html>'
