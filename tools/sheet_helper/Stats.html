@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html>
+<head>
+<base target="_top">
+<style>
+  body { font-family: -apple-system, BlinkMacSystemFont, sans-serif; padding: 16px; color: #222; line-height: 1.6; }
+  h2 { margin: 0 0 16px; font-size: 18px; }
+  h3 { margin: 20px 0 8px; font-size: 14px; border-bottom: 2px solid #000; padding-bottom: 4px; }
+  .stat-box { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; }
+  .card { background: #fff; border: 2px solid #000; box-shadow: 3px 3px 0 0 #000; padding: 14px; }
+  .card .label { font-size: 11px; color: #666; text-transform: uppercase; letter-spacing: .1em; margin-bottom: 4px; }
+  .card .num { font-size: 28px; font-weight: 900; }
+  .progress-row { margin: 10px 0; }
+  .progress-label { font-size: 13px; margin-bottom: 4px; display: flex; justify-content: space-between; }
+  .progress-bar-bg { height: 12px; background: #eee; border: 2px solid #000; }
+  .progress-bar { height: 100%; background: #fde047; border-right: 2px solid #000; }
+</style>
+</head>
+<body>
+<? if (data.error) { ?>
+  <h2>⚠️ <?= data.error ?></h2>
+<? } else { ?>
+
+<div class="stat-box">
+  <div class="card">
+    <div class="label">총 행</div>
+    <div class="num"><?= data.totalRows ?></div>
+  </div>
+  <div class="card">
+    <div class="label">Unique 셀럽</div>
+    <div class="num"><?= data.uniqueCelebs ?></div>
+  </div>
+  <div class="card">
+    <div class="label">Unique 도서</div>
+    <div class="num"><?= data.uniqueBooks ?></div>
+  </div>
+  <div class="card">
+    <div class="label">Unique 작가</div>
+    <div class="num"><?= data.uniqueAuthors ?></div>
+  </div>
+</div>
+
+<h3>영문 데이터 진행률</h3>
+
+<? function showProgress(label, info) { ?>
+  <? if (info) { ?>
+    <div class="progress-row">
+      <div class="progress-label">
+        <span><?= label ?></span>
+        <span><?= info.filled ?>/<?= info.total ?> (<?= info.pct ?>%)</span>
+      </div>
+      <div class="progress-bar-bg">
+        <div class="progress-bar" style="width: <?= info.pct ?>%"></div>
+      </div>
+    </div>
+  <? } ?>
+<? } ?>
+
+<? showProgress('셀럽 영문명 (연예인_en)', data.celebsEn); ?>
+<? showProgress('도서 영문명 (도서명_en)', data.booksEn); ?>
+<? showProgress('작가 영문명 (저자_en)', data.authorsEn); ?>
+
+<? } ?>
+</body>
+</html>

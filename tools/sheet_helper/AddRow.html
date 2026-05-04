@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html>
+<head>
+<base target="_top">
+<style>
+  body { font-family: -apple-system, BlinkMacSystemFont, sans-serif; padding: 16px; color: #222; line-height: 1.5; }
+  h2 { margin: 0 0 12px; font-size: 16px; }
+  .field { margin-bottom: 12px; }
+  .field label { display: block; font-size: 12px; font-weight: 700; margin-bottom: 4px; }
+  .field input, .field textarea { width: 100%; padding: 8px 10px; border: 2px solid #000; box-shadow: 2px 2px 0 0 #000; font-size: 13px; box-sizing: border-box; }
+  .field input:focus, .field textarea:focus { outline: none; box-shadow: 3px 3px 0 0 #000; transform: translate(-1px, -1px); }
+  .req { color: #dc2626; }
+  .small { font-size: 11px; color: #666; margin-top: 2px; }
+  button { padding: 10px 20px; border: 2px solid #000; box-shadow: 3px 3px 0 0 #000; background: #fde047; font-weight: 700; font-size: 13px; cursor: pointer; }
+  button:hover { transform: translate(-1px, -1px); box-shadow: 4px 4px 0 0 #000; }
+  button:active { transform: translate(0, 0); box-shadow: 2px 2px 0 0 #000; }
+  button[disabled] { opacity: .5; cursor: not-allowed; }
+  .button-row { display: flex; gap: 10px; margin-top: 16px; }
+  .cancel { background: #fff; }
+  .status { margin-top: 12px; padding: 10px; font-size: 13px; }
+  .status.ok { background: #dcfce7; border: 2px solid #16a34a; }
+  .status.err { background: #fee2e2; border: 2px solid #dc2626; }
+</style>
+</head>
+<body>
+
+<form id="form">
+  <div class="field">
+    <label>연예인 <span class="req">*</span></label>
+    <input type="text" id="celeb" list="celebs-list" required autocomplete="off">
+    <datalist id="celebs-list">
+      <? suggestions.celebs.forEach(function(c) { ?>
+        <option value="<?= c ?>"></option>
+      <? }); ?>
+    </datalist>
+    <div class="small">예: RM(BTS), 아이유, 박서준 — 기존 셀럽이면 자동완성</div>
+  </div>
+
+  <div class="field">
+    <label>도서명 <span class="req">*</span></label>
+    <input type="text" id="book" list="books-list" required autocomplete="off">
+    <datalist id="books-list">
+      <? suggestions.books.forEach(function(b) { ?>
+        <option value="<?= b ?>"></option>
+      <? }); ?>
+    </datalist>
+  </div>
+
+  <div class="field">
+    <label>저자 <span class="req">*</span></label>
+    <input type="text" id="author" list="authors-list" required autocomplete="off">
+    <datalist id="authors-list">
+      <? suggestions.authors.forEach(function(a) { ?>
+        <option value="<?= a ?>"></option>
+      <? }); ?>
+    </datalist>
+  </div>
+
+  <div class="field">
+    <label>출판사 <span class="req">*</span></label>
+    <input type="text" id="publisher" list="publishers-list" required autocomplete="off">
+    <datalist id="publishers-list">
+      <? suggestions.publishers.forEach(function(p) { ?>
+        <option value="<?= p ?>"></option>
+      <? }); ?>
+    </datalist>
+  </div>
+
+  <div class="field">
+    <label>출처 URL <span class="req">*</span></label>
+    <input type="url" id="source" placeholder="https://..." required>
+    <div class="small">유튜브, 인터뷰, SNS 등 검증 가능한 출처 링크</div>
+  </div>
+
+  <div class="field">
+    <label>도서 이미지 URL <span class="small">(선택)</span></label>
+    <input type="url" id="bookImage" placeholder="https://image.aladin.co.kr/...">
+  </div>
+
+  <div class="field">
+    <label>연예인 이미지 URL <span class="small">(선택)</span></label>
+    <input type="url" id="celebImage" placeholder="https://upload.wikimedia.org/...">
+    <div class="small">이미 등록된 셀럽이면 비워둬도 OK</div>
+  </div>
+
+  <div class="field">
+    <label>코멘트 <span class="small">(선택)</span></label>
+    <textarea id="comment" rows="2" placeholder="짧은 메모"></textarea>
+  </div>
+
+  <div class="button-row">
+    <button type="submit" id="submit-btn">저장</button>
+    <button type="button" class="cancel" onclick="google.script.host.close()">취소</button>
+  </div>
+
+  <div id="status"></div>
+</form>
+
+<script>
+const $ = (id) => document.getElementById(id);
+
+document.getElementById('form').addEventListener('submit', (e) => {
+  e.preventDefault();
+  const btn = $('submit-btn');
+  btn.disabled = true;
+  btn.textContent = '저장 중...';
+  $('status').innerHTML = '';
+
+  const payload = {
+    celeb:      $('celeb').value.trim(),
+    book:       $('book').value.trim(),
+    author:     $('author').value.trim(),
+    publisher:  $('publisher').value.trim(),
+    source:     $('source').value.trim(),
+    bookImage:  $('bookImage').value.trim(),
+    celebImage: $('celebImage').value.trim(),
+    comment:    $('comment').value.trim(),
+  };
+
+  google.script.run
+    .withSuccessHandler((res) => {
+      $('status').innerHTML = '<div class="status ok">✅ ' + res.rowNum + '행에 추가됨. 또 추가하려면 폼을 다시 작성하세요.</div>';
+      btn.disabled = false;
+      btn.textContent = '저장';
+      // 입력값 초기화 (자주 안 바뀌는 셀럽 빼고)
+      ['book', 'author', 'publisher', 'source', 'bookImage', 'comment'].forEach(id => $(id).value = '');
+    })
+    .withFailureHandler((err) => {
+      $('status').innerHTML = '<div class="status err">❌ ' + err.message + '</div>';
+      btn.disabled = false;
+      btn.textContent = '저장';
+    })
+    .appendRow(payload);
+});
+</script>
+
+</body>
+</html>
