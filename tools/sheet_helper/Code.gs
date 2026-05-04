@@ -238,29 +238,41 @@ function getSuggestions() {
   };
 }
 
-// 폼 제출 처리 — 시트에 새 행 append
+// 폼 제출 처리 — 시트에 새 행 append.
+//
+// 중요: sheet.appendRow([...]) 는 모든 셀에 빈 문자열을 강제로 써서
+// ARRAYFORMULA(B/D/F열의 영문 컬럼) 결과를 #REF! 로 깨뜨립니다.
+// 따라서 사용자가 채운 값만 setValue()로 직접 쓰고, 영문 컬럼 등은
+// 손대지 않아 ARRAYFORMULA가 자연스럽게 새 행을 채우게 합니다.
 function appendRow(payload) {
   const sheet = getMainSheet();
   const headers = sheet.getRange(1, 1, 1, sheet.getLastColumn()).getValues()[0];
   const ci = buildColIndex(headers);
 
-  const row = new Array(headers.length).fill('');
-  // 영문 컬럼은 lookup 시트의 ARRAYFORMULA가 자동 채움 → 비움
+  const targetRow = sheet.getLastRow() + 1;
+
   const map = {
     '연예인':       payload.celeb,
     '도서명':       payload.book,
     '저자':         payload.author,
     '출판사':       payload.publisher,
     '출처':         payload.source,
+    '도서 정보':    payload.bookInfo,
     '도서 이미지':  payload.bookImage,
     '연예인 이미지': payload.celebImage,
     '코멘트':       payload.comment,
   };
+
+  // 값이 있는 셀만 개별적으로 setValue → 빈 셀은 진짜 비워두어
+  // ARRAYFORMULA / 자동 수식 등이 자유롭게 동작하도록 함.
   Object.keys(map).forEach(col => {
+    const v = map[col];
+    if (!v || String(v).trim() === '') return;
     const i = ci.find(col);
-    if (i >= 0) row[i] = map[col] || '';
+    if (i >= 0) {
+      sheet.getRange(targetRow, i + 1).setValue(v);
+    }
   });
 
-  sheet.appendRow(row);
-  return { ok: true, rowNum: sheet.getLastRow() };
+  return { ok: true, rowNum: targetRow };
 }

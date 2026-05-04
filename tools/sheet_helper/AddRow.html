@@ -73,6 +73,12 @@
   </div>
 
   <div class="field">
+    <label>도서 정보 URL <span class="small">(선택)</span></label>
+    <input type="url" id="bookInfo" placeholder="https://www.aladin.co.kr/shop/wproduct.aspx?ItemId=...">
+    <div class="small">알라딘 상품 페이지 링크 (시트에 GET_ALADIN_API_URL 수식이 있으면 자동, 없으면 수동 입력)</div>
+  </div>
+
+  <div class="field">
     <label>도서 이미지 URL <span class="small">(선택)</span></label>
     <input type="url" id="bookImage" placeholder="https://image.aladin.co.kr/...">
   </div>
@@ -112,6 +118,7 @@ document.getElementById('form').addEventListener('submit', (e) => {
     author:     $('author').value.trim(),
     publisher:  $('publisher').value.trim(),
     source:     $('source').value.trim(),
+    bookInfo:   $('bookInfo').value.trim(),
     bookImage:  $('bookImage').value.trim(),
     celebImage: $('celebImage').value.trim(),
     comment:    $('comment').value.trim(),
@@ -123,7 +130,7 @@ document.getElementById('form').addEventListener('submit', (e) => {
       btn.disabled = false;
       btn.textContent = '저장';
       // 입력값 초기화 (자주 안 바뀌는 셀럽 빼고)
-      ['book', 'author', 'publisher', 'source', 'bookImage', 'comment'].forEach(id => $(id).value = '');
+      ['book', 'author', 'publisher', 'source', 'bookInfo', 'bookImage', 'comment'].forEach(id => $(id).value = '');
     })
     .withFailureHandler((err) => {
       $('status').innerHTML = '<div class="status err">❌ ' + err.message + '</div>';
