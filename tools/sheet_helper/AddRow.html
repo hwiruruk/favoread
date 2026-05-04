@@ -73,14 +73,15 @@
   </div>
 
   <div class="field">
-    <label>도서 정보 URL <span class="small">(선택)</span></label>
-    <input type="url" id="bookInfo" placeholder="https://www.aladin.co.kr/shop/wproduct.aspx?ItemId=...">
-    <div class="small">알라딘 상품 페이지 링크 (시트에 GET_ALADIN_API_URL 수식이 있으면 자동, 없으면 수동 입력)</div>
+    <label>도서 정보 URL <span class="small">(비워두면 알라딘 API 자동 조회)</span></label>
+    <input type="url" id="bookInfo" placeholder="자동 조회 (또는 https://www.aladin.co.kr/shop/wproduct.aspx?ItemId=...)">
+    <div class="small">GET_ALADIN_API_URL 함수가 같은 프로젝트에 있으면 자동 호출됨</div>
   </div>
 
   <div class="field">
-    <label>도서 이미지 URL <span class="small">(선택)</span></label>
-    <input type="url" id="bookImage" placeholder="https://image.aladin.co.kr/...">
+    <label>도서 이미지 URL <span class="small">(비워두면 알라딘 API 자동 조회)</span></label>
+    <input type="url" id="bookImage" placeholder="자동 조회 (또는 https://image.aladin.co.kr/...)">
+    <div class="small">GET_ALADIN_COVER 함수가 같은 프로젝트에 있으면 자동 호출됨</div>
   </div>
 
   <div class="field">
@@ -96,7 +97,9 @@
 
   <div class="button-row">
     <button type="submit" id="submit-btn">저장</button>
-    <button type="button" class="cancel" onclick="google.script.host.close()">취소</button>
+    <? if (typeof standalone === 'undefined' || !standalone) { ?>
+      <button type="button" class="cancel" onclick="google.script.host.close()">취소</button>
+    <? } ?>
   </div>
 
   <div id="status"></div>
@@ -126,7 +129,10 @@ document.getElementById('form').addEventListener('submit', (e) => {
 
   google.script.run
     .withSuccessHandler((res) => {
-      $('status').innerHTML = '<div class="status ok">✅ ' + res.rowNum + '행에 추가됨. 또 추가하려면 폼을 다시 작성하세요.</div>';
+      let extra = '';
+      if (res.bookInfoAuto)  extra += '<div class="small">🔗 도서 정보 자동: ' + res.bookInfoAuto + '</div>';
+      if (res.bookImageAuto) extra += '<div class="small">🖼️ 도서 이미지 자동: ' + res.bookImageAuto + '</div>';
+      $('status').innerHTML = '<div class="status ok">✅ ' + res.rowNum + '행에 추가됨.' + extra + '</div>';
       btn.disabled = false;
       btn.textContent = '저장';
       // 입력값 초기화 (자주 안 바뀌는 셀럽 빼고)
