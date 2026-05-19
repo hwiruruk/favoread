@@ -266,19 +266,26 @@
     .bc-title { font-weight: 700; font-size: 13px; line-height: 1.3; margin-bottom: 4px; }
     .bc-author { font-size: 12px; color: #555; margin-bottom: 6px; }
     .bc-badge { display: inline-block; font-size: 11px; background: #fde047; border: 1px solid #000; padding: 1px 6px; font-weight: 700; }
-    .shared-book-list { list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 12px; }
-    .shared-book { background: #fff; border: 2px solid #000; box-shadow: 4px 4px 0 0 #000; padding: 12px; }
-    .sb-main { display: flex; gap: 12px; margin-bottom: 10px; }
-    .sb-cover-link { flex-shrink: 0; display: block; }
-    .sb-meta { flex: 1; min-width: 0; }
-    .sb-title { font-weight: 800; font-size: 15px; line-height: 1.3; margin-bottom: 4px; }
-    .sb-title a { color: #000; }
-    .sb-title a:hover { color: #2563eb; }
-    .sb-author { font-size: 13px; color: #555; }
-    .sb-celebs { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; padding-top: 10px; border-top: 1.5px dashed #ccc; }
-    .sb-celebs-label { font-size: 12px; color: #666; font-weight: 700; margin-right: 4px; }
-    .sb-celeb-chip { display: inline-block; padding: 3px 9px; background: #fff8e7; border: 1.5px solid #000; box-shadow: 1px 1px 0 0 #000; font-size: 12px; font-weight: 700; text-decoration: none; color: #000; transition: transform .1s, box-shadow .1s, background .1s; }
-    .sb-celeb-chip:hover { transform: translate(-1px,-1px); box-shadow: 2px 2px 0 0 #000; background: #fde047; text-decoration: none; }
+    .celeb-bio { margin: 4px 0 8px; padding: 6px 10px; background: #fff8e7; border-left: 4px solid #000; font-size: 14px; line-height: 1.45; color: #222; }
+    .reading-list { list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 14px; counter-reset: rl; }
+    .rl-item { position: relative; background: #fff; border: 2px solid #000; box-shadow: 4px 4px 0 0 #000; padding: 14px 14px 14px 52px; transition: transform .12s, box-shadow .12s; }
+    .rl-item:hover { transform: translate(-1px,-1px); box-shadow: 6px 6px 0 0 #000; }
+    .rl-num { position: absolute; left: -2px; top: -2px; width: 38px; height: 30px; display: flex; align-items: center; justify-content: center; background: #fde047; border: 2px solid #000; font-weight: 900; font-size: 14px; font-family: "Space Grotesk", sans-serif; }
+    .rl-item .rl-cover, .rl-item > .rl-cover { float: left; margin-right: 14px; width: 74px; height: 105px; display: block; flex-shrink: 0; border: 1.5px solid #000; box-shadow: 2px 2px 0 0 #000; background: #f4f4f0; overflow: hidden; }
+    .rl-cover img { width: 100%; height: 100%; object-fit: cover; display: block; }
+    .rl-no-cover { width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; font-size: 32px; }
+    .rl-meta { overflow: hidden; min-height: 105px; }
+    .rl-title { font-weight: 800; font-size: 16px; line-height: 1.3; margin-bottom: 4px; }
+    .rl-title a { color: #000; }
+    .rl-title a:hover { color: #2563eb; }
+    .rl-byline { font-size: 13px; color: #555; margin-bottom: 8px; line-height: 1.4; }
+    .rl-source { display: inline-block; font-size: 12px; padding: 3px 8px; background: #fff; border: 1.5px solid #000; box-shadow: 1px 1px 0 0 #000; text-decoration: none; color: #000; transition: transform .1s, box-shadow .1s, background .1s; }
+    .rl-source:hover { transform: translate(-1px,-1px); box-shadow: 2px 2px 0 0 #000; background: #a7f3d0; text-decoration: none; }
+    .rl-shared { clear: both; margin-top: 12px; padding-top: 10px; border-top: 1.5px dashed #ccc; display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
+    .rl-shared-label { font-size: 12px; color: #666; font-weight: 700; }
+    .rl-celeb-chip { display: inline-block; padding: 3px 9px; background: #fff8e7; border: 1.5px solid #000; box-shadow: 1px 1px 0 0 #000; font-size: 12px; font-weight: 700; text-decoration: none; color: #000; transition: transform .1s, box-shadow .1s, background .1s; }
+    .rl-celeb-chip:hover { transform: translate(-1px,-1px); box-shadow: 2px 2px 0 0 #000; background: #fde047; text-decoration: none; }
+    @media (max-width: 480px) { .rl-item { padding: 14px 12px 14px 46px; } .rl-num { width: 32px; height: 26px; font-size: 12px; } .rl-item .rl-cover, .rl-item > .rl-cover { width: 60px; height: 88px; margin-right: 10px; } .rl-meta { min-height: 88px; } .rl-title { font-size: 15px; } }
     .related-celebs { margin: 24px 0; }
     .related-celeb-list { display: flex; flex-wrap: wrap; gap: 8px; }
     .related-celeb { display: inline-flex; align-items: center; gap: 6px; padding: 6px 12px; background: #fff; border: 2px solid #000; box-shadow: 2px 2px 0 0 #000; font-size: 13px; font-weight: 700; text-decoration: none; color: #000; transition: transform .1s, box-shadow .1s; }
@@ -306,75 +313,113 @@
     </div>
     <div>
       <h1>서지혜(1996) 독서 기록 · 읽은 책 · 추천 책</h1>
+      <p class="celeb-bio">한국 배우. 1996년생, JTBC &#x27;내 아이디는 강남미인&#x27; 데뷔, &#x27;조립식 가족&#x27; 등 출연.</p>
       <p style="margin:0;color:#666;font-size:14px">총 <strong>9권</strong>의 도서</p>
     </div>
   </header>
 
   <section class="intro">
-    <p style="margin:0">서지혜(1996)의 독서 기록을 한곳에 모았습니다. 유튜브·인터뷰·SNS 등 출처가 확인된 서지혜(1996)의 인생책·추천 도서 <strong>9권</strong>을 정리한 독서 리스트예요. 서지혜(1996) 책 추천과 독서 취향이 궁금하다면 아래 전체 목록과 출처 링크에서 확인할 수 있습니다.</p>
+    <p style="margin:0">서지혜(1996)의 독서 기록을 한곳에 모았어요. 유튜브·인터뷰·SNS 등 공개 출처에서 확인된 인생책·추천 도서 <strong>9권</strong>을 한 페이지에 정리한 독서 리스트입니다. 아래 목록에서 책 제목·저자·출처 링크를 한눈에 확인할 수 있어요.</p>
   </section>
 
   <section>
-    <h2>서지혜(1996)의 독서 리스트 전체 목록 (9권)</h2>
-    <table>
-      <thead><tr><th>#</th><th>표지</th><th>도서명</th><th>저자</th><th>출판사</th><th>출처</th></tr></thead>
-      <tbody>
-    <tr><td>1</td><td><a href="https://www.aladin.co.kr/shop/wproduct.aspx?ItemId=364735701&amp;partner=openAPI&amp;start=api" rel="nofollow noopener noreferrer" target="_blank" aria-label="다독임 알라딘에서 보기"><img src="https://image.aladin.co.kr/product/36473/57/cover500/k402039915_2.jpg" alt="다독임 표지" width="60" height="85" loading="lazy" style="object-fit:cover"></a></td><td><a href="https://www.aladin.co.kr/shop/wproduct.aspx?ItemId=364735701&amp;partner=openAPI&amp;start=api" rel="nofollow noopener noreferrer" target="_blank">다독임</a></td><td>오은</td><td>난다</td><td class="src"><a href="https://www.marieclairekorea.com/culture/lifestyle/2021/07/book-logout/" rel="nofollow noopener noreferrer" target="_blank">출처 보기 →</a></td></tr>
-    <tr><td>2</td><td><a href="https://www.aladin.co.kr/shop/wproduct.aspx?ItemId=189032355&amp;partner=openAPI&amp;start=api" rel="nofollow noopener noreferrer" target="_blank" aria-label="뜻밖의 좋은 일 알라딘에서 보기"><img src="https://image.aladin.co.kr/product/18903/23/cover500/8936437844_1.jpg" alt="뜻밖의 좋은 일 표지" width="60" height="85" loading="lazy" style="object-fit:cover"></a></td><td><a href="https://www.aladin.co.kr/shop/wproduct.aspx?ItemId=189032355&amp;partner=openAPI&amp;start=api" rel="nofollow noopener noreferrer" target="_blank">뜻밖의 좋은 일</a></td><td>정혜윤</td><td>창비</td><td class="src"><a href="https://www.marieclairekorea.com/culture/lifestyle/2021/07/book-logout/" rel="nofollow noopener noreferrer" target="_blank">출처 보기 →</a></td></tr>
-    <tr><td>3</td><td><a href="https://www.aladin.co.kr/shop/wproduct.aspx?ItemId=1697276&amp;partner=openAPI&amp;start=api" rel="nofollow noopener noreferrer" target="_blank" aria-label="마음사전 알라딘에서 보기"><img src="https://image.aladin.co.kr/product/169/72/cover500/8960900273_1.jpg" alt="마음사전 표지" width="60" height="85" loading="lazy" style="object-fit:cover"></a></td><td><a href="https://www.aladin.co.kr/shop/wproduct.aspx?ItemId=1697276&amp;partner=openAPI&amp;start=api" rel="nofollow noopener noreferrer" target="_blank">마음사전</a></td><td>김소연</td><td>마음산책</td><td class="src"><a href="https://www.marieclairekorea.com/culture/lifestyle/2021/07/book-logout/" rel="nofollow noopener noreferrer" target="_blank">출처 보기 →</a></td></tr>
-    <tr><td>4</td><td><a href="https://www.aladin.co.kr/shop/wproduct.aspx?ItemId=111454737&amp;partner=openAPI&amp;start=api" rel="nofollow noopener noreferrer" target="_blank" aria-label="바깥은 여름 알라딘에서 보기"><img src="https://image.aladin.co.kr/product/11145/47/cover500/s532932793_1.jpg" alt="바깥은 여름 표지" width="60" height="85" loading="lazy" style="object-fit:cover"></a></td><td><a href="https://www.aladin.co.kr/shop/wproduct.aspx?ItemId=111454737&amp;partner=openAPI&amp;start=api" rel="nofollow noopener noreferrer" target="_blank">바깥은 여름</a></td><td>김애란</td><td>문학동네</td><td class="src"><a href="https://www.marieclairekorea.com/culture/lifestyle/2021/07/book-logout/" rel="nofollow noopener noreferrer" target="_blank">출처 보기 →</a></td></tr>
-    <tr><td>5</td><td><a href="https://www.aladin.co.kr/shop/wproduct.aspx?ItemId=66980786" rel="nofollow noopener noreferrer" target="_blank" aria-label="불안의 책 알라딘에서 보기"><img src="https://image.aladin.co.kr/product/6698/7/cover500/8954625762_1.jpg" alt="불안의 책 표지" width="60" height="85" loading="lazy" style="object-fit:cover"></a></td><td><a href="https://www.aladin.co.kr/shop/wproduct.aspx?ItemId=66980786" rel="nofollow noopener noreferrer" target="_blank">불안의 책</a></td><td>페르난두 페소아</td><td>문학동네</td><td class="src"><a href="https://www.marieclairekorea.com/culture/lifestyle/2021/07/book-logout/" rel="nofollow noopener noreferrer" target="_blank">출처 보기 →</a></td></tr>
-    <tr><td>6</td><td><a href="https://www.aladin.co.kr/shop/wproduct.aspx?ItemId=191663333&amp;partner=openAPI&amp;start=api" rel="nofollow noopener noreferrer" target="_blank" aria-label="빛과 물질에 관한 이론 알라딘에서 보기"><img src="https://image.aladin.co.kr/product/19166/33/cover500/8954656161_1.jpg" alt="빛과 물질에 관한 이론 표지" width="60" height="85" loading="lazy" style="object-fit:cover"></a></td><td><a href="https://www.aladin.co.kr/shop/wproduct.aspx?ItemId=191663333&amp;partner=openAPI&amp;start=api" rel="nofollow noopener noreferrer" target="_blank">빛과 물질에 관한 이론</a></td><td>앤드루 포터</td><td>문학동네</td><td class="src"><a href="https://www.marieclairekorea.com/culture/lifestyle/2021/07/book-logout/" rel="nofollow noopener noreferrer" target="_blank">출처 보기 →</a></td></tr>
-    <tr><td>7</td><td><a href="https://www.aladin.co.kr/shop/wproduct.aspx?ItemId=376265819&amp;partner=openAPI&amp;start=api" rel="nofollow noopener noreferrer" target="_blank" aria-label="소란 알라딘에서 보기"><img src="https://image.aladin.co.kr/product/37626/58/cover500/k852032042_1.jpg" alt="소란 표지" width="60" height="85" loading="lazy" style="object-fit:cover"></a></td><td><a href="https://www.aladin.co.kr/shop/wproduct.aspx?ItemId=376265819&amp;partner=openAPI&amp;start=api" rel="nofollow noopener noreferrer" target="_blank">소란</a></td><td>박연준</td><td>난다</td><td class="src"><a href="https://www.marieclairekorea.com/culture/lifestyle/2021/07/book-logout/" rel="nofollow noopener noreferrer" target="_blank">출처 보기 →</a></td></tr>
-    <tr><td>8</td><td><a href="https://www.aladin.co.kr/shop/wproduct.aspx?ItemId=2065518&amp;partner=openAPI&amp;start=api" rel="nofollow noopener noreferrer" target="_blank" aria-label="슬픔이 없는 십오 초 알라딘에서 보기"><img src="https://image.aladin.co.kr/product/206/55/cover500/8932018502_1.jpg" alt="슬픔이 없는 십오 초 표지" width="60" height="85" loading="lazy" style="object-fit:cover"></a></td><td><a href="https://www.aladin.co.kr/shop/wproduct.aspx?ItemId=2065518&amp;partner=openAPI&amp;start=api" rel="nofollow noopener noreferrer" target="_blank">슬픔이 없는 십오 초</a></td><td>심보선</td><td>문학과지성사</td><td class="src"><a href="https://www.marieclairekorea.com/culture/lifestyle/2021/07/book-logout/" rel="nofollow noopener noreferrer" target="_blank">출처 보기 →</a></td></tr>
-    <tr><td>9</td><td><a href="https://www.aladin.co.kr/shop/wproduct.aspx?ItemId=122785&amp;partner=openAPI&amp;start=api" rel="nofollow noopener noreferrer" target="_blank" aria-label="입 속의 검은 잎 알라딘에서 보기"><img src="https://image.aladin.co.kr/product/12/27/cover500/8932003971_2.jpg" alt="입 속의 검은 잎 표지" width="60" height="85" loading="lazy" style="object-fit:cover"></a></td><td><a href="https://www.aladin.co.kr/shop/wproduct.aspx?ItemId=122785&amp;partner=openAPI&amp;start=api" rel="nofollow noopener noreferrer" target="_blank">입 속의 검은 잎</a></td><td>기형도</td><td>문학과지성사</td><td class="src"><a href="https://www.marieclairekorea.com/culture/lifestyle/2021/07/book-logout/" rel="nofollow noopener noreferrer" target="_blank">출처 보기 →</a></td></tr>
-      </tbody>
-    </table>
-  </section>
-
-  <section class="book-pages">
-    <h2>👥 서지혜(1996)과 다른 셀럽이 함께 추천한 책 (2권)</h2>
-    <p class="muted">2명 이상의 셀럽이 추천한 책과 함께 추천한 셀럽 명단이에요.</p>
-    <ul class="shared-book-list">
-      <li class="shared-book">
-        <div class="sb-main">
-          <a class="sb-cover-link" href="https://www.aladin.co.kr/shop/wproduct.aspx?ItemId=111454737&amp;partner=openAPI&amp;start=api" rel="nofollow noopener noreferrer" target="_blank" aria-label="바깥은 여름 알라딘에서 보기"><img src="https://image.aladin.co.kr/product/11145/47/cover500/s532932793_1.jpg" alt="바깥은 여름 표지" width="60" height="85" loading="lazy" style="object-fit:cover"></a>
-          <div class="sb-meta">
-            <div class="sb-title"><a href="https://www.aladin.co.kr/shop/wproduct.aspx?ItemId=111454737&amp;partner=openAPI&amp;start=api" rel="nofollow noopener noreferrer" target="_blank">바깥은 여름</a></div>
-            <div class="sb-author">김애란</div>
-          </div>
-        </div>
-        <div class="sb-celebs">
-          <span class="sb-celebs-label">함께 추천한 셀럽 3명:</span>
-          <a class="sb-celeb-chip" href="https://favorbook.co.kr/share/%EA%B3%A0%EB%AF%BC%EC%8B%9C.html">고민시</a>
-          <a class="sb-celeb-chip" href="https://favorbook.co.kr/share/%EA%B9%80%ED%83%9C%EB%A6%AC.html">김태리</a>
-          <a class="sb-celeb-chip" href="https://favorbook.co.kr/share/%EA%B9%80%EB%AF%BC%EC%A3%BC.html">김민주</a>
-        </div>
-      </li>
-      <li class="shared-book">
-        <div class="sb-main">
-          <a class="sb-cover-link" href="https://www.aladin.co.kr/shop/wproduct.aspx?ItemId=191663333&amp;partner=openAPI&amp;start=api" rel="nofollow noopener noreferrer" target="_blank" aria-label="빛과 물질에 관한 이론 알라딘에서 보기"><img src="https://image.aladin.co.kr/product/19166/33/cover500/8954656161_1.jpg" alt="빛과 물질에 관한 이론 표지" width="60" height="85" loading="lazy" style="object-fit:cover"></a>
-          <div class="sb-meta">
-            <div class="sb-title"><a href="https://www.aladin.co.kr/shop/wproduct.aspx?ItemId=191663333&amp;partner=openAPI&amp;start=api" rel="nofollow noopener noreferrer" target="_blank">빛과 물질에 관한 이론</a></div>
-            <div class="sb-author">앤드루 포터</div>
-          </div>
-        </div>
-        <div class="sb-celebs">
-          <span class="sb-celebs-label">함께 추천한 셀럽 1명:</span>
-          <a class="sb-celeb-chip" href="https://favorbook.co.kr/share/%EA%B9%80%EC%82%AC%EC%9B%94.html">김사월</a>
-        </div>
-      </li>
-    </ul>
+    <h2>📚 서지혜의 독서 리스트 (9권)</h2>
+    <p class="muted">2권은 다른 셀럽도 함께 추천한 책이에요. 카드 안에 함께 추천한 셀럽 이름이 표시됩니다.</p>
+    <ol class="reading-list">
+    <li class="rl-item">
+      <span class="rl-num">1</span>
+      <a class="rl-cover" href="https://www.aladin.co.kr/shop/wproduct.aspx?ItemId=364735701&amp;partner=openAPI&amp;start=api" rel="nofollow noopener noreferrer" target="_blank" aria-label="다독임 알라딘에서 보기"><img src="https://image.aladin.co.kr/product/36473/57/cover500/k402039915_2.jpg" alt="다독임 표지" loading="lazy"></a>
+      <div class="rl-meta">
+        <div class="rl-title"><a href="https://www.aladin.co.kr/shop/wproduct.aspx?ItemId=364735701&amp;partner=openAPI&amp;start=api" rel="nofollow noopener noreferrer" target="_blank">다독임</a></div>
+        <div class="rl-byline">오은 · 난다</div>
+        <a class="rl-source" href="https://www.marieclairekorea.com/culture/lifestyle/2021/07/book-logout/" rel="nofollow noopener noreferrer" target="_blank">📺 출처 보기</a>
+      </div>
+    </li>
+    <li class="rl-item">
+      <span class="rl-num">2</span>
+      <a class="rl-cover" href="https://www.aladin.co.kr/shop/wproduct.aspx?ItemId=189032355&amp;partner=openAPI&amp;start=api" rel="nofollow noopener noreferrer" target="_blank" aria-label="뜻밖의 좋은 일 알라딘에서 보기"><img src="https://image.aladin.co.kr/product/18903/23/cover500/8936437844_1.jpg" alt="뜻밖의 좋은 일 표지" loading="lazy"></a>
+      <div class="rl-meta">
+        <div class="rl-title"><a href="https://www.aladin.co.kr/shop/wproduct.aspx?ItemId=189032355&amp;partner=openAPI&amp;start=api" rel="nofollow noopener noreferrer" target="_blank">뜻밖의 좋은 일</a></div>
+        <div class="rl-byline">정혜윤 · 창비</div>
+        <a class="rl-source" href="https://www.marieclairekorea.com/culture/lifestyle/2021/07/book-logout/" rel="nofollow noopener noreferrer" target="_blank">📺 출처 보기</a>
+      </div>
+    </li>
+    <li class="rl-item">
+      <span class="rl-num">3</span>
+      <a class="rl-cover" href="https://www.aladin.co.kr/shop/wproduct.aspx?ItemId=1697276&amp;partner=openAPI&amp;start=api" rel="nofollow noopener noreferrer" target="_blank" aria-label="마음사전 알라딘에서 보기"><img src="https://image.aladin.co.kr/product/169/72/cover500/8960900273_1.jpg" alt="마음사전 표지" loading="lazy"></a>
+      <div class="rl-meta">
+        <div class="rl-title"><a href="https://www.aladin.co.kr/shop/wproduct.aspx?ItemId=1697276&amp;partner=openAPI&amp;start=api" rel="nofollow noopener noreferrer" target="_blank">마음사전</a></div>
+        <div class="rl-byline">김소연 · 마음산책</div>
+        <a class="rl-source" href="https://www.marieclairekorea.com/culture/lifestyle/2021/07/book-logout/" rel="nofollow noopener noreferrer" target="_blank">📺 출처 보기</a>
+      </div>
+    </li>
+    <li class="rl-item">
+      <span class="rl-num">4</span>
+      <a class="rl-cover" href="https://www.aladin.co.kr/shop/wproduct.aspx?ItemId=111454737&amp;partner=openAPI&amp;start=api" rel="nofollow noopener noreferrer" target="_blank" aria-label="바깥은 여름 알라딘에서 보기"><img src="https://image.aladin.co.kr/product/11145/47/cover500/s532932793_1.jpg" alt="바깥은 여름 표지" loading="lazy"></a>
+      <div class="rl-meta">
+        <div class="rl-title"><a href="https://www.aladin.co.kr/shop/wproduct.aspx?ItemId=111454737&amp;partner=openAPI&amp;start=api" rel="nofollow noopener noreferrer" target="_blank">바깥은 여름</a></div>
+        <div class="rl-byline">김애란 · 문학동네</div>
+        <a class="rl-source" href="https://www.marieclairekorea.com/culture/lifestyle/2021/07/book-logout/" rel="nofollow noopener noreferrer" target="_blank">📺 출처 보기</a>
+      </div>
+      <div class="rl-shared"><span class="rl-shared-label">👥 함께 추천한 셀럽 3명:</span> <a class="rl-celeb-chip" href="https://favorbook.co.kr/share/%EA%B3%A0%EB%AF%BC%EC%8B%9C.html">고민시</a><a class="rl-celeb-chip" href="https://favorbook.co.kr/share/%EA%B9%80%ED%83%9C%EB%A6%AC.html">김태리</a><a class="rl-celeb-chip" href="https://favorbook.co.kr/share/%EA%B9%80%EB%AF%BC%EC%A3%BC.html">김민주</a></div>
+    </li>
+    <li class="rl-item">
+      <span class="rl-num">5</span>
+      <a class="rl-cover" href="https://www.aladin.co.kr/shop/wproduct.aspx?ItemId=66980786" rel="nofollow noopener noreferrer" target="_blank" aria-label="불안의 책 알라딘에서 보기"><img src="https://image.aladin.co.kr/product/6698/7/cover500/8954625762_1.jpg" alt="불안의 책 표지" loading="lazy"></a>
+      <div class="rl-meta">
+        <div class="rl-title"><a href="https://www.aladin.co.kr/shop/wproduct.aspx?ItemId=66980786" rel="nofollow noopener noreferrer" target="_blank">불안의 책</a></div>
+        <div class="rl-byline">페르난두 페소아 · 문학동네</div>
+        <a class="rl-source" href="https://www.marieclairekorea.com/culture/lifestyle/2021/07/book-logout/" rel="nofollow noopener noreferrer" target="_blank">📺 출처 보기</a>
+      </div>
+    </li>
+    <li class="rl-item">
+      <span class="rl-num">6</span>
+      <a class="rl-cover" href="https://www.aladin.co.kr/shop/wproduct.aspx?ItemId=191663333&amp;partner=openAPI&amp;start=api" rel="nofollow noopener noreferrer" target="_blank" aria-label="빛과 물질에 관한 이론 알라딘에서 보기"><img src="https://image.aladin.co.kr/product/19166/33/cover500/8954656161_1.jpg" alt="빛과 물질에 관한 이론 표지" loading="lazy"></a>
+      <div class="rl-meta">
+        <div class="rl-title"><a href="https://www.aladin.co.kr/shop/wproduct.aspx?ItemId=191663333&amp;partner=openAPI&amp;start=api" rel="nofollow noopener noreferrer" target="_blank">빛과 물질에 관한 이론</a></div>
+        <div class="rl-byline">앤드루 포터 · 문학동네</div>
+        <a class="rl-source" href="https://www.marieclairekorea.com/culture/lifestyle/2021/07/book-logout/" rel="nofollow noopener noreferrer" target="_blank">📺 출처 보기</a>
+      </div>
+      <div class="rl-shared"><span class="rl-shared-label">👥 함께 추천한 셀럽 1명:</span> <a class="rl-celeb-chip" href="https://favorbook.co.kr/share/%EA%B9%80%EC%82%AC%EC%9B%94.html">김사월</a></div>
+    </li>
+    <li class="rl-item">
+      <span class="rl-num">7</span>
+      <a class="rl-cover" href="https://www.aladin.co.kr/shop/wproduct.aspx?ItemId=376265819&amp;partner=openAPI&amp;start=api" rel="nofollow noopener noreferrer" target="_blank" aria-label="소란 알라딘에서 보기"><img src="https://image.aladin.co.kr/product/37626/58/cover500/k852032042_1.jpg" alt="소란 표지" loading="lazy"></a>
+      <div class="rl-meta">
+        <div class="rl-title"><a href="https://www.aladin.co.kr/shop/wproduct.aspx?ItemId=376265819&amp;partner=openAPI&amp;start=api" rel="nofollow noopener noreferrer" target="_blank">소란</a></div>
+        <div class="rl-byline">박연준 · 난다</div>
+        <a class="rl-source" href="https://www.marieclairekorea.com/culture/lifestyle/2021/07/book-logout/" rel="nofollow noopener noreferrer" target="_blank">📺 출처 보기</a>
+      </div>
+    </li>
+    <li class="rl-item">
+      <span class="rl-num">8</span>
+      <a class="rl-cover" href="https://www.aladin.co.kr/shop/wproduct.aspx?ItemId=2065518&amp;partner=openAPI&amp;start=api" rel="nofollow noopener noreferrer" target="_blank" aria-label="슬픔이 없는 십오 초 알라딘에서 보기"><img src="https://image.aladin.co.kr/product/206/55/cover500/8932018502_1.jpg" alt="슬픔이 없는 십오 초 표지" loading="lazy"></a>
+      <div class="rl-meta">
+        <div class="rl-title"><a href="https://www.aladin.co.kr/shop/wproduct.aspx?ItemId=2065518&amp;partner=openAPI&amp;start=api" rel="nofollow noopener noreferrer" target="_blank">슬픔이 없는 십오 초</a></div>
+        <div class="rl-byline">심보선 · 문학과지성사</div>
+        <a class="rl-source" href="https://www.marieclairekorea.com/culture/lifestyle/2021/07/book-logout/" rel="nofollow noopener noreferrer" target="_blank">📺 출처 보기</a>
+      </div>
+    </li>
+    <li class="rl-item">
+      <span class="rl-num">9</span>
+      <a class="rl-cover" href="https://www.aladin.co.kr/shop/wproduct.aspx?ItemId=122785&amp;partner=openAPI&amp;start=api" rel="nofollow noopener noreferrer" target="_blank" aria-label="입 속의 검은 잎 알라딘에서 보기"><img src="https://image.aladin.co.kr/product/12/27/cover500/8932003971_2.jpg" alt="입 속의 검은 잎 표지" loading="lazy"></a>
+      <div class="rl-meta">
+        <div class="rl-title"><a href="https://www.aladin.co.kr/shop/wproduct.aspx?ItemId=122785&amp;partner=openAPI&amp;start=api" rel="nofollow noopener noreferrer" target="_blank">입 속의 검은 잎</a></div>
+        <div class="rl-byline">기형도 · 문학과지성사</div>
+        <a class="rl-source" href="https://www.marieclairekorea.com/culture/lifestyle/2021/07/book-logout/" rel="nofollow noopener noreferrer" target="_blank">📺 출처 보기</a>
+      </div>
+    </li>
+    </ol>
   </section>
 
   <section>
-    <h2>서지혜(1996) 인생책 · 책 추천 키워드</h2>
-    <p>서지혜(1996)의 추천 도서에 가장 자주 등장한 작가는 오은, 정혜윤, 김소연입니다. 서지혜(1996)의 책 추천 리스트는 위 표에서 출처와 함께 확인할 수 있습니다.</p>
+    <h2>📝 서지혜의 책 취향</h2>
+    <p>추천 도서에 가장 자주 등장한 작가는 오은, 정혜윤, 김소연 등이에요.</p>
   </section>
 
   <section class="related-celebs">
-    <h2>🤝 서지혜(1996)의 독서 취향과 겹치는 셀럽</h2>
-    <p class="muted">서지혜(1996)의 추천 도서를 함께 추천한 다른 셀럽이에요. 숫자는 공통 도서 권수.</p>
+    <h2>🤝 책 취향이 겹치는 셀럽</h2>
+    <p class="muted">같은 책을 함께 추천한 다른 셀럽이에요. 숫자는 공통 도서 권수.</p>
     <div class="related-celeb-list">
       <a class="related-celeb" href="https://favorbook.co.kr/share/%EA%B3%A0%EB%AF%BC%EC%8B%9C.html" title="공통 도서: 바깥은 여름">고민시 <span class="rc-count">1</span></a>
       <a class="related-celeb" href="https://favorbook.co.kr/share/%EA%B9%80%EB%AF%BC%EC%A3%BC.html" title="공통 도서: 바깥은 여름">김민주 <span class="rc-count">1</span></a>
@@ -393,7 +438,7 @@
   </nav>
 
   <footer>
-    <p>서지혜(1996) 독서 기록 정보는 유튜브·인터뷰·SNS 등 공개된 출처를 기반으로 정리되었습니다.</p>
+    <p>이 페이지의 독서 기록은 유튜브·인터뷰·SNS 등 공개된 출처를 기반으로 정리됐어요.</p>
   </footer>
 
 </body>

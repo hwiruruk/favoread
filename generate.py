@@ -223,6 +223,35 @@ def clean_none(obj):
         return [clean_none(i) for i in obj]
     return obj
 
+# ── 셀럽 한 줄 소개(bio) 로더 ────────────────────────────────────────
+# data/bios.json: { "bios": { "셀럽이름": {"ko": "...", "en": "..."} } }
+# CSV의 '코멘트' 칸이 비어있지 않으면 그게 우선 (수동 override)
+
+def load_bios():
+    path = 'data/bios.json'
+    if not os.path.exists(path):
+        return {}
+    try:
+        with open(path, encoding='utf-8') as f:
+            d = json.load(f)
+        return d.get('bios', {})
+    except Exception as e:
+        print(f"⚠️ bios.json 로드 실패: {e}")
+        return {}
+
+BIOS = load_bios()
+
+# 괄호/소속 표기 제거한 짧은 이름 — 본문 반복 노출 시 사용
+# "윤덕원(브로콜리너마저)" → "윤덕원", "RM(BTS)" → "RM"
+_SHORT_NAME_RE = re.compile(r'\s*\([^)]*\)\s*$')
+def short_name(name):
+    return _SHORT_NAME_RE.sub('', name).strip() or name
+
+def get_bio(name, lang='ko'):
+    """bios.json에서 한 줄 소개 가져오기. 없으면 빈 문자열."""
+    entry = BIOS.get(name) or {}
+    return (entry.get(lang) or '').strip()
+
 # ── 1. CSV 파싱 ──────────────────────────────────────────────────────
 
 celebs = {}
@@ -644,8 +673,8 @@ for name, info in celebs.items():
     }
 
     # 책 테이블 행 (표지·도서명은 알라딘 외부 링크, 출처는 별도 외부링크)
-    book_rows = ''
-    shared_book_cards = []   # 다른 셀럽도 함께 추천한 책 목록용
+    book_cards_html = ''   # 카드 그리드 (표 대체)
+    shared_count = 0       # 다른 셀럽과 공유된 책 권수 (섹션 헤더용)
     for i, b in enumerate(books):
         has_book_page = b['title'] in books_with_pages
 
@@ -658,19 +687,20 @@ for name, info in celebs.items():
         ):
             aladin_url = esc(html.unescape(raw_link))
 
-        cover_img = ''
+        # 표지
         if b['coverUrl'] and b['coverUrl'].startswith('http'):
-            cover_img = ('<img src="' + esc(b['coverUrl']) + '" alt="' + esc(b['title'])
-                         + ' 표지" width="60" height="85" loading="lazy" style="object-fit:cover">')
-
-        if cover_img and aladin_url:
-            cover_td = ('<a href="' + aladin_url
-                        + '" rel="nofollow noopener noreferrer" target="_blank" '
-                        'aria-label="' + esc(b['title']) + ' 알라딘에서 보기">'
-                        + cover_img + '</a>')
+            cover_inner = ('<img src="' + esc(b['coverUrl']) + '" alt="' + esc(b['title'])
+                           + ' 표지" loading="lazy">')
         else:
-            cover_td = cover_img
+            cover_inner = '<div class="rl-no-cover">📕</div>'
+        if aladin_url:
+            cover_html = ('<a class="rl-cover" href="' + aladin_url
+                          + '" rel="nofollow noopener noreferrer" target="_blank" '
+                          'aria-label="' + esc(b['title']) + ' 알라딘에서 보기">' + cover_inner + '</a>')
+        else:
+            cover_html = '<div class="rl-cover">' + cover_inner + '</div>'
 
+        # 제목
         if aladin_url:
             title_html = ('<a href="' + aladin_url
                           + '" rel="nofollow noopener noreferrer" target="_blank">'
@@ -678,44 +708,62 @@ for name, info in celebs.items():
         else:
             title_html = esc(b['title'])
 
-        if has_book_page:
-            other_celebs = [c for c in book_celebs[b['title']]['celebs'] if c != name]
-            shared_book_cards.append({
-                'cover':       b['coverUrl'] if (b['coverUrl'] or '').startswith('http') else '',
-                'title':       b['title'],
-                'author':      b['author'],
-                'aladin_url':  aladin_url,
-                'other_celebs': other_celebs,
-            })
+        # 저자 · 출판사
+        byline_parts = []
+        if b['author']:    byline_parts.append(esc(b['author']))
+        if b['publisher']: byline_parts.append(esc(b['publisher']))
+        byline_html = ' · '.join(byline_parts)
 
-        # 출처 (대부분 YouTube 등 URL) → 외부링크
+        # 출처
         source_html = ''
         if b['source'] and b['source'].startswith('http'):
-            source_html = ('<a href="' + esc(b['source'])
-                           + '" rel="nofollow noopener noreferrer" target="_blank">출처 보기 →</a>')
-        elif b['source']:
-            source_html = esc(b['source'])
+            source_html = ('<a class="rl-source" href="' + esc(b['source'])
+                           + '" rel="nofollow noopener noreferrer" target="_blank">📺 출처 보기</a>')
 
-        book_rows += (
-            '    <tr>'
-            '<td>' + str(i+1) + '</td>'
-            '<td>' + cover_td + '</td>'
-            '<td>' + title_html + '</td>'
-            '<td>' + esc(b['author']) + '</td>'
-            '<td>' + esc(b['publisher']) + '</td>'
-            '<td class="src">' + source_html + '</td>'
-            '</tr>\n'
+        # 함께 추천한 다른 셀럽 (카드 안에 임베드)
+        shared_html = ''
+        if has_book_page:
+            shared_count += 1
+            other_celebs = [c for c in book_celebs[b['title']]['celebs'] if c != name]
+            if other_celebs:
+                chips = ''.join(
+                    '<a class="rl-celeb-chip" href="' + esc(
+                        BASE + 'share/' + quote(safe_filename(_oc), safe='') + '.html'
+                    ) + '">' + esc(_oc) + '</a>'
+                    for _oc in other_celebs
+                )
+                shared_html = (
+                    '\n      <div class="rl-shared">'
+                    '<span class="rl-shared-label">👥 함께 추천한 셀럽 '
+                    + str(len(other_celebs)) + '명:</span> '
+                    + chips +
+                    '</div>'
+                )
+
+        book_cards_html += (
+            '    <li class="rl-item">\n'
+            '      <span class="rl-num">' + str(i+1) + '</span>\n'
+            '      ' + cover_html + '\n'
+            '      <div class="rl-meta">\n'
+            '        <div class="rl-title">' + title_html + '</div>\n'
+            + (('        <div class="rl-byline">' + byline_html + '</div>\n') if byline_html else '')
+            + (('        ' + source_html + '\n') if source_html else '')
+            + '      </div>'
+            + shared_html
+            + '\n    </li>\n'
         )
 
-    # 인트로 단락: 자연스럽게 키워드 변형 노출 (~150-220자)
+    sname = short_name(name)  # 본문 반복용 짧은 이름
+
+    # 인트로 단락: 풀네임은 1번만, 나머지는 생략
     intro_p = (
-        esc(name) + '의 독서 기록을 한곳에 모았습니다. '
-        '유튜브·인터뷰·SNS 등 출처가 확인된 ' + esc(name) + '의 인생책·추천 도서 '
-        '<strong>' + str(n_books) + '권</strong>을 정리한 독서 리스트예요. '
-        + esc(name) + ' 책 추천과 독서 취향이 궁금하다면 아래 전체 목록과 출처 링크에서 확인할 수 있습니다.'
+        esc(name) + '의 독서 기록을 한곳에 모았어요. '
+        '유튜브·인터뷰·SNS 등 공개 출처에서 확인된 인생책·추천 도서 '
+        '<strong>' + str(n_books) + '권</strong>을 한 페이지에 정리한 독서 리스트입니다. '
+        '아래 목록에서 책 제목·저자·출처 링크를 한눈에 확인할 수 있어요.'
     )
 
-    # 작가/출판사 빈도 요약 (간단한 unique 콘텐츠)
+    # 작가 빈도 요약 (간단한 unique 콘텐츠)
     author_counts = {}
     for b in books:
         a = b['author'].strip()
@@ -724,9 +772,9 @@ for name, info in celebs.items():
     top_authors = sorted(author_counts.items(), key=lambda x: x[1], reverse=True)[:3]
     if top_authors:
         author_summary = (
-            esc(name) + '의 추천 도서에 가장 자주 등장한 작가는 '
+            '추천 도서에 가장 자주 등장한 작가는 '
             + ', '.join(esc(a) + (' (' + str(c) + '권)' if c > 1 else '') for a, c in top_authors)
-            + '입니다.'
+            + ' 등이에요.'
         )
     else:
         author_summary = ''
@@ -761,8 +809,8 @@ for name, info in celebs.items():
             )
         related_section = (
             '  <section class="related-celebs">\n'
-            '    <h2>🤝 ' + esc(name) + '의 독서 취향과 겹치는 셀럽</h2>\n'
-            '    <p class="muted">' + esc(name) + '의 추천 도서를 함께 추천한 다른 셀럽이에요. 숫자는 공통 도서 권수.</p>\n'
+            '    <h2>🤝 책 취향이 겹치는 셀럽</h2>\n'
+            '    <p class="muted">같은 책을 함께 추천한 다른 셀럽이에요. 숫자는 공통 도서 권수.</p>\n'
             '    <div class="related-celeb-list">\n'
             + chips +
             '    </div>\n'
@@ -891,19 +939,26 @@ for name, info in celebs.items():
         '    .bc-title { font-weight: 700; font-size: 13px; line-height: 1.3; margin-bottom: 4px; }\n'
         '    .bc-author { font-size: 12px; color: #555; margin-bottom: 6px; }\n'
         '    .bc-badge { display: inline-block; font-size: 11px; background: #fde047; border: 1px solid #000; padding: 1px 6px; font-weight: 700; }\n'
-        '    .shared-book-list { list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 12px; }\n'
-        '    .shared-book { background: #fff; border: 2px solid #000; box-shadow: 4px 4px 0 0 #000; padding: 12px; }\n'
-        '    .sb-main { display: flex; gap: 12px; margin-bottom: 10px; }\n'
-        '    .sb-cover-link { flex-shrink: 0; display: block; }\n'
-        '    .sb-meta { flex: 1; min-width: 0; }\n'
-        '    .sb-title { font-weight: 800; font-size: 15px; line-height: 1.3; margin-bottom: 4px; }\n'
-        '    .sb-title a { color: #000; }\n'
-        '    .sb-title a:hover { color: #2563eb; }\n'
-        '    .sb-author { font-size: 13px; color: #555; }\n'
-        '    .sb-celebs { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; padding-top: 10px; border-top: 1.5px dashed #ccc; }\n'
-        '    .sb-celebs-label { font-size: 12px; color: #666; font-weight: 700; margin-right: 4px; }\n'
-        '    .sb-celeb-chip { display: inline-block; padding: 3px 9px; background: #fff8e7; border: 1.5px solid #000; box-shadow: 1px 1px 0 0 #000; font-size: 12px; font-weight: 700; text-decoration: none; color: #000; transition: transform .1s, box-shadow .1s, background .1s; }\n'
-        '    .sb-celeb-chip:hover { transform: translate(-1px,-1px); box-shadow: 2px 2px 0 0 #000; background: #fde047; text-decoration: none; }\n'
+        '    .celeb-bio { margin: 4px 0 8px; padding: 6px 10px; background: #fff8e7; border-left: 4px solid #000; font-size: 14px; line-height: 1.45; color: #222; }\n'
+        '    .reading-list { list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 14px; counter-reset: rl; }\n'
+        '    .rl-item { position: relative; background: #fff; border: 2px solid #000; box-shadow: 4px 4px 0 0 #000; padding: 14px 14px 14px 52px; transition: transform .12s, box-shadow .12s; }\n'
+        '    .rl-item:hover { transform: translate(-1px,-1px); box-shadow: 6px 6px 0 0 #000; }\n'
+        '    .rl-num { position: absolute; left: -2px; top: -2px; width: 38px; height: 30px; display: flex; align-items: center; justify-content: center; background: #fde047; border: 2px solid #000; font-weight: 900; font-size: 14px; font-family: "Space Grotesk", sans-serif; }\n'
+        '    .rl-item .rl-cover, .rl-item > .rl-cover { float: left; margin-right: 14px; width: 74px; height: 105px; display: block; flex-shrink: 0; border: 1.5px solid #000; box-shadow: 2px 2px 0 0 #000; background: #f4f4f0; overflow: hidden; }\n'
+        '    .rl-cover img { width: 100%; height: 100%; object-fit: cover; display: block; }\n'
+        '    .rl-no-cover { width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; font-size: 32px; }\n'
+        '    .rl-meta { overflow: hidden; min-height: 105px; }\n'
+        '    .rl-title { font-weight: 800; font-size: 16px; line-height: 1.3; margin-bottom: 4px; }\n'
+        '    .rl-title a { color: #000; }\n'
+        '    .rl-title a:hover { color: #2563eb; }\n'
+        '    .rl-byline { font-size: 13px; color: #555; margin-bottom: 8px; line-height: 1.4; }\n'
+        '    .rl-source { display: inline-block; font-size: 12px; padding: 3px 8px; background: #fff; border: 1.5px solid #000; box-shadow: 1px 1px 0 0 #000; text-decoration: none; color: #000; transition: transform .1s, box-shadow .1s, background .1s; }\n'
+        '    .rl-source:hover { transform: translate(-1px,-1px); box-shadow: 2px 2px 0 0 #000; background: #a7f3d0; text-decoration: none; }\n'
+        '    .rl-shared { clear: both; margin-top: 12px; padding-top: 10px; border-top: 1.5px dashed #ccc; display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }\n'
+        '    .rl-shared-label { font-size: 12px; color: #666; font-weight: 700; }\n'
+        '    .rl-celeb-chip { display: inline-block; padding: 3px 9px; background: #fff8e7; border: 1.5px solid #000; box-shadow: 1px 1px 0 0 #000; font-size: 12px; font-weight: 700; text-decoration: none; color: #000; transition: transform .1s, box-shadow .1s, background .1s; }\n'
+        '    .rl-celeb-chip:hover { transform: translate(-1px,-1px); box-shadow: 2px 2px 0 0 #000; background: #fde047; text-decoration: none; }\n'
+        '    @media (max-width: 480px) { .rl-item { padding: 14px 12px 14px 46px; } .rl-num { width: 32px; height: 26px; font-size: 12px; } .rl-item .rl-cover, .rl-item > .rl-cover { width: 60px; height: 88px; margin-right: 10px; } .rl-meta { min-height: 88px; } .rl-title { font-size: 15px; } }\n'
         '    .related-celebs { margin: 24px 0; }\n'
         '    .related-celeb-list { display: flex; flex-wrap: wrap; gap: 8px; }\n'
         '    .related-celeb { display: inline-flex; align-items: center; gap: 6px; padding: 6px 12px; background: #fff; border: 2px solid #000; box-shadow: 2px 2px 0 0 #000; font-size: 13px; font-weight: 700; text-decoration: none; color: #000; transition: transform .1s, box-shadow .1s; }\n'
@@ -932,7 +987,9 @@ for name, info in celebs.items():
         + '    </div>\n'
         '    <div>\n'
         '      <h1>' + h1_text + '</h1>\n'
-        '      <p style="margin:0;color:#666;font-size:14px">총 <strong>' + str(n_books) + '권</strong>의 도서</p>\n'
+        + (('      <p class="celeb-bio">' + esc(get_bio(name, 'ko')) + '</p>\n')
+           if get_bio(name, 'ko') else '')
+        + '      <p style="margin:0;color:#666;font-size:14px">총 <strong>' + str(n_books) + '권</strong>의 도서</p>\n'
         '    </div>\n'
         '  </header>\n'
         '\n'
@@ -941,66 +998,17 @@ for name, info in celebs.items():
         '  </section>\n'
         '\n'
         '  <section>\n'
-        '    <h2>' + esc(name) + '의 독서 리스트 전체 목록 (' + str(n_books) + '권)</h2>\n'
-        '    <table>\n'
-        '      <thead><tr><th>#</th><th>표지</th><th>도서명</th><th>저자</th><th>출판사</th><th>출처</th></tr></thead>\n'
-        '      <tbody>\n'
-        + book_rows +
-        '      </tbody>\n'
-        '    </table>\n'
+        '    <h2>📚 ' + esc(sname) + '의 독서 리스트 (' + str(n_books) + '권)</h2>\n'
+        + (('    <p class="muted">' + str(shared_count) + '권은 다른 셀럽도 함께 추천한 책이에요. 카드 안에 함께 추천한 셀럽 이름이 표시됩니다.</p>\n')
+           if shared_count else '')
+        + '    <ol class="reading-list">\n'
+        + book_cards_html +
+        '    </ol>\n'
         '  </section>\n'
         '\n'
-        + ((
-            '  <section class="book-pages">\n'
-            '    <h2>👥 ' + esc(name) + '과 다른 셀럽이 함께 추천한 책 (' + str(len(shared_book_cards)) + '권)</h2>\n'
-            '    <p class="muted">2명 이상의 셀럽이 추천한 책과 함께 추천한 셀럽 명단이에요.</p>\n'
-            '    <ul class="shared-book-list">\n'
-            + ''.join(
-                '      <li class="shared-book">\n'
-                '        <div class="sb-main">\n'
-                '          ' + (
-                    ('<a class="sb-cover-link" href="' + _c['aladin_url']
-                     + '" rel="nofollow noopener noreferrer" target="_blank" '
-                     'aria-label="' + esc(_c['title']) + ' 알라딘에서 보기">'
-                     + '<img src="' + esc(_c['cover']) + '" alt="' + esc(_c['title']) + ' 표지" '
-                     'width="60" height="85" loading="lazy" style="object-fit:cover"></a>')
-                    if (_c['cover'] and _c['aladin_url']) else
-                    (('<img src="' + esc(_c['cover']) + '" alt="' + esc(_c['title']) + ' 표지" '
-                      'width="60" height="85" loading="lazy" style="object-fit:cover">')
-                     if _c['cover'] else '<div class="no-cover">📕</div>')
-                ) + '\n'
-                '          <div class="sb-meta">\n'
-                '            <div class="sb-title">'
-                + (
-                    ('<a href="' + _c['aladin_url']
-                     + '" rel="nofollow noopener noreferrer" target="_blank">'
-                     + esc(_c['title']) + '</a>')
-                    if _c['aladin_url'] else esc(_c['title'])
-                ) + '</div>\n'
-                '            <div class="sb-author">' + esc(_c['author']) + '</div>\n'
-                '          </div>\n'
-                '        </div>\n'
-                '        <div class="sb-celebs">\n'
-                '          <span class="sb-celebs-label">함께 추천한 셀럽 '
-                + str(len(_c['other_celebs'])) + '명:</span>\n'
-                + ''.join(
-                    '          <a class="sb-celeb-chip" href="' + esc(
-                        BASE + 'share/' + quote(safe_filename(_oc), safe='') + '.html'
-                    ) + '">' + esc(_oc) + '</a>\n'
-                    for _oc in _c['other_celebs']
-                )
-                + '        </div>\n'
-                '      </li>\n'
-                for _c in shared_book_cards
-            )
-            + '    </ul>\n'
-            '  </section>\n'
-            '\n'
-        ) if shared_book_cards else '')
         + (('  <section>\n'
-            '    <h2>' + esc(name) + ' 인생책 · 책 추천 키워드</h2>\n'
-            '    <p>' + author_summary + ' '
-            + esc(name) + '의 책 추천 리스트는 위 표에서 출처와 함께 확인할 수 있습니다.</p>\n'
+            '    <h2>📝 ' + esc(sname) + '의 책 취향</h2>\n'
+            '    <p>' + author_summary + '</p>\n'
             '  </section>\n'
             '\n') if author_summary else '')
         + related_section
@@ -1012,7 +1020,7 @@ for name, info in celebs.items():
         '\n'
         + pager_section
         + '  <footer>\n'
-        '    <p>' + esc(name) + ' 독서 기록 정보는 유튜브·인터뷰·SNS 등 공개된 출처를 기반으로 정리되었습니다.</p>\n'
+        '    <p>이 페이지의 독서 기록은 유튜브·인터뷰·SNS 등 공개된 출처를 기반으로 정리됐어요.</p>\n'
         '  </footer>\n'
         '\n'
         '</body>\n'
@@ -1216,27 +1224,54 @@ for name, info in celebs.items():
     # 책 행 (영문 제목 + 한국어 원제 부기)
     rows = ''
     for i, b in enumerate(en_books):
-        cover_td = ''
+        # 알라딘 상품 URL (CSV의 &amp; 디코드)
+        aladin_url = ''
+        raw_link = b.get('link') or ''
+        if raw_link.startswith('http') and not raw_link.lower().rstrip().endswith(
+            ('.jpg', '.jpeg', '.png', '.gif', '.webp', '.bmp')
+        ):
+            aladin_url = esc(html.unescape(raw_link))
+
         if b['coverUrl'] and b['coverUrl'].startswith('http'):
-            cover_td = ('<img src="' + esc(b['coverUrl']) + '" alt="' + esc(b['title_en'])
-                        + ' cover" width="60" height="85" loading="lazy" style="object-fit:cover">')
-        if b['title'] in en_books_with_pages:
-            t_html = ('<a href="book/' + safe_en_filename(b['title_en']) + '.html">'
+            cover_inner = ('<img src="' + esc(b['coverUrl']) + '" alt="' + esc(b['title_en'])
+                           + ' cover" loading="lazy">')
+        else:
+            cover_inner = '<div class="rl-no-cover">📕</div>'
+        if aladin_url:
+            cover_html = ('<a class="rl-cover" href="' + aladin_url
+                          + '" rel="nofollow noopener noreferrer" target="_blank" '
+                          'aria-label="View ' + esc(b['title_en']) + ' on Aladin">'
+                          + cover_inner + '</a>')
+        else:
+            cover_html = '<div class="rl-cover">' + cover_inner + '</div>'
+
+        if aladin_url:
+            t_html = ('<a href="' + aladin_url
+                      + '" rel="nofollow noopener noreferrer" target="_blank">'
                       + esc(b['title_en']) + '</a>')
         else:
             t_html = esc(b['title_en'])
-        t_html += ' <span style="color:#888;font-size:12px">(' + esc(b['title']) + ')</span>'
+        t_html += ' <span style="color:#888;font-size:12px;font-weight:400">(' + esc(b['title']) + ')</span>'
+
+        a_en = b.get('author_en')
+        author_text = esc(a_en) if a_en else esc(b['author'])
+
         src_html = ''
         if b['source'] and b['source'].startswith('http'):
-            src_html = '<a href="' + esc(b['source']) + '" rel="nofollow noopener noreferrer" target="_blank">source →</a>'
-        # 영문 작가 이름이 있으면 우선 사용, 없으면 한국어 그대로
-        a_en = b.get('author_en')
-        if a_en:
-            author_html = esc(a_en)
-        else:
-            author_html = esc(b['author'])
-        rows += ('    <tr><td>' + str(i+1) + '</td><td>' + cover_td + '</td><td>' + t_html
-                 + '</td><td>' + author_html + '</td><td class="src">' + src_html + '</td></tr>\n')
+            src_html = ('<a class="rl-source" href="' + esc(b['source'])
+                        + '" rel="nofollow noopener noreferrer" target="_blank">📺 Source</a>')
+
+        rows += (
+            '    <li class="rl-item">\n'
+            '      <span class="rl-num">' + str(i+1) + '</span>\n'
+            '      ' + cover_html + '\n'
+            '      <div class="rl-meta">\n'
+            '        <div class="rl-title">' + t_html + '</div>\n'
+            + (('        <div class="rl-byline">' + author_text + '</div>\n') if author_text else '')
+            + (('        ' + src_html + '\n') if src_html else '')
+            + '      </div>\n'
+            '    </li>\n'
+        )
 
     title_text = name_en + ' Reading List · ' + str(n) + ' Books ' + name_en + ' Has Read'
     desc_text  = ('What is ' + name_en + ' (Korean: ' + esc(name) + ') reading? '
@@ -1310,9 +1345,22 @@ for name, info in celebs.items():
         '    h1 { font-size: 28px; margin: 0 0 8px; font-weight: 900; }\n'
         '    h2 { font-size: 19px; margin: 32px 0 12px; padding-bottom: 4px; border-bottom: 2px solid #000; font-weight: 800; }\n'
         '    .intro { background: #fff; border: 2px solid #000; box-shadow: 4px 4px 0 0 #000; padding: 14px 16px; margin: 16px 0 24px; font-size: 15px; }\n'
-        '    table { width: 100%; border-collapse: collapse; font-size: 14px; background: #fff; border: 2px solid #000; }\n'
-        '    th, td { border: 1px solid #000; padding: 8px 10px; text-align: left; vertical-align: middle; }\n'
-        '    th { background: #fde047; font-size: 13px; font-weight: 800; }\n'
+        '    .celeb-bio { margin: 4px 0 8px; padding: 6px 10px; background: #fff8e7; border-left: 4px solid #000; font-size: 14px; line-height: 1.45; color: #222; }\n'
+        '    .reading-list { list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 14px; }\n'
+        '    .rl-item { position: relative; background: #fff; border: 2px solid #000; box-shadow: 4px 4px 0 0 #000; padding: 14px 14px 14px 52px; transition: transform .12s, box-shadow .12s; }\n'
+        '    .rl-item:hover { transform: translate(-1px,-1px); box-shadow: 6px 6px 0 0 #000; }\n'
+        '    .rl-num { position: absolute; left: -2px; top: -2px; width: 38px; height: 30px; display: flex; align-items: center; justify-content: center; background: #fde047; border: 2px solid #000; font-weight: 900; font-size: 14px; }\n'
+        '    .rl-cover { float: left; margin-right: 14px; width: 74px; height: 105px; display: block; border: 1.5px solid #000; box-shadow: 2px 2px 0 0 #000; background: #f4f4f0; overflow: hidden; }\n'
+        '    .rl-cover img { width: 100%; height: 100%; object-fit: cover; display: block; }\n'
+        '    .rl-no-cover { width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; font-size: 32px; }\n'
+        '    .rl-meta { overflow: hidden; min-height: 105px; }\n'
+        '    .rl-title { font-weight: 800; font-size: 16px; line-height: 1.3; margin-bottom: 4px; }\n'
+        '    .rl-title a { color: #000; }\n'
+        '    .rl-title a:hover { color: #2563eb; }\n'
+        '    .rl-byline { font-size: 13px; color: #555; margin-bottom: 8px; line-height: 1.4; }\n'
+        '    .rl-source { display: inline-block; font-size: 12px; padding: 3px 8px; background: #fff; border: 1.5px solid #000; box-shadow: 1px 1px 0 0 #000; text-decoration: none; color: #000; transition: transform .1s, box-shadow .1s, background .1s; }\n'
+        '    .rl-source:hover { transform: translate(-1px,-1px); box-shadow: 2px 2px 0 0 #000; background: #a7f3d0; text-decoration: none; }\n'
+        '    @media (max-width: 480px) { .rl-item { padding: 14px 12px 14px 46px; } .rl-num { width: 32px; height: 26px; font-size: 12px; } .rl-cover { width: 60px; height: 88px; margin-right: 10px; } .rl-meta { min-height: 88px; } .rl-title { font-size: 15px; } }\n'
         '    a { color: #2563eb; text-decoration: none; }\n'
         '    a:hover { text-decoration: underline; }\n'
         '    footer { margin-top: 48px; padding-top: 16px; border-top: 2px solid #000; font-size: 13px; color: #666; }\n'
@@ -1328,7 +1376,9 @@ for name, info in celebs.items():
         '    <img class="celeb-img" src="' + esc(img) + '" alt="' + esc(name_en) + ' profile photo" width="120" height="120">\n'
         '    <div>\n'
         '      <h1>' + esc(name_en) + ' <span style="font-weight:400;color:#666;font-size:18px">(' + esc(name) + ')</span></h1>\n'
-        '      <p style="margin:0;color:#666;font-size:14px">' + str(n) + ' book' + ('s' if n != 1 else '') + ' read &amp; recommended</p>\n'
+        + (('      <p class="celeb-bio">' + esc(get_bio(name, 'en')) + '</p>\n')
+           if get_bio(name, 'en') else '')
+        + '      <p style="margin:0;color:#666;font-size:14px">' + str(n) + ' book' + ('s' if n != 1 else '') + ' read &amp; recommended</p>\n'
         '    </div>\n'
         '  </header>\n'
         '  <section class="intro">\n'
@@ -1338,11 +1388,8 @@ for name, info in celebs.items():
         '  </section>\n'
         '  <section>\n'
         '    <h2>Reading list</h2>\n'
-        '    <table>\n'
-        '      <thead><tr><th>#</th><th>Cover</th><th>Title</th><th>Author</th><th>Source</th></tr></thead>\n'
-        '      <tbody>\n' + rows +
-        '      </tbody>\n'
-        '    </table>\n'
+        '    <ol class="reading-list">\n' + rows +
+        '    </ol>\n'
         '  </section>\n'
         '  <footer>\n'
         '    <p>Curated from public Korean-language sources. Korean original page: <a href="'

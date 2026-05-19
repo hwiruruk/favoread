@@ -250,19 +250,26 @@
     .bc-title { font-weight: 700; font-size: 13px; line-height: 1.3; margin-bottom: 4px; }
     .bc-author { font-size: 12px; color: #555; margin-bottom: 6px; }
     .bc-badge { display: inline-block; font-size: 11px; background: #fde047; border: 1px solid #000; padding: 1px 6px; font-weight: 700; }
-    .shared-book-list { list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 12px; }
-    .shared-book { background: #fff; border: 2px solid #000; box-shadow: 4px 4px 0 0 #000; padding: 12px; }
-    .sb-main { display: flex; gap: 12px; margin-bottom: 10px; }
-    .sb-cover-link { flex-shrink: 0; display: block; }
-    .sb-meta { flex: 1; min-width: 0; }
-    .sb-title { font-weight: 800; font-size: 15px; line-height: 1.3; margin-bottom: 4px; }
-    .sb-title a { color: #000; }
-    .sb-title a:hover { color: #2563eb; }
-    .sb-author { font-size: 13px; color: #555; }
-    .sb-celebs { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; padding-top: 10px; border-top: 1.5px dashed #ccc; }
-    .sb-celebs-label { font-size: 12px; color: #666; font-weight: 700; margin-right: 4px; }
-    .sb-celeb-chip { display: inline-block; padding: 3px 9px; background: #fff8e7; border: 1.5px solid #000; box-shadow: 1px 1px 0 0 #000; font-size: 12px; font-weight: 700; text-decoration: none; color: #000; transition: transform .1s, box-shadow .1s, background .1s; }
-    .sb-celeb-chip:hover { transform: translate(-1px,-1px); box-shadow: 2px 2px 0 0 #000; background: #fde047; text-decoration: none; }
+    .celeb-bio { margin: 4px 0 8px; padding: 6px 10px; background: #fff8e7; border-left: 4px solid #000; font-size: 14px; line-height: 1.45; color: #222; }
+    .reading-list { list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 14px; counter-reset: rl; }
+    .rl-item { position: relative; background: #fff; border: 2px solid #000; box-shadow: 4px 4px 0 0 #000; padding: 14px 14px 14px 52px; transition: transform .12s, box-shadow .12s; }
+    .rl-item:hover { transform: translate(-1px,-1px); box-shadow: 6px 6px 0 0 #000; }
+    .rl-num { position: absolute; left: -2px; top: -2px; width: 38px; height: 30px; display: flex; align-items: center; justify-content: center; background: #fde047; border: 2px solid #000; font-weight: 900; font-size: 14px; font-family: "Space Grotesk", sans-serif; }
+    .rl-item .rl-cover, .rl-item > .rl-cover { float: left; margin-right: 14px; width: 74px; height: 105px; display: block; flex-shrink: 0; border: 1.5px solid #000; box-shadow: 2px 2px 0 0 #000; background: #f4f4f0; overflow: hidden; }
+    .rl-cover img { width: 100%; height: 100%; object-fit: cover; display: block; }
+    .rl-no-cover { width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; font-size: 32px; }
+    .rl-meta { overflow: hidden; min-height: 105px; }
+    .rl-title { font-weight: 800; font-size: 16px; line-height: 1.3; margin-bottom: 4px; }
+    .rl-title a { color: #000; }
+    .rl-title a:hover { color: #2563eb; }
+    .rl-byline { font-size: 13px; color: #555; margin-bottom: 8px; line-height: 1.4; }
+    .rl-source { display: inline-block; font-size: 12px; padding: 3px 8px; background: #fff; border: 1.5px solid #000; box-shadow: 1px 1px 0 0 #000; text-decoration: none; color: #000; transition: transform .1s, box-shadow .1s, background .1s; }
+    .rl-source:hover { transform: translate(-1px,-1px); box-shadow: 2px 2px 0 0 #000; background: #a7f3d0; text-decoration: none; }
+    .rl-shared { clear: both; margin-top: 12px; padding-top: 10px; border-top: 1.5px dashed #ccc; display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
+    .rl-shared-label { font-size: 12px; color: #666; font-weight: 700; }
+    .rl-celeb-chip { display: inline-block; padding: 3px 9px; background: #fff8e7; border: 1.5px solid #000; box-shadow: 1px 1px 0 0 #000; font-size: 12px; font-weight: 700; text-decoration: none; color: #000; transition: transform .1s, box-shadow .1s, background .1s; }
+    .rl-celeb-chip:hover { transform: translate(-1px,-1px); box-shadow: 2px 2px 0 0 #000; background: #fde047; text-decoration: none; }
+    @media (max-width: 480px) { .rl-item { padding: 14px 12px 14px 46px; } .rl-num { width: 32px; height: 26px; font-size: 12px; } .rl-item .rl-cover, .rl-item > .rl-cover { width: 60px; height: 88px; margin-right: 10px; } .rl-meta { min-height: 88px; } .rl-title { font-size: 15px; } }
     .related-celebs { margin: 24px 0; }
     .related-celeb-list { display: flex; flex-wrap: wrap; gap: 8px; }
     .related-celeb { display: inline-flex; align-items: center; gap: 6px; padding: 6px 12px; background: #fff; border: 2px solid #000; box-shadow: 2px 2px 0 0 #000; font-size: 13px; font-weight: 700; text-decoration: none; color: #000; transition: transform .1s, box-shadow .1s; }
@@ -295,87 +302,99 @@
   </header>
 
   <section class="intro">
-    <p style="margin:0">김민하의 독서 기록을 한곳에 모았습니다. 유튜브·인터뷰·SNS 등 출처가 확인된 김민하의 인생책·추천 도서 <strong>8권</strong>을 정리한 독서 리스트예요. 김민하 책 추천과 독서 취향이 궁금하다면 아래 전체 목록과 출처 링크에서 확인할 수 있습니다.</p>
+    <p style="margin:0">김민하의 독서 기록을 한곳에 모았어요. 유튜브·인터뷰·SNS 등 공개 출처에서 확인된 인생책·추천 도서 <strong>8권</strong>을 한 페이지에 정리한 독서 리스트입니다. 아래 목록에서 책 제목·저자·출처 링크를 한눈에 확인할 수 있어요.</p>
   </section>
 
   <section>
-    <h2>김민하의 독서 리스트 전체 목록 (8권)</h2>
-    <table>
-      <thead><tr><th>#</th><th>표지</th><th>도서명</th><th>저자</th><th>출판사</th><th>출처</th></tr></thead>
-      <tbody>
-    <tr><td>1</td><td><a href="https://www.aladin.co.kr/shop/wproduct.aspx?ItemId=327015675&amp;partner=openAPI&amp;start=api" rel="nofollow noopener noreferrer" target="_blank" aria-label="고양이 눈 알라딘에서 보기"><img src="https://image.aladin.co.kr/product/32701/56/cover500/8937464241_1.jpg" alt="고양이 눈 표지" width="60" height="85" loading="lazy" style="object-fit:cover"></a></td><td><a href="https://www.aladin.co.kr/shop/wproduct.aspx?ItemId=327015675&amp;partner=openAPI&amp;start=api" rel="nofollow noopener noreferrer" target="_blank">고양이 눈</a></td><td>마거릿 애트우드</td><td>민음사</td><td class="src"><a href="https://blog.naver.com/minumworld/223316875496" rel="nofollow noopener noreferrer" target="_blank">출처 보기 →</a></td></tr>
-    <tr><td>2</td><td><a href="https://www.aladin.co.kr/shop/wproduct.aspx?ItemId=315614621&amp;partner=openAPI&amp;start=api" rel="nofollow noopener noreferrer" target="_blank" aria-label="구의 증명 알라딘에서 보기"><img src="https://image.aladin.co.kr/product/31561/46/cover500/k782832854_1.jpg" alt="구의 증명 표지" width="60" height="85" loading="lazy" style="object-fit:cover"></a></td><td><a href="https://www.aladin.co.kr/shop/wproduct.aspx?ItemId=315614621&amp;partner=openAPI&amp;start=api" rel="nofollow noopener noreferrer" target="_blank">구의 증명</a></td><td>최진영</td><td>은행나무</td><td class="src"><a href="https://blog.naver.com/minumworld/223316875496" rel="nofollow noopener noreferrer" target="_blank">출처 보기 →</a></td></tr>
-    <tr><td>3</td><td><a href="https://www.aladin.co.kr/shop/wproduct.aspx?ItemId=365711963" rel="nofollow noopener noreferrer" target="_blank" aria-label="내 주머니는 맑고 강풍 알라딘에서 보기"><img src="https://image.aladin.co.kr/product/36571/19/cover500/k222039349_1.jpg" alt="내 주머니는 맑고 강풍 표지" width="60" height="85" loading="lazy" style="object-fit:cover"></a></td><td><a href="https://www.aladin.co.kr/shop/wproduct.aspx?ItemId=365711963" rel="nofollow noopener noreferrer" target="_blank">내 주머니는 맑고 강풍</a></td><td>최진영</td><td>핀드</td><td class="src"><a href="https://www.gqkorea.co.kr/2026/02/26/%EA%B9%80%EB%AF%BC%ED%95%98/" rel="nofollow noopener noreferrer" target="_blank">출처 보기 →</a></td></tr>
-    <tr><td>4</td><td><a href="https://www.aladin.co.kr/shop/wproduct.aspx?ItemId=324968136" rel="nofollow noopener noreferrer" target="_blank" aria-label="단 한 사람 알라딘에서 보기"><img src="https://image.aladin.co.kr/product/32496/81/cover500/k382935719_1.jpg" alt="단 한 사람 표지" width="60" height="85" loading="lazy" style="object-fit:cover"></a></td><td><a href="https://www.aladin.co.kr/shop/wproduct.aspx?ItemId=324968136" rel="nofollow noopener noreferrer" target="_blank">단 한 사람</a></td><td>최진영</td><td>한겨레출판</td><td class="src"><a href="https://www.elle.co.kr/ellevoice/community/detail/3833" rel="nofollow noopener noreferrer" target="_blank">출처 보기 →</a></td></tr>
-    <tr><td>5</td><td><a href="https://www.aladin.co.kr/shop/wproduct.aspx?ItemId=86469018&amp;partner=openAPI&amp;start=api" rel="nofollow noopener noreferrer" target="_blank" aria-label="마음 알라딘에서 보기"><img src="https://image.aladin.co.kr/product/8646/90/cover500/8932317968_1.jpg" alt="마음 표지" width="60" height="85" loading="lazy" style="object-fit:cover"></a></td><td><a href="https://www.aladin.co.kr/shop/wproduct.aspx?ItemId=86469018&amp;partner=openAPI&amp;start=api" rel="nofollow noopener noreferrer" target="_blank">마음</a></td><td>나쓰메 소세키</td><td>현암사</td><td class="src"><a href="https://www.allurekorea.com/2024/11/22/full-of-love-%ea%b9%80%eb%af%bc%ed%95%98/" rel="nofollow noopener noreferrer" target="_blank">출처 보기 →</a></td></tr>
-    <tr><td>6</td><td><a href="https://www.aladin.co.kr/shop/wproduct.aspx?ItemId=272940" rel="nofollow noopener noreferrer" target="_blank" aria-label="무인도에서 살아남기 알라딘에서 보기"><img src="https://image.aladin.co.kr/product/27/29/cover500/8937810778_3.jpg" alt="무인도에서 살아남기 표지" width="60" height="85" loading="lazy" style="object-fit:cover"></a></td><td><a href="https://www.aladin.co.kr/shop/wproduct.aspx?ItemId=272940" rel="nofollow noopener noreferrer" target="_blank">무인도에서 살아남기</a></td><td>최덕희, 강경효</td><td>미래엔아이세움</td><td class="src"><a href="https://www.vogue.co.kr/2025/04/22/%EC%8B%9C%EB%AA%AC-%EB%A1%9C%EC%83%A4%EC%99%80-%EA%B9%80%EB%AF%BC%ED%95%98%EA%B0%80-%EC%84%9C%EB%A1%9C%EC%97%90%EA%B2%8C-%EC%A3%BC%EB%8A%94-%EC%98%81%EA%B0%90/" rel="nofollow noopener noreferrer" target="_blank">출처 보기 →</a></td></tr>
-    <tr><td>7</td><td><a href="https://www.aladin.co.kr/shop/wproduct.aspx?ItemId=6383454" rel="nofollow noopener noreferrer" target="_blank" aria-label="사랑할 때와 죽을 때 알라딘에서 보기"><img src="https://image.aladin.co.kr/product/638/34/cover500/893746246x_3.jpg" alt="사랑할 때와 죽을 때 표지" width="60" height="85" loading="lazy" style="object-fit:cover"></a></td><td><a href="https://www.aladin.co.kr/shop/wproduct.aspx?ItemId=6383454" rel="nofollow noopener noreferrer" target="_blank">사랑할 때와 죽을 때</a></td><td>히리 마리아 레마르크</td><td>민음사</td><td class="src"><a href="https://blog.naver.com/minumworld/223316875496" rel="nofollow noopener noreferrer" target="_blank">출처 보기 →</a></td></tr>
-    <tr><td>8</td><td><a href="https://www.aladin.co.kr/shop/wproduct.aspx?ItemId=318623961&amp;partner=openAPI&amp;start=api" rel="nofollow noopener noreferrer" target="_blank" aria-label="창조적 행위 알라딘에서 보기"><img src="https://image.aladin.co.kr/product/31862/39/cover500/k562833421_2.jpg" alt="창조적 행위 표지" width="60" height="85" loading="lazy" style="object-fit:cover"></a></td><td><a href="https://www.aladin.co.kr/shop/wproduct.aspx?ItemId=318623961&amp;partner=openAPI&amp;start=api" rel="nofollow noopener noreferrer" target="_blank">창조적 행위</a></td><td>릭 루빈</td><td>코쿤북스</td><td class="src"><a href="https://rollingstone.co.kr/main-trending/$/20329" rel="nofollow noopener noreferrer" target="_blank">출처 보기 →</a></td></tr>
-      </tbody>
-    </table>
-  </section>
-
-  <section class="book-pages">
-    <h2>👥 김민하과 다른 셀럽이 함께 추천한 책 (3권)</h2>
-    <p class="muted">2명 이상의 셀럽이 추천한 책과 함께 추천한 셀럽 명단이에요.</p>
-    <ul class="shared-book-list">
-      <li class="shared-book">
-        <div class="sb-main">
-          <a class="sb-cover-link" href="https://www.aladin.co.kr/shop/wproduct.aspx?ItemId=315614621&amp;partner=openAPI&amp;start=api" rel="nofollow noopener noreferrer" target="_blank" aria-label="구의 증명 알라딘에서 보기"><img src="https://image.aladin.co.kr/product/31561/46/cover500/k782832854_1.jpg" alt="구의 증명 표지" width="60" height="85" loading="lazy" style="object-fit:cover"></a>
-          <div class="sb-meta">
-            <div class="sb-title"><a href="https://www.aladin.co.kr/shop/wproduct.aspx?ItemId=315614621&amp;partner=openAPI&amp;start=api" rel="nofollow noopener noreferrer" target="_blank">구의 증명</a></div>
-            <div class="sb-author">최진영</div>
-          </div>
-        </div>
-        <div class="sb-celebs">
-          <span class="sb-celebs-label">함께 추천한 셀럽 3명:</span>
-          <a class="sb-celeb-chip" href="https://favorbook.co.kr/share/%EA%B0%80%EC%9B%90%28%EB%AF%B8%EC%95%BC%EC%98%A4%29.html">가원(미야오)</a>
-          <a class="sb-celeb-chip" href="https://favorbook.co.kr/share/%ED%95%9C%EB%A1%9C%EB%A1%9C.html">한로로</a>
-          <a class="sb-celeb-chip" href="https://favorbook.co.kr/share/%EA%B9%80%EB%AF%BC%EC%A3%BC.html">김민주</a>
-        </div>
-      </li>
-      <li class="shared-book">
-        <div class="sb-main">
-          <a class="sb-cover-link" href="https://www.aladin.co.kr/shop/wproduct.aspx?ItemId=86469018&amp;partner=openAPI&amp;start=api" rel="nofollow noopener noreferrer" target="_blank" aria-label="마음 알라딘에서 보기"><img src="https://image.aladin.co.kr/product/8646/90/cover500/8932317968_1.jpg" alt="마음 표지" width="60" height="85" loading="lazy" style="object-fit:cover"></a>
-          <div class="sb-meta">
-            <div class="sb-title"><a href="https://www.aladin.co.kr/shop/wproduct.aspx?ItemId=86469018&amp;partner=openAPI&amp;start=api" rel="nofollow noopener noreferrer" target="_blank">마음</a></div>
-            <div class="sb-author">나쓰메 소세키</div>
-          </div>
-        </div>
-        <div class="sb-celebs">
-          <span class="sb-celebs-label">함께 추천한 셀럽 2명:</span>
-          <a class="sb-celeb-chip" href="https://favorbook.co.kr/share/%EC%8B%AC%EC%9D%80%EA%B2%BD.html">심은경</a>
-          <a class="sb-celeb-chip" href="https://favorbook.co.kr/share/%EC%98%88%EB%A6%AC%28%EB%A0%88%EB%93%9C%EB%B2%A8%EB%B2%B3%29.html">예리(레드벨벳)</a>
-        </div>
-      </li>
-      <li class="shared-book">
-        <div class="sb-main">
-          <a class="sb-cover-link" href="https://www.aladin.co.kr/shop/wproduct.aspx?ItemId=318623961&amp;partner=openAPI&amp;start=api" rel="nofollow noopener noreferrer" target="_blank" aria-label="창조적 행위 알라딘에서 보기"><img src="https://image.aladin.co.kr/product/31862/39/cover500/k562833421_2.jpg" alt="창조적 행위 표지" width="60" height="85" loading="lazy" style="object-fit:cover"></a>
-          <div class="sb-meta">
-            <div class="sb-title"><a href="https://www.aladin.co.kr/shop/wproduct.aspx?ItemId=318623961&amp;partner=openAPI&amp;start=api" rel="nofollow noopener noreferrer" target="_blank">창조적 행위</a></div>
-            <div class="sb-author">릭 루빈</div>
-          </div>
-        </div>
-        <div class="sb-celebs">
-          <span class="sb-celebs-label">함께 추천한 셀럽 5명:</span>
-          <a class="sb-celeb-chip" href="https://favorbook.co.kr/share/%EA%B9%80%EC%9C%A0%EC%A0%95.html">김유정</a>
-          <a class="sb-celeb-chip" href="https://favorbook.co.kr/share/%EB%94%94%EB%85%B8%28%EC%84%B8%EB%B8%90%ED%8B%B4%29.html">디노(세븐틴)</a>
-          <a class="sb-celeb-chip" href="https://favorbook.co.kr/share/%EB%A7%88%ED%8B%B4%28%EC%BD%94%EB%A5%B4%ED%8B%B0%EC%8A%A4%29.html">마틴(코르티스)</a>
-          <a class="sb-celeb-chip" href="https://favorbook.co.kr/share/%EB%B2%84%EB%85%BC%28%EC%84%B8%EB%B8%90%ED%8B%B4%29.html">버논(세븐틴)</a>
-          <a class="sb-celeb-chip" href="https://favorbook.co.kr/share/%EC%B5%9C%EC%A0%95%ED%9B%88%28%EC%9E%94%EB%82%98%EB%B9%84%29.html">최정훈(잔나비)</a>
-        </div>
-      </li>
-    </ul>
+    <h2>📚 김민하의 독서 리스트 (8권)</h2>
+    <p class="muted">3권은 다른 셀럽도 함께 추천한 책이에요. 카드 안에 함께 추천한 셀럽 이름이 표시됩니다.</p>
+    <ol class="reading-list">
+    <li class="rl-item">
+      <span class="rl-num">1</span>
+      <a class="rl-cover" href="https://www.aladin.co.kr/shop/wproduct.aspx?ItemId=327015675&amp;partner=openAPI&amp;start=api" rel="nofollow noopener noreferrer" target="_blank" aria-label="고양이 눈 알라딘에서 보기"><img src="https://image.aladin.co.kr/product/32701/56/cover500/8937464241_1.jpg" alt="고양이 눈 표지" loading="lazy"></a>
+      <div class="rl-meta">
+        <div class="rl-title"><a href="https://www.aladin.co.kr/shop/wproduct.aspx?ItemId=327015675&amp;partner=openAPI&amp;start=api" rel="nofollow noopener noreferrer" target="_blank">고양이 눈</a></div>
+        <div class="rl-byline">마거릿 애트우드 · 민음사</div>
+        <a class="rl-source" href="https://blog.naver.com/minumworld/223316875496" rel="nofollow noopener noreferrer" target="_blank">📺 출처 보기</a>
+      </div>
+    </li>
+    <li class="rl-item">
+      <span class="rl-num">2</span>
+      <a class="rl-cover" href="https://www.aladin.co.kr/shop/wproduct.aspx?ItemId=315614621&amp;partner=openAPI&amp;start=api" rel="nofollow noopener noreferrer" target="_blank" aria-label="구의 증명 알라딘에서 보기"><img src="https://image.aladin.co.kr/product/31561/46/cover500/k782832854_1.jpg" alt="구의 증명 표지" loading="lazy"></a>
+      <div class="rl-meta">
+        <div class="rl-title"><a href="https://www.aladin.co.kr/shop/wproduct.aspx?ItemId=315614621&amp;partner=openAPI&amp;start=api" rel="nofollow noopener noreferrer" target="_blank">구의 증명</a></div>
+        <div class="rl-byline">최진영 · 은행나무</div>
+        <a class="rl-source" href="https://blog.naver.com/minumworld/223316875496" rel="nofollow noopener noreferrer" target="_blank">📺 출처 보기</a>
+      </div>
+      <div class="rl-shared"><span class="rl-shared-label">👥 함께 추천한 셀럽 3명:</span> <a class="rl-celeb-chip" href="https://favorbook.co.kr/share/%EA%B0%80%EC%9B%90%28%EB%AF%B8%EC%95%BC%EC%98%A4%29.html">가원(미야오)</a><a class="rl-celeb-chip" href="https://favorbook.co.kr/share/%ED%95%9C%EB%A1%9C%EB%A1%9C.html">한로로</a><a class="rl-celeb-chip" href="https://favorbook.co.kr/share/%EA%B9%80%EB%AF%BC%EC%A3%BC.html">김민주</a></div>
+    </li>
+    <li class="rl-item">
+      <span class="rl-num">3</span>
+      <a class="rl-cover" href="https://www.aladin.co.kr/shop/wproduct.aspx?ItemId=365711963" rel="nofollow noopener noreferrer" target="_blank" aria-label="내 주머니는 맑고 강풍 알라딘에서 보기"><img src="https://image.aladin.co.kr/product/36571/19/cover500/k222039349_1.jpg" alt="내 주머니는 맑고 강풍 표지" loading="lazy"></a>
+      <div class="rl-meta">
+        <div class="rl-title"><a href="https://www.aladin.co.kr/shop/wproduct.aspx?ItemId=365711963" rel="nofollow noopener noreferrer" target="_blank">내 주머니는 맑고 강풍</a></div>
+        <div class="rl-byline">최진영 · 핀드</div>
+        <a class="rl-source" href="https://www.gqkorea.co.kr/2026/02/26/%EA%B9%80%EB%AF%BC%ED%95%98/" rel="nofollow noopener noreferrer" target="_blank">📺 출처 보기</a>
+      </div>
+    </li>
+    <li class="rl-item">
+      <span class="rl-num">4</span>
+      <a class="rl-cover" href="https://www.aladin.co.kr/shop/wproduct.aspx?ItemId=324968136" rel="nofollow noopener noreferrer" target="_blank" aria-label="단 한 사람 알라딘에서 보기"><img src="https://image.aladin.co.kr/product/32496/81/cover500/k382935719_1.jpg" alt="단 한 사람 표지" loading="lazy"></a>
+      <div class="rl-meta">
+        <div class="rl-title"><a href="https://www.aladin.co.kr/shop/wproduct.aspx?ItemId=324968136" rel="nofollow noopener noreferrer" target="_blank">단 한 사람</a></div>
+        <div class="rl-byline">최진영 · 한겨레출판</div>
+        <a class="rl-source" href="https://www.elle.co.kr/ellevoice/community/detail/3833" rel="nofollow noopener noreferrer" target="_blank">📺 출처 보기</a>
+      </div>
+    </li>
+    <li class="rl-item">
+      <span class="rl-num">5</span>
+      <a class="rl-cover" href="https://www.aladin.co.kr/shop/wproduct.aspx?ItemId=86469018&amp;partner=openAPI&amp;start=api" rel="nofollow noopener noreferrer" target="_blank" aria-label="마음 알라딘에서 보기"><img src="https://image.aladin.co.kr/product/8646/90/cover500/8932317968_1.jpg" alt="마음 표지" loading="lazy"></a>
+      <div class="rl-meta">
+        <div class="rl-title"><a href="https://www.aladin.co.kr/shop/wproduct.aspx?ItemId=86469018&amp;partner=openAPI&amp;start=api" rel="nofollow noopener noreferrer" target="_blank">마음</a></div>
+        <div class="rl-byline">나쓰메 소세키 · 현암사</div>
+        <a class="rl-source" href="https://www.allurekorea.com/2024/11/22/full-of-love-%ea%b9%80%eb%af%bc%ed%95%98/" rel="nofollow noopener noreferrer" target="_blank">📺 출처 보기</a>
+      </div>
+      <div class="rl-shared"><span class="rl-shared-label">👥 함께 추천한 셀럽 2명:</span> <a class="rl-celeb-chip" href="https://favorbook.co.kr/share/%EC%8B%AC%EC%9D%80%EA%B2%BD.html">심은경</a><a class="rl-celeb-chip" href="https://favorbook.co.kr/share/%EC%98%88%EB%A6%AC%28%EB%A0%88%EB%93%9C%EB%B2%A8%EB%B2%B3%29.html">예리(레드벨벳)</a></div>
+    </li>
+    <li class="rl-item">
+      <span class="rl-num">6</span>
+      <a class="rl-cover" href="https://www.aladin.co.kr/shop/wproduct.aspx?ItemId=272940" rel="nofollow noopener noreferrer" target="_blank" aria-label="무인도에서 살아남기 알라딘에서 보기"><img src="https://image.aladin.co.kr/product/27/29/cover500/8937810778_3.jpg" alt="무인도에서 살아남기 표지" loading="lazy"></a>
+      <div class="rl-meta">
+        <div class="rl-title"><a href="https://www.aladin.co.kr/shop/wproduct.aspx?ItemId=272940" rel="nofollow noopener noreferrer" target="_blank">무인도에서 살아남기</a></div>
+        <div class="rl-byline">최덕희, 강경효 · 미래엔아이세움</div>
+        <a class="rl-source" href="https://www.vogue.co.kr/2025/04/22/%EC%8B%9C%EB%AA%AC-%EB%A1%9C%EC%83%A4%EC%99%80-%EA%B9%80%EB%AF%BC%ED%95%98%EA%B0%80-%EC%84%9C%EB%A1%9C%EC%97%90%EA%B2%8C-%EC%A3%BC%EB%8A%94-%EC%98%81%EA%B0%90/" rel="nofollow noopener noreferrer" target="_blank">📺 출처 보기</a>
+      </div>
+    </li>
+    <li class="rl-item">
+      <span class="rl-num">7</span>
+      <a class="rl-cover" href="https://www.aladin.co.kr/shop/wproduct.aspx?ItemId=6383454" rel="nofollow noopener noreferrer" target="_blank" aria-label="사랑할 때와 죽을 때 알라딘에서 보기"><img src="https://image.aladin.co.kr/product/638/34/cover500/893746246x_3.jpg" alt="사랑할 때와 죽을 때 표지" loading="lazy"></a>
+      <div class="rl-meta">
+        <div class="rl-title"><a href="https://www.aladin.co.kr/shop/wproduct.aspx?ItemId=6383454" rel="nofollow noopener noreferrer" target="_blank">사랑할 때와 죽을 때</a></div>
+        <div class="rl-byline">히리 마리아 레마르크 · 민음사</div>
+        <a class="rl-source" href="https://blog.naver.com/minumworld/223316875496" rel="nofollow noopener noreferrer" target="_blank">📺 출처 보기</a>
+      </div>
+    </li>
+    <li class="rl-item">
+      <span class="rl-num">8</span>
+      <a class="rl-cover" href="https://www.aladin.co.kr/shop/wproduct.aspx?ItemId=318623961&amp;partner=openAPI&amp;start=api" rel="nofollow noopener noreferrer" target="_blank" aria-label="창조적 행위 알라딘에서 보기"><img src="https://image.aladin.co.kr/product/31862/39/cover500/k562833421_2.jpg" alt="창조적 행위 표지" loading="lazy"></a>
+      <div class="rl-meta">
+        <div class="rl-title"><a href="https://www.aladin.co.kr/shop/wproduct.aspx?ItemId=318623961&amp;partner=openAPI&amp;start=api" rel="nofollow noopener noreferrer" target="_blank">창조적 행위</a></div>
+        <div class="rl-byline">릭 루빈 · 코쿤북스</div>
+        <a class="rl-source" href="https://rollingstone.co.kr/main-trending/$/20329" rel="nofollow noopener noreferrer" target="_blank">📺 출처 보기</a>
+      </div>
+      <div class="rl-shared"><span class="rl-shared-label">👥 함께 추천한 셀럽 5명:</span> <a class="rl-celeb-chip" href="https://favorbook.co.kr/share/%EA%B9%80%EC%9C%A0%EC%A0%95.html">김유정</a><a class="rl-celeb-chip" href="https://favorbook.co.kr/share/%EB%94%94%EB%85%B8%28%EC%84%B8%EB%B8%90%ED%8B%B4%29.html">디노(세븐틴)</a><a class="rl-celeb-chip" href="https://favorbook.co.kr/share/%EB%A7%88%ED%8B%B4%28%EC%BD%94%EB%A5%B4%ED%8B%B0%EC%8A%A4%29.html">마틴(코르티스)</a><a class="rl-celeb-chip" href="https://favorbook.co.kr/share/%EB%B2%84%EB%85%BC%28%EC%84%B8%EB%B8%90%ED%8B%B4%29.html">버논(세븐틴)</a><a class="rl-celeb-chip" href="https://favorbook.co.kr/share/%EC%B5%9C%EC%A0%95%ED%9B%88%28%EC%9E%94%EB%82%98%EB%B9%84%29.html">최정훈(잔나비)</a></div>
+    </li>
+    </ol>
   </section>
 
   <section>
-    <h2>김민하 인생책 · 책 추천 키워드</h2>
-    <p>김민하의 추천 도서에 가장 자주 등장한 작가는 최진영 (3권), 마거릿 애트우드, 나쓰메 소세키입니다. 김민하의 책 추천 리스트는 위 표에서 출처와 함께 확인할 수 있습니다.</p>
+    <h2>📝 김민하의 책 취향</h2>
+    <p>추천 도서에 가장 자주 등장한 작가는 최진영 (3권), 마거릿 애트우드, 나쓰메 소세키 등이에요.</p>
   </section>
 
   <section class="related-celebs">
-    <h2>🤝 김민하의 독서 취향과 겹치는 셀럽</h2>
-    <p class="muted">김민하의 추천 도서를 함께 추천한 다른 셀럽이에요. 숫자는 공통 도서 권수.</p>
+    <h2>🤝 책 취향이 겹치는 셀럽</h2>
+    <p class="muted">같은 책을 함께 추천한 다른 셀럽이에요. 숫자는 공통 도서 권수.</p>
     <div class="related-celeb-list">
       <a class="related-celeb" href="https://favorbook.co.kr/share/%EA%B0%80%EC%9B%90%28%EB%AF%B8%EC%95%BC%EC%98%A4%29.html" title="공통 도서: 구의 증명">가원(미야오) <span class="rc-count">1</span></a>
       <a class="related-celeb" href="https://favorbook.co.kr/share/%EA%B9%80%EB%AF%BC%EC%A3%BC.html" title="공통 도서: 구의 증명">김민주 <span class="rc-count">1</span></a>
@@ -400,7 +419,7 @@
   </nav>
 
   <footer>
-    <p>김민하 독서 기록 정보는 유튜브·인터뷰·SNS 등 공개된 출처를 기반으로 정리되었습니다.</p>
+    <p>이 페이지의 독서 기록은 유튜브·인터뷰·SNS 등 공개된 출처를 기반으로 정리됐어요.</p>
   </footer>
 
 </body>
