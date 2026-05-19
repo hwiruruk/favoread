@@ -162,19 +162,26 @@
     .bc-title { font-weight: 700; font-size: 13px; line-height: 1.3; margin-bottom: 4px; }
     .bc-author { font-size: 12px; color: #555; margin-bottom: 6px; }
     .bc-badge { display: inline-block; font-size: 11px; background: #fde047; border: 1px solid #000; padding: 1px 6px; font-weight: 700; }
-    .shared-book-list { list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 12px; }
-    .shared-book { background: #fff; border: 2px solid #000; box-shadow: 4px 4px 0 0 #000; padding: 12px; }
-    .sb-main { display: flex; gap: 12px; margin-bottom: 10px; }
-    .sb-cover-link { flex-shrink: 0; display: block; }
-    .sb-meta { flex: 1; min-width: 0; }
-    .sb-title { font-weight: 800; font-size: 15px; line-height: 1.3; margin-bottom: 4px; }
-    .sb-title a { color: #000; }
-    .sb-title a:hover { color: #2563eb; }
-    .sb-author { font-size: 13px; color: #555; }
-    .sb-celebs { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; padding-top: 10px; border-top: 1.5px dashed #ccc; }
-    .sb-celebs-label { font-size: 12px; color: #666; font-weight: 700; margin-right: 4px; }
-    .sb-celeb-chip { display: inline-block; padding: 3px 9px; background: #fff8e7; border: 1.5px solid #000; box-shadow: 1px 1px 0 0 #000; font-size: 12px; font-weight: 700; text-decoration: none; color: #000; transition: transform .1s, box-shadow .1s, background .1s; }
-    .sb-celeb-chip:hover { transform: translate(-1px,-1px); box-shadow: 2px 2px 0 0 #000; background: #fde047; text-decoration: none; }
+    .celeb-bio { margin: 4px 0 8px; padding: 6px 10px; background: #fff8e7; border-left: 4px solid #000; font-size: 14px; line-height: 1.45; color: #222; }
+    .reading-list { list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 14px; counter-reset: rl; }
+    .rl-item { position: relative; background: #fff; border: 2px solid #000; box-shadow: 4px 4px 0 0 #000; padding: 14px 14px 14px 52px; transition: transform .12s, box-shadow .12s; }
+    .rl-item:hover { transform: translate(-1px,-1px); box-shadow: 6px 6px 0 0 #000; }
+    .rl-num { position: absolute; left: -2px; top: -2px; width: 38px; height: 30px; display: flex; align-items: center; justify-content: center; background: #fde047; border: 2px solid #000; font-weight: 900; font-size: 14px; font-family: "Space Grotesk", sans-serif; }
+    .rl-item .rl-cover, .rl-item > .rl-cover { float: left; margin-right: 14px; width: 74px; height: 105px; display: block; flex-shrink: 0; border: 1.5px solid #000; box-shadow: 2px 2px 0 0 #000; background: #f4f4f0; overflow: hidden; }
+    .rl-cover img { width: 100%; height: 100%; object-fit: cover; display: block; }
+    .rl-no-cover { width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; font-size: 32px; }
+    .rl-meta { overflow: hidden; min-height: 105px; }
+    .rl-title { font-weight: 800; font-size: 16px; line-height: 1.3; margin-bottom: 4px; }
+    .rl-title a { color: #000; }
+    .rl-title a:hover { color: #2563eb; }
+    .rl-byline { font-size: 13px; color: #555; margin-bottom: 8px; line-height: 1.4; }
+    .rl-source { display: inline-block; font-size: 12px; padding: 3px 8px; background: #fff; border: 1.5px solid #000; box-shadow: 1px 1px 0 0 #000; text-decoration: none; color: #000; transition: transform .1s, box-shadow .1s, background .1s; }
+    .rl-source:hover { transform: translate(-1px,-1px); box-shadow: 2px 2px 0 0 #000; background: #a7f3d0; text-decoration: none; }
+    .rl-shared { clear: both; margin-top: 12px; padding-top: 10px; border-top: 1.5px dashed #ccc; display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
+    .rl-shared-label { font-size: 12px; color: #666; font-weight: 700; }
+    .rl-celeb-chip { display: inline-block; padding: 3px 9px; background: #fff8e7; border: 1.5px solid #000; box-shadow: 1px 1px 0 0 #000; font-size: 12px; font-weight: 700; text-decoration: none; color: #000; transition: transform .1s, box-shadow .1s, background .1s; }
+    .rl-celeb-chip:hover { transform: translate(-1px,-1px); box-shadow: 2px 2px 0 0 #000; background: #fde047; text-decoration: none; }
+    @media (max-width: 480px) { .rl-item { padding: 14px 12px 14px 46px; } .rl-num { width: 32px; height: 26px; font-size: 12px; } .rl-item .rl-cover, .rl-item > .rl-cover { width: 60px; height: 88px; margin-right: 10px; } .rl-meta { min-height: 88px; } .rl-title { font-size: 15px; } }
     .related-celebs { margin: 24px 0; }
     .related-celeb-list { display: flex; flex-wrap: wrap; gap: 8px; }
     .related-celeb { display: inline-flex; align-items: center; gap: 6px; padding: 6px 12px; background: #fff; border: 2px solid #000; box-shadow: 2px 2px 0 0 #000; font-size: 13px; font-weight: 700; text-decoration: none; color: #000; transition: transform .1s, box-shadow .1s; }
@@ -207,52 +214,52 @@
   </header>
 
   <section class="intro">
-    <p style="margin:0">김태하의 독서 기록을 한곳에 모았습니다. 유튜브·인터뷰·SNS 등 출처가 확인된 김태하의 인생책·추천 도서 <strong>3권</strong>을 정리한 독서 리스트예요. 김태하 책 추천과 독서 취향이 궁금하다면 아래 전체 목록과 출처 링크에서 확인할 수 있습니다.</p>
+    <p style="margin:0">김태하의 독서 기록을 한곳에 모았어요. 유튜브·인터뷰·SNS 등 공개 출처에서 확인된 인생책·추천 도서 <strong>3권</strong>을 한 페이지에 정리한 독서 리스트입니다. 아래 목록에서 책 제목·저자·출처 링크를 한눈에 확인할 수 있어요.</p>
   </section>
 
   <section>
-    <h2>김태하의 독서 리스트 전체 목록 (3권)</h2>
-    <table>
-      <thead><tr><th>#</th><th>표지</th><th>도서명</th><th>저자</th><th>출판사</th><th>출처</th></tr></thead>
-      <tbody>
-    <tr><td>1</td><td><a href="https://www.aladin.co.kr/shop/wproduct.aspx?ItemId=307689982&amp;start=pcsearch_auto" rel="nofollow noopener noreferrer" target="_blank" aria-label="나미야 잡화점의 기적 알라딘에서 보기"><img src="https://image.aladin.co.kr/product/30768/99/cover500/k252830652_2.jpg" alt="나미야 잡화점의 기적 표지" width="60" height="85" loading="lazy" style="object-fit:cover"></a></td><td><a href="https://www.aladin.co.kr/shop/wproduct.aspx?ItemId=307689982&amp;start=pcsearch_auto" rel="nofollow noopener noreferrer" target="_blank">나미야 잡화점의 기적</a></td><td>히가시노 게이고</td><td>현대문학</td><td class="src"><a href="https://www.sedaily.com/article/12103241" rel="nofollow noopener noreferrer" target="_blank">출처 보기 →</a></td></tr>
-    <tr><td>2</td><td><a href="https://www.aladin.co.kr/shop/wproduct.aspx?ItemId=23002856&amp;partner=openAPI&amp;start=api" rel="nofollow noopener noreferrer" target="_blank" aria-label="서울시 알라딘에서 보기"><img src="https://image.aladin.co.kr/product/2300/28/cover500/8927804090_1.jpg" alt="서울시 표지" width="60" height="85" loading="lazy" style="object-fit:cover"></a></td><td><a href="https://www.aladin.co.kr/shop/wproduct.aspx?ItemId=23002856&amp;partner=openAPI&amp;start=api" rel="nofollow noopener noreferrer" target="_blank">서울시</a></td><td>하상욱</td><td></td><td class="src"><a href="https://www.sedaily.com/article/12103241" rel="nofollow noopener noreferrer" target="_blank">출처 보기 →</a></td></tr>
-    <tr><td>3</td><td><a href="https://www.aladin.co.kr/shop/wproduct.aspx?ItemId=240887114&amp;partner=openAPI&amp;start=api" rel="nofollow noopener noreferrer" target="_blank" aria-label="시 읽는 밤 알라딘에서 보기"><img src="https://image.aladin.co.kr/product/24088/71/cover500/s902830746_1.jpg" alt="시 읽는 밤 표지" width="60" height="85" loading="lazy" style="object-fit:cover"></a></td><td><a href="https://www.aladin.co.kr/shop/wproduct.aspx?ItemId=240887114&amp;partner=openAPI&amp;start=api" rel="nofollow noopener noreferrer" target="_blank">시 읽는 밤</a></td><td>하상욱</td><td></td><td class="src"><a href="https://www.sedaily.com/article/12103241" rel="nofollow noopener noreferrer" target="_blank">출처 보기 →</a></td></tr>
-      </tbody>
-    </table>
-  </section>
-
-  <section class="book-pages">
-    <h2>👥 김태하과 다른 셀럽이 함께 추천한 책 (1권)</h2>
-    <p class="muted">2명 이상의 셀럽이 추천한 책과 함께 추천한 셀럽 명단이에요.</p>
-    <ul class="shared-book-list">
-      <li class="shared-book">
-        <div class="sb-main">
-          <a class="sb-cover-link" href="https://www.aladin.co.kr/shop/wproduct.aspx?ItemId=307689982&amp;start=pcsearch_auto" rel="nofollow noopener noreferrer" target="_blank" aria-label="나미야 잡화점의 기적 알라딘에서 보기"><img src="https://image.aladin.co.kr/product/30768/99/cover500/k252830652_2.jpg" alt="나미야 잡화점의 기적 표지" width="60" height="85" loading="lazy" style="object-fit:cover"></a>
-          <div class="sb-meta">
-            <div class="sb-title"><a href="https://www.aladin.co.kr/shop/wproduct.aspx?ItemId=307689982&amp;start=pcsearch_auto" rel="nofollow noopener noreferrer" target="_blank">나미야 잡화점의 기적</a></div>
-            <div class="sb-author">히가시노 게이고</div>
-          </div>
-        </div>
-        <div class="sb-celebs">
-          <span class="sb-celebs-label">함께 추천한 셀럽 4명:</span>
-          <a class="sb-celeb-chip" href="https://favorbook.co.kr/share/%EB%B0%95%EC%A7%80%ED%9B%88.html">박지훈</a>
-          <a class="sb-celeb-chip" href="https://favorbook.co.kr/share/%ED%8E%98%EC%9D%B4%EC%BB%A4.html">페이커</a>
-          <a class="sb-celeb-chip" href="https://favorbook.co.kr/share/%ED%95%98%EC%97%B0%EC%A3%BC.html">하연주</a>
-          <a class="sb-celeb-chip" href="https://favorbook.co.kr/share/%EB%B0%95%EC%84%B8%EC%99%84.html">박세완</a>
-        </div>
-      </li>
-    </ul>
+    <h2>📚 김태하의 독서 리스트 (3권)</h2>
+    <p class="muted">1권은 다른 셀럽도 함께 추천한 책이에요. 카드 안에 함께 추천한 셀럽 이름이 표시됩니다.</p>
+    <ol class="reading-list">
+    <li class="rl-item">
+      <span class="rl-num">1</span>
+      <a class="rl-cover" href="https://www.aladin.co.kr/shop/wproduct.aspx?ItemId=307689982&amp;start=pcsearch_auto" rel="nofollow noopener noreferrer" target="_blank" aria-label="나미야 잡화점의 기적 알라딘에서 보기"><img src="https://image.aladin.co.kr/product/30768/99/cover500/k252830652_2.jpg" alt="나미야 잡화점의 기적 표지" loading="lazy"></a>
+      <div class="rl-meta">
+        <div class="rl-title"><a href="https://www.aladin.co.kr/shop/wproduct.aspx?ItemId=307689982&amp;start=pcsearch_auto" rel="nofollow noopener noreferrer" target="_blank">나미야 잡화점의 기적</a></div>
+        <div class="rl-byline">히가시노 게이고 · 현대문학</div>
+        <a class="rl-source" href="https://www.sedaily.com/article/12103241" rel="nofollow noopener noreferrer" target="_blank">📺 출처 보기</a>
+      </div>
+      <div class="rl-shared"><span class="rl-shared-label">👥 함께 추천한 셀럽 4명:</span> <a class="rl-celeb-chip" href="https://favorbook.co.kr/share/%EB%B0%95%EC%A7%80%ED%9B%88.html">박지훈</a><a class="rl-celeb-chip" href="https://favorbook.co.kr/share/%ED%8E%98%EC%9D%B4%EC%BB%A4.html">페이커</a><a class="rl-celeb-chip" href="https://favorbook.co.kr/share/%ED%95%98%EC%97%B0%EC%A3%BC.html">하연주</a><a class="rl-celeb-chip" href="https://favorbook.co.kr/share/%EB%B0%95%EC%84%B8%EC%99%84.html">박세완</a></div>
+    </li>
+    <li class="rl-item">
+      <span class="rl-num">2</span>
+      <a class="rl-cover" href="https://www.aladin.co.kr/shop/wproduct.aspx?ItemId=23002856&amp;partner=openAPI&amp;start=api" rel="nofollow noopener noreferrer" target="_blank" aria-label="서울시 알라딘에서 보기"><img src="https://image.aladin.co.kr/product/2300/28/cover500/8927804090_1.jpg" alt="서울시 표지" loading="lazy"></a>
+      <div class="rl-meta">
+        <div class="rl-title"><a href="https://www.aladin.co.kr/shop/wproduct.aspx?ItemId=23002856&amp;partner=openAPI&amp;start=api" rel="nofollow noopener noreferrer" target="_blank">서울시</a></div>
+        <div class="rl-byline">하상욱</div>
+        <a class="rl-source" href="https://www.sedaily.com/article/12103241" rel="nofollow noopener noreferrer" target="_blank">📺 출처 보기</a>
+      </div>
+    </li>
+    <li class="rl-item">
+      <span class="rl-num">3</span>
+      <a class="rl-cover" href="https://www.aladin.co.kr/shop/wproduct.aspx?ItemId=240887114&amp;partner=openAPI&amp;start=api" rel="nofollow noopener noreferrer" target="_blank" aria-label="시 읽는 밤 알라딘에서 보기"><img src="https://image.aladin.co.kr/product/24088/71/cover500/s902830746_1.jpg" alt="시 읽는 밤 표지" loading="lazy"></a>
+      <div class="rl-meta">
+        <div class="rl-title"><a href="https://www.aladin.co.kr/shop/wproduct.aspx?ItemId=240887114&amp;partner=openAPI&amp;start=api" rel="nofollow noopener noreferrer" target="_blank">시 읽는 밤</a></div>
+        <div class="rl-byline">하상욱</div>
+        <a class="rl-source" href="https://www.sedaily.com/article/12103241" rel="nofollow noopener noreferrer" target="_blank">📺 출처 보기</a>
+      </div>
+    </li>
+    </ol>
   </section>
 
   <section>
-    <h2>김태하 인생책 · 책 추천 키워드</h2>
-    <p>김태하의 추천 도서에 가장 자주 등장한 작가는 하상욱 (2권), 히가시노 게이고입니다. 김태하의 책 추천 리스트는 위 표에서 출처와 함께 확인할 수 있습니다.</p>
+    <h2>📝 김태하의 책 취향</h2>
+    <p>추천 도서에 가장 자주 등장한 작가는 하상욱 (2권), 히가시노 게이고 등이에요.</p>
   </section>
 
   <section class="related-celebs">
-    <h2>🤝 김태하의 독서 취향과 겹치는 셀럽</h2>
-    <p class="muted">김태하의 추천 도서를 함께 추천한 다른 셀럽이에요. 숫자는 공통 도서 권수.</p>
+    <h2>🤝 책 취향이 겹치는 셀럽</h2>
+    <p class="muted">같은 책을 함께 추천한 다른 셀럽이에요. 숫자는 공통 도서 권수.</p>
     <div class="related-celeb-list">
       <a class="related-celeb" href="https://favorbook.co.kr/share/%EB%B0%95%EC%84%B8%EC%99%84.html" title="공통 도서: 나미야 잡화점의 기적">박세완 <span class="rc-count">1</span></a>
       <a class="related-celeb" href="https://favorbook.co.kr/share/%EB%B0%95%EC%A7%80%ED%9B%88.html" title="공통 도서: 나미야 잡화점의 기적">박지훈 <span class="rc-count">1</span></a>
@@ -271,7 +278,7 @@
   </nav>
 
   <footer>
-    <p>김태하 독서 기록 정보는 유튜브·인터뷰·SNS 등 공개된 출처를 기반으로 정리되었습니다.</p>
+    <p>이 페이지의 독서 기록은 유튜브·인터뷰·SNS 등 공개된 출처를 기반으로 정리됐어요.</p>
   </footer>
 
 </body>

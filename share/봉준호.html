@@ -330,19 +330,26 @@
     .bc-title { font-weight: 700; font-size: 13px; line-height: 1.3; margin-bottom: 4px; }
     .bc-author { font-size: 12px; color: #555; margin-bottom: 6px; }
     .bc-badge { display: inline-block; font-size: 11px; background: #fde047; border: 1px solid #000; padding: 1px 6px; font-weight: 700; }
-    .shared-book-list { list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 12px; }
-    .shared-book { background: #fff; border: 2px solid #000; box-shadow: 4px 4px 0 0 #000; padding: 12px; }
-    .sb-main { display: flex; gap: 12px; margin-bottom: 10px; }
-    .sb-cover-link { flex-shrink: 0; display: block; }
-    .sb-meta { flex: 1; min-width: 0; }
-    .sb-title { font-weight: 800; font-size: 15px; line-height: 1.3; margin-bottom: 4px; }
-    .sb-title a { color: #000; }
-    .sb-title a:hover { color: #2563eb; }
-    .sb-author { font-size: 13px; color: #555; }
-    .sb-celebs { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; padding-top: 10px; border-top: 1.5px dashed #ccc; }
-    .sb-celebs-label { font-size: 12px; color: #666; font-weight: 700; margin-right: 4px; }
-    .sb-celeb-chip { display: inline-block; padding: 3px 9px; background: #fff8e7; border: 1.5px solid #000; box-shadow: 1px 1px 0 0 #000; font-size: 12px; font-weight: 700; text-decoration: none; color: #000; transition: transform .1s, box-shadow .1s, background .1s; }
-    .sb-celeb-chip:hover { transform: translate(-1px,-1px); box-shadow: 2px 2px 0 0 #000; background: #fde047; text-decoration: none; }
+    .celeb-bio { margin: 4px 0 8px; padding: 6px 10px; background: #fff8e7; border-left: 4px solid #000; font-size: 14px; line-height: 1.45; color: #222; }
+    .reading-list { list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 14px; counter-reset: rl; }
+    .rl-item { position: relative; background: #fff; border: 2px solid #000; box-shadow: 4px 4px 0 0 #000; padding: 14px 14px 14px 52px; transition: transform .12s, box-shadow .12s; }
+    .rl-item:hover { transform: translate(-1px,-1px); box-shadow: 6px 6px 0 0 #000; }
+    .rl-num { position: absolute; left: -2px; top: -2px; width: 38px; height: 30px; display: flex; align-items: center; justify-content: center; background: #fde047; border: 2px solid #000; font-weight: 900; font-size: 14px; font-family: "Space Grotesk", sans-serif; }
+    .rl-item .rl-cover, .rl-item > .rl-cover { float: left; margin-right: 14px; width: 74px; height: 105px; display: block; flex-shrink: 0; border: 1.5px solid #000; box-shadow: 2px 2px 0 0 #000; background: #f4f4f0; overflow: hidden; }
+    .rl-cover img { width: 100%; height: 100%; object-fit: cover; display: block; }
+    .rl-no-cover { width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; font-size: 32px; }
+    .rl-meta { overflow: hidden; min-height: 105px; }
+    .rl-title { font-weight: 800; font-size: 16px; line-height: 1.3; margin-bottom: 4px; }
+    .rl-title a { color: #000; }
+    .rl-title a:hover { color: #2563eb; }
+    .rl-byline { font-size: 13px; color: #555; margin-bottom: 8px; line-height: 1.4; }
+    .rl-source { display: inline-block; font-size: 12px; padding: 3px 8px; background: #fff; border: 1.5px solid #000; box-shadow: 1px 1px 0 0 #000; text-decoration: none; color: #000; transition: transform .1s, box-shadow .1s, background .1s; }
+    .rl-source:hover { transform: translate(-1px,-1px); box-shadow: 2px 2px 0 0 #000; background: #a7f3d0; text-decoration: none; }
+    .rl-shared { clear: both; margin-top: 12px; padding-top: 10px; border-top: 1.5px dashed #ccc; display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
+    .rl-shared-label { font-size: 12px; color: #666; font-weight: 700; }
+    .rl-celeb-chip { display: inline-block; padding: 3px 9px; background: #fff8e7; border: 1.5px solid #000; box-shadow: 1px 1px 0 0 #000; font-size: 12px; font-weight: 700; text-decoration: none; color: #000; transition: transform .1s, box-shadow .1s, background .1s; }
+    .rl-celeb-chip:hover { transform: translate(-1px,-1px); box-shadow: 2px 2px 0 0 #000; background: #fde047; text-decoration: none; }
+    @media (max-width: 480px) { .rl-item { padding: 14px 12px 14px 46px; } .rl-num { width: 32px; height: 26px; font-size: 12px; } .rl-item .rl-cover, .rl-item > .rl-cover { width: 60px; height: 88px; margin-right: 10px; } .rl-meta { min-height: 88px; } .rl-title { font-size: 15px; } }
     .related-celebs { margin: 24px 0; }
     .related-celeb-list { display: flex; flex-wrap: wrap; gap: 8px; }
     .related-celeb { display: inline-flex; align-items: center; gap: 6px; padding: 6px 12px; background: #fff; border: 2px solid #000; box-shadow: 2px 2px 0 0 #000; font-size: 13px; font-weight: 700; text-decoration: none; color: #000; transition: transform .1s, box-shadow .1s; }
@@ -370,39 +377,141 @@
     </div>
     <div>
       <h1>봉준호 독서 기록 · 읽은 책 · 추천 책</h1>
+      <p class="celeb-bio">한국 영화감독. &#x27;기생충&#x27;으로 칸 황금종려상·아카데미 작품상 등 4관왕, &#x27;괴물&#x27;, &#x27;살인의 추억&#x27; 연출.</p>
       <p style="margin:0;color:#666;font-size:14px">총 <strong>13권</strong>의 도서</p>
     </div>
   </header>
 
   <section class="intro">
-    <p style="margin:0">봉준호의 독서 기록을 한곳에 모았습니다. 유튜브·인터뷰·SNS 등 출처가 확인된 봉준호의 인생책·추천 도서 <strong>13권</strong>을 정리한 독서 리스트예요. 봉준호 책 추천과 독서 취향이 궁금하다면 아래 전체 목록과 출처 링크에서 확인할 수 있습니다.</p>
+    <p style="margin:0">봉준호의 독서 기록을 한곳에 모았어요. 유튜브·인터뷰·SNS 등 공개 출처에서 확인된 인생책·추천 도서 <strong>13권</strong>을 한 페이지에 정리한 독서 리스트입니다. 아래 목록에서 책 제목·저자·출처 링크를 한눈에 확인할 수 있어요.</p>
   </section>
 
   <section>
-    <h2>봉준호의 독서 리스트 전체 목록 (13권)</h2>
-    <table>
-      <thead><tr><th>#</th><th>표지</th><th>도서명</th><th>저자</th><th>출판사</th><th>출처</th></tr></thead>
-      <tbody>
-    <tr><td>1</td><td><a href="https://www.aladin.co.kr/shop/wproduct.aspx?ItemId=321509671" rel="nofollow noopener noreferrer" target="_blank" aria-label="7인의 집행관 알라딘에서 보기"><img src="https://www.aladin.co.kr/shop/wproduct.aspx?ItemId=321509671" alt="7인의 집행관 표지" width="60" height="85" loading="lazy" style="object-fit:cover"></a></td><td><a href="https://www.aladin.co.kr/shop/wproduct.aspx?ItemId=321509671" rel="nofollow noopener noreferrer" target="_blank">7인의 집행관</a></td><td>김보영</td><td>현대문학</td><td class="src"><a href="https://www.aladin.co.kr/shop/wproduct.aspx?ItemId=321509671" rel="nofollow noopener noreferrer" target="_blank">출처 보기 →</a></td></tr>
-    <tr><td>2</td><td><a href="https://www.aladin.co.kr/shop/wproduct.aspx?ItemId=365454044" rel="nofollow noopener noreferrer" target="_blank" aria-label="극장에는 항상 상훈이 형이 있다 알라딘에서 보기"><img src="https://image.aladin.co.kr/product/36545/40/cover500/k522039045_3.jpg" alt="극장에는 항상 상훈이 형이 있다 표지" width="60" height="85" loading="lazy" style="object-fit:cover"></a></td><td><a href="https://www.aladin.co.kr/shop/wproduct.aspx?ItemId=365454044" rel="nofollow noopener noreferrer" target="_blank">극장에는 항상 상훈이 형이 있다</a></td><td>한상훈</td><td>불란서책방</td><td class="src"><a href="https://www.aladin.co.kr/shop/wproduct.aspx?ItemId=365454044" rel="nofollow noopener noreferrer" target="_blank">출처 보기 →</a></td></tr>
-    <tr><td>3</td><td><a href="https://www.aladin.co.kr/shop/wproduct.aspx?ItemId=18935821&amp;partner=openAPI&amp;start=api" rel="nofollow noopener noreferrer" target="_blank" aria-label="나쁜 친구 알라딘에서 보기"><img src="https://image.aladin.co.kr/product/1893/58/cover500/8936472178_1.jpg" alt="나쁜 친구 표지" width="60" height="85" loading="lazy" style="object-fit:cover"></a></td><td><a href="https://www.aladin.co.kr/shop/wproduct.aspx?ItemId=18935821&amp;partner=openAPI&amp;start=api" rel="nofollow noopener noreferrer" target="_blank">나쁜 친구</a></td><td>앙꼬</td><td>창비</td><td class="src"><a href="https://m.ch.yes24.com/article/details/41092" rel="nofollow noopener noreferrer" target="_blank">출처 보기 →</a></td></tr>
-    <tr><td>4</td><td><a href="https://www.aladin.co.kr/shop/wproduct.aspx?ItemId=254653202&amp;srsltid=AfmBOopxjUw_yUsusScVc_mrn9m5Hi3VMHHkID7mO2Ksps-clQVQXfpM" rel="nofollow noopener noreferrer" target="_blank" aria-label="냄새 알라딘에서 보기"><img src="https://image.aladin.co.kr/product/25465/32/cover500/k192633829_2.jpg" alt="냄새 표지" width="60" height="85" loading="lazy" style="object-fit:cover"></a></td><td><a href="https://www.aladin.co.kr/shop/wproduct.aspx?ItemId=254653202&amp;srsltid=AfmBOopxjUw_yUsusScVc_mrn9m5Hi3VMHHkID7mO2Ksps-clQVQXfpM" rel="nofollow noopener noreferrer" target="_blank">냄새</a></td><td>A. S. 바위치</td><td>세로북스</td><td class="src"><a href="https://www.aladin.co.kr/shop/wproduct.aspx?ItemId=254653202&amp;srsltid=AfmBOopxjUw_yUsusScVc_mrn9m5Hi3VMHHkID7mO2Ksps-clQVQXfpM" rel="nofollow noopener noreferrer" target="_blank">출처 보기 →</a></td></tr>
-    <tr><td>5</td><td><a href="https://www.aladin.co.kr/shop/wproduct.aspx?ItemId=171597448" rel="nofollow noopener noreferrer" target="_blank" aria-label="대단한 돼지 에스더 알라딘에서 보기"><img src="https://image.aladin.co.kr/product/17159/74/cover500/8997137328_1.jpg" alt="대단한 돼지 에스더 표지" width="60" height="85" loading="lazy" style="object-fit:cover"></a></td><td><a href="https://www.aladin.co.kr/shop/wproduct.aspx?ItemId=171597448" rel="nofollow noopener noreferrer" target="_blank">대단한 돼지 에스더</a></td><td>스티브 젠킨스 등</td><td>책공장더불어</td><td class="src"><a href="https://www.aladin.co.kr/shop/wproduct.aspx?ItemId=171597448" rel="nofollow noopener noreferrer" target="_blank">출처 보기 →</a></td></tr>
-    <tr><td>6</td><td><a href="https://www.aladin.co.kr/shop/wproduct.aspx?ItemId=168894745" rel="nofollow noopener noreferrer" target="_blank" aria-label="동대문 네팔 타운의 희노애락 알라딘에서 보기"><img src="https://image.aladin.co.kr/product/16889/47/cover200/k162534172_1.jpg" alt="동대문 네팔 타운의 희노애락 표지" width="60" height="85" loading="lazy" style="object-fit:cover"></a></td><td><a href="https://www.aladin.co.kr/shop/wproduct.aspx?ItemId=168894745" rel="nofollow noopener noreferrer" target="_blank">동대문 네팔 타운의 희노애락</a></td><td>육성철</td><td>서울연구원</td><td class="src"><a href="https://www.aladin.co.kr/author/wauthor_recommend.aspx?AuthorSearch=@166544" rel="nofollow noopener noreferrer" target="_blank">출처 보기 →</a></td></tr>
-    <tr><td>7</td><td><a href="https://www.aladin.co.kr/shop/wproduct.aspx?ItemId=78839375&amp;partner=openAPI&amp;start=api" rel="nofollow noopener noreferrer" target="_blank" aria-label="블랙홀 알라딘에서 보기"><img src="https://image.aladin.co.kr/product/7883/93/cover500/8950963337_1.jpg" alt="블랙홀 표지" width="60" height="85" loading="lazy" style="object-fit:cover"></a></td><td><a href="https://www.aladin.co.kr/shop/wproduct.aspx?ItemId=78839375&amp;partner=openAPI&amp;start=api" rel="nofollow noopener noreferrer" target="_blank">블랙홀</a></td><td>찰스 번즈</td><td>아르테</td><td class="src"><a href="https://m.ch.yes24.com/article/details/41092" rel="nofollow noopener noreferrer" target="_blank">출처 보기 →</a></td></tr>
-    <tr><td>8</td><td><a href="https://www.aladin.co.kr/shop/wproduct.aspx?ItemId=84635869" rel="nofollow noopener noreferrer" target="_blank" aria-label="소설가 구보씨의 일생 알라딘에서 보기"><img src="https://image.aladin.co.kr/product/8463/58/cover200/8932028540_1.jpg" alt="소설가 구보씨의 일생 표지" width="60" height="85" loading="lazy" style="object-fit:cover"></a></td><td><a href="https://www.aladin.co.kr/shop/wproduct.aspx?ItemId=84635869" rel="nofollow noopener noreferrer" target="_blank">소설가 구보씨의 일생</a></td><td>박일영</td><td>문학과지성사</td><td class="src"><a href="https://www.aladin.co.kr/shop/wproduct.aspx?ItemId=84635869" rel="nofollow noopener noreferrer" target="_blank">출처 보기 →</a></td></tr>
-    <tr><td>9</td><td><a href="https://www.aladin.co.kr/shop/wproduct.aspx?ItemId=254249430" rel="nofollow noopener noreferrer" target="_blank" aria-label="엔딩 크레딧 알라딘에서 보기"><img src="https://image.aladin.co.kr/product/25424/94/cover200/8925591685_1.jpg" alt="엔딩 크레딧 표지" width="60" height="85" loading="lazy" style="object-fit:cover"></a></td><td><a href="https://www.aladin.co.kr/shop/wproduct.aspx?ItemId=254249430" rel="nofollow noopener noreferrer" target="_blank">엔딩 크레딧</a></td><td>신영균</td><td>알에이치코리아</td><td class="src"><a href="https://www.aladin.co.kr/shop/wproduct.aspx?ItemId=254249430" rel="nofollow noopener noreferrer" target="_blank">출처 보기 →</a></td></tr>
-    <tr><td>10</td><td><a href="https://www.aladin.co.kr/shop/wproduct.aspx?ItemId=169300268&amp;srsltid=AfmBOoq-q1HxT15X30M2n-RG7u84AkweNTTZEydQaFCVufDXAYBUXdB1" rel="nofollow noopener noreferrer" target="_blank" aria-label="우나기 선생 알라딘에서 보기"><img src="https://image.aladin.co.kr/product/16930/2/cover500/8960905453_1.jpg" alt="우나기 선생 표지" width="60" height="85" loading="lazy" style="object-fit:cover"></a></td><td><a href="https://www.aladin.co.kr/shop/wproduct.aspx?ItemId=169300268&amp;srsltid=AfmBOoq-q1HxT15X30M2n-RG7u84AkweNTTZEydQaFCVufDXAYBUXdB1" rel="nofollow noopener noreferrer" target="_blank">우나기 선생</a></td><td>이마무라 쇼헤이</td><td>마음산책</td><td class="src"><a href="https://www.aladin.co.kr/shop/wproduct.aspx?ItemId=169300268&amp;srsltid=AfmBOoq-q1HxT15X30M2n-RG7u84AkweNTTZEydQaFCVufDXAYBUXdB1" rel="nofollow noopener noreferrer" target="_blank">출처 보기 →</a></td></tr>
-    <tr><td>11</td><td><a href="https://www.aladin.co.kr/shop/wproduct.aspx?ItemId=294843706" rel="nofollow noopener noreferrer" target="_blank" aria-label="재생력 알라딘에서 보기"><img src="https://www.aladin.co.kr/shop/wproduct.aspx?ItemId=294843706" alt="재생력 표지" width="60" height="85" loading="lazy" style="object-fit:cover"></a></td><td><a href="https://www.aladin.co.kr/shop/wproduct.aspx?ItemId=294843706" rel="nofollow noopener noreferrer" target="_blank">재생력</a></td><td>조성환</td><td>미메시스</td><td class="src"><a href="https://www.aladin.co.kr/shop/wproduct.aspx?ItemId=294843706" rel="nofollow noopener noreferrer" target="_blank">출처 보기 →</a></td></tr>
-    <tr><td>12</td><td><a href="https://www.aladin.co.kr/shop/wproduct.aspx?ItemId=243219202" rel="nofollow noopener noreferrer" target="_blank" aria-label="지옥 알라딘에서 보기"><img src="https://image.aladin.co.kr/product/24321/92/cover500/895467304x_2.jpg" alt="지옥 표지" width="60" height="85" loading="lazy" style="object-fit:cover"></a></td><td><a href="https://www.aladin.co.kr/shop/wproduct.aspx?ItemId=243219202" rel="nofollow noopener noreferrer" target="_blank">지옥</a></td><td>연상호, 최규석</td><td>문학동네</td><td class="src"><a href="https://www.aladin.co.kr/shop/wproduct.aspx?ItemId=243219202" rel="nofollow noopener noreferrer" target="_blank">출처 보기 →</a></td></tr>
-    <tr><td>13</td><td><a href="https://www.aladin.co.kr/shop/wproduct.aspx?ItemId=28631321" rel="nofollow noopener noreferrer" target="_blank" aria-label="B급 문화, 대한민국을 습격하다 알라딘에서 보기"><img src="https://image.aladin.co.kr/product/2863/13/cover500/8967990200_2.jpg" alt="B급 문화, 대한민국을 습격하다 표지" width="60" height="85" loading="lazy" style="object-fit:cover"></a></td><td><a href="https://www.aladin.co.kr/shop/wproduct.aspx?ItemId=28631321" rel="nofollow noopener noreferrer" target="_blank">B급 문화, 대한민국을 습격하다</a></td><td>이형석</td><td>북오션</td><td class="src"><a href="https://www.aladin.co.kr/shop/wproduct.aspx?ItemId=28631321" rel="nofollow noopener noreferrer" target="_blank">출처 보기 →</a></td></tr>
-      </tbody>
-    </table>
+    <h2>📚 봉준호의 독서 리스트 (13권)</h2>
+    <ol class="reading-list">
+    <li class="rl-item">
+      <span class="rl-num">1</span>
+      <a class="rl-cover" href="https://www.aladin.co.kr/shop/wproduct.aspx?ItemId=321509671" rel="nofollow noopener noreferrer" target="_blank" aria-label="7인의 집행관 알라딘에서 보기"><img src="https://www.aladin.co.kr/shop/wproduct.aspx?ItemId=321509671" alt="7인의 집행관 표지" loading="lazy"></a>
+      <div class="rl-meta">
+        <div class="rl-title"><a href="https://www.aladin.co.kr/shop/wproduct.aspx?ItemId=321509671" rel="nofollow noopener noreferrer" target="_blank">7인의 집행관</a></div>
+        <div class="rl-byline">김보영 · 현대문학</div>
+        <a class="rl-source" href="https://www.aladin.co.kr/shop/wproduct.aspx?ItemId=321509671" rel="nofollow noopener noreferrer" target="_blank">📺 출처 보기</a>
+      </div>
+    </li>
+    <li class="rl-item">
+      <span class="rl-num">2</span>
+      <a class="rl-cover" href="https://www.aladin.co.kr/shop/wproduct.aspx?ItemId=365454044" rel="nofollow noopener noreferrer" target="_blank" aria-label="극장에는 항상 상훈이 형이 있다 알라딘에서 보기"><img src="https://image.aladin.co.kr/product/36545/40/cover500/k522039045_3.jpg" alt="극장에는 항상 상훈이 형이 있다 표지" loading="lazy"></a>
+      <div class="rl-meta">
+        <div class="rl-title"><a href="https://www.aladin.co.kr/shop/wproduct.aspx?ItemId=365454044" rel="nofollow noopener noreferrer" target="_blank">극장에는 항상 상훈이 형이 있다</a></div>
+        <div class="rl-byline">한상훈 · 불란서책방</div>
+        <a class="rl-source" href="https://www.aladin.co.kr/shop/wproduct.aspx?ItemId=365454044" rel="nofollow noopener noreferrer" target="_blank">📺 출처 보기</a>
+      </div>
+    </li>
+    <li class="rl-item">
+      <span class="rl-num">3</span>
+      <a class="rl-cover" href="https://www.aladin.co.kr/shop/wproduct.aspx?ItemId=18935821&amp;partner=openAPI&amp;start=api" rel="nofollow noopener noreferrer" target="_blank" aria-label="나쁜 친구 알라딘에서 보기"><img src="https://image.aladin.co.kr/product/1893/58/cover500/8936472178_1.jpg" alt="나쁜 친구 표지" loading="lazy"></a>
+      <div class="rl-meta">
+        <div class="rl-title"><a href="https://www.aladin.co.kr/shop/wproduct.aspx?ItemId=18935821&amp;partner=openAPI&amp;start=api" rel="nofollow noopener noreferrer" target="_blank">나쁜 친구</a></div>
+        <div class="rl-byline">앙꼬 · 창비</div>
+        <a class="rl-source" href="https://m.ch.yes24.com/article/details/41092" rel="nofollow noopener noreferrer" target="_blank">📺 출처 보기</a>
+      </div>
+    </li>
+    <li class="rl-item">
+      <span class="rl-num">4</span>
+      <a class="rl-cover" href="https://www.aladin.co.kr/shop/wproduct.aspx?ItemId=254653202&amp;srsltid=AfmBOopxjUw_yUsusScVc_mrn9m5Hi3VMHHkID7mO2Ksps-clQVQXfpM" rel="nofollow noopener noreferrer" target="_blank" aria-label="냄새 알라딘에서 보기"><img src="https://image.aladin.co.kr/product/25465/32/cover500/k192633829_2.jpg" alt="냄새 표지" loading="lazy"></a>
+      <div class="rl-meta">
+        <div class="rl-title"><a href="https://www.aladin.co.kr/shop/wproduct.aspx?ItemId=254653202&amp;srsltid=AfmBOopxjUw_yUsusScVc_mrn9m5Hi3VMHHkID7mO2Ksps-clQVQXfpM" rel="nofollow noopener noreferrer" target="_blank">냄새</a></div>
+        <div class="rl-byline">A. S. 바위치 · 세로북스</div>
+        <a class="rl-source" href="https://www.aladin.co.kr/shop/wproduct.aspx?ItemId=254653202&amp;srsltid=AfmBOopxjUw_yUsusScVc_mrn9m5Hi3VMHHkID7mO2Ksps-clQVQXfpM" rel="nofollow noopener noreferrer" target="_blank">📺 출처 보기</a>
+      </div>
+    </li>
+    <li class="rl-item">
+      <span class="rl-num">5</span>
+      <a class="rl-cover" href="https://www.aladin.co.kr/shop/wproduct.aspx?ItemId=171597448" rel="nofollow noopener noreferrer" target="_blank" aria-label="대단한 돼지 에스더 알라딘에서 보기"><img src="https://image.aladin.co.kr/product/17159/74/cover500/8997137328_1.jpg" alt="대단한 돼지 에스더 표지" loading="lazy"></a>
+      <div class="rl-meta">
+        <div class="rl-title"><a href="https://www.aladin.co.kr/shop/wproduct.aspx?ItemId=171597448" rel="nofollow noopener noreferrer" target="_blank">대단한 돼지 에스더</a></div>
+        <div class="rl-byline">스티브 젠킨스 등 · 책공장더불어</div>
+        <a class="rl-source" href="https://www.aladin.co.kr/shop/wproduct.aspx?ItemId=171597448" rel="nofollow noopener noreferrer" target="_blank">📺 출처 보기</a>
+      </div>
+    </li>
+    <li class="rl-item">
+      <span class="rl-num">6</span>
+      <a class="rl-cover" href="https://www.aladin.co.kr/shop/wproduct.aspx?ItemId=168894745" rel="nofollow noopener noreferrer" target="_blank" aria-label="동대문 네팔 타운의 희노애락 알라딘에서 보기"><img src="https://image.aladin.co.kr/product/16889/47/cover200/k162534172_1.jpg" alt="동대문 네팔 타운의 희노애락 표지" loading="lazy"></a>
+      <div class="rl-meta">
+        <div class="rl-title"><a href="https://www.aladin.co.kr/shop/wproduct.aspx?ItemId=168894745" rel="nofollow noopener noreferrer" target="_blank">동대문 네팔 타운의 희노애락</a></div>
+        <div class="rl-byline">육성철 · 서울연구원</div>
+        <a class="rl-source" href="https://www.aladin.co.kr/author/wauthor_recommend.aspx?AuthorSearch=@166544" rel="nofollow noopener noreferrer" target="_blank">📺 출처 보기</a>
+      </div>
+    </li>
+    <li class="rl-item">
+      <span class="rl-num">7</span>
+      <a class="rl-cover" href="https://www.aladin.co.kr/shop/wproduct.aspx?ItemId=78839375&amp;partner=openAPI&amp;start=api" rel="nofollow noopener noreferrer" target="_blank" aria-label="블랙홀 알라딘에서 보기"><img src="https://image.aladin.co.kr/product/7883/93/cover500/8950963337_1.jpg" alt="블랙홀 표지" loading="lazy"></a>
+      <div class="rl-meta">
+        <div class="rl-title"><a href="https://www.aladin.co.kr/shop/wproduct.aspx?ItemId=78839375&amp;partner=openAPI&amp;start=api" rel="nofollow noopener noreferrer" target="_blank">블랙홀</a></div>
+        <div class="rl-byline">찰스 번즈 · 아르테</div>
+        <a class="rl-source" href="https://m.ch.yes24.com/article/details/41092" rel="nofollow noopener noreferrer" target="_blank">📺 출처 보기</a>
+      </div>
+    </li>
+    <li class="rl-item">
+      <span class="rl-num">8</span>
+      <a class="rl-cover" href="https://www.aladin.co.kr/shop/wproduct.aspx?ItemId=84635869" rel="nofollow noopener noreferrer" target="_blank" aria-label="소설가 구보씨의 일생 알라딘에서 보기"><img src="https://image.aladin.co.kr/product/8463/58/cover200/8932028540_1.jpg" alt="소설가 구보씨의 일생 표지" loading="lazy"></a>
+      <div class="rl-meta">
+        <div class="rl-title"><a href="https://www.aladin.co.kr/shop/wproduct.aspx?ItemId=84635869" rel="nofollow noopener noreferrer" target="_blank">소설가 구보씨의 일생</a></div>
+        <div class="rl-byline">박일영 · 문학과지성사</div>
+        <a class="rl-source" href="https://www.aladin.co.kr/shop/wproduct.aspx?ItemId=84635869" rel="nofollow noopener noreferrer" target="_blank">📺 출처 보기</a>
+      </div>
+    </li>
+    <li class="rl-item">
+      <span class="rl-num">9</span>
+      <a class="rl-cover" href="https://www.aladin.co.kr/shop/wproduct.aspx?ItemId=254249430" rel="nofollow noopener noreferrer" target="_blank" aria-label="엔딩 크레딧 알라딘에서 보기"><img src="https://image.aladin.co.kr/product/25424/94/cover200/8925591685_1.jpg" alt="엔딩 크레딧 표지" loading="lazy"></a>
+      <div class="rl-meta">
+        <div class="rl-title"><a href="https://www.aladin.co.kr/shop/wproduct.aspx?ItemId=254249430" rel="nofollow noopener noreferrer" target="_blank">엔딩 크레딧</a></div>
+        <div class="rl-byline">신영균 · 알에이치코리아</div>
+        <a class="rl-source" href="https://www.aladin.co.kr/shop/wproduct.aspx?ItemId=254249430" rel="nofollow noopener noreferrer" target="_blank">📺 출처 보기</a>
+      </div>
+    </li>
+    <li class="rl-item">
+      <span class="rl-num">10</span>
+      <a class="rl-cover" href="https://www.aladin.co.kr/shop/wproduct.aspx?ItemId=169300268&amp;srsltid=AfmBOoq-q1HxT15X30M2n-RG7u84AkweNTTZEydQaFCVufDXAYBUXdB1" rel="nofollow noopener noreferrer" target="_blank" aria-label="우나기 선생 알라딘에서 보기"><img src="https://image.aladin.co.kr/product/16930/2/cover500/8960905453_1.jpg" alt="우나기 선생 표지" loading="lazy"></a>
+      <div class="rl-meta">
+        <div class="rl-title"><a href="https://www.aladin.co.kr/shop/wproduct.aspx?ItemId=169300268&amp;srsltid=AfmBOoq-q1HxT15X30M2n-RG7u84AkweNTTZEydQaFCVufDXAYBUXdB1" rel="nofollow noopener noreferrer" target="_blank">우나기 선생</a></div>
+        <div class="rl-byline">이마무라 쇼헤이 · 마음산책</div>
+        <a class="rl-source" href="https://www.aladin.co.kr/shop/wproduct.aspx?ItemId=169300268&amp;srsltid=AfmBOoq-q1HxT15X30M2n-RG7u84AkweNTTZEydQaFCVufDXAYBUXdB1" rel="nofollow noopener noreferrer" target="_blank">📺 출처 보기</a>
+      </div>
+    </li>
+    <li class="rl-item">
+      <span class="rl-num">11</span>
+      <a class="rl-cover" href="https://www.aladin.co.kr/shop/wproduct.aspx?ItemId=294843706" rel="nofollow noopener noreferrer" target="_blank" aria-label="재생력 알라딘에서 보기"><img src="https://www.aladin.co.kr/shop/wproduct.aspx?ItemId=294843706" alt="재생력 표지" loading="lazy"></a>
+      <div class="rl-meta">
+        <div class="rl-title"><a href="https://www.aladin.co.kr/shop/wproduct.aspx?ItemId=294843706" rel="nofollow noopener noreferrer" target="_blank">재생력</a></div>
+        <div class="rl-byline">조성환 · 미메시스</div>
+        <a class="rl-source" href="https://www.aladin.co.kr/shop/wproduct.aspx?ItemId=294843706" rel="nofollow noopener noreferrer" target="_blank">📺 출처 보기</a>
+      </div>
+    </li>
+    <li class="rl-item">
+      <span class="rl-num">12</span>
+      <a class="rl-cover" href="https://www.aladin.co.kr/shop/wproduct.aspx?ItemId=243219202" rel="nofollow noopener noreferrer" target="_blank" aria-label="지옥 알라딘에서 보기"><img src="https://image.aladin.co.kr/product/24321/92/cover500/895467304x_2.jpg" alt="지옥 표지" loading="lazy"></a>
+      <div class="rl-meta">
+        <div class="rl-title"><a href="https://www.aladin.co.kr/shop/wproduct.aspx?ItemId=243219202" rel="nofollow noopener noreferrer" target="_blank">지옥</a></div>
+        <div class="rl-byline">연상호, 최규석 · 문학동네</div>
+        <a class="rl-source" href="https://www.aladin.co.kr/shop/wproduct.aspx?ItemId=243219202" rel="nofollow noopener noreferrer" target="_blank">📺 출처 보기</a>
+      </div>
+    </li>
+    <li class="rl-item">
+      <span class="rl-num">13</span>
+      <a class="rl-cover" href="https://www.aladin.co.kr/shop/wproduct.aspx?ItemId=28631321" rel="nofollow noopener noreferrer" target="_blank" aria-label="B급 문화, 대한민국을 습격하다 알라딘에서 보기"><img src="https://image.aladin.co.kr/product/2863/13/cover500/8967990200_2.jpg" alt="B급 문화, 대한민국을 습격하다 표지" loading="lazy"></a>
+      <div class="rl-meta">
+        <div class="rl-title"><a href="https://www.aladin.co.kr/shop/wproduct.aspx?ItemId=28631321" rel="nofollow noopener noreferrer" target="_blank">B급 문화, 대한민국을 습격하다</a></div>
+        <div class="rl-byline">이형석 · 북오션</div>
+        <a class="rl-source" href="https://www.aladin.co.kr/shop/wproduct.aspx?ItemId=28631321" rel="nofollow noopener noreferrer" target="_blank">📺 출처 보기</a>
+      </div>
+    </li>
+    </ol>
   </section>
 
   <section>
-    <h2>봉준호 인생책 · 책 추천 키워드</h2>
-    <p>봉준호의 추천 도서에 가장 자주 등장한 작가는 김보영, 한상훈, 앙꼬입니다. 봉준호의 책 추천 리스트는 위 표에서 출처와 함께 확인할 수 있습니다.</p>
+    <h2>📝 봉준호의 책 취향</h2>
+    <p>추천 도서에 가장 자주 등장한 작가는 김보영, 한상훈, 앙꼬 등이에요.</p>
   </section>
 
   <aside class="related">
@@ -415,7 +524,7 @@
   </nav>
 
   <footer>
-    <p>봉준호 독서 기록 정보는 유튜브·인터뷰·SNS 등 공개된 출처를 기반으로 정리되었습니다.</p>
+    <p>이 페이지의 독서 기록은 유튜브·인터뷰·SNS 등 공개된 출처를 기반으로 정리됐어요.</p>
   </footer>
 
 </body>

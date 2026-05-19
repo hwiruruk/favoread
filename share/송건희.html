@@ -138,19 +138,26 @@
     .bc-title { font-weight: 700; font-size: 13px; line-height: 1.3; margin-bottom: 4px; }
     .bc-author { font-size: 12px; color: #555; margin-bottom: 6px; }
     .bc-badge { display: inline-block; font-size: 11px; background: #fde047; border: 1px solid #000; padding: 1px 6px; font-weight: 700; }
-    .shared-book-list { list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 12px; }
-    .shared-book { background: #fff; border: 2px solid #000; box-shadow: 4px 4px 0 0 #000; padding: 12px; }
-    .sb-main { display: flex; gap: 12px; margin-bottom: 10px; }
-    .sb-cover-link { flex-shrink: 0; display: block; }
-    .sb-meta { flex: 1; min-width: 0; }
-    .sb-title { font-weight: 800; font-size: 15px; line-height: 1.3; margin-bottom: 4px; }
-    .sb-title a { color: #000; }
-    .sb-title a:hover { color: #2563eb; }
-    .sb-author { font-size: 13px; color: #555; }
-    .sb-celebs { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; padding-top: 10px; border-top: 1.5px dashed #ccc; }
-    .sb-celebs-label { font-size: 12px; color: #666; font-weight: 700; margin-right: 4px; }
-    .sb-celeb-chip { display: inline-block; padding: 3px 9px; background: #fff8e7; border: 1.5px solid #000; box-shadow: 1px 1px 0 0 #000; font-size: 12px; font-weight: 700; text-decoration: none; color: #000; transition: transform .1s, box-shadow .1s, background .1s; }
-    .sb-celeb-chip:hover { transform: translate(-1px,-1px); box-shadow: 2px 2px 0 0 #000; background: #fde047; text-decoration: none; }
+    .celeb-bio { margin: 4px 0 8px; padding: 6px 10px; background: #fff8e7; border-left: 4px solid #000; font-size: 14px; line-height: 1.45; color: #222; }
+    .reading-list { list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 14px; counter-reset: rl; }
+    .rl-item { position: relative; background: #fff; border: 2px solid #000; box-shadow: 4px 4px 0 0 #000; padding: 14px 14px 14px 52px; transition: transform .12s, box-shadow .12s; }
+    .rl-item:hover { transform: translate(-1px,-1px); box-shadow: 6px 6px 0 0 #000; }
+    .rl-num { position: absolute; left: -2px; top: -2px; width: 38px; height: 30px; display: flex; align-items: center; justify-content: center; background: #fde047; border: 2px solid #000; font-weight: 900; font-size: 14px; font-family: "Space Grotesk", sans-serif; }
+    .rl-item .rl-cover, .rl-item > .rl-cover { float: left; margin-right: 14px; width: 74px; height: 105px; display: block; flex-shrink: 0; border: 1.5px solid #000; box-shadow: 2px 2px 0 0 #000; background: #f4f4f0; overflow: hidden; }
+    .rl-cover img { width: 100%; height: 100%; object-fit: cover; display: block; }
+    .rl-no-cover { width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; font-size: 32px; }
+    .rl-meta { overflow: hidden; min-height: 105px; }
+    .rl-title { font-weight: 800; font-size: 16px; line-height: 1.3; margin-bottom: 4px; }
+    .rl-title a { color: #000; }
+    .rl-title a:hover { color: #2563eb; }
+    .rl-byline { font-size: 13px; color: #555; margin-bottom: 8px; line-height: 1.4; }
+    .rl-source { display: inline-block; font-size: 12px; padding: 3px 8px; background: #fff; border: 1.5px solid #000; box-shadow: 1px 1px 0 0 #000; text-decoration: none; color: #000; transition: transform .1s, box-shadow .1s, background .1s; }
+    .rl-source:hover { transform: translate(-1px,-1px); box-shadow: 2px 2px 0 0 #000; background: #a7f3d0; text-decoration: none; }
+    .rl-shared { clear: both; margin-top: 12px; padding-top: 10px; border-top: 1.5px dashed #ccc; display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
+    .rl-shared-label { font-size: 12px; color: #666; font-weight: 700; }
+    .rl-celeb-chip { display: inline-block; padding: 3px 9px; background: #fff8e7; border: 1.5px solid #000; box-shadow: 1px 1px 0 0 #000; font-size: 12px; font-weight: 700; text-decoration: none; color: #000; transition: transform .1s, box-shadow .1s, background .1s; }
+    .rl-celeb-chip:hover { transform: translate(-1px,-1px); box-shadow: 2px 2px 0 0 #000; background: #fde047; text-decoration: none; }
+    @media (max-width: 480px) { .rl-item { padding: 14px 12px 14px 46px; } .rl-num { width: 32px; height: 26px; font-size: 12px; } .rl-item .rl-cover, .rl-item > .rl-cover { width: 60px; height: 88px; margin-right: 10px; } .rl-meta { min-height: 88px; } .rl-title { font-size: 15px; } }
     .related-celebs { margin: 24px 0; }
     .related-celeb-list { display: flex; flex-wrap: wrap; gap: 8px; }
     .related-celeb { display: inline-flex; align-items: center; gap: 6px; padding: 6px 12px; background: #fff; border: 2px solid #000; box-shadow: 2px 2px 0 0 #000; font-size: 13px; font-weight: 700; text-decoration: none; color: #000; transition: transform .1s, box-shadow .1s; }
@@ -183,22 +190,26 @@
   </header>
 
   <section class="intro">
-    <p style="margin:0">송건희의 독서 기록을 한곳에 모았습니다. 유튜브·인터뷰·SNS 등 출처가 확인된 송건희의 인생책·추천 도서 <strong>1권</strong>을 정리한 독서 리스트예요. 송건희 책 추천과 독서 취향이 궁금하다면 아래 전체 목록과 출처 링크에서 확인할 수 있습니다.</p>
+    <p style="margin:0">송건희의 독서 기록을 한곳에 모았어요. 유튜브·인터뷰·SNS 등 공개 출처에서 확인된 인생책·추천 도서 <strong>1권</strong>을 한 페이지에 정리한 독서 리스트입니다. 아래 목록에서 책 제목·저자·출처 링크를 한눈에 확인할 수 있어요.</p>
   </section>
 
   <section>
-    <h2>송건희의 독서 리스트 전체 목록 (1권)</h2>
-    <table>
-      <thead><tr><th>#</th><th>표지</th><th>도서명</th><th>저자</th><th>출판사</th><th>출처</th></tr></thead>
-      <tbody>
-    <tr><td>1</td><td><a href="https://www.aladin.co.kr/shop/wproduct.aspx?ItemId=329557817&amp;partner=openAPI&amp;start=api" rel="nofollow noopener noreferrer" target="_blank" aria-label="어떤 섬세함 알라딘에서 보기"><img src="https://image.aladin.co.kr/product/32955/78/cover500/k662936240_1.jpg" alt="어떤 섬세함 표지" width="60" height="85" loading="lazy" style="object-fit:cover"></a></td><td><a href="https://www.aladin.co.kr/shop/wproduct.aspx?ItemId=329557817&amp;partner=openAPI&amp;start=api" rel="nofollow noopener noreferrer" target="_blank">어떤 섬세함</a></td><td>이석원</td><td>위즈덤하우스</td><td class="src">data:image/jpeg;base64,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</td></tr>
-      </tbody>
-    </table>
+    <h2>📚 송건희의 독서 리스트 (1권)</h2>
+    <ol class="reading-list">
+    <li class="rl-item">
+      <span class="rl-num">1</span>
+      <a class="rl-cover" href="https://www.aladin.co.kr/shop/wproduct.aspx?ItemId=329557817&amp;partner=openAPI&amp;start=api" rel="nofollow noopener noreferrer" target="_blank" aria-label="어떤 섬세함 알라딘에서 보기"><img src="https://image.aladin.co.kr/product/32955/78/cover500/k662936240_1.jpg" alt="어떤 섬세함 표지" loading="lazy"></a>
+      <div class="rl-meta">
+        <div class="rl-title"><a href="https://www.aladin.co.kr/shop/wproduct.aspx?ItemId=329557817&amp;partner=openAPI&amp;start=api" rel="nofollow noopener noreferrer" target="_blank">어떤 섬세함</a></div>
+        <div class="rl-byline">이석원 · 위즈덤하우스</div>
+      </div>
+    </li>
+    </ol>
   </section>
 
   <section>
-    <h2>송건희 인생책 · 책 추천 키워드</h2>
-    <p>송건희의 추천 도서에 가장 자주 등장한 작가는 이석원입니다. 송건희의 책 추천 리스트는 위 표에서 출처와 함께 확인할 수 있습니다.</p>
+    <h2>📝 송건희의 책 취향</h2>
+    <p>추천 도서에 가장 자주 등장한 작가는 이석원 등이에요.</p>
   </section>
 
   <aside class="related">
@@ -211,7 +222,7 @@
   </nav>
 
   <footer>
-    <p>송건희 독서 기록 정보는 유튜브·인터뷰·SNS 등 공개된 출처를 기반으로 정리되었습니다.</p>
+    <p>이 페이지의 독서 기록은 유튜브·인터뷰·SNS 등 공개된 출처를 기반으로 정리됐어요.</p>
   </footer>
 
 </body>

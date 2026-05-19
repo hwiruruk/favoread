@@ -778,19 +778,26 @@
     .bc-title { font-weight: 700; font-size: 13px; line-height: 1.3; margin-bottom: 4px; }
     .bc-author { font-size: 12px; color: #555; margin-bottom: 6px; }
     .bc-badge { display: inline-block; font-size: 11px; background: #fde047; border: 1px solid #000; padding: 1px 6px; font-weight: 700; }
-    .shared-book-list { list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 12px; }
-    .shared-book { background: #fff; border: 2px solid #000; box-shadow: 4px 4px 0 0 #000; padding: 12px; }
-    .sb-main { display: flex; gap: 12px; margin-bottom: 10px; }
-    .sb-cover-link { flex-shrink: 0; display: block; }
-    .sb-meta { flex: 1; min-width: 0; }
-    .sb-title { font-weight: 800; font-size: 15px; line-height: 1.3; margin-bottom: 4px; }
-    .sb-title a { color: #000; }
-    .sb-title a:hover { color: #2563eb; }
-    .sb-author { font-size: 13px; color: #555; }
-    .sb-celebs { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; padding-top: 10px; border-top: 1.5px dashed #ccc; }
-    .sb-celebs-label { font-size: 12px; color: #666; font-weight: 700; margin-right: 4px; }
-    .sb-celeb-chip { display: inline-block; padding: 3px 9px; background: #fff8e7; border: 1.5px solid #000; box-shadow: 1px 1px 0 0 #000; font-size: 12px; font-weight: 700; text-decoration: none; color: #000; transition: transform .1s, box-shadow .1s, background .1s; }
-    .sb-celeb-chip:hover { transform: translate(-1px,-1px); box-shadow: 2px 2px 0 0 #000; background: #fde047; text-decoration: none; }
+    .celeb-bio { margin: 4px 0 8px; padding: 6px 10px; background: #fff8e7; border-left: 4px solid #000; font-size: 14px; line-height: 1.45; color: #222; }
+    .reading-list { list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 14px; counter-reset: rl; }
+    .rl-item { position: relative; background: #fff; border: 2px solid #000; box-shadow: 4px 4px 0 0 #000; padding: 14px 14px 14px 52px; transition: transform .12s, box-shadow .12s; }
+    .rl-item:hover { transform: translate(-1px,-1px); box-shadow: 6px 6px 0 0 #000; }
+    .rl-num { position: absolute; left: -2px; top: -2px; width: 38px; height: 30px; display: flex; align-items: center; justify-content: center; background: #fde047; border: 2px solid #000; font-weight: 900; font-size: 14px; font-family: "Space Grotesk", sans-serif; }
+    .rl-item .rl-cover, .rl-item > .rl-cover { float: left; margin-right: 14px; width: 74px; height: 105px; display: block; flex-shrink: 0; border: 1.5px solid #000; box-shadow: 2px 2px 0 0 #000; background: #f4f4f0; overflow: hidden; }
+    .rl-cover img { width: 100%; height: 100%; object-fit: cover; display: block; }
+    .rl-no-cover { width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; font-size: 32px; }
+    .rl-meta { overflow: hidden; min-height: 105px; }
+    .rl-title { font-weight: 800; font-size: 16px; line-height: 1.3; margin-bottom: 4px; }
+    .rl-title a { color: #000; }
+    .rl-title a:hover { color: #2563eb; }
+    .rl-byline { font-size: 13px; color: #555; margin-bottom: 8px; line-height: 1.4; }
+    .rl-source { display: inline-block; font-size: 12px; padding: 3px 8px; background: #fff; border: 1.5px solid #000; box-shadow: 1px 1px 0 0 #000; text-decoration: none; color: #000; transition: transform .1s, box-shadow .1s, background .1s; }
+    .rl-source:hover { transform: translate(-1px,-1px); box-shadow: 2px 2px 0 0 #000; background: #a7f3d0; text-decoration: none; }
+    .rl-shared { clear: both; margin-top: 12px; padding-top: 10px; border-top: 1.5px dashed #ccc; display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
+    .rl-shared-label { font-size: 12px; color: #666; font-weight: 700; }
+    .rl-celeb-chip { display: inline-block; padding: 3px 9px; background: #fff8e7; border: 1.5px solid #000; box-shadow: 1px 1px 0 0 #000; font-size: 12px; font-weight: 700; text-decoration: none; color: #000; transition: transform .1s, box-shadow .1s, background .1s; }
+    .rl-celeb-chip:hover { transform: translate(-1px,-1px); box-shadow: 2px 2px 0 0 #000; background: #fde047; text-decoration: none; }
+    @media (max-width: 480px) { .rl-item { padding: 14px 12px 14px 46px; } .rl-num { width: 32px; height: 26px; font-size: 12px; } .rl-item .rl-cover, .rl-item > .rl-cover { width: 60px; height: 88px; margin-right: 10px; } .rl-meta { min-height: 88px; } .rl-title { font-size: 15px; } }
     .related-celebs { margin: 24px 0; }
     .related-celeb-list { display: flex; flex-wrap: wrap; gap: 8px; }
     .related-celeb { display: inline-flex; align-items: center; gap: 6px; padding: 6px 12px; background: #fff; border: 2px solid #000; box-shadow: 2px 2px 0 0 #000; font-size: 13px; font-weight: 700; text-decoration: none; color: #000; transition: transform .1s, box-shadow .1s; }
@@ -818,275 +825,407 @@
     </div>
     <div>
       <h1>페이커 독서 기록 · 읽은 책 · 추천 책</h1>
+      <p class="celeb-bio">한국 프로게이머. T1 소속 리그 오브 레전드 미드 라이너로 LCK·MSI·롤드컵 다수 우승한 &#x27;GOAT&#x27;.</p>
       <p style="margin:0;color:#666;font-size:14px">총 <strong>41권</strong>의 도서</p>
     </div>
   </header>
 
   <section class="intro">
-    <p style="margin:0">페이커의 독서 기록을 한곳에 모았습니다. 유튜브·인터뷰·SNS 등 출처가 확인된 페이커의 인생책·추천 도서 <strong>41권</strong>을 정리한 독서 리스트예요. 페이커 책 추천과 독서 취향이 궁금하다면 아래 전체 목록과 출처 링크에서 확인할 수 있습니다.</p>
+    <p style="margin:0">페이커의 독서 기록을 한곳에 모았어요. 유튜브·인터뷰·SNS 등 공개 출처에서 확인된 인생책·추천 도서 <strong>41권</strong>을 한 페이지에 정리한 독서 리스트입니다. 아래 목록에서 책 제목·저자·출처 링크를 한눈에 확인할 수 있어요.</p>
   </section>
 
   <section>
-    <h2>페이커의 독서 리스트 전체 목록 (41권)</h2>
-    <table>
-      <thead><tr><th>#</th><th>표지</th><th>도서명</th><th>저자</th><th>출판사</th><th>출처</th></tr></thead>
-      <tbody>
-    <tr><td>1</td><td><a href="https://www.aladin.co.kr/shop/wproduct.aspx?ItemId=4342463&amp;partner=openAPI&amp;start=api" rel="nofollow noopener noreferrer" target="_blank" aria-label="1Q84 알라딘에서 보기"><img src="https://image.aladin.co.kr/product/434/24/cover500/8954608647_3.jpg" alt="1Q84 표지" width="60" height="85" loading="lazy" style="object-fit:cover"></a></td><td><a href="https://www.aladin.co.kr/shop/wproduct.aspx?ItemId=4342463&amp;partner=openAPI&amp;start=api" rel="nofollow noopener noreferrer" target="_blank">1Q84</a></td><td>무라카미 하루키</td><td>문학동네</td><td class="src"></td></tr>
-    <tr><td>2</td><td><a href="https://www.aladin.co.kr/shop/wproduct.aspx?ItemId=115091346&amp;partner=openAPI&amp;start=api" rel="nofollow noopener noreferrer" target="_blank" aria-label="감각의 미래 알라딘에서 보기"><img src="https://image.aladin.co.kr/product/11509/13/cover500/8965962277_1.jpg" alt="감각의 미래 표지" width="60" height="85" loading="lazy" style="object-fit:cover"></a></td><td><a href="https://www.aladin.co.kr/shop/wproduct.aspx?ItemId=115091346&amp;partner=openAPI&amp;start=api" rel="nofollow noopener noreferrer" target="_blank">감각의 미래</a></td><td>카라 플라토니</td><td>흐름출판</td><td class="src"><a href="https://theqoo.net/square/2116866085" rel="nofollow noopener noreferrer" target="_blank">출처 보기 →</a></td></tr>
-    <tr><td>3</td><td><a href="https://www.aladin.co.kr/shop/wproduct.aspx?ItemId=371119291&amp;partner=openAPI&amp;start=api" rel="nofollow noopener noreferrer" target="_blank" aria-label="게임이론 알라딘에서 보기"><img src="https://image.aladin.co.kr/product/37111/92/cover500/k112030353_1.jpg" alt="게임이론 표지" width="60" height="85" loading="lazy" style="object-fit:cover"></a></td><td><a href="https://www.aladin.co.kr/shop/wproduct.aspx?ItemId=371119291&amp;partner=openAPI&amp;start=api" rel="nofollow noopener noreferrer" target="_blank">게임이론</a></td><td>김영세 (지은이)</td><td>박영사</td><td class="src"><a href="https://theqoo.net/square/2116866085" rel="nofollow noopener noreferrer" target="_blank">출처 보기 →</a></td></tr>
-    <tr><td>4</td><td><a href="https://www.aladin.co.kr/shop/wproduct.aspx?ItemId=2227980&amp;partner=openAPI&amp;start=api" rel="nofollow noopener noreferrer" target="_blank" aria-label="골든 슬럼버 알라딘에서 보기"><img src="https://image.aladin.co.kr/product/222/79/cover500/8901082810_3.jpg" alt="골든 슬럼버 표지" width="60" height="85" loading="lazy" style="object-fit:cover"></a></td><td><a href="https://www.aladin.co.kr/shop/wproduct.aspx?ItemId=2227980&amp;partner=openAPI&amp;start=api" rel="nofollow noopener noreferrer" target="_blank">골든 슬럼버</a></td><td>이사카 고타로</td><td>웅진지식하우스</td><td class="src"><a href="https://theqoo.net/square/2116866085" rel="nofollow noopener noreferrer" target="_blank">출처 보기 →</a></td></tr>
-    <tr><td>5</td><td><a href="https://www.aladin.co.kr/shop/wproduct.aspx?ItemId=101158454&amp;partner=openAPI&amp;start=api" rel="nofollow noopener noreferrer" target="_blank" aria-label="국가란 무엇인가 알라딘에서 보기"><img src="https://image.aladin.co.kr/product/10115/84/cover500/8971998016_1.jpg" alt="국가란 무엇인가 표지" width="60" height="85" loading="lazy" style="object-fit:cover"></a></td><td><a href="https://www.aladin.co.kr/shop/wproduct.aspx?ItemId=101158454&amp;partner=openAPI&amp;start=api" rel="nofollow noopener noreferrer" target="_blank">국가란 무엇인가</a></td><td>유시민</td><td>돌베개</td><td class="src"><a href="https://theqoo.net/square/2116866085" rel="nofollow noopener noreferrer" target="_blank">출처 보기 →</a></td></tr>
-    <tr><td>6</td><td><a href="https://www.aladin.co.kr/shop/wproduct.aspx?ItemId=355165726&amp;partner=openAPI&amp;start=api" rel="nofollow noopener noreferrer" target="_blank" aria-label="나는 나로 살기로 했다 알라딘에서 보기"><img src="https://image.aladin.co.kr/product/35516/57/cover500/k212036764_1.jpg" alt="나는 나로 살기로 했다 표지" width="60" height="85" loading="lazy" style="object-fit:cover"></a></td><td><a href="https://www.aladin.co.kr/shop/wproduct.aspx?ItemId=355165726&amp;partner=openAPI&amp;start=api" rel="nofollow noopener noreferrer" target="_blank">나는 나로 살기로 했다</a></td><td>김수현 (지은이)</td><td>클레이하우스</td><td class="src"><a href="https://theqoo.net/square/2116866085" rel="nofollow noopener noreferrer" target="_blank">출처 보기 →</a></td></tr>
-    <tr><td>7</td><td><a href="https://www.aladin.co.kr/shop/wproduct.aspx?ItemId=113801752&amp;partner=openAPI&amp;start=api" rel="nofollow noopener noreferrer" target="_blank" aria-label="나를 모르는 나에게 알라딘에서 보기"><img src="https://image.aladin.co.kr/product/11380/17/cover500/k332531901_1.jpg" alt="나를 모르는 나에게 표지" width="60" height="85" loading="lazy" style="object-fit:cover"></a></td><td><a href="https://www.aladin.co.kr/shop/wproduct.aspx?ItemId=113801752&amp;partner=openAPI&amp;start=api" rel="nofollow noopener noreferrer" target="_blank">나를 모르는 나에게</a></td><td>하유진</td><td>책세상</td><td class="src"><a href="https://theqoo.net/square/2116866085" rel="nofollow noopener noreferrer" target="_blank">출처 보기 →</a></td></tr>
-    <tr><td>8</td><td><a href="https://www.aladin.co.kr/shop/wproduct.aspx?ItemId=307689982&amp;partner=openAPI&amp;start=api" rel="nofollow noopener noreferrer" target="_blank" aria-label="나미야 잡화점의 기적 알라딘에서 보기"><img src="https://image.aladin.co.kr/product/30768/99/cover500/k252830652_2.jpg" alt="나미야 잡화점의 기적 표지" width="60" height="85" loading="lazy" style="object-fit:cover"></a></td><td><a href="https://www.aladin.co.kr/shop/wproduct.aspx?ItemId=307689982&amp;partner=openAPI&amp;start=api" rel="nofollow noopener noreferrer" target="_blank">나미야 잡화점의 기적</a></td><td>히가시노 게이고</td><td>현대문학</td><td class="src"><a href="https://theqoo.net/square/2116866085" rel="nofollow noopener noreferrer" target="_blank">출처 보기 →</a></td></tr>
-    <tr><td>9</td><td><a href="https://www.aladin.co.kr/shop/wproduct.aspx?ItemId=135389438&amp;partner=openAPI&amp;start=api" rel="nofollow noopener noreferrer" target="_blank" aria-label="날마다 천체 물리 알라딘에서 보기"><img src="https://image.aladin.co.kr/product/13538/94/cover500/8983717777_1.jpg" alt="날마다 천체 물리 표지" width="60" height="85" loading="lazy" style="object-fit:cover"></a></td><td><a href="https://www.aladin.co.kr/shop/wproduct.aspx?ItemId=135389438&amp;partner=openAPI&amp;start=api" rel="nofollow noopener noreferrer" target="_blank">날마다 천체 물리</a></td><td>닐 디그래스 타이슨</td><td>사이언스북스</td><td class="src"><a href="https://theqoo.net/square/2116866085" rel="nofollow noopener noreferrer" target="_blank">출처 보기 →</a></td></tr>
-    <tr><td>10</td><td><a href="https://www.aladin.co.kr/shop/wproduct.aspx?ItemId=292691257" rel="nofollow noopener noreferrer" target="_blank" aria-label="내가 틀릴 수도 있습니다 알라딘에서 보기"><img src="https://image.aladin.co.kr/product/29269/12/cover500/k822837807_3.jpg" alt="내가 틀릴 수도 있습니다 표지" width="60" height="85" loading="lazy" style="object-fit:cover"></a></td><td><a href="https://www.aladin.co.kr/shop/wproduct.aspx?ItemId=292691257" rel="nofollow noopener noreferrer" target="_blank">내가 틀릴 수도 있습니다</a></td><td>나티코 린데블라드</td><td>다산초당</td><td class="src"><a href="https://www.chosun.com/politics/politics_general/2025/12/20/D6PIVQAP6ZAUVLIWADLS3MV4XE/?utm_source=naver&amp;utm_medium=referral&amp;utm_campaign=naver-news" rel="nofollow noopener noreferrer" target="_blank">출처 보기 →</a></td></tr>
-    <tr><td>11</td><td><a href="https://www.aladin.co.kr/shop/wproduct.aspx?ItemId=311899364" rel="nofollow noopener noreferrer" target="_blank" aria-label="내면소통 알라딘에서 보기"><img src="https://image.aladin.co.kr/product/31189/93/cover500/s512831358_3.jpg" alt="내면소통 표지" width="60" height="85" loading="lazy" style="object-fit:cover"></a></td><td><a href="https://www.aladin.co.kr/shop/wproduct.aspx?ItemId=311899364" rel="nofollow noopener noreferrer" target="_blank">내면소통</a></td><td>김주환</td><td>인플루엔셜</td><td class="src"><a href="https://www.chosun.com/topclass/topclass_issue/2025/11/08/B7G3BLQY4ZEGFHI5YV7UVF2NYQ/" rel="nofollow noopener noreferrer" target="_blank">출처 보기 →</a></td></tr>
-    <tr><td>12</td><td><a href="https://www.aladin.co.kr/shop/wproduct.aspx?ItemId=115614994&amp;partner=openAPI&amp;start=api" rel="nofollow noopener noreferrer" target="_blank" aria-label="노르웨이의 숲 알라딘에서 보기"><img src="https://image.aladin.co.kr/product/11561/49/cover500/8937434482_1.jpg" alt="노르웨이의 숲 표지" width="60" height="85" loading="lazy" style="object-fit:cover"></a></td><td><a href="https://www.aladin.co.kr/shop/wproduct.aspx?ItemId=115614994&amp;partner=openAPI&amp;start=api" rel="nofollow noopener noreferrer" target="_blank">노르웨이의 숲</a></td><td>무라카미 하루키</td><td>민음사</td><td class="src"><a href="https://theqoo.net/square/2116866085" rel="nofollow noopener noreferrer" target="_blank">출처 보기 →</a></td></tr>
-    <tr><td>13</td><td><a href="https://www.aladin.co.kr/shop/wproduct.aspx?ItemId=174275034&amp;partner=openAPI&amp;start=api" rel="nofollow noopener noreferrer" target="_blank" aria-label="다산의 마지막 공부 알라딘에서 보기"><img src="https://image.aladin.co.kr/product/17427/50/cover500/s302534501_1.jpg" alt="다산의 마지막 공부 표지" width="60" height="85" loading="lazy" style="object-fit:cover"></a></td><td><a href="https://www.aladin.co.kr/shop/wproduct.aspx?ItemId=174275034&amp;partner=openAPI&amp;start=api" rel="nofollow noopener noreferrer" target="_blank">다산의 마지막 공부</a></td><td>조윤제</td><td>청림출판</td><td class="src"></td></tr>
-    <tr><td>14</td><td><a href="https://www.aladin.co.kr/shop/wproduct.aspx?ItemId=105691833&amp;partner=openAPI&amp;start=api" rel="nofollow noopener noreferrer" target="_blank" aria-label="라프 코스터의 재미이론 알라딘에서 보기"><img src="https://image.aladin.co.kr/product/10569/18/cover500/k002530539_2.jpg" alt="라프 코스터의 재미이론 표지" width="60" height="85" loading="lazy" style="object-fit:cover"></a></td><td><a href="https://www.aladin.co.kr/shop/wproduct.aspx?ItemId=105691833&amp;partner=openAPI&amp;start=api" rel="nofollow noopener noreferrer" target="_blank">라프 코스터의 재미이론</a></td><td>라프 코스터 (지은이), 유창석, 전유택 (옮긴이)</td><td>길벗</td><td class="src"><a href="https://theqoo.net/square/2116866085" rel="nofollow noopener noreferrer" target="_blank">출처 보기 →</a></td></tr>
-    <tr><td>15</td><td><a href="https://www.aladin.co.kr/shop/wproduct.aspx?ItemId=72885569&amp;partner=openAPI&amp;start=api" rel="nofollow noopener noreferrer" target="_blank" aria-label="라플라스의 마녀 알라딘에서 보기"><img src="https://image.aladin.co.kr/product/7288/55/cover500/s422635497_1.jpg" alt="라플라스의 마녀 표지" width="60" height="85" loading="lazy" style="object-fit:cover"></a></td><td><a href="https://www.aladin.co.kr/shop/wproduct.aspx?ItemId=72885569&amp;partner=openAPI&amp;start=api" rel="nofollow noopener noreferrer" target="_blank">라플라스의 마녀</a></td><td>히가시노 게이고</td><td>현대문학</td><td class="src"><a href="https://theqoo.net/square/2116866085" rel="nofollow noopener noreferrer" target="_blank">출처 보기 →</a></td></tr>
-    <tr><td>16</td><td><a href="https://www.aladin.co.kr/shop/wproduct.aspx?ItemId=56869333&amp;partner=openAPI&amp;start=api" rel="nofollow noopener noreferrer" target="_blank" aria-label="마션 알라딘에서 보기"><img src="https://image.aladin.co.kr/product/5686/93/cover500/8925556782_2.jpg" alt="마션 표지" width="60" height="85" loading="lazy" style="object-fit:cover"></a></td><td><a href="https://www.aladin.co.kr/shop/wproduct.aspx?ItemId=56869333&amp;partner=openAPI&amp;start=api" rel="nofollow noopener noreferrer" target="_blank">마션</a></td><td>앤디 위어</td><td>알에이치코리아(RHK)</td><td class="src"><a href="https://theqoo.net/square/2116866085" rel="nofollow noopener noreferrer" target="_blank">출처 보기 →</a></td></tr>
-    <tr><td>17</td><td><a href="https://www.aladin.co.kr/shop/wproduct.aspx?ItemId=375389788&amp;partner=openAPI&amp;start=api" rel="nofollow noopener noreferrer" target="_blank" aria-label="망델브로가 들려주는 프랙털 이야기 알라딘에서 보기"><img src="https://image.aladin.co.kr/product/37538/97/cover500/8954453260_1.jpg" alt="망델브로가 들려주는 프랙털 이야기 표지" width="60" height="85" loading="lazy" style="object-fit:cover"></a></td><td><a href="https://www.aladin.co.kr/shop/wproduct.aspx?ItemId=375389788&amp;partner=openAPI&amp;start=api" rel="nofollow noopener noreferrer" target="_blank">망델브로가 들려주는 프랙털 이야기</a></td><td>배수경</td><td>자음과모음</td><td class="src"><a href="https://theqoo.net/square/2116866085" rel="nofollow noopener noreferrer" target="_blank">출처 보기 →</a></td></tr>
-    <tr><td>18</td><td><a href="https://www.aladin.co.kr/shop/wproduct.aspx?ItemId=92577628&amp;partner=openAPI&amp;start=api" rel="nofollow noopener noreferrer" target="_blank" aria-label="모든 것을 기억하는 남자 알라딘에서 보기"><img src="https://image.aladin.co.kr/product/9257/76/cover500/k742535210_1.jpg" alt="모든 것을 기억하는 남자 표지" width="60" height="85" loading="lazy" style="object-fit:cover"></a></td><td><a href="https://www.aladin.co.kr/shop/wproduct.aspx?ItemId=92577628&amp;partner=openAPI&amp;start=api" rel="nofollow noopener noreferrer" target="_blank">모든 것을 기억하는 남자</a></td><td>데이비드 발다치</td><td>북로드</td><td class="src"><a href="https://theqoo.net/square/2116866085" rel="nofollow noopener noreferrer" target="_blank">출처 보기 →</a></td></tr>
-    <tr><td>19</td><td><a href="https://www.aladin.co.kr/shop/wproduct.aspx?ItemId=314636155&amp;partner=openAPI&amp;start=api" rel="nofollow noopener noreferrer" target="_blank" aria-label="무례한 사람에게 웃으며 대처하는 법 알라딘에서 보기"><img src="https://image.aladin.co.kr/product/31463/61/cover500/k272832422_1.jpg" alt="무례한 사람에게 웃으며 대처하는 법 표지" width="60" height="85" loading="lazy" style="object-fit:cover"></a></td><td><a href="https://www.aladin.co.kr/shop/wproduct.aspx?ItemId=314636155&amp;partner=openAPI&amp;start=api" rel="nofollow noopener noreferrer" target="_blank">무례한 사람에게 웃으며 대처하는 법</a></td><td>정문정</td><td>포레스트북스</td><td class="src"><a href="https://theqoo.net/square/2116866085" rel="nofollow noopener noreferrer" target="_blank">출처 보기 →</a></td></tr>
-    <tr><td>20</td><td><a href="https://www.aladin.co.kr/shop/wproduct.aspx?ItemId=332273361&amp;partner=openAPI&amp;start=api" rel="nofollow noopener noreferrer" target="_blank" aria-label="미라클모닝 확장판 알라딘에서 보기"><img src="https://image.aladin.co.kr/product/33227/33/cover500/k012937150_1.jpg" alt="미라클모닝 확장판 표지" width="60" height="85" loading="lazy" style="object-fit:cover"></a></td><td><a href="https://www.aladin.co.kr/shop/wproduct.aspx?ItemId=332273361&amp;partner=openAPI&amp;start=api" rel="nofollow noopener noreferrer" target="_blank">미라클모닝 확장판</a></td><td>할 엘로드</td><td>한빛비즈</td><td class="src"><a href="https://theqoo.net/square/2116866085" rel="nofollow noopener noreferrer" target="_blank">출처 보기 →</a></td></tr>
-    <tr><td>21</td><td><a href="https://www.aladin.co.kr/shop/wproduct.aspx?ItemId=216792703&amp;partner=openAPI&amp;start=api" rel="nofollow noopener noreferrer" target="_blank" aria-label="소크라테스의 변명·크리톤·파이돈·향연 알라딘에서 보기"><img src="https://image.aladin.co.kr/product/21679/27/cover500/k252636705_1.jpg" alt="소크라테스의 변명·크리톤·파이돈·향연 표지" width="60" height="85" loading="lazy" style="object-fit:cover"></a></td><td><a href="https://www.aladin.co.kr/shop/wproduct.aspx?ItemId=216792703&amp;partner=openAPI&amp;start=api" rel="nofollow noopener noreferrer" target="_blank">소크라테스의 변명·크리톤·파이돈·향연</a></td><td>플라톤</td><td>현대지성</td><td class="src"><a href="https://theqoo.net/square/2116866085" rel="nofollow noopener noreferrer" target="_blank">출처 보기 →</a></td></tr>
-    <tr><td>22</td><td><a href="https://www.aladin.co.kr/shop/wproduct.aspx?ItemId=178703465&amp;partner=openAPI&amp;start=api" rel="nofollow noopener noreferrer" target="_blank" aria-label="스탠퍼드식 최고의 피로회복법 알라딘에서 보기"><img src="https://image.aladin.co.kr/product/17870/34/cover500/k232534733_1.jpg" alt="스탠퍼드식 최고의 피로회복법 표지" width="60" height="85" loading="lazy" style="object-fit:cover"></a></td><td><a href="https://www.aladin.co.kr/shop/wproduct.aspx?ItemId=178703465&amp;partner=openAPI&amp;start=api" rel="nofollow noopener noreferrer" target="_blank">스탠퍼드식 최고의 피로회복법</a></td><td>야마다 도모오</td><td>비타북스</td><td class="src"><a href="https://theqoo.net/square/2116866085" rel="nofollow noopener noreferrer" target="_blank">출처 보기 →</a></td></tr>
-    <tr><td>23</td><td><a href="https://www.aladin.co.kr/shop/wproduct.aspx?ItemId=120057939&amp;partner=openAPI&amp;start=api" rel="nofollow noopener noreferrer" target="_blank" aria-label="신경 끄기의 기술 알라딘에서 보기"><img src="https://image.aladin.co.kr/product/12005/79/cover500/8901219948_1.jpg" alt="신경 끄기의 기술 표지" width="60" height="85" loading="lazy" style="object-fit:cover"></a></td><td><a href="https://www.aladin.co.kr/shop/wproduct.aspx?ItemId=120057939&amp;partner=openAPI&amp;start=api" rel="nofollow noopener noreferrer" target="_blank">신경 끄기의 기술</a></td><td>마크 맨슨</td><td>갤리온</td><td class="src"><a href="https://theqoo.net/square/2116866085" rel="nofollow noopener noreferrer" target="_blank">출처 보기 →</a></td></tr>
-    <tr><td>24</td><td><a href="https://www.aladin.co.kr/shop/wproduct.aspx?ItemId=240184371&amp;partner=openAPI&amp;start=api" rel="nofollow noopener noreferrer" target="_blank" aria-label="아인슈타인이 괴델과 함께 걸을 때 알라딘에서 보기"><img src="https://image.aladin.co.kr/product/24018/43/cover500/k892639416_2.jpg" alt="아인슈타인이 괴델과 함께 걸을 때 표지" width="60" height="85" loading="lazy" style="object-fit:cover"></a></td><td><a href="https://www.aladin.co.kr/shop/wproduct.aspx?ItemId=240184371&amp;partner=openAPI&amp;start=api" rel="nofollow noopener noreferrer" target="_blank">아인슈타인이 괴델과 함께 걸을 때</a></td><td>짐 홀트</td><td>소소의책</td><td class="src"><a href="https://theqoo.net/square/2116866085" rel="nofollow noopener noreferrer" target="_blank">출처 보기 →</a></td></tr>
-    <tr><td>25</td><td><a href="https://www.aladin.co.kr/shop/wproduct.aspx?ItemId=134947105&amp;partner=openAPI&amp;start=api" rel="nofollow noopener noreferrer" target="_blank" aria-label="우울할 땐 뇌 과학 알라딘에서 보기"><img src="https://image.aladin.co.kr/product/13494/71/cover500/k052532504_2.jpg" alt="우울할 땐 뇌 과학 표지" width="60" height="85" loading="lazy" style="object-fit:cover"></a></td><td><a href="https://www.aladin.co.kr/shop/wproduct.aspx?ItemId=134947105&amp;partner=openAPI&amp;start=api" rel="nofollow noopener noreferrer" target="_blank">우울할 땐 뇌 과학</a></td><td>앨릭스 코브</td><td>심심</td><td class="src"></td></tr>
-    <tr><td>26</td><td><a href="https://www.aladin.co.kr/shop/wproduct.aspx?ItemId=570453&amp;partner=openAPI&amp;start=api" rel="nofollow noopener noreferrer" target="_blank" aria-label="우주의 구조 알라딘에서 보기"><img src="https://image.aladin.co.kr/product/57/4/cover500/8988907736_2.jpg" alt="우주의 구조 표지" width="60" height="85" loading="lazy" style="object-fit:cover"></a></td><td><a href="https://www.aladin.co.kr/shop/wproduct.aspx?ItemId=570453&amp;partner=openAPI&amp;start=api" rel="nofollow noopener noreferrer" target="_blank">우주의 구조</a></td><td>브라이언 그린</td><td>승산</td><td class="src"><a href="https://theqoo.net/square/2116866085" rel="nofollow noopener noreferrer" target="_blank">출처 보기 →</a></td></tr>
-    <tr><td>27</td><td><a href="https://www.aladin.co.kr/shop/wproduct.aspx?ItemId=12840843" rel="nofollow noopener noreferrer" target="_blank" aria-label="월든 알라딘에서 보기"><img src="https://image.aladin.co.kr/product/1284/8/cover500/8956605416_3.jpg" alt="월든 표지" width="60" height="85" loading="lazy" style="object-fit:cover"></a></td><td><a href="https://www.aladin.co.kr/shop/wproduct.aspx?ItemId=12840843" rel="nofollow noopener noreferrer" target="_blank">월든</a></td><td>헨리 데이비드 소로</td><td>은행나무</td><td class="src"></td></tr>
-    <tr><td>28</td><td><a href="https://www.aladin.co.kr/shop/wproduct.aspx?ItemId=48988418" rel="nofollow noopener noreferrer" target="_blank" aria-label="이기적 유전자 알라딘에서 보기"><img src="https://image.aladin.co.kr/product/17048/25/cover500/8932473900_1.jpg" alt="이기적 유전자 표지" width="60" height="85" loading="lazy" style="object-fit:cover"></a></td><td><a href="https://www.aladin.co.kr/shop/wproduct.aspx?ItemId=48988418" rel="nofollow noopener noreferrer" target="_blank">이기적 유전자</a></td><td>리처드 도킨스</td><td>을유문화사</td><td class="src"><a href="https://www.chosun.com/topclass/topclass_issue/2025/11/08/B7G3BLQY4ZEGFHI5YV7UVF2NYQ/" rel="nofollow noopener noreferrer" target="_blank">출처 보기 →</a></td></tr>
-    <tr><td>29</td><td><a href="https://www.aladin.co.kr/shop/wproduct.aspx?ItemId=343492328&amp;partner=openAPI&amp;start=api" rel="nofollow noopener noreferrer" target="_blank" aria-label="잠 알라딘에서 보기"><img src="https://image.aladin.co.kr/product/34349/23/cover500/8932924538_1.jpg" alt="잠 표지" width="60" height="85" loading="lazy" style="object-fit:cover"></a></td><td><a href="https://www.aladin.co.kr/shop/wproduct.aspx?ItemId=343492328&amp;partner=openAPI&amp;start=api" rel="nofollow noopener noreferrer" target="_blank">잠</a></td><td>베르나르 베르베르 (지은이), 전미연 (옮긴이)</td><td>열린책들</td><td class="src"><a href="https://theqoo.net/square/2116866085" rel="nofollow noopener noreferrer" target="_blank">출처 보기 →</a></td></tr>
-    <tr><td>30</td><td><a href="https://www.aladin.co.kr/shop/wproduct.aspx?ItemId=48988418" rel="nofollow noopener noreferrer" target="_blank" aria-label="정의란 무엇인가 알라딘에서 보기"><img src="https://image.aladin.co.kr/product/4898/84/cover500/s812035947_1.jpg" alt="정의란 무엇인가 표지" width="60" height="85" loading="lazy" style="object-fit:cover"></a></td><td><a href="https://www.aladin.co.kr/shop/wproduct.aspx?ItemId=48988418" rel="nofollow noopener noreferrer" target="_blank">정의란 무엇인가</a></td><td>마이클 샌델</td><td>와이즈베리</td><td class="src"><a href="https://www.chosun.com/topclass/topclass_issue/2025/11/08/B7G3BLQY4ZEGFHI5YV7UVF2NYQ/" rel="nofollow noopener noreferrer" target="_blank">출처 보기 →</a></td></tr>
-    <tr><td>31</td><td><a href="https://www.aladin.co.kr/shop/wproduct.aspx?ItemId=135080640&amp;partner=openAPI&amp;start=api" rel="nofollow noopener noreferrer" target="_blank" aria-label="죄의 목소리 알라딘에서 보기"><img src="https://image.aladin.co.kr/product/13508/6/cover500/k612532605_1.jpg" alt="죄의 목소리 표지" width="60" height="85" loading="lazy" style="object-fit:cover"></a></td><td><a href="https://www.aladin.co.kr/shop/wproduct.aspx?ItemId=135080640&amp;partner=openAPI&amp;start=api" rel="nofollow noopener noreferrer" target="_blank">죄의 목소리</a></td><td>시오타 타케시</td><td>비앤엘(BNL)</td><td class="src"></td></tr>
-    <tr><td>32</td><td><a href="https://www.aladin.co.kr/shop/wproduct.aspx?ItemId=20004432&amp;partner=openAPI&amp;start=api" rel="nofollow noopener noreferrer" target="_blank" aria-label="지금 시작하는 인문학 알라딘에서 보기"><img src="https://image.aladin.co.kr/product/2000/44/cover500/8998015013_1.jpg" alt="지금 시작하는 인문학 표지" width="60" height="85" loading="lazy" style="object-fit:cover"></a></td><td><a href="https://www.aladin.co.kr/shop/wproduct.aspx?ItemId=20004432&amp;partner=openAPI&amp;start=api" rel="nofollow noopener noreferrer" target="_blank">지금 시작하는 인문학</a></td><td>주현성</td><td>더좋은책</td><td class="src"><a href="https://theqoo.net/square/2116866085" rel="nofollow noopener noreferrer" target="_blank">출처 보기 →</a></td></tr>
-    <tr><td>33</td><td><a href="https://www.aladin.co.kr/shop/wproduct.aspx?ItemId=219841523&amp;partner=openAPI&amp;start=api" rel="nofollow noopener noreferrer" target="_blank" aria-label="지적 대화를 위한 넓고 얕은 지식 : 제로 편 알라딘에서 보기"><img src="https://image.aladin.co.kr/product/21984/15/cover500/s612035274_1.jpg" alt="지적 대화를 위한 넓고 얕은 지식 : 제로 편 표지" width="60" height="85" loading="lazy" style="object-fit:cover"></a></td><td><a href="https://www.aladin.co.kr/shop/wproduct.aspx?ItemId=219841523&amp;partner=openAPI&amp;start=api" rel="nofollow noopener noreferrer" target="_blank">지적 대화를 위한 넓고 얕은 지식 : 제로 편</a></td><td>채사장</td><td>웨일북</td><td class="src"><a href="https://theqoo.net/square/2116866085" rel="nofollow noopener noreferrer" target="_blank">출처 보기 →</a></td></tr>
-    <tr><td>34</td><td><a href="https://www.aladin.co.kr/shop/wproduct.aspx?ItemId=92772351&amp;partner=openAPI&amp;start=api" rel="nofollow noopener noreferrer" target="_blank" aria-label="처음 만나는 뇌과학 이야기 알라딘에서 보기"><img src="https://image.aladin.co.kr/product/9277/23/cover500/k892535418_1.jpg" alt="처음 만나는 뇌과학 이야기 표지" width="60" height="85" loading="lazy" style="object-fit:cover"></a></td><td><a href="https://www.aladin.co.kr/shop/wproduct.aspx?ItemId=92772351&amp;partner=openAPI&amp;start=api" rel="nofollow noopener noreferrer" target="_blank">처음 만나는 뇌과학 이야기</a></td><td>양은우</td><td>카시오페아</td><td class="src"><a href="https://theqoo.net/square/2116866085" rel="nofollow noopener noreferrer" target="_blank">출처 보기 →</a></td></tr>
-    <tr><td>35</td><td><a href="https://www.aladin.co.kr/shop/wproduct.aspx?ItemId=338537229" rel="nofollow noopener noreferrer" target="_blank" aria-label="침묵의 봄 알라딘에서 보기"><img src="https://image.aladin.co.kr/product/33853/72/cover500/8962632721_1.jpg" alt="침묵의 봄 표지" width="60" height="85" loading="lazy" style="object-fit:cover"></a></td><td><a href="https://www.aladin.co.kr/shop/wproduct.aspx?ItemId=338537229" rel="nofollow noopener noreferrer" target="_blank">침묵의 봄</a></td><td>레이첼 카슨</td><td>에코리브르</td><td class="src"></td></tr>
-    <tr><td>36</td><td><a href="https://www.aladin.co.kr/shop/wproduct.aspx?ItemId=540789&amp;partner=openAPI&amp;start=api" rel="nofollow noopener noreferrer" target="_blank" aria-label="코스모스 알라딘에서 보기"><img src="https://image.aladin.co.kr/product/54/7/cover500/898371154x_2.jpg" alt="코스모스 표지" width="60" height="85" loading="lazy" style="object-fit:cover"></a></td><td><a href="https://www.aladin.co.kr/shop/wproduct.aspx?ItemId=540789&amp;partner=openAPI&amp;start=api" rel="nofollow noopener noreferrer" target="_blank">코스모스</a></td><td>칼 세이건</td><td>사이언스북스</td><td class="src"><a href="https://theqoo.net/square/2116866085" rel="nofollow noopener noreferrer" target="_blank">출처 보기 →</a></td></tr>
-    <tr><td>37</td><td><a href="https://www.aladin.co.kr/shop/wproduct.aspx?ItemId=74921141&amp;partner=openAPI&amp;start=api" rel="nofollow noopener noreferrer" target="_blank" aria-label="틀리지 않는 법 알라딘에서 보기"><img src="https://image.aladin.co.kr/product/7492/11/cover500/8932917655_1.jpg" alt="틀리지 않는 법 표지" width="60" height="85" loading="lazy" style="object-fit:cover"></a></td><td><a href="https://www.aladin.co.kr/shop/wproduct.aspx?ItemId=74921141&amp;partner=openAPI&amp;start=api" rel="nofollow noopener noreferrer" target="_blank">틀리지 않는 법</a></td><td>조던 엘렌버그</td><td>열린책들</td><td class="src"><a href="https://theqoo.net/square/2116866085" rel="nofollow noopener noreferrer" target="_blank">출처 보기 →</a></td></tr>
-    <tr><td>38</td><td><a href="https://www.aladin.co.kr/shop/wproduct.aspx?ItemId=345384332&amp;partner=openAPI&amp;start=api" rel="nofollow noopener noreferrer" target="_blank" aria-label="팩트풀니스 알라딘에서 보기"><img src="https://image.aladin.co.kr/product/34538/43/cover500/8934933879_1.jpg" alt="팩트풀니스 표지" width="60" height="85" loading="lazy" style="object-fit:cover"></a></td><td><a href="https://www.aladin.co.kr/shop/wproduct.aspx?ItemId=345384332&amp;partner=openAPI&amp;start=api" rel="nofollow noopener noreferrer" target="_blank">팩트풀니스</a></td><td>한스 로슬링, 올라 로슬링, 안나 로슬링 뢴룬드</td><td>김영사</td><td class="src"><a href="https://theqoo.net/square/2116866085" rel="nofollow noopener noreferrer" target="_blank">출처 보기 →</a></td></tr>
-    <tr><td>39</td><td><a href="https://www.aladin.co.kr/shop/wproduct.aspx?ItemId=316296278&amp;partner=openAPI&amp;start=api" rel="nofollow noopener noreferrer" target="_blank" aria-label="프로이트의 의자 알라딘에서 보기"><img src="https://image.aladin.co.kr/product/31629/62/cover500/k062833875_1.jpg" alt="프로이트의 의자 표지" width="60" height="85" loading="lazy" style="object-fit:cover"></a></td><td><a href="https://www.aladin.co.kr/shop/wproduct.aspx?ItemId=316296278&amp;partner=openAPI&amp;start=api" rel="nofollow noopener noreferrer" target="_blank">프로이트의 의자</a></td><td>정도언 (지은이)</td><td>지와인</td><td class="src"><a href="https://theqoo.net/square/2116866085" rel="nofollow noopener noreferrer" target="_blank">출처 보기 →</a></td></tr>
-    <tr><td>40</td><td><a href="https://www.aladin.co.kr/shop/wproduct.aspx?ItemId=238629446&amp;partner=openAPI&amp;start=api" rel="nofollow noopener noreferrer" target="_blank" aria-label="하쿠바산장 살인사건 알라딘에서 보기"><img src="https://image.aladin.co.kr/product/23862/94/cover500/8925569132_1.jpg" alt="하쿠바산장 살인사건 표지" width="60" height="85" loading="lazy" style="object-fit:cover"></a></td><td><a href="https://www.aladin.co.kr/shop/wproduct.aspx?ItemId=238629446&amp;partner=openAPI&amp;start=api" rel="nofollow noopener noreferrer" target="_blank">하쿠바산장 살인사건</a></td><td>히가시노 게이고</td><td>알에이치코리아(RHK)</td><td class="src"><a href="https://theqoo.net/square/2116866085" rel="nofollow noopener noreferrer" target="_blank">출처 보기 →</a></td></tr>
-    <tr><td>41</td><td><a href="https://www.aladin.co.kr/shop/wproduct.aspx?ItemId=3420907&amp;partner=openAPI&amp;start=api" rel="nofollow noopener noreferrer" target="_blank" aria-label="화씨 451 알라딘에서 보기"><img src="https://image.aladin.co.kr/product/342/9/cover500/8982739084_1.jpg" alt="화씨 451 표지" width="60" height="85" loading="lazy" style="object-fit:cover"></a></td><td><a href="https://www.aladin.co.kr/shop/wproduct.aspx?ItemId=3420907&amp;partner=openAPI&amp;start=api" rel="nofollow noopener noreferrer" target="_blank">화씨 451</a></td><td>레이 브래드버리</td><td>황금가지</td><td class="src"><a href="https://theqoo.net/square/2116866085" rel="nofollow noopener noreferrer" target="_blank">출처 보기 →</a></td></tr>
-      </tbody>
-    </table>
-  </section>
-
-  <section class="book-pages">
-    <h2>👥 페이커과 다른 셀럽이 함께 추천한 책 (14권)</h2>
-    <p class="muted">2명 이상의 셀럽이 추천한 책과 함께 추천한 셀럽 명단이에요.</p>
-    <ul class="shared-book-list">
-      <li class="shared-book">
-        <div class="sb-main">
-          <a class="sb-cover-link" href="https://www.aladin.co.kr/shop/wproduct.aspx?ItemId=355165726&amp;partner=openAPI&amp;start=api" rel="nofollow noopener noreferrer" target="_blank" aria-label="나는 나로 살기로 했다 알라딘에서 보기"><img src="https://image.aladin.co.kr/product/35516/57/cover500/k212036764_1.jpg" alt="나는 나로 살기로 했다 표지" width="60" height="85" loading="lazy" style="object-fit:cover"></a>
-          <div class="sb-meta">
-            <div class="sb-title"><a href="https://www.aladin.co.kr/shop/wproduct.aspx?ItemId=355165726&amp;partner=openAPI&amp;start=api" rel="nofollow noopener noreferrer" target="_blank">나는 나로 살기로 했다</a></div>
-            <div class="sb-author">김수현 (지은이)</div>
-          </div>
-        </div>
-        <div class="sb-celebs">
-          <span class="sb-celebs-label">함께 추천한 셀럽 2명:</span>
-          <a class="sb-celeb-chip" href="https://favorbook.co.kr/share/%EB%A1%9C%EC%9A%B4.html">로운</a>
-          <a class="sb-celeb-chip" href="https://favorbook.co.kr/share/%EC%A0%95%EA%B5%AD%28BTS%29.html">정국(BTS)</a>
-        </div>
-      </li>
-      <li class="shared-book">
-        <div class="sb-main">
-          <a class="sb-cover-link" href="https://www.aladin.co.kr/shop/wproduct.aspx?ItemId=307689982&amp;partner=openAPI&amp;start=api" rel="nofollow noopener noreferrer" target="_blank" aria-label="나미야 잡화점의 기적 알라딘에서 보기"><img src="https://image.aladin.co.kr/product/30768/99/cover500/k252830652_2.jpg" alt="나미야 잡화점의 기적 표지" width="60" height="85" loading="lazy" style="object-fit:cover"></a>
-          <div class="sb-meta">
-            <div class="sb-title"><a href="https://www.aladin.co.kr/shop/wproduct.aspx?ItemId=307689982&amp;partner=openAPI&amp;start=api" rel="nofollow noopener noreferrer" target="_blank">나미야 잡화점의 기적</a></div>
-            <div class="sb-author">히가시노 게이고</div>
-          </div>
-        </div>
-        <div class="sb-celebs">
-          <span class="sb-celebs-label">함께 추천한 셀럽 4명:</span>
-          <a class="sb-celeb-chip" href="https://favorbook.co.kr/share/%EA%B9%80%ED%83%9C%ED%95%98.html">김태하</a>
-          <a class="sb-celeb-chip" href="https://favorbook.co.kr/share/%EB%B0%95%EC%A7%80%ED%9B%88.html">박지훈</a>
-          <a class="sb-celeb-chip" href="https://favorbook.co.kr/share/%ED%95%98%EC%97%B0%EC%A3%BC.html">하연주</a>
-          <a class="sb-celeb-chip" href="https://favorbook.co.kr/share/%EB%B0%95%EC%84%B8%EC%99%84.html">박세완</a>
-        </div>
-      </li>
-      <li class="shared-book">
-        <div class="sb-main">
-          <a class="sb-cover-link" href="https://www.aladin.co.kr/shop/wproduct.aspx?ItemId=115614994&amp;partner=openAPI&amp;start=api" rel="nofollow noopener noreferrer" target="_blank" aria-label="노르웨이의 숲 알라딘에서 보기"><img src="https://image.aladin.co.kr/product/11561/49/cover500/8937434482_1.jpg" alt="노르웨이의 숲 표지" width="60" height="85" loading="lazy" style="object-fit:cover"></a>
-          <div class="sb-meta">
-            <div class="sb-title"><a href="https://www.aladin.co.kr/shop/wproduct.aspx?ItemId=115614994&amp;partner=openAPI&amp;start=api" rel="nofollow noopener noreferrer" target="_blank">노르웨이의 숲</a></div>
-            <div class="sb-author">무라카미 하루키</div>
-          </div>
-        </div>
-        <div class="sb-celebs">
-          <span class="sb-celebs-label">함께 추천한 셀럽 5명:</span>
-          <a class="sb-celeb-chip" href="https://favorbook.co.kr/share/%EA%B0%80%EC%9B%90%28%EB%AF%B8%EC%95%BC%EC%98%A4%29.html">가원(미야오)</a>
-          <a class="sb-celeb-chip" href="https://favorbook.co.kr/share/%EA%B3%A0%EB%AF%BC%EC%8B%9C.html">고민시</a>
-          <a class="sb-celeb-chip" href="https://favorbook.co.kr/share/%EC%86%90%EC%A2%85%EC%9B%90.html">손종원</a>
-          <a class="sb-celeb-chip" href="https://favorbook.co.kr/share/%ED%97%88%EC%84%B1%EB%B2%94.html">허성범</a>
-          <a class="sb-celeb-chip" href="https://favorbook.co.kr/share/%EA%B9%80%EB%8F%84%EC%99%84.html">김도완</a>
-        </div>
-      </li>
-      <li class="shared-book">
-        <div class="sb-main">
-          <a class="sb-cover-link" href="https://www.aladin.co.kr/shop/wproduct.aspx?ItemId=314636155&amp;partner=openAPI&amp;start=api" rel="nofollow noopener noreferrer" target="_blank" aria-label="무례한 사람에게 웃으며 대처하는 법 알라딘에서 보기"><img src="https://image.aladin.co.kr/product/31463/61/cover500/k272832422_1.jpg" alt="무례한 사람에게 웃으며 대처하는 법 표지" width="60" height="85" loading="lazy" style="object-fit:cover"></a>
-          <div class="sb-meta">
-            <div class="sb-title"><a href="https://www.aladin.co.kr/shop/wproduct.aspx?ItemId=314636155&amp;partner=openAPI&amp;start=api" rel="nofollow noopener noreferrer" target="_blank">무례한 사람에게 웃으며 대처하는 법</a></div>
-            <div class="sb-author">정문정</div>
-          </div>
-        </div>
-        <div class="sb-celebs">
-          <span class="sb-celebs-label">함께 추천한 셀럽 1명:</span>
-          <a class="sb-celeb-chip" href="https://favorbook.co.kr/share/%EC%9E%A5%EC%9E%AC%EC%9D%B8.html">장재인</a>
-        </div>
-      </li>
-      <li class="shared-book">
-        <div class="sb-main">
-          <a class="sb-cover-link" href="https://www.aladin.co.kr/shop/wproduct.aspx?ItemId=120057939&amp;partner=openAPI&amp;start=api" rel="nofollow noopener noreferrer" target="_blank" aria-label="신경 끄기의 기술 알라딘에서 보기"><img src="https://image.aladin.co.kr/product/12005/79/cover500/8901219948_1.jpg" alt="신경 끄기의 기술 표지" width="60" height="85" loading="lazy" style="object-fit:cover"></a>
-          <div class="sb-meta">
-            <div class="sb-title"><a href="https://www.aladin.co.kr/shop/wproduct.aspx?ItemId=120057939&amp;partner=openAPI&amp;start=api" rel="nofollow noopener noreferrer" target="_blank">신경 끄기의 기술</a></div>
-            <div class="sb-author">마크 맨슨</div>
-          </div>
-        </div>
-        <div class="sb-celebs">
-          <span class="sb-celebs-label">함께 추천한 셀럽 5명:</span>
-          <a class="sb-celeb-chip" href="https://favorbook.co.kr/share/%EB%A1%9C%EC%A0%9C%28%EB%B8%94%EB%9E%99%ED%95%91%ED%81%AC%29.html">로제(블랙핑크)</a>
-          <a class="sb-celeb-chip" href="https://favorbook.co.kr/share/%EB%A7%88%ED%8B%B4%28%EC%BD%94%EB%A5%B4%ED%8B%B0%EC%8A%A4%29.html">마틴(코르티스)</a>
-          <a class="sb-celeb-chip" href="https://favorbook.co.kr/share/%EC%A0%95%ED%95%B4%EC%9D%B8.html">정해인</a>
-          <a class="sb-celeb-chip" href="https://favorbook.co.kr/share/%EC%A3%BC%ED%9B%88%28%EC%BD%94%EB%A5%B4%ED%8B%B0%EC%8A%A4%29.html">주훈(코르티스)</a>
-          <a class="sb-celeb-chip" href="https://favorbook.co.kr/share/%EC%86%8C%EC%9C%A0.html">소유</a>
-        </div>
-      </li>
-      <li class="shared-book">
-        <div class="sb-main">
-          <a class="sb-cover-link" href="https://www.aladin.co.kr/shop/wproduct.aspx?ItemId=570453&amp;partner=openAPI&amp;start=api" rel="nofollow noopener noreferrer" target="_blank" aria-label="우주의 구조 알라딘에서 보기"><img src="https://image.aladin.co.kr/product/57/4/cover500/8988907736_2.jpg" alt="우주의 구조 표지" width="60" height="85" loading="lazy" style="object-fit:cover"></a>
-          <div class="sb-meta">
-            <div class="sb-title"><a href="https://www.aladin.co.kr/shop/wproduct.aspx?ItemId=570453&amp;partner=openAPI&amp;start=api" rel="nofollow noopener noreferrer" target="_blank">우주의 구조</a></div>
-            <div class="sb-author">브라이언 그린</div>
-          </div>
-        </div>
-        <div class="sb-celebs">
-          <span class="sb-celebs-label">함께 추천한 셀럽 1명:</span>
-          <a class="sb-celeb-chip" href="https://favorbook.co.kr/share/%EC%9D%B4%EC%A7%80%EC%95%84.html">이지아</a>
-        </div>
-      </li>
-      <li class="shared-book">
-        <div class="sb-main">
-          <a class="sb-cover-link" href="https://www.aladin.co.kr/shop/wproduct.aspx?ItemId=12840843" rel="nofollow noopener noreferrer" target="_blank" aria-label="월든 알라딘에서 보기"><img src="https://image.aladin.co.kr/product/1284/8/cover500/8956605416_3.jpg" alt="월든 표지" width="60" height="85" loading="lazy" style="object-fit:cover"></a>
-          <div class="sb-meta">
-            <div class="sb-title"><a href="https://www.aladin.co.kr/shop/wproduct.aspx?ItemId=12840843" rel="nofollow noopener noreferrer" target="_blank">월든</a></div>
-            <div class="sb-author">헨리 데이비드 소로</div>
-          </div>
-        </div>
-        <div class="sb-celebs">
-          <span class="sb-celebs-label">함께 추천한 셀럽 1명:</span>
-          <a class="sb-celeb-chip" href="https://favorbook.co.kr/share/%EB%85%B8%EC%A0%9C.html">노제</a>
-        </div>
-      </li>
-      <li class="shared-book">
-        <div class="sb-main">
-          <a class="sb-cover-link" href="https://www.aladin.co.kr/shop/wproduct.aspx?ItemId=48988418" rel="nofollow noopener noreferrer" target="_blank" aria-label="이기적 유전자 알라딘에서 보기"><img src="https://image.aladin.co.kr/product/17048/25/cover500/8932473900_1.jpg" alt="이기적 유전자 표지" width="60" height="85" loading="lazy" style="object-fit:cover"></a>
-          <div class="sb-meta">
-            <div class="sb-title"><a href="https://www.aladin.co.kr/shop/wproduct.aspx?ItemId=48988418" rel="nofollow noopener noreferrer" target="_blank">이기적 유전자</a></div>
-            <div class="sb-author">리처드 도킨스</div>
-          </div>
-        </div>
-        <div class="sb-celebs">
-          <span class="sb-celebs-label">함께 추천한 셀럽 1명:</span>
-          <a class="sb-celeb-chip" href="https://favorbook.co.kr/share/%EC%97%84%EC%A7%80%EC%9B%90.html">엄지원</a>
-        </div>
-      </li>
-      <li class="shared-book">
-        <div class="sb-main">
-          <a class="sb-cover-link" href="https://www.aladin.co.kr/shop/wproduct.aspx?ItemId=343492328&amp;partner=openAPI&amp;start=api" rel="nofollow noopener noreferrer" target="_blank" aria-label="잠 알라딘에서 보기"><img src="https://image.aladin.co.kr/product/34349/23/cover500/8932924538_1.jpg" alt="잠 표지" width="60" height="85" loading="lazy" style="object-fit:cover"></a>
-          <div class="sb-meta">
-            <div class="sb-title"><a href="https://www.aladin.co.kr/shop/wproduct.aspx?ItemId=343492328&amp;partner=openAPI&amp;start=api" rel="nofollow noopener noreferrer" target="_blank">잠</a></div>
-            <div class="sb-author">베르나르 베르베르 (지은이), 전미연 (옮긴이)</div>
-          </div>
-        </div>
-        <div class="sb-celebs">
-          <span class="sb-celebs-label">함께 추천한 셀럽 1명:</span>
-          <a class="sb-celeb-chip" href="https://favorbook.co.kr/share/%EC%84%A4%ED%98%84.html">설현</a>
-        </div>
-      </li>
-      <li class="shared-book">
-        <div class="sb-main">
-          <a class="sb-cover-link" href="https://www.aladin.co.kr/shop/wproduct.aspx?ItemId=48988418" rel="nofollow noopener noreferrer" target="_blank" aria-label="정의란 무엇인가 알라딘에서 보기"><img src="https://image.aladin.co.kr/product/4898/84/cover500/s812035947_1.jpg" alt="정의란 무엇인가 표지" width="60" height="85" loading="lazy" style="object-fit:cover"></a>
-          <div class="sb-meta">
-            <div class="sb-title"><a href="https://www.aladin.co.kr/shop/wproduct.aspx?ItemId=48988418" rel="nofollow noopener noreferrer" target="_blank">정의란 무엇인가</a></div>
-            <div class="sb-author">마이클 샌델</div>
-          </div>
-        </div>
-        <div class="sb-celebs">
-          <span class="sb-celebs-label">함께 추천한 셀럽 2명:</span>
-          <a class="sb-celeb-chip" href="https://favorbook.co.kr/share/%ED%82%A4%EB%85%B8%28%ED%8E%9C%ED%83%80%EA%B3%A4%29.html">키노(펜타곤)</a>
-          <a class="sb-celeb-chip" href="https://favorbook.co.kr/share/%ED%97%88%EC%84%B1%EB%B2%94.html">허성범</a>
-        </div>
-      </li>
-      <li class="shared-book">
-        <div class="sb-main">
-          <a class="sb-cover-link" href="https://www.aladin.co.kr/shop/wproduct.aspx?ItemId=338537229" rel="nofollow noopener noreferrer" target="_blank" aria-label="침묵의 봄 알라딘에서 보기"><img src="https://image.aladin.co.kr/product/33853/72/cover500/8962632721_1.jpg" alt="침묵의 봄 표지" width="60" height="85" loading="lazy" style="object-fit:cover"></a>
-          <div class="sb-meta">
-            <div class="sb-title"><a href="https://www.aladin.co.kr/shop/wproduct.aspx?ItemId=338537229" rel="nofollow noopener noreferrer" target="_blank">침묵의 봄</a></div>
-            <div class="sb-author">레이첼 카슨</div>
-          </div>
-        </div>
-        <div class="sb-celebs">
-          <span class="sb-celebs-label">함께 추천한 셀럽 1명:</span>
-          <a class="sb-celeb-chip" href="https://favorbook.co.kr/share/%EA%B9%80%EC%8B%A0%EB%A1%9D.html">김신록</a>
-        </div>
-      </li>
-      <li class="shared-book">
-        <div class="sb-main">
-          <a class="sb-cover-link" href="https://www.aladin.co.kr/shop/wproduct.aspx?ItemId=540789&amp;partner=openAPI&amp;start=api" rel="nofollow noopener noreferrer" target="_blank" aria-label="코스모스 알라딘에서 보기"><img src="https://image.aladin.co.kr/product/54/7/cover500/898371154x_2.jpg" alt="코스모스 표지" width="60" height="85" loading="lazy" style="object-fit:cover"></a>
-          <div class="sb-meta">
-            <div class="sb-title"><a href="https://www.aladin.co.kr/shop/wproduct.aspx?ItemId=540789&amp;partner=openAPI&amp;start=api" rel="nofollow noopener noreferrer" target="_blank">코스모스</a></div>
-            <div class="sb-author">칼 세이건</div>
-          </div>
-        </div>
-        <div class="sb-celebs">
-          <span class="sb-celebs-label">함께 추천한 셀럽 2명:</span>
-          <a class="sb-celeb-chip" href="https://favorbook.co.kr/share/%EB%85%B8%EC%A0%9C.html">노제</a>
-          <a class="sb-celeb-chip" href="https://favorbook.co.kr/share/%EB%B0%95%EC%A7%80%ED%9B%88.html">박지훈</a>
-        </div>
-      </li>
-      <li class="shared-book">
-        <div class="sb-main">
-          <a class="sb-cover-link" href="https://www.aladin.co.kr/shop/wproduct.aspx?ItemId=345384332&amp;partner=openAPI&amp;start=api" rel="nofollow noopener noreferrer" target="_blank" aria-label="팩트풀니스 알라딘에서 보기"><img src="https://image.aladin.co.kr/product/34538/43/cover500/8934933879_1.jpg" alt="팩트풀니스 표지" width="60" height="85" loading="lazy" style="object-fit:cover"></a>
-          <div class="sb-meta">
-            <div class="sb-title"><a href="https://www.aladin.co.kr/shop/wproduct.aspx?ItemId=345384332&amp;partner=openAPI&amp;start=api" rel="nofollow noopener noreferrer" target="_blank">팩트풀니스</a></div>
-            <div class="sb-author">한스 로슬링, 올라 로슬링, 안나 로슬링 뢴룬드</div>
-          </div>
-        </div>
-        <div class="sb-celebs">
-          <span class="sb-celebs-label">함께 추천한 셀럽 1명:</span>
-          <a class="sb-celeb-chip" href="https://favorbook.co.kr/share/%EC%B5%9C%EA%B0%95%EC%B0%BD%EB%AF%BC.html">최강창민</a>
-        </div>
-      </li>
-      <li class="shared-book">
-        <div class="sb-main">
-          <a class="sb-cover-link" href="https://www.aladin.co.kr/shop/wproduct.aspx?ItemId=3420907&amp;partner=openAPI&amp;start=api" rel="nofollow noopener noreferrer" target="_blank" aria-label="화씨 451 알라딘에서 보기"><img src="https://image.aladin.co.kr/product/342/9/cover500/8982739084_1.jpg" alt="화씨 451 표지" width="60" height="85" loading="lazy" style="object-fit:cover"></a>
-          <div class="sb-meta">
-            <div class="sb-title"><a href="https://www.aladin.co.kr/shop/wproduct.aspx?ItemId=3420907&amp;partner=openAPI&amp;start=api" rel="nofollow noopener noreferrer" target="_blank">화씨 451</a></div>
-            <div class="sb-author">레이 브래드버리</div>
-          </div>
-        </div>
-        <div class="sb-celebs">
-          <span class="sb-celebs-label">함께 추천한 셀럽 1명:</span>
-          <a class="sb-celeb-chip" href="https://favorbook.co.kr/share/%EC%97%98%EB%9D%BC%28%EB%AF%B8%EC%95%BC%EC%98%A4%29.html">엘라(미야오)</a>
-        </div>
-      </li>
-    </ul>
+    <h2>📚 페이커의 독서 리스트 (41권)</h2>
+    <p class="muted">14권은 다른 셀럽도 함께 추천한 책이에요. 카드 안에 함께 추천한 셀럽 이름이 표시됩니다.</p>
+    <ol class="reading-list">
+    <li class="rl-item">
+      <span class="rl-num">1</span>
+      <a class="rl-cover" href="https://www.aladin.co.kr/shop/wproduct.aspx?ItemId=4342463&amp;partner=openAPI&amp;start=api" rel="nofollow noopener noreferrer" target="_blank" aria-label="1Q84 알라딘에서 보기"><img src="https://image.aladin.co.kr/product/434/24/cover500/8954608647_3.jpg" alt="1Q84 표지" loading="lazy"></a>
+      <div class="rl-meta">
+        <div class="rl-title"><a href="https://www.aladin.co.kr/shop/wproduct.aspx?ItemId=4342463&amp;partner=openAPI&amp;start=api" rel="nofollow noopener noreferrer" target="_blank">1Q84</a></div>
+        <div class="rl-byline">무라카미 하루키 · 문학동네</div>
+      </div>
+    </li>
+    <li class="rl-item">
+      <span class="rl-num">2</span>
+      <a class="rl-cover" href="https://www.aladin.co.kr/shop/wproduct.aspx?ItemId=115091346&amp;partner=openAPI&amp;start=api" rel="nofollow noopener noreferrer" target="_blank" aria-label="감각의 미래 알라딘에서 보기"><img src="https://image.aladin.co.kr/product/11509/13/cover500/8965962277_1.jpg" alt="감각의 미래 표지" loading="lazy"></a>
+      <div class="rl-meta">
+        <div class="rl-title"><a href="https://www.aladin.co.kr/shop/wproduct.aspx?ItemId=115091346&amp;partner=openAPI&amp;start=api" rel="nofollow noopener noreferrer" target="_blank">감각의 미래</a></div>
+        <div class="rl-byline">카라 플라토니 · 흐름출판</div>
+        <a class="rl-source" href="https://theqoo.net/square/2116866085" rel="nofollow noopener noreferrer" target="_blank">📺 출처 보기</a>
+      </div>
+    </li>
+    <li class="rl-item">
+      <span class="rl-num">3</span>
+      <a class="rl-cover" href="https://www.aladin.co.kr/shop/wproduct.aspx?ItemId=371119291&amp;partner=openAPI&amp;start=api" rel="nofollow noopener noreferrer" target="_blank" aria-label="게임이론 알라딘에서 보기"><img src="https://image.aladin.co.kr/product/37111/92/cover500/k112030353_1.jpg" alt="게임이론 표지" loading="lazy"></a>
+      <div class="rl-meta">
+        <div class="rl-title"><a href="https://www.aladin.co.kr/shop/wproduct.aspx?ItemId=371119291&amp;partner=openAPI&amp;start=api" rel="nofollow noopener noreferrer" target="_blank">게임이론</a></div>
+        <div class="rl-byline">김영세 (지은이) · 박영사</div>
+        <a class="rl-source" href="https://theqoo.net/square/2116866085" rel="nofollow noopener noreferrer" target="_blank">📺 출처 보기</a>
+      </div>
+    </li>
+    <li class="rl-item">
+      <span class="rl-num">4</span>
+      <a class="rl-cover" href="https://www.aladin.co.kr/shop/wproduct.aspx?ItemId=2227980&amp;partner=openAPI&amp;start=api" rel="nofollow noopener noreferrer" target="_blank" aria-label="골든 슬럼버 알라딘에서 보기"><img src="https://image.aladin.co.kr/product/222/79/cover500/8901082810_3.jpg" alt="골든 슬럼버 표지" loading="lazy"></a>
+      <div class="rl-meta">
+        <div class="rl-title"><a href="https://www.aladin.co.kr/shop/wproduct.aspx?ItemId=2227980&amp;partner=openAPI&amp;start=api" rel="nofollow noopener noreferrer" target="_blank">골든 슬럼버</a></div>
+        <div class="rl-byline">이사카 고타로 · 웅진지식하우스</div>
+        <a class="rl-source" href="https://theqoo.net/square/2116866085" rel="nofollow noopener noreferrer" target="_blank">📺 출처 보기</a>
+      </div>
+    </li>
+    <li class="rl-item">
+      <span class="rl-num">5</span>
+      <a class="rl-cover" href="https://www.aladin.co.kr/shop/wproduct.aspx?ItemId=101158454&amp;partner=openAPI&amp;start=api" rel="nofollow noopener noreferrer" target="_blank" aria-label="국가란 무엇인가 알라딘에서 보기"><img src="https://image.aladin.co.kr/product/10115/84/cover500/8971998016_1.jpg" alt="국가란 무엇인가 표지" loading="lazy"></a>
+      <div class="rl-meta">
+        <div class="rl-title"><a href="https://www.aladin.co.kr/shop/wproduct.aspx?ItemId=101158454&amp;partner=openAPI&amp;start=api" rel="nofollow noopener noreferrer" target="_blank">국가란 무엇인가</a></div>
+        <div class="rl-byline">유시민 · 돌베개</div>
+        <a class="rl-source" href="https://theqoo.net/square/2116866085" rel="nofollow noopener noreferrer" target="_blank">📺 출처 보기</a>
+      </div>
+    </li>
+    <li class="rl-item">
+      <span class="rl-num">6</span>
+      <a class="rl-cover" href="https://www.aladin.co.kr/shop/wproduct.aspx?ItemId=355165726&amp;partner=openAPI&amp;start=api" rel="nofollow noopener noreferrer" target="_blank" aria-label="나는 나로 살기로 했다 알라딘에서 보기"><img src="https://image.aladin.co.kr/product/35516/57/cover500/k212036764_1.jpg" alt="나는 나로 살기로 했다 표지" loading="lazy"></a>
+      <div class="rl-meta">
+        <div class="rl-title"><a href="https://www.aladin.co.kr/shop/wproduct.aspx?ItemId=355165726&amp;partner=openAPI&amp;start=api" rel="nofollow noopener noreferrer" target="_blank">나는 나로 살기로 했다</a></div>
+        <div class="rl-byline">김수현 (지은이) · 클레이하우스</div>
+        <a class="rl-source" href="https://theqoo.net/square/2116866085" rel="nofollow noopener noreferrer" target="_blank">📺 출처 보기</a>
+      </div>
+      <div class="rl-shared"><span class="rl-shared-label">👥 함께 추천한 셀럽 2명:</span> <a class="rl-celeb-chip" href="https://favorbook.co.kr/share/%EB%A1%9C%EC%9A%B4.html">로운</a><a class="rl-celeb-chip" href="https://favorbook.co.kr/share/%EC%A0%95%EA%B5%AD%28BTS%29.html">정국(BTS)</a></div>
+    </li>
+    <li class="rl-item">
+      <span class="rl-num">7</span>
+      <a class="rl-cover" href="https://www.aladin.co.kr/shop/wproduct.aspx?ItemId=113801752&amp;partner=openAPI&amp;start=api" rel="nofollow noopener noreferrer" target="_blank" aria-label="나를 모르는 나에게 알라딘에서 보기"><img src="https://image.aladin.co.kr/product/11380/17/cover500/k332531901_1.jpg" alt="나를 모르는 나에게 표지" loading="lazy"></a>
+      <div class="rl-meta">
+        <div class="rl-title"><a href="https://www.aladin.co.kr/shop/wproduct.aspx?ItemId=113801752&amp;partner=openAPI&amp;start=api" rel="nofollow noopener noreferrer" target="_blank">나를 모르는 나에게</a></div>
+        <div class="rl-byline">하유진 · 책세상</div>
+        <a class="rl-source" href="https://theqoo.net/square/2116866085" rel="nofollow noopener noreferrer" target="_blank">📺 출처 보기</a>
+      </div>
+    </li>
+    <li class="rl-item">
+      <span class="rl-num">8</span>
+      <a class="rl-cover" href="https://www.aladin.co.kr/shop/wproduct.aspx?ItemId=307689982&amp;partner=openAPI&amp;start=api" rel="nofollow noopener noreferrer" target="_blank" aria-label="나미야 잡화점의 기적 알라딘에서 보기"><img src="https://image.aladin.co.kr/product/30768/99/cover500/k252830652_2.jpg" alt="나미야 잡화점의 기적 표지" loading="lazy"></a>
+      <div class="rl-meta">
+        <div class="rl-title"><a href="https://www.aladin.co.kr/shop/wproduct.aspx?ItemId=307689982&amp;partner=openAPI&amp;start=api" rel="nofollow noopener noreferrer" target="_blank">나미야 잡화점의 기적</a></div>
+        <div class="rl-byline">히가시노 게이고 · 현대문학</div>
+        <a class="rl-source" href="https://theqoo.net/square/2116866085" rel="nofollow noopener noreferrer" target="_blank">📺 출처 보기</a>
+      </div>
+      <div class="rl-shared"><span class="rl-shared-label">👥 함께 추천한 셀럽 4명:</span> <a class="rl-celeb-chip" href="https://favorbook.co.kr/share/%EA%B9%80%ED%83%9C%ED%95%98.html">김태하</a><a class="rl-celeb-chip" href="https://favorbook.co.kr/share/%EB%B0%95%EC%A7%80%ED%9B%88.html">박지훈</a><a class="rl-celeb-chip" href="https://favorbook.co.kr/share/%ED%95%98%EC%97%B0%EC%A3%BC.html">하연주</a><a class="rl-celeb-chip" href="https://favorbook.co.kr/share/%EB%B0%95%EC%84%B8%EC%99%84.html">박세완</a></div>
+    </li>
+    <li class="rl-item">
+      <span class="rl-num">9</span>
+      <a class="rl-cover" href="https://www.aladin.co.kr/shop/wproduct.aspx?ItemId=135389438&amp;partner=openAPI&amp;start=api" rel="nofollow noopener noreferrer" target="_blank" aria-label="날마다 천체 물리 알라딘에서 보기"><img src="https://image.aladin.co.kr/product/13538/94/cover500/8983717777_1.jpg" alt="날마다 천체 물리 표지" loading="lazy"></a>
+      <div class="rl-meta">
+        <div class="rl-title"><a href="https://www.aladin.co.kr/shop/wproduct.aspx?ItemId=135389438&amp;partner=openAPI&amp;start=api" rel="nofollow noopener noreferrer" target="_blank">날마다 천체 물리</a></div>
+        <div class="rl-byline">닐 디그래스 타이슨 · 사이언스북스</div>
+        <a class="rl-source" href="https://theqoo.net/square/2116866085" rel="nofollow noopener noreferrer" target="_blank">📺 출처 보기</a>
+      </div>
+    </li>
+    <li class="rl-item">
+      <span class="rl-num">10</span>
+      <a class="rl-cover" href="https://www.aladin.co.kr/shop/wproduct.aspx?ItemId=292691257" rel="nofollow noopener noreferrer" target="_blank" aria-label="내가 틀릴 수도 있습니다 알라딘에서 보기"><img src="https://image.aladin.co.kr/product/29269/12/cover500/k822837807_3.jpg" alt="내가 틀릴 수도 있습니다 표지" loading="lazy"></a>
+      <div class="rl-meta">
+        <div class="rl-title"><a href="https://www.aladin.co.kr/shop/wproduct.aspx?ItemId=292691257" rel="nofollow noopener noreferrer" target="_blank">내가 틀릴 수도 있습니다</a></div>
+        <div class="rl-byline">나티코 린데블라드 · 다산초당</div>
+        <a class="rl-source" href="https://www.chosun.com/politics/politics_general/2025/12/20/D6PIVQAP6ZAUVLIWADLS3MV4XE/?utm_source=naver&amp;utm_medium=referral&amp;utm_campaign=naver-news" rel="nofollow noopener noreferrer" target="_blank">📺 출처 보기</a>
+      </div>
+    </li>
+    <li class="rl-item">
+      <span class="rl-num">11</span>
+      <a class="rl-cover" href="https://www.aladin.co.kr/shop/wproduct.aspx?ItemId=311899364" rel="nofollow noopener noreferrer" target="_blank" aria-label="내면소통 알라딘에서 보기"><img src="https://image.aladin.co.kr/product/31189/93/cover500/s512831358_3.jpg" alt="내면소통 표지" loading="lazy"></a>
+      <div class="rl-meta">
+        <div class="rl-title"><a href="https://www.aladin.co.kr/shop/wproduct.aspx?ItemId=311899364" rel="nofollow noopener noreferrer" target="_blank">내면소통</a></div>
+        <div class="rl-byline">김주환 · 인플루엔셜</div>
+        <a class="rl-source" href="https://www.chosun.com/topclass/topclass_issue/2025/11/08/B7G3BLQY4ZEGFHI5YV7UVF2NYQ/" rel="nofollow noopener noreferrer" target="_blank">📺 출처 보기</a>
+      </div>
+    </li>
+    <li class="rl-item">
+      <span class="rl-num">12</span>
+      <a class="rl-cover" href="https://www.aladin.co.kr/shop/wproduct.aspx?ItemId=115614994&amp;partner=openAPI&amp;start=api" rel="nofollow noopener noreferrer" target="_blank" aria-label="노르웨이의 숲 알라딘에서 보기"><img src="https://image.aladin.co.kr/product/11561/49/cover500/8937434482_1.jpg" alt="노르웨이의 숲 표지" loading="lazy"></a>
+      <div class="rl-meta">
+        <div class="rl-title"><a href="https://www.aladin.co.kr/shop/wproduct.aspx?ItemId=115614994&amp;partner=openAPI&amp;start=api" rel="nofollow noopener noreferrer" target="_blank">노르웨이의 숲</a></div>
+        <div class="rl-byline">무라카미 하루키 · 민음사</div>
+        <a class="rl-source" href="https://theqoo.net/square/2116866085" rel="nofollow noopener noreferrer" target="_blank">📺 출처 보기</a>
+      </div>
+      <div class="rl-shared"><span class="rl-shared-label">👥 함께 추천한 셀럽 5명:</span> <a class="rl-celeb-chip" href="https://favorbook.co.kr/share/%EA%B0%80%EC%9B%90%28%EB%AF%B8%EC%95%BC%EC%98%A4%29.html">가원(미야오)</a><a class="rl-celeb-chip" href="https://favorbook.co.kr/share/%EA%B3%A0%EB%AF%BC%EC%8B%9C.html">고민시</a><a class="rl-celeb-chip" href="https://favorbook.co.kr/share/%EC%86%90%EC%A2%85%EC%9B%90.html">손종원</a><a class="rl-celeb-chip" href="https://favorbook.co.kr/share/%ED%97%88%EC%84%B1%EB%B2%94.html">허성범</a><a class="rl-celeb-chip" href="https://favorbook.co.kr/share/%EA%B9%80%EB%8F%84%EC%99%84.html">김도완</a></div>
+    </li>
+    <li class="rl-item">
+      <span class="rl-num">13</span>
+      <a class="rl-cover" href="https://www.aladin.co.kr/shop/wproduct.aspx?ItemId=174275034&amp;partner=openAPI&amp;start=api" rel="nofollow noopener noreferrer" target="_blank" aria-label="다산의 마지막 공부 알라딘에서 보기"><img src="https://image.aladin.co.kr/product/17427/50/cover500/s302534501_1.jpg" alt="다산의 마지막 공부 표지" loading="lazy"></a>
+      <div class="rl-meta">
+        <div class="rl-title"><a href="https://www.aladin.co.kr/shop/wproduct.aspx?ItemId=174275034&amp;partner=openAPI&amp;start=api" rel="nofollow noopener noreferrer" target="_blank">다산의 마지막 공부</a></div>
+        <div class="rl-byline">조윤제 · 청림출판</div>
+      </div>
+    </li>
+    <li class="rl-item">
+      <span class="rl-num">14</span>
+      <a class="rl-cover" href="https://www.aladin.co.kr/shop/wproduct.aspx?ItemId=105691833&amp;partner=openAPI&amp;start=api" rel="nofollow noopener noreferrer" target="_blank" aria-label="라프 코스터의 재미이론 알라딘에서 보기"><img src="https://image.aladin.co.kr/product/10569/18/cover500/k002530539_2.jpg" alt="라프 코스터의 재미이론 표지" loading="lazy"></a>
+      <div class="rl-meta">
+        <div class="rl-title"><a href="https://www.aladin.co.kr/shop/wproduct.aspx?ItemId=105691833&amp;partner=openAPI&amp;start=api" rel="nofollow noopener noreferrer" target="_blank">라프 코스터의 재미이론</a></div>
+        <div class="rl-byline">라프 코스터 (지은이), 유창석, 전유택 (옮긴이) · 길벗</div>
+        <a class="rl-source" href="https://theqoo.net/square/2116866085" rel="nofollow noopener noreferrer" target="_blank">📺 출처 보기</a>
+      </div>
+    </li>
+    <li class="rl-item">
+      <span class="rl-num">15</span>
+      <a class="rl-cover" href="https://www.aladin.co.kr/shop/wproduct.aspx?ItemId=72885569&amp;partner=openAPI&amp;start=api" rel="nofollow noopener noreferrer" target="_blank" aria-label="라플라스의 마녀 알라딘에서 보기"><img src="https://image.aladin.co.kr/product/7288/55/cover500/s422635497_1.jpg" alt="라플라스의 마녀 표지" loading="lazy"></a>
+      <div class="rl-meta">
+        <div class="rl-title"><a href="https://www.aladin.co.kr/shop/wproduct.aspx?ItemId=72885569&amp;partner=openAPI&amp;start=api" rel="nofollow noopener noreferrer" target="_blank">라플라스의 마녀</a></div>
+        <div class="rl-byline">히가시노 게이고 · 현대문학</div>
+        <a class="rl-source" href="https://theqoo.net/square/2116866085" rel="nofollow noopener noreferrer" target="_blank">📺 출처 보기</a>
+      </div>
+    </li>
+    <li class="rl-item">
+      <span class="rl-num">16</span>
+      <a class="rl-cover" href="https://www.aladin.co.kr/shop/wproduct.aspx?ItemId=56869333&amp;partner=openAPI&amp;start=api" rel="nofollow noopener noreferrer" target="_blank" aria-label="마션 알라딘에서 보기"><img src="https://image.aladin.co.kr/product/5686/93/cover500/8925556782_2.jpg" alt="마션 표지" loading="lazy"></a>
+      <div class="rl-meta">
+        <div class="rl-title"><a href="https://www.aladin.co.kr/shop/wproduct.aspx?ItemId=56869333&amp;partner=openAPI&amp;start=api" rel="nofollow noopener noreferrer" target="_blank">마션</a></div>
+        <div class="rl-byline">앤디 위어 · 알에이치코리아(RHK)</div>
+        <a class="rl-source" href="https://theqoo.net/square/2116866085" rel="nofollow noopener noreferrer" target="_blank">📺 출처 보기</a>
+      </div>
+    </li>
+    <li class="rl-item">
+      <span class="rl-num">17</span>
+      <a class="rl-cover" href="https://www.aladin.co.kr/shop/wproduct.aspx?ItemId=375389788&amp;partner=openAPI&amp;start=api" rel="nofollow noopener noreferrer" target="_blank" aria-label="망델브로가 들려주는 프랙털 이야기 알라딘에서 보기"><img src="https://image.aladin.co.kr/product/37538/97/cover500/8954453260_1.jpg" alt="망델브로가 들려주는 프랙털 이야기 표지" loading="lazy"></a>
+      <div class="rl-meta">
+        <div class="rl-title"><a href="https://www.aladin.co.kr/shop/wproduct.aspx?ItemId=375389788&amp;partner=openAPI&amp;start=api" rel="nofollow noopener noreferrer" target="_blank">망델브로가 들려주는 프랙털 이야기</a></div>
+        <div class="rl-byline">배수경 · 자음과모음</div>
+        <a class="rl-source" href="https://theqoo.net/square/2116866085" rel="nofollow noopener noreferrer" target="_blank">📺 출처 보기</a>
+      </div>
+    </li>
+    <li class="rl-item">
+      <span class="rl-num">18</span>
+      <a class="rl-cover" href="https://www.aladin.co.kr/shop/wproduct.aspx?ItemId=92577628&amp;partner=openAPI&amp;start=api" rel="nofollow noopener noreferrer" target="_blank" aria-label="모든 것을 기억하는 남자 알라딘에서 보기"><img src="https://image.aladin.co.kr/product/9257/76/cover500/k742535210_1.jpg" alt="모든 것을 기억하는 남자 표지" loading="lazy"></a>
+      <div class="rl-meta">
+        <div class="rl-title"><a href="https://www.aladin.co.kr/shop/wproduct.aspx?ItemId=92577628&amp;partner=openAPI&amp;start=api" rel="nofollow noopener noreferrer" target="_blank">모든 것을 기억하는 남자</a></div>
+        <div class="rl-byline">데이비드 발다치 · 북로드</div>
+        <a class="rl-source" href="https://theqoo.net/square/2116866085" rel="nofollow noopener noreferrer" target="_blank">📺 출처 보기</a>
+      </div>
+    </li>
+    <li class="rl-item">
+      <span class="rl-num">19</span>
+      <a class="rl-cover" href="https://www.aladin.co.kr/shop/wproduct.aspx?ItemId=314636155&amp;partner=openAPI&amp;start=api" rel="nofollow noopener noreferrer" target="_blank" aria-label="무례한 사람에게 웃으며 대처하는 법 알라딘에서 보기"><img src="https://image.aladin.co.kr/product/31463/61/cover500/k272832422_1.jpg" alt="무례한 사람에게 웃으며 대처하는 법 표지" loading="lazy"></a>
+      <div class="rl-meta">
+        <div class="rl-title"><a href="https://www.aladin.co.kr/shop/wproduct.aspx?ItemId=314636155&amp;partner=openAPI&amp;start=api" rel="nofollow noopener noreferrer" target="_blank">무례한 사람에게 웃으며 대처하는 법</a></div>
+        <div class="rl-byline">정문정 · 포레스트북스</div>
+        <a class="rl-source" href="https://theqoo.net/square/2116866085" rel="nofollow noopener noreferrer" target="_blank">📺 출처 보기</a>
+      </div>
+      <div class="rl-shared"><span class="rl-shared-label">👥 함께 추천한 셀럽 1명:</span> <a class="rl-celeb-chip" href="https://favorbook.co.kr/share/%EC%9E%A5%EC%9E%AC%EC%9D%B8.html">장재인</a></div>
+    </li>
+    <li class="rl-item">
+      <span class="rl-num">20</span>
+      <a class="rl-cover" href="https://www.aladin.co.kr/shop/wproduct.aspx?ItemId=332273361&amp;partner=openAPI&amp;start=api" rel="nofollow noopener noreferrer" target="_blank" aria-label="미라클모닝 확장판 알라딘에서 보기"><img src="https://image.aladin.co.kr/product/33227/33/cover500/k012937150_1.jpg" alt="미라클모닝 확장판 표지" loading="lazy"></a>
+      <div class="rl-meta">
+        <div class="rl-title"><a href="https://www.aladin.co.kr/shop/wproduct.aspx?ItemId=332273361&amp;partner=openAPI&amp;start=api" rel="nofollow noopener noreferrer" target="_blank">미라클모닝 확장판</a></div>
+        <div class="rl-byline">할 엘로드 · 한빛비즈</div>
+        <a class="rl-source" href="https://theqoo.net/square/2116866085" rel="nofollow noopener noreferrer" target="_blank">📺 출처 보기</a>
+      </div>
+    </li>
+    <li class="rl-item">
+      <span class="rl-num">21</span>
+      <a class="rl-cover" href="https://www.aladin.co.kr/shop/wproduct.aspx?ItemId=216792703&amp;partner=openAPI&amp;start=api" rel="nofollow noopener noreferrer" target="_blank" aria-label="소크라테스의 변명·크리톤·파이돈·향연 알라딘에서 보기"><img src="https://image.aladin.co.kr/product/21679/27/cover500/k252636705_1.jpg" alt="소크라테스의 변명·크리톤·파이돈·향연 표지" loading="lazy"></a>
+      <div class="rl-meta">
+        <div class="rl-title"><a href="https://www.aladin.co.kr/shop/wproduct.aspx?ItemId=216792703&amp;partner=openAPI&amp;start=api" rel="nofollow noopener noreferrer" target="_blank">소크라테스의 변명·크리톤·파이돈·향연</a></div>
+        <div class="rl-byline">플라톤 · 현대지성</div>
+        <a class="rl-source" href="https://theqoo.net/square/2116866085" rel="nofollow noopener noreferrer" target="_blank">📺 출처 보기</a>
+      </div>
+    </li>
+    <li class="rl-item">
+      <span class="rl-num">22</span>
+      <a class="rl-cover" href="https://www.aladin.co.kr/shop/wproduct.aspx?ItemId=178703465&amp;partner=openAPI&amp;start=api" rel="nofollow noopener noreferrer" target="_blank" aria-label="스탠퍼드식 최고의 피로회복법 알라딘에서 보기"><img src="https://image.aladin.co.kr/product/17870/34/cover500/k232534733_1.jpg" alt="스탠퍼드식 최고의 피로회복법 표지" loading="lazy"></a>
+      <div class="rl-meta">
+        <div class="rl-title"><a href="https://www.aladin.co.kr/shop/wproduct.aspx?ItemId=178703465&amp;partner=openAPI&amp;start=api" rel="nofollow noopener noreferrer" target="_blank">스탠퍼드식 최고의 피로회복법</a></div>
+        <div class="rl-byline">야마다 도모오 · 비타북스</div>
+        <a class="rl-source" href="https://theqoo.net/square/2116866085" rel="nofollow noopener noreferrer" target="_blank">📺 출처 보기</a>
+      </div>
+    </li>
+    <li class="rl-item">
+      <span class="rl-num">23</span>
+      <a class="rl-cover" href="https://www.aladin.co.kr/shop/wproduct.aspx?ItemId=120057939&amp;partner=openAPI&amp;start=api" rel="nofollow noopener noreferrer" target="_blank" aria-label="신경 끄기의 기술 알라딘에서 보기"><img src="https://image.aladin.co.kr/product/12005/79/cover500/8901219948_1.jpg" alt="신경 끄기의 기술 표지" loading="lazy"></a>
+      <div class="rl-meta">
+        <div class="rl-title"><a href="https://www.aladin.co.kr/shop/wproduct.aspx?ItemId=120057939&amp;partner=openAPI&amp;start=api" rel="nofollow noopener noreferrer" target="_blank">신경 끄기의 기술</a></div>
+        <div class="rl-byline">마크 맨슨 · 갤리온</div>
+        <a class="rl-source" href="https://theqoo.net/square/2116866085" rel="nofollow noopener noreferrer" target="_blank">📺 출처 보기</a>
+      </div>
+      <div class="rl-shared"><span class="rl-shared-label">👥 함께 추천한 셀럽 5명:</span> <a class="rl-celeb-chip" href="https://favorbook.co.kr/share/%EB%A1%9C%EC%A0%9C%28%EB%B8%94%EB%9E%99%ED%95%91%ED%81%AC%29.html">로제(블랙핑크)</a><a class="rl-celeb-chip" href="https://favorbook.co.kr/share/%EB%A7%88%ED%8B%B4%28%EC%BD%94%EB%A5%B4%ED%8B%B0%EC%8A%A4%29.html">마틴(코르티스)</a><a class="rl-celeb-chip" href="https://favorbook.co.kr/share/%EC%A0%95%ED%95%B4%EC%9D%B8.html">정해인</a><a class="rl-celeb-chip" href="https://favorbook.co.kr/share/%EC%A3%BC%ED%9B%88%28%EC%BD%94%EB%A5%B4%ED%8B%B0%EC%8A%A4%29.html">주훈(코르티스)</a><a class="rl-celeb-chip" href="https://favorbook.co.kr/share/%EC%86%8C%EC%9C%A0.html">소유</a></div>
+    </li>
+    <li class="rl-item">
+      <span class="rl-num">24</span>
+      <a class="rl-cover" href="https://www.aladin.co.kr/shop/wproduct.aspx?ItemId=240184371&amp;partner=openAPI&amp;start=api" rel="nofollow noopener noreferrer" target="_blank" aria-label="아인슈타인이 괴델과 함께 걸을 때 알라딘에서 보기"><img src="https://image.aladin.co.kr/product/24018/43/cover500/k892639416_2.jpg" alt="아인슈타인이 괴델과 함께 걸을 때 표지" loading="lazy"></a>
+      <div class="rl-meta">
+        <div class="rl-title"><a href="https://www.aladin.co.kr/shop/wproduct.aspx?ItemId=240184371&amp;partner=openAPI&amp;start=api" rel="nofollow noopener noreferrer" target="_blank">아인슈타인이 괴델과 함께 걸을 때</a></div>
+        <div class="rl-byline">짐 홀트 · 소소의책</div>
+        <a class="rl-source" href="https://theqoo.net/square/2116866085" rel="nofollow noopener noreferrer" target="_blank">📺 출처 보기</a>
+      </div>
+    </li>
+    <li class="rl-item">
+      <span class="rl-num">25</span>
+      <a class="rl-cover" href="https://www.aladin.co.kr/shop/wproduct.aspx?ItemId=134947105&amp;partner=openAPI&amp;start=api" rel="nofollow noopener noreferrer" target="_blank" aria-label="우울할 땐 뇌 과학 알라딘에서 보기"><img src="https://image.aladin.co.kr/product/13494/71/cover500/k052532504_2.jpg" alt="우울할 땐 뇌 과학 표지" loading="lazy"></a>
+      <div class="rl-meta">
+        <div class="rl-title"><a href="https://www.aladin.co.kr/shop/wproduct.aspx?ItemId=134947105&amp;partner=openAPI&amp;start=api" rel="nofollow noopener noreferrer" target="_blank">우울할 땐 뇌 과학</a></div>
+        <div class="rl-byline">앨릭스 코브 · 심심</div>
+      </div>
+    </li>
+    <li class="rl-item">
+      <span class="rl-num">26</span>
+      <a class="rl-cover" href="https://www.aladin.co.kr/shop/wproduct.aspx?ItemId=570453&amp;partner=openAPI&amp;start=api" rel="nofollow noopener noreferrer" target="_blank" aria-label="우주의 구조 알라딘에서 보기"><img src="https://image.aladin.co.kr/product/57/4/cover500/8988907736_2.jpg" alt="우주의 구조 표지" loading="lazy"></a>
+      <div class="rl-meta">
+        <div class="rl-title"><a href="https://www.aladin.co.kr/shop/wproduct.aspx?ItemId=570453&amp;partner=openAPI&amp;start=api" rel="nofollow noopener noreferrer" target="_blank">우주의 구조</a></div>
+        <div class="rl-byline">브라이언 그린 · 승산</div>
+        <a class="rl-source" href="https://theqoo.net/square/2116866085" rel="nofollow noopener noreferrer" target="_blank">📺 출처 보기</a>
+      </div>
+      <div class="rl-shared"><span class="rl-shared-label">👥 함께 추천한 셀럽 1명:</span> <a class="rl-celeb-chip" href="https://favorbook.co.kr/share/%EC%9D%B4%EC%A7%80%EC%95%84.html">이지아</a></div>
+    </li>
+    <li class="rl-item">
+      <span class="rl-num">27</span>
+      <a class="rl-cover" href="https://www.aladin.co.kr/shop/wproduct.aspx?ItemId=12840843" rel="nofollow noopener noreferrer" target="_blank" aria-label="월든 알라딘에서 보기"><img src="https://image.aladin.co.kr/product/1284/8/cover500/8956605416_3.jpg" alt="월든 표지" loading="lazy"></a>
+      <div class="rl-meta">
+        <div class="rl-title"><a href="https://www.aladin.co.kr/shop/wproduct.aspx?ItemId=12840843" rel="nofollow noopener noreferrer" target="_blank">월든</a></div>
+        <div class="rl-byline">헨리 데이비드 소로 · 은행나무</div>
+      </div>
+      <div class="rl-shared"><span class="rl-shared-label">👥 함께 추천한 셀럽 1명:</span> <a class="rl-celeb-chip" href="https://favorbook.co.kr/share/%EB%85%B8%EC%A0%9C.html">노제</a></div>
+    </li>
+    <li class="rl-item">
+      <span class="rl-num">28</span>
+      <a class="rl-cover" href="https://www.aladin.co.kr/shop/wproduct.aspx?ItemId=48988418" rel="nofollow noopener noreferrer" target="_blank" aria-label="이기적 유전자 알라딘에서 보기"><img src="https://image.aladin.co.kr/product/17048/25/cover500/8932473900_1.jpg" alt="이기적 유전자 표지" loading="lazy"></a>
+      <div class="rl-meta">
+        <div class="rl-title"><a href="https://www.aladin.co.kr/shop/wproduct.aspx?ItemId=48988418" rel="nofollow noopener noreferrer" target="_blank">이기적 유전자</a></div>
+        <div class="rl-byline">리처드 도킨스 · 을유문화사</div>
+        <a class="rl-source" href="https://www.chosun.com/topclass/topclass_issue/2025/11/08/B7G3BLQY4ZEGFHI5YV7UVF2NYQ/" rel="nofollow noopener noreferrer" target="_blank">📺 출처 보기</a>
+      </div>
+      <div class="rl-shared"><span class="rl-shared-label">👥 함께 추천한 셀럽 1명:</span> <a class="rl-celeb-chip" href="https://favorbook.co.kr/share/%EC%97%84%EC%A7%80%EC%9B%90.html">엄지원</a></div>
+    </li>
+    <li class="rl-item">
+      <span class="rl-num">29</span>
+      <a class="rl-cover" href="https://www.aladin.co.kr/shop/wproduct.aspx?ItemId=343492328&amp;partner=openAPI&amp;start=api" rel="nofollow noopener noreferrer" target="_blank" aria-label="잠 알라딘에서 보기"><img src="https://image.aladin.co.kr/product/34349/23/cover500/8932924538_1.jpg" alt="잠 표지" loading="lazy"></a>
+      <div class="rl-meta">
+        <div class="rl-title"><a href="https://www.aladin.co.kr/shop/wproduct.aspx?ItemId=343492328&amp;partner=openAPI&amp;start=api" rel="nofollow noopener noreferrer" target="_blank">잠</a></div>
+        <div class="rl-byline">베르나르 베르베르 (지은이), 전미연 (옮긴이) · 열린책들</div>
+        <a class="rl-source" href="https://theqoo.net/square/2116866085" rel="nofollow noopener noreferrer" target="_blank">📺 출처 보기</a>
+      </div>
+      <div class="rl-shared"><span class="rl-shared-label">👥 함께 추천한 셀럽 1명:</span> <a class="rl-celeb-chip" href="https://favorbook.co.kr/share/%EC%84%A4%ED%98%84.html">설현</a></div>
+    </li>
+    <li class="rl-item">
+      <span class="rl-num">30</span>
+      <a class="rl-cover" href="https://www.aladin.co.kr/shop/wproduct.aspx?ItemId=48988418" rel="nofollow noopener noreferrer" target="_blank" aria-label="정의란 무엇인가 알라딘에서 보기"><img src="https://image.aladin.co.kr/product/4898/84/cover500/s812035947_1.jpg" alt="정의란 무엇인가 표지" loading="lazy"></a>
+      <div class="rl-meta">
+        <div class="rl-title"><a href="https://www.aladin.co.kr/shop/wproduct.aspx?ItemId=48988418" rel="nofollow noopener noreferrer" target="_blank">정의란 무엇인가</a></div>
+        <div class="rl-byline">마이클 샌델 · 와이즈베리</div>
+        <a class="rl-source" href="https://www.chosun.com/topclass/topclass_issue/2025/11/08/B7G3BLQY4ZEGFHI5YV7UVF2NYQ/" rel="nofollow noopener noreferrer" target="_blank">📺 출처 보기</a>
+      </div>
+      <div class="rl-shared"><span class="rl-shared-label">👥 함께 추천한 셀럽 2명:</span> <a class="rl-celeb-chip" href="https://favorbook.co.kr/share/%ED%82%A4%EB%85%B8%28%ED%8E%9C%ED%83%80%EA%B3%A4%29.html">키노(펜타곤)</a><a class="rl-celeb-chip" href="https://favorbook.co.kr/share/%ED%97%88%EC%84%B1%EB%B2%94.html">허성범</a></div>
+    </li>
+    <li class="rl-item">
+      <span class="rl-num">31</span>
+      <a class="rl-cover" href="https://www.aladin.co.kr/shop/wproduct.aspx?ItemId=135080640&amp;partner=openAPI&amp;start=api" rel="nofollow noopener noreferrer" target="_blank" aria-label="죄의 목소리 알라딘에서 보기"><img src="https://image.aladin.co.kr/product/13508/6/cover500/k612532605_1.jpg" alt="죄의 목소리 표지" loading="lazy"></a>
+      <div class="rl-meta">
+        <div class="rl-title"><a href="https://www.aladin.co.kr/shop/wproduct.aspx?ItemId=135080640&amp;partner=openAPI&amp;start=api" rel="nofollow noopener noreferrer" target="_blank">죄의 목소리</a></div>
+        <div class="rl-byline">시오타 타케시 · 비앤엘(BNL)</div>
+      </div>
+    </li>
+    <li class="rl-item">
+      <span class="rl-num">32</span>
+      <a class="rl-cover" href="https://www.aladin.co.kr/shop/wproduct.aspx?ItemId=20004432&amp;partner=openAPI&amp;start=api" rel="nofollow noopener noreferrer" target="_blank" aria-label="지금 시작하는 인문학 알라딘에서 보기"><img src="https://image.aladin.co.kr/product/2000/44/cover500/8998015013_1.jpg" alt="지금 시작하는 인문학 표지" loading="lazy"></a>
+      <div class="rl-meta">
+        <div class="rl-title"><a href="https://www.aladin.co.kr/shop/wproduct.aspx?ItemId=20004432&amp;partner=openAPI&amp;start=api" rel="nofollow noopener noreferrer" target="_blank">지금 시작하는 인문학</a></div>
+        <div class="rl-byline">주현성 · 더좋은책</div>
+        <a class="rl-source" href="https://theqoo.net/square/2116866085" rel="nofollow noopener noreferrer" target="_blank">📺 출처 보기</a>
+      </div>
+    </li>
+    <li class="rl-item">
+      <span class="rl-num">33</span>
+      <a class="rl-cover" href="https://www.aladin.co.kr/shop/wproduct.aspx?ItemId=219841523&amp;partner=openAPI&amp;start=api" rel="nofollow noopener noreferrer" target="_blank" aria-label="지적 대화를 위한 넓고 얕은 지식 : 제로 편 알라딘에서 보기"><img src="https://image.aladin.co.kr/product/21984/15/cover500/s612035274_1.jpg" alt="지적 대화를 위한 넓고 얕은 지식 : 제로 편 표지" loading="lazy"></a>
+      <div class="rl-meta">
+        <div class="rl-title"><a href="https://www.aladin.co.kr/shop/wproduct.aspx?ItemId=219841523&amp;partner=openAPI&amp;start=api" rel="nofollow noopener noreferrer" target="_blank">지적 대화를 위한 넓고 얕은 지식 : 제로 편</a></div>
+        <div class="rl-byline">채사장 · 웨일북</div>
+        <a class="rl-source" href="https://theqoo.net/square/2116866085" rel="nofollow noopener noreferrer" target="_blank">📺 출처 보기</a>
+      </div>
+    </li>
+    <li class="rl-item">
+      <span class="rl-num">34</span>
+      <a class="rl-cover" href="https://www.aladin.co.kr/shop/wproduct.aspx?ItemId=92772351&amp;partner=openAPI&amp;start=api" rel="nofollow noopener noreferrer" target="_blank" aria-label="처음 만나는 뇌과학 이야기 알라딘에서 보기"><img src="https://image.aladin.co.kr/product/9277/23/cover500/k892535418_1.jpg" alt="처음 만나는 뇌과학 이야기 표지" loading="lazy"></a>
+      <div class="rl-meta">
+        <div class="rl-title"><a href="https://www.aladin.co.kr/shop/wproduct.aspx?ItemId=92772351&amp;partner=openAPI&amp;start=api" rel="nofollow noopener noreferrer" target="_blank">처음 만나는 뇌과학 이야기</a></div>
+        <div class="rl-byline">양은우 · 카시오페아</div>
+        <a class="rl-source" href="https://theqoo.net/square/2116866085" rel="nofollow noopener noreferrer" target="_blank">📺 출처 보기</a>
+      </div>
+    </li>
+    <li class="rl-item">
+      <span class="rl-num">35</span>
+      <a class="rl-cover" href="https://www.aladin.co.kr/shop/wproduct.aspx?ItemId=338537229" rel="nofollow noopener noreferrer" target="_blank" aria-label="침묵의 봄 알라딘에서 보기"><img src="https://image.aladin.co.kr/product/33853/72/cover500/8962632721_1.jpg" alt="침묵의 봄 표지" loading="lazy"></a>
+      <div class="rl-meta">
+        <div class="rl-title"><a href="https://www.aladin.co.kr/shop/wproduct.aspx?ItemId=338537229" rel="nofollow noopener noreferrer" target="_blank">침묵의 봄</a></div>
+        <div class="rl-byline">레이첼 카슨 · 에코리브르</div>
+      </div>
+      <div class="rl-shared"><span class="rl-shared-label">👥 함께 추천한 셀럽 1명:</span> <a class="rl-celeb-chip" href="https://favorbook.co.kr/share/%EA%B9%80%EC%8B%A0%EB%A1%9D.html">김신록</a></div>
+    </li>
+    <li class="rl-item">
+      <span class="rl-num">36</span>
+      <a class="rl-cover" href="https://www.aladin.co.kr/shop/wproduct.aspx?ItemId=540789&amp;partner=openAPI&amp;start=api" rel="nofollow noopener noreferrer" target="_blank" aria-label="코스모스 알라딘에서 보기"><img src="https://image.aladin.co.kr/product/54/7/cover500/898371154x_2.jpg" alt="코스모스 표지" loading="lazy"></a>
+      <div class="rl-meta">
+        <div class="rl-title"><a href="https://www.aladin.co.kr/shop/wproduct.aspx?ItemId=540789&amp;partner=openAPI&amp;start=api" rel="nofollow noopener noreferrer" target="_blank">코스모스</a></div>
+        <div class="rl-byline">칼 세이건 · 사이언스북스</div>
+        <a class="rl-source" href="https://theqoo.net/square/2116866085" rel="nofollow noopener noreferrer" target="_blank">📺 출처 보기</a>
+      </div>
+      <div class="rl-shared"><span class="rl-shared-label">👥 함께 추천한 셀럽 2명:</span> <a class="rl-celeb-chip" href="https://favorbook.co.kr/share/%EB%85%B8%EC%A0%9C.html">노제</a><a class="rl-celeb-chip" href="https://favorbook.co.kr/share/%EB%B0%95%EC%A7%80%ED%9B%88.html">박지훈</a></div>
+    </li>
+    <li class="rl-item">
+      <span class="rl-num">37</span>
+      <a class="rl-cover" href="https://www.aladin.co.kr/shop/wproduct.aspx?ItemId=74921141&amp;partner=openAPI&amp;start=api" rel="nofollow noopener noreferrer" target="_blank" aria-label="틀리지 않는 법 알라딘에서 보기"><img src="https://image.aladin.co.kr/product/7492/11/cover500/8932917655_1.jpg" alt="틀리지 않는 법 표지" loading="lazy"></a>
+      <div class="rl-meta">
+        <div class="rl-title"><a href="https://www.aladin.co.kr/shop/wproduct.aspx?ItemId=74921141&amp;partner=openAPI&amp;start=api" rel="nofollow noopener noreferrer" target="_blank">틀리지 않는 법</a></div>
+        <div class="rl-byline">조던 엘렌버그 · 열린책들</div>
+        <a class="rl-source" href="https://theqoo.net/square/2116866085" rel="nofollow noopener noreferrer" target="_blank">📺 출처 보기</a>
+      </div>
+    </li>
+    <li class="rl-item">
+      <span class="rl-num">38</span>
+      <a class="rl-cover" href="https://www.aladin.co.kr/shop/wproduct.aspx?ItemId=345384332&amp;partner=openAPI&amp;start=api" rel="nofollow noopener noreferrer" target="_blank" aria-label="팩트풀니스 알라딘에서 보기"><img src="https://image.aladin.co.kr/product/34538/43/cover500/8934933879_1.jpg" alt="팩트풀니스 표지" loading="lazy"></a>
+      <div class="rl-meta">
+        <div class="rl-title"><a href="https://www.aladin.co.kr/shop/wproduct.aspx?ItemId=345384332&amp;partner=openAPI&amp;start=api" rel="nofollow noopener noreferrer" target="_blank">팩트풀니스</a></div>
+        <div class="rl-byline">한스 로슬링, 올라 로슬링, 안나 로슬링 뢴룬드 · 김영사</div>
+        <a class="rl-source" href="https://theqoo.net/square/2116866085" rel="nofollow noopener noreferrer" target="_blank">📺 출처 보기</a>
+      </div>
+      <div class="rl-shared"><span class="rl-shared-label">👥 함께 추천한 셀럽 1명:</span> <a class="rl-celeb-chip" href="https://favorbook.co.kr/share/%EC%B5%9C%EA%B0%95%EC%B0%BD%EB%AF%BC.html">최강창민</a></div>
+    </li>
+    <li class="rl-item">
+      <span class="rl-num">39</span>
+      <a class="rl-cover" href="https://www.aladin.co.kr/shop/wproduct.aspx?ItemId=316296278&amp;partner=openAPI&amp;start=api" rel="nofollow noopener noreferrer" target="_blank" aria-label="프로이트의 의자 알라딘에서 보기"><img src="https://image.aladin.co.kr/product/31629/62/cover500/k062833875_1.jpg" alt="프로이트의 의자 표지" loading="lazy"></a>
+      <div class="rl-meta">
+        <div class="rl-title"><a href="https://www.aladin.co.kr/shop/wproduct.aspx?ItemId=316296278&amp;partner=openAPI&amp;start=api" rel="nofollow noopener noreferrer" target="_blank">프로이트의 의자</a></div>
+        <div class="rl-byline">정도언 (지은이) · 지와인</div>
+        <a class="rl-source" href="https://theqoo.net/square/2116866085" rel="nofollow noopener noreferrer" target="_blank">📺 출처 보기</a>
+      </div>
+    </li>
+    <li class="rl-item">
+      <span class="rl-num">40</span>
+      <a class="rl-cover" href="https://www.aladin.co.kr/shop/wproduct.aspx?ItemId=238629446&amp;partner=openAPI&amp;start=api" rel="nofollow noopener noreferrer" target="_blank" aria-label="하쿠바산장 살인사건 알라딘에서 보기"><img src="https://image.aladin.co.kr/product/23862/94/cover500/8925569132_1.jpg" alt="하쿠바산장 살인사건 표지" loading="lazy"></a>
+      <div class="rl-meta">
+        <div class="rl-title"><a href="https://www.aladin.co.kr/shop/wproduct.aspx?ItemId=238629446&amp;partner=openAPI&amp;start=api" rel="nofollow noopener noreferrer" target="_blank">하쿠바산장 살인사건</a></div>
+        <div class="rl-byline">히가시노 게이고 · 알에이치코리아(RHK)</div>
+        <a class="rl-source" href="https://theqoo.net/square/2116866085" rel="nofollow noopener noreferrer" target="_blank">📺 출처 보기</a>
+      </div>
+    </li>
+    <li class="rl-item">
+      <span class="rl-num">41</span>
+      <a class="rl-cover" href="https://www.aladin.co.kr/shop/wproduct.aspx?ItemId=3420907&amp;partner=openAPI&amp;start=api" rel="nofollow noopener noreferrer" target="_blank" aria-label="화씨 451 알라딘에서 보기"><img src="https://image.aladin.co.kr/product/342/9/cover500/8982739084_1.jpg" alt="화씨 451 표지" loading="lazy"></a>
+      <div class="rl-meta">
+        <div class="rl-title"><a href="https://www.aladin.co.kr/shop/wproduct.aspx?ItemId=3420907&amp;partner=openAPI&amp;start=api" rel="nofollow noopener noreferrer" target="_blank">화씨 451</a></div>
+        <div class="rl-byline">레이 브래드버리 · 황금가지</div>
+        <a class="rl-source" href="https://theqoo.net/square/2116866085" rel="nofollow noopener noreferrer" target="_blank">📺 출처 보기</a>
+      </div>
+      <div class="rl-shared"><span class="rl-shared-label">👥 함께 추천한 셀럽 1명:</span> <a class="rl-celeb-chip" href="https://favorbook.co.kr/share/%EC%97%98%EB%9D%BC%28%EB%AF%B8%EC%95%BC%EC%98%A4%29.html">엘라(미야오)</a></div>
+    </li>
+    </ol>
   </section>
 
   <section>
-    <h2>페이커 인생책 · 책 추천 키워드</h2>
-    <p>페이커의 추천 도서에 가장 자주 등장한 작가는 히가시노 게이고 (3권), 무라카미 하루키 (2권), 카라 플라토니입니다. 페이커의 책 추천 리스트는 위 표에서 출처와 함께 확인할 수 있습니다.</p>
+    <h2>📝 페이커의 책 취향</h2>
+    <p>추천 도서에 가장 자주 등장한 작가는 히가시노 게이고 (3권), 무라카미 하루키 (2권), 카라 플라토니 등이에요.</p>
   </section>
 
   <section class="related-celebs">
-    <h2>🤝 페이커의 독서 취향과 겹치는 셀럽</h2>
-    <p class="muted">페이커의 추천 도서를 함께 추천한 다른 셀럽이에요. 숫자는 공통 도서 권수.</p>
+    <h2>🤝 책 취향이 겹치는 셀럽</h2>
+    <p class="muted">같은 책을 함께 추천한 다른 셀럽이에요. 숫자는 공통 도서 권수.</p>
     <div class="related-celeb-list">
       <a class="related-celeb" href="https://favorbook.co.kr/share/%EB%85%B8%EC%A0%9C.html" title="공통 도서: 월든 외 1권">노제 <span class="rc-count">2</span></a>
       <a class="related-celeb" href="https://favorbook.co.kr/share/%EB%B0%95%EC%A7%80%ED%9B%88.html" title="공통 도서: 나미야 잡화점의 기적 외 1권">박지훈 <span class="rc-count">2</span></a>
@@ -1113,7 +1252,7 @@
   </nav>
 
   <footer>
-    <p>페이커 독서 기록 정보는 유튜브·인터뷰·SNS 등 공개된 출처를 기반으로 정리되었습니다.</p>
+    <p>이 페이지의 독서 기록은 유튜브·인터뷰·SNS 등 공개된 출처를 기반으로 정리됐어요.</p>
   </footer>
 
 </body>
