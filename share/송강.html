@@ -154,19 +154,26 @@
     .bc-title { font-weight: 700; font-size: 13px; line-height: 1.3; margin-bottom: 4px; }
     .bc-author { font-size: 12px; color: #555; margin-bottom: 6px; }
     .bc-badge { display: inline-block; font-size: 11px; background: #fde047; border: 1px solid #000; padding: 1px 6px; font-weight: 700; }
-    .shared-book-list { list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 12px; }
-    .shared-book { background: #fff; border: 2px solid #000; box-shadow: 4px 4px 0 0 #000; padding: 12px; }
-    .sb-main { display: flex; gap: 12px; margin-bottom: 10px; }
-    .sb-cover-link { flex-shrink: 0; display: block; }
-    .sb-meta { flex: 1; min-width: 0; }
-    .sb-title { font-weight: 800; font-size: 15px; line-height: 1.3; margin-bottom: 4px; }
-    .sb-title a { color: #000; }
-    .sb-title a:hover { color: #2563eb; }
-    .sb-author { font-size: 13px; color: #555; }
-    .sb-celebs { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; padding-top: 10px; border-top: 1.5px dashed #ccc; }
-    .sb-celebs-label { font-size: 12px; color: #666; font-weight: 700; margin-right: 4px; }
-    .sb-celeb-chip { display: inline-block; padding: 3px 9px; background: #fff8e7; border: 1.5px solid #000; box-shadow: 1px 1px 0 0 #000; font-size: 12px; font-weight: 700; text-decoration: none; color: #000; transition: transform .1s, box-shadow .1s, background .1s; }
-    .sb-celeb-chip:hover { transform: translate(-1px,-1px); box-shadow: 2px 2px 0 0 #000; background: #fde047; text-decoration: none; }
+    .celeb-bio { margin: 4px 0 8px; padding: 6px 10px; background: #fff8e7; border-left: 4px solid #000; font-size: 14px; line-height: 1.45; color: #222; }
+    .reading-list { list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 14px; counter-reset: rl; }
+    .rl-item { position: relative; background: #fff; border: 2px solid #000; box-shadow: 4px 4px 0 0 #000; padding: 14px 14px 14px 52px; transition: transform .12s, box-shadow .12s; }
+    .rl-item:hover { transform: translate(-1px,-1px); box-shadow: 6px 6px 0 0 #000; }
+    .rl-num { position: absolute; left: -2px; top: -2px; width: 38px; height: 30px; display: flex; align-items: center; justify-content: center; background: #fde047; border: 2px solid #000; font-weight: 900; font-size: 14px; font-family: "Space Grotesk", sans-serif; }
+    .rl-item .rl-cover, .rl-item > .rl-cover { float: left; margin-right: 14px; width: 74px; height: 105px; display: block; flex-shrink: 0; border: 1.5px solid #000; box-shadow: 2px 2px 0 0 #000; background: #f4f4f0; overflow: hidden; }
+    .rl-cover img { width: 100%; height: 100%; object-fit: cover; display: block; }
+    .rl-no-cover { width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; font-size: 32px; }
+    .rl-meta { overflow: hidden; min-height: 105px; }
+    .rl-title { font-weight: 800; font-size: 16px; line-height: 1.3; margin-bottom: 4px; }
+    .rl-title a { color: #000; }
+    .rl-title a:hover { color: #2563eb; }
+    .rl-byline { font-size: 13px; color: #555; margin-bottom: 8px; line-height: 1.4; }
+    .rl-source { display: inline-block; font-size: 12px; padding: 3px 8px; background: #fff; border: 1.5px solid #000; box-shadow: 1px 1px 0 0 #000; text-decoration: none; color: #000; transition: transform .1s, box-shadow .1s, background .1s; }
+    .rl-source:hover { transform: translate(-1px,-1px); box-shadow: 2px 2px 0 0 #000; background: #a7f3d0; text-decoration: none; }
+    .rl-shared { clear: both; margin-top: 12px; padding-top: 10px; border-top: 1.5px dashed #ccc; display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
+    .rl-shared-label { font-size: 12px; color: #666; font-weight: 700; }
+    .rl-celeb-chip { display: inline-block; padding: 3px 9px; background: #fff8e7; border: 1.5px solid #000; box-shadow: 1px 1px 0 0 #000; font-size: 12px; font-weight: 700; text-decoration: none; color: #000; transition: transform .1s, box-shadow .1s, background .1s; }
+    .rl-celeb-chip:hover { transform: translate(-1px,-1px); box-shadow: 2px 2px 0 0 #000; background: #fde047; text-decoration: none; }
+    @media (max-width: 480px) { .rl-item { padding: 14px 12px 14px 46px; } .rl-num { width: 32px; height: 26px; font-size: 12px; } .rl-item .rl-cover, .rl-item > .rl-cover { width: 60px; height: 88px; margin-right: 10px; } .rl-meta { min-height: 88px; } .rl-title { font-size: 15px; } }
     .related-celebs { margin: 24px 0; }
     .related-celeb-list { display: flex; flex-wrap: wrap; gap: 8px; }
     .related-celeb { display: inline-flex; align-items: center; gap: 6px; padding: 6px 12px; background: #fff; border: 2px solid #000; box-shadow: 2px 2px 0 0 #000; font-size: 13px; font-weight: 700; text-decoration: none; color: #000; transition: transform .1s, box-shadow .1s; }
@@ -203,14 +210,27 @@
   </section>
 
   <section>
-    <h2>송강의 독서 리스트 전체 목록 (2권)</h2>
-    <table>
-      <thead><tr><th>#</th><th>표지</th><th>도서명</th><th>저자</th><th>출판사</th><th>출처</th></tr></thead>
-      <tbody>
-    <tr><td>1</td><td><a href="https://www.aladin.co.kr/shop/wproduct.aspx?ItemId=340361323&amp;partner=openAPI&amp;start=api" rel="nofollow noopener noreferrer" target="_blank" aria-label="어떤 하루 알라딘에서 보기"><img src="https://image.aladin.co.kr/product/34036/13/cover500/k232931266_1.jpg" alt="어떤 하루 표지" width="60" height="85" loading="lazy" style="object-fit:cover"></a></td><td><a href="https://www.aladin.co.kr/shop/wproduct.aspx?ItemId=340361323&amp;partner=openAPI&amp;start=api" rel="nofollow noopener noreferrer" target="_blank">어떤 하루</a></td><td>신준모 , 김진희</td><td>프롬북스</td><td class="src"><a href="https://www.allurekorea.com/2017/10/21/%ec%86%a1%ea%b0%95%ec%9d%b4-%eb%8b%a4%ea%b0%80%ec%99%94%eb%8b%a4/" rel="nofollow noopener noreferrer" target="_blank">출처 보기 →</a></td></tr>
-    <tr><td>2</td><td><a href="https://www.aladin.co.kr/shop/wproduct.aspx?ItemId=216182279&amp;partner=openAPI&amp;start=api" rel="nofollow noopener noreferrer" target="_blank" aria-label="집안의 타인 알라딘에서 보기"><img src="https://image.aladin.co.kr/product/21618/22/cover500/k272636595_3.jpg" alt="집안의 타인 표지" width="60" height="85" loading="lazy" style="object-fit:cover"></a></td><td><a href="https://www.aladin.co.kr/shop/wproduct.aspx?ItemId=216182279&amp;partner=openAPI&amp;start=api" rel="nofollow noopener noreferrer" target="_blank">집안의 타인</a></td><td>샤리 라피나</td><td>비앤엘(BNL)</td><td class="src"><a href="https://www.marieclairekorea.com/celebrity/2021/06/songgang-previous-interview/" rel="nofollow noopener noreferrer" target="_blank">출처 보기 →</a></td></tr>
-      </tbody>
-    </table>
+    <h2>송강의 독서 리스트 (2권)</h2>
+    <ol class="reading-list">
+    <li class="rl-item">
+      <span class="rl-num">1</span>
+      <a class="rl-cover" href="https://www.aladin.co.kr/shop/wproduct.aspx?ItemId=340361323&amp;partner=openAPI&amp;start=api" rel="nofollow noopener noreferrer" target="_blank" aria-label="어떤 하루 알라딘에서 보기"><img src="https://image.aladin.co.kr/product/34036/13/cover500/k232931266_1.jpg" alt="어떤 하루 표지" loading="lazy"></a>
+      <div class="rl-meta">
+        <div class="rl-title"><a href="https://www.aladin.co.kr/shop/wproduct.aspx?ItemId=340361323&amp;partner=openAPI&amp;start=api" rel="nofollow noopener noreferrer" target="_blank">어떤 하루</a></div>
+        <div class="rl-byline">신준모 , 김진희 · 프롬북스</div>
+        <a class="rl-source" href="https://www.allurekorea.com/2017/10/21/%ec%86%a1%ea%b0%95%ec%9d%b4-%eb%8b%a4%ea%b0%80%ec%99%94%eb%8b%a4/" rel="nofollow noopener noreferrer" target="_blank">📺 출처 보기</a>
+      </div>
+    </li>
+    <li class="rl-item">
+      <span class="rl-num">2</span>
+      <a class="rl-cover" href="https://www.aladin.co.kr/shop/wproduct.aspx?ItemId=216182279&amp;partner=openAPI&amp;start=api" rel="nofollow noopener noreferrer" target="_blank" aria-label="집안의 타인 알라딘에서 보기"><img src="https://image.aladin.co.kr/product/21618/22/cover500/k272636595_3.jpg" alt="집안의 타인 표지" loading="lazy"></a>
+      <div class="rl-meta">
+        <div class="rl-title"><a href="https://www.aladin.co.kr/shop/wproduct.aspx?ItemId=216182279&amp;partner=openAPI&amp;start=api" rel="nofollow noopener noreferrer" target="_blank">집안의 타인</a></div>
+        <div class="rl-byline">샤리 라피나 · 비앤엘(BNL)</div>
+        <a class="rl-source" href="https://www.marieclairekorea.com/celebrity/2021/06/songgang-previous-interview/" rel="nofollow noopener noreferrer" target="_blank">📺 출처 보기</a>
+      </div>
+    </li>
+    </ol>
   </section>
 
   <section>

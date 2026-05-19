@@ -322,19 +322,26 @@
     .bc-title { font-weight: 700; font-size: 13px; line-height: 1.3; margin-bottom: 4px; }
     .bc-author { font-size: 12px; color: #555; margin-bottom: 6px; }
     .bc-badge { display: inline-block; font-size: 11px; background: #fde047; border: 1px solid #000; padding: 1px 6px; font-weight: 700; }
-    .shared-book-list { list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 12px; }
-    .shared-book { background: #fff; border: 2px solid #000; box-shadow: 4px 4px 0 0 #000; padding: 12px; }
-    .sb-main { display: flex; gap: 12px; margin-bottom: 10px; }
-    .sb-cover-link { flex-shrink: 0; display: block; }
-    .sb-meta { flex: 1; min-width: 0; }
-    .sb-title { font-weight: 800; font-size: 15px; line-height: 1.3; margin-bottom: 4px; }
-    .sb-title a { color: #000; }
-    .sb-title a:hover { color: #2563eb; }
-    .sb-author { font-size: 13px; color: #555; }
-    .sb-celebs { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; padding-top: 10px; border-top: 1.5px dashed #ccc; }
-    .sb-celebs-label { font-size: 12px; color: #666; font-weight: 700; margin-right: 4px; }
-    .sb-celeb-chip { display: inline-block; padding: 3px 9px; background: #fff8e7; border: 1.5px solid #000; box-shadow: 1px 1px 0 0 #000; font-size: 12px; font-weight: 700; text-decoration: none; color: #000; transition: transform .1s, box-shadow .1s, background .1s; }
-    .sb-celeb-chip:hover { transform: translate(-1px,-1px); box-shadow: 2px 2px 0 0 #000; background: #fde047; text-decoration: none; }
+    .celeb-bio { margin: 4px 0 8px; padding: 6px 10px; background: #fff8e7; border-left: 4px solid #000; font-size: 14px; line-height: 1.45; color: #222; }
+    .reading-list { list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 14px; counter-reset: rl; }
+    .rl-item { position: relative; background: #fff; border: 2px solid #000; box-shadow: 4px 4px 0 0 #000; padding: 14px 14px 14px 52px; transition: transform .12s, box-shadow .12s; }
+    .rl-item:hover { transform: translate(-1px,-1px); box-shadow: 6px 6px 0 0 #000; }
+    .rl-num { position: absolute; left: -2px; top: -2px; width: 38px; height: 30px; display: flex; align-items: center; justify-content: center; background: #fde047; border: 2px solid #000; font-weight: 900; font-size: 14px; font-family: "Space Grotesk", sans-serif; }
+    .rl-item .rl-cover, .rl-item > .rl-cover { float: left; margin-right: 14px; width: 74px; height: 105px; display: block; flex-shrink: 0; border: 1.5px solid #000; box-shadow: 2px 2px 0 0 #000; background: #f4f4f0; overflow: hidden; }
+    .rl-cover img { width: 100%; height: 100%; object-fit: cover; display: block; }
+    .rl-no-cover { width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; font-size: 32px; }
+    .rl-meta { overflow: hidden; min-height: 105px; }
+    .rl-title { font-weight: 800; font-size: 16px; line-height: 1.3; margin-bottom: 4px; }
+    .rl-title a { color: #000; }
+    .rl-title a:hover { color: #2563eb; }
+    .rl-byline { font-size: 13px; color: #555; margin-bottom: 8px; line-height: 1.4; }
+    .rl-source { display: inline-block; font-size: 12px; padding: 3px 8px; background: #fff; border: 1.5px solid #000; box-shadow: 1px 1px 0 0 #000; text-decoration: none; color: #000; transition: transform .1s, box-shadow .1s, background .1s; }
+    .rl-source:hover { transform: translate(-1px,-1px); box-shadow: 2px 2px 0 0 #000; background: #a7f3d0; text-decoration: none; }
+    .rl-shared { clear: both; margin-top: 12px; padding-top: 10px; border-top: 1.5px dashed #ccc; display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
+    .rl-shared-label { font-size: 12px; color: #666; font-weight: 700; }
+    .rl-celeb-chip { display: inline-block; padding: 3px 9px; background: #fff8e7; border: 1.5px solid #000; box-shadow: 1px 1px 0 0 #000; font-size: 12px; font-weight: 700; text-decoration: none; color: #000; transition: transform .1s, box-shadow .1s, background .1s; }
+    .rl-celeb-chip:hover { transform: translate(-1px,-1px); box-shadow: 2px 2px 0 0 #000; background: #fde047; text-decoration: none; }
+    @media (max-width: 480px) { .rl-item { padding: 14px 12px 14px 46px; } .rl-num { width: 32px; height: 26px; font-size: 12px; } .rl-item .rl-cover, .rl-item > .rl-cover { width: 60px; height: 88px; margin-right: 10px; } .rl-meta { min-height: 88px; } .rl-title { font-size: 15px; } }
     .related-celebs { margin: 24px 0; }
     .related-celeb-list { display: flex; flex-wrap: wrap; gap: 8px; }
     .related-celeb { display: inline-flex; align-items: center; gap: 6px; padding: 6px 12px; background: #fff; border: 2px solid #000; box-shadow: 2px 2px 0 0 #000; font-size: 13px; font-weight: 700; text-decoration: none; color: #000; transition: transform .1s, box-shadow .1s; }
@@ -362,6 +369,7 @@
     </div>
     <div>
       <h1>이설 독서 기록 · 읽은 책 · 추천 책</h1>
+      <p class="celeb-bio">한국 배우. 영화 &#x27;허스토리&#x27;, &#x27;자기만의 방&#x27;, 드라마 &#x27;검법남녀&#x27;, &#x27;비밀의 숲 2&#x27; 등 출연.</p>
       <p style="margin:0;color:#666;font-size:14px">총 <strong>18권</strong>의 도서</p>
     </div>
   </header>
@@ -371,91 +379,167 @@
   </section>
 
   <section>
-    <h2>이설의 독서 리스트 전체 목록 (18권)</h2>
-    <table>
-      <thead><tr><th>#</th><th>표지</th><th>도서명</th><th>저자</th><th>출판사</th><th>출처</th></tr></thead>
-      <tbody>
-    <tr><td>1</td><td><a href="https://www.aladin.co.kr/shop/wproduct.aspx?ItemId=213543424&amp;partner=openAPI&amp;start=api" rel="nofollow noopener noreferrer" target="_blank" aria-label="겨울방학 알라딘에서 보기"><img src="https://image.aladin.co.kr/product/21354/34/cover500/893747977x_2.jpg" alt="겨울방학 표지" width="60" height="85" loading="lazy" style="object-fit:cover"></a></td><td><a href="https://www.aladin.co.kr/shop/wproduct.aspx?ItemId=213543424&amp;partner=openAPI&amp;start=api" rel="nofollow noopener noreferrer" target="_blank">겨울방학</a></td><td>최진영</td><td></td><td class="src"><a href="https://www.allurekorea.com/2021/07/27/book-with-love-%ec%9d%b4%ec%84%a4-2/?utm_source=naver&amp;utm_medium=partnership" rel="nofollow noopener noreferrer" target="_blank">출처 보기 →</a></td></tr>
-    <tr><td>2</td><td><a href="https://www.aladin.co.kr/shop/wproduct.aspx?ItemId=97913356&amp;partner=openAPI&amp;start=api" rel="nofollow noopener noreferrer" target="_blank" aria-label="날짜 없음 알라딘에서 보기"><img src="https://image.aladin.co.kr/product/9791/33/cover500/8937473143_1.jpg" alt="날짜 없음 표지" width="60" height="85" loading="lazy" style="object-fit:cover"></a></td><td><a href="https://www.aladin.co.kr/shop/wproduct.aspx?ItemId=97913356&amp;partner=openAPI&amp;start=api" rel="nofollow noopener noreferrer" target="_blank">날짜 없음</a></td><td>장은진</td><td>민음사</td><td class="src"><a href="https://sports.donga.com/ent/article/all/20200407/100537493/1" rel="nofollow noopener noreferrer" target="_blank">출처 보기 →</a></td></tr>
-    <tr><td>3</td><td><a href="https://www.aladin.co.kr/shop/wproduct.aspx?ItemId=350862747&amp;partner=openAPI&amp;start=api" rel="nofollow noopener noreferrer" target="_blank" aria-label="내가 되는 꿈 알라딘에서 보기"><img src="https://image.aladin.co.kr/product/35086/27/cover500/k812934498_1.jpg" alt="내가 되는 꿈 표지" width="60" height="85" loading="lazy" style="object-fit:cover"></a></td><td><a href="https://www.aladin.co.kr/shop/wproduct.aspx?ItemId=350862747&amp;partner=openAPI&amp;start=api" rel="nofollow noopener noreferrer" target="_blank">내가 되는 꿈</a></td><td>최진영</td><td></td><td class="src"><a href="https://www.allurekorea.com/2021/07/27/book-with-love-%ec%9d%b4%ec%84%a4-2/?utm_source=naver&amp;utm_medium=partnership" rel="nofollow noopener noreferrer" target="_blank">출처 보기 →</a></td></tr>
-    <tr><td>4</td><td><a href="https://www.aladin.co.kr/shop/wproduct.aspx?ItemId=253989088&amp;partner=openAPI&amp;start=api" rel="nofollow noopener noreferrer" target="_blank" aria-label="내일의 연인들 알라딘에서 보기"><img src="https://image.aladin.co.kr/product/25398/90/cover500/8954675379_1.jpg" alt="내일의 연인들 표지" width="60" height="85" loading="lazy" style="object-fit:cover"></a></td><td><a href="https://www.aladin.co.kr/shop/wproduct.aspx?ItemId=253989088&amp;partner=openAPI&amp;start=api" rel="nofollow noopener noreferrer" target="_blank">내일의 연인들</a></td><td></td><td></td><td class="src"><a href="https://www.allurekorea.com/2021/07/27/book-with-love-%ec%9d%b4%ec%84%a4-2/?utm_source=naver&amp;utm_medium=partnership" rel="nofollow noopener noreferrer" target="_blank">출처 보기 →</a></td></tr>
-    <tr><td>5</td><td><a href="https://www.aladin.co.kr/shop/wproduct.aspx?ItemId=255929552&amp;partner=openAPI&amp;start=api" rel="nofollow noopener noreferrer" target="_blank" aria-label="다시 올리브 알라딘에서 보기"><img src="https://image.aladin.co.kr/product/25592/95/cover500/8954675441_1.jpg" alt="다시 올리브 표지" width="60" height="85" loading="lazy" style="object-fit:cover"></a></td><td><a href="https://www.aladin.co.kr/shop/wproduct.aspx?ItemId=255929552&amp;partner=openAPI&amp;start=api" rel="nofollow noopener noreferrer" target="_blank">다시 올리브</a></td><td></td><td></td><td class="src"><a href="https://www.allurekorea.com/2021/07/27/book-with-love-%ec%9d%b4%ec%84%a4-2/?utm_source=naver&amp;utm_medium=partnership" rel="nofollow noopener noreferrer" target="_blank">출처 보기 →</a></td></tr>
-    <tr><td>6</td><td><a href="https://www.aladin.co.kr/shop/wproduct.aspx?ItemId=245127051&amp;partner=openAPI&amp;start=api" rel="nofollow noopener noreferrer" target="_blank" aria-label="달러구트 꿈 백화점 알라딘에서 보기"><img src="https://image.aladin.co.kr/product/24512/70/cover500/k392630952_2.jpg" alt="달러구트 꿈 백화점 표지" width="60" height="85" loading="lazy" style="object-fit:cover"></a></td><td><a href="https://www.aladin.co.kr/shop/wproduct.aspx?ItemId=245127051&amp;partner=openAPI&amp;start=api" rel="nofollow noopener noreferrer" target="_blank">달러구트 꿈 백화점</a></td><td></td><td></td><td class="src"><a href="https://www.allurekorea.com/2021/07/27/book-with-love-%ec%9d%b4%ec%84%a4-2/?utm_source=naver&amp;utm_medium=partnership" rel="nofollow noopener noreferrer" target="_blank">출처 보기 →</a></td></tr>
-    <tr><td>7</td><td><a href="https://www.aladin.co.kr/shop/wproduct.aspx?ItemId=269873776&amp;partner=openAPI&amp;start=api" rel="nofollow noopener noreferrer" target="_blank" aria-label="미드나잇 라이브러리 알라딘에서 보기"><img src="https://image.aladin.co.kr/product/26987/37/cover500/s622931315_1.jpg" alt="미드나잇 라이브러리 표지" width="60" height="85" loading="lazy" style="object-fit:cover"></a></td><td><a href="https://www.aladin.co.kr/shop/wproduct.aspx?ItemId=269873776&amp;partner=openAPI&amp;start=api" rel="nofollow noopener noreferrer" target="_blank">미드나잇 라이브러리</a></td><td></td><td></td><td class="src"><a href="https://www.allurekorea.com/2021/07/27/book-with-love-%ec%9d%b4%ec%84%a4-2/?utm_source=naver&amp;utm_medium=partnership" rel="nofollow noopener noreferrer" target="_blank">출처 보기 →</a></td></tr>
-    <tr><td>8</td><td><a href="https://www.aladin.co.kr/shop/wproduct.aspx?ItemId=237706048&amp;partner=openAPI&amp;start=api" rel="nofollow noopener noreferrer" target="_blank" aria-label="삐삐 언니는 조울의 사막을 건넜어 알라딘에서 보기"><img src="https://image.aladin.co.kr/product/23770/60/cover500/k712639965_1.jpg" alt="삐삐 언니는 조울의 사막을 건넜어 표지" width="60" height="85" loading="lazy" style="object-fit:cover"></a></td><td><a href="https://www.aladin.co.kr/shop/wproduct.aspx?ItemId=237706048&amp;partner=openAPI&amp;start=api" rel="nofollow noopener noreferrer" target="_blank">삐삐 언니는 조울의 사막을 건넜어</a></td><td></td><td></td><td class="src"><a href="https://www.allurekorea.com/2021/07/27/book-with-love-%ec%9d%b4%ec%84%a4-2/?utm_source=naver&amp;utm_medium=partnership" rel="nofollow noopener noreferrer" target="_blank">출처 보기 →</a></td></tr>
-    <tr><td>9</td><td><a href="https://www.aladin.co.kr/shop/wproduct.aspx?ItemId=337280683&amp;partner=openAPI&amp;start=api" rel="nofollow noopener noreferrer" target="_blank" aria-label="아가미 알라딘에서 보기"><img src="https://image.aladin.co.kr/product/33728/6/cover500/k282939544_1.jpg" alt="아가미 표지" width="60" height="85" loading="lazy" style="object-fit:cover"></a></td><td><a href="https://www.aladin.co.kr/shop/wproduct.aspx?ItemId=337280683&amp;partner=openAPI&amp;start=api" rel="nofollow noopener noreferrer" target="_blank">아가미</a></td><td>구병모</td><td></td><td class="src"><a href="https://www.allurekorea.com/2021/07/27/book-with-love-%ec%9d%b4%ec%84%a4-2/?utm_source=naver&amp;utm_medium=partnership" rel="nofollow noopener noreferrer" target="_blank">출처 보기 →</a></td></tr>
-    <tr><td>10</td><td><a href="https://www.aladin.co.kr/shop/wproduct.aspx?ItemId=8721225&amp;partner=openAPI&amp;start=api" rel="nofollow noopener noreferrer" target="_blank" aria-label="아주 오래된 농담 알라딘에서 보기"><img src="https://image.aladin.co.kr/product/872/12/cover500/8939206487_1.jpg" alt="아주 오래된 농담 표지" width="60" height="85" loading="lazy" style="object-fit:cover"></a></td><td><a href="https://www.aladin.co.kr/shop/wproduct.aspx?ItemId=8721225&amp;partner=openAPI&amp;start=api" rel="nofollow noopener noreferrer" target="_blank">아주 오래된 농담</a></td><td>박완서</td><td>실천문학사</td><td class="src"><a href="https://sports.donga.com/ent/article/all/20200407/100537493/1" rel="nofollow noopener noreferrer" target="_blank">출처 보기 →</a></td></tr>
-    <tr><td>11</td><td><a href="https://www.aladin.co.kr/shop/wproduct.aspx?ItemId=204202708&amp;partner=openAPI&amp;start=api" rel="nofollow noopener noreferrer" target="_blank" aria-label="엘리너 올리펀트는 완전 괜찮아 알라딘에서 보기"><img src="https://image.aladin.co.kr/product/20420/27/cover500/8954657478_2.jpg" alt="엘리너 올리펀트는 완전 괜찮아 표지" width="60" height="85" loading="lazy" style="object-fit:cover"></a></td><td><a href="https://www.aladin.co.kr/shop/wproduct.aspx?ItemId=204202708&amp;partner=openAPI&amp;start=api" rel="nofollow noopener noreferrer" target="_blank">엘리너 올리펀트는 완전 괜찮아</a></td><td></td><td></td><td class="src"><a href="https://www.allurekorea.com/2021/07/27/book-with-love-%ec%9d%b4%ec%84%a4-2/?utm_source=naver&amp;utm_medium=partnership" rel="nofollow noopener noreferrer" target="_blank">출처 보기 →</a></td></tr>
-    <tr><td>12</td><td><a href="https://www.aladin.co.kr/shop/wproduct.aspx?ItemId=204202708&amp;partner=openAPI&amp;start=api" rel="nofollow noopener noreferrer" target="_blank" aria-label="엘리너 올리펀트는 완전 괜찮아 알라딘에서 보기"><img src="https://image.aladin.co.kr/product/20420/27/cover500/8954657478_2.jpg" alt="엘리너 올리펀트는 완전 괜찮아 표지" width="60" height="85" loading="lazy" style="object-fit:cover"></a></td><td><a href="https://www.aladin.co.kr/shop/wproduct.aspx?ItemId=204202708&amp;partner=openAPI&amp;start=api" rel="nofollow noopener noreferrer" target="_blank">엘리너 올리펀트는 완전 괜찮아</a></td><td>게일 허니먼</td><td>문학동네</td><td class="src"><a href="https://sports.donga.com/ent/article/all/20200407/100537493/1" rel="nofollow noopener noreferrer" target="_blank">출처 보기 →</a></td></tr>
-    <tr><td>13</td><td><a href="https://www.aladin.co.kr/shop/wproduct.aspx?ItemId=244899880&amp;partner=openAPI&amp;start=api" rel="nofollow noopener noreferrer" target="_blank" aria-label="여름의 빌라 알라딘에서 보기"><img src="https://image.aladin.co.kr/product/24489/98/cover500/8954673104_1.jpg" alt="여름의 빌라 표지" width="60" height="85" loading="lazy" style="object-fit:cover"></a></td><td><a href="https://www.aladin.co.kr/shop/wproduct.aspx?ItemId=244899880&amp;partner=openAPI&amp;start=api" rel="nofollow noopener noreferrer" target="_blank">여름의 빌라</a></td><td></td><td></td><td class="src"><a href="https://www.allurekorea.com/2021/07/27/book-with-love-%ec%9d%b4%ec%84%a4-2/?utm_source=naver&amp;utm_medium=partnership" rel="nofollow noopener noreferrer" target="_blank">출처 보기 →</a></td></tr>
-    <tr><td>14</td><td><a href="https://www.aladin.co.kr/shop/wproduct.aspx?ItemId=97517868&amp;partner=openAPI&amp;start=api" rel="nofollow noopener noreferrer" target="_blank" aria-label="자기 앞의 생 알라딘에서 보기"><img src="https://image.aladin.co.kr/product/9751/78/cover500/8982816631_3.jpg" alt="자기 앞의 생 표지" width="60" height="85" loading="lazy" style="object-fit:cover"></a></td><td><a href="https://www.aladin.co.kr/shop/wproduct.aspx?ItemId=97517868&amp;partner=openAPI&amp;start=api" rel="nofollow noopener noreferrer" target="_blank">자기 앞의 생</a></td><td></td><td></td><td class="src"><a href="https://www.allurekorea.com/2021/07/27/book-with-love-%ec%9d%b4%ec%84%a4-2/?utm_source=naver&amp;utm_medium=partnership" rel="nofollow noopener noreferrer" target="_blank">출처 보기 →</a></td></tr>
-    <tr><td>15</td><td><a href="https://www.aladin.co.kr/shop/wproduct.aspx?ItemId=173785595&amp;partner=openAPI&amp;start=api" rel="nofollow noopener noreferrer" target="_blank" aria-label="친구들과의 대화 알라딘에서 보기"><img src="https://image.aladin.co.kr/product/17378/55/cover500/8932919313_1.jpg" alt="친구들과의 대화 표지" width="60" height="85" loading="lazy" style="object-fit:cover"></a></td><td><a href="https://www.aladin.co.kr/shop/wproduct.aspx?ItemId=173785595&amp;partner=openAPI&amp;start=api" rel="nofollow noopener noreferrer" target="_blank">친구들과의 대화</a></td><td>샐리 루니</td><td>열린책들</td><td class="src"><a href="https://www.harpersbazaar.co.kr/article/48242" rel="nofollow noopener noreferrer" target="_blank">출처 보기 →</a></td></tr>
-    <tr><td>16</td><td><a href="https://www.aladin.co.kr/shop/wproduct.aspx?ItemId=337280601&amp;partner=openAPI&amp;start=api" rel="nofollow noopener noreferrer" target="_blank" aria-label="파과 알라딘에서 보기"><img src="https://image.aladin.co.kr/product/33728/6/cover500/k312039010_3.jpg" alt="파과 표지" width="60" height="85" loading="lazy" style="object-fit:cover"></a></td><td><a href="https://www.aladin.co.kr/shop/wproduct.aspx?ItemId=337280601&amp;partner=openAPI&amp;start=api" rel="nofollow noopener noreferrer" target="_blank">파과</a></td><td>구병모</td><td></td><td class="src"><a href="https://www.allurekorea.com/2021/07/27/book-with-love-%ec%9d%b4%ec%84%a4-2/?utm_source=naver&amp;utm_medium=partnership" rel="nofollow noopener noreferrer" target="_blank">출처 보기 →</a></td></tr>
-    <tr><td>17</td><td><a href="https://www.aladin.co.kr/shop/wproduct.aspx?ItemId=269155104&amp;partner=openAPI&amp;start=api" rel="nofollow noopener noreferrer" target="_blank" aria-label="하늘은 어디에나 있어 알라딘에서 보기"><img src="https://image.aladin.co.kr/product/26915/51/cover500/8984374253_1.jpg" alt="하늘은 어디에나 있어 표지" width="60" height="85" loading="lazy" style="object-fit:cover"></a></td><td><a href="https://www.aladin.co.kr/shop/wproduct.aspx?ItemId=269155104&amp;partner=openAPI&amp;start=api" rel="nofollow noopener noreferrer" target="_blank">하늘은 어디에나 있어</a></td><td></td><td></td><td class="src"><a href="https://www.allurekorea.com/2021/07/27/book-with-love-%ec%9d%b4%ec%84%a4-2/?utm_source=naver&amp;utm_medium=partnership" rel="nofollow noopener noreferrer" target="_blank">출처 보기 →</a></td></tr>
-    <tr><td>18</td><td><a href="https://www.aladin.co.kr/shop/wproduct.aspx?ItemId=112811885&amp;partner=openAPI&amp;start=api" rel="nofollow noopener noreferrer" target="_blank" aria-label="해가 지는 곳으로 알라딘에서 보기"><img src="https://image.aladin.co.kr/product/11281/18/cover500/893747316x_1.jpg" alt="해가 지는 곳으로 표지" width="60" height="85" loading="lazy" style="object-fit:cover"></a></td><td><a href="https://www.aladin.co.kr/shop/wproduct.aspx?ItemId=112811885&amp;partner=openAPI&amp;start=api" rel="nofollow noopener noreferrer" target="_blank">해가 지는 곳으로</a></td><td>최진영</td><td>민음사</td><td class="src"><a href="https://sports.donga.com/ent/article/all/20200407/100537493/1" rel="nofollow noopener noreferrer" target="_blank">출처 보기 →</a></td></tr>
-      </tbody>
-    </table>
-  </section>
-
-  <section class="book-pages">
-    <h2>👥 이설과 다른 셀럽이 함께 추천한 책 (4권)</h2>
-    <p class="muted">2명 이상의 셀럽이 추천한 책과 함께 추천한 셀럽 명단이에요.</p>
-    <ul class="shared-book-list">
-      <li class="shared-book">
-        <div class="sb-main">
-          <a class="sb-cover-link" href="https://www.aladin.co.kr/shop/wproduct.aspx?ItemId=245127051&amp;partner=openAPI&amp;start=api" rel="nofollow noopener noreferrer" target="_blank" aria-label="달러구트 꿈 백화점 알라딘에서 보기"><img src="https://image.aladin.co.kr/product/24512/70/cover500/k392630952_2.jpg" alt="달러구트 꿈 백화점 표지" width="60" height="85" loading="lazy" style="object-fit:cover"></a>
-          <div class="sb-meta">
-            <div class="sb-title"><a href="https://www.aladin.co.kr/shop/wproduct.aspx?ItemId=245127051&amp;partner=openAPI&amp;start=api" rel="nofollow noopener noreferrer" target="_blank">달러구트 꿈 백화점</a></div>
-            <div class="sb-author"></div>
-          </div>
-        </div>
-        <div class="sb-celebs">
-          <span class="sb-celebs-label">함께 추천한 셀럽 1명:</span>
-          <a class="sb-celeb-chip" href="https://favorbook.co.kr/share/%EC%A7%80%EC%BD%94%28%EB%B8%94%EB%9D%BD%EB%B9%84%29.html">지코(블락비)</a>
-        </div>
-      </li>
-      <li class="shared-book">
-        <div class="sb-main">
-          <a class="sb-cover-link" href="https://www.aladin.co.kr/shop/wproduct.aspx?ItemId=337280683&amp;partner=openAPI&amp;start=api" rel="nofollow noopener noreferrer" target="_blank" aria-label="아가미 알라딘에서 보기"><img src="https://image.aladin.co.kr/product/33728/6/cover500/k282939544_1.jpg" alt="아가미 표지" width="60" height="85" loading="lazy" style="object-fit:cover"></a>
-          <div class="sb-meta">
-            <div class="sb-title"><a href="https://www.aladin.co.kr/shop/wproduct.aspx?ItemId=337280683&amp;partner=openAPI&amp;start=api" rel="nofollow noopener noreferrer" target="_blank">아가미</a></div>
-            <div class="sb-author">구병모</div>
-          </div>
-        </div>
-        <div class="sb-celebs">
-          <span class="sb-celebs-label">함께 추천한 셀럽 1명:</span>
-          <a class="sb-celeb-chip" href="https://favorbook.co.kr/share/%EB%82%98%EB%A6%B0%28%EB%AF%B8%EC%95%BC%EC%98%A4%29.html">나린(미야오)</a>
-        </div>
-      </li>
-      <li class="shared-book">
-        <div class="sb-main">
-          <a class="sb-cover-link" href="https://www.aladin.co.kr/shop/wproduct.aspx?ItemId=97517868&amp;partner=openAPI&amp;start=api" rel="nofollow noopener noreferrer" target="_blank" aria-label="자기 앞의 생 알라딘에서 보기"><img src="https://image.aladin.co.kr/product/9751/78/cover500/8982816631_3.jpg" alt="자기 앞의 생 표지" width="60" height="85" loading="lazy" style="object-fit:cover"></a>
-          <div class="sb-meta">
-            <div class="sb-title"><a href="https://www.aladin.co.kr/shop/wproduct.aspx?ItemId=97517868&amp;partner=openAPI&amp;start=api" rel="nofollow noopener noreferrer" target="_blank">자기 앞의 생</a></div>
-            <div class="sb-author"></div>
-          </div>
-        </div>
-        <div class="sb-celebs">
-          <span class="sb-celebs-label">함께 추천한 셀럽 3명:</span>
-          <a class="sb-celeb-chip" href="https://favorbook.co.kr/share/%EC%A7%84%EC%98%81%28%EA%B0%93%EC%84%B8%EB%B8%90%29.html">진영(갓세븐)</a>
-          <a class="sb-celeb-chip" href="https://favorbook.co.kr/share/%EC%B1%84%EC%88%98%EB%B9%88.html">채수빈</a>
-          <a class="sb-celeb-chip" href="https://favorbook.co.kr/share/%EB%B0%B0%EC%A2%85%EC%98%A5.html">배종옥</a>
-        </div>
-      </li>
-      <li class="shared-book">
-        <div class="sb-main">
-          <a class="sb-cover-link" href="https://www.aladin.co.kr/shop/wproduct.aspx?ItemId=112811885&amp;partner=openAPI&amp;start=api" rel="nofollow noopener noreferrer" target="_blank" aria-label="해가 지는 곳으로 알라딘에서 보기"><img src="https://image.aladin.co.kr/product/11281/18/cover500/893747316x_1.jpg" alt="해가 지는 곳으로 표지" width="60" height="85" loading="lazy" style="object-fit:cover"></a>
-          <div class="sb-meta">
-            <div class="sb-title"><a href="https://www.aladin.co.kr/shop/wproduct.aspx?ItemId=112811885&amp;partner=openAPI&amp;start=api" rel="nofollow noopener noreferrer" target="_blank">해가 지는 곳으로</a></div>
-            <div class="sb-author">최진영</div>
-          </div>
-        </div>
-        <div class="sb-celebs">
-          <span class="sb-celebs-label">함께 추천한 셀럽 1명:</span>
-          <a class="sb-celeb-chip" href="https://favorbook.co.kr/share/%ED%97%88%EC%9C%A4%EC%A7%84%28%EB%A5%B4%EC%84%B8%EB%9D%BC%ED%95%8C%29.html">허윤진(르세라핌)</a>
-        </div>
-      </li>
-    </ul>
+    <h2>이설의 독서 리스트 (18권)</h2>
+    <p class="muted">4권은 다른 셀럽도 함께 추천한 책이에요. 카드 안에 함께 추천한 셀럽 이름이 표시됩니다.</p>
+    <ol class="reading-list">
+    <li class="rl-item">
+      <span class="rl-num">1</span>
+      <a class="rl-cover" href="https://www.aladin.co.kr/shop/wproduct.aspx?ItemId=213543424&amp;partner=openAPI&amp;start=api" rel="nofollow noopener noreferrer" target="_blank" aria-label="겨울방학 알라딘에서 보기"><img src="https://image.aladin.co.kr/product/21354/34/cover500/893747977x_2.jpg" alt="겨울방학 표지" loading="lazy"></a>
+      <div class="rl-meta">
+        <div class="rl-title"><a href="https://www.aladin.co.kr/shop/wproduct.aspx?ItemId=213543424&amp;partner=openAPI&amp;start=api" rel="nofollow noopener noreferrer" target="_blank">겨울방학</a></div>
+        <div class="rl-byline">최진영</div>
+        <a class="rl-source" href="https://www.allurekorea.com/2021/07/27/book-with-love-%ec%9d%b4%ec%84%a4-2/?utm_source=naver&amp;utm_medium=partnership" rel="nofollow noopener noreferrer" target="_blank">📺 출처 보기</a>
+      </div>
+    </li>
+    <li class="rl-item">
+      <span class="rl-num">2</span>
+      <a class="rl-cover" href="https://www.aladin.co.kr/shop/wproduct.aspx?ItemId=97913356&amp;partner=openAPI&amp;start=api" rel="nofollow noopener noreferrer" target="_blank" aria-label="날짜 없음 알라딘에서 보기"><img src="https://image.aladin.co.kr/product/9791/33/cover500/8937473143_1.jpg" alt="날짜 없음 표지" loading="lazy"></a>
+      <div class="rl-meta">
+        <div class="rl-title"><a href="https://www.aladin.co.kr/shop/wproduct.aspx?ItemId=97913356&amp;partner=openAPI&amp;start=api" rel="nofollow noopener noreferrer" target="_blank">날짜 없음</a></div>
+        <div class="rl-byline">장은진 · 민음사</div>
+        <a class="rl-source" href="https://sports.donga.com/ent/article/all/20200407/100537493/1" rel="nofollow noopener noreferrer" target="_blank">📺 출처 보기</a>
+      </div>
+    </li>
+    <li class="rl-item">
+      <span class="rl-num">3</span>
+      <a class="rl-cover" href="https://www.aladin.co.kr/shop/wproduct.aspx?ItemId=350862747&amp;partner=openAPI&amp;start=api" rel="nofollow noopener noreferrer" target="_blank" aria-label="내가 되는 꿈 알라딘에서 보기"><img src="https://image.aladin.co.kr/product/35086/27/cover500/k812934498_1.jpg" alt="내가 되는 꿈 표지" loading="lazy"></a>
+      <div class="rl-meta">
+        <div class="rl-title"><a href="https://www.aladin.co.kr/shop/wproduct.aspx?ItemId=350862747&amp;partner=openAPI&amp;start=api" rel="nofollow noopener noreferrer" target="_blank">내가 되는 꿈</a></div>
+        <div class="rl-byline">최진영</div>
+        <a class="rl-source" href="https://www.allurekorea.com/2021/07/27/book-with-love-%ec%9d%b4%ec%84%a4-2/?utm_source=naver&amp;utm_medium=partnership" rel="nofollow noopener noreferrer" target="_blank">📺 출처 보기</a>
+      </div>
+    </li>
+    <li class="rl-item">
+      <span class="rl-num">4</span>
+      <a class="rl-cover" href="https://www.aladin.co.kr/shop/wproduct.aspx?ItemId=253989088&amp;partner=openAPI&amp;start=api" rel="nofollow noopener noreferrer" target="_blank" aria-label="내일의 연인들 알라딘에서 보기"><img src="https://image.aladin.co.kr/product/25398/90/cover500/8954675379_1.jpg" alt="내일의 연인들 표지" loading="lazy"></a>
+      <div class="rl-meta">
+        <div class="rl-title"><a href="https://www.aladin.co.kr/shop/wproduct.aspx?ItemId=253989088&amp;partner=openAPI&amp;start=api" rel="nofollow noopener noreferrer" target="_blank">내일의 연인들</a></div>
+        <a class="rl-source" href="https://www.allurekorea.com/2021/07/27/book-with-love-%ec%9d%b4%ec%84%a4-2/?utm_source=naver&amp;utm_medium=partnership" rel="nofollow noopener noreferrer" target="_blank">📺 출처 보기</a>
+      </div>
+    </li>
+    <li class="rl-item">
+      <span class="rl-num">5</span>
+      <a class="rl-cover" href="https://www.aladin.co.kr/shop/wproduct.aspx?ItemId=255929552&amp;partner=openAPI&amp;start=api" rel="nofollow noopener noreferrer" target="_blank" aria-label="다시 올리브 알라딘에서 보기"><img src="https://image.aladin.co.kr/product/25592/95/cover500/8954675441_1.jpg" alt="다시 올리브 표지" loading="lazy"></a>
+      <div class="rl-meta">
+        <div class="rl-title"><a href="https://www.aladin.co.kr/shop/wproduct.aspx?ItemId=255929552&amp;partner=openAPI&amp;start=api" rel="nofollow noopener noreferrer" target="_blank">다시 올리브</a></div>
+        <a class="rl-source" href="https://www.allurekorea.com/2021/07/27/book-with-love-%ec%9d%b4%ec%84%a4-2/?utm_source=naver&amp;utm_medium=partnership" rel="nofollow noopener noreferrer" target="_blank">📺 출처 보기</a>
+      </div>
+    </li>
+    <li class="rl-item">
+      <span class="rl-num">6</span>
+      <a class="rl-cover" href="https://www.aladin.co.kr/shop/wproduct.aspx?ItemId=245127051&amp;partner=openAPI&amp;start=api" rel="nofollow noopener noreferrer" target="_blank" aria-label="달러구트 꿈 백화점 알라딘에서 보기"><img src="https://image.aladin.co.kr/product/24512/70/cover500/k392630952_2.jpg" alt="달러구트 꿈 백화점 표지" loading="lazy"></a>
+      <div class="rl-meta">
+        <div class="rl-title"><a href="https://www.aladin.co.kr/shop/wproduct.aspx?ItemId=245127051&amp;partner=openAPI&amp;start=api" rel="nofollow noopener noreferrer" target="_blank">달러구트 꿈 백화점</a></div>
+        <a class="rl-source" href="https://www.allurekorea.com/2021/07/27/book-with-love-%ec%9d%b4%ec%84%a4-2/?utm_source=naver&amp;utm_medium=partnership" rel="nofollow noopener noreferrer" target="_blank">📺 출처 보기</a>
+      </div>
+      <div class="rl-shared"><span class="rl-shared-label">👥 함께 추천한 셀럽 1명:</span> <a class="rl-celeb-chip" href="https://favorbook.co.kr/share/%EC%A7%80%EC%BD%94%28%EB%B8%94%EB%9D%BD%EB%B9%84%29.html">지코(블락비)</a></div>
+    </li>
+    <li class="rl-item">
+      <span class="rl-num">7</span>
+      <a class="rl-cover" href="https://www.aladin.co.kr/shop/wproduct.aspx?ItemId=269873776&amp;partner=openAPI&amp;start=api" rel="nofollow noopener noreferrer" target="_blank" aria-label="미드나잇 라이브러리 알라딘에서 보기"><img src="https://image.aladin.co.kr/product/26987/37/cover500/s622931315_1.jpg" alt="미드나잇 라이브러리 표지" loading="lazy"></a>
+      <div class="rl-meta">
+        <div class="rl-title"><a href="https://www.aladin.co.kr/shop/wproduct.aspx?ItemId=269873776&amp;partner=openAPI&amp;start=api" rel="nofollow noopener noreferrer" target="_blank">미드나잇 라이브러리</a></div>
+        <a class="rl-source" href="https://www.allurekorea.com/2021/07/27/book-with-love-%ec%9d%b4%ec%84%a4-2/?utm_source=naver&amp;utm_medium=partnership" rel="nofollow noopener noreferrer" target="_blank">📺 출처 보기</a>
+      </div>
+    </li>
+    <li class="rl-item">
+      <span class="rl-num">8</span>
+      <a class="rl-cover" href="https://www.aladin.co.kr/shop/wproduct.aspx?ItemId=237706048&amp;partner=openAPI&amp;start=api" rel="nofollow noopener noreferrer" target="_blank" aria-label="삐삐 언니는 조울의 사막을 건넜어 알라딘에서 보기"><img src="https://image.aladin.co.kr/product/23770/60/cover500/k712639965_1.jpg" alt="삐삐 언니는 조울의 사막을 건넜어 표지" loading="lazy"></a>
+      <div class="rl-meta">
+        <div class="rl-title"><a href="https://www.aladin.co.kr/shop/wproduct.aspx?ItemId=237706048&amp;partner=openAPI&amp;start=api" rel="nofollow noopener noreferrer" target="_blank">삐삐 언니는 조울의 사막을 건넜어</a></div>
+        <a class="rl-source" href="https://www.allurekorea.com/2021/07/27/book-with-love-%ec%9d%b4%ec%84%a4-2/?utm_source=naver&amp;utm_medium=partnership" rel="nofollow noopener noreferrer" target="_blank">📺 출처 보기</a>
+      </div>
+    </li>
+    <li class="rl-item">
+      <span class="rl-num">9</span>
+      <a class="rl-cover" href="https://www.aladin.co.kr/shop/wproduct.aspx?ItemId=337280683&amp;partner=openAPI&amp;start=api" rel="nofollow noopener noreferrer" target="_blank" aria-label="아가미 알라딘에서 보기"><img src="https://image.aladin.co.kr/product/33728/6/cover500/k282939544_1.jpg" alt="아가미 표지" loading="lazy"></a>
+      <div class="rl-meta">
+        <div class="rl-title"><a href="https://www.aladin.co.kr/shop/wproduct.aspx?ItemId=337280683&amp;partner=openAPI&amp;start=api" rel="nofollow noopener noreferrer" target="_blank">아가미</a></div>
+        <div class="rl-byline">구병모</div>
+        <a class="rl-source" href="https://www.allurekorea.com/2021/07/27/book-with-love-%ec%9d%b4%ec%84%a4-2/?utm_source=naver&amp;utm_medium=partnership" rel="nofollow noopener noreferrer" target="_blank">📺 출처 보기</a>
+      </div>
+      <div class="rl-shared"><span class="rl-shared-label">👥 함께 추천한 셀럽 1명:</span> <a class="rl-celeb-chip" href="https://favorbook.co.kr/share/%EB%82%98%EB%A6%B0%28%EB%AF%B8%EC%95%BC%EC%98%A4%29.html">나린(미야오)</a></div>
+    </li>
+    <li class="rl-item">
+      <span class="rl-num">10</span>
+      <a class="rl-cover" href="https://www.aladin.co.kr/shop/wproduct.aspx?ItemId=8721225&amp;partner=openAPI&amp;start=api" rel="nofollow noopener noreferrer" target="_blank" aria-label="아주 오래된 농담 알라딘에서 보기"><img src="https://image.aladin.co.kr/product/872/12/cover500/8939206487_1.jpg" alt="아주 오래된 농담 표지" loading="lazy"></a>
+      <div class="rl-meta">
+        <div class="rl-title"><a href="https://www.aladin.co.kr/shop/wproduct.aspx?ItemId=8721225&amp;partner=openAPI&amp;start=api" rel="nofollow noopener noreferrer" target="_blank">아주 오래된 농담</a></div>
+        <div class="rl-byline">박완서 · 실천문학사</div>
+        <a class="rl-source" href="https://sports.donga.com/ent/article/all/20200407/100537493/1" rel="nofollow noopener noreferrer" target="_blank">📺 출처 보기</a>
+      </div>
+    </li>
+    <li class="rl-item">
+      <span class="rl-num">11</span>
+      <a class="rl-cover" href="https://www.aladin.co.kr/shop/wproduct.aspx?ItemId=204202708&amp;partner=openAPI&amp;start=api" rel="nofollow noopener noreferrer" target="_blank" aria-label="엘리너 올리펀트는 완전 괜찮아 알라딘에서 보기"><img src="https://image.aladin.co.kr/product/20420/27/cover500/8954657478_2.jpg" alt="엘리너 올리펀트는 완전 괜찮아 표지" loading="lazy"></a>
+      <div class="rl-meta">
+        <div class="rl-title"><a href="https://www.aladin.co.kr/shop/wproduct.aspx?ItemId=204202708&amp;partner=openAPI&amp;start=api" rel="nofollow noopener noreferrer" target="_blank">엘리너 올리펀트는 완전 괜찮아</a></div>
+        <a class="rl-source" href="https://www.allurekorea.com/2021/07/27/book-with-love-%ec%9d%b4%ec%84%a4-2/?utm_source=naver&amp;utm_medium=partnership" rel="nofollow noopener noreferrer" target="_blank">📺 출처 보기</a>
+      </div>
+    </li>
+    <li class="rl-item">
+      <span class="rl-num">12</span>
+      <a class="rl-cover" href="https://www.aladin.co.kr/shop/wproduct.aspx?ItemId=204202708&amp;partner=openAPI&amp;start=api" rel="nofollow noopener noreferrer" target="_blank" aria-label="엘리너 올리펀트는 완전 괜찮아 알라딘에서 보기"><img src="https://image.aladin.co.kr/product/20420/27/cover500/8954657478_2.jpg" alt="엘리너 올리펀트는 완전 괜찮아 표지" loading="lazy"></a>
+      <div class="rl-meta">
+        <div class="rl-title"><a href="https://www.aladin.co.kr/shop/wproduct.aspx?ItemId=204202708&amp;partner=openAPI&amp;start=api" rel="nofollow noopener noreferrer" target="_blank">엘리너 올리펀트는 완전 괜찮아</a></div>
+        <div class="rl-byline">게일 허니먼 · 문학동네</div>
+        <a class="rl-source" href="https://sports.donga.com/ent/article/all/20200407/100537493/1" rel="nofollow noopener noreferrer" target="_blank">📺 출처 보기</a>
+      </div>
+    </li>
+    <li class="rl-item">
+      <span class="rl-num">13</span>
+      <a class="rl-cover" href="https://www.aladin.co.kr/shop/wproduct.aspx?ItemId=244899880&amp;partner=openAPI&amp;start=api" rel="nofollow noopener noreferrer" target="_blank" aria-label="여름의 빌라 알라딘에서 보기"><img src="https://image.aladin.co.kr/product/24489/98/cover500/8954673104_1.jpg" alt="여름의 빌라 표지" loading="lazy"></a>
+      <div class="rl-meta">
+        <div class="rl-title"><a href="https://www.aladin.co.kr/shop/wproduct.aspx?ItemId=244899880&amp;partner=openAPI&amp;start=api" rel="nofollow noopener noreferrer" target="_blank">여름의 빌라</a></div>
+        <a class="rl-source" href="https://www.allurekorea.com/2021/07/27/book-with-love-%ec%9d%b4%ec%84%a4-2/?utm_source=naver&amp;utm_medium=partnership" rel="nofollow noopener noreferrer" target="_blank">📺 출처 보기</a>
+      </div>
+    </li>
+    <li class="rl-item">
+      <span class="rl-num">14</span>
+      <a class="rl-cover" href="https://www.aladin.co.kr/shop/wproduct.aspx?ItemId=97517868&amp;partner=openAPI&amp;start=api" rel="nofollow noopener noreferrer" target="_blank" aria-label="자기 앞의 생 알라딘에서 보기"><img src="https://image.aladin.co.kr/product/9751/78/cover500/8982816631_3.jpg" alt="자기 앞의 생 표지" loading="lazy"></a>
+      <div class="rl-meta">
+        <div class="rl-title"><a href="https://www.aladin.co.kr/shop/wproduct.aspx?ItemId=97517868&amp;partner=openAPI&amp;start=api" rel="nofollow noopener noreferrer" target="_blank">자기 앞의 생</a></div>
+        <a class="rl-source" href="https://www.allurekorea.com/2021/07/27/book-with-love-%ec%9d%b4%ec%84%a4-2/?utm_source=naver&amp;utm_medium=partnership" rel="nofollow noopener noreferrer" target="_blank">📺 출처 보기</a>
+      </div>
+      <div class="rl-shared"><span class="rl-shared-label">👥 함께 추천한 셀럽 3명:</span> <a class="rl-celeb-chip" href="https://favorbook.co.kr/share/%EC%A7%84%EC%98%81%28%EA%B0%93%EC%84%B8%EB%B8%90%29.html">진영(갓세븐)</a><a class="rl-celeb-chip" href="https://favorbook.co.kr/share/%EC%B1%84%EC%88%98%EB%B9%88.html">채수빈</a><a class="rl-celeb-chip" href="https://favorbook.co.kr/share/%EB%B0%B0%EC%A2%85%EC%98%A5.html">배종옥</a></div>
+    </li>
+    <li class="rl-item">
+      <span class="rl-num">15</span>
+      <a class="rl-cover" href="https://www.aladin.co.kr/shop/wproduct.aspx?ItemId=173785595&amp;partner=openAPI&amp;start=api" rel="nofollow noopener noreferrer" target="_blank" aria-label="친구들과의 대화 알라딘에서 보기"><img src="https://image.aladin.co.kr/product/17378/55/cover500/8932919313_1.jpg" alt="친구들과의 대화 표지" loading="lazy"></a>
+      <div class="rl-meta">
+        <div class="rl-title"><a href="https://www.aladin.co.kr/shop/wproduct.aspx?ItemId=173785595&amp;partner=openAPI&amp;start=api" rel="nofollow noopener noreferrer" target="_blank">친구들과의 대화</a></div>
+        <div class="rl-byline">샐리 루니 · 열린책들</div>
+        <a class="rl-source" href="https://www.harpersbazaar.co.kr/article/48242" rel="nofollow noopener noreferrer" target="_blank">📺 출처 보기</a>
+      </div>
+    </li>
+    <li class="rl-item">
+      <span class="rl-num">16</span>
+      <a class="rl-cover" href="https://www.aladin.co.kr/shop/wproduct.aspx?ItemId=337280601&amp;partner=openAPI&amp;start=api" rel="nofollow noopener noreferrer" target="_blank" aria-label="파과 알라딘에서 보기"><img src="https://image.aladin.co.kr/product/33728/6/cover500/k312039010_3.jpg" alt="파과 표지" loading="lazy"></a>
+      <div class="rl-meta">
+        <div class="rl-title"><a href="https://www.aladin.co.kr/shop/wproduct.aspx?ItemId=337280601&amp;partner=openAPI&amp;start=api" rel="nofollow noopener noreferrer" target="_blank">파과</a></div>
+        <div class="rl-byline">구병모</div>
+        <a class="rl-source" href="https://www.allurekorea.com/2021/07/27/book-with-love-%ec%9d%b4%ec%84%a4-2/?utm_source=naver&amp;utm_medium=partnership" rel="nofollow noopener noreferrer" target="_blank">📺 출처 보기</a>
+      </div>
+    </li>
+    <li class="rl-item">
+      <span class="rl-num">17</span>
+      <a class="rl-cover" href="https://www.aladin.co.kr/shop/wproduct.aspx?ItemId=269155104&amp;partner=openAPI&amp;start=api" rel="nofollow noopener noreferrer" target="_blank" aria-label="하늘은 어디에나 있어 알라딘에서 보기"><img src="https://image.aladin.co.kr/product/26915/51/cover500/8984374253_1.jpg" alt="하늘은 어디에나 있어 표지" loading="lazy"></a>
+      <div class="rl-meta">
+        <div class="rl-title"><a href="https://www.aladin.co.kr/shop/wproduct.aspx?ItemId=269155104&amp;partner=openAPI&amp;start=api" rel="nofollow noopener noreferrer" target="_blank">하늘은 어디에나 있어</a></div>
+        <a class="rl-source" href="https://www.allurekorea.com/2021/07/27/book-with-love-%ec%9d%b4%ec%84%a4-2/?utm_source=naver&amp;utm_medium=partnership" rel="nofollow noopener noreferrer" target="_blank">📺 출처 보기</a>
+      </div>
+    </li>
+    <li class="rl-item">
+      <span class="rl-num">18</span>
+      <a class="rl-cover" href="https://www.aladin.co.kr/shop/wproduct.aspx?ItemId=112811885&amp;partner=openAPI&amp;start=api" rel="nofollow noopener noreferrer" target="_blank" aria-label="해가 지는 곳으로 알라딘에서 보기"><img src="https://image.aladin.co.kr/product/11281/18/cover500/893747316x_1.jpg" alt="해가 지는 곳으로 표지" loading="lazy"></a>
+      <div class="rl-meta">
+        <div class="rl-title"><a href="https://www.aladin.co.kr/shop/wproduct.aspx?ItemId=112811885&amp;partner=openAPI&amp;start=api" rel="nofollow noopener noreferrer" target="_blank">해가 지는 곳으로</a></div>
+        <div class="rl-byline">최진영 · 민음사</div>
+        <a class="rl-source" href="https://sports.donga.com/ent/article/all/20200407/100537493/1" rel="nofollow noopener noreferrer" target="_blank">📺 출처 보기</a>
+      </div>
+      <div class="rl-shared"><span class="rl-shared-label">👥 함께 추천한 셀럽 1명:</span> <a class="rl-celeb-chip" href="https://favorbook.co.kr/share/%ED%97%88%EC%9C%A4%EC%A7%84%28%EB%A5%B4%EC%84%B8%EB%9D%BC%ED%95%8C%29.html">허윤진(르세라핌)</a></div>
+    </li>
+    </ol>
   </section>
 
   <section>

@@ -218,19 +218,26 @@
     .bc-title { font-weight: 700; font-size: 13px; line-height: 1.3; margin-bottom: 4px; }
     .bc-author { font-size: 12px; color: #555; margin-bottom: 6px; }
     .bc-badge { display: inline-block; font-size: 11px; background: #fde047; border: 1px solid #000; padding: 1px 6px; font-weight: 700; }
-    .shared-book-list { list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 12px; }
-    .shared-book { background: #fff; border: 2px solid #000; box-shadow: 4px 4px 0 0 #000; padding: 12px; }
-    .sb-main { display: flex; gap: 12px; margin-bottom: 10px; }
-    .sb-cover-link { flex-shrink: 0; display: block; }
-    .sb-meta { flex: 1; min-width: 0; }
-    .sb-title { font-weight: 800; font-size: 15px; line-height: 1.3; margin-bottom: 4px; }
-    .sb-title a { color: #000; }
-    .sb-title a:hover { color: #2563eb; }
-    .sb-author { font-size: 13px; color: #555; }
-    .sb-celebs { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; padding-top: 10px; border-top: 1.5px dashed #ccc; }
-    .sb-celebs-label { font-size: 12px; color: #666; font-weight: 700; margin-right: 4px; }
-    .sb-celeb-chip { display: inline-block; padding: 3px 9px; background: #fff8e7; border: 1.5px solid #000; box-shadow: 1px 1px 0 0 #000; font-size: 12px; font-weight: 700; text-decoration: none; color: #000; transition: transform .1s, box-shadow .1s, background .1s; }
-    .sb-celeb-chip:hover { transform: translate(-1px,-1px); box-shadow: 2px 2px 0 0 #000; background: #fde047; text-decoration: none; }
+    .celeb-bio { margin: 4px 0 8px; padding: 6px 10px; background: #fff8e7; border-left: 4px solid #000; font-size: 14px; line-height: 1.45; color: #222; }
+    .reading-list { list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 14px; counter-reset: rl; }
+    .rl-item { position: relative; background: #fff; border: 2px solid #000; box-shadow: 4px 4px 0 0 #000; padding: 14px 14px 14px 52px; transition: transform .12s, box-shadow .12s; }
+    .rl-item:hover { transform: translate(-1px,-1px); box-shadow: 6px 6px 0 0 #000; }
+    .rl-num { position: absolute; left: -2px; top: -2px; width: 38px; height: 30px; display: flex; align-items: center; justify-content: center; background: #fde047; border: 2px solid #000; font-weight: 900; font-size: 14px; font-family: "Space Grotesk", sans-serif; }
+    .rl-item .rl-cover, .rl-item > .rl-cover { float: left; margin-right: 14px; width: 74px; height: 105px; display: block; flex-shrink: 0; border: 1.5px solid #000; box-shadow: 2px 2px 0 0 #000; background: #f4f4f0; overflow: hidden; }
+    .rl-cover img { width: 100%; height: 100%; object-fit: cover; display: block; }
+    .rl-no-cover { width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; font-size: 32px; }
+    .rl-meta { overflow: hidden; min-height: 105px; }
+    .rl-title { font-weight: 800; font-size: 16px; line-height: 1.3; margin-bottom: 4px; }
+    .rl-title a { color: #000; }
+    .rl-title a:hover { color: #2563eb; }
+    .rl-byline { font-size: 13px; color: #555; margin-bottom: 8px; line-height: 1.4; }
+    .rl-source { display: inline-block; font-size: 12px; padding: 3px 8px; background: #fff; border: 1.5px solid #000; box-shadow: 1px 1px 0 0 #000; text-decoration: none; color: #000; transition: transform .1s, box-shadow .1s, background .1s; }
+    .rl-source:hover { transform: translate(-1px,-1px); box-shadow: 2px 2px 0 0 #000; background: #a7f3d0; text-decoration: none; }
+    .rl-shared { clear: both; margin-top: 12px; padding-top: 10px; border-top: 1.5px dashed #ccc; display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
+    .rl-shared-label { font-size: 12px; color: #666; font-weight: 700; }
+    .rl-celeb-chip { display: inline-block; padding: 3px 9px; background: #fff8e7; border: 1.5px solid #000; box-shadow: 1px 1px 0 0 #000; font-size: 12px; font-weight: 700; text-decoration: none; color: #000; transition: transform .1s, box-shadow .1s, background .1s; }
+    .rl-celeb-chip:hover { transform: translate(-1px,-1px); box-shadow: 2px 2px 0 0 #000; background: #fde047; text-decoration: none; }
+    @media (max-width: 480px) { .rl-item { padding: 14px 12px 14px 46px; } .rl-num { width: 32px; height: 26px; font-size: 12px; } .rl-item .rl-cover, .rl-item > .rl-cover { width: 60px; height: 88px; margin-right: 10px; } .rl-meta { min-height: 88px; } .rl-title { font-size: 15px; } }
     .related-celebs { margin: 24px 0; }
     .related-celeb-list { display: flex; flex-wrap: wrap; gap: 8px; }
     .related-celeb { display: inline-flex; align-items: center; gap: 6px; padding: 6px 12px; background: #fff; border: 2px solid #000; box-shadow: 2px 2px 0 0 #000; font-size: 13px; font-weight: 700; text-decoration: none; color: #000; transition: transform .1s, box-shadow .1s; }
@@ -267,52 +274,66 @@
   </section>
 
   <section>
-    <h2>주연(더보이즈)의 독서 리스트 전체 목록 (6권)</h2>
-    <table>
-      <thead><tr><th>#</th><th>표지</th><th>도서명</th><th>저자</th><th>출판사</th><th>출처</th></tr></thead>
-      <tbody>
-    <tr><td>1</td><td><a href="https://www.aladin.co.kr/shop/wproduct.aspx?ItemId=32981373&amp;partner=openAPI&amp;start=api" rel="nofollow noopener noreferrer" target="_blank" aria-label="강신주의 감정수업 알라딘에서 보기"><img src="https://image.aladin.co.kr/product/3298/13/cover500/8937488353_2.jpg" alt="강신주의 감정수업 표지" width="60" height="85" loading="lazy" style="object-fit:cover"></a></td><td><a href="https://www.aladin.co.kr/shop/wproduct.aspx?ItemId=32981373&amp;partner=openAPI&amp;start=api" rel="nofollow noopener noreferrer" target="_blank">강신주의 감정수업</a></td><td>강신주 (</td><td>민음사</td><td class="src"><a href="https://www.gqkorea.co.kr/2025/01/06/%eb%8d%94%eb%b3%b4%ec%9d%b4%ec%a6%88-%ec%a3%bc%ec%97%b0-%ec%97%ac%ec%a0%84%ed%9e%88-%eb%b3%80%ec%b9%98-%ec%95%8a%eb%8a%94-%ec%a3%bc%ec%97%b0%ec%9d%98-%ec%86%8d%eb%8f%84%eb%a1%9c%ec%9a%94/" rel="nofollow noopener noreferrer" target="_blank">출처 보기 →</a></td></tr>
-    <tr><td>2</td><td><a href="https://www.aladin.co.kr/shop/wproduct.aspx?ItemId=35385389" rel="nofollow noopener noreferrer" target="_blank" aria-label="개밥바라기별 알라딘에서 보기"><img src="https://image.aladin.co.kr/product/3538/53/cover500/8954623247_1.jpg" alt="개밥바라기별 표지" width="60" height="85" loading="lazy" style="object-fit:cover"></a></td><td><a href="https://www.aladin.co.kr/shop/wproduct.aspx?ItemId=35385389" rel="nofollow noopener noreferrer" target="_blank">개밥바라기별</a></td><td>황석영</td><td>문학동네</td><td class="src"><a href="https://www.esquirekorea.co.kr/article/1875667" rel="nofollow noopener noreferrer" target="_blank">출처 보기 →</a></td></tr>
-    <tr><td>3</td><td><a href="https://www.aladin.co.kr/shop/wproduct.aspx?ItemId=2156605&amp;partner=openAPI&amp;start=api" rel="nofollow noopener noreferrer" target="_blank" aria-label="브람스를 좋아하세요... 알라딘에서 보기"><img src="https://image.aladin.co.kr/product/215/66/cover500/s252137206_1.jpg" alt="브람스를 좋아하세요... 표지" width="60" height="85" loading="lazy" style="object-fit:cover"></a></td><td><a href="https://www.aladin.co.kr/shop/wproduct.aspx?ItemId=2156605&amp;partner=openAPI&amp;start=api" rel="nofollow noopener noreferrer" target="_blank">브람스를 좋아하세요...</a></td><td>프랑수아즈 사강</td><td>민음사</td><td class="src"><a href="https://www.marieclairekorea.com/fashion/2023/10/autumn-moments-1/" rel="nofollow noopener noreferrer" target="_blank">출처 보기 →</a></td></tr>
-    <tr><td>4</td><td><a href="https://www.aladin.co.kr/shop/wproduct.aspx?ItemId=314636537&amp;partner=openAPI&amp;start=api" rel="nofollow noopener noreferrer" target="_blank" aria-label="슬픔이여 안녕 알라딘에서 보기"><img src="https://image.aladin.co.kr/product/31463/65/cover500/8950935651_1.jpg" alt="슬픔이여 안녕 표지" width="60" height="85" loading="lazy" style="object-fit:cover"></a></td><td><a href="https://www.aladin.co.kr/shop/wproduct.aspx?ItemId=314636537&amp;partner=openAPI&amp;start=api" rel="nofollow noopener noreferrer" target="_blank">슬픔이여 안녕</a></td><td>프랑수아즈 사강</td><td>arte(아르테)</td><td class="src"><a href="https://www.marieclairekorea.com/fashion/2023/10/autumn-moments-1/" rel="nofollow noopener noreferrer" target="_blank">출처 보기 →</a></td></tr>
-    <tr><td>5</td><td><a href="https://www.aladin.co.kr/shop/wproduct.aspx?ItemId=212246612&amp;partner=openAPI&amp;start=api" rel="nofollow noopener noreferrer" target="_blank" aria-label="이방인 알라딘에서 보기"><img src="https://image.aladin.co.kr/product/21224/66/cover500/8937443848_1.jpg" alt="이방인 표지" width="60" height="85" loading="lazy" style="object-fit:cover"></a></td><td><a href="https://www.aladin.co.kr/shop/wproduct.aspx?ItemId=212246612&amp;partner=openAPI&amp;start=api" rel="nofollow noopener noreferrer" target="_blank">이방인</a></td><td>알베르 카뮈</td><td>민음사</td><td class="src"><a href="https://www.marieclairekorea.com/fashion/2023/10/autumn-moments-1/" rel="nofollow noopener noreferrer" target="_blank">출처 보기 →</a></td></tr>
-    <tr><td>6</td><td><a href="https://www.aladin.co.kr/shop/wproduct.aspx?ItemId=528044" rel="nofollow noopener noreferrer" target="_blank" aria-label="크눌프 알라딘에서 보기"><img src="https://image.aladin.co.kr/product/52/80/cover500/8937461110_2.jpg" alt="크눌프 표지" width="60" height="85" loading="lazy" style="object-fit:cover"></a></td><td><a href="https://www.aladin.co.kr/shop/wproduct.aspx?ItemId=528044" rel="nofollow noopener noreferrer" target="_blank">크눌프</a></td><td>헤르만 헤세</td><td>민음사</td><td class="src"><a href="https://www.esquirekorea.co.kr/article/1863487" rel="nofollow noopener noreferrer" target="_blank">출처 보기 →</a></td></tr>
-      </tbody>
-    </table>
-  </section>
-
-  <section class="book-pages">
-    <h2>👥 주연(더보이즈)과 다른 셀럽이 함께 추천한 책 (2권)</h2>
-    <p class="muted">2명 이상의 셀럽이 추천한 책과 함께 추천한 셀럽 명단이에요.</p>
-    <ul class="shared-book-list">
-      <li class="shared-book">
-        <div class="sb-main">
-          <a class="sb-cover-link" href="https://www.aladin.co.kr/shop/wproduct.aspx?ItemId=2156605&amp;partner=openAPI&amp;start=api" rel="nofollow noopener noreferrer" target="_blank" aria-label="브람스를 좋아하세요... 알라딘에서 보기"><img src="https://image.aladin.co.kr/product/215/66/cover500/s252137206_1.jpg" alt="브람스를 좋아하세요... 표지" width="60" height="85" loading="lazy" style="object-fit:cover"></a>
-          <div class="sb-meta">
-            <div class="sb-title"><a href="https://www.aladin.co.kr/shop/wproduct.aspx?ItemId=2156605&amp;partner=openAPI&amp;start=api" rel="nofollow noopener noreferrer" target="_blank">브람스를 좋아하세요...</a></div>
-            <div class="sb-author">프랑수아즈 사강</div>
-          </div>
-        </div>
-        <div class="sb-celebs">
-          <span class="sb-celebs-label">함께 추천한 셀럽 1명:</span>
-          <a class="sb-celeb-chip" href="https://favorbook.co.kr/share/%EC%95%84%EC%9D%B4%EC%9C%A0.html">아이유</a>
-        </div>
-      </li>
-      <li class="shared-book">
-        <div class="sb-main">
-          <a class="sb-cover-link" href="https://www.aladin.co.kr/shop/wproduct.aspx?ItemId=212246612&amp;partner=openAPI&amp;start=api" rel="nofollow noopener noreferrer" target="_blank" aria-label="이방인 알라딘에서 보기"><img src="https://image.aladin.co.kr/product/21224/66/cover500/8937443848_1.jpg" alt="이방인 표지" width="60" height="85" loading="lazy" style="object-fit:cover"></a>
-          <div class="sb-meta">
-            <div class="sb-title"><a href="https://www.aladin.co.kr/shop/wproduct.aspx?ItemId=212246612&amp;partner=openAPI&amp;start=api" rel="nofollow noopener noreferrer" target="_blank">이방인</a></div>
-            <div class="sb-author">알베르 카뮈</div>
-          </div>
-        </div>
-        <div class="sb-celebs">
-          <span class="sb-celebs-label">함께 추천한 셀럽 2명:</span>
-          <a class="sb-celeb-chip" href="https://favorbook.co.kr/share/%EC%84%9C%EA%B0%95%EC%A4%80.html">서강준</a>
-          <a class="sb-celeb-chip" href="https://favorbook.co.kr/share/%EC%8B%A0%EC%84%B8%EA%B2%BD.html">신세경</a>
-        </div>
-      </li>
-    </ul>
+    <h2>주연(더보이즈)의 독서 리스트 (6권)</h2>
+    <p class="muted">2권은 다른 셀럽도 함께 추천한 책이에요. 카드 안에 함께 추천한 셀럽 이름이 표시됩니다.</p>
+    <ol class="reading-list">
+    <li class="rl-item">
+      <span class="rl-num">1</span>
+      <a class="rl-cover" href="https://www.aladin.co.kr/shop/wproduct.aspx?ItemId=32981373&amp;partner=openAPI&amp;start=api" rel="nofollow noopener noreferrer" target="_blank" aria-label="강신주의 감정수업 알라딘에서 보기"><img src="https://image.aladin.co.kr/product/3298/13/cover500/8937488353_2.jpg" alt="강신주의 감정수업 표지" loading="lazy"></a>
+      <div class="rl-meta">
+        <div class="rl-title"><a href="https://www.aladin.co.kr/shop/wproduct.aspx?ItemId=32981373&amp;partner=openAPI&amp;start=api" rel="nofollow noopener noreferrer" target="_blank">강신주의 감정수업</a></div>
+        <div class="rl-byline">강신주 ( · 민음사</div>
+        <a class="rl-source" href="https://www.gqkorea.co.kr/2025/01/06/%eb%8d%94%eb%b3%b4%ec%9d%b4%ec%a6%88-%ec%a3%bc%ec%97%b0-%ec%97%ac%ec%a0%84%ed%9e%88-%eb%b3%80%ec%b9%98-%ec%95%8a%eb%8a%94-%ec%a3%bc%ec%97%b0%ec%9d%98-%ec%86%8d%eb%8f%84%eb%a1%9c%ec%9a%94/" rel="nofollow noopener noreferrer" target="_blank">📺 출처 보기</a>
+      </div>
+    </li>
+    <li class="rl-item">
+      <span class="rl-num">2</span>
+      <a class="rl-cover" href="https://www.aladin.co.kr/shop/wproduct.aspx?ItemId=35385389" rel="nofollow noopener noreferrer" target="_blank" aria-label="개밥바라기별 알라딘에서 보기"><img src="https://image.aladin.co.kr/product/3538/53/cover500/8954623247_1.jpg" alt="개밥바라기별 표지" loading="lazy"></a>
+      <div class="rl-meta">
+        <div class="rl-title"><a href="https://www.aladin.co.kr/shop/wproduct.aspx?ItemId=35385389" rel="nofollow noopener noreferrer" target="_blank">개밥바라기별</a></div>
+        <div class="rl-byline">황석영 · 문학동네</div>
+        <a class="rl-source" href="https://www.esquirekorea.co.kr/article/1875667" rel="nofollow noopener noreferrer" target="_blank">📺 출처 보기</a>
+      </div>
+    </li>
+    <li class="rl-item">
+      <span class="rl-num">3</span>
+      <a class="rl-cover" href="https://www.aladin.co.kr/shop/wproduct.aspx?ItemId=2156605&amp;partner=openAPI&amp;start=api" rel="nofollow noopener noreferrer" target="_blank" aria-label="브람스를 좋아하세요... 알라딘에서 보기"><img src="https://image.aladin.co.kr/product/215/66/cover500/s252137206_1.jpg" alt="브람스를 좋아하세요... 표지" loading="lazy"></a>
+      <div class="rl-meta">
+        <div class="rl-title"><a href="https://www.aladin.co.kr/shop/wproduct.aspx?ItemId=2156605&amp;partner=openAPI&amp;start=api" rel="nofollow noopener noreferrer" target="_blank">브람스를 좋아하세요...</a></div>
+        <div class="rl-byline">프랑수아즈 사강 · 민음사</div>
+        <a class="rl-source" href="https://www.marieclairekorea.com/fashion/2023/10/autumn-moments-1/" rel="nofollow noopener noreferrer" target="_blank">📺 출처 보기</a>
+      </div>
+      <div class="rl-shared"><span class="rl-shared-label">👥 함께 추천한 셀럽 1명:</span> <a class="rl-celeb-chip" href="https://favorbook.co.kr/share/%EC%95%84%EC%9D%B4%EC%9C%A0.html">아이유</a></div>
+    </li>
+    <li class="rl-item">
+      <span class="rl-num">4</span>
+      <a class="rl-cover" href="https://www.aladin.co.kr/shop/wproduct.aspx?ItemId=314636537&amp;partner=openAPI&amp;start=api" rel="nofollow noopener noreferrer" target="_blank" aria-label="슬픔이여 안녕 알라딘에서 보기"><img src="https://image.aladin.co.kr/product/31463/65/cover500/8950935651_1.jpg" alt="슬픔이여 안녕 표지" loading="lazy"></a>
+      <div class="rl-meta">
+        <div class="rl-title"><a href="https://www.aladin.co.kr/shop/wproduct.aspx?ItemId=314636537&amp;partner=openAPI&amp;start=api" rel="nofollow noopener noreferrer" target="_blank">슬픔이여 안녕</a></div>
+        <div class="rl-byline">프랑수아즈 사강 · arte(아르테)</div>
+        <a class="rl-source" href="https://www.marieclairekorea.com/fashion/2023/10/autumn-moments-1/" rel="nofollow noopener noreferrer" target="_blank">📺 출처 보기</a>
+      </div>
+    </li>
+    <li class="rl-item">
+      <span class="rl-num">5</span>
+      <a class="rl-cover" href="https://www.aladin.co.kr/shop/wproduct.aspx?ItemId=212246612&amp;partner=openAPI&amp;start=api" rel="nofollow noopener noreferrer" target="_blank" aria-label="이방인 알라딘에서 보기"><img src="https://image.aladin.co.kr/product/21224/66/cover500/8937443848_1.jpg" alt="이방인 표지" loading="lazy"></a>
+      <div class="rl-meta">
+        <div class="rl-title"><a href="https://www.aladin.co.kr/shop/wproduct.aspx?ItemId=212246612&amp;partner=openAPI&amp;start=api" rel="nofollow noopener noreferrer" target="_blank">이방인</a></div>
+        <div class="rl-byline">알베르 카뮈 · 민음사</div>
+        <a class="rl-source" href="https://www.marieclairekorea.com/fashion/2023/10/autumn-moments-1/" rel="nofollow noopener noreferrer" target="_blank">📺 출처 보기</a>
+      </div>
+      <div class="rl-shared"><span class="rl-shared-label">👥 함께 추천한 셀럽 2명:</span> <a class="rl-celeb-chip" href="https://favorbook.co.kr/share/%EC%84%9C%EA%B0%95%EC%A4%80.html">서강준</a><a class="rl-celeb-chip" href="https://favorbook.co.kr/share/%EC%8B%A0%EC%84%B8%EA%B2%BD.html">신세경</a></div>
+    </li>
+    <li class="rl-item">
+      <span class="rl-num">6</span>
+      <a class="rl-cover" href="https://www.aladin.co.kr/shop/wproduct.aspx?ItemId=528044" rel="nofollow noopener noreferrer" target="_blank" aria-label="크눌프 알라딘에서 보기"><img src="https://image.aladin.co.kr/product/52/80/cover500/8937461110_2.jpg" alt="크눌프 표지" loading="lazy"></a>
+      <div class="rl-meta">
+        <div class="rl-title"><a href="https://www.aladin.co.kr/shop/wproduct.aspx?ItemId=528044" rel="nofollow noopener noreferrer" target="_blank">크눌프</a></div>
+        <div class="rl-byline">헤르만 헤세 · 민음사</div>
+        <a class="rl-source" href="https://www.esquirekorea.co.kr/article/1863487" rel="nofollow noopener noreferrer" target="_blank">📺 출처 보기</a>
+      </div>
+    </li>
+    </ol>
   </section>
 
   <section>

@@ -154,19 +154,26 @@
     .bc-title { font-weight: 700; font-size: 13px; line-height: 1.3; margin-bottom: 4px; }
     .bc-author { font-size: 12px; color: #555; margin-bottom: 6px; }
     .bc-badge { display: inline-block; font-size: 11px; background: #fde047; border: 1px solid #000; padding: 1px 6px; font-weight: 700; }
-    .shared-book-list { list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 12px; }
-    .shared-book { background: #fff; border: 2px solid #000; box-shadow: 4px 4px 0 0 #000; padding: 12px; }
-    .sb-main { display: flex; gap: 12px; margin-bottom: 10px; }
-    .sb-cover-link { flex-shrink: 0; display: block; }
-    .sb-meta { flex: 1; min-width: 0; }
-    .sb-title { font-weight: 800; font-size: 15px; line-height: 1.3; margin-bottom: 4px; }
-    .sb-title a { color: #000; }
-    .sb-title a:hover { color: #2563eb; }
-    .sb-author { font-size: 13px; color: #555; }
-    .sb-celebs { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; padding-top: 10px; border-top: 1.5px dashed #ccc; }
-    .sb-celebs-label { font-size: 12px; color: #666; font-weight: 700; margin-right: 4px; }
-    .sb-celeb-chip { display: inline-block; padding: 3px 9px; background: #fff8e7; border: 1.5px solid #000; box-shadow: 1px 1px 0 0 #000; font-size: 12px; font-weight: 700; text-decoration: none; color: #000; transition: transform .1s, box-shadow .1s, background .1s; }
-    .sb-celeb-chip:hover { transform: translate(-1px,-1px); box-shadow: 2px 2px 0 0 #000; background: #fde047; text-decoration: none; }
+    .celeb-bio { margin: 4px 0 8px; padding: 6px 10px; background: #fff8e7; border-left: 4px solid #000; font-size: 14px; line-height: 1.45; color: #222; }
+    .reading-list { list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 14px; counter-reset: rl; }
+    .rl-item { position: relative; background: #fff; border: 2px solid #000; box-shadow: 4px 4px 0 0 #000; padding: 14px 14px 14px 52px; transition: transform .12s, box-shadow .12s; }
+    .rl-item:hover { transform: translate(-1px,-1px); box-shadow: 6px 6px 0 0 #000; }
+    .rl-num { position: absolute; left: -2px; top: -2px; width: 38px; height: 30px; display: flex; align-items: center; justify-content: center; background: #fde047; border: 2px solid #000; font-weight: 900; font-size: 14px; font-family: "Space Grotesk", sans-serif; }
+    .rl-item .rl-cover, .rl-item > .rl-cover { float: left; margin-right: 14px; width: 74px; height: 105px; display: block; flex-shrink: 0; border: 1.5px solid #000; box-shadow: 2px 2px 0 0 #000; background: #f4f4f0; overflow: hidden; }
+    .rl-cover img { width: 100%; height: 100%; object-fit: cover; display: block; }
+    .rl-no-cover { width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; font-size: 32px; }
+    .rl-meta { overflow: hidden; min-height: 105px; }
+    .rl-title { font-weight: 800; font-size: 16px; line-height: 1.3; margin-bottom: 4px; }
+    .rl-title a { color: #000; }
+    .rl-title a:hover { color: #2563eb; }
+    .rl-byline { font-size: 13px; color: #555; margin-bottom: 8px; line-height: 1.4; }
+    .rl-source { display: inline-block; font-size: 12px; padding: 3px 8px; background: #fff; border: 1.5px solid #000; box-shadow: 1px 1px 0 0 #000; text-decoration: none; color: #000; transition: transform .1s, box-shadow .1s, background .1s; }
+    .rl-source:hover { transform: translate(-1px,-1px); box-shadow: 2px 2px 0 0 #000; background: #a7f3d0; text-decoration: none; }
+    .rl-shared { clear: both; margin-top: 12px; padding-top: 10px; border-top: 1.5px dashed #ccc; display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
+    .rl-shared-label { font-size: 12px; color: #666; font-weight: 700; }
+    .rl-celeb-chip { display: inline-block; padding: 3px 9px; background: #fff8e7; border: 1.5px solid #000; box-shadow: 1px 1px 0 0 #000; font-size: 12px; font-weight: 700; text-decoration: none; color: #000; transition: transform .1s, box-shadow .1s, background .1s; }
+    .rl-celeb-chip:hover { transform: translate(-1px,-1px); box-shadow: 2px 2px 0 0 #000; background: #fde047; text-decoration: none; }
+    @media (max-width: 480px) { .rl-item { padding: 14px 12px 14px 46px; } .rl-num { width: 32px; height: 26px; font-size: 12px; } .rl-item .rl-cover, .rl-item > .rl-cover { width: 60px; height: 88px; margin-right: 10px; } .rl-meta { min-height: 88px; } .rl-title { font-size: 15px; } }
     .related-celebs { margin: 24px 0; }
     .related-celeb-list { display: flex; flex-wrap: wrap; gap: 8px; }
     .related-celeb { display: inline-flex; align-items: center; gap: 6px; padding: 6px 12px; background: #fff; border: 2px solid #000; box-shadow: 2px 2px 0 0 #000; font-size: 13px; font-weight: 700; text-decoration: none; color: #000; transition: transform .1s, box-shadow .1s; }
@@ -203,14 +210,25 @@
   </section>
 
   <section>
-    <h2>정이서의 독서 리스트 전체 목록 (2권)</h2>
-    <table>
-      <thead><tr><th>#</th><th>표지</th><th>도서명</th><th>저자</th><th>출판사</th><th>출처</th></tr></thead>
-      <tbody>
-    <tr><td>1</td><td><a href="https://www.aladin.co.kr/shop/wproduct.aspx?ItemId=267416648&amp;partner=openAPI&amp;start=api" rel="nofollow noopener noreferrer" target="_blank" aria-label="몽 카페 알라딘에서 보기"><img src="https://image.aladin.co.kr/product/26741/66/cover500/k082730387_1.jpg" alt="몽 카페 표지" width="60" height="85" loading="lazy" style="object-fit:cover"></a></td><td><a href="https://www.aladin.co.kr/shop/wproduct.aspx?ItemId=267416648&amp;partner=openAPI&amp;start=api" rel="nofollow noopener noreferrer" target="_blank">몽 카페</a></td><td>신유진</td><td>시간의흐름</td><td class="src"></td></tr>
-    <tr><td>2</td><td><a href="https://www.aladin.co.kr/shop/wproduct.aspx?ItemId=218914400&amp;partner=openAPI&amp;start=api" rel="nofollow noopener noreferrer" target="_blank" aria-label="카운터 일기 알라딘에서 보기"><img src="https://image.aladin.co.kr/product/21891/44/cover500/k232636400_3.jpg" alt="카운터 일기 표지" width="60" height="85" loading="lazy" style="object-fit:cover"></a></td><td><a href="https://www.aladin.co.kr/shop/wproduct.aspx?ItemId=218914400&amp;partner=openAPI&amp;start=api" rel="nofollow noopener noreferrer" target="_blank">카운터 일기</a></td><td>이미연</td><td>시간의흐름</td><td class="src">data:image/jpeg;base64,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</td></tr>
-      </tbody>
-    </table>
+    <h2>정이서의 독서 리스트 (2권)</h2>
+    <ol class="reading-list">
+    <li class="rl-item">
+      <span class="rl-num">1</span>
+      <a class="rl-cover" href="https://www.aladin.co.kr/shop/wproduct.aspx?ItemId=267416648&amp;partner=openAPI&amp;start=api" rel="nofollow noopener noreferrer" target="_blank" aria-label="몽 카페 알라딘에서 보기"><img src="https://image.aladin.co.kr/product/26741/66/cover500/k082730387_1.jpg" alt="몽 카페 표지" loading="lazy"></a>
+      <div class="rl-meta">
+        <div class="rl-title"><a href="https://www.aladin.co.kr/shop/wproduct.aspx?ItemId=267416648&amp;partner=openAPI&amp;start=api" rel="nofollow noopener noreferrer" target="_blank">몽 카페</a></div>
+        <div class="rl-byline">신유진 · 시간의흐름</div>
+      </div>
+    </li>
+    <li class="rl-item">
+      <span class="rl-num">2</span>
+      <a class="rl-cover" href="https://www.aladin.co.kr/shop/wproduct.aspx?ItemId=218914400&amp;partner=openAPI&amp;start=api" rel="nofollow noopener noreferrer" target="_blank" aria-label="카운터 일기 알라딘에서 보기"><img src="https://image.aladin.co.kr/product/21891/44/cover500/k232636400_3.jpg" alt="카운터 일기 표지" loading="lazy"></a>
+      <div class="rl-meta">
+        <div class="rl-title"><a href="https://www.aladin.co.kr/shop/wproduct.aspx?ItemId=218914400&amp;partner=openAPI&amp;start=api" rel="nofollow noopener noreferrer" target="_blank">카운터 일기</a></div>
+        <div class="rl-byline">이미연 · 시간의흐름</div>
+      </div>
+    </li>
+    </ol>
   </section>
 
   <section>
