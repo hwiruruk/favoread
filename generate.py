@@ -241,6 +241,12 @@ def load_bios():
 
 BIOS = load_bios()
 
+# 괄호/소속 표기 제거한 짧은 이름 — 본문 반복 노출 시 사용
+# "윤덕원(브로콜리너마저)" → "윤덕원", "RM(BTS)" → "RM"
+_SHORT_NAME_RE = re.compile(r'\s*\([^)]*\)\s*$')
+def short_name(name):
+    return _SHORT_NAME_RE.sub('', name).strip() or name
+
 def get_bio(name, lang='ko'):
     """bios.json에서 한 줄 소개 가져오기. 없으면 빈 문자열."""
     entry = BIOS.get(name) or {}
@@ -747,15 +753,17 @@ for name, info in celebs.items():
             + '\n    </li>\n'
         )
 
-    # 인트로 단락: 자연스럽게 키워드 변형 노출 (~150-220자)
+    sname = short_name(name)  # 본문 반복용 짧은 이름
+
+    # 인트로 단락: 풀네임은 1번만, 나머지는 생략
     intro_p = (
-        esc(name) + '의 독서 기록을 한곳에 모았습니다. '
-        '유튜브·인터뷰·SNS 등 출처가 확인된 ' + esc(name) + '의 인생책·추천 도서 '
-        '<strong>' + str(n_books) + '권</strong>을 정리한 독서 리스트예요. '
-        + esc(name) + ' 책 추천과 독서 취향이 궁금하다면 아래 전체 목록과 출처 링크에서 확인할 수 있습니다.'
+        esc(name) + '의 독서 기록을 한곳에 모았어요. '
+        '유튜브·인터뷰·SNS 등 공개 출처에서 확인된 인생책·추천 도서 '
+        '<strong>' + str(n_books) + '권</strong>을 한 페이지에 정리한 독서 리스트입니다. '
+        '아래 목록에서 책 제목·저자·출처 링크를 한눈에 확인할 수 있어요.'
     )
 
-    # 작가/출판사 빈도 요약 (간단한 unique 콘텐츠)
+    # 작가 빈도 요약 (간단한 unique 콘텐츠)
     author_counts = {}
     for b in books:
         a = b['author'].strip()
@@ -764,9 +772,9 @@ for name, info in celebs.items():
     top_authors = sorted(author_counts.items(), key=lambda x: x[1], reverse=True)[:3]
     if top_authors:
         author_summary = (
-            esc(name) + '의 추천 도서에 가장 자주 등장한 작가는 '
+            '추천 도서에 가장 자주 등장한 작가는 '
             + ', '.join(esc(a) + (' (' + str(c) + '권)' if c > 1 else '') for a, c in top_authors)
-            + '입니다.'
+            + ' 등이에요.'
         )
     else:
         author_summary = ''
@@ -801,8 +809,8 @@ for name, info in celebs.items():
             )
         related_section = (
             '  <section class="related-celebs">\n'
-            '    <h2>🤝 ' + esc(name) + '의 독서 취향과 겹치는 셀럽</h2>\n'
-            '    <p class="muted">' + esc(name) + '의 추천 도서를 함께 추천한 다른 셀럽이에요. 숫자는 공통 도서 권수.</p>\n'
+            '    <h2>🤝 책 취향이 겹치는 셀럽</h2>\n'
+            '    <p class="muted">같은 책을 함께 추천한 다른 셀럽이에요. 숫자는 공통 도서 권수.</p>\n'
             '    <div class="related-celeb-list">\n'
             + chips +
             '    </div>\n'
@@ -990,7 +998,7 @@ for name, info in celebs.items():
         '  </section>\n'
         '\n'
         '  <section>\n'
-        '    <h2>' + esc(name) + '의 독서 리스트 (' + str(n_books) + '권)</h2>\n'
+        '    <h2>📚 ' + esc(sname) + '의 독서 리스트 (' + str(n_books) + '권)</h2>\n'
         + (('    <p class="muted">' + str(shared_count) + '권은 다른 셀럽도 함께 추천한 책이에요. 카드 안에 함께 추천한 셀럽 이름이 표시됩니다.</p>\n')
            if shared_count else '')
         + '    <ol class="reading-list">\n'
@@ -999,9 +1007,8 @@ for name, info in celebs.items():
         '  </section>\n'
         '\n'
         + (('  <section>\n'
-            '    <h2>' + esc(name) + ' 인생책 · 책 추천 키워드</h2>\n'
-            '    <p>' + author_summary + ' '
-            + esc(name) + '의 책 추천 리스트는 위 표에서 출처와 함께 확인할 수 있습니다.</p>\n'
+            '    <h2>📝 ' + esc(sname) + '의 책 취향</h2>\n'
+            '    <p>' + author_summary + '</p>\n'
             '  </section>\n'
             '\n') if author_summary else '')
         + related_section
@@ -1013,7 +1020,7 @@ for name, info in celebs.items():
         '\n'
         + pager_section
         + '  <footer>\n'
-        '    <p>' + esc(name) + ' 독서 기록 정보는 유튜브·인터뷰·SNS 등 공개된 출처를 기반으로 정리되었습니다.</p>\n'
+        '    <p>이 페이지의 독서 기록은 유튜브·인터뷰·SNS 등 공개된 출처를 기반으로 정리됐어요.</p>\n'
         '  </footer>\n'
         '\n'
         '</body>\n'
