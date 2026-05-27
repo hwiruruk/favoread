@@ -991,7 +991,9 @@
     const bookCount = (name && celebMap[name]) ? celebMap[name].books.length : 0;
     const desc = name ? `${name}의 읽은 책이 궁금하다면? ✨ 총 ${bookCount}권의 읽은 책과 추천하는 책, 인생책까지 확인해 보세요. #${name} #책추천 #읽은책 #독서 #인생책 📕` : defaultDesc;
     const fn = name ? name.replace(/\//g, '_').replace(/\\/g, '_') : '';
-    const canonical = name ? `${BASE}share/${encodeURIComponent(fn)}.html` : BASE;
+    // canonical은 항상 홈(/)으로 고정 — ?celeb= 변형이 별도 페이지로 색인되어
+    // 홈 권위가 분산되는 것을 막는다. 셀럽별 콘텐츠는 /share/{name}.html이 담당.
+    const canonical = BASE;
 
     let imageUrl = defaultImage;
     if (name && celebMap[name] && celebMap[name].imageUrl) {
