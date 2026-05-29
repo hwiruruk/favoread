@@ -6,7 +6,7 @@
 'use strict';
 
 const OUTPUT_SCALE = 2;
-const DEFAULT_SELECT = 6;
+const DEFAULT_SELECT = 5;
 const PROXY = 'https://images.weserv.nl/?url=';
 
 /* ---------- 배경 프리셋 ---------- */
@@ -25,11 +25,10 @@ const L = {
     bookCoverCredit: '도서 표지 ⓒ 알라딘 (aladin.co.kr)',
     coverPhoto: '표지 사진',
     promoTag: '당신이 좋아하는, 그들이 읽은 책',
-    promoStat: (c, b) => `셀럽 ${c}명 · 책 ${b.toLocaleString()}권`,
+    promoStat: (c, b) => `셀럽 ${c.toLocaleString()}명의 책 ${b.toLocaleString()}권을 만나보세요`,
     promoCta: '더 보러 가기',
-    emptyQuote: (n) => `${n}의 책장에 놓인 한 권.`,
     title: (n) => `${n}의 책장`,
-    subtitle: (n) => `${josa(n, '이', '가')} 읽고 추천한 책`,
+    subtitle: (n, c) => `${josa(n, '이', '가')} 읽은 책 ${c}권`,
     noSrc: '출처 미상',
   },
   en: {
@@ -40,11 +39,10 @@ const L = {
     bookCoverCredit: 'Book covers ⓒ Aladin (aladin.co.kr)',
     coverPhoto: 'Cover photo',
     promoTag: 'The books your faves are reading',
-    promoStat: (c, b) => `${c} celebrities · ${b.toLocaleString()}+ books`,
+    promoStat: (c, b) => `Discover ${b.toLocaleString()} books from ${c} celebrities`,
     promoCta: 'Explore more',
-    emptyQuote: (n) => `A book on ${n}'s shelf.`,
     title: (n) => `${n}'s Bookshelf`,
-    subtitle: (n) => `Books ${n} read & loved`,
+    subtitle: (n, c) => `${c} books ${n} read`,
     noSrc: 'Source unknown',
   },
 };
@@ -67,6 +65,7 @@ const state = {
     bg: '#f4f1e9',
     mono: false,
     covers: true,           // 표지에 책 표지 노출
+    noImage: false,         // 표지 사진 비우고 프레임만
     outro: true,
     promo: true,
     proxy: true,
@@ -223,14 +222,8 @@ function detectSource(url) {
   return { name, type, date };
 }
 
-function citeParts(b) {
-  const out = [];
-  if (b.srcName) out.push(`<b>${esc(b.srcName)}</b>`);
-  if (b.srcType) out.push(esc(b.srcType));
-  if (b.srcDate) out.push(esc(b.srcDate));
-  return out.join(' · ');
-}
-function citeText(b) { return [b.srcName, b.srcType, b.srcDate].filter(Boolean).join(' · '); }
+function citeParts(b) { return b.srcName ? `<b>${esc(b.srcName)}</b>` : ''; }
+function citeText(b) { return (b.srcName || '').trim(); }
 
 /* ========================================================
    부트
@@ -296,10 +289,14 @@ function bindSearch() {
    ======================================================== */
 function applyAutoText() {
   const dn = displayName(state.name);
+  const c = selectedBooks().length || DEFAULT_SELECT;
   state.opts.title = T().title(dn);
-  state.opts.subtitle = T().subtitle(dn);
+  state.opts.subtitle = T().subtitle(dn, c);
   $('#optTitle').value = state.opts.title;
   $('#optSubtitle').value = state.opts.subtitle;
+}
+function refreshAutoText() {
+  if (state.autoText && state.name) { applyAutoText(); }
 }
 
 function selectCeleb(name) {
@@ -307,19 +304,19 @@ function selectCeleb(name) {
   state.celeb = state.data.celebs[name];
   state.customImage = null;
   state.autoText = true;
-  applyAutoText();
 
   const cs = detectSource(state.celeb.imageUrl);
   state.opts.coverSrc = cs.name ? `ⓒ ${cs.name}${cs.date ? ' · ' + cs.date : ''}` : '';
   $('#optCoverSrc').value = state.opts.coverSrc;
 
   state.books = state.celeb.books.map((ref, i) => {
-    const d = detectSource(ref.source);
+    const q = (ref.comment || '').trim();
     return {
-      ref, selected: i < DEFAULT_SELECT, quote: (ref.comment || '').trim(),
-      srcName: d.name, srcType: d.type, srcDate: d.date,
+      ref, selected: i < DEFAULT_SELECT, quote: q, noQuote: !q,
+      srcName: detectSource(ref.source).name,
     };
   });
+  applyAutoText();
 
   $('#celebBlock').classList.remove('hidden');
   $('#optsBlock').classList.remove('hidden');
@@ -346,25 +343,19 @@ function renderBookList() {
         <input type="checkbox" class="bk-sel" ${b.selected ? 'checked' : ''} title="카드에 포함">
         <img src="${esc(proxify(r.coverUrl))}" referrerpolicy="no-referrer" onerror="this.style.visibility='hidden'">
         <div class="bt"><b>${esc(r.title)}</b><span>${esc(r.author || '')}${r.publisher ? ' · ' + esc(r.publisher) : ''}</span></div>
-        ${b.quote ? '<span class="badge-on">대목</span>' : ''}
+        ${(!b.noQuote && b.quote) ? '<span class="badge-on">대목</span>' : ''}
         <span class="caret">▸</span>
       </div>
       <div class="book-edit">
+        <label class="chk" style="margin-top:11px"><input type="checkbox" class="bk-noq" ${b.noQuote ? 'checked' : ''}> 언급 대목 없음 (책·제목을 가운데 배치)</label>
         <label class="field">
           <span>언급 대목 (인용문) ${r.source ? `· <a class="src-open" href="${esc(cleanUrl(r.source))}" target="_blank" rel="noreferrer">출처 열기 ↗</a>` : ''}</span>
-          <textarea class="bk-quote" rows="3" placeholder="이 인물이 책을 언급/추천한 문장을 붙여넣으세요">${esc(b.quote)}</textarea>
+          <textarea class="bk-quote" rows="3" placeholder="이 인물이 책을 언급/추천한 문장을 붙여넣으세요" ${b.noQuote ? 'disabled' : ''}>${esc(b.quote)}</textarea>
         </label>
-        <div class="row3">
-          <label class="field"><span>매체명</span><input class="bk-name" type="text" value="${esc(b.srcName)}"></label>
-          <label class="field"><span>유형</span><input class="bk-type" type="text" list="srcTypes" value="${esc(b.srcType)}"></label>
-        </div>
-        <label class="field"><span>날짜 (예: 2024.05.12)</span><input class="bk-date" type="text" value="${esc(b.srcDate)}"></label>
+        <label class="field"><span>매체명 (출처)</span><input class="bk-name" type="text" value="${esc(b.srcName)}" placeholder="예: VOGUE KOREA"></label>
       </div>
     </li>`;
-  }).join('') + `<datalist id="srcTypes">
-      <option>매거진</option><option>인터뷰</option><option>신문</option><option>방송</option>
-      <option>영상</option><option>SNS</option><option>커뮤니티</option><option>블로그</option>
-      <option>도서플랫폼</option><option>웹</option></datalist>`;
+  }).join('');
 
   $$('.book-item', ul).forEach((li) => {
     const i = +li.dataset.i, b = state.books[i];
@@ -372,17 +363,21 @@ function renderBookList() {
       if (e.target.classList.contains('bk-sel')) return;
       li.classList.toggle('open');
     });
-    li.querySelector('.bk-sel').addEventListener('change', (e) => { b.selected = e.target.checked; renderPreview(); });
+    li.querySelector('.bk-sel').addEventListener('change', (e) => { b.selected = e.target.checked; refreshAutoText(); renderPreview(); });
     const reflectBadge = () => {
       const head = li.querySelector('.book-head');
       let badge = head.querySelector('.badge-on');
-      if (b.quote && !badge) { badge = document.createElement('span'); badge.className = 'badge-on'; badge.textContent = '대목'; head.insertBefore(badge, head.querySelector('.caret')); }
-      else if (!b.quote && badge) badge.remove();
+      const show = !b.noQuote && b.quote;
+      if (show && !badge) { badge = document.createElement('span'); badge.className = 'badge-on'; badge.textContent = '대목'; head.insertBefore(badge, head.querySelector('.caret')); }
+      else if (!show && badge) badge.remove();
     };
+    li.querySelector('.bk-noq').addEventListener('change', (e) => {
+      b.noQuote = e.target.checked;
+      li.querySelector('.bk-quote').disabled = b.noQuote;
+      reflectBadge(); renderPreview();
+    });
     li.querySelector('.bk-quote').addEventListener('input', (e) => { b.quote = e.target.value; reflectBadge(); renderPreview(); });
     li.querySelector('.bk-name').addEventListener('input', (e) => { b.srcName = e.target.value; renderPreview(); });
-    li.querySelector('.bk-type').addEventListener('input', (e) => { b.srcType = e.target.value; renderPreview(); });
-    li.querySelector('.bk-date').addEventListener('input', (e) => { b.srcDate = e.target.value; renderPreview(); });
   });
 }
 
@@ -418,7 +413,7 @@ function bindOptions() {
 
   $$('input[name=lang]').forEach((r) => r.addEventListener('change', () => {
     state.opts.lang = $$('input[name=lang]').find((x) => x.checked).value;
-    if (state.autoText && state.name) applyAutoText();
+    refreshAutoText();
     renderPreview();
   }));
   $$('input[name=format]').forEach((r) => r.addEventListener('change', () => {
@@ -429,6 +424,7 @@ function bindOptions() {
   }));
   $('#optMono').addEventListener('change', (e) => { state.opts.mono = e.target.checked; renderPreview(); });
   $('#optCovers').addEventListener('change', (e) => { state.opts.covers = e.target.checked; renderPreview(); });
+  $('#optNoImage').addEventListener('change', (e) => { state.opts.noImage = e.target.checked; renderPreview(); });
   $('#optOutro').addEventListener('change', (e) => { state.opts.outro = e.target.checked; renderPreview(); });
   $('#optPromo').addEventListener('change', (e) => { state.opts.promo = e.target.checked; renderPreview(); });
   $('#optProxy').addEventListener('change', (e) => {
@@ -437,8 +433,8 @@ function bindOptions() {
     renderPreview();
   });
 
-  $('#selAll').addEventListener('click', () => { state.books.forEach((b) => b.selected = true); renderBookList(); renderPreview(); });
-  $('#selNone').addEventListener('click', () => { state.books.forEach((b) => b.selected = false); renderBookList(); renderPreview(); });
+  $('#selAll').addEventListener('click', () => { state.books.forEach((b) => b.selected = true); refreshAutoText(); renderBookList(); renderPreview(); });
+  $('#selNone').addEventListener('click', () => { state.books.forEach((b) => b.selected = false); refreshAutoText(); renderBookList(); renderPreview(); });
 
   $('#celebUpload').addEventListener('change', (e) => {
     const f = e.target.files[0]; if (!f) return;
@@ -474,13 +470,16 @@ function coverHTML() {
         return `<div class="bk" style="width:${w}px"><img src="${esc(proxify(b.ref.coverUrl))}" crossorigin="anonymous" referrerpolicy="no-referrer"></div>`;
       }).join('')}</div>`
     : '';
+  const photo = state.opts.noImage
+    ? `<div class="cn-photo empty"></div>`
+    : `<div class="cn-photo"><img src="${esc(img)}" crossorigin="anonymous" referrerpolicy="no-referrer"></div>`;
   return `<div class="cn-pad cn-cover">
     ${topBar(T().brand, T().tagline)}
     <h1 class="cn-title">${esc(state.opts.title)}</h1>
     ${state.opts.subtitle ? `<div class="cn-sub">${esc(state.opts.subtitle)}</div>` : ''}
-    <div class="cn-photo"><img src="${esc(img)}" crossorigin="anonymous" referrerpolicy="no-referrer"></div>
+    ${photo}
     ${fan}
-    <div class="cn-foot"><span>${esc(state.opts.coverSrc || '')}</span><span class="cn-cnt">${String(sel.length).padStart(2, '0')} ${T().books}</span></div>
+    ${state.opts.coverSrc ? `<div class="cn-foot"><span>${esc(state.opts.coverSrc)}</span></div>` : ''}
   </div>`;
 }
 
@@ -492,10 +491,11 @@ function bookHTML(b, idx, total) {
   const ch = sq ? 360 : 470, cw = Math.round(ch * 0.66);
   const cite = citeParts(b);
   const meta = [bookAuthor(r), state.opts.lang === 'en' ? '' : r.publisher].filter(Boolean).join(' · ');
-  const quote = b.quote
+  const showQuote = !b.noQuote && (b.quote || '').trim();
+  const quote = showQuote
     ? `<div class="cn-quote"><span class="qmark">“</span><p>${esc(b.quote)}</p></div>`
-    : `<div class="cn-quote empty"><span class="qmark">“</span><p>${esc(T().emptyQuote(displayName(state.name)))}</p></div>`;
-  return `<div class="cn-pad cn-book">
+    : '';
+  return `<div class="cn-pad cn-book${showQuote ? '' : ' centered'}">
     <div class="cn-top">
       <span class="cn-big-num"><span class="cn-num-lat">${String(idx).padStart(2, '0')}</span> / ${String(total).padStart(2, '0')}</span>
       <span class="cn-kicker r">${esc(T().brand)}</span>
@@ -542,7 +542,6 @@ function outroHTML() {
 
 function promoHTML() {
   return `<div class="cn-pad cn-promo">
-    <div class="cn-mark">Favoread</div>
     <div class="cn-bn">${esc(T().brand)}</div>
     <div class="cn-tag">${esc(T().promoTag)}</div>
     <div class="cn-stat">${esc(T().promoStat(state.celebCount, state.bookCount))}</div>
