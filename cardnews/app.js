@@ -1,8 +1,7 @@
 /* ========================================================
    Favoread 카드뉴스 빌더
-   - data.json 에서 인물 검색 → 책/정보 불러오기
-   - 표지 / 본문(책표지+언급 대목) / 출처 / 홍보 카드 생성
-   - 한국어·영어, 배경색, 이미지 맞춤, 원고 복사, PNG/ZIP 내보내기
+   인물 검색 → 읽은 책/출처 불러오기 → antiegg 풍 인스타 카드
+   (표지 · 본문 · 출처 · 홍보) 생성 → PNG/ZIP 내보내기
    ======================================================== */
 'use strict';
 
@@ -11,62 +10,66 @@ const DEFAULT_SELECT = 6;
 const PROXY = 'https://images.weserv.nl/?url=';
 
 /* ---------- 배경 프리셋 ---------- */
-const SWATCHES = ['#f4f1e9', '#faf8f3', '#e9e0cf', '#f0e4e0', '#e3e7dd', '#e2e8ec', '#1f1d18', '#14110d'];
+const SWATCHES = [
+  '#f4f1e9', '#faf8f3', '#efe7d6', '#f0e6e1',
+  '#e4e8e0', '#e2e8ec', '#1f1d18', '#14110d',
+];
 
 /* ---------- 다국어 문구 ---------- */
-const T = {
+const L = {
   ko: {
     brand: '최애의 독서',
     tagline: '당신이 좋아하는, 그들이 읽은 책',
     book: 'BOOK', source: 'SOURCE', books: 'BOOKS',
     sources: '출처', imgGroup: '이미지', txtGroup: '텍스트',
-    bookCover: '도서 표지 ⓒ 알라딘',
+    bookCoverCredit: '도서 표지 ⓒ 알라딘 (aladin.co.kr)',
     coverPhoto: '표지 사진',
-    noSrc: '출처 미상',
+    promoTag: '당신이 좋아하는, 그들이 읽은 책',
+    promoStat: (c, b) => `셀럽 ${c}명 · 책 ${b.toLocaleString()}권`,
+    promoCta: '더 보러 가기',
+    emptyQuote: (n) => `${n}의 책장에 놓인 한 권.`,
     title: (n) => `${n}의 책장`,
     subtitle: (n) => `${josa(n, '이', '가')} 읽고 추천한 책`,
-    emptyQuote: (n) => `${n}의 책장에 놓인 한 권.`,
-    promoTag: '당신이 좋아하는, 그들이 읽은 책',
-    promoStat: (c, b) => `셀럽 ${c}명 · 책 ${b.toLocaleString()}권의 독서 기록`,
-    promoCta: '지금 보러 가기',
+    noSrc: '출처 미상',
   },
   en: {
     brand: 'FAVOREAD',
     tagline: 'The books your faves are reading',
     book: 'BOOK', source: 'SOURCE', books: 'BOOKS',
     sources: 'Sources', imgGroup: 'Images', txtGroup: 'Text',
-    bookCover: 'Book covers ⓒ Aladin',
+    bookCoverCredit: 'Book covers ⓒ Aladin (aladin.co.kr)',
     coverPhoto: 'Cover photo',
-    noSrc: 'Source unknown',
-    title: (n) => `${n}'s Bookshelf`,
-    subtitle: (n) => `Books ${n} read & loved`,
-    emptyQuote: (n) => `A book on ${n}'s shelf.`,
     promoTag: 'The books your faves are reading',
     promoStat: (c, b) => `${c} celebrities · ${b.toLocaleString()}+ books`,
-    promoCta: 'Explore now',
+    promoCta: 'Explore more',
+    emptyQuote: (n) => `A book on ${n}'s shelf.`,
+    title: (n) => `${n}'s Bookshelf`,
+    subtitle: (n) => `Books ${n} read & loved`,
+    noSrc: 'Source unknown',
   },
 };
-const L = () => T[state.opts.lang];
+const T = () => L[state.opts.lang];
 
 /* ---------- 상태 ---------- */
 const state = {
   data: null,
-  meta: { celebs: 0, books: 0 },
+  celebCount: 0,
+  bookCount: 0,
   name: '',
   celeb: null,
   customImage: null,
-  autoText: true,
+  autoText: true,           // 제목/부제 자동 채움 여부
   books: [],
   opts: {
     lang: 'ko',
     format: 'portrait',
     fit: 'contain',
+    bg: '#f4f1e9',
     mono: false,
-    covers: true,
+    covers: true,           // 표지에 책 표지 노출
     outro: true,
     promo: true,
     proxy: true,
-    bg: '#f4f1e9',
     title: '',
     subtitle: '',
     coverSrc: '',
@@ -93,23 +96,34 @@ function josa(word, withB, withoutB) {
 }
 const displayName = (n) => String(n || '').replace(/\s*\(.*?\)\s*$/, '').trim() || n;
 
-/* ---------- 색상 유틸 ---------- */
-function hexToRgb(h) { const c = h.replace('#', ''); return [0, 2, 4].map((i) => parseInt(c.slice(i, i + 2), 16)); }
-function rgbToHex(r) { return '#' + r.map((x) => Math.max(0, Math.min(255, Math.round(x))).toString(16).padStart(2, '0')).join(''); }
-function lum(h) {
-  const f = (x) => { x /= 255; return x <= 0.03928 ? x / 12.92 : ((x + 0.055) / 1.055) ** 2.4; };
-  const [r, g, b] = hexToRgb(h); return 0.2126 * f(r) + 0.7152 * f(g) + 0.0722 * f(b);
+/* ---------- 색상 유틸 (배경에 맞춰 글자색 자동) ---------- */
+function hexToRgb(h) {
+  const c = h.replace('#', '');
+  return [parseInt(c.slice(0, 2), 16), parseInt(c.slice(2, 4), 16), parseInt(c.slice(4, 6), 16)];
 }
-function mix(a, b, t) { const A = hexToRgb(a), B = hexToRgb(b); return rgbToHex(A.map((v, i) => v + (B[i] - v) * t)); }
+function rgbToHex(r, g, b) {
+  return '#' + [r, g, b].map((x) => Math.max(0, Math.min(255, Math.round(x))).toString(16).padStart(2, '0')).join('');
+}
+function mix(a, b, t) {
+  const [r1, g1, b1] = hexToRgb(a), [r2, g2, b2] = hexToRgb(b);
+  return rgbToHex(r1 + (r2 - r1) * t, g1 + (g2 - g1) * t, b1 + (b2 - b1) * t);
+}
+function luminance(h) {
+  const [r, g, b] = hexToRgb(h).map((x) => {
+    x /= 255; return x <= 0.03928 ? x / 12.92 : ((x + 0.055) / 1.055) ** 2.4;
+  });
+  return 0.2126 * r + 0.7152 * g + 0.0722 * b;
+}
 function paletteFor(bg) {
-  const light = lum(bg) > 0.45;
-  if (light) return {
-    paper: bg, ink: mix(bg, '#000000', 0.9), soft: mix(bg, '#000000', 0.62),
-    mute: mix(bg, '#000000', 0.42), line: mix(bg, '#000000', 0.16), panel: mix(bg, '#000000', 0.06),
-  };
+  const dark = luminance(bg) < 0.42;
+  const ink = dark ? '#f1ece0' : '#181511';
   return {
-    paper: bg, ink: mix(bg, '#ffffff', 0.92), soft: mix(bg, '#ffffff', 0.66),
-    mute: mix(bg, '#ffffff', 0.42), line: mix(bg, '#ffffff', 0.18), panel: mix(bg, '#ffffff', 0.08),
+    '--paper': bg,
+    '--ink': ink,
+    '--soft': mix(bg, ink, dark ? 0.72 : 0.66),
+    '--mute': mix(bg, ink, dark ? 0.5 : 0.45),
+    '--line': mix(bg, ink, dark ? 0.26 : 0.2),
+    '--panel': mix(bg, ink, 0.06),
   };
 }
 
@@ -185,6 +199,10 @@ const SRC_MAP = [
   ['cafe.naver.com', '네이버 카페', '커뮤니티'],
   ['brunch.co.kr', '브런치', '블로그'],
   ['tistory.com', '티스토리', '블로그'],
+  ['wikimedia.org', '위키미디어 커먼즈', '이미지'],
+  ['wikipedia.org', '위키백과', '이미지'],
+  ['namu.wiki', '나무위키', '이미지'],
+  ['talkimg.imbc.com', 'MBC', '방송'],
 ];
 
 function detectSource(url) {
@@ -205,7 +223,6 @@ function detectSource(url) {
   return { name, type, date };
 }
 
-/* ---------- 출처 표기 ---------- */
 function citeParts(b) {
   const out = [];
   if (b.srcName) out.push(`<b>${esc(b.srcName)}</b>`);
@@ -215,22 +232,20 @@ function citeParts(b) {
 }
 function citeText(b) { return [b.srcName, b.srcType, b.srcDate].filter(Boolean).join(' · '); }
 
-/* ---------- 책 표시(언어) ---------- */
-function bkTitle(r) { return (state.opts.lang === 'en' && r.title_en) ? r.title_en : r.title; }
-function bkAuthor(r) { return (state.opts.lang === 'en' && r.author_en) ? r.author_en : r.author; }
-
 /* ========================================================
-   부팅
+   부트
    ======================================================== */
 async function boot() {
   status('데이터 불러오는 중…');
   try {
     const res = await fetch('../data.json', { cache: 'no-cache' });
     state.data = await res.json();
-    state.meta.celebs = Object.keys(state.data.celebs).length;
-    state.meta.books = Object.values(state.data.celebs).reduce((s, c) => s + c.books.length, 0);
-    status(`${state.meta.celebs}명 로드됨`);
-  } catch (e) { status('data.json 로드 실패'); console.error(e); return; }
+    state.celebCount = Object.keys(state.data.celebs).length;
+    state.bookCount = Object.values(state.data.celebs).reduce((a, c) => a + c.books.length, 0);
+    status(`${state.celebCount}명 · 책 ${state.bookCount}권 로드됨`);
+  } catch (e) {
+    status('data.json 로드 실패'); console.error(e); return;
+  }
   buildSwatches();
   bindOptions();
   bindSearch();
@@ -242,7 +257,6 @@ async function boot() {
 function bindSearch() {
   const input = $('#search'), box = $('#results');
   let active = -1, items = [];
-
   const render = (q) => {
     const names = Object.keys(state.data.celebs);
     const ql = q.trim().toLowerCase();
@@ -257,7 +271,6 @@ function bindSearch() {
         <span>${esc(n)}</span><span class="rc">책 ${c.books.length}</span></li>`;
     }).join('');
   };
-
   input.addEventListener('input', () => render(input.value));
   input.addEventListener('focus', () => { if (input.value.trim()) render(input.value); });
   input.addEventListener('keydown', (e) => {
@@ -269,9 +282,12 @@ function bindSearch() {
     e.preventDefault();
     $$('li', box).forEach((li, i) => li.classList.toggle('active', i === active));
   });
-  box.addEventListener('click', (e) => { const li = e.target.closest('li[data-name]'); if (li) pick(li.dataset.name); });
-  document.addEventListener('click', (e) => { if (!e.target.closest('.search-wrap')) box.classList.add('hidden'); });
-
+  box.addEventListener('click', (e) => {
+    const li = e.target.closest('li[data-name]'); if (li) pick(li.dataset.name);
+  });
+  document.addEventListener('click', (e) => {
+    if (!e.target.closest('.search-wrap')) box.classList.add('hidden');
+  });
   function pick(name) { box.classList.add('hidden'); input.value = name; selectCeleb(name); }
 }
 
@@ -280,8 +296,8 @@ function bindSearch() {
    ======================================================== */
 function applyAutoText() {
   const dn = displayName(state.name);
-  state.opts.title = L().title(dn);
-  state.opts.subtitle = L().subtitle(dn);
+  state.opts.title = T().title(dn);
+  state.opts.subtitle = T().subtitle(dn);
   $('#optTitle').value = state.opts.title;
   $('#optSubtitle').value = state.opts.subtitle;
 }
@@ -293,13 +309,16 @@ function selectCeleb(name) {
   state.autoText = true;
   applyAutoText();
 
-  const cd = detectSource(state.celeb.imageUrl);
-  state.opts.coverSrc = cd.name ? `ⓒ ${cd.name}${cd.date ? ' · ' + cd.date : ''}` : '';
+  const cs = detectSource(state.celeb.imageUrl);
+  state.opts.coverSrc = cs.name ? `ⓒ ${cs.name}${cs.date ? ' · ' + cs.date : ''}` : '';
   $('#optCoverSrc').value = state.opts.coverSrc;
 
   state.books = state.celeb.books.map((ref, i) => {
     const d = detectSource(ref.source);
-    return { ref, selected: i < DEFAULT_SELECT, quote: (ref.comment || '').trim(), srcName: d.name, srcType: d.type, srcDate: d.date };
+    return {
+      ref, selected: i < DEFAULT_SELECT, quote: (ref.comment || '').trim(),
+      srcName: d.name, srcType: d.type, srcDate: d.date,
+    };
   });
 
   $('#celebBlock').classList.remove('hidden');
@@ -368,18 +387,26 @@ function renderBookList() {
 }
 
 /* ========================================================
-   배경 스와치 + 옵션 바인딩
+   옵션 바인딩
    ======================================================== */
 function buildSwatches() {
   const box = $('#swatches');
   box.innerHTML = SWATCHES.map((c) =>
     `<button data-c="${c}" style="background:${c}" title="${c}"></button>`).join('');
-  const sync = () => $$('button', box).forEach((b) => b.classList.toggle('active', b.dataset.c.toLowerCase() === state.opts.bg.toLowerCase()));
   box.addEventListener('click', (e) => {
-    const b = e.target.closest('button'); if (!b) return;
-    state.opts.bg = b.dataset.c; $('#optBgCustom').value = b.dataset.c; sync(); renderPreview();
+    const btn = e.target.closest('button[data-c]'); if (!btn) return;
+    setBg(btn.dataset.c);
   });
-  sync();
+  markSwatch();
+}
+function markSwatch() {
+  $$('#swatches button').forEach((b) => b.classList.toggle('active', b.dataset.c.toLowerCase() === state.opts.bg.toLowerCase()));
+}
+function setBg(c) {
+  state.opts.bg = c;
+  $('#optBgCustom').value = /^#[0-9a-f]{6}$/i.test(c) ? c : '#f4f1e9';
+  markSwatch();
+  renderPreview();
 }
 
 function bindOptions() {
@@ -387,11 +414,11 @@ function bindOptions() {
   $('#optSubtitle').addEventListener('input', (e) => { state.opts.subtitle = e.target.value; state.autoText = false; renderPreview(); });
   $('#optCoverSrc').addEventListener('input', (e) => { state.opts.coverSrc = e.target.value; renderPreview(); });
   $('#optHandle').addEventListener('input', (e) => { state.opts.handle = e.target.value; renderPreview(); });
-  $('#optBgCustom').addEventListener('input', (e) => { state.opts.bg = e.target.value; buildSwatches(); renderPreview(); });
+  $('#optBgCustom').addEventListener('input', (e) => setBg(e.target.value));
 
   $$('input[name=lang]').forEach((r) => r.addEventListener('change', () => {
     state.opts.lang = $$('input[name=lang]').find((x) => x.checked).value;
-    if (state.celeb && state.autoText) applyAutoText();
+    if (state.autoText && state.name) applyAutoText();
     renderPreview();
   }));
   $$('input[name=format]').forEach((r) => r.addEventListener('change', () => {
@@ -425,83 +452,88 @@ function bindOptions() {
 }
 
 /* ========================================================
-   카드 생성
+   카드 슬라이드 생성
    ======================================================== */
 function dims() { return state.opts.format === 'square' ? [1080, 1080] : [1080, 1350]; }
 function selectedBooks() { return state.books.filter((b) => b.selected); }
+
+function topBar(left, right) {
+  return `<div class="cn-top"><span class="cn-kicker">${esc(left)}</span>
+    ${right ? `<span class="cn-kicker r">${esc(right)}</span>` : ''}</div>`;
+}
 
 function coverHTML() {
   const dn = displayName(state.name);
   const sel = selectedBooks();
   const img = state.customImage || proxify(state.celeb.imageUrl);
-  const fan = (state.opts.covers && sel.length)
-    ? `<div class="cn-fan">${sel.slice(0, 6).map((b) =>
-        `<span class="bk"><img src="${esc(proxify(b.ref.coverUrl))}" crossorigin="anonymous" referrerpolicy="no-referrer"></span>`).join('')}</div>`
+  const sq = state.opts.format === 'square';
+  const fanN = sq ? 4 : 5;
+  const fan = state.opts.covers && sel.length
+    ? `<div class="cn-fan">${sel.slice(0, fanN).map((b) => {
+        const h = sq ? 128 : 168, w = Math.round(h * 0.66);
+        return `<div class="bk" style="width:${w}px"><img src="${esc(proxify(b.ref.coverUrl))}" crossorigin="anonymous" referrerpolicy="no-referrer"></div>`;
+      }).join('')}</div>`
     : '';
   return `<div class="cn-pad cn-cover">
-    <div class="cn-top">
-      <span class="cn-kicker">${esc(L().brand)}</span>
-      <span class="cn-kicker r">${esc(L().tagline)}</span>
-    </div>
+    ${topBar(T().brand, T().tagline)}
     <h1 class="cn-title">${esc(state.opts.title)}</h1>
     ${state.opts.subtitle ? `<div class="cn-sub">${esc(state.opts.subtitle)}</div>` : ''}
     <div class="cn-photo"><img src="${esc(img)}" crossorigin="anonymous" referrerpolicy="no-referrer"></div>
     ${fan}
-    <div class="cn-foot">
-      <span>${esc(state.opts.coverSrc || '')}</span>
-      <span class="cn-cnt">${String(sel.length).padStart(2, '0')} ${esc(L().books)}</span>
-    </div>
+    <div class="cn-foot"><span>${esc(state.opts.coverSrc || '')}</span><span class="cn-cnt">${String(sel.length).padStart(2, '0')} ${T().books}</span></div>
   </div>`;
 }
 
+function bookTitle(r) { return state.opts.lang === 'en' ? (r.title_en || r.title) : r.title; }
+function bookAuthor(r) { return state.opts.lang === 'en' ? (r.author_en || r.author) : r.author; }
+
 function bookHTML(b, idx, total) {
-  const r = b.ref;
-  const ch = state.opts.format === 'square' ? 360 : 470;
-  const cw = Math.round(ch * 0.66);
+  const r = b.ref, sq = state.opts.format === 'square';
+  const ch = sq ? 360 : 470, cw = Math.round(ch * 0.66);
   const cite = citeParts(b);
+  const meta = [bookAuthor(r), state.opts.lang === 'en' ? '' : r.publisher].filter(Boolean).join(' · ');
   const quote = b.quote
     ? `<div class="cn-quote"><span class="qmark">“</span><p>${esc(b.quote)}</p></div>`
-    : `<div class="cn-quote empty"><span class="qmark">“</span><p>${esc(L().emptyQuote(displayName(state.name)))}</p></div>`;
+    : `<div class="cn-quote empty"><span class="qmark">“</span><p>${esc(T().emptyQuote(displayName(state.name)))}</p></div>`;
   return `<div class="cn-pad cn-book">
     <div class="cn-top">
       <span class="cn-big-num"><span class="cn-num-lat">${String(idx).padStart(2, '0')}</span> / ${String(total).padStart(2, '0')}</span>
-      <span class="cn-kicker">${esc(L().brand)}</span>
+      <span class="cn-kicker r">${esc(T().brand)}</span>
     </div>
     <div class="cn-body">
       <div class="cn-cover-img" style="width:${cw}px;height:${ch}px">
         <img src="${esc(proxify(r.coverUrl))}" crossorigin="anonymous" referrerpolicy="no-referrer">
       </div>
-      <h2 class="cn-bk-title">${esc(bkTitle(r))}</h2>
-      <div class="cn-bk-meta">${esc(bkAuthor(r) || '')}${r.publisher ? ' · ' + esc(r.publisher) : ''}</div>
+      <h2 class="cn-bk-title">${esc(bookTitle(r))}</h2>
+      ${meta ? `<div class="cn-bk-meta">${esc(meta)}</div>` : ''}
       ${quote}
     </div>
-    ${cite ? `<div class="cn-src"><span class="cn-src-lab">${esc(L().source)}</span><span class="cn-cite">${cite}</span></div>` : ''}
+    ${cite ? `<div class="cn-src"><span class="cn-src-lab">${esc(T().source)}</span><span class="cn-cite">${cite}</span></div>` : ''}
   </div>`;
 }
 
 function outroHTML() {
   const sel = selectedBooks();
-  // 텍스트(언급) 출처
+  // 텍스트(인용) 출처
   const txt = sel.map((b, i) =>
     `<li><span class="n">${String(i + 1).padStart(2, '0')}</span>
-      <span><b>《${esc(bkTitle(b.ref))}》</b> ${esc(citeText(b) || L().noSrc)}</span></li>`).join('');
+      <span class="t"><b>《${esc(bookTitle(b.ref))}》</b> — ${esc(citeText(b) || T().noSrc)}</span></li>`).join('');
   // 이미지 출처
   const imgItems = [];
-  if (state.opts.coverSrc) imgItems.push(`<li><span class="n">·</span><span>${esc(L().coverPhoto)} ${esc(state.opts.coverSrc)}</span></li>`);
-  imgItems.push(`<li><span class="n">·</span><span>${esc(L().bookCover)}</span></li>`);
+  if (state.opts.coverSrc) imgItems.push(`${T().coverPhoto} — ${state.opts.coverSrc.replace(/^ⓒ\s*/, '')}`);
+  imgItems.push(T().bookCoverCredit);
+  const img = imgItems.map((s, i) =>
+    `<li><span class="n">${String(i + 1).padStart(2, '0')}</span><span class="t">${esc(s)}</span></li>`).join('');
   return `<div class="cn-pad cn-outro">
-    <div class="cn-top">
-      <span class="cn-kicker">${esc(L().brand)}</span>
-      <span class="cn-kicker r">${esc(L().tagline)}</span>
-    </div>
-    <h2 class="cn-otitle">${esc(L().sources)}</h2>
+    ${topBar(T().brand, T().tagline)}
+    <h2 class="cn-otitle">${esc(T().sources)}</h2>
     <div class="cn-srcgroup">
-      <div class="cn-glab">${esc(L().txtGroup)}</div>
+      <div class="cn-glab">${esc(T().txtGroup)}</div>
       <ul class="cn-srclist">${txt}</ul>
     </div>
     <div class="cn-srcgroup">
-      <div class="cn-glab">${esc(L().imgGroup)}</div>
-      <ul class="cn-srclist">${imgItems.join('')}</ul>
+      <div class="cn-glab">${esc(T().imgGroup)}</div>
+      <ul class="cn-srclist">${img}</ul>
     </div>
     <div class="cn-spacer"></div>
     <div class="cn-foot"><span class="h">${esc(displayName(state.name))}</span><span class="g">${esc(state.opts.handle)}</span></div>
@@ -510,21 +542,20 @@ function outroHTML() {
 
 function promoHTML() {
   return `<div class="cn-pad cn-promo">
-    <div class="cn-mark">${esc(L().brand)}</div>
-    <div class="cn-bn">${esc(state.opts.handle)}</div>
-    <div class="cn-tag">${esc(L().promoTag)}</div>
-    <div class="cn-stat">${esc(L().promoStat(state.meta.celebs, state.meta.books))}</div>
-    <div class="cn-cta">${esc(L().promoCta)} <span class="arr">→</span></div>
+    <div class="cn-mark">Favoread</div>
+    <div class="cn-bn">${esc(T().brand)}</div>
+    <div class="cn-tag">${esc(T().promoTag)}</div>
+    <div class="cn-stat">${esc(T().promoStat(state.celebCount, state.bookCount))}</div>
+    <div class="cn-cta">${esc(state.opts.handle)} <span class="arr">→</span></div>
   </div>`;
 }
 
 function buildSlides() {
-  const slides = [];
-  const sel = selectedBooks();
-  slides.push({ name: 'cover', label: '표지', html: coverHTML() });
-  sel.forEach((b, i) => slides.push({ name: `book${i + 1}`, label: `본문 ${i + 1}`, html: bookHTML(b, i + 1, sel.length) }));
-  if (state.opts.outro && sel.length) slides.push({ name: 'sources', label: '출처', html: outroHTML() });
-  if (state.opts.promo) slides.push({ name: 'promo', label: '홍보', html: promoHTML() });
+  const slides = [], sel = selectedBooks();
+  slides.push({ name: 'cover', html: coverHTML() });
+  sel.forEach((b, i) => slides.push({ name: `book${i + 1}`, html: bookHTML(b, i + 1, sel.length) }));
+  if (state.opts.outro && sel.length) slides.push({ name: 'sources', html: outroHTML() });
+  if (state.opts.promo) slides.push({ name: 'promo', html: promoHTML() });
   return slides;
 }
 
@@ -534,14 +565,9 @@ function makeSlideEl(html) {
     + (state.opts.format === 'square' ? ' square' : '')
     + (state.opts.mono ? ' cn-mono' : '')
     + (state.opts.fit === 'cover' ? ' fit-cover' : ' fit-contain');
-  const p = paletteFor(state.opts.bg);
-  el.style.background = p.paper;
-  el.style.setProperty('--paper', p.paper);
-  el.style.setProperty('--ink', p.ink);
-  el.style.setProperty('--soft', p.soft);
-  el.style.setProperty('--mute', p.mute);
-  el.style.setProperty('--line', p.line);
-  el.style.setProperty('--panel', p.panel);
+  const pal = paletteFor(state.opts.bg);
+  for (const k in pal) el.style.setProperty(k, pal[k]);
+  el.style.background = pal['--paper'];
   el.innerHTML = html;
   return el;
 }
@@ -565,13 +591,14 @@ function renderPreview() {
     el.style.transform = `scale(${s})`;
     const frame = document.createElement('div');
     frame.className = 'cn-frame';
-    frame.style.width = `${w * s}px`;
-    frame.style.height = `${h * s}px`;
+    frame.style.width = `${w * s}px`; frame.style.height = `${h * s}px`;
     frame.appendChild(el);
 
     const bar = document.createElement('div');
     bar.className = 'slide-bar';
-    bar.innerHTML = `<b>${String(i + 1).padStart(2, '0')}</b> ${esc(sl.label)}`;
+    const labels = { cover: '표지', sources: '출처', promo: '홍보' };
+    const label = labels[sl.name] || `본문 ${sl.name.replace('book', '')}`;
+    bar.innerHTML = `<b>${String(i + 1).padStart(2, '0')}</b> ${label}`;
     const dl = document.createElement('button');
     dl.textContent = '⤓ PNG';
     dl.addEventListener('click', () => exportOne(sl, i));
@@ -587,62 +614,19 @@ let resizeT;
 window.addEventListener('resize', () => { clearTimeout(resizeT); resizeT = setTimeout(renderPreview, 150); });
 
 /* ========================================================
-   원고 복사
-   ======================================================== */
-function buildScript() {
-  const dn = displayName(state.name);
-  const sel = selectedBooks();
-  const lines = [];
-  lines.push(`[${L().brand}] ${state.opts.title}`);
-  if (state.opts.subtitle) lines.push(state.opts.subtitle);
-  if (state.opts.coverSrc) lines.push(`${L().coverPhoto}: ${state.opts.coverSrc}`);
-  lines.push('');
-  sel.forEach((b, i) => {
-    const r = b.ref;
-    lines.push(`${String(i + 1).padStart(2, '0')}. 《${bkTitle(r)}》 — ${bkAuthor(r) || ''}${r.publisher ? ' / ' + r.publisher : ''}`);
-    if (b.quote) lines.push(`   “${b.quote}”`);
-    const c = citeText(b); if (c) lines.push(`   ${L().source}: ${c}`);
-    lines.push('');
-  });
-  lines.push(`[${L().sources}]`);
-  lines.push(`· ${L().txtGroup}`);
-  sel.forEach((b, i) => lines.push(`  ${String(i + 1).padStart(2, '0')} 《${bkTitle(b.ref)}》 ${citeText(b) || L().noSrc}`));
-  lines.push(`· ${L().imgGroup}`);
-  if (state.opts.coverSrc) lines.push(`  ${L().coverPhoto} ${state.opts.coverSrc}`);
-  lines.push(`  ${L().bookCover}`);
-  lines.push('');
-  lines.push(`${L().promoTag} — ${state.opts.handle}`);
-  return lines.join('\n');
-}
-
-async function copyScript() {
-  const text = buildScript();
-  try {
-    await navigator.clipboard.writeText(text);
-    status('원고가 복사되었어요');
-  } catch {
-    const ta = document.createElement('textarea');
-    ta.value = text; document.body.appendChild(ta); ta.select();
-    try { document.execCommand('copy'); status('원고가 복사되었어요'); }
-    catch { status('복사 실패 — 콘솔에 출력했어요'); console.log(text); }
-    ta.remove();
-  }
-}
-
-/* ========================================================
    내보내기
    ======================================================== */
 function waitForImages(node, timeout = 9000) {
   return Promise.all($$('img', node).map((img) => {
     if (img.complete && img.naturalWidth) return Promise.resolve();
     return new Promise((resolve) => {
-      img.addEventListener('load', resolve, { once: true });
-      img.addEventListener('error', resolve, { once: true });
-      setTimeout(resolve, timeout);
+      const done = () => resolve();
+      img.addEventListener('load', done, { once: true });
+      img.addEventListener('error', done, { once: true });
+      setTimeout(done, timeout);
     });
   }));
 }
-
 async function slideToCanvas(sl) {
   const [w, h] = dims();
   const el = makeSlideEl(sl.html);
@@ -661,7 +645,6 @@ async function slideToCanvas(sl) {
     });
   } finally { holder.remove(); }
 }
-
 function safeName(s) { return String(s).replace(/[\\/:*?"<>|]/g, '_').replace(/\s+/g, '_'); }
 function canvasToBlob(c) { return new Promise((r) => c.toBlob(r, 'image/png')); }
 
@@ -672,16 +655,14 @@ async function exportOne(sl, i) {
     const a = document.createElement('a');
     a.href = URL.createObjectURL(blob);
     a.download = `${safeName(displayName(state.name))}_${String(i + 1).padStart(2, '0')}_${sl.name}.png`;
-    a.click(); setTimeout(() => URL.revokeObjectURL(a.href), 4000);
+    a.click();
+    setTimeout(() => URL.revokeObjectURL(a.href), 4000);
     status('완료');
-  } catch (e) { console.error(e); status('저장 실패 (프록시를 켜고 다시 시도)'); }
+  } catch (e) { console.error(e); status('저장 실패 (프록시를 켜고 다시 시도해 보세요)'); }
 }
-
 async function exportZip() {
   if (!state.celeb) return;
-  const slides = buildSlides();
-  const zip = new JSZip();
-  const base = safeName(displayName(state.name));
+  const slides = buildSlides(), zip = new JSZip(), base = safeName(displayName(state.name));
   for (let i = 0; i < slides.length; i++) {
     status(`PNG ${i + 1}/${slides.length} 만드는 중…`);
     const blob = await canvasToBlob(await slideToCanvas(slides[i]));
@@ -692,8 +673,50 @@ async function exportZip() {
   const a = document.createElement('a');
   a.href = URL.createObjectURL(out);
   a.download = `favoread_cardnews_${base}.zip`;
-  a.click(); setTimeout(() => URL.revokeObjectURL(a.href), 4000);
+  a.click();
+  setTimeout(() => URL.revokeObjectURL(a.href), 4000);
   status(`완료 · ${slides.length}장`);
+}
+
+/* ========================================================
+   전체 원고 복사
+   ======================================================== */
+function buildScript() {
+  const dn = displayName(state.name), sel = selectedBooks(), lines = [];
+  lines.push(`[${T().brand}] ${state.opts.title}`);
+  if (state.opts.subtitle) lines.push(state.opts.subtitle);
+  if (state.opts.coverSrc) lines.push(state.opts.coverSrc);
+  lines.push('');
+  sel.forEach((b, i) => {
+    const r = b.ref;
+    lines.push(`${String(i + 1).padStart(2, '0')}. 《${bookTitle(r)}》 ${[bookAuthor(r), state.opts.lang === 'en' ? '' : r.publisher].filter(Boolean).join(' · ')}`);
+    if (b.quote) lines.push(`“${b.quote}”`);
+    const c = citeText(b); if (c) lines.push(`${T().source}: ${c}`);
+    lines.push('');
+  });
+  lines.push(`[${T().sources}]`);
+  lines.push(`· ${T().txtGroup}`);
+  sel.forEach((b, i) => lines.push(`  ${i + 1}. 《${bookTitle(b.ref)}》 — ${citeText(b) || T().noSrc}`));
+  lines.push(`· ${T().imgGroup}`);
+  if (state.opts.coverSrc) lines.push(`  - ${T().coverPhoto} — ${state.opts.coverSrc.replace(/^ⓒ\s*/, '')}`);
+  lines.push(`  - ${T().bookCoverCredit}`);
+  lines.push('');
+  lines.push(`${T().brand} · ${T().promoTag}`);
+  lines.push(`${T().promoStat(state.celebCount, state.bookCount)} · ${state.opts.handle}`);
+  return lines.join('\n');
+}
+async function copyScript() {
+  const text = buildScript();
+  try {
+    await navigator.clipboard.writeText(text);
+    status('원고가 복사되었어요');
+  } catch {
+    const ta = document.createElement('textarea');
+    ta.value = text; document.body.appendChild(ta); ta.select();
+    try { document.execCommand('copy'); status('원고가 복사되었어요'); }
+    catch { status('복사 실패'); }
+    ta.remove();
+  }
 }
 
 boot();
