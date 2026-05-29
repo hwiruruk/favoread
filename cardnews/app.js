@@ -62,7 +62,7 @@ const state = {
     lang: 'ko',
     format: 'portrait',
     coverLayout: 'split',   // split(좌우) | stack(상하)
-    fit: 'contain',
+    fit: 'cover',           // 인물 사진: cover(채움) | contain(전체)
     bg: '#f4f1e9',
     mono: false,
     covers: true,           // 표지에 책 표지 노출
