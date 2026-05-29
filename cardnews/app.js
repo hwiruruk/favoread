@@ -66,6 +66,8 @@ const state = {
     bg: '#f4f1e9',
     mono: false,
     covers: true,           // 표지에 책 표지 노출
+    bookGrid: true,         // 책 표지 2열 그리드(아니면 한 줄)
+    imgPos: 'center',       // 표지 사진 세로 위치 top|center|bottom
     noImage: false,         // 표지 사진 비우고 프레임만
     outro: true,
     promo: true,
@@ -426,6 +428,12 @@ function bindOptions() {
   $$('input[name=coverLayout]').forEach((r) => r.addEventListener('change', () => {
     state.opts.coverLayout = $$('input[name=coverLayout]').find((x) => x.checked).value; renderPreview();
   }));
+  $$('input[name=bookGrid]').forEach((r) => r.addEventListener('change', () => {
+    state.opts.bookGrid = $$('input[name=bookGrid]').find((x) => x.checked).value === 'grid'; renderPreview();
+  }));
+  $$('input[name=imgPos]').forEach((r) => r.addEventListener('change', () => {
+    state.opts.imgPos = $$('input[name=imgPos]').find((x) => x.checked).value; renderPreview();
+  }));
   $('#optMono').addEventListener('change', (e) => { state.opts.mono = e.target.checked; renderPreview(); });
   $('#optCovers').addEventListener('change', (e) => { state.opts.covers = e.target.checked; renderPreview(); });
   $('#optNoImage').addEventListener('change', (e) => { state.opts.noImage = e.target.checked; renderPreview(); });
@@ -462,12 +470,25 @@ function topBar(left, right) {
     ${right ? `<span class="cn-kicker r">${esc(right)}</span>` : ''}</div>`;
 }
 
-function fanHTML(sel, n, h) {
+// 이미지는 <img object-fit> 대신 background-image div로 그린다
+// (html2canvas가 object-fit을 제대로 못 그려 세로로 늘어나는 문제 방지)
+function imgBg(url, cls, w, h) {
+  const wh = (w && h) ? `width:${w}px;height:${h}px;` : '';
+  return `<div class="cn-imgbg ${cls}" style="${wh}background-image:url('${esc(url)}')"></div>`;
+}
+function coverCell(b, w, h) { return imgBg(proxify(b.ref.coverUrl), 'bk', w, h); }
+
+function bookCovers(sel, sq) {
   if (!state.opts.covers || !sel.length) return '';
-  return `<div class="cn-fan" style="height:${h}px">${sel.slice(0, n).map((b) => {
+  if (state.opts.bookGrid) {
+    const n = Math.min(sel.length, 10);            // 최대 2열 × 5행
+    const rows = Math.ceil(n / 2), gap = 16, budget = sq ? 460 : 640;
+    const h = Math.max(96, Math.min(sq ? 230 : 300, Math.floor((budget - (rows - 1) * gap) / rows)));
     const w = Math.round(h * 0.66);
-    return `<div class="bk" style="width:${w}px"><img src="${esc(proxify(b.ref.coverUrl))}" crossorigin="anonymous" referrerpolicy="no-referrer"></div>`;
-  }).join('')}</div>`;
+    return `<div class="cn-covers grid" style="gap:${gap}px">${sel.slice(0, n).map((b) => coverCell(b, w, h)).join('')}</div>`;
+  }
+  const n = Math.min(sel.length, sq ? 4 : 5), h = sq ? 128 : 168, w = Math.round(h * 0.66);
+  return `<div class="cn-covers row">${sel.slice(0, n).map((b) => coverCell(b, w, h)).join('')}</div>`;
 }
 
 function coverHTML() {
@@ -475,12 +496,12 @@ function coverHTML() {
   const img = state.customImage || proxify(state.celeb.imageUrl);
   const sq = state.opts.format === 'square';
   const foot = state.opts.coverSrc ? `<div class="cn-foot"><span>${esc(state.opts.coverSrc)}</span></div>` : '';
+  const covers = bookCovers(sel, sq);
 
   if (state.opts.coverLayout === 'split') {
-    const fan = fanHTML(sel, sq ? 3 : 4, sq ? 118 : 150);
     const photo = state.opts.noImage
       ? `<div class="cn-split-photo empty"></div>`
-      : `<div class="cn-split-photo"><img src="${esc(img)}" crossorigin="anonymous" referrerpolicy="no-referrer"></div>`;
+      : imgBg(img, 'cn-split-photo');
     return `<div class="cn-cover split">
       <div class="cn-split-main">
         <div class="cn-cv-brand"><span class="cn-kicker">${esc(T().brand)}</span><span class="cn-kicker tag">${esc(T().tagline)}</span></div>
@@ -488,7 +509,7 @@ function coverHTML() {
           <h1 class="cn-title">${esc(state.opts.title)}</h1>
           ${state.opts.subtitle ? `<div class="cn-sub">${esc(state.opts.subtitle)}</div>` : ''}
         </div>
-        ${fan}
+        ${covers}
         ${foot}
       </div>
       ${photo}
@@ -496,16 +517,15 @@ function coverHTML() {
   }
 
   // stack (기본 상하)
-  const fan = fanHTML(sel, sq ? 4 : 5, sq ? 128 : 168);
   const photo = state.opts.noImage
     ? `<div class="cn-photo empty"></div>`
-    : `<div class="cn-photo"><img src="${esc(img)}" crossorigin="anonymous" referrerpolicy="no-referrer"></div>`;
+    : imgBg(img, 'cn-photo');
   return `<div class="cn-pad cn-cover">
     ${topBar(T().brand, T().tagline)}
     <h1 class="cn-title">${esc(state.opts.title)}</h1>
     ${state.opts.subtitle ? `<div class="cn-sub">${esc(state.opts.subtitle)}</div>` : ''}
     ${photo}
-    ${fan}
+    ${covers}
     ${foot}
   </div>`;
 }
@@ -528,9 +548,7 @@ function bookHTML(b, idx, total) {
       <span class="cn-kicker r">${esc(T().brand)}</span>
     </div>
     <div class="cn-body">
-      <div class="cn-cover-img" style="width:${cw}px;height:${ch}px">
-        <img src="${esc(proxify(r.coverUrl))}" crossorigin="anonymous" referrerpolicy="no-referrer">
-      </div>
+      ${imgBg(proxify(r.coverUrl), 'cn-cover-img', cw, ch)}
       <h2 class="cn-bk-title">${esc(bookTitle(r))}</h2>
       ${meta ? `<div class="cn-bk-meta">${esc(meta)}</div>` : ''}
       ${quote}
@@ -594,6 +612,8 @@ function makeSlideEl(html) {
   const pal = paletteFor(state.opts.bg);
   for (const k in pal) el.style.setProperty(k, pal[k]);
   el.style.background = pal['--paper'];
+  const posMap = { top: 'center 18%', center: 'center', bottom: 'center 82%' };
+  el.style.setProperty('--imgpos', posMap[state.opts.imgPos] || 'center');
   el.innerHTML = html;
   return el;
 }
@@ -643,15 +663,29 @@ window.addEventListener('resize', () => { clearTimeout(resizeT); resizeT = setTi
    내보내기
    ======================================================== */
 function waitForImages(node, timeout = 9000) {
-  return Promise.all($$('img', node).map((img) => {
-    if (img.complete && img.naturalWidth) return Promise.resolve();
-    return new Promise((resolve) => {
-      const done = () => resolve();
-      img.addEventListener('load', done, { once: true });
-      img.addEventListener('error', done, { once: true });
-      setTimeout(done, timeout);
-    });
-  }));
+  const tasks = [];
+  // <img> 요소
+  $$('img', node).forEach((img) => {
+    if (img.complete && img.naturalWidth) return;
+    tasks.push(new Promise((resolve) => {
+      img.addEventListener('load', resolve, { once: true });
+      img.addEventListener('error', resolve, { once: true });
+      setTimeout(resolve, timeout);
+    }));
+  });
+  // background-image div (카드 이미지)
+  $$('.cn-imgbg', node).forEach((d) => {
+    const m = /url\(["']?(.*?)["']?\)/.exec(d.style.backgroundImage || '');
+    if (!m || !m[1]) return;
+    tasks.push(new Promise((resolve) => {
+      const im = new Image();
+      im.crossOrigin = 'anonymous';
+      im.onload = resolve; im.onerror = resolve;
+      im.src = m[1];
+      setTimeout(resolve, timeout);
+    }));
+  });
+  return Promise.all(tasks);
 }
 async function slideToCanvas(sl) {
   const [w, h] = dims();
