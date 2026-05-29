@@ -1,0 +1,126 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex,nofollow">
+<title>Favoread 카드뉴스 빌더</title>
+<link rel="icon" href="../favicon.svg">
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+KR:wght@300;400;500;700;900&family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,400&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.css">
+<link rel="stylesheet" href="styles.css">
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+</head>
+<body>
+
+<header class="topbar">
+  <div class="brand">
+    <span class="logo">▤</span>
+    <strong>Favoread <span class="brand-sub">카드뉴스 빌더</span></strong>
+  </div>
+  <div class="topbar-actions">
+    <span id="statusMsg" class="status"></span>
+    <button id="zipBtn" class="btn primary" disabled>⤓ 전체 PNG (ZIP)</button>
+  </div>
+</header>
+
+<main class="layout">
+
+  <aside class="panel">
+
+    <!-- 1. 인물 검색 -->
+    <section class="block">
+      <div class="block-title">① 인물 검색</div>
+      <div class="search-wrap">
+        <input id="search" type="search" placeholder="이름을 입력하세요 (예: 아이유, 뷔, 임윤찬)" autocomplete="off">
+        <ul id="results" class="results hidden"></ul>
+      </div>
+    </section>
+
+    <!-- 2. 선택된 인물 -->
+    <section class="block hidden" id="celebBlock">
+      <div class="block-title">② 선택된 인물</div>
+      <div class="celeb-card">
+        <img id="celebThumb" alt="" referrerpolicy="no-referrer">
+        <div class="celeb-meta">
+          <strong id="celebName">—</strong>
+          <span id="celebCount" class="muted">—</span>
+          <label class="mini-file">
+            🖼 표지 사진 교체
+            <input id="celebUpload" type="file" accept="image/*" hidden>
+          </label>
+        </div>
+      </div>
+    </section>
+
+    <!-- 3. 카드 설정 -->
+    <section class="block hidden" id="optsBlock">
+      <div class="block-title">③ 카드 설정</div>
+
+      <label class="field">
+        <span>표지 제목</span>
+        <input id="optTitle" type="text">
+      </label>
+      <label class="field">
+        <span>표지 부제</span>
+        <input id="optSubtitle" type="text">
+      </label>
+
+      <div class="field">
+        <span>사이즈 (인스타그램)</span>
+        <div class="seg">
+          <label><input type="radio" name="format" value="portrait" checked> 4:5 세로 <em>1080×1350</em></label>
+          <label><input type="radio" name="format" value="square"> 1:1 정사각 <em>1080×1080</em></label>
+        </div>
+      </div>
+
+      <div class="field-row">
+        <label class="chk"><input id="optMono" type="checkbox"> 흑백 톤 (antiegg)</label>
+        <label class="chk"><input id="optOutro" type="checkbox" checked> 출처 모음 슬라이드</label>
+      </div>
+      <div class="field-row">
+        <label class="chk"><input id="optProxy" type="checkbox" checked> 이미지 프록시</label>
+        <label class="field tight">
+          <span>핸들/도메인</span>
+          <input id="optHandle" type="text" value="favorbook.co.kr">
+        </label>
+      </div>
+      <p class="hint">※ 외부 이미지는 PNG로 저장하려면 프록시가 필요해요. 저장이 안 되면 프록시를 켠 상태로 다시 시도하세요.</p>
+    </section>
+
+    <!-- 4. 책 선택 & 편집 -->
+    <section class="block hidden" id="booksBlock">
+      <div class="block-title">
+        ④ 책 선택 &amp; 대목·출처 편집
+        <span class="title-tools">
+          <button id="selAll" class="btn tiny">전체</button>
+          <button id="selNone" class="btn tiny">해제</button>
+        </span>
+      </div>
+      <p class="hint">체크한 책이 카드가 됩니다. 펼쳐서 <b>언급 대목(인용)</b>과 <b>출처</b>를 다듬으세요.</p>
+      <ul id="bookList" class="book-list"></ul>
+    </section>
+
+  </aside>
+
+  <section class="stage">
+    <div id="stageEmpty" class="stage-empty">
+      <div class="stage-empty-inner">
+        <div class="big">▤</div>
+        <p>왼쪽에서 인물을 검색하면<br>인스타그램용 카드뉴스가 여기에 만들어집니다.</p>
+        <p class="muted">표지 · 본문(책 표지 + 언급 대목) · 출처까지 한 번에.</p>
+      </div>
+    </div>
+    <div id="slides" class="slides"></div>
+  </section>
+
+</main>
+
+<script src="app.js"></script>
+</body>
+</html>
