@@ -245,6 +245,7 @@ async function boot() {
   buildSwatches();
   bindOptions();
   bindSearch();
+  $('#loadBtn').disabled = false;
 }
 
 /* ========================================================
@@ -329,6 +330,7 @@ function selectCeleb(name) {
   $('#celebCount').textContent = `책 ${state.celeb.books.length}권`;
   $('#zipBtn').disabled = false;
   $('#copyBtn').disabled = false;
+  $('#saveBtn').disabled = false;
 
   renderBookList();
   renderPreview();
@@ -457,6 +459,96 @@ function bindOptions() {
 
   $('#zipBtn').addEventListener('click', exportZip);
   $('#copyBtn').addEventListener('click', copyScript);
+  $('#saveBtn').addEventListener('click', saveProject);
+  $('#loadBtn').addEventListener('click', () => $('#loadFile').click());
+  $('#loadFile').addEventListener('change', (e) => {
+    const f = e.target.files[0]; if (!f) return;
+    const fr = new FileReader();
+    fr.onload = () => loadProject(fr.result);
+    fr.readAsText(f);
+    e.target.value = '';
+  });
+}
+
+/* ========================================================
+   프로젝트 저장 / 불러오기 (JSON)
+   ======================================================== */
+function setRadio(name, val) { const el = $$(`input[name=${name}]`).find((x) => x.value === val); if (el) el.checked = true; }
+
+function syncControls() {
+  $('#optTitle').value = state.opts.title;
+  $('#optSubtitle').value = state.opts.subtitle;
+  $('#optCoverSrc').value = state.opts.coverSrc;
+  $('#optHandle').value = state.opts.handle;
+  setRadio('lang', state.opts.lang);
+  setRadio('format', state.opts.format);
+  setRadio('fit', state.opts.fit);
+  setRadio('coverLayout', state.opts.coverLayout);
+  setRadio('imgPos', state.opts.imgPos);
+  setRadio('bookGrid', state.opts.bookGrid ? 'grid' : 'row');
+  $('#optMono').checked = !!state.opts.mono;
+  $('#optCovers').checked = !!state.opts.covers;
+  $('#optNoImage').checked = !!state.opts.noImage;
+  $('#optOutro').checked = !!state.opts.outro;
+  $('#optPromo').checked = !!state.opts.promo;
+  $('#optProxy').checked = !!state.opts.proxy;
+  if (!/^#[0-9a-f]{6}$/i.test(state.opts.bg)) state.opts.bg = '#f4f1e9';
+  $('#optBgCustom').value = state.opts.bg;
+  markSwatch();
+}
+
+function saveProject() {
+  if (!state.celeb) return;
+  const proj = {
+    app: 'favoread-cardnews', version: 1, savedAt: new Date().toISOString(),
+    name: state.name,
+    autoText: state.autoText,
+    customImage: state.customImage || null,
+    opts: state.opts,
+    books: state.books.map((b) => ({
+      title: b.ref.title, author: b.ref.author,
+      selected: b.selected, quote: b.quote, noQuote: b.noQuote, srcName: b.srcName,
+    })),
+  };
+  const blob = new Blob([JSON.stringify(proj, null, 2)], { type: 'application/json' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = `favoread_cardnews_${safeName(displayName(state.name))}.json`;
+  a.click();
+  setTimeout(() => URL.revokeObjectURL(a.href), 4000);
+  status('프로젝트를 저장했어요 (JSON)');
+}
+
+function loadProject(text) {
+  let proj;
+  try { proj = JSON.parse(text); } catch { status('JSON을 읽지 못했어요'); return; }
+  if (!proj || proj.app !== 'favoread-cardnews') { status('이 도구의 프로젝트 파일이 아니에요'); return; }
+  const name = proj.name;
+  if (!name || !state.data.celebs[name]) { status(`'${name || '?'}'(은)는 현재 데이터에 없어요`); return; }
+
+  selectCeleb(name);                       // 데이터에서 책/UI 재구성
+  Object.assign(state.opts, proj.opts || {});
+  state.autoText = proj.autoText !== undefined ? proj.autoText : false;
+  state.customImage = proj.customImage || null;
+
+  const saved = Array.isArray(proj.books) ? proj.books : [];
+  state.books.forEach((b, i) => {
+    let m = saved[i] && saved[i].title === b.ref.title ? saved[i] : null;
+    if (!m) m = saved.find((s) => s.title === b.ref.title);
+    if (m) {
+      b.selected = !!m.selected;
+      b.quote = m.quote || '';
+      b.noQuote = !!m.noQuote;
+      if (m.srcName != null) b.srcName = m.srcName;
+    }
+  });
+
+  if (state.customImage) $('#celebThumb').src = state.customImage;
+  $('#search').value = name;
+  syncControls();
+  renderBookList();
+  renderPreview();
+  status('프로젝트를 불러왔어요');
 }
 
 /* ========================================================
