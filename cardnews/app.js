@@ -61,6 +61,7 @@ const state = {
   opts: {
     lang: 'ko',
     format: 'portrait',
+    coverLayout: 'split',   // split(좌우) | stack(상하)
     fit: 'contain',
     bg: '#f4f1e9',
     mono: false,
@@ -422,6 +423,9 @@ function bindOptions() {
   $$('input[name=fit]').forEach((r) => r.addEventListener('change', () => {
     state.opts.fit = $$('input[name=fit]').find((x) => x.checked).value; renderPreview();
   }));
+  $$('input[name=coverLayout]').forEach((r) => r.addEventListener('change', () => {
+    state.opts.coverLayout = $$('input[name=coverLayout]').find((x) => x.checked).value; renderPreview();
+  }));
   $('#optMono').addEventListener('change', (e) => { state.opts.mono = e.target.checked; renderPreview(); });
   $('#optCovers').addEventListener('change', (e) => { state.opts.covers = e.target.checked; renderPreview(); });
   $('#optNoImage').addEventListener('change', (e) => { state.opts.noImage = e.target.checked; renderPreview(); });
@@ -458,18 +462,41 @@ function topBar(left, right) {
     ${right ? `<span class="cn-kicker r">${esc(right)}</span>` : ''}</div>`;
 }
 
+function fanHTML(sel, n, h) {
+  if (!state.opts.covers || !sel.length) return '';
+  return `<div class="cn-fan" style="height:${h}px">${sel.slice(0, n).map((b) => {
+    const w = Math.round(h * 0.66);
+    return `<div class="bk" style="width:${w}px"><img src="${esc(proxify(b.ref.coverUrl))}" crossorigin="anonymous" referrerpolicy="no-referrer"></div>`;
+  }).join('')}</div>`;
+}
+
 function coverHTML() {
-  const dn = displayName(state.name);
   const sel = selectedBooks();
   const img = state.customImage || proxify(state.celeb.imageUrl);
   const sq = state.opts.format === 'square';
-  const fanN = sq ? 4 : 5;
-  const fan = state.opts.covers && sel.length
-    ? `<div class="cn-fan">${sel.slice(0, fanN).map((b) => {
-        const h = sq ? 128 : 168, w = Math.round(h * 0.66);
-        return `<div class="bk" style="width:${w}px"><img src="${esc(proxify(b.ref.coverUrl))}" crossorigin="anonymous" referrerpolicy="no-referrer"></div>`;
-      }).join('')}</div>`
-    : '';
+  const foot = state.opts.coverSrc ? `<div class="cn-foot"><span>${esc(state.opts.coverSrc)}</span></div>` : '';
+
+  if (state.opts.coverLayout === 'split') {
+    const fan = fanHTML(sel, sq ? 3 : 4, sq ? 118 : 150);
+    const photo = state.opts.noImage
+      ? `<div class="cn-split-photo empty"></div>`
+      : `<div class="cn-split-photo"><img src="${esc(img)}" crossorigin="anonymous" referrerpolicy="no-referrer"></div>`;
+    return `<div class="cn-cover split">
+      <div class="cn-split-main">
+        <div class="cn-cv-brand"><span class="cn-kicker">${esc(T().brand)}</span><span class="cn-kicker tag">${esc(T().tagline)}</span></div>
+        <div class="cn-cv-body">
+          <h1 class="cn-title">${esc(state.opts.title)}</h1>
+          ${state.opts.subtitle ? `<div class="cn-sub">${esc(state.opts.subtitle)}</div>` : ''}
+        </div>
+        ${fan}
+        ${foot}
+      </div>
+      ${photo}
+    </div>`;
+  }
+
+  // stack (기본 상하)
+  const fan = fanHTML(sel, sq ? 4 : 5, sq ? 128 : 168);
   const photo = state.opts.noImage
     ? `<div class="cn-photo empty"></div>`
     : `<div class="cn-photo"><img src="${esc(img)}" crossorigin="anonymous" referrerpolicy="no-referrer"></div>`;
@@ -479,7 +506,7 @@ function coverHTML() {
     ${state.opts.subtitle ? `<div class="cn-sub">${esc(state.opts.subtitle)}</div>` : ''}
     ${photo}
     ${fan}
-    ${state.opts.coverSrc ? `<div class="cn-foot"><span>${esc(state.opts.coverSrc)}</span></div>` : ''}
+    ${foot}
   </div>`;
 }
 
