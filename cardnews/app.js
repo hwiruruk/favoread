@@ -32,7 +32,7 @@ const L = {
     noSrc: '출처 미상',
   },
   en: {
-    brand: 'FAVOREAD',
+    brand: 'FAVORBOOK',
     tagline: 'The books your faves are reading',
     book: 'BOOK', source: 'SOURCE', books: 'BOOKS',
     sources: 'Sources', imgGroup: 'Images', txtGroup: 'Text',
@@ -204,6 +204,7 @@ const SRC_MAP = [
   ['wikimedia.org', '위키미디어 커먼즈', '이미지'],
   ['wikipedia.org', '위키백과', '이미지'],
   ['namu.wiki', '나무위키', '이미지'],
+  ['tmdb', 'TMDB', '이미지'],
   ['talkimg.imbc.com', 'MBC', '방송'],
 ];
 
@@ -225,8 +226,61 @@ function detectSource(url) {
   return { name, type, date };
 }
 
-function citeParts(b) { return b.srcName ? `<b>${esc(b.srcName)}</b>` : ''; }
-function citeText(b) { return (b.srcName || '').trim(); }
+/* ---------- 한글 → 영문 이름 (로마자) ---------- */
+const RR_INI = ['g', 'kk', 'n', 'd', 'tt', 'r', 'm', 'b', 'pp', 's', 'ss', '', 'j', 'jj', 'ch', 'k', 't', 'p', 'h'];
+const RR_MED = ['a', 'ae', 'ya', 'yae', 'eo', 'e', 'yeo', 'ye', 'o', 'wa', 'wae', 'oe', 'yo', 'u', 'wo', 'we', 'wi', 'yu', 'eu', 'ui', 'i'];
+const RR_FIN = ['', 'k', 'k', 'k', 'n', 'n', 'n', 't', 'l', 'k', 'm', 'l', 'l', 'l', 'p', 'l', 'm', 'p', 'p', 't', 't', 'ng', 't', 't', 'k', 't', 'p', 't'];
+const cap = (s) => (s ? s.charAt(0).toUpperCase() + s.slice(1) : s);
+const hasHangul = (s) => /[가-힣]/.test(s);
+function romanizeWord(s) {
+  let out = '';
+  for (const ch of String(s)) {
+    const c = ch.charCodeAt(0);
+    if (c >= 0xac00 && c <= 0xd7a3) {
+      const x = c - 0xac00;
+      out += RR_INI[Math.floor(x / 588)] + RR_MED[Math.floor((x % 588) / 28)] + RR_FIN[x % 28];
+    } else out += ch;
+  }
+  return out;
+}
+const SURNAME = { '김': 'Kim', '이': 'Lee', '박': 'Park', '최': 'Choi', '정': 'Jung', '강': 'Kang', '조': 'Cho', '윤': 'Yoon', '장': 'Jang', '임': 'Lim', '한': 'Han', '오': 'Oh', '서': 'Seo', '신': 'Shin', '권': 'Kwon', '황': 'Hwang', '안': 'Ahn', '송': 'Song', '전': 'Jeon', '홍': 'Hong', '유': 'Yoo', '고': 'Ko', '문': 'Moon', '양': 'Yang', '손': 'Son', '배': 'Bae', '백': 'Baek', '허': 'Heo', '노': 'Noh', '심': 'Shim', '하': 'Ha', '곽': 'Kwak', '성': 'Sung', '차': 'Cha', '주': 'Joo', '우': 'Woo', '구': 'Koo', '민': 'Min', '류': 'Ryu', '나': 'Na', '진': 'Jin', '지': 'Ji', '엄': 'Eom', '채': 'Chae', '원': 'Won', '천': 'Cheon', '방': 'Bang', '공': 'Kong', '현': 'Hyun', '함': 'Ham', '변': 'Byun', '염': 'Yeom', '여': 'Yeo', '추': 'Chu', '도': 'Do', '소': 'So', '석': 'Seok', '선': 'Sun', '설': 'Seol', '마': 'Ma', '길': 'Gil', '연': 'Yeon', '위': 'Wi', '표': 'Pyo', '명': 'Myung', '기': 'Ki', '반': 'Ban', '라': 'Ra', '왕': 'Wang', '옥': 'Ok', '육': 'Yook', '인': 'In', '제': 'Je', '모': 'Mo', '남': 'Nam', '탁': 'Tak', '국': 'Kook', '은': 'Eun', '편': 'Pyun', '용': 'Yong', '예': 'Ye', '봉': 'Bong' };
+const COMPOUND = { '남궁': 'Namgung', '황보': 'Hwangbo', '선우': 'Sunwoo', '제갈': 'Jegal', '독고': 'Dokgo', '서문': 'Seomun', '사공': 'Sagong' };
+function romanizeName(full) {
+  const base = displayName(full);
+  if (!hasHangul(base)) return base;
+  if (/\(/.test(full)) return cap(romanizeWord(base));   // 괄호 = 활동명(모노님)
+  let sur, given;
+  if (base.length >= 3 && COMPOUND[base.slice(0, 2)]) { sur = COMPOUND[base.slice(0, 2)]; given = base.slice(2); }
+  else { sur = SURNAME[base[0]] || cap(romanizeWord(base[0])); given = base.slice(1); }
+  if (!given) return sur;
+  const g = [...given].map((ch) => romanizeWord(ch)).filter(Boolean);
+  return `${sur} ${g.map((x, i) => (i === 0 ? cap(x) : x)).join('-')}`;
+}
+function enName() { return state.opts.lang === 'en' ? romanizeName(state.name) : displayName(state.name); }
+
+/* ---------- 출처 매체명 한글 → 영문 ---------- */
+const SRC_EN = [
+  ['위키미디어 커먼즈', 'Wikimedia Commons'], ['네이버 블로그', 'Naver blog'], ['네이버 포스트', 'Naver post'],
+  ['네이버 카페', 'Naver cafe'], ['네이버 뉴스', 'Naver News'], ['밀리의 서재', 'Millie'], ['채널예스', 'Channel Yes'],
+  ['교보문고', 'Kyobo Book'], ['엑스포츠뉴스', 'Xportsnews'], ['스포츠조선', 'Sports Chosun'], ['마이데일리', 'MyDaily'],
+  ['디시인사이드', 'DCinside'], ['에펨코리아', 'FM Korea'], ['인스타그램', 'Instagram'], ['유튜브', 'YouTube'],
+  ['트위터', 'Twitter'], ['더쿠', 'theqoo'], ['브런치', 'Brunch'], ['티스토리', 'Tistory'], ['위버스', 'Weverse'],
+  ['틱톡', 'TikTok'], ['씨네21', 'Cine21'], ['예스24', 'Yes24'], ['알라딘', 'Aladin'], ['리디', 'Ridi'],
+  ['문학동네', 'Munhakdongne'], ['서울경제', 'Seoul Economic Daily'], ['한국경제', 'Korea Economic Daily'],
+  ['매일경제', 'Maeil Business'], ['조선일보', 'Chosun Ilbo'], ['동아일보', 'Donga Ilbo'], ['중앙일보', 'JoongAng Ilbo'],
+  ['한겨레', 'Hankyoreh'], ['경향신문', 'Kyunghyang Shinmun'], ['한국일보', 'Hankook Ilbo'], ['서울신문', 'Seoul Shinmun'],
+  ['국민일보', 'Kookmin Ilbo'], ['데일리안', 'Dailian'], ['뉴스엔', 'Newsen'], ['텐아시아', 'TenAsia'],
+  ['나무위키', 'Namuwiki'], ['위키백과', 'Wikipedia'], ['다음', 'Daum'], ['엑스', 'X'],
+].sort((a, b) => b[0].length - a[0].length);
+function translateSourceEn(str) {
+  let s = String(str || '');
+  for (const [ko, en] of SRC_EN) if (s.includes(ko)) s = s.split(ko).join(en);
+  return s;
+}
+const srcDisp = (name) => (state.opts.lang === 'en' ? translateSourceEn(name) : name);
+
+function citeParts(b) { return b.srcName ? `<b>${esc(srcDisp(b.srcName))}</b>` : ''; }
+function citeText(b) { return srcDisp((b.srcName || '').trim()); }
 
 /* ========================================================
    부트
@@ -292,7 +346,7 @@ function bindSearch() {
    인물 선택
    ======================================================== */
 function applyAutoText() {
-  const dn = displayName(state.name);
+  const dn = enName();
   const c = selectedBooks().length || DEFAULT_SELECT;
   state.opts.title = T().title(dn);
   state.opts.subtitle = T().subtitle(dn, c);
@@ -513,7 +567,7 @@ function saveProject() {
   const blob = new Blob([JSON.stringify(proj, null, 2)], { type: 'application/json' });
   const a = document.createElement('a');
   a.href = URL.createObjectURL(blob);
-  a.download = `favoread_cardnews_${safeName(displayName(state.name))}.json`;
+  a.download = `favorbook_cardnews_${safeName(displayName(state.name))}.json`;
   a.click();
   setTimeout(() => URL.revokeObjectURL(a.href), 4000);
   status('프로젝트를 저장했어요 (JSON)');
@@ -587,7 +641,7 @@ function coverHTML() {
   const sel = selectedBooks();
   const img = state.customImage || proxify(state.celeb.imageUrl);
   const sq = state.opts.format === 'square';
-  const foot = state.opts.coverSrc ? `<div class="cn-foot"><span>${esc(state.opts.coverSrc)}</span></div>` : '';
+  const foot = state.opts.coverSrc ? `<div class="cn-foot"><span>${esc(srcDisp(state.opts.coverSrc))}</span></div>` : '';
   const covers = bookCovers(sel, sq);
 
   if (state.opts.coverLayout === 'split') {
@@ -657,7 +711,7 @@ function outroHTML() {
       <span class="t"><b>《${esc(bookTitle(b.ref))}》</b> — ${esc(citeText(b) || T().noSrc)}</span></li>`).join('');
   // 이미지 출처
   const imgItems = [];
-  if (state.opts.coverSrc) imgItems.push(`${T().coverPhoto} — ${state.opts.coverSrc.replace(/^ⓒ\s*/, '')}`);
+  if (state.opts.coverSrc) imgItems.push(`${T().coverPhoto} — ${srcDisp(state.opts.coverSrc).replace(/^ⓒ\s*/, '')}`);
   imgItems.push(T().bookCoverCredit);
   const img = imgItems.map((s, i) =>
     `<li><span class="n">${String(i + 1).padStart(2, '0')}</span><span class="t">${esc(s)}</span></li>`).join('');
@@ -673,7 +727,7 @@ function outroHTML() {
       <ul class="cn-srclist">${img}</ul>
     </div>
     <div class="cn-spacer"></div>
-    <div class="cn-foot"><span class="h">${esc(displayName(state.name))}</span><span class="g">${esc(state.opts.handle)}</span></div>
+    <div class="cn-foot"><span class="h">${esc(enName())}</span><span class="g">${esc(state.opts.handle)}</span></div>
   </div>`;
 }
 
@@ -824,7 +878,7 @@ async function exportZip() {
   const out = await zip.generateAsync({ type: 'blob' });
   const a = document.createElement('a');
   a.href = URL.createObjectURL(out);
-  a.download = `favoread_cardnews_${base}.zip`;
+  a.download = `favorbook_cardnews_${base}.zip`;
   a.click();
   setTimeout(() => URL.revokeObjectURL(a.href), 4000);
   status(`완료 · ${slides.length}장`);
