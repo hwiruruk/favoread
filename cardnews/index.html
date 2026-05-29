@@ -9,7 +9,7 @@
 
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+KR:wght@300;400;500;700;900&family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,400&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+KR:wght@300;400;500;600;700;900&family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,400&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.css">
 <link rel="stylesheet" href="styles.css">
 
@@ -25,6 +25,7 @@
   </div>
   <div class="topbar-actions">
     <span id="statusMsg" class="status"></span>
+    <button id="copyBtn" class="btn" disabled>⧉ 원고 복사</button>
     <button id="zipBtn" class="btn primary" disabled>⤓ 전체 PNG (ZIP)</button>
   </div>
 </header>
@@ -37,7 +38,7 @@
     <section class="block">
       <div class="block-title">① 인물 검색</div>
       <div class="search-wrap">
-        <input id="search" type="search" placeholder="이름을 입력하세요 (예: 아이유, 뷔, 임윤찬)" autocomplete="off">
+        <input id="search" type="search" placeholder="이름을 입력하세요 (예: 뷔, 임윤찬, 로제)" autocomplete="off">
         <ul id="results" class="results hidden"></ul>
       </div>
     </section>
@@ -56,11 +57,23 @@
           </label>
         </div>
       </div>
+      <label class="field" style="margin-top:10px">
+        <span>표지 이미지 출처 (첫 장 왼쪽 하단)</span>
+        <input id="optCoverSrc" type="text" placeholder="예: ⓒ W KOREA · 2024.05">
+      </label>
     </section>
 
     <!-- 3. 카드 설정 -->
     <section class="block hidden" id="optsBlock">
       <div class="block-title">③ 카드 설정</div>
+
+      <div class="field">
+        <span>언어</span>
+        <div class="seg seg-row">
+          <label><input type="radio" name="lang" value="ko" checked> 한국어</label>
+          <label><input type="radio" name="lang" value="en"> English <em>(해외 팬용)</em></label>
+        </div>
+      </div>
 
       <label class="field">
         <span>표지 제목</span>
@@ -72,6 +85,14 @@
       </label>
 
       <div class="field">
+        <span>배경색</span>
+        <div class="swatches" id="swatches"></div>
+        <label class="custom-color">
+          직접 선택 <input id="optBgCustom" type="color" value="#f4f1e9">
+        </label>
+      </div>
+
+      <div class="field">
         <span>사이즈 (인스타그램)</span>
         <div class="seg">
           <label><input type="radio" name="format" value="portrait" checked> 4:5 세로 <em>1080×1350</em></label>
@@ -79,18 +100,30 @@
         </div>
       </div>
 
+      <div class="field">
+        <span>이미지 맞춤</span>
+        <div class="seg seg-row">
+          <label><input type="radio" name="fit" value="contain" checked> 전체 보기 <em>(안 잘림)</em></label>
+          <label><input type="radio" name="fit" value="cover"> 꽉 채움 <em>(잘릴 수 있음)</em></label>
+        </div>
+      </div>
+
       <div class="field-row">
-        <label class="chk"><input id="optMono" type="checkbox"> 흑백 톤 (antiegg)</label>
-        <label class="chk"><input id="optOutro" type="checkbox" checked> 출처 모음 슬라이드</label>
+        <label class="chk"><input id="optMono" type="checkbox"> 흑백 톤</label>
+        <label class="chk"><input id="optCovers" type="checkbox" checked> 표지에 책 표지</label>
+      </div>
+      <div class="field-row">
+        <label class="chk"><input id="optOutro" type="checkbox" checked> 출처 슬라이드</label>
+        <label class="chk"><input id="optPromo" type="checkbox" checked> 홍보 슬라이드</label>
       </div>
       <div class="field-row">
         <label class="chk"><input id="optProxy" type="checkbox" checked> 이미지 프록시</label>
         <label class="field tight">
-          <span>핸들/도메인</span>
+          <span>홈페이지/도메인</span>
           <input id="optHandle" type="text" value="favorbook.co.kr">
         </label>
       </div>
-      <p class="hint">※ 외부 이미지는 PNG로 저장하려면 프록시가 필요해요. 저장이 안 되면 프록시를 켠 상태로 다시 시도하세요.</p>
+      <p class="hint">※ 외부 이미지를 PNG로 저장하려면 프록시가 필요해요.</p>
     </section>
 
     <!-- 4. 책 선택 & 편집 -->
@@ -113,7 +146,7 @@
       <div class="stage-empty-inner">
         <div class="big">▤</div>
         <p>왼쪽에서 인물을 검색하면<br>인스타그램용 카드뉴스가 여기에 만들어집니다.</p>
-        <p class="muted">표지 · 본문(책 표지 + 언급 대목) · 출처까지 한 번에.</p>
+        <p class="muted">표지 · 본문(책 표지 + 언급 대목) · 출처 · 홍보까지 한 번에.</p>
       </div>
     </div>
     <div id="slides" class="slides"></div>
