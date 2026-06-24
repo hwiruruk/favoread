@@ -52,6 +52,74 @@ function toTitleCase(s) {
   );
 }
 
+/* 한국어 성씨 → 자주 쓰이는 로마자 표기.
+ * 한국 이름의 영문 표기는 '성 이름' 순서(예: 한강 = Han Kang)가 표준이고
+ * 본인이 외국 활동 시에도 이 순서를 유지하는 경우가 많다.
+ * 자동 번역/위키 결과가 가끔 '이름 성'(Kang Han)이나 붙은 단어(Hangang)로
+ * 나오는 걸 표준 순서로 교정. */
+const KO_SURNAMES = {
+  '김':['kim','gim'],'이':['lee','yi','rhee','ri','i'],'박':['park','pak','bak'],
+  '최':['choi','choe'],'정':['jung','jeong','chung','jong'],'강':['kang','gang'],
+  '조':['cho','jo'],'윤':['yoon','yun'],'장':['jang','chang'],'임':['lim','im','rim'],
+  '한':['han'],'오':['oh','o'],'서':['seo','suh','sur'],'신':['shin','sin'],
+  '권':['kwon','gwon'],'황':['hwang'],'안':['ahn','an'],'송':['song'],
+  '류':['ryu','yu','rhyu'],'전':['jeon','jun','chun'],'홍':['hong'],
+  '고':['ko','go','koh','goh'],'문':['moon','mun'],'양':['yang'],
+  '손':['son'],'배':['bae','pae'],'백':['baek','paek','pek'],'허':['heo','huh'],
+  '유':['yu','yoo'],'남':['nam'],'심':['sim','shim'],'노':['noh','no','roh'],
+  '하':['ha'],'곽':['kwak','gwak'],'성':['sung','seong'],'차':['cha'],
+  '주':['joo','ju','choo'],'우':['woo','u'],'구':['koo','gu','ku','goo'],
+  '민':['min'],'나':['na','ra'],'도':['do'],'진':['jin','chin'],
+  '천':['cheon','chun'],'마':['ma'],'표':['pyo'],'변':['byun','pyon','byeon'],
+  '지':['ji','chi'],'엄':['eom','um'],'채':['chae'],'원':['won'],
+  '추':['chu','choo'],'어':['eo'],'반':['ban','pan'],'방':['bang'],
+  '석':['seok','suk'],'설':['seol','sul'],'염':['yeom','yum'],'옥':['ok','ock'],
+  '연':['yeon','youn'],'예':['ye','yea'],'위':['wi'],'은':['eun'],
+  '명':['myung','myeong'],'편':['pyeon'],'표':['pyo'],
+  '봉':['bong'],'복':['bok'],'독':['dok'],'두':['doo','du'],
+  '맹':['maeng'],'모':['mo'],'목':['mok'],'묵':['muk'],
+  '여':['yeo','yo'],'옹':['ong'],'육':['yuk','yook'],'음':['eum','um'],
+  '인':['in'],'경':['kyung','kyong'],'기':['ki','gi','khee'],
+};
+
+/* 한국 이름을 '성 이름' 순서로 교정.
+ * 입력 ko가 2~4자 순수 한글 이름일 때만 작동. 그 외엔 en 그대로 반환. */
+function fixKoreanNameOrder(ko, en) {
+  if (!ko || !en) return en;
+  ko = ko.trim();
+  if (!/^[가-힣]{2,4}$/.test(ko)) return en;
+  const expected = KO_SURNAMES[ko[0]];
+  if (!expected) return en;
+  const norm = en.trim().replace(/\s+/g, ' ');
+  const words = norm.split(' ').filter(Boolean);
+  if (words.length === 1) {
+    // 'Hangang' 같은 붙은 단어 → 'Han Gang'으로 분리 시도
+    const lower = words[0].toLowerCase();
+    for (const s of expected) {
+      if (lower.startsWith(s) && lower.length > s.length) {
+        const rest = words[0].slice(s.length);
+        return s[0].toUpperCase() + s.slice(1)
+             + ' ' + rest[0].toUpperCase() + rest.slice(1).toLowerCase();
+      }
+    }
+    return en;
+  }
+  if (words.length === 2) {
+    const first = words[0].toLowerCase();
+    const last = words[1].toLowerCase();
+    if (expected.includes(first)) return en;          // 이미 성-이름 순
+    if (expected.includes(last))  return words[1] + ' ' + words[0]; // Swap
+  }
+  if (words.length === 3) {
+    // 'Park Ji Won' 또는 'Ji Won Park' 같은 3-token 경우
+    const first = words[0].toLowerCase();
+    const last  = words[2].toLowerCase();
+    if (expected.includes(first)) return en;
+    if (expected.includes(last))  return words[2] + ' ' + words[0] + ' ' + words[1];
+  }
+  return en;
+}
+
 function setDirty(v) {
   State.dirty = v;
   $('#saveBtn').disabled = !v;
@@ -964,7 +1032,7 @@ $('#bookAuthorTranslateBtn').addEventListener('click', async (e) => {
   try {
     const r = await EnEnrich.translateKoEn(a);
     if (!r || !r.text) { toast('번역 결과를 얻지 못했습니다', 'err'); return; }
-    const cased = toTitleCase(r.text);
+    const cased = fixKoreanNameOrder(a, toTitleCase(r.text));
     const marked = /\*\s*$/.test(cased) ? cased : (cased + ' *');
     $('#bookAuthorEn').value = marked;
     toast(`직역 적용 (${r.source}): ${cased}`, 'ok');
@@ -990,7 +1058,8 @@ $('#bookAuthorEnAutoBtn').addEventListener('click', async (e) => {
       return;
     }
     // 위 함수는 그룹 표기를 괄호로 붙이는데, 저자명엔 불필요 → 괄호 제거
-    const cleaned = r.name_en.replace(/\s*\([^)]*\)\s*$/, '').trim();
+    let cleaned = r.name_en.replace(/\s*\([^)]*\)\s*$/, '').trim();
+    cleaned = fixKoreanNameOrder(a, cleaned);
     $('#bookAuthorEn').value = cleaned;
     toast(`적용됨 (${r.source}): ${cleaned}`, 'ok');
   } catch (err) {
@@ -1013,7 +1082,7 @@ $('#bookEnAutoBtn').addEventListener('click', async (e) => {
     if (!r) { toast('영문판 정보를 찾지 못했습니다', 'err'); return; }
     if (r.title_en) $('#bookTitleEn').value = r.title_en;
     if (r.author_en && !$('#bookAuthorEn').value.trim()) {
-      $('#bookAuthorEn').value = r.author_en;
+      $('#bookAuthorEn').value = fixKoreanNameOrder(a, r.author_en);
     }
     toast(`적용됨 (${r.source})`, 'ok');
   } catch (err) {
