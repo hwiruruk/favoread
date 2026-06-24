@@ -293,11 +293,15 @@ const Gh = {
 const Aladin = {
   // Default proxies to try in order. Each item: [name, prefix, kind].
   // kind: 'wrap' (response is {contents:..., status:...}) or 'raw' (body is upstream body)
+  // 공개 프록시는 자주 장애가 나므로 여러 후보 + 자체 Cloudflare Worker(설정 시) 우선.
   DEFAULT_PROXIES: [
-    ['allorigins-get',  'https://api.allorigins.win/get?url=',          'wrap'],
-    ['corsproxy.io',    'https://corsproxy.io/?',                        'raw' ],
-    ['codetabs',        'https://api.codetabs.com/v1/proxy/?quest=',     'raw' ],
-    ['allorigins-raw',  'https://api.allorigins.win/raw?url=',           'raw' ],
+    ['allorigins-get',   'https://api.allorigins.win/get?url=',        'wrap'],
+    ['corsproxy.io',     'https://corsproxy.io/?url=',                  'raw' ],
+    ['cors.lol',         'https://api.cors.lol/?url=',                  'raw' ],
+    ['corsproxy.org',    'https://corsproxy.org/?',                     'raw' ],
+    ['codetabs',         'https://api.codetabs.com/v1/proxy/?quest=',   'raw' ],
+    ['allorigins-raw',   'https://api.allorigins.win/raw?url=',         'raw' ],
+    ['thingproxy',       'https://thingproxy.freeboard.io/fetch/',      'raw' ],
   ],
   _baseParams(extra) {
     const p = new URLSearchParams(extra);
@@ -315,14 +319,17 @@ const Aladin = {
     return JSON.parse(s);
   },
   async _tryProxy(name, prefix, kind, fullUrl) {
-    const proxied = prefix + encodeURIComponent(fullUrl);
+    // thingproxy는 URL을 인코딩하지 않고 그대로 붙임 (예외 처리)
+    const proxied = name === 'thingproxy'
+      ? prefix + fullUrl
+      : prefix + encodeURIComponent(fullUrl);
     const ctrl = new AbortController();
-    const timer = setTimeout(() => ctrl.abort(), 6000);
+    const timer = setTimeout(() => ctrl.abort(), 12000);
     let r;
     try {
       r = await fetch(proxied, { signal: ctrl.signal });
     } catch (e) {
-      throw new Error(e.name === 'AbortError' ? 'timeout 6s' : e.message);
+      throw new Error(e.name === 'AbortError' ? 'timeout 12s' : e.message);
     } finally {
       clearTimeout(timer);
     }
