@@ -104,7 +104,11 @@ BookStack에서 검증된 패턴을 그대로 사용합니다 — `api.allorigin
 프록시로 거치면 응답이 `{contents, status}`로 한 번 감싸져 돌아오고,
 Aladin은 Referer 검사를 우회한 형태로 처리합니다.
 
-- 기본 프록시: `https://api.allorigins.win/get?url=` (별도 설정 불필요)
+- **기본 폴백 프록시 7종** (별도 설정 불필요, 순차 시도):
+  allorigins-get → corsproxy.io → cors.lol → corsproxy.org → codetabs →
+  allorigins-raw → thingproxy
+- 공개 프록시는 자주 죽으므로, **모두 실패하면 자체 Cloudflare Worker** 사용 권장
+  (10분 무료 셋업) — 자세한 안내: [`cloudflare-worker.js`](./cloudflare-worker.js)
 - 다른 프록시를 쓰려면 ⚙️ 설정의 "알라딘 호출 프록시"에 입력. 끝이 `?url=`로
   끝나야 하며, **응답을 그대로(raw) 반환하는 프록시**라면 동작은 다음과 같이
   처리됩니다: 응답이 `{contents, status}` 모양이면 contents 안의 본문을
@@ -119,7 +123,8 @@ Aladin은 Referer 검사를 우회한 형태로 처리합니다.
 
 | 증상 | 원인 | 해결 |
 |------|------|------|
-| `프록시 HTTP 4xx/5xx` | allorigins 일시 장애 | 잠시 후 재시도 또는 다른 프록시 |
+| `프록시 HTTP 4xx/5xx` | 공개 프록시 일시 장애 | 잠시 후 재시도. 자주 발생하면 Cloudflare Worker 권장 (`cloudflare-worker.js`) |
+| `모든 프록시 실패` | 공개 프록시 전체 다운/API 변경 | Cloudflare Worker 셋업 (`cloudflare-worker.js` 참고, 10분) |
 | `알라딘 응답 파싱 실패` | Aladin이 HTML(로그인 안내/오류 페이지)을 돌려줌 | TTBKey 확인 |
 | `errorCode 8` 등 | TTBKey 만료/오타 | 알라딘 OpenAPI 관리 페이지에서 확인 |
 
