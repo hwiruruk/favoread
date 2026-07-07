@@ -1000,10 +1000,22 @@ async function runAladinSearch(query, append = false) {
     }
   }
 }
+/* 알라딘 author 필드는 '무라카미 하루키 (지은이), 홍길동 (옮긴이)' 형태.
+ * 역할 표기 삭제 + '옮긴이/편집자'는 제외해 저자만 남김. */
+function cleanAladinAuthor(s) {
+  if (!s) return '';
+  const parts = String(s).split(/\s*,\s*/);
+  const authors = parts
+    .filter(p => !/\(옮긴이|편집|편저|엮은이|그림|사진|감수|번역\)/.test(p))
+    .map(p => p.replace(/\s*\([^)]*\)\s*/g, '').trim())
+    .filter(Boolean);
+  return authors.length ? authors.join(', ') : String(s).replace(/\s*\([^)]*\)\s*/g, '').trim();
+}
+
 function applyAladinItem(it) {
   const cover = Aladin.bigCover(it);
   $('#bookTitle').value = it.title || $('#bookTitle').value;
-  $('#bookAuthor').value = it.author || $('#bookAuthor').value;
+  $('#bookAuthor').value = cleanAladinAuthor(it.author) || $('#bookAuthor').value;
   $('#bookPublisher').value = it.publisher || $('#bookPublisher').value;
   $('#bookLink').value = it.link || $('#bookLink').value;
   if (cover) $('#bookCover').value = cover;
@@ -1039,6 +1051,73 @@ $('#aladinLookupBtn').addEventListener('click', async () => {
   } catch (err) {
     toast(err.message, 'err');
   }
+});
+
+/* -------------------- ⚡ 빠른 검색: Google Books --------------------
+ * CORS 허용 API라 브라우저에서 직접 호출. 프록시·JSONP 불필요.
+ * 제목·저자만 채움 (표지·출판사·ItemId는 필요 시 알라딘 검색으로 별도 조회). */
+const GBooks = {
+  async search(query, maxResults = 8) {
+    const u = new URL('https://www.googleapis.com/books/v1/volumes');
+    u.searchParams.set('q', query);
+    u.searchParams.set('maxResults', String(maxResults));
+    u.searchParams.set('printType', 'books');
+    const r = await fetch(u.toString());
+    if (!r.ok) throw new Error(`Google Books HTTP ${r.status}`);
+    const d = await r.json();
+    return (d.items || []).map(it => {
+      const v = it.volumeInfo || {};
+      const t = v.subtitle ? `${v.title}: ${v.subtitle}` : v.title;
+      return {
+        title: t || '',
+        author: (v.authors || []).join(', '),
+        lang: v.language || '',
+        year: (v.publishedDate || '').slice(0, 4),
+      };
+    }).filter(x => x.title);
+  },
+};
+
+function renderGBooksResults(box, items) {
+  if (!items.length) { box.innerHTML = '<div class="empty">결과 없음. 알라딘 검색이나 수동 입력을 이용하세요.</div>'; return; }
+  box.innerHTML = items.map((it, i) => `
+    <div class="ar-item" data-gi="${i}">
+      <div class="ar-meta" style="padding-left:0;">
+        <div class="ar-title">${esc(it.title)}</div>
+        <div class="ar-sub">${esc(it.author || '(저자 없음)')}${it.year ? ` · ${esc(it.year)}` : ''}${it.lang ? ` <span class="muted">[${esc(it.lang)}]</span>` : ''}</div>
+      </div>
+    </div>
+  `).join('');
+  box._items = items;
+}
+
+$('#gbSearchBtn').addEventListener('click', async () => {
+  const q = $('#gbQuery').value.trim();
+  if (!q) return;
+  const box = $('#gbResults');
+  box.innerHTML = '<div class="empty">검색 중…</div>';
+  try {
+    const items = await GBooks.search(q);
+    renderGBooksResults(box, items);
+  } catch (err) {
+    box.innerHTML = `<div class="empty">${esc(err.message)}</div>`;
+  }
+});
+
+$('#gbQuery').addEventListener('keydown', (e) => {
+  if (e.key === 'Enter') { e.preventDefault(); $('#gbSearchBtn').click(); }
+});
+
+$('#gbResults').addEventListener('click', (e) => {
+  const row = e.target.closest('.ar-item');
+  if (!row) return;
+  const items = $('#gbResults')._items || [];
+  const it = items[+row.dataset.gi];
+  if (!it) return;
+  // 제목·저자만 채움. (지은이) 등 부가정보 없음.
+  $('#bookTitle').value = it.title;
+  $('#bookAuthor').value = it.author;
+  toast(`반영: ${it.title}`, 'ok');
 });
 
 $('#bookTranslateBtn').addEventListener('click', async (e) => {
