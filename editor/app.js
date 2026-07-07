@@ -346,17 +346,14 @@ const Gh = {
 };
 
 /* -------------------- Aladin API --------------------
- * Aladin TTB OpenAPI restricts requests by Referer matching the URL
- * registered with the TTBKey, so a static page on a different host
- * always gets 403 "Host not in allowlist". The proven workaround
- * (used by the BookStack repo) is to fetch via the allorigins.win
- * proxy: it returns the upstream body wrapped in {contents, status}
- * and Aladin does not see a mismatched Referer.
+ * 호출 순서:
+ *  1) JSONP (<script> 태그) — 프록시·CORS·확장 차단 모두 우회. 가장 안정적.
+ *     Aladin은 &Callback=xxx 붙이면 xxx({...}); 로 감싸서 응답.
+ *  2) 공개 CORS 프록시 (allorigins 등) 순차 시도 — JSONP 실패 시 폴백.
  *
- * Important details copied from BookStack:
- *  - param name is lowercase `output=js`
- *  - do NOT add a callback param (Aladin returns plain JSON + trailing `;`)
- *  - strip the trailing `;` before JSON.parse
+ * Aladin TTB OpenAPI는 등록된 URL과 Referer가 일치할 때만 응답하는데,
+ * <script> 태그로 로드하면 브라우저가 favorbook.co.kr Referer를 보내주므로
+ * TTBKey가 favorbook.co.kr로 등록돼 있으면 그대로 통과.
  */
 const Aladin = {
   // Default proxies to try in order. Each item: [name, prefix, kind].
@@ -419,10 +416,23 @@ const Aladin = {
   async _call(fullUrl) {
     if (!Config.ttb) throw new Error('알라딘 TTBKey가 설정되지 않았습니다.');
     console.log('[Aladin] →', fullUrl);
-    // Build proxy list: user override (if any) first, then defaults
+
+    // 1) JSONP 우선 시도 — 프록시·CORS·브라우저 확장 우회
+    // Aladin은 &Callback=xxx 파라미터를 붙이면 xxx({...}); 형태로 감싸서 응답.
+    try {
+      const body = await this._jsonpCall(fullUrl);
+      if (body && body.errorCode) {
+        throw new Error(`알라딘 ${body.errorCode}: ${body.errorMessage}`);
+      }
+      console.log('[Aladin] ✓ JSONP (프록시 없이 직접)');
+      return body;
+    } catch (e) {
+      console.warn('[Aladin] ✗ JSONP:', e.message);
+    }
+
+    // 2) 폴백: 프록시 목록
     const list = [];
     if (Config.corsProxy) {
-      // User can specify a single override; we don't know its kind, so try wrap first then raw
       list.push(['user(wrap)', Config.corsProxy, 'wrap']);
       list.push(['user(raw)',  Config.corsProxy, 'raw']);
     }
@@ -440,6 +450,39 @@ const Aladin = {
       }
     }
     throw new Error('모든 프록시 실패 — ' + errors.join(' / '));
+  },
+
+  /* JSONP: <script> 태그로 로드해서 콜백 함수로 데이터 수신.
+   * 브라우저의 CORS·확장 프록시 차단·네트워크 프록시 모두 우회.
+   * Aladin OpenAPI는 &Callback=<fn> 파라미터로 JSONP 지원. */
+  _jsonpCall(fullUrl) {
+    return new Promise((resolve, reject) => {
+      const cbName = '_aladin_cb_' + Math.random().toString(36).slice(2, 10);
+      const sep = fullUrl.includes('?') ? '&' : '?';
+      // Callback 파라미터 붙이기 (중복 방지)
+      const cleanUrl = fullUrl.replace(/&?Callback=[^&]*/gi, '');
+      const src = cleanUrl + sep + 'Callback=' + cbName;
+      const script = document.createElement('script');
+      const cleanup = () => {
+        clearTimeout(timer);
+        try { delete window[cbName]; } catch { window[cbName] = undefined; }
+        if (script.parentNode) script.parentNode.removeChild(script);
+      };
+      const timer = setTimeout(() => {
+        cleanup();
+        reject(new Error('JSONP timeout 10s'));
+      }, 10000);
+      window[cbName] = (data) => {
+        cleanup();
+        resolve(data);
+      };
+      script.onerror = () => {
+        cleanup();
+        reject(new Error('script load failed (CSP/network/블록됨)'));
+      };
+      script.src = src;
+      document.head.appendChild(script);
+    });
   },
   async search(query, start = 1, maxResults = 5) {
     const p = this._baseParams({
