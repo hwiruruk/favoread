@@ -1053,10 +1053,39 @@ $('#aladinLookupBtn').addEventListener('click', async () => {
   }
 });
 
+/* '🔎 알라딘' 버튼 — 현재 제목·저자로 알라딘 검색을 새 탭으로 오픈.
+ * ItemId가 있는 알라딘 URL을 사용자가 복사해 옆 필드에 붙여넣는 방식.
+ * 알라딘 API 호출 안 함 → 프록시 문제 무관. */
+$('#openAladinBtn').addEventListener('click', () => {
+  const t = $('#bookTitle').value.trim();
+  const a = $('#bookAuthor').value.trim();
+  if (!t) { toast('먼저 제목을 채우세요', 'err'); return; }
+  const q = [t, a].filter(Boolean).join(' ');
+  const u = new URL('https://www.aladin.co.kr/search/wsearchresult.aspx');
+  u.searchParams.set('SearchTarget', 'Book');
+  u.searchParams.set('SearchWord', q);
+  window.open(u.toString(), '_blank', 'noopener');
+});
+
 /* -------------------- ⚡ 빠른 검색: Google Books --------------------
  * CORS 허용 API라 브라우저에서 직접 호출. 프록시·JSONP 불필요.
  * 제목·저자만 채움 (표지·출판사·ItemId는 필요 시 알라딘 검색으로 별도 조회). */
 const GBooks = {
+  /* Google Books thumbnail은 zoom=1(작음)로 오는 경우가 많음 → zoom=0(큼)로 교체.
+   * http URL도 https로 승격. edge=curl 제거해 종이 말림 효과 삭제. */
+  _upgradeCover(url) {
+    if (!url) return '';
+    let u = url.replace(/^http:/, 'https:');
+    u = u.replace(/&edge=curl/g, '').replace(/&zoom=\d+/g, '&zoom=0');
+    // zoom 파라미터가 아예 없으면 붙임 (더 큰 이미지)
+    if (!/[?&]zoom=/.test(u)) u += (u.includes('?') ? '&' : '?') + 'zoom=0';
+    return u;
+  },
+  _isbn13(idents) {
+    const list = idents || [];
+    const t = list.find(x => x.type === 'ISBN_13') || list.find(x => x.type === 'ISBN_10');
+    return t ? t.identifier.replace(/[^0-9Xx]/g, '') : '';
+  },
   async search(query, maxResults = 8) {
     const u = new URL('https://www.googleapis.com/books/v1/volumes');
     u.searchParams.set('q', query);
@@ -1068,11 +1097,16 @@ const GBooks = {
     return (d.items || []).map(it => {
       const v = it.volumeInfo || {};
       const t = v.subtitle ? `${v.title}: ${v.subtitle}` : v.title;
+      const img = (v.imageLinks || {});
+      const cover = this._upgradeCover(img.thumbnail || img.smallThumbnail || '');
+      const isbn = this._isbn13(v.industryIdentifiers);
       return {
         title: t || '',
         author: (v.authors || []).join(', '),
         lang: v.language || '',
         year: (v.publishedDate || '').slice(0, 4),
+        cover,
+        isbn,
       };
     }).filter(x => x.title);
   },
@@ -1082,9 +1116,11 @@ function renderGBooksResults(box, items) {
   if (!items.length) { box.innerHTML = '<div class="empty">결과 없음. 알라딘 검색이나 수동 입력을 이용하세요.</div>'; return; }
   box.innerHTML = items.map((it, i) => `
     <div class="ar-item" data-gi="${i}">
-      <div class="ar-meta" style="padding-left:0;">
+      <div class="ar-cover">${it.cover ? `<img src="${esc(it.cover)}" referrerpolicy="no-referrer" alt="">` : ''}</div>
+      <div class="ar-meta">
         <div class="ar-title">${esc(it.title)}</div>
         <div class="ar-sub">${esc(it.author || '(저자 없음)')}${it.year ? ` · ${esc(it.year)}` : ''}${it.lang ? ` <span class="muted">[${esc(it.lang)}]</span>` : ''}</div>
+        ${it.isbn ? `<div class="ar-sub muted">ISBN ${esc(it.isbn)}</div>` : ''}
       </div>
     </div>
   `).join('');
@@ -1114,10 +1150,16 @@ $('#gbResults').addEventListener('click', (e) => {
   const items = $('#gbResults')._items || [];
   const it = items[+row.dataset.gi];
   if (!it) return;
-  // 제목·저자만 채움. (지은이) 등 부가정보 없음.
+  // 제목·저자·표지만 채움 (알라딘 링크는 별도 워크플로우로 처리)
   $('#bookTitle').value = it.title;
   $('#bookAuthor').value = it.author;
-  toast(`반영: ${it.title}`, 'ok');
+  if (it.cover) {
+    $('#bookCover').value = it.cover;
+    $('#bookCoverPreview').src = it.cover;
+  }
+  // 알라딘 검색을 편하게 하도록 검색어 필드에 제목+저자 미리 넣어둠
+  $('#aladinQuery').value = [it.title, it.author].filter(Boolean).join(' ');
+  toast(`반영: ${it.title}${it.cover ? ' + 표지' : ''}`, 'ok');
 });
 
 $('#bookTranslateBtn').addEventListener('click', async (e) => {
