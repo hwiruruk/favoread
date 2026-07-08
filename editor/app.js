@@ -1067,17 +1067,18 @@ $('#openAladinBtn').addEventListener('click', () => {
   window.open(u.toString(), '_blank', 'noopener');
 });
 
-/* -------------------- ⚡ 빠른 검색: Google Books --------------------
- * CORS 허용 API라 브라우저에서 직접 호출. 프록시·JSONP 불필요.
- * 제목·저자만 채움 (표지·출판사·ItemId는 필요 시 알라딘 검색으로 별도 조회). */
-const GBooks = {
-  /* Google Books thumbnail은 zoom=1(작음)로 오는 경우가 많음 → zoom=0(큼)로 교체.
-   * http URL도 https로 승격. edge=curl 제거해 종이 말림 효과 삭제. */
-  _upgradeCover(url) {
+/* -------------------- ⚡ 빠른 검색: Google Books + Open Library --------------------
+ * 두 CORS 허용 API를 순차 호출. 프록시·JSONP 불필요.
+ *  1) Google Books — 커버율 최고, 하지만 무키 하루 쿼터 낮음 (429 rate limit)
+ *  2) Open Library — 폴백, CORS 허용, 쿼터 널널 */
+const QuickBooks = {
+  _cache: new Map(),  // query → items (같은 쿼리 반복 시 API 안 부름)
+
+  /* Google Books thumbnail: zoom=1(작음) → zoom=0(큼) + HTTPS + edge=curl 제거 */
+  _upgradeGBCover(url) {
     if (!url) return '';
     let u = url.replace(/^http:/, 'https:');
     u = u.replace(/&edge=curl/g, '').replace(/&zoom=\d+/g, '&zoom=0');
-    // zoom 파라미터가 아예 없으면 붙임 (더 큰 이미지)
     if (!/[?&]zoom=/.test(u)) u += (u.includes('?') ? '&' : '?') + 'zoom=0';
     return u;
   },
@@ -1086,7 +1087,7 @@ const GBooks = {
     const t = list.find(x => x.type === 'ISBN_13') || list.find(x => x.type === 'ISBN_10');
     return t ? t.identifier.replace(/[^0-9Xx]/g, '') : '';
   },
-  async search(query, maxResults = 8) {
+  async _searchGBooks(query, maxResults) {
     const u = new URL('https://www.googleapis.com/books/v1/volumes');
     u.searchParams.set('q', query);
     u.searchParams.set('maxResults', String(maxResults));
@@ -1098,19 +1099,62 @@ const GBooks = {
       const v = it.volumeInfo || {};
       const t = v.subtitle ? `${v.title}: ${v.subtitle}` : v.title;
       const img = (v.imageLinks || {});
-      const cover = this._upgradeCover(img.thumbnail || img.smallThumbnail || '');
-      const isbn = this._isbn13(v.industryIdentifiers);
       return {
         title: t || '',
         author: (v.authors || []).join(', '),
         lang: v.language || '',
         year: (v.publishedDate || '').slice(0, 4),
-        cover,
-        isbn,
+        cover: this._upgradeGBCover(img.thumbnail || img.smallThumbnail || ''),
+        isbn: this._isbn13(v.industryIdentifiers),
+        source: 'GB',
       };
     }).filter(x => x.title);
   },
+  async _searchOpenLibrary(query, maxResults) {
+    const u = new URL('https://openlibrary.org/search.json');
+    u.searchParams.set('q', query);
+    u.searchParams.set('limit', String(maxResults));
+    u.searchParams.set('fields', 'title,author_name,first_publish_year,cover_i,language,isbn');
+    const r = await fetch(u.toString());
+    if (!r.ok) throw new Error(`Open Library HTTP ${r.status}`);
+    const d = await r.json();
+    return (d.docs || []).map(doc => ({
+      title: doc.title || '',
+      author: (doc.author_name || []).join(', '),
+      lang: (doc.language || []).join(',').slice(0, 20),
+      year: doc.first_publish_year ? String(doc.first_publish_year) : '',
+      cover: doc.cover_i ? `https://covers.openlibrary.org/b/id/${doc.cover_i}-L.jpg` : '',
+      isbn: (doc.isbn && doc.isbn[0]) || '',
+      source: 'OL',
+    })).filter(x => x.title);
+  },
+  async search(query, maxResults = 8) {
+    const key = query.trim().toLowerCase();
+    if (this._cache.has(key)) return this._cache.get(key);
+
+    let errs = [];
+    try {
+      const items = await this._searchGBooks(query, maxResults);
+      if (items.length) { this._cache.set(key, items); return items; }
+    } catch (e) {
+      errs.push(`Google Books: ${e.message}`);
+      console.warn('[QuickBooks] GB fail:', e.message);
+    }
+
+    try {
+      const items = await this._searchOpenLibrary(query, maxResults);
+      if (items.length) { this._cache.set(key, items); return items; }
+    } catch (e) {
+      errs.push(`Open Library: ${e.message}`);
+      console.warn('[QuickBooks] OL fail:', e.message);
+    }
+
+    if (errs.length) throw new Error(errs.join(' / '));
+    return [];
+  },
 };
+// 하위 호환 (기존 참조 유지)
+const GBooks = QuickBooks;
 
 function renderGBooksResults(box, items) {
   if (!items.length) { box.innerHTML = '<div class="empty">결과 없음. 알라딘 검색이나 수동 입력을 이용하세요.</div>'; return; }
@@ -1118,7 +1162,7 @@ function renderGBooksResults(box, items) {
     <div class="ar-item" data-gi="${i}">
       <div class="ar-cover">${it.cover ? `<img src="${esc(it.cover)}" referrerpolicy="no-referrer" alt="">` : ''}</div>
       <div class="ar-meta">
-        <div class="ar-title">${esc(it.title)}</div>
+        <div class="ar-title">${esc(it.title)} ${it.source ? `<span class="muted" style="font-size:10px;">[${esc(it.source)}]</span>` : ''}</div>
         <div class="ar-sub">${esc(it.author || '(저자 없음)')}${it.year ? ` · ${esc(it.year)}` : ''}${it.lang ? ` <span class="muted">[${esc(it.lang)}]</span>` : ''}</div>
         ${it.isbn ? `<div class="ar-sub muted">ISBN ${esc(it.isbn)}</div>` : ''}
       </div>
