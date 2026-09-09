@@ -1,0 +1,94 @@
+name: Yes24 Link Migration
+
+# 알라딘 API 종료에 대비해, data.csv의 도서 링크·표지를 예스24로 자동 교체.
+# enrich-en.yml과 동일한 방식: 확신 있는 것만 자동 적용하고, 애매한 건 건드리지
+# 않은 채 검토 리포트(tools/yes24-migration-review.md)로 남겨 PR에서 확인.
+#
+# 사전 준비: 저장소 Settings → Secrets and variables → Actions에
+#   YES24_PROXY_URL = https://yes24-proxy.xxx.workers.dev
+# (tools/yes24-proxy/README.md 대로 Cloudflare Worker를 배포한 뒤 그 주소를 등록)
+
+on:
+  workflow_dispatch:
+    inputs:
+      limit:
+        description: '최대 처리 행 수 (0=무제한, 먼저 소량으로 테스트 추천)'
+        required: false
+        default: '20'
+      dry_run:
+        description: 'true면 data.csv를 바꾸지 않고 결과만 로그로 출력'
+        required: false
+        default: 'false'
+        type: boolean
+
+jobs:
+  migrate:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pull-requests: write
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Check YES24_PROXY_URL secret
+        run: |
+          if [ -z "${{ secrets.YES24_PROXY_URL }}" ]; then
+            echo "❌ YES24_PROXY_URL 시크릿이 설정되지 않았습니다."
+            echo "   저장소 Settings → Secrets and variables → Actions에서 추가하세요."
+            echo "   (tools/yes24-proxy/README.md 참고 — Cloudflare Worker 배포 후 그 주소)"
+            exit 1
+          fi
+
+      - name: Run migration
+        env:
+          YES24_PROXY_URL: ${{ secrets.YES24_PROXY_URL }}
+        run: |
+          ARGS=""
+          if [ "${{ github.event.inputs.limit }}" != "" ] && [ "${{ github.event.inputs.limit }}" != "0" ]; then
+            ARGS="$ARGS --limit ${{ github.event.inputs.limit }}"
+          fi
+          if [ "${{ github.event.inputs.dry_run }}" = "true" ]; then
+            ARGS="$ARGS --dry-run"
+          fi
+          python3 tools/yes24_migrate.py $ARGS
+
+      - name: Check if data.csv changed
+        id: diff
+        run: |
+          if git diff --quiet data.csv; then
+            echo "changed=false" >> $GITHUB_OUTPUT
+          else
+            echo "changed=true" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Create Pull Request
+        if: steps.diff.outputs.changed == 'true'
+        uses: peter-evans/create-pull-request@v6
+        with:
+          commit-message: "chore: 도서 링크 예스24로 자동 교체"
+          title: "chore: 알라딘 → 예스24 도서 링크 자동 교체"
+          body: |
+            ## 예스24 링크 자동 교체
+
+            `tools/yes24_migrate.py`가 도서명(+저자)으로 예스24에서 검색해, 제목·저자가
+            확실히 일치하는 책만 링크·표지를 알라딘 → 예스24로 바꿨습니다.
+
+            애매한 항목(제목 불일치, 저자 불일치, 검색 결과 없음)은 **건드리지 않고**
+            그대로 뒀고, 대신 `tools/yes24-migration-review.md`에 후보와 함께 정리해뒀습니다.
+
+            ### 병합 전 확인
+            1. `tools/yes24-migration-review.md`를 열어서 검토 필요 목록을 훑어보세요.
+            2. 이 PR은 **자동 교체된 것만** 반영합니다. 검토 목록은 편집기의
+               "예스24 검색"으로 하나씩 직접 확인 후 나중에 반영하면 됩니다.
+            3. 병합하면 `data.csv` 변경으로 사이트 자동 재생성(Update Site Data
+               워크플로우)이 뒤따라 실행됩니다.
+
+            `limit` 입력값 때문에 일부만 처리됐을 수 있습니다 — 전체를 돌리려면
+            Actions 탭에서 `limit=0`으로 다시 실행하세요.
+          branch: yes24/link-migration
+          delete-branch: true
+          base: ${{ github.ref_name }}
+          add-paths: |
+            data.csv
+            tools/yes24-migration-review.md

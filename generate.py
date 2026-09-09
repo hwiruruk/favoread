@@ -52,6 +52,20 @@ def esc(text):
     """HTML 특수문자 이스케이프"""
     return html.escape(text, quote=True)
 
+def book_link_label(url, lang='ko'):
+    """도서 정보 링크의 실제 목적지에 맞는 안내 문구.
+    알라딘→예스24 전환 중이라 한 사이트 안에 두 링크가 섞여 있을 수 있음."""
+    u = (url or '').lower()
+    if lang == 'en':
+        if 'yes24.com' in u: return 'Yes24'
+        if 'aladin.co.kr' in u: return 'Aladin'
+        return 'the publisher site'
+    if 'yes24.com' in u:
+        return '예스24'
+    if 'aladin.co.kr' in u:
+        return '알라딘'
+    return '도서 정보'
+
 def esc_xml(text):
     """XML용 이스케이프 (sitemap/feed)"""
     return (text
@@ -710,7 +724,8 @@ for name, info in celebs.items():
         if aladin_url:
             cover_html = ('<a class="rl-cover" href="' + aladin_url
                           + '" rel="nofollow noopener noreferrer" target="_blank" '
-                          'aria-label="' + esc(b['title']) + ' 알라딘에서 보기">' + cover_inner + '</a>')
+                          'aria-label="' + esc(b['title']) + ' ' + book_link_label(aladin_url)
+                          + '에서 보기">' + cover_inner + '</a>')
         else:
             cover_html = '<div class="rl-cover">' + cover_inner + '</div>'
 
@@ -911,6 +926,8 @@ for name, info in celebs.items():
         '\n'
         '  <link rel="preconnect" href="https://image.aladin.co.kr">\n'
         '  <link rel="dns-prefetch" href="https://image.aladin.co.kr">\n'
+        '  <link rel="preconnect" href="https://image.yes24.com">\n'
+        '  <link rel="dns-prefetch" href="https://image.yes24.com">\n'
         '\n'
         '  <script type="application/ld+json">\n'
         '  ' + json.dumps(json_ld, ensure_ascii=False, indent=2) + '\n'
@@ -1155,6 +1172,8 @@ for title, binfo in book_celebs.items():
         '\n'
         '  <link rel="preconnect" href="https://image.aladin.co.kr">\n'
         '  <link rel="dns-prefetch" href="https://image.aladin.co.kr">\n'
+        '  <link rel="preconnect" href="https://image.yes24.com">\n'
+        '  <link rel="dns-prefetch" href="https://image.yes24.com">\n'
         '\n'
         '  <script type="application/ld+json">\n'
         '  ' + json.dumps(json_ld, ensure_ascii=False, indent=2) + '\n'
@@ -1254,7 +1273,8 @@ for name, info in celebs.items():
         if aladin_url:
             cover_html = ('<a class="rl-cover" href="' + aladin_url
                           + '" rel="nofollow noopener noreferrer" target="_blank" '
-                          'aria-label="View ' + esc(b['title_en']) + ' on Aladin">'
+                          'aria-label="View ' + esc(b['title_en']) + ' on '
+                          + book_link_label(aladin_url, 'en') + '">'
                           + cover_inner + '</a>')
         else:
             cover_html = '<div class="rl-cover">' + cover_inner + '</div>'
