@@ -16,6 +16,9 @@ const Config = {
   get ttb()       { return LS.get('ttb'); },
   get committer() { return LS.get('committer'); },
   get corsProxy() { return LS.get('corsProxy'); }, // e.g. https://corsproxy.io/?url=
+  // 예스24 프록시 Worker URL. API Key는 Worker의 환경변수(secret)에만 있고
+  // 여기(브라우저)에는 절대 저장하지 않음 — tools/yes24-proxy/README.md 참고.
+  get yes24Proxy() { return LS.get('yes24Proxy'); },
 };
 
 /* -------------------- State -------------------- */
@@ -525,6 +528,64 @@ const Aladin = {
   },
 };
 
+/* -------------------- Yes24 API --------------------
+ * 알라딘 서비스 종료에 대비한 대체 연동. 예스24 Open API는 X-Api-Key
+ * 요청 헤더로 인증하는데, 이 방식은 <script> 태그(JSONP)로 못 부르고
+ * (커스텀 헤더 불가) 공식 문서도 API Key를 클라이언트 코드에 넣지 말라고
+ * 명시한다. 그래서 반드시 Cloudflare Worker(tools/yes24-proxy/)를 거쳐야
+ * 하며, API Key는 그 Worker의 환경변수에만 있고 이 편집기·localStorage
+ * 어디에도 저장되지 않는다.
+ */
+const Yes24 = {
+  async _call(path, params) {
+    if (!Config.yes24Proxy) throw new Error('예스24 프록시 Worker URL이 설정되지 않았습니다. ⚙️ 설정을 확인하세요.');
+    const base = Config.yes24Proxy.replace(/\/+$/, '');
+    const url = `${base}${path}?${params}`;
+    let r;
+    try {
+      r = await fetch(url);
+    } catch (e) {
+      throw new Error(`예스24 프록시 호출 실패: ${e.message}`);
+    }
+    let body;
+    try { body = await r.json(); }
+    catch { throw new Error(`예스24 응답 파싱 실패 (HTTP ${r.status})`); }
+    if (!body || body.success !== true) {
+      throw new Error(`예스24 ${body?.errorCode || r.status}: ${body?.message || '알 수 없는 오류'}`);
+    }
+    return body.data;
+  },
+  async search(query, page = 1, pageSize = 5) {
+    const p = new URLSearchParams({
+      query, category: 'BOOK', page: String(page), pageSize: String(pageSize), detail: 'N',
+    });
+    const d = await this._call('/goods/itemList', p);
+    return {
+      items: (d && d.items) || [],
+      total: Number(d && d.totalCount) || 0,
+    };
+  },
+  /* 예스24 상품 URL(https://www.yes24.com/product/goods/12345678) 또는
+   * 순수 숫자(ItemId), 13자리 ISBN을 모두 받아들인다. */
+  parseItemId(input) {
+    const s = String(input || '').trim();
+    const m = s.match(/\/goods\/(\d+)/i);
+    if (m) return m[1];
+    if (/^\d+$/.test(s)) return s;
+    return null;
+  },
+  async lookup(input) {
+    const s = String(input || '').trim();
+    const id = this.parseItemId(input) || s;
+    const searchType = /^\d{13}$/.test(id) ? 'ISBN13' : 'ItemId';
+    const p = new URLSearchParams({ searchType, query: id, detail: 'N' });
+    const d = await this._call('/goods/itemDetail', p);
+    return (d && d.items && d.items[0]) || null;
+  },
+  // 예스24 응답의 cover는 이미 큰 이미지(L) URL이라 별도 업그레이드 불필요.
+  cover(item) { return (item && item.cover) || ''; },
+};
+
 /* -------------------- 영문 자동채움 (Google Books / Wikipedia / Wikidata)
  * 모두 CORS 허용 API라 브라우저에서 직접 호출 가능.
  * enrich_en.py와 동일한 룰을 포팅. */
@@ -908,6 +969,9 @@ function openBookDialog(book, index) {
   $('#aladinResults').innerHTML = '';
   $('#aladinQuery').value = book?.title || '';
   $('#aladinItemId').value = book?.link || '';
+  $('#yes24Results').innerHTML = '';
+  $('#yes24Query').value = book?.title || '';
+  $('#yes24ItemId').value = book?.link || '';
   bookDlg.showModal();
 }
 
@@ -1064,6 +1128,117 @@ $('#openAladinBtn').addEventListener('click', () => {
   const u = new URL('https://www.aladin.co.kr/search/wsearchresult.aspx');
   u.searchParams.set('SearchTarget', 'Book');
   u.searchParams.set('SearchWord', q);
+  window.open(u.toString(), '_blank', 'noopener');
+});
+
+/* Yes24 search inside dialog — paginated 5 at a time (알라딘 섹션과 동일 패턴) */
+function renderYes24Results(box) {
+  const items = box._items || [];
+  const more = (box._total || 0) > items.length;
+  let html = '';
+  items.forEach((it, i) => {
+    const cover = Yes24.cover(it);
+    html += `<div class="ar-item" data-i="${i}">
+      <div class="ar-cover">${cover ? `<img src="${esc(cover)}" referrerpolicy="no-referrer" alt="">` : ''}</div>
+      <div class="ar-meta">
+        <div class="ar-title">${esc(it.title)}</div>
+        <div class="ar-sub">${esc(it.author || '')} · ${esc(it.publisher || '')}</div>
+        <div class="ar-sub muted">${esc(it.publishDate || '')} · ItemId ${it.itemId}</div>
+      </div>
+    </div>`;
+  });
+  if (more) {
+    const remaining = box._total - items.length;
+    html += `<button type="button" id="yes24MoreBtn" class="btn small" style="display:block;width:100%;margin:6px 0;">+ 더 보기 (${remaining}건 남음)</button>`;
+  }
+  box.innerHTML = html;
+}
+
+const YES24_PAGE_SIZE = 5;
+async function runYes24Search(query, page = 1, append = false) {
+  const box = $('#yes24Results');
+  if (!append) {
+    box.innerHTML = '<div class="empty">검색 중…</div>';
+    box._query = query;
+    box._page = 1;
+    box._items = [];
+    box._total = 0;
+  } else {
+    const old = box.querySelector('#yes24MoreBtn');
+    if (old) { old.disabled = true; old.textContent = '불러오는 중…'; }
+  }
+  try {
+    const { items, total } = await Yes24.search(box._query, box._page, YES24_PAGE_SIZE);
+    box._items = (box._items || []).concat(items);
+    box._page += 1;
+    box._total = total || box._items.length;
+    if (!box._items.length) {
+      box.innerHTML = '<div class="empty">결과 없음</div>';
+      return;
+    }
+    renderYes24Results(box);
+  } catch (err) {
+    if (!append) box.innerHTML = `<div class="empty">${esc(err.message)}</div>`;
+    else {
+      const old = box.querySelector('#yes24MoreBtn');
+      if (old) { old.disabled = false; old.textContent = '+ 더 보기 (재시도)'; }
+      toast(err.message, 'err');
+    }
+  }
+}
+
+function applyYes24Item(it) {
+  const cover = Yes24.cover(it);
+  $('#bookTitle').value = it.title || $('#bookTitle').value;
+  $('#bookAuthor').value = it.author || $('#bookAuthor').value;
+  $('#bookPublisher').value = it.publisher || $('#bookPublisher').value;
+  $('#bookLink').value = it.link || $('#bookLink').value;
+  if (cover) $('#bookCover').value = cover;
+  $('#bookCoverPreview').src = cover || '';
+}
+
+$('#yes24SearchBtn').addEventListener('click', () => {
+  const q = $('#yes24Query').value.trim();
+  if (q) runYes24Search(q);
+});
+$('#yes24Query').addEventListener('keydown', (e) => {
+  if (e.key === 'Enter') { e.preventDefault(); $('#yes24SearchBtn').click(); }
+});
+$('#yes24Results').addEventListener('click', (e) => {
+  if (e.target.id === 'yes24MoreBtn') {
+    const box = $('#yes24Results');
+    if (box._query) runYes24Search(box._query, box._page, true);
+    return;
+  }
+  const row = e.target.closest('.ar-item'); if (!row) return;
+  const items = $('#yes24Results')._items || [];
+  const it = items[+row.dataset.i];
+  if (it) applyYes24Item(it);
+});
+$('#yes24LookupBtn').addEventListener('click', async () => {
+  const id = Yes24.parseItemId($('#yes24ItemId').value) || $('#yes24ItemId').value.trim();
+  if (!id) { toast('ItemId, ISBN13 또는 예스24 URL을 입력하세요', 'err'); return; }
+  try {
+    const it = await Yes24.lookup(id);
+    if (!it) { toast('해당 상품을 찾지 못했습니다', 'err'); return; }
+    applyYes24Item(it);
+    toast('예스24 정보 적용됨', 'ok');
+  } catch (err) {
+    toast(err.message, 'err');
+  }
+});
+
+/* '🔎 예스24' 버튼 — 현재 제목·저자로 예스24 검색을 새 탭으로 오픈.
+ * 알라딘 버튼과 동일한 패턴: 원하는 상품 URL을 사용자가 복사해 옆 필드에 붙여넣음.
+ * 예스24 API 호출 안 함 → Worker 설정 여부와 무관하게 항상 사용 가능. */
+$('#openYes24Btn').addEventListener('click', () => {
+  const t = $('#bookTitle').value.trim();
+  const a = $('#bookAuthor').value.trim();
+  if (!t) { toast('먼저 제목을 채우세요', 'err'); return; }
+  const q = [t, a].filter(Boolean).join(' ');
+  const u = new URL('https://www.yes24.com/Product/Search');
+  u.searchParams.set('domain', 'BOOK');
+  u.searchParams.set('query', q);
   window.open(u.toString(), '_blank', 'noopener');
 });
 
@@ -1266,6 +1441,7 @@ function loadSettingsToForm() {
   $('#cfgToken').value = Config.token;
   $('#cfgTtb').value = Config.ttb;
   $('#cfgCorsProxy').value = Config.corsProxy;
+  $('#cfgYes24Proxy').value = Config.yes24Proxy;
   $('#cfgCommitter').value = Config.committer;
 }
 $('#settingsBtn').addEventListener('click', () => { loadSettingsToForm(); settingsDlg.showModal(); });
@@ -1276,6 +1452,7 @@ $('#saveSettingsBtn').addEventListener('click', () => {
   LS.set('token', $('#cfgToken').value.trim());
   LS.set('ttb', $('#cfgTtb').value.trim());
   LS.set('corsProxy', $('#cfgCorsProxy').value.trim());
+  LS.set('yes24Proxy', $('#cfgYes24Proxy').value.trim().replace(/\/+$/, ''));
   LS.set('committer', $('#cfgCommitter').value.trim());
   $('#branchTag').textContent = `${Config.repo} @ ${Config.branch}`;
   toast('설정 저장됨', 'ok');
