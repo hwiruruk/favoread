@@ -95,6 +95,28 @@ python3 -m http.server 8765
 커밋된 것입니다. **↻ 불러오기 → 다시 편집 → 저장** 순서로 동기화하세요.
 편집기는 미저장 상태에서 페이지를 떠날 때 경고를 표시합니다.
 
+## GitHub 저장 방식 (1MB 한도)
+
+`data.csv`는 **Git Data API**로 저장합니다. blob → tree → commit → ref 순으로 올리고,
+결과는 커밋 하나로 떨어져 예전과 같습니다.
+
+예전에는 Contents API(`PUT /contents/{path}`)를 썼는데, 이 API는 본문을 base64로 싣고
+**1MB 한도**가 있습니다. data.csv가 799KB를 넘기면서 base64가 1.02MB가 되어 한도를 넘었고,
+GitHub이 크기와 무관해 보이는 메시지로 거절했습니다.
+
+```
+GitHub 저장 실패 (503): { "message": "Could not create file. Please try again later." }
+```
+
+Git Data API의 blob은 100MB까지 받으므로 한동안 여유가 있습니다.
+
+불러오기도 같은 이유로 대비해 뒀습니다. Contents API는 1MB가 넘는 파일의 `content`를
+비워서 주는데, 그때는 `GET /git/blobs/{sha}`로 다시 받아옵니다.
+
+충돌 감지는 그대로입니다. 불러올 때의 blob sha를 기억했다가 저장 직전 브랜치 끝에서
+같은 파일의 sha와 비교하고, 다르면 저장을 멈춥니다. 커밋을 붙인 뒤 ref는
+`force: false`로 옮기므로, 그새 브랜치가 움직였으면 GitHub이 거절합니다.
+
 ## 알라딘 API에 대해
 
 알라딘 TTB OpenAPI는 발급 시 등록된 URL과 호출 측 Referer가 일치할 때만
