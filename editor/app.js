@@ -1,5 +1,6 @@
 /* Favoread Editor — single-page editor for data.csv
- * Auth: GitHub PAT in localStorage, commits via Contents API.
+ * Auth: GitHub PAT in localStorage, commits via Git Data API
+ *       (blob → tree → commit → ref). Contents API는 1MB 한도가 있어 못 쓴다.
  * Aladin: JSONP (Output=JS&Callback=...) — bypasses CORS.
  */
 
@@ -132,10 +133,8 @@ function setDirty(v) {
   window.onbeforeunload = v ? () => '저장되지 않은 변경이 있습니다.' : null;
 }
 
-/* Unicode-safe base64 (for GitHub Contents API) */
-function b64encodeUtf8(str) {
-  return btoa(unescape(encodeURIComponent(str)));
-}
+/* Unicode-safe base64 — GitHub이 내려주는 파일 내용을 푸는 데 쓴다.
+ * (올릴 때는 Blob API에 utf-8 문자열을 그대로 보내므로 인코딩이 필요 없다) */
 function b64decodeUtf8(b64) {
   return decodeURIComponent(escape(atob(b64.replace(/\s/g, ''))));
 }
@@ -287,6 +286,17 @@ const Gh = {
     if (Config.token) headers['Authorization'] = 'Bearer ' + Config.token;
     return fetch('https://api.github.com' + path, { ...init, headers });
   },
+  async apiJson(path, init) {
+    const r = await this.api(path, init);
+    if (!r.ok) {
+      const t = await r.text();
+      const e = new Error(t);
+      e.status = r.status;
+      throw e;
+    }
+    return r.json();
+  },
+
   async getFile() {
     if (!Config.token) throw new Error('GitHub Token이 설정되지 않았습니다.');
     const url = `/repos/${Config.repo}/contents/${encodeURIComponent(Config.path)}?ref=${encodeURIComponent(Config.branch)}`;
@@ -305,46 +315,87 @@ const Gh = {
       throw new Error(`GitHub 로드 실패 (${r.status}): ${t}`);
     }
     const j = await r.json();
-    return { content: b64decodeUtf8(j.content), sha: j.sha };
-  },
-  async putFile({ content, sha, message }) {
-    const url = `/repos/${Config.repo}/contents/${encodeURIComponent(Config.path)}`;
-    const body = {
-      message,
-      content: b64encodeUtf8(content),
-      sha,
-      branch: Config.branch,
-    };
-    if (Config.committer) {
-      const m = Config.committer.match(/^(.+?)\s*<(.+)>$/);
-      if (m) body.committer = body.author = { name: m[1].trim(), email: m[2].trim() };
+    // Contents API는 1MB를 넘는 파일의 내용을 비워서 준다. 그때는 Blob API로 받는다
+    // (Blob API는 100MB까지 지원).
+    if (j.encoding === 'base64' && j.content) {
+      return { content: b64decodeUtf8(j.content), sha: j.sha };
     }
-    const r = await this.api(url, {
-      method: 'PUT',
+    const blob = await this.apiJson(`/repos/${Config.repo}/git/blobs/${j.sha}`);
+    return { content: b64decodeUtf8(blob.content), sha: j.sha };
+  },
+
+  /* 저장은 Git Data API로 한다.
+   * Contents API(PUT)는 본문을 base64로 싣는데 1MB 한도가 있어서, data.csv가
+   * 그 선을 넘으면 GitHub이 503 "Could not create file"을 돌려준다(크기 얘기가
+   * 아니라 헷갈리는 메시지). Blob → Tree → Commit → Ref 순서로 올리면
+   * 100MB까지 가능하고, 커밋 하나로 떨어지는 결과는 똑같다. */
+  async putFile({ content, sha, message }) {
+    if (!Config.token) throw new Error('GitHub Token이 설정되지 않았습니다.');
+    const repo = Config.repo;
+    const branch = Config.branch;
+    const json = (path, body, method = 'POST') => this.apiJson(path, {
+      method,
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(body),
     });
-    if (!r.ok) {
-      const t = await r.text();
-      if (r.status === 409 || r.status === 422) {
-        throw new Error('저장 실패: 원격 파일이 변경되었습니다. ↻ 불러오기로 동기화 후 다시 시도하세요.');
+
+    let who = null;
+    if (Config.committer) {
+      const m = Config.committer.match(/^(.+?)\s*<(.+)>$/);
+      if (m) who = { name: m[1].trim(), email: m[2].trim() };
+    }
+
+    try {
+      // 1. 브랜치 끝 커밋
+      const ref = await this.apiJson(`/repos/${repo}/git/ref/heads/${encodeURIComponent(branch)}`);
+      const headSha = ref.object.sha;
+      const headCommit = await this.apiJson(`/repos/${repo}/git/commits/${headSha}`);
+
+      // 2. 내가 불러온 뒤로 남이 이 파일을 바꿨는지 확인
+      if (sha) {
+        const cur = await this.api(
+          `/repos/${repo}/contents/${encodeURIComponent(Config.path)}?ref=${encodeURIComponent(headSha)}`
+        );
+        if (cur.ok) {
+          const curJson = await cur.json();
+          if (curJson.sha && curJson.sha !== sha) {
+            throw new Error('저장 실패: 원격 파일이 변경되었습니다. ↻ 불러오기로 동기화 후 다시 시도하세요.');
+          }
+        }
       }
-      if (r.status === 403) {
+
+      // 3. 내용을 blob으로 올리고 트리·커밋을 만든 뒤 브랜치를 옮긴다
+      const blob = await json(`/repos/${repo}/git/blobs`, { content, encoding: 'utf-8' });
+      const tree = await json(`/repos/${repo}/git/trees`, {
+        base_tree: headCommit.tree.sha,
+        tree: [{ path: Config.path, mode: '100644', type: 'blob', sha: blob.sha }],
+      });
+      const commitBody = { message, tree: tree.sha, parents: [headSha] };
+      if (who) { commitBody.author = who; commitBody.committer = who; }
+      const commit = await json(`/repos/${repo}/git/commits`, commitBody);
+      await json(`/repos/${repo}/git/refs/heads/${encodeURIComponent(branch)}`,
+        { sha: commit.sha, force: false }, 'PATCH');
+
+      return { sha: blob.sha };
+    } catch (err) {
+      if (err && err.status === 403) {
         throw new Error(
           'GitHub 저장 실패 (403): PAT 권한이 부족합니다. ' +
           'Fine-grained PAT를 재발급하면서 ① 이 저장소 선택 ② Permissions → Contents: Read and write ' +
           '를 반드시 켜주세요. (브랜치 보호 규칙으로 main 직접 푸시가 막혀있을 수도 있음)'
         );
       }
-      if (r.status === 404) {
+      if (err && err.status === 404) {
         throw new Error(
           'GitHub 저장 실패 (404): 저장소/브랜치/경로 또는 PAT의 저장소 접근 권한을 확인하세요.'
         );
       }
-      throw new Error(`GitHub 저장 실패 (${r.status}): ${t}`);
+      if (err && (err.status === 409 || err.status === 422)) {
+        throw new Error('저장 실패: 원격 브랜치가 그새 움직였습니다. ↻ 불러오기로 동기화 후 다시 시도하세요.');
+      }
+      if (err && err.status) throw new Error(`GitHub 저장 실패 (${err.status}): ${err.message}`);
+      throw err;
     }
-    const j = await r.json();
-    return { sha: j.content.sha };
   },
 };
 
