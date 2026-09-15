@@ -94,7 +94,8 @@ const state = {
     ink: '#181511',         // 자동이 아닐 때 쓸 글자색
     accentAuto: true,       // 포인트 색 테마 기본값 사용
     accent: '#ff4d6d',
-    coverZoom: 1,           // 표지 인물 사진 확대 배율
+    coverPhoto: { x: 50, y: 50, zoom: 1 },  // 표지 인물 사진 초점·확대 (마우스로 조정)
+    adj: {},                // 표지 슬라이드 요소별 마우스 조정값
     mono: false,
     covers: true,           // 표지에 책 표지 노출
     bookGrid: true,         // 책 표지 2열 그리드(아니면 한 줄)
@@ -160,7 +161,7 @@ function paletteFor(bg, inkOverride) {
     '--soft': mix(bg, ink, dark ? 0.72 : 0.66),
     '--mute': mix(bg, ink, dark ? 0.5 : 0.45),
     '--line': mix(bg, ink, dark ? 0.26 : 0.2),
-    '--panel': mix(bg, ink, 0.06),
+    '--panel': bg,          // 이미지 상자의 빈 공간은 배경색과 같게
   };
 }
 
@@ -334,6 +335,7 @@ async function boot() {
   buildSwatches();
   bindOptions();
   bindSearch();
+  bindAdjust();
   $('#loadBtn').disabled = false;
 }
 
@@ -397,6 +399,8 @@ function selectCeleb(name) {
   state.celeb = state.data.celebs[name];
   state.customImage = null;
   state.autoText = true;
+  state.opts.adj = {};
+  state.opts.coverPhoto = { x: 50, y: 50, zoom: 1 };
 
   const cs = detectSource(state.celeb.imageUrl);
   state.opts.coverSrc = cs.name ? `ⓒ ${cs.name}${cs.date ? ' · ' + cs.date : ''}` : '';
@@ -408,6 +412,7 @@ function selectCeleb(name) {
       ref, selected: i < DEFAULT_SELECT, quote: q, noQuote: !q,
       srcName: detectSource(ref.source).name,
       photo: null,          // {src, fit, zoom, x, y, w}
+      adj: {},              // 이 카드 요소별 마우스 조정값
     };
   });
   applyAutoText();
@@ -675,7 +680,7 @@ function bindOptions() {
     state.opts.accentAuto = e.target.checked; markSwatch(); renderPreview();
   });
   $('#optCoverZoom').addEventListener('input', (e) => {
-    state.opts.coverZoom = +e.target.value / 100;
+    state.opts.coverPhoto.zoom = +e.target.value / 100;
     $('#optCoverZoomOut').textContent = `${e.target.value}%`;
     renderPreview();
   });
@@ -698,7 +703,11 @@ function bindOptions() {
     state.opts.bookGrid = $$('input[name=bookGrid]').find((x) => x.checked).value === 'grid'; renderPreview();
   }));
   $$('input[name=imgPos]').forEach((r) => r.addEventListener('change', () => {
-    state.opts.imgPos = $$('input[name=imgPos]').find((x) => x.checked).value; renderPreview();
+    state.opts.imgPos = $$('input[name=imgPos]').find((x) => x.checked).value;
+    // 라디오를 누르면 마우스로 옮긴 초점도 그 위치로 맞춘다
+    state.opts.coverPhoto.x = 50;
+    state.opts.coverPhoto.y = { top: 18, center: 50, bottom: 82 }[state.opts.imgPos] ?? 50;
+    renderPreview();
   }));
   $('#optMono').addEventListener('change', (e) => { state.opts.mono = e.target.checked; renderPreview(); });
   $('#optCovers').addEventListener('change', (e) => { state.opts.covers = e.target.checked; renderPreview(); });
@@ -752,8 +761,9 @@ function syncControls() {
   $('#optAccentAuto').checked = state.opts.accentAuto !== false;
   if (/^#[0-9a-f]{6}$/i.test(state.opts.ink || '')) $('#optInkCustom').value = state.opts.ink;
   if (/^#[0-9a-f]{6}$/i.test(state.opts.accent || '')) $('#optAccentCustom').value = state.opts.accent;
-  $('#optCoverZoom').value = Math.round((state.opts.coverZoom || 1) * 100);
-  $('#optCoverZoomOut').textContent = `${Math.round((state.opts.coverZoom || 1) * 100)}%`;
+  const cz = Math.round(((state.opts.coverPhoto && state.opts.coverPhoto.zoom) || 1) * 100);
+  $('#optCoverZoom').value = cz;
+  $('#optCoverZoomOut').textContent = `${cz}%`;
   setRadio('format', state.opts.format);
   setRadio('fit', state.opts.fit);
   setRadio('coverLayout', state.opts.coverLayout);
@@ -782,6 +792,7 @@ function saveProject() {
       title: b.ref.title, author: b.ref.author,
       selected: b.selected, quote: b.quote, noQuote: b.noQuote, srcName: b.srcName,
       photo: b.photo || null,
+      adj: b.adj || {},
     })),
   };
   const blob = new Blob([JSON.stringify(proj, null, 2)], { type: 'application/json' });
@@ -802,6 +813,14 @@ function loadProject(text) {
 
   selectCeleb(name);                       // 데이터에서 책/UI 재구성
   Object.assign(state.opts, proj.opts || {});
+  if (!state.opts.coverPhoto) {
+    // 예전 파일 호환: coverZoom + 사진 위치를 새 구조로 옮긴다
+    state.opts.coverPhoto = {
+      x: 50, y: { top: 18, center: 50, bottom: 82 }[state.opts.imgPos] ?? 50,
+      zoom: state.opts.coverZoom || 1,
+    };
+  }
+  if (!state.opts.adj) state.opts.adj = {};
   state.autoText = proj.autoText !== undefined ? proj.autoText : false;
   state.customImage = proj.customImage || null;
 
@@ -815,6 +834,7 @@ function loadProject(text) {
       b.noQuote = !!m.noQuote;
       if (m.srcName != null) b.srcName = m.srcName;
       b.photo = m.photo && m.photo.src ? normPhoto(m.photo) : null;
+      b.adj = m.adj && typeof m.adj === 'object' ? m.adj : {};
     }
   });
 
@@ -839,9 +859,9 @@ function topBar(left, right) {
 
 // 이미지는 <img object-fit> 대신 background-image div로 그린다
 // (html2canvas가 object-fit을 제대로 못 그려 세로로 늘어나는 문제 방지)
-function imgBg(url, cls, w, h) {
+function imgBg(url, cls, w, h, extraStyle, attrs) {
   const wh = (w && h) ? `width:${w}px;height:${h}px;` : '';
-  return `<div class="cn-imgbg ${cls}" style="${wh}background-image:url('${esc(url)}')"></div>`;
+  return `<div class="cn-imgbg ${cls}"${attrs || ''} style="${wh}${extraStyle || ''}background-image:url('${esc(url)}')"></div>`;
 }
 
 /* ========================================================
@@ -880,10 +900,10 @@ function normPhoto(ph) {
 }
 
 /* 사진 한 장을 그린다. 실제 배율은 DOM 삽입 후 applyPhotoFits 가 확정한다. */
-function fitImg(url, cls, ph, extraStyle) {
+function fitImg(url, cls, ph, extraStyle, attrs) {
   const p = normPhoto(ph);
   noteMeta(url);
-  return `<div class="cn-imgbg cn-fitimg ${cls}"
+  return `<div class="cn-imgbg cn-fitimg ${cls}"${attrs || ''}
     data-src="${esc(url)}" data-fit="${p.fit}" data-zoom="${p.zoom}" data-x="${p.x}" data-y="${p.y}"
     style="${extraStyle || ''}background-image:url('${esc(url)}');background-size:${p.fit};background-position:${p.x}% ${p.y}%"></div>`;
 }
@@ -923,6 +943,80 @@ function readImageFile(file, cb) {
   fr.readAsDataURL(file);
 }
 
+/* ========================================================
+   마우스 조정 (끌어서 이동 · 휠로 크기)
+   - move: 제목·인용구·책 표지 등 → translate + scale
+   - pan : 사진 → 초점(배경 위치) 이동, 휠은 확대
+   조정값은 표지는 state.opts.adj, 본문은 책마다 b.adj 에 남는다.
+   ======================================================== */
+function scopeStore(scope) {
+  if (scope === 'cover') {
+    if (!state.opts.adj) state.opts.adj = {};
+    return state.opts.adj;
+  }
+  const b = state.books[+String(scope).split(':')[1]];
+  if (!b) return null;
+  if (!b.adj) b.adj = {};
+  return b.adj;
+}
+function getAdj(scope, key) {
+  const st = scopeStore(scope);
+  if (!st) return null;
+  if (!st[key]) st[key] = { dx: 0, dy: 0, s: 1 };
+  return st[key];
+}
+function peekAdj(scope, key) {
+  const st = scopeStore(scope);
+  return st ? st[key] : null;
+}
+/* 저장된 조정값을 인라인 transform 으로 */
+function adjStyle(scope, key) {
+  const a = peekAdj(scope, key);
+  if (!a || (!a.dx && !a.dy && (a.s == null || a.s === 1))) return '';
+  const sc = a.s && a.s !== 1 ? ` scale(${a.s})` : '';
+  return `transform:translate(${a.dx || 0}px,${a.dy || 0}px)${sc};`;
+}
+const adjAttr = (scope, key, kind) =>
+  ` data-adj="${key}" data-scope="${scope}" data-kind="${kind || 'move'}"`;
+
+/* 사진의 초점·확대값 (pan 대상) */
+function photoProps(scope) {
+  if (scope === 'cover') return state.opts.coverPhoto;
+  const b = state.books[+String(scope).split(':')[1]];
+  return b && b.photo ? b.photo : null;
+}
+/* 마우스로 사진을 만졌을 때 패널 슬라이더도 같은 값으로 */
+function syncPhotoPanel(scope) {
+  const ph = photoProps(scope);
+  if (!ph) return;
+  if (scope === 'cover') {
+    const z = Math.round((ph.zoom || 1) * 100);
+    $('#optCoverZoom').value = z;
+    $('#optCoverZoomOut').textContent = `${z}%`;
+    return;
+  }
+  const li = $(`.book-item[data-i="${+String(scope).split(':')[1]}"]`);
+  if (!li) return;
+  const put = (sel, out, v) => {
+    const el = li.querySelector(sel), o = li.querySelector(out);
+    if (el) el.value = v;
+    if (o) o.textContent = `${v}%`;
+  };
+  put('.bk-ph-zoom', '.bk-ph-zoom-o', Math.round((ph.zoom || 1) * 100));
+  put('.bk-ph-x', '.bk-ph-x-o', Math.round(ph.x));
+  put('.bk-ph-y', '.bk-ph-y-o', Math.round(ph.y));
+}
+
+/* 한 슬라이드의 조정값을 모두 되돌린다 */
+function resetAdj(scope) {
+  const st = scopeStore(scope);
+  if (st) Object.keys(st).forEach((k) => delete st[k]);
+  const ph = photoProps(scope);
+  if (ph) { ph.x = 50; ph.y = 50; ph.zoom = 1; }
+  syncPhotoPanel(scope);
+  renderPreview();
+}
+
 /* 사진 소스: 업로드(data:)는 그대로, 외부 URL은 프록시를 태운다 */
 function photoSrc(ph) {
   const u = (ph && ph.src) || '';
@@ -932,15 +1026,16 @@ function coverCell(b, w, h) { return imgBg(proxify(b.ref.coverUrl), 'bk', w, h);
 
 function bookCovers(sel, sq) {
   if (!state.opts.covers || !sel.length) return '';
+  const at = adjAttr('cover', 'covers') , st = adjStyle('cover', 'covers');
   if (state.opts.bookGrid) {
     const n = Math.min(sel.length, 10);            // 최대 2열 × 5행
     const rows = Math.ceil(n / 2), gap = 16, budget = sq ? 460 : 640;
     const h = Math.max(96, Math.min(sq ? 230 : 300, Math.floor((budget - (rows - 1) * gap) / rows)));
     const w = Math.round(h * 0.66);
-    return `<div class="cn-covers grid" style="gap:${gap}px">${sel.slice(0, n).map((b) => coverCell(b, w, h)).join('')}</div>`;
+    return `<div class="cn-covers grid"${at} style="gap:${gap}px;${st}">${sel.slice(0, n).map((b) => coverCell(b, w, h)).join('')}</div>`;
   }
   const n = Math.min(sel.length, sq ? 4 : 5), h = sq ? 128 : 168, w = Math.round(h * 0.66);
-  return `<div class="cn-covers row">${sel.slice(0, n).map((b) => coverCell(b, w, h)).join('')}</div>`;
+  return `<div class="cn-covers row"${at} style="${st}">${sel.slice(0, n).map((b) => coverCell(b, w, h)).join('')}</div>`;
 }
 
 function coverHTML() {
@@ -950,19 +1045,19 @@ function coverHTML() {
   const foot = state.opts.coverSrc ? `<div class="cn-foot"><span>${esc(srcDisp(state.opts.coverSrc))}</span></div>` : '';
   const covers = bookCovers(sel, sq);
 
-  const coverPhotoOpt = {
-    fit: state.opts.fit, zoom: state.opts.coverZoom,
-    x: 50, y: { top: 18, center: 50, bottom: 82 }[state.opts.imgPos] ?? 50,
-  };
+  const cp = state.opts.coverPhoto;
+  const coverPhotoOpt = { fit: state.opts.fit, zoom: cp.zoom, x: cp.x, y: cp.y };
+  const photoAttr = adjAttr('cover', 'photo', 'pan');
+  const textAttr = adjAttr('cover', 'text'), textStyle = adjStyle('cover', 'text');
 
   if (state.opts.coverLayout === 'split') {
     const photo = state.opts.noImage
       ? `<div class="cn-split-photo empty"></div>`
-      : fitImg(img, 'cn-split-photo', coverPhotoOpt);
+      : fitImg(img, 'cn-split-photo', coverPhotoOpt, '', photoAttr);
     return `<div class="cn-cover split">
       <div class="cn-split-main">
         <div class="cn-cv-brand"><span class="cn-kicker">${esc(T().brand)}</span><span class="cn-kicker tag">${esc(T().tagline)}</span></div>
-        <div class="cn-cv-body">
+        <div class="cn-cv-body"${textAttr} style="${textStyle}">
           <h1 class="cn-title">${escML(state.opts.title)}</h1>
           ${state.opts.subtitle ? `<div class="cn-sub">${escML(state.opts.subtitle)}</div>` : ''}
         </div>
@@ -976,11 +1071,13 @@ function coverHTML() {
   // stack (기본 상하)
   const photo = state.opts.noImage
     ? `<div class="cn-photo empty"></div>`
-    : fitImg(img, 'cn-photo', coverPhotoOpt);
+    : fitImg(img, 'cn-photo', coverPhotoOpt, '', photoAttr);
   return `<div class="cn-pad cn-cover">
     ${topBar(T().brand, T().tagline)}
-    <h1 class="cn-title">${escML(state.opts.title)}</h1>
-    ${state.opts.subtitle ? `<div class="cn-sub">${escML(state.opts.subtitle)}</div>` : ''}
+    <div class="cn-cv-body"${textAttr} style="${textStyle}">
+      <h1 class="cn-title">${escML(state.opts.title)}</h1>
+      ${state.opts.subtitle ? `<div class="cn-sub">${escML(state.opts.subtitle)}</div>` : ''}
+    </div>
     ${photo}
     ${covers}
     ${foot}
@@ -995,9 +1092,15 @@ function bookHTML(b, idx, total) {
   const cite = citeParts(b);
   const meta = [bookAuthor(r), state.opts.lang === 'en' ? '' : r.publisher].filter(Boolean).join(' · ');
   const showQuote = !b.noQuote && (b.quote || '').trim();
+  const scope = `book:${state.books.indexOf(b)}`;
   const quote = showQuote
-    ? `<div class="cn-quote"><span class="qmark">“</span><p>${escML(b.quote)}</p></div>`
+    ? `<div class="cn-quote"${adjAttr(scope, 'quote')} style="${adjStyle(scope, 'quote')}">
+        <span class="qmark">“</span><p>${escML(b.quote)}</p></div>`
     : '';
+  const headBlock = `<div class="cn-bk-head"${adjAttr(scope, 'title')} style="${adjStyle(scope, 'title')}">
+      <h2 class="cn-bk-title">${esc(bookTitle(r))}</h2>
+      ${meta ? `<div class="cn-bk-meta">${esc(meta)}</div>` : ''}
+    </div>`;
   const head = `<div class="cn-top">
       <span class="cn-big-num"><span class="cn-num-lat">${String(idx).padStart(2, '0')}</span> / ${String(total).padStart(2, '0')}</span>
       <span class="cn-kicker r">${esc(T().brand)}</span>
@@ -1008,18 +1111,20 @@ function bookHTML(b, idx, total) {
 
   // 사진이 있는 카드 — 왼쪽: 책 / 오른쪽: 사진
   const ph = b.photo && b.photo.src ? normPhoto(b.photo) : null;
+  const coverAttr = adjAttr(scope, 'cover'), coverStyle = adjStyle(scope, 'cover');
   if (ph) {
     const ch2 = sq ? 240 : 320, cw2 = Math.round(ch2 * 0.66);
     return `<div class="cn-pad cn-book duo">
       ${head}
       <div class="cn-duo">
         <div class="cn-duo-l">
-          ${imgBg(proxify(r.coverUrl), 'cn-cover-img', cw2, ch2)}
-          <h2 class="cn-bk-title">${esc(bookTitle(r))}</h2>
-          ${meta ? `<div class="cn-bk-meta">${esc(meta)}</div>` : ''}
+          ${imgBg(proxify(r.coverUrl), 'cn-cover-img', cw2, ch2, coverStyle, coverAttr)}
+          ${headBlock}
           ${quote}
         </div>
-        <div class="cn-duo-r" style="width:${ph.w}%">${fitImg(photoSrc(ph), 'cn-duo-photo', ph)}</div>
+        <div class="cn-duo-r" style="width:${ph.w}%">
+          ${fitImg(photoSrc(ph), 'cn-duo-photo', ph, '', adjAttr(scope, 'photo', 'pan'))}
+        </div>
       </div>
       ${foot}
     </div>`;
@@ -1029,9 +1134,8 @@ function bookHTML(b, idx, total) {
   return `<div class="cn-pad cn-book${showQuote ? '' : ' centered'}">
     ${head}
     <div class="cn-body">
-      ${imgBg(proxify(r.coverUrl), 'cn-cover-img', cw, ch)}
-      <h2 class="cn-bk-title">${esc(bookTitle(r))}</h2>
-      ${meta ? `<div class="cn-bk-meta">${esc(meta)}</div>` : ''}
+      ${imgBg(proxify(r.coverUrl), 'cn-cover-img', cw, ch, coverStyle, coverAttr)}
+      ${headBlock}
       ${quote}
     </div>
     ${foot}
@@ -1077,8 +1181,11 @@ function promoHTML() {
 
 function buildSlides() {
   const slides = [], sel = selectedBooks();
-  slides.push({ name: 'cover', html: coverHTML() });
-  sel.forEach((b, i) => slides.push({ name: `book${i + 1}`, html: bookHTML(b, i + 1, sel.length) }));
+  slides.push({ name: 'cover', html: coverHTML(), scope: 'cover' });
+  sel.forEach((b, i) => slides.push({
+    name: `book${i + 1}`, html: bookHTML(b, i + 1, sel.length),
+    scope: `book:${state.books.indexOf(b)}`,
+  }));
   if (state.opts.outro && sel.length) slides.push({ name: 'sources', html: outroHTML() });
   if (state.opts.promo) slides.push({ name: 'promo', html: promoHTML() });
   return slides;
@@ -1113,6 +1220,7 @@ function renderPreview() {
   if (!state.celeb) return;
   const wrap = $('#slides');
   $('#stageEmpty').classList.add('hidden');
+  $('#stageTip').classList.remove('hidden');
   const slides = buildSlides();
   const [w, h] = dims();
   const stageW = $('.stage').clientWidth - 56;
@@ -1126,6 +1234,7 @@ function renderPreview() {
     const frame = document.createElement('div');
     frame.className = 'cn-frame';
     frame.style.width = `${w * s}px`; frame.style.height = `${h * s}px`;
+    frame.dataset.scale = s;
     frame.appendChild(el);
 
     const bar = document.createElement('div');
@@ -1133,6 +1242,13 @@ function renderPreview() {
     const labels = { cover: '표지', sources: '출처', promo: '홍보' };
     const label = labels[sl.name] || `본문 ${sl.name.replace('book', '')}`;
     bar.innerHTML = `<b>${String(i + 1).padStart(2, '0')}</b> ${label}`;
+    if (sl.scope) {
+      const rs = document.createElement('button');
+      rs.textContent = '↺ 조정 초기화';
+      rs.title = '이 장에서 마우스로 옮기거나 키운 것을 되돌려요';
+      rs.addEventListener('click', () => resetAdj(sl.scope));
+      bar.appendChild(rs);
+    }
     const dl = document.createElement('button');
     dl.textContent = '⤓ PNG';
     dl.addEventListener('click', () => exportOne(sl, i));
@@ -1147,6 +1263,102 @@ function renderPreview() {
 }
 let resizeT;
 window.addEventListener('resize', () => { clearTimeout(resizeT); resizeT = setTimeout(renderPreview, 150); });
+
+/* ========================================================
+   미리보기 위에서 마우스로 조정
+   · 끌기  : 글자·책 표지는 위치 이동, 사진은 초점 이동
+   · 휠    : 글자·책 표지는 크기, 사진은 확대
+   ======================================================== */
+function bindAdjust() {
+  const wrap = $('#slides');
+  let drag = null;
+
+  const scaleOf = (el) => parseFloat(el.closest('.cn-frame')?.dataset.scale) || 1;
+
+  wrap.addEventListener('pointerdown', (e) => {
+    const el = e.target.closest('[data-adj]');
+    if (!el || e.button !== 0) return;
+    const { adj: key, scope, kind } = el.dataset;
+    if (kind === 'pan') {
+      const ph = photoProps(scope);
+      if (!ph) return;
+      const m = /(\d+(?:\.\d+)?)px\s+(\d+(?:\.\d+)?)px/.exec(el.style.backgroundSize || '');
+      drag = {
+        el, kind, ph, sx: e.clientX, sy: e.clientY, ox: ph.x, oy: ph.y, scale: scaleOf(el),
+        imgW: m ? +m[1] : 0, imgH: m ? +m[2] : 0,
+      };
+    } else {
+      const a = getAdj(scope, key);
+      if (!a) return;
+      drag = { el, kind: 'move', a, sx: e.clientX, sy: e.clientY, ox: a.dx, oy: a.dy, scale: scaleOf(el) };
+    }
+    el.setPointerCapture(e.pointerId);
+    el.classList.add('adj-on');
+    e.preventDefault();
+  });
+
+  wrap.addEventListener('pointermove', (e) => {
+    if (!drag) return;
+    const dx = (e.clientX - drag.sx) / drag.scale;
+    const dy = (e.clientY - drag.sy) / drag.scale;
+    if (drag.kind === 'pan') {
+      // 0~100% 가 움직이는 실제 거리(넘치는 폭 또는 남는 여백)로 나눠야 손끝을 따라온다.
+      // 꽉 채움이면 사진이 반대로, 전체 보기(여백 있음)면 같은 방향으로 움직인다.
+      // 넘치지도 남지도 않는 축은 움직일 여지가 없으므로 그대로 둔다.
+      const W = drag.el.clientWidth || 1, H = drag.el.clientHeight || 1;
+      const rawX = (drag.imgW || W) - W, rawY = (drag.imgH || H) - H;
+      const moveAxis = (o, d, raw) => {
+        const denom = Math.abs(raw);
+        if (denom <= 1) return o;
+        return clampNum(o + (raw > 0 ? -1 : 1) * (d / denom) * 100, 0, 100);
+      };
+      drag.ph.x = moveAxis(drag.ox, dx, rawX);
+      drag.ph.y = moveAxis(drag.oy, dy, rawY);
+      drag.el.dataset.x = drag.ph.x;
+      drag.el.dataset.y = drag.ph.y;
+      drag.el.style.backgroundPosition = `${drag.ph.x}% ${drag.ph.y}%`;
+    } else {
+      drag.a.dx = Math.round(drag.ox + dx);
+      drag.a.dy = Math.round(drag.oy + dy);
+      drag.el.style.transform = transformOf(drag.a);
+    }
+  });
+
+  const endDrag = () => {
+    if (!drag) return;
+    drag.el.classList.remove('adj-on');
+    if (drag.kind === 'pan') syncPhotoPanel(drag.el.dataset.scope);
+    drag = null;
+  };
+  wrap.addEventListener('pointerup', endDrag);
+  wrap.addEventListener('pointercancel', endDrag);
+
+  wrap.addEventListener('wheel', (e) => {
+    const el = e.target.closest('[data-adj]');
+    if (!el) return;
+    e.preventDefault();
+    const { adj: key, scope, kind } = el.dataset;
+    const step = e.deltaY < 0 ? 1.06 : 1 / 1.06;
+    if (kind === 'pan') {
+      const ph = photoProps(scope);
+      if (!ph) return;
+      ph.zoom = clampNum((ph.zoom || 1) * step, 1, 4);
+      el.dataset.zoom = ph.zoom;
+      applyPhotoFits(el.parentElement || document);
+      syncPhotoPanel(scope);
+    } else {
+      const a = getAdj(scope, key);
+      if (!a) return;
+      a.s = clampNum((a.s || 1) * step, 0.4, 3);
+      el.style.transform = transformOf(a);
+    }
+  }, { passive: false });
+}
+const clampNum = (v, a, b) => Math.max(a, Math.min(b, Math.round(v * 100) / 100));
+function transformOf(a) {
+  const sc = a.s && a.s !== 1 ? ` scale(${a.s})` : '';
+  return `translate(${a.dx || 0}px,${a.dy || 0}px)${sc}`;
+}
 
 /* ========================================================
    내보내기

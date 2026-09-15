@@ -104,6 +104,13 @@ textarea{resize:vertical;line-height:1.5}
 .seg .dot{width:16px;height:16px;border:2px solid var(--ink-ui);display:inline-block}
 input[type=range]{width:100%;accent-color:var(--ink-ui)}
 
+/* ---- 색 스와치 ---- */
+.swatches{display:flex;flex-wrap:wrap;gap:7px;margin-top:2px}
+.swatches button{width:26px;height:26px;border-radius:50%;border:2px solid var(--ink-ui);cursor:pointer;padding:0}
+.swatches button.active{outline:3px solid var(--hl);outline-offset:2px}
+.custom-color{display:flex;align-items:center;gap:8px;font-size:12px;color:var(--muted-ui);margin-top:8px;font-weight:700}
+.custom-color input[type=color]{width:36px;height:26px;padding:0;border:2px solid var(--ink-ui);background:none;cursor:pointer}
+
 /* ---- theme chips ---- */
 .theme-grid{display:grid;grid-template-columns:1fr 1fr;gap:6px}
 .theme-chip{
@@ -169,12 +176,21 @@ input[type=range]{width:100%;accent-color:var(--ink-ui)}
 .tg-item.sel{outline:3px dashed #00c2ff;outline-offset:6px}
 
 /* 큰 제목 — 흰 글자 + 두꺼운 외곽선 */
+/* 채움 = 배경색, 외곽선 = 글자색 → 두 색을 바꾸면 그대로 따라온다 */
 .tg-title{
-  font-family:var(--display);font-weight:400;line-height:1.12;letter-spacing:-.01em;color:#fff;
+  font-family:var(--display);font-weight:400;line-height:1.12;letter-spacing:-.01em;color:var(--paper);
   text-shadow:
     5px 0 0 var(--ink),-5px 0 0 var(--ink),0 5px 0 var(--ink),0 -5px 0 var(--ink),
     4px 4px 0 var(--ink),-4px 4px 0 var(--ink),4px -4px 0 var(--ink),-4px -4px 0 var(--ink),
     14px 14px 0 var(--a);
+}
+/* 밝은 바탕 테마·어두운 바탕 테마는 채움과 외곽선을 맞바꾼다 */
+.th-pastel .tg-title,.th-cream .tg-title,.th-neon .tg-title{
+  color:var(--ink);
+  text-shadow:
+    5px 0 0 var(--paper),-5px 0 0 var(--paper),0 5px 0 var(--paper),0 -5px 0 var(--paper),
+    4px 4px 0 var(--paper),-4px 4px 0 var(--paper),4px -4px 0 var(--paper),-4px -4px 0 var(--paper),
+    12px 12px 0 var(--a);
 }
 
 /* 말풍선 */
@@ -219,9 +235,10 @@ input[type=range]{width:100%;accent-color:var(--ink-ui)}
 .tg-book{line-height:0}
 .tg-bookimg{
   width:100%;background-repeat:no-repeat;background-position:center;background-size:cover;
-  border:5px solid var(--ink);border-radius:10px;box-shadow:10px 10px 0 rgba(0,0,0,.28);
+  border:none;border-radius:8px;box-shadow:0 16px 30px rgba(0,0,0,.34);
   background-color:var(--paper);
 }
+.bd-on .tg-bookimg{border:5px solid var(--ink);border-radius:10px;box-shadow:10px 10px 0 rgba(0,0,0,.28)}
 
 /* 하단 표기 */
 .tg-mark{
@@ -233,24 +250,28 @@ input[type=range]{width:100%;accent-color:var(--ink-ui)}
 .tg-mark .tg-mark-r{opacity:.9;font-size:19px;text-align:right}
 
 /* ---- 테마별 마감 ---- */
-.th-pastel .tg-bubble,.th-pastel .tg-stars,.th-pastel .tg-emoji,.th-pastel .tg-bookimg{
+.th-pastel .tg-bubble,.th-pastel .tg-stars,.th-pastel .tg-emoji{
   border-width:0;box-shadow:0 14px 30px rgba(90,70,110,.28);
 }
+.th-pastel.bd-on .tg-bookimg{border-width:0;box-shadow:0 14px 30px rgba(90,70,110,.28)}
 .th-pastel .tg-title{text-shadow:4px 0 0 #fff,-4px 0 0 #fff,0 4px 0 #fff,0 -4px 0 #fff,12px 12px 0 var(--a);color:var(--ink)}
 .th-pastel .tg-tag{background:var(--a);color:#4a3f55}
 
 .th-neon .tg-bubble,.th-neon .tg-stars,.th-neon .tg-emoji{
   border-color:var(--b);box-shadow:0 0 28px rgba(139,92,246,.75);
 }
-.th-neon .tg-bookimg{border-color:var(--b);box-shadow:0 0 26px rgba(34,211,238,.55)}
+.th-neon .tg-bookimg{box-shadow:0 0 26px rgba(34,211,238,.55)}
+.th-neon.bd-on .tg-bookimg{border-color:var(--b)}
 .th-neon .tg-title{text-shadow:4px 0 0 #000,-4px 0 0 #000,0 4px 0 #000,0 -4px 0 #000,12px 12px 0 var(--a)}
 .th-neon .tg-tag{background:var(--b);color:#111}
 
-.th-cream .tg-bookimg{border:14px solid #fff;border-bottom-width:34px;border-radius:2px;box-shadow:0 10px 26px rgba(0,0,0,.25)}
+/* 폴라로이드 흰 테두리는 '책 표지 테두리'를 켰을 때만 */
+.th-cream.bd-on .tg-bookimg{border:14px solid #fff;border-bottom-width:34px;border-radius:2px;box-shadow:0 10px 26px rgba(0,0,0,.25)}
 .th-cream .tg-bubble,.th-cream .tg-stars,.th-cream .tg-emoji{border-width:3px;box-shadow:5px 5px 0 rgba(0,0,0,.18)}
 .th-cream .tg-title{text-shadow:4px 0 0 #fff,-4px 0 0 #fff,0 4px 0 #fff,0 -4px 0 #fff,10px 10px 0 var(--a);color:var(--ink)}
 
 .th-mono .tg-bookimg{filter:grayscale(1) contrast(1.08);border-radius:0}
+.th-mono.bd-on .tg-bookimg{border-radius:0}
 .th-mono .tg-bubble,.th-mono .tg-stars,.th-mono .tg-emoji{border-radius:0;box-shadow:8px 8px 0 var(--ink)}
 .th-mono .tg-bubble[data-shape=blob]{border-radius:50%}
 .th-mono .tg-star-row{color:var(--ink)}
