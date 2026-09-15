@@ -95,6 +95,21 @@ python3 -m http.server 8765
 커밋된 것입니다. **↻ 불러오기 → 다시 편집 → 저장** 순서로 동기화하세요.
 편집기는 미저장 상태에서 페이지를 떠날 때 경고를 표시합니다.
 
+## 설정값 주의 — Repo · Branch · CSV 경로
+
+세 칸 모두 **앞뒤 공백과 슬래시를 떼고** 씁니다. 편집기가 값을 정규화하긴 하지만
+설정 자체를 깨끗하게 두는 편이 좋습니다.
+
+| 칸 | 맞는 값 | 틀린 값 |
+|---|---|---|
+| GitHub Repo | `hwiruruk/favoread` | `/hwiruruk/favoread/` |
+| Branch | `main` | `/main` |
+| CSV 경로 | `data.csv` | `/data.csv` |
+
+Branch에 `/main`처럼 슬래시가 붙으면 API 경로에서 `%2Fmain`이 되어 GitHub이
+**본문 없는 500**을 돌려줍니다. 저장 실패 메시지에 어느 단계에서 났는지와
+현재 repo/branch/path가 함께 찍히니 이걸 먼저 확인하세요.
+
 ## GitHub 저장 방식 (1MB 한도)
 
 `data.csv`는 **Git Data API**로 저장합니다. blob → tree → commit → ref 순으로 올리고,

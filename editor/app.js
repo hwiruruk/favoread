@@ -9,10 +9,13 @@ const LS = {
   get(k, def = '') { return localStorage.getItem('favoread.' + k) ?? def; },
   set(k, v) { localStorage.setItem('favoread.' + k, v); },
 };
+const trimSlashes = (v) => String(v || '').trim().replace(/^\/+|\/+$/g, '');
 const Config = {
-  get repo()      { return LS.get('repo', 'hwiruruk/favoread'); },
-  get branch()    { return LS.get('branch', 'main'); },
-  get path()      { return LS.get('path', 'data.csv'); },
+  // 값 앞뒤의 공백·슬래시를 떼어낸다. 예를 들어 Branch에 '/main'처럼 슬래시가
+  // 붙어 있으면 URL 경로에서 %2Fmain 이 되어 GitHub이 본문 없는 500을 돌려준다.
+  get repo()      { return trimSlashes(LS.get('repo', 'hwiruruk/favoread')) || 'hwiruruk/favoread'; },
+  get branch()    { return trimSlashes(LS.get('branch', 'main')) || 'main'; },
+  get path()      { return trimSlashes(LS.get('path', 'data.csv')) || 'data.csv'; },
   get token()     { return LS.get('token'); },
   get ttb()       { return LS.get('ttb'); },
   get committer() { return LS.get('committer'); },
@@ -286,15 +289,34 @@ const Gh = {
     if (Config.token) headers['Authorization'] = 'Bearer ' + Config.token;
     return fetch('https://api.github.com' + path, { ...init, headers });
   },
-  async apiJson(path, init) {
+  async apiJson(path, init, step) {
     const r = await this.api(path, init);
     if (!r.ok) {
       const t = await r.text();
       const e = new Error(t);
       e.status = r.status;
+      e.step = step || path;
+      e.requestId = r.headers.get('x-github-request-id') || '';
       throw e;
     }
     return r.json();
+  },
+  /* GitHub이 이따금 5xx를 던지므로 한 번만 다시 시도한다.
+   * blob·tree 생성은 내용으로 주소가 정해져 재시도해도 같은 결과고,
+   * ref 옮기기도 다시 부르면 되거나 거절될 뿐이라 안전하다. */
+  async step(label, fn) {
+    for (let i = 0; ; i++) {
+      try { return await fn(); }
+      catch (e) {
+        if (i === 0 && e && e.status >= 500) {
+          await new Promise((r) => setTimeout(r, 1200));
+          continue;
+        }
+        if (e && !e.step) e.step = label;
+        else if (e && e.status) e.step = label;
+        throw e;
+      }
+    }
   },
 
   async getFile() {
@@ -347,9 +369,11 @@ const Gh = {
 
     try {
       // 1. 브랜치 끝 커밋
-      const ref = await this.apiJson(`/repos/${repo}/git/ref/heads/${encodeURIComponent(branch)}`);
+      const ref = await this.step('브랜치 조회', () =>
+        this.apiJson(`/repos/${repo}/git/ref/heads/${encodeURIComponent(branch)}`));
       const headSha = ref.object.sha;
-      const headCommit = await this.apiJson(`/repos/${repo}/git/commits/${headSha}`);
+      const headCommit = await this.step('커밋 조회', () =>
+        this.apiJson(`/repos/${repo}/git/commits/${headSha}`));
 
       // 2. 내가 불러온 뒤로 남이 이 파일을 바꿨는지 확인
       if (sha) {
@@ -365,16 +389,20 @@ const Gh = {
       }
 
       // 3. 내용을 blob으로 올리고 트리·커밋을 만든 뒤 브랜치를 옮긴다
-      const blob = await json(`/repos/${repo}/git/blobs`, { content, encoding: 'utf-8' });
-      const tree = await json(`/repos/${repo}/git/trees`, {
-        base_tree: headCommit.tree.sha,
-        tree: [{ path: Config.path, mode: '100644', type: 'blob', sha: blob.sha }],
-      });
+      const blob = await this.step('내용 업로드', () =>
+        json(`/repos/${repo}/git/blobs`, { content, encoding: 'utf-8' }));
+      const tree = await this.step('트리 생성', () =>
+        json(`/repos/${repo}/git/trees`, {
+          base_tree: headCommit.tree.sha,
+          tree: [{ path: Config.path, mode: '100644', type: 'blob', sha: blob.sha }],
+        }));
       const commitBody = { message, tree: tree.sha, parents: [headSha] };
       if (who) { commitBody.author = who; commitBody.committer = who; }
-      const commit = await json(`/repos/${repo}/git/commits`, commitBody);
-      await json(`/repos/${repo}/git/refs/heads/${encodeURIComponent(branch)}`,
-        { sha: commit.sha, force: false }, 'PATCH');
+      const commit = await this.step('커밋 생성', () =>
+        json(`/repos/${repo}/git/commits`, commitBody));
+      await this.step('브랜치 이동', () =>
+        json(`/repos/${repo}/git/refs/heads/${encodeURIComponent(branch)}`,
+          { sha: commit.sha, force: false }, 'PATCH'));
 
       return { sha: blob.sha };
     } catch (err) {
@@ -393,7 +421,16 @@ const Gh = {
       if (err && (err.status === 409 || err.status === 422)) {
         throw new Error('저장 실패: 원격 브랜치가 그새 움직였습니다. ↻ 불러오기로 동기화 후 다시 시도하세요.');
       }
-      if (err && err.status) throw new Error(`GitHub 저장 실패 (${err.status}): ${err.message}`);
+      if (err && err.status) {
+        const where = err.step ? ` — ${err.step} 단계` : '';
+        const rid = err.requestId ? ` / request-id ${err.requestId}` : '';
+        const body = (err.message || '').trim() || '응답 본문 없음';
+        const hint = err.status >= 500
+          ? `\n설정을 확인하세요 — repo "${repo}", branch "${branch}", path "${Config.path}". ` +
+            '그래도 안 되면 GitHub 일시 장애일 수 있으니 잠시 후 다시 시도하세요.'
+          : '';
+        throw new Error(`GitHub 저장 실패 (${err.status})${where}: ${body}${rid}${hint}`);
+      }
       throw err;
     }
   },
