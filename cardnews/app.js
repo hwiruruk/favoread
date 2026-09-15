@@ -1091,7 +1091,41 @@ function fitImg(url, cls, ph, extraStyle, attrs) {
     style="${extraStyle || ''}background-image:url('${esc(url)}');background-size:${p.fit};background-position:${p.x}% ${p.y}%"></div>`;
 }
 
+/* 책 표지 상자를 표지 원본 비율에 맞춘다.
+   상자가 고정 비율이면 표지가 상자 안에서 남는 여백이 생기고,
+   그림자·테두리는 상자 기준이라 표지와 어긋나 보인다.
+   원본 크기를 알면 상자를 표지에 딱 맞춰 그림자가 표지를 감싸게 한다. */
+function coverBox(url, cls, maxW, maxH, extraStyle, attrs) {
+  noteMeta(url);
+  const m = imgMeta[url];
+  let w = maxW, h = maxH;
+  if (m && m.w && m.h) {
+    const k = Math.min(maxW / m.w, maxH / m.h);
+    w = Math.round(m.w * k); h = Math.round(m.h * k);
+  }
+  const data = ` data-src="${esc(url)}" data-maxw="${maxW}" data-maxh="${maxH}"`;
+  return imgBg(url, `${cls} cn-fitbox`, w, h, extraStyle, (attrs || '') + data);
+}
+
+function applyCoverBoxes(root) {
+  $$('.cn-fitbox', root || document).forEach((d) => {
+    const m = imgMeta[d.dataset.src];
+    if (!m || !m.w || !m.h) return;
+    const cs = getComputedStyle(d);
+    // 테두리를 두르는 테마가 있으므로 테두리 두께를 빼고 계산한다 (box-sizing: border-box)
+    const bx = (parseFloat(cs.borderLeftWidth) || 0) + (parseFloat(cs.borderRightWidth) || 0);
+    const by = (parseFloat(cs.borderTopWidth) || 0) + (parseFloat(cs.borderBottomWidth) || 0);
+    const maxW = Math.max(1, (+d.dataset.maxw || 0) - bx);
+    const maxH = Math.max(1, (+d.dataset.maxh || 0) - by);
+    const k = Math.min(maxW / m.w, maxH / m.h);
+    d.style.width = `${Math.round(m.w * k + bx)}px`;
+    d.style.height = `${Math.round(m.h * k + by)}px`;
+    d.style.backgroundSize = 'cover';   // 상자가 표지 비율과 같으므로 잘리지 않는다
+  });
+}
+
 function applyPhotoFits(root) {
+  applyCoverBoxes(root);
   $$('.cn-fitimg', root || document).forEach((d) => {
     const m = imgMeta[d.dataset.src];
     const W = d.clientWidth, H = d.clientHeight;
@@ -1205,7 +1239,7 @@ function photoSrc(ph) {
   const u = (ph && ph.src) || '';
   return u.startsWith('data:') ? u : proxify(u);
 }
-function coverCell(b, w, h) { return imgBg(proxify(b.ref.coverUrl), 'bk', w, h); }
+function coverCell(b, w, h) { return coverBox(proxify(b.ref.coverUrl), 'bk', w, h); }
 
 function bookCovers(sel, sq) {
   if (!state.opts.covers || !sel.length) return '';
@@ -1301,7 +1335,7 @@ function bookHTML(b, idx, total) {
       ${head}
       <div class="cn-duo">
         <div class="cn-duo-l">
-          ${imgBg(proxify(r.coverUrl), 'cn-cover-img', cw2, ch2, coverStyle, coverAttr)}
+          ${coverBox(proxify(r.coverUrl), 'cn-cover-img', cw2, ch2, coverStyle, coverAttr)}
           ${headBlock}
           ${quote}
         </div>
@@ -1317,7 +1351,7 @@ function bookHTML(b, idx, total) {
   return `<div class="cn-pad cn-book${showQuote ? '' : ' centered'}">
     ${head}
     <div class="cn-body">
-      ${imgBg(proxify(r.coverUrl), 'cn-cover-img', cw, ch, coverStyle, coverAttr)}
+      ${coverBox(proxify(r.coverUrl), 'cn-cover-img', cw, ch, coverStyle, coverAttr)}
       ${headBlock}
       ${quote}
     </div>
@@ -1564,11 +1598,18 @@ function waitForImages(node, timeout = 9000) {
   $$('.cn-imgbg', node).forEach((d) => {
     const m = /url\(["']?(.*?)["']?\)/.exec(d.style.backgroundImage || '');
     if (!m || !m[1]) return;
+    const url = m[1];
     tasks.push(new Promise((resolve) => {
       const im = new Image();
       im.crossOrigin = 'anonymous';
-      im.onload = resolve; im.onerror = resolve;
-      im.src = m[1];
+      im.onload = () => {
+        if (!imgMeta[url] || !imgMeta[url].w) {
+          imgMeta[url] = { w: im.naturalWidth || 0, h: im.naturalHeight || 0 };
+        }
+        resolve();
+      };
+      im.onerror = resolve;
+      im.src = url;
       setTimeout(resolve, timeout);
     }));
   });
