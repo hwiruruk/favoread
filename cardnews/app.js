@@ -13,7 +13,32 @@ const PROXY = 'https://images.weserv.nl/?url=';
 const SWATCHES = [
   '#f4f1e9', '#faf8f3', '#efe7d6', '#f0e6e1',
   '#e4e8e0', '#e2e8ec', '#1f1d18', '#14110d',
+  '#fff6cc', '#ffe3ec', '#dff3ff', '#0e0b1f',
 ];
+
+/* ---------- 글자색 프리셋 ---------- */
+const INK_SWATCHES = [
+  '#181511', '#000000', '#3b332c', '#2b2a4a',
+  '#7a1f3d', '#1f4d3d', '#f1ece0', '#ffffff',
+];
+
+/* ---------- 포인트 색 프리셋 ---------- */
+const ACCENT_SWATCHES = [
+  '#ff4d6d', '#ff8a3d', '#ffd23f', '#3ddc84',
+  '#4cc9f0', '#8b5cf6', '#e2483d', '#8a7b63',
+];
+
+/* ---------- Z세대 테마 (레이아웃 + 색 + 폰트) ----------
+   각 테마는 .cn-slide 에 th-{key} 클래스를 붙여 styles.css 가 마감을 담당한다.
+   테마를 고르면 배경/포인트 색이 그 테마 기본값으로 초기화된다. */
+const THEMES = {
+  editorial: { label: '에디토리얼', emoji: '📰', desc: '잡지풍 기본', bg: '#f4f1e9', accent: '#8a7b63' },
+  pop:       { label: '스티커 팝',  emoji: '⭐', desc: '두꺼운 테두리·그림자', bg: '#fff6cc', accent: '#ff4d6d' },
+  y2k:       { label: 'Y2K 사이버', emoji: '💿', desc: '네온 다크', bg: '#0e0b1f', accent: '#8b5cf6' },
+  diary:     { label: '다이어리',   emoji: '✏️', desc: '손글씨 · 폴라로이드', bg: '#fdf4ee', accent: '#7fb069' },
+  zine:      { label: '뉴트로 진',  emoji: '🗞', desc: '흑백 편집숍', bg: '#ecebe6', accent: '#e2483d' },
+};
+const THEME_KEYS = Object.keys(THEMES);
 
 /* ---------- 다국어 문구 ---------- */
 const L = {
@@ -60,10 +85,16 @@ const state = {
   books: [],
   opts: {
     lang: 'ko',
+    theme: 'editorial',
     format: 'portrait',
     coverLayout: 'split',   // split(좌우) | stack(상하)
     fit: 'cover',           // 인물 사진: cover(채움) | contain(전체)
     bg: '#f4f1e9',
+    inkAuto: true,          // 글자색 자동(배경 명도 기준)
+    ink: '#181511',         // 자동이 아닐 때 쓸 글자색
+    accentAuto: true,       // 포인트 색 테마 기본값 사용
+    accent: '#ff4d6d',
+    coverZoom: 1,           // 표지 인물 사진 확대 배율
     mono: false,
     covers: true,           // 표지에 책 표지 노출
     bookGrid: true,         // 책 표지 2열 그리드(아니면 한 줄)
@@ -83,6 +114,8 @@ const $ = (s, r = document) => r.querySelector(s);
 const $$ = (s, r = document) => [...r.querySelectorAll(s)];
 const esc = (s) => String(s == null ? '' : s).replace(/[&<>"]/g, (c) =>
   ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+/* 엔터(줄바꿈)를 카드에 그대로 반영 */
+const escML = (s) => esc(s).replace(/\r\n|\r|\n/g, '<br>');
 const status = (m) => { $('#statusMsg').textContent = m || ''; };
 
 /* ---------- 한글 조사 ---------- */
@@ -116,9 +149,11 @@ function luminance(h) {
   });
   return 0.2126 * r + 0.7152 * g + 0.0722 * b;
 }
-function paletteFor(bg) {
+function paletteFor(bg, inkOverride) {
   const dark = luminance(bg) < 0.42;
-  const ink = dark ? '#f1ece0' : '#181511';
+  const ink = /^#[0-9a-f]{6}$/i.test(inkOverride || '')
+    ? inkOverride
+    : (dark ? '#f1ece0' : '#181511');
   return {
     '--paper': bg,
     '--ink': ink,
@@ -372,6 +407,7 @@ function selectCeleb(name) {
     return {
       ref, selected: i < DEFAULT_SELECT, quote: q, noQuote: !q,
       srcName: detectSource(ref.source).name,
+      photo: null,          // {src, fit, zoom, x, y, w}
     };
   });
   applyAutoText();
@@ -397,12 +433,14 @@ function renderBookList() {
   const ul = $('#bookList');
   ul.innerHTML = state.books.map((b, i) => {
     const r = b.ref;
-    return `<li class="book-item" data-i="${i}">
+    const ph = b.photo && b.photo.src ? normPhoto(b.photo) : null;
+    return `<li class="book-item${ph ? ' has-photo' : ''}" data-i="${i}">
       <div class="book-head">
         <input type="checkbox" class="bk-sel" ${b.selected ? 'checked' : ''} title="카드에 포함">
         <img src="${esc(proxify(r.coverUrl))}" referrerpolicy="no-referrer" onerror="this.style.visibility='hidden'">
         <div class="bt"><b>${esc(r.title)}</b><span>${esc(r.author || '')}${r.publisher ? ' · ' + esc(r.publisher) : ''}</span></div>
         ${(!b.noQuote && b.quote) ? '<span class="badge-on">대목</span>' : ''}
+        ${ph ? '<span class="badge-on ph">사진</span>' : ''}
         <span class="caret">▸</span>
       </div>
       <div class="book-edit">
@@ -412,6 +450,42 @@ function renderBookList() {
           <textarea class="bk-quote" rows="3" placeholder="이 인물이 책을 언급/추천한 문장을 붙여넣으세요" ${b.noQuote ? 'disabled' : ''}>${esc(b.quote)}</textarea>
         </label>
         <label class="field"><span>매체명 (출처)</span><input class="bk-name" type="text" value="${esc(b.srcName)}" placeholder="예: VOGUE KOREA"></label>
+
+        <div class="field ph-block">
+          <span>이 카드 사진 <em>(넣으면 책 왼쪽 · 사진 오른쪽)</em></span>
+          <div class="ph-row">
+            <label class="mini-file">🖼 사진 올리기<input class="bk-photo" type="file" accept="image/*" hidden></label>
+            <button type="button" class="btn tiny bk-photo-del"${ph ? '' : ' disabled'}>사진 빼기</button>
+          </div>
+          <input class="bk-photo-url" type="text" placeholder="또는 이미지 주소(URL) 붙여넣기"
+            value="${esc(ph && !ph.src.startsWith('data:') ? ph.src : '')}">
+        </div>
+
+        <div class="ph-adj${ph ? '' : ' hidden'}">
+          <div class="field">
+            <span>사진 맞춤</span>
+            <div class="seg seg-row">
+              <label><input type="radio" name="phfit${i}" value="cover" ${!ph || ph.fit !== 'contain' ? 'checked' : ''}> 꽉 채움</label>
+              <label><input type="radio" name="phfit${i}" value="contain" ${ph && ph.fit === 'contain' ? 'checked' : ''}> 전체 보기 <em>(안 잘림)</em></label>
+            </div>
+          </div>
+          <label class="field range">
+            <span>확대 <output class="bk-ph-zoom-o">${Math.round((ph ? ph.zoom : 1) * 100)}%</output></span>
+            <input class="bk-ph-zoom" type="range" min="100" max="300" step="5" value="${Math.round((ph ? ph.zoom : 1) * 100)}">
+          </label>
+          <label class="field range">
+            <span>가로 초점 <output class="bk-ph-x-o">${ph ? ph.x : 50}%</output></span>
+            <input class="bk-ph-x" type="range" min="0" max="100" step="1" value="${ph ? ph.x : 50}">
+          </label>
+          <label class="field range">
+            <span>세로 초점 <output class="bk-ph-y-o">${ph ? ph.y : 50}%</output></span>
+            <input class="bk-ph-y" type="range" min="0" max="100" step="1" value="${ph ? ph.y : 50}">
+          </label>
+          <label class="field range">
+            <span>사진 폭 <output class="bk-ph-w-o">${ph ? ph.w : 42}%</output></span>
+            <input class="bk-ph-w" type="range" min="28" max="62" step="1" value="${ph ? ph.w : 42}">
+          </label>
+        </div>
       </div>
     </li>`;
   }).join('');
@@ -437,28 +511,151 @@ function renderBookList() {
     });
     li.querySelector('.bk-quote').addEventListener('input', (e) => { b.quote = e.target.value; reflectBadge(); renderPreview(); });
     li.querySelector('.bk-name').addEventListener('input', (e) => { b.srcName = e.target.value; renderPreview(); });
+
+    /* ---- 카드별 사진 ---- */
+    const adj = li.querySelector('.ph-adj');
+    const setPhoto = (src) => {
+      if (!src) { b.photo = null; } else { b.photo = normPhoto({ ...(b.photo || {}), src }); }
+      const on = !!(b.photo && b.photo.src);
+      adj.classList.toggle('hidden', !on);
+      li.classList.toggle('has-photo', on);
+      li.querySelector('.bk-photo-del').disabled = !on;
+      const head = li.querySelector('.book-head');
+      let badge = head.querySelector('.badge-on.ph');
+      if (on && !badge) {
+        badge = document.createElement('span');
+        badge.className = 'badge-on ph'; badge.textContent = '사진';
+        head.insertBefore(badge, head.querySelector('.caret'));
+      } else if (!on && badge) badge.remove();
+      renderPreview();
+    };
+    li.querySelector('.bk-photo').addEventListener('change', (e) => {
+      const f = e.target.files[0]; if (!f) return;
+      readImageFile(f, (dataUrl) => {
+        li.querySelector('.bk-photo-url').value = '';
+        setPhoto(dataUrl);
+      });
+      e.target.value = '';
+    });
+    li.querySelector('.bk-photo-url').addEventListener('input', (e) => {
+      setPhoto(cleanUrl(e.target.value));
+    });
+    li.querySelector('.bk-photo-del').addEventListener('click', () => {
+      li.querySelector('.bk-photo-url').value = '';
+      setPhoto('');
+    });
+    const tweak = (sel, outSel, key, fn) => {
+      const input = li.querySelector(sel), out = li.querySelector(outSel);
+      input.addEventListener('input', (e) => {
+        if (!b.photo) return;
+        b.photo = normPhoto({ ...b.photo, [key]: fn(e.target.value) });
+        if (out) out.textContent = key === 'zoom' ? `${e.target.value}%` : `${e.target.value}%`;
+        renderPreview();
+      });
+    };
+    tweak('.bk-ph-zoom', '.bk-ph-zoom-o', 'zoom', (v) => +v / 100);
+    tweak('.bk-ph-x', '.bk-ph-x-o', 'x', (v) => +v);
+    tweak('.bk-ph-y', '.bk-ph-y-o', 'y', (v) => +v);
+    tweak('.bk-ph-w', '.bk-ph-w-o', 'w', (v) => +v);
+    $$(`input[name=phfit${i}]`, li).forEach((r2) => r2.addEventListener('change', (e) => {
+      if (!b.photo || !e.target.checked) return;
+      b.photo = normPhoto({ ...b.photo, fit: e.target.value });
+      renderPreview();
+    }));
   });
 }
 
 /* ========================================================
    옵션 바인딩
    ======================================================== */
+function swatchHTML(list) {
+  return list.map((c) => `<button type="button" data-c="${c}" style="background:${c}" title="${c}"></button>`).join('');
+}
+
 function buildSwatches() {
   const box = $('#swatches');
-  box.innerHTML = SWATCHES.map((c) =>
-    `<button data-c="${c}" style="background:${c}" title="${c}"></button>`).join('');
+  box.innerHTML = swatchHTML(SWATCHES);
   box.addEventListener('click', (e) => {
     const btn = e.target.closest('button[data-c]'); if (!btn) return;
     setBg(btn.dataset.c);
   });
+
+  const inkBox = $('#inkSwatches');
+  inkBox.innerHTML = swatchHTML(INK_SWATCHES);
+  inkBox.addEventListener('click', (e) => {
+    const btn = e.target.closest('button[data-c]'); if (!btn) return;
+    setInk(btn.dataset.c);
+  });
+
+  const acBox = $('#accentSwatches');
+  acBox.innerHTML = swatchHTML(ACCENT_SWATCHES);
+  acBox.addEventListener('click', (e) => {
+    const btn = e.target.closest('button[data-c]'); if (!btn) return;
+    setAccent(btn.dataset.c);
+  });
+
+  buildThemeGrid();
   markSwatch();
 }
+
+function buildThemeGrid() {
+  const box = $('#themeGrid');
+  box.innerHTML = THEME_KEYS.map((k) => {
+    const t = THEMES[k];
+    return `<button type="button" class="theme-chip" data-t="${k}">
+      <span class="tc-dot" style="background:${t.bg};box-shadow:inset 0 0 0 3px ${t.accent}"></span>
+      <span class="tc-txt"><b>${t.emoji} ${esc(t.label)}</b><em>${esc(t.desc)}</em></span>
+    </button>`;
+  }).join('');
+  box.addEventListener('click', (e) => {
+    const btn = e.target.closest('button[data-t]'); if (!btn) return;
+    setTheme(btn.dataset.t);
+  });
+  markTheme();
+}
+function markTheme() {
+  $$('#themeGrid button').forEach((b) => b.classList.toggle('active', b.dataset.t === state.opts.theme));
+}
+function setTheme(k) {
+  if (!THEMES[k]) return;
+  state.opts.theme = k;
+  // 테마를 고르면 배경·포인트 색을 그 테마 기본값으로 초기화 (글자색은 자동으로)
+  state.opts.bg = THEMES[k].bg;
+  state.opts.accentAuto = true;
+  state.opts.accent = THEMES[k].accent;
+  state.opts.inkAuto = true;
+  syncControls();
+  renderPreview();
+}
+
 function markSwatch() {
-  $$('#swatches button').forEach((b) => b.classList.toggle('active', b.dataset.c.toLowerCase() === state.opts.bg.toLowerCase()));
+  const eq = (a, b) => String(a).toLowerCase() === String(b).toLowerCase();
+  $$('#swatches button').forEach((b) => b.classList.toggle('active', eq(b.dataset.c, state.opts.bg)));
+  $$('#inkSwatches button').forEach((b) => b.classList.toggle('active', !state.opts.inkAuto && eq(b.dataset.c, state.opts.ink)));
+  $$('#accentSwatches button').forEach((b) => b.classList.toggle('active', !state.opts.accentAuto && eq(b.dataset.c, state.opts.accent)));
+  markTheme();
 }
 function setBg(c) {
   state.opts.bg = c;
   $('#optBgCustom').value = /^#[0-9a-f]{6}$/i.test(c) ? c : '#f4f1e9';
+  markSwatch();
+  renderPreview();
+}
+function setInk(c) {
+  if (!/^#[0-9a-f]{6}$/i.test(c)) return;
+  state.opts.ink = c;
+  state.opts.inkAuto = false;
+  $('#optInkAuto').checked = false;
+  $('#optInkCustom').value = c;
+  markSwatch();
+  renderPreview();
+}
+function setAccent(c) {
+  if (!/^#[0-9a-f]{6}$/i.test(c)) return;
+  state.opts.accent = c;
+  state.opts.accentAuto = false;
+  $('#optAccentAuto').checked = false;
+  $('#optAccentCustom').value = c;
   markSwatch();
   renderPreview();
 }
@@ -469,6 +666,19 @@ function bindOptions() {
   $('#optCoverSrc').addEventListener('input', (e) => { state.opts.coverSrc = e.target.value; renderPreview(); });
   $('#optHandle').addEventListener('input', (e) => { state.opts.handle = e.target.value; renderPreview(); });
   $('#optBgCustom').addEventListener('input', (e) => setBg(e.target.value));
+  $('#optInkCustom').addEventListener('input', (e) => setInk(e.target.value));
+  $('#optAccentCustom').addEventListener('input', (e) => setAccent(e.target.value));
+  $('#optInkAuto').addEventListener('change', (e) => {
+    state.opts.inkAuto = e.target.checked; markSwatch(); renderPreview();
+  });
+  $('#optAccentAuto').addEventListener('change', (e) => {
+    state.opts.accentAuto = e.target.checked; markSwatch(); renderPreview();
+  });
+  $('#optCoverZoom').addEventListener('input', (e) => {
+    state.opts.coverZoom = +e.target.value / 100;
+    $('#optCoverZoomOut').textContent = `${e.target.value}%`;
+    renderPreview();
+  });
 
   $$('input[name=lang]').forEach((r) => r.addEventListener('change', () => {
     state.opts.lang = $$('input[name=lang]').find((x) => x.checked).value;
@@ -506,9 +716,12 @@ function bindOptions() {
 
   $('#celebUpload').addEventListener('change', (e) => {
     const f = e.target.files[0]; if (!f) return;
-    const fr = new FileReader();
-    fr.onload = () => { state.customImage = fr.result; $('#celebThumb').src = fr.result; renderPreview(); };
-    fr.readAsDataURL(f);
+    readImageFile(f, (dataUrl) => {
+      state.customImage = dataUrl;
+      $('#celebThumb').src = dataUrl;
+      renderPreview();
+    });
+    e.target.value = '';
   });
 
   $('#zipBtn').addEventListener('click', exportZip);
@@ -535,6 +748,12 @@ function syncControls() {
   $('#optCoverSrc').value = state.opts.coverSrc;
   $('#optHandle').value = state.opts.handle;
   setRadio('lang', state.opts.lang);
+  $('#optInkAuto').checked = state.opts.inkAuto !== false;
+  $('#optAccentAuto').checked = state.opts.accentAuto !== false;
+  if (/^#[0-9a-f]{6}$/i.test(state.opts.ink || '')) $('#optInkCustom').value = state.opts.ink;
+  if (/^#[0-9a-f]{6}$/i.test(state.opts.accent || '')) $('#optAccentCustom').value = state.opts.accent;
+  $('#optCoverZoom').value = Math.round((state.opts.coverZoom || 1) * 100);
+  $('#optCoverZoomOut').textContent = `${Math.round((state.opts.coverZoom || 1) * 100)}%`;
   setRadio('format', state.opts.format);
   setRadio('fit', state.opts.fit);
   setRadio('coverLayout', state.opts.coverLayout);
@@ -562,6 +781,7 @@ function saveProject() {
     books: state.books.map((b) => ({
       title: b.ref.title, author: b.ref.author,
       selected: b.selected, quote: b.quote, noQuote: b.noQuote, srcName: b.srcName,
+      photo: b.photo || null,
     })),
   };
   const blob = new Blob([JSON.stringify(proj, null, 2)], { type: 'application/json' });
@@ -594,6 +814,7 @@ function loadProject(text) {
       b.quote = m.quote || '';
       b.noQuote = !!m.noQuote;
       if (m.srcName != null) b.srcName = m.srcName;
+      b.photo = m.photo && m.photo.src ? normPhoto(m.photo) : null;
     }
   });
 
@@ -622,6 +843,91 @@ function imgBg(url, cls, w, h) {
   const wh = (w && h) ? `width:${w}px;height:${h}px;` : '';
   return `<div class="cn-imgbg ${cls}" style="${wh}background-image:url('${esc(url)}')"></div>`;
 }
+
+/* ========================================================
+   범용 이미지 맞춤 툴
+   가로/세로/정사각 등 어떤 비율의 사진이 들어와도
+   (1) 원본 크기를 읽어 두고 (2) 상자 크기에 맞춰 정확한
+   background-size 를 계산한다. 확대(zoom)와 초점(x,y)도 함께.
+   ======================================================== */
+const imgMeta = Object.create(null);   // url → {w,h} | null(로딩 중)
+let refitTimer;
+
+function noteMeta(url) {
+  if (!url || imgMeta[url] !== undefined) return;
+  imgMeta[url] = null;
+  const im = new Image();
+  im.crossOrigin = 'anonymous';
+  im.onload = () => {
+    imgMeta[url] = { w: im.naturalWidth || 0, h: im.naturalHeight || 0 };
+    clearTimeout(refitTimer);
+    refitTimer = setTimeout(() => applyPhotoFits(document), 60);
+  };
+  im.onerror = () => { imgMeta[url] = { w: 0, h: 0 }; };
+  im.src = url;
+}
+
+function normPhoto(ph) {
+  const p = ph || {};
+  return {
+    src: p.src || '',
+    fit: p.fit === 'contain' ? 'contain' : 'cover',
+    zoom: Number(p.zoom) > 0 ? Number(p.zoom) : 1,
+    x: p.x == null ? 50 : +p.x,
+    y: p.y == null ? 50 : +p.y,
+    w: p.w == null ? 42 : +p.w,       // 카드에서 사진이 차지할 가로 비율(%)
+  };
+}
+
+/* 사진 한 장을 그린다. 실제 배율은 DOM 삽입 후 applyPhotoFits 가 확정한다. */
+function fitImg(url, cls, ph, extraStyle) {
+  const p = normPhoto(ph);
+  noteMeta(url);
+  return `<div class="cn-imgbg cn-fitimg ${cls}"
+    data-src="${esc(url)}" data-fit="${p.fit}" data-zoom="${p.zoom}" data-x="${p.x}" data-y="${p.y}"
+    style="${extraStyle || ''}background-image:url('${esc(url)}');background-size:${p.fit};background-position:${p.x}% ${p.y}%"></div>`;
+}
+
+function applyPhotoFits(root) {
+  $$('.cn-fitimg', root || document).forEach((d) => {
+    const m = imgMeta[d.dataset.src];
+    const W = d.clientWidth, H = d.clientHeight;
+    if (!m || !m.w || !m.h || !W || !H) return;
+    const base = d.dataset.fit === 'contain'
+      ? Math.min(W / m.w, H / m.h)
+      : Math.max(W / m.w, H / m.h);
+    const z = parseFloat(d.dataset.zoom) || 1;
+    d.style.backgroundSize = `${Math.round(m.w * base * z)}px ${Math.round(m.h * base * z)}px`;
+    d.style.backgroundPosition = `${d.dataset.x}% ${d.dataset.y}%`;
+  });
+}
+
+/* 업로드 이미지는 긴 변 1600px로 줄여 둔다 (PNG 저장·JSON 용량 대비) */
+function readImageFile(file, cb) {
+  const fr = new FileReader();
+  fr.onload = () => {
+    const im = new Image();
+    im.onload = () => {
+      const MAX = 1600;
+      const scale = Math.min(1, MAX / Math.max(im.naturalWidth, im.naturalHeight));
+      if (scale >= 1) { cb(fr.result); return; }
+      const cv = document.createElement('canvas');
+      cv.width = Math.round(im.naturalWidth * scale);
+      cv.height = Math.round(im.naturalHeight * scale);
+      cv.getContext('2d').drawImage(im, 0, 0, cv.width, cv.height);
+      cb(cv.toDataURL('image/jpeg', 0.92));
+    };
+    im.onerror = () => cb(fr.result);
+    im.src = fr.result;
+  };
+  fr.readAsDataURL(file);
+}
+
+/* 사진 소스: 업로드(data:)는 그대로, 외부 URL은 프록시를 태운다 */
+function photoSrc(ph) {
+  const u = (ph && ph.src) || '';
+  return u.startsWith('data:') ? u : proxify(u);
+}
 function coverCell(b, w, h) { return imgBg(proxify(b.ref.coverUrl), 'bk', w, h); }
 
 function bookCovers(sel, sq) {
@@ -644,16 +950,21 @@ function coverHTML() {
   const foot = state.opts.coverSrc ? `<div class="cn-foot"><span>${esc(srcDisp(state.opts.coverSrc))}</span></div>` : '';
   const covers = bookCovers(sel, sq);
 
+  const coverPhotoOpt = {
+    fit: state.opts.fit, zoom: state.opts.coverZoom,
+    x: 50, y: { top: 18, center: 50, bottom: 82 }[state.opts.imgPos] ?? 50,
+  };
+
   if (state.opts.coverLayout === 'split') {
     const photo = state.opts.noImage
       ? `<div class="cn-split-photo empty"></div>`
-      : imgBg(img, 'cn-split-photo');
+      : fitImg(img, 'cn-split-photo', coverPhotoOpt);
     return `<div class="cn-cover split">
       <div class="cn-split-main">
         <div class="cn-cv-brand"><span class="cn-kicker">${esc(T().brand)}</span><span class="cn-kicker tag">${esc(T().tagline)}</span></div>
         <div class="cn-cv-body">
-          <h1 class="cn-title">${esc(state.opts.title)}</h1>
-          ${state.opts.subtitle ? `<div class="cn-sub">${esc(state.opts.subtitle)}</div>` : ''}
+          <h1 class="cn-title">${escML(state.opts.title)}</h1>
+          ${state.opts.subtitle ? `<div class="cn-sub">${escML(state.opts.subtitle)}</div>` : ''}
         </div>
         ${covers}
         ${foot}
@@ -665,11 +976,11 @@ function coverHTML() {
   // stack (기본 상하)
   const photo = state.opts.noImage
     ? `<div class="cn-photo empty"></div>`
-    : imgBg(img, 'cn-photo');
+    : fitImg(img, 'cn-photo', coverPhotoOpt);
   return `<div class="cn-pad cn-cover">
     ${topBar(T().brand, T().tagline)}
-    <h1 class="cn-title">${esc(state.opts.title)}</h1>
-    ${state.opts.subtitle ? `<div class="cn-sub">${esc(state.opts.subtitle)}</div>` : ''}
+    <h1 class="cn-title">${escML(state.opts.title)}</h1>
+    ${state.opts.subtitle ? `<div class="cn-sub">${escML(state.opts.subtitle)}</div>` : ''}
     ${photo}
     ${covers}
     ${foot}
@@ -681,25 +992,49 @@ function bookAuthor(r) { return state.opts.lang === 'en' ? (r.author_en || r.aut
 
 function bookHTML(b, idx, total) {
   const r = b.ref, sq = state.opts.format === 'square';
-  const ch = sq ? 360 : 470, cw = Math.round(ch * 0.66);
   const cite = citeParts(b);
   const meta = [bookAuthor(r), state.opts.lang === 'en' ? '' : r.publisher].filter(Boolean).join(' · ');
   const showQuote = !b.noQuote && (b.quote || '').trim();
   const quote = showQuote
-    ? `<div class="cn-quote"><span class="qmark">“</span><p>${esc(b.quote)}</p></div>`
+    ? `<div class="cn-quote"><span class="qmark">“</span><p>${escML(b.quote)}</p></div>`
     : '';
-  return `<div class="cn-pad cn-book${showQuote ? '' : ' centered'}">
-    <div class="cn-top">
+  const head = `<div class="cn-top">
       <span class="cn-big-num"><span class="cn-num-lat">${String(idx).padStart(2, '0')}</span> / ${String(total).padStart(2, '0')}</span>
       <span class="cn-kicker r">${esc(T().brand)}</span>
-    </div>
+    </div>`;
+  const foot = cite
+    ? `<div class="cn-src"><span class="cn-src-lab">${esc(T().source)}</span><span class="cn-cite">${cite}</span></div>`
+    : '';
+
+  // 사진이 있는 카드 — 왼쪽: 책 / 오른쪽: 사진
+  const ph = b.photo && b.photo.src ? normPhoto(b.photo) : null;
+  if (ph) {
+    const ch2 = sq ? 240 : 320, cw2 = Math.round(ch2 * 0.66);
+    return `<div class="cn-pad cn-book duo">
+      ${head}
+      <div class="cn-duo">
+        <div class="cn-duo-l">
+          ${imgBg(proxify(r.coverUrl), 'cn-cover-img', cw2, ch2)}
+          <h2 class="cn-bk-title">${esc(bookTitle(r))}</h2>
+          ${meta ? `<div class="cn-bk-meta">${esc(meta)}</div>` : ''}
+          ${quote}
+        </div>
+        <div class="cn-duo-r" style="width:${ph.w}%">${fitImg(photoSrc(ph), 'cn-duo-photo', ph)}</div>
+      </div>
+      ${foot}
+    </div>`;
+  }
+
+  const ch = sq ? 360 : 470, cw = Math.round(ch * 0.66);
+  return `<div class="cn-pad cn-book${showQuote ? '' : ' centered'}">
+    ${head}
     <div class="cn-body">
       ${imgBg(proxify(r.coverUrl), 'cn-cover-img', cw, ch)}
       <h2 class="cn-bk-title">${esc(bookTitle(r))}</h2>
       ${meta ? `<div class="cn-bk-meta">${esc(meta)}</div>` : ''}
       ${quote}
     </div>
-    ${cite ? `<div class="cn-src"><span class="cn-src-lab">${esc(T().source)}</span><span class="cn-cite">${cite}</span></div>` : ''}
+    ${foot}
   </div>`;
 }
 
@@ -749,14 +1084,21 @@ function buildSlides() {
   return slides;
 }
 
+function themeDef() { return THEMES[state.opts.theme] || THEMES.editorial; }
+function accentColor() {
+  return state.opts.accentAuto ? themeDef().accent : (state.opts.accent || themeDef().accent);
+}
+
 function makeSlideEl(html) {
   const el = document.createElement('div');
   el.className = 'cn-slide'
+    + ' th-' + (THEMES[state.opts.theme] ? state.opts.theme : 'editorial')
     + (state.opts.format === 'square' ? ' square' : '')
     + (state.opts.mono ? ' cn-mono' : '')
     + (state.opts.fit === 'cover' ? ' fit-cover' : ' fit-contain');
-  const pal = paletteFor(state.opts.bg);
+  const pal = paletteFor(state.opts.bg, state.opts.inkAuto ? '' : state.opts.ink);
   for (const k in pal) el.style.setProperty(k, pal[k]);
+  el.style.setProperty('--accent', accentColor());
   el.style.background = pal['--paper'];
   const posMap = { top: 'center 18%', center: 'center', bottom: 'center 82%' };
   el.style.setProperty('--imgpos', posMap[state.opts.imgPos] || 'center');
@@ -801,6 +1143,7 @@ function renderPreview() {
     sw.append(frame, bar);
     wrap.appendChild(sw);
   });
+  applyPhotoFits(wrap);   // DOM에 올라간 뒤 실제 상자 크기로 사진 배율 확정
 }
 let resizeT;
 window.addEventListener('resize', () => { clearTimeout(resizeT); resizeT = setTimeout(renderPreview, 150); });
@@ -844,6 +1187,7 @@ async function slideToCanvas(sl) {
   try {
     if (document.fonts && document.fonts.ready) await document.fonts.ready;
     await waitForImages(el);
+    applyPhotoFits(el);
     await new Promise((r) => setTimeout(r, 120));
     return await html2canvas(el, {
       width: w, height: h, windowWidth: w, windowHeight: h,
