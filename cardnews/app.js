@@ -244,6 +244,75 @@ const SRC_MAP = [
   ['talkimg.imbc.com', 'MBC', '방송'],
 ];
 
+/* 계정명으로 볼 수 없는 경로 조각 (섹션·기능 이름) */
+const NOT_HANDLE = new Set([
+  'p', 'reel', 'reels', 'tv', 'explore', 'stories', 'accounts', 'direct',
+  'watch', 'shorts', 'embed', 'channel', 'playlist', 'results', 'feed',
+  'i', 'home', 'search', 'hashtag', 'intent', 'share', 'status',
+  'video', 'photo', 'tag', 'about', 'post', 'posts', 'article', 'news',
+  'square', 'board', 'view', 'read', 'list', 'index', 'main', 'shop', 'm',
+]);
+
+/* URL 경로에서 계정명(@) 뽑기 */
+function detectHandle(u, host) {
+  let seg = [];
+  try { seg = new URL(u).pathname.split('/').filter(Boolean).map(decodeURIComponent); }
+  catch { return ''; }
+  const at = seg.find((x) => x.startsWith('@') && x.length > 1);     // /@handle 형태
+  if (at) return at;
+  const first = seg[0] || '';
+  const ok = (x) => x && !NOT_HANDLE.has(x.toLowerCase()) && !/^\d+$/.test(x) && x.length <= 40;
+
+  if (/tistory\.com$/.test(host)) {
+    const sub = host.replace(/\.tistory\.com$/, '');
+    return sub && sub !== 'www' ? '@' + sub : '';
+  }
+  if (/instagram\.com$/.test(host) || /threads\.net$/.test(host)) return ok(first) ? '@' + first : '';
+  if (/(twitter\.com|x\.com)$/.test(host)) return ok(first) ? '@' + first : '';
+  if (/tiktok\.com$/.test(host)) return ok(first) ? '@' + first : '';
+  if (/blog\.naver\.com$/.test(host) || /post\.naver\.com$/.test(host)) return ok(first) ? '@' + first : '';
+  if (/cafe\.naver\.com$/.test(host)) return ok(first) ? '@' + first : '';
+  if (/brunch\.co\.kr$/.test(host)) return ok(first) ? '@' + first : '';
+  if (/weverse\.io$/.test(host)) return ok(first) ? '@' + first : '';
+  if (/youtube\.com$/.test(host)) {
+    const i = seg.findIndex((x) => x === 'c' || x === 'user');
+    return i >= 0 && ok(seg[i + 1]) ? '@' + seg[i + 1] : '';
+  }
+  return '';
+}
+
+/* URL 슬러그에서 페이지 제목 짐작하기 (한글 슬러그가 있는 매거진·블로그에 잘 맞음)
+   글 번호·게시물 ID 같은 건 제목이 아니므로 버린다.
+   받아들이는 건 (1) 한글이 들어간 슬러그 또는 (2) 단어가 둘 이상인 영문 슬러그뿐. */
+function detectTitleFromUrl(u, handle) {
+  let seg = [];
+  try { seg = new URL(u).pathname.split('/').filter(Boolean); } catch { return ''; }
+  const bare = String(handle || '').replace(/^@/, '').toLowerCase();
+  for (let i = seg.length - 1; i >= 0 && i >= seg.length - 2; i--) {
+    let t = seg[i];
+    try { t = decodeURIComponent(t); } catch { /* 그대로 */ }
+    t = t.replace(/\.(html?|php|aspx?|jsp)$/i, '')
+      .replace(/[-_+]+/g, ' ')
+      .replace(/\s+/g, ' ')
+      .trim();
+    if (!t) continue;
+    if (NOT_HANDLE.has(t.toLowerCase())) continue;
+    if (bare && t.toLowerCase().replace(/^@/, '') === bare) continue;   // 계정명과 같으면 제목이 아님
+    if (!/[A-Za-z가-힣]/.test(t)) continue;                              // 글자가 없으면 버림
+    const hangul = /[가-힣]/.test(t);
+    const words = t.split(' ').filter(Boolean);
+    if (!hangul) {
+      if (words.length < 2) continue;                                   // 한 덩어리 영문 = 대개 ID
+      if (words.some((w) => /\d/.test(w) && /[A-Za-z]/.test(w))) continue; // 영문+숫자 뒤섞이면 ID
+      if (words.every((w) => w.length <= 2)) continue;
+    }
+    if (t.replace(/\s/g, '').length < 4) continue;
+    if (t.length > 90) t = t.slice(0, 90).trim() + '…';
+    return t;
+  }
+  return '';
+}
+
 function detectSource(url) {
   const u = cleanUrl(url);
   let host = '';
@@ -259,7 +328,43 @@ function detectSource(url) {
     const mm = m[2].padStart(2, '0'), dd = m[3].padStart(2, '0');
     if (+mm >= 1 && +mm <= 12 && +dd >= 1 && +dd <= 31) date = `${m[1]}.${mm}.${dd}`;
   }
-  return { name, type, date };
+  const handle = detectHandle(u, host);
+  return { name, type, date, handle, title: detectTitleFromUrl(u, handle) };
+}
+
+/* ---------- 영상 제목·채널 가져오기 (oEmbed, 브라우저에서 바로 호출 가능) ----------
+   유튜브·비메오는 공개 oEmbed 를 열어 두어서 제목과 채널명을 그대로 받을 수 있다.
+   실패하면(오프라인·차단) URL에서 뽑은 값을 그대로 쓴다. */
+const oembedCache = Object.create(null);
+
+function oembedEndpoint(u) {
+  if (/(?:youtube\.com|youtu\.be)/i.test(u)) {
+    return `https://www.youtube.com/oembed?url=${encodeURIComponent(u)}&format=json`;
+  }
+  if (/vimeo\.com/i.test(u)) {
+    return `https://vimeo.com/api/oembed.json?url=${encodeURIComponent(u)}`;
+  }
+  return '';
+}
+async function fetchOEmbed(url) {
+  const u = cleanUrl(url);
+  const ep = oembedEndpoint(u);
+  if (!ep) return null;
+  if (oembedCache[u] !== undefined) return oembedCache[u];
+  try {
+    const res = await fetch(ep, { cache: 'force-cache' });
+    if (!res.ok) throw new Error('oembed ' + res.status);
+    const j = await res.json();
+    let author = String(j.author_name || '').trim();
+    // 핸들처럼 생겼을 때만 @ 를 붙인다 (채널 표시 이름은 그대로)
+    if (author && !author.startsWith('@') && /^[A-Za-z0-9._-]+$/.test(author)) author = '@' + author;
+    const out = { title: String(j.title || '').trim(), author };
+    oembedCache[u] = out;
+    return out;
+  } catch (e) {
+    oembedCache[u] = null;
+    return null;
+  }
 }
 
 /* ---------- 한글 → 영문 이름 (로마자) ---------- */
@@ -315,8 +420,28 @@ function translateSourceEn(str) {
 }
 const srcDisp = (name) => (state.opts.lang === 'en' ? translateSourceEn(name) : name);
 
-function citeParts(b) { return b.srcName ? `<b>${esc(srcDisp(b.srcName))}</b>` : ''; }
-function citeText(b) { return srcDisp((b.srcName || '').trim()); }
+/* 카드 출처 줄: 매체명 · @계정 · 날짜  /  아래에 「페이지 제목」 */
+function citeParts(b) {
+  const head = [];
+  if (b.srcName) head.push(`<b>${esc(srcDisp(b.srcName))}</b>`);
+  if (b.srcHandle) head.push(esc(b.srcHandle));
+  if (b.srcDate) head.push(esc(b.srcDate));
+  const line1 = head.join(' · ');
+  const line2 = b.srcTitle ? `<span class="cn-cite-t">「${esc(b.srcTitle)}」</span>` : '';
+  if (!line1 && !line2) return '';
+  return (line1 ? `<span class="cn-cite-m">${line1}</span>` : '') + line2;
+}
+/* 글로 옮길 때 (출처 슬라이드·원고 복사) */
+function citeText(b) {
+  const parts = [];
+  if (b.srcName) parts.push(srcDisp(b.srcName.trim()));
+  if (b.srcHandle) parts.push(b.srcHandle.trim());
+  if (b.srcDate) parts.push(b.srcDate.trim());
+  const head = parts.join(' · ');
+  return b.srcTitle ? `${head}${head ? ' · ' : ''}「${b.srcTitle.trim()}」` : head;
+}
+const citeHead = (b) => [b.srcName ? srcDisp(b.srcName.trim()) : '', b.srcHandle, b.srcDate]
+  .filter(Boolean).join(' · ');
 
 /* ========================================================
    부트
@@ -408,9 +533,10 @@ function selectCeleb(name) {
 
   state.books = state.celeb.books.map((ref, i) => {
     const q = (ref.comment || '').trim();
+    const d = detectSource(ref.source);
     return {
       ref, selected: i < DEFAULT_SELECT, quote: q, noQuote: !q,
-      srcName: detectSource(ref.source).name,
+      srcName: d.name, srcHandle: d.handle, srcTitle: d.title, srcDate: d.date,
       photo: null,          // {src, fit, zoom, x, y, w}
       adj: {},              // 이 카드 요소별 마우스 조정값
     };
@@ -429,11 +555,26 @@ function selectCeleb(name) {
 
   renderBookList();
   renderPreview();
+  enrichSources();
 }
 
-/* ========================================================
-   책 목록 패널
-   ======================================================== */
+/* 유튜브·비메오 출처는 oEmbed 로 영상 제목과 채널명을 채워 준다.
+   네트워크가 막혀 있으면 조용히 URL에서 뽑은 값만 쓴다. */
+async function enrichSources(list) {
+  const targets = (list || state.books)
+    .filter((b) => b.selected && !b.srcTitle && oembedEndpoint(cleanUrl(b.ref.source)));
+  if (!targets.length) return;
+  let done = 0;
+  for (const b of targets) {
+    const info = await fetchOEmbed(b.ref.source);
+    if (info && (info.title || info.author)) {
+      if (info.title && !b.srcTitle) b.srcTitle = info.title;
+      if (info.author && !b.srcHandle) b.srcHandle = info.author;
+      done++;
+    }
+  }
+  if (done) { renderBookList(); renderPreview(); status(`출처 ${done}건을 영상 정보로 채웠어요`); }
+}
 function renderBookList() {
   const ul = $('#bookList');
   ul.innerHTML = state.books.map((b, i) => {
@@ -454,7 +595,18 @@ function renderBookList() {
           <span>언급 대목 (인용문) ${r.source ? `· <a class="src-open" href="${esc(cleanUrl(r.source))}" target="_blank" rel="noreferrer">출처 열기 ↗</a>` : ''}</span>
           <textarea class="bk-quote" rows="3" placeholder="이 인물이 책을 언급/추천한 문장을 붙여넣으세요" ${b.noQuote ? 'disabled' : ''}>${esc(b.quote)}</textarea>
         </label>
-        <label class="field"><span>매체명 (출처)</span><input class="bk-name" type="text" value="${esc(b.srcName)}" placeholder="예: VOGUE KOREA"></label>
+        <div class="field src-block">
+          <span>출처 <em>(URL에서 자동으로 뽑아 둔 값 — 고칠 수 있어요)</em></span>
+          <div class="src-grid">
+            <input class="bk-name" type="text" value="${esc(b.srcName)}" placeholder="매체명 (예: VOGUE KOREA)">
+            <input class="bk-handle" type="text" value="${esc(b.srcHandle || '')}" placeholder="계정명 (예: @favoritesbook)">
+          </div>
+          <input class="bk-srctitle" type="text" value="${esc(b.srcTitle || '')}" placeholder="페이지·영상 제목">
+          <div class="src-grid">
+            <input class="bk-srcdate" type="text" value="${esc(b.srcDate || '')}" placeholder="날짜 (예: 2024.05.12)">
+            <button type="button" class="btn tiny bk-src-refetch">↻ URL에서 다시 읽기</button>
+          </div>
+        </div>
 
         <div class="field ph-block">
           <span>이 카드 사진 <em>(넣으면 책 왼쪽 · 사진 오른쪽)</em></span>
@@ -501,7 +653,11 @@ function renderBookList() {
       if (e.target.classList.contains('bk-sel')) return;
       li.classList.toggle('open');
     });
-    li.querySelector('.bk-sel').addEventListener('change', (e) => { b.selected = e.target.checked; refreshAutoText(); renderPreview(); });
+    li.querySelector('.bk-sel').addEventListener('change', (e) => {
+      b.selected = e.target.checked;
+      refreshAutoText(); renderPreview();
+      if (b.selected) enrichSources([b]);
+    });
     const reflectBadge = () => {
       const head = li.querySelector('.book-head');
       let badge = head.querySelector('.badge-on');
@@ -516,6 +672,26 @@ function renderBookList() {
     });
     li.querySelector('.bk-quote').addEventListener('input', (e) => { b.quote = e.target.value; reflectBadge(); renderPreview(); });
     li.querySelector('.bk-name').addEventListener('input', (e) => { b.srcName = e.target.value; renderPreview(); });
+    li.querySelector('.bk-handle').addEventListener('input', (e) => { b.srcHandle = e.target.value; renderPreview(); });
+    li.querySelector('.bk-srctitle').addEventListener('input', (e) => { b.srcTitle = e.target.value; renderPreview(); });
+    li.querySelector('.bk-srcdate').addEventListener('input', (e) => { b.srcDate = e.target.value; renderPreview(); });
+    li.querySelector('.bk-src-refetch').addEventListener('click', async () => {
+      const d = detectSource(b.ref.source);
+      b.srcName = d.name; b.srcHandle = d.handle; b.srcTitle = d.title; b.srcDate = d.date;
+      li.querySelector('.bk-name').value = b.srcName;
+      li.querySelector('.bk-handle').value = b.srcHandle;
+      li.querySelector('.bk-srctitle').value = b.srcTitle;
+      li.querySelector('.bk-srcdate').value = b.srcDate;
+      renderPreview();
+      const info = await fetchOEmbed(b.ref.source);
+      if (info && (info.title || info.author)) {
+        if (info.title) b.srcTitle = info.title;
+        if (info.author) b.srcHandle = info.author;
+        li.querySelector('.bk-srctitle').value = b.srcTitle;
+        li.querySelector('.bk-handle').value = b.srcHandle;
+        renderPreview();
+      }
+    });
 
     /* ---- 카드별 사진 ---- */
     const adj = li.querySelector('.ph-adj');
@@ -720,7 +896,10 @@ function bindOptions() {
     renderPreview();
   });
 
-  $('#selAll').addEventListener('click', () => { state.books.forEach((b) => b.selected = true); refreshAutoText(); renderBookList(); renderPreview(); });
+  $('#selAll').addEventListener('click', () => {
+    state.books.forEach((b) => b.selected = true);
+    refreshAutoText(); renderBookList(); renderPreview(); enrichSources();
+  });
   $('#selNone').addEventListener('click', () => { state.books.forEach((b) => b.selected = false); refreshAutoText(); renderBookList(); renderPreview(); });
 
   $('#celebUpload').addEventListener('change', (e) => {
@@ -790,7 +969,8 @@ function saveProject() {
     opts: state.opts,
     books: state.books.map((b) => ({
       title: b.ref.title, author: b.ref.author,
-      selected: b.selected, quote: b.quote, noQuote: b.noQuote, srcName: b.srcName,
+      selected: b.selected, quote: b.quote, noQuote: b.noQuote,
+      srcName: b.srcName, srcHandle: b.srcHandle, srcTitle: b.srcTitle, srcDate: b.srcDate,
       photo: b.photo || null,
       adj: b.adj || {},
     })),
@@ -833,6 +1013,9 @@ function loadProject(text) {
       b.quote = m.quote || '';
       b.noQuote = !!m.noQuote;
       if (m.srcName != null) b.srcName = m.srcName;
+      if (m.srcHandle != null) b.srcHandle = m.srcHandle;
+      if (m.srcTitle != null) b.srcTitle = m.srcTitle;
+      if (m.srcDate != null) b.srcDate = m.srcDate;
       b.photo = m.photo && m.photo.src ? normPhoto(m.photo) : null;
       b.adj = m.adj && typeof m.adj === 'object' ? m.adj : {};
     }
@@ -1145,9 +1328,12 @@ function bookHTML(b, idx, total) {
 function outroHTML() {
   const sel = selectedBooks();
   // 텍스트(인용) 출처
-  const txt = sel.map((b, i) =>
-    `<li><span class="n">${String(i + 1).padStart(2, '0')}</span>
-      <span class="t"><b>《${esc(bookTitle(b.ref))}》</b> — ${esc(citeText(b) || T().noSrc)}</span></li>`).join('');
+  const txt = sel.map((b, i) => {
+    const head = citeHead(b);
+    return `<li><span class="n">${String(i + 1).padStart(2, '0')}</span>
+      <span class="t"><b>《${esc(bookTitle(b.ref))}》</b> — ${esc(head || T().noSrc)}
+        ${b.srcTitle ? `<span class="sub">「${esc(b.srcTitle)}」</span>` : ''}</span></li>`;
+  }).join('');
   // 이미지 출처
   const imgItems = [];
   if (state.opts.coverSrc) imgItems.push(`${T().coverPhoto} — ${srcDisp(state.opts.coverSrc).replace(/^ⓒ\s*/, '')}`);
@@ -1454,11 +1640,15 @@ function buildScript() {
     lines.push(`${String(i + 1).padStart(2, '0')}. 《${bookTitle(r)}》 ${[bookAuthor(r), state.opts.lang === 'en' ? '' : r.publisher].filter(Boolean).join(' · ')}`);
     if (b.quote) lines.push(`“${b.quote}”`);
     const c = citeText(b); if (c) lines.push(`${T().source}: ${c}`);
+    if (b.ref.source) lines.push(cleanUrl(b.ref.source));
     lines.push('');
   });
   lines.push(`[${T().sources}]`);
   lines.push(`· ${T().txtGroup}`);
-  sel.forEach((b, i) => lines.push(`  ${i + 1}. 《${bookTitle(b.ref)}》 — ${citeText(b) || T().noSrc}`));
+  sel.forEach((b, i) => {
+    lines.push(`  ${i + 1}. 《${bookTitle(b.ref)}》 — ${citeText(b) || T().noSrc}`);
+    if (b.ref.source) lines.push(`     ${cleanUrl(b.ref.source)}`);
+  });
   lines.push(`· ${T().imgGroup}`);
   if (state.opts.coverSrc) lines.push(`  - ${T().coverPhoto} — ${state.opts.coverSrc.replace(/^ⓒ\s*/, '')}`);
   lines.push(`  - ${T().bookCoverCredit}`);
