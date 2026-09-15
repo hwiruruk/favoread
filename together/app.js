@@ -23,6 +23,16 @@ const THEMES = {
 };
 const THEME_KEYS = Object.keys(THEMES);
 
+/* 배경색 · 글자색 프리셋 */
+const PAPER_SWATCHES = [
+  '#ffffff', '#fff8fb', '#fdf6e9', '#f4f3f0',
+  '#ffe8f0', '#e8f4ff', '#3a3a44', '#141024',
+];
+const INK_SWATCHES = [
+  '#111111', '#453c31', '#4a3f55', '#1f3a5f',
+  '#7a1f3d', '#1f4d3d', '#f4f3f0', '#ffffff',
+];
+
 /* ---------- 상태 ---------- */
 const state = {
   data: null,
@@ -30,6 +40,11 @@ const state = {
   celeb: null,
   size: 'portrait',
   theme: 'pop',
+  paperAuto: true,      // 배경색: 테마 기본값 사용
+  paper: '#ffffff',
+  inkAuto: true,        // 글자색: 테마 기본값 사용
+  ink: '#111111',
+  bookBorder: false,    // 책 표지 테두리(기본 없음)
   proxy: true,
   watermark: true,
   credit: '',
@@ -150,6 +165,8 @@ async function boot() {
     status('데이터를 불러오지 못했어요'); console.error(e); return;
   }
   buildThemeGrid();
+  buildColorSwatches();
+  syncColorControls();
   bindSearch();
   bindOptions();
   bindCardEvents();
@@ -225,13 +242,8 @@ function selectCeleb(name) {
   render();
 }
 
+/* 처음에는 글자 없이 사진 + 책 표지만. 문구는 ⑤에서 필요한 것만 올린다. */
 function seedDefaults() {
-  const dn = displayName(state.name);
-  const [W] = SIZES[state.size];
-  addItem({ type: 'title', text: '내 최애가 읽은 책\n함께 읽기', x: 70, y: 86, size: 96, rot: -2, w: 880 });
-  addItem({ type: 'bubble', text: `${josa(dn, '이', '가')} 읽은 책`, x: 74, y: 320, size: 44, rot: -6, shape: 'blob', color: 'b' });
-  addItem({ type: 'stars', text: '같이 읽어요!', x: W - 400, y: 400, size: 40, rot: 4, n: 5 });
-  // 첫 3권을 자동으로 붙인다
   state.celeb.books.slice(0, 3).forEach((b) => addBook(b, false));
   layoutBooks();
 }
@@ -347,9 +359,9 @@ function render() {
   const [W, H] = SIZES[state.size];
   const card = $('#card'), frame = $('#cardFrame');
 
-  card.className = `tg-card th-${state.theme} font-${t.font}`;
-  card.style.setProperty('--ink', t.ink);
-  card.style.setProperty('--paper', t.paper);
+  card.className = `tg-card th-${state.theme} font-${t.font}${state.bookBorder ? ' bd-on' : ''}`;
+  card.style.setProperty('--ink', state.inkAuto ? t.ink : state.ink);
+  card.style.setProperty('--paper', state.paperAuto ? t.paper : state.paper);
   card.style.setProperty('--a', t.a);
   card.style.setProperty('--b', t.b);
   card.style.setProperty('--c', t.c);
@@ -562,13 +574,56 @@ function buildThemeGrid() {
   box.addEventListener('click', (e) => {
     const b = e.target.closest('button[data-t]'); if (!b) return;
     state.theme = b.dataset.t;
-    markTheme();
+    // 테마를 고르면 배경색·글자색은 그 테마 기본값으로 돌아간다
+    state.paperAuto = true; state.inkAuto = true;
+    state.paper = THEMES[state.theme].paper;
+    state.ink = THEMES[state.theme].ink;
+    syncColorControls();
     render();
   });
   markTheme();
 }
 function markTheme() {
   $$('#themeGrid button').forEach((b) => b.classList.toggle('active', b.dataset.t === state.theme));
+}
+
+/* ---- 배경색 · 글자색 ---- */
+function swatchHTML(list) {
+  return list.map((c) => `<button type="button" data-c="${c}" style="background:${c}" title="${c}"></button>`).join('');
+}
+function buildColorSwatches() {
+  const pb = $('#paperSwatches'), ib = $('#inkSwatches');
+  pb.innerHTML = swatchHTML(PAPER_SWATCHES);
+  ib.innerHTML = swatchHTML(INK_SWATCHES);
+  pb.addEventListener('click', (e) => {
+    const b = e.target.closest('button[data-c]'); if (b) setPaper(b.dataset.c);
+  });
+  ib.addEventListener('click', (e) => {
+    const b = e.target.closest('button[data-c]'); if (b) setInk(b.dataset.c);
+  });
+}
+const isHex = (c) => /^#[0-9a-f]{6}$/i.test(c || '');
+function setPaper(c) {
+  if (!isHex(c)) return;
+  state.paper = c; state.paperAuto = false;
+  syncColorControls(); render();
+}
+function setInk(c) {
+  if (!isHex(c)) return;
+  state.ink = c; state.inkAuto = false;
+  syncColorControls(); render();
+}
+function syncColorControls() {
+  const t = themeDef();
+  $('#optPaperAuto').checked = state.paperAuto;
+  $('#optInkAuto').checked = state.inkAuto;
+  $('#optBookBorder').checked = state.bookBorder;
+  $('#optPaperCustom').value = state.paperAuto ? t.paper : state.paper;
+  $('#optInkCustom').value = state.inkAuto ? t.ink : state.ink;
+  const eq = (a, b) => String(a).toLowerCase() === String(b).toLowerCase();
+  $$('#paperSwatches button').forEach((b) => b.classList.toggle('active', !state.paperAuto && eq(b.dataset.c, state.paper)));
+  $$('#inkSwatches button').forEach((b) => b.classList.toggle('active', !state.inkAuto && eq(b.dataset.c, state.ink)));
+  markTheme();
 }
 
 function syncPhotoControls() {
@@ -627,6 +682,18 @@ function bindOptions() {
   });
   $('#optWatermark').addEventListener('change', (e) => { state.watermark = e.target.checked; render(); });
 
+  $('#optPaperCustom').addEventListener('input', (e) => setPaper(e.target.value));
+  $('#optInkCustom').addEventListener('input', (e) => setInk(e.target.value));
+  $('#optPaperAuto').addEventListener('change', (e) => {
+    state.paperAuto = e.target.checked; syncColorControls(); render();
+  });
+  $('#optInkAuto').addEventListener('change', (e) => {
+    state.inkAuto = e.target.checked; syncColorControls(); render();
+  });
+  $('#optBookBorder').addEventListener('change', (e) => {
+    state.bookBorder = e.target.checked; render();
+  });
+
   $('#bkNone').addEventListener('click', () => {
     state.items = state.items.filter((i) => i.type !== 'book');
     renderBookList(); render();
@@ -638,17 +705,30 @@ function bindOptions() {
   $('#pngBtn').addEventListener('click', exportPNG);
 }
 
+/* 스티커의 대략적인 높이 — 새 스티커를 겹치지 않게 놓는 데만 쓴다 */
+function estHeight(it) {
+  const size = it.size || 40;
+  const lines = String(it.text || '').split('\n').length;
+  if (it.type === 'title') return size * 1.15 * lines + 20;
+  if (it.type === 'bubble') return size * 1.35 * lines + 105;
+  if (it.type === 'stars') return size * (it.text ? 2.7 : 1.6) + 40;
+  if (it.type === 'emoji') return size * 1.3 + 30;
+  return size * 1.3 + 30;
+}
+
 function addSticker(kind) {
   const [W, H] = SIZES[state.size];
   const dn = displayName(state.name);
-  // 새 스티커는 앞의 것과 겹치지 않게 계단식으로 놓는다
-  const k = state.items.filter((i) => i.type !== 'book').length;
-  const base = { x: 80 + (k % 4) * 46, y: 170 + (k % 6) * 92 };
-  base.y = clamp(base.y, 60, H - 260);
-  base.x = clamp(base.x, 40, W - 320);
+  // 새 스티커는 이미 올려둔 글자 아래에 차곡차곡 (겹치지 않게)
+  const texts = state.items.filter((i) => i.type !== 'book');
+  const bottom = texts.reduce((m, i) => Math.max(m, i.y + estHeight(i)), 0);
+  const base = {
+    x: clamp(80 + texts.length * 14, 40, W - 340),
+    y: clamp(bottom ? bottom + 34 : 120, 60, H - 320),
+  };
   let it;
-  if (kind === 'title') it = addItem({ type: 'title', text: '함께 읽어요', size: 90, w: 860, rot: -2, ...base });
-  else if (kind === 'bubble') it = addItem({ type: 'bubble', text: '이 책 어때?', size: 44, shape: 'blob', color: 'a', rot: -5, ...base });
+  if (kind === 'title') it = addItem({ type: 'title', text: '내 최애가 읽은 책\n함께 읽기', size: 90, w: 860, rot: -2, ...base });
+  else if (kind === 'bubble') it = addItem({ type: 'bubble', text: `${josa(dn, '이', '가')} 읽은 책`, size: 44, shape: 'blob', color: 'a', rot: -5, ...base });
   else if (kind === 'stars') it = addItem({ type: 'stars', text: '별이 다섯 개!', size: 40, n: 5, rot: 3, ...base });
   else if (kind === 'emoji') it = addItem({ type: 'emoji', text: '✨ 📚 🩷 ⭐️', size: 54, rot: 0, ...base });
   else it = addItem({ type: 'tag', text: `#${dn}_독서`, size: 34, rot: -3, ...base });

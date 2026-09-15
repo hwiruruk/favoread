@@ -160,7 +160,7 @@ function paletteFor(bg, inkOverride) {
     '--soft': mix(bg, ink, dark ? 0.72 : 0.66),
     '--mute': mix(bg, ink, dark ? 0.5 : 0.45),
     '--line': mix(bg, ink, dark ? 0.26 : 0.2),
-    '--panel': mix(bg, ink, 0.06),
+    '--panel': bg,          // 이미지 상자의 빈 공간은 배경색과 같게
   };
 }
 
