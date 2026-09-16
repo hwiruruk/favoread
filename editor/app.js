@@ -195,7 +195,8 @@ function loadCsv(text) {
     c.books.push({
       title,
       title_en: get('title_en'),
-      author: get('author'),
+      // 예전에 저장된 값에도 '저 / 역자'가 남아 있을 수 있어 불러올 때 정리한다
+      author: cleanAuthorName(get('author')) || get('author'),
       author_en: get('author_en'),
       publisher: get('pub'),
       source: get('source'),
@@ -1117,20 +1118,76 @@ async function runAladinSearch(query, append = false) {
 }
 /* 알라딘 author 필드는 '무라카미 하루키 (지은이), 홍길동 (옮긴이)' 형태.
  * 역할 표기 삭제 + '옮긴이/편집자'는 제외해 저자만 남김. */
-function cleanAladinAuthor(s) {
-  if (!s) return '';
-  const parts = String(s).split(/\s*,\s*/);
-  const authors = parts
-    .filter(p => !/\(옮긴이|편집|편저|엮은이|그림|사진|감수|번역\)/.test(p))
-    .map(p => p.replace(/\s*\([^)]*\)\s*/g, '').trim())
-    .filter(Boolean);
-  return authors.length ? authors.join(', ') : String(s).replace(/\s*\([^)]*\)\s*/g, '').trim();
+/* -------------------- 저자명 정리 --------------------
+ * 서점 API가 주는 저자 문자열에는 역할 표기가 붙어 온다.
+ *   알라딘  "신영복 (지은이), 김세현 (그림)"
+ *   예스24  "요아힘 마이어호프 저/박종대 역", "문순태,최일남,한승원,박완서 공저"
+ * 이걸 지은이만 남기고 정리한다 — '저·지음' 같은 역할 꼬리표는 떼고,
+ * 역자·편집자·그림 같은 다른 역할자는 아예 뺀다.
+ */
+// 이름만 남기고 뺄 역할
+const AUTHOR_DROP_ROLES = new Set([
+  '옮긴이', '옮김', '번역', '역', '역자', '공역', '편역',
+  '엮은이', '엮음', '편집', '편저', '감수', '사진', '삽화', '해설', '그림',
+]);
+// 지은이 본인 — 꼬리표만 떼고 이름은 남긴다
+const AUTHOR_KEEP_ROLES = new Set([
+  '저', '저자', '지음', '지은이', '공저', '글', '글그림', '글·그림', '글/그림',
+  '쓴이', '씀', '원작',
+]);
+// 항목 끝에 붙은 역할 꼬리표. 이름 뒤에 공백이나 여는 괄호가 있어야 인정한다
+// ('이역' 같은 이름의 끝 글자를 역할로 잘못 읽지 않도록).
+const AUTHOR_ROLE_RE = new RegExp(
+  '(?:^|[\\s(])\\s*(글\\s*[·/]?\\s*그림|글그림|옮긴이|옮김|지은이|지음|저자|공저|편역|편저|편집|엮은이|엮음|번역|역자|공역|감수|삽화|해설|사진|원작|쓴이|그림|글|저|역|씀)\\s*\\)?\\s*$'
+);
+
+function cleanAuthorName(raw) {
+  if (!raw) return '';
+  const src = String(raw).replace(/\s+/g, ' ').trim();
+
+  // 1) 항목마다 이름과 역할을 떼어 낸다
+  const parts = [];
+  for (const part of src.split(/\s*[\/,;]\s*/)) {
+    let name = part.trim();
+    if (!name) continue;
+    let role = '';
+    // "홍길동 (지은이)"처럼 꼬리표가 겹칠 수 있어 몇 번 벗겨 본다
+    for (let i = 0; i < 3; i++) {
+      const m = name.match(AUTHOR_ROLE_RE);
+      if (!m) break;
+      role = m[1].replace(/\s/g, '');
+      name = name.slice(0, m.index).trim();
+      if (AUTHOR_DROP_ROLES.has(role)) break;
+    }
+    // 역할 괄호는 위에서 이미 떼어냈다. 남은 괄호는 필명·본명 같은 정보이므로
+    // 건드리지 않는다 ('설레다(최민정)' 를 '설레다' 로 줄이지 않기 위해).
+    name = name.replace(/\s+/g, ' ').trim();
+    if (name) parts.push({ name, role });
+  }
+
+  // 2) 역할이 안 적힌 이름은 뒤에 오는 역할을 따른다.
+  //    "패트릭 브링리 (지은이), 김희정, 조현주 (옮긴이)" 에서 김희정도 옮긴이다
+  //    — 서점들이 같은 역할의 사람을 쉼표로 묶고 마지막에만 역할을 적기 때문.
+  let following = '';
+  for (let i = parts.length - 1; i >= 0; i--) {
+    if (parts[i].role) following = parts[i].role;
+    else parts[i].role = following;
+  }
+
+  const out = [];
+  for (const { name, role } of parts) {
+    if (role && AUTHOR_DROP_ROLES.has(role)) continue;
+    if (!out.includes(name)) out.push(name);
+  }
+  // 전부 걸러졌다면(예: 역자만 적힌 경우) 빈 값을 돌려준다.
+  // 호출부가 `|| 기존값`으로 받으므로 역자가 저자 칸에 들어가는 일이 없다.
+  return out.join(', ');
 }
 
 function applyAladinItem(it) {
   const cover = Aladin.bigCover(it);
   $('#bookTitle').value = it.title || $('#bookTitle').value;
-  $('#bookAuthor').value = cleanAladinAuthor(it.author) || $('#bookAuthor').value;
+  $('#bookAuthor').value = cleanAuthorName(it.author) || $('#bookAuthor').value;
   $('#bookPublisher').value = it.publisher || $('#bookPublisher').value;
   $('#bookLink').value = it.link || $('#bookLink').value;
   if (cover) $('#bookCover').value = cover;
@@ -1241,7 +1298,7 @@ async function runYes24Search(query, page = 1, append = false) {
 function applyYes24Item(it) {
   const cover = Yes24.cover(it);
   $('#bookTitle').value = it.title || $('#bookTitle').value;
-  $('#bookAuthor').value = it.author || $('#bookAuthor').value;
+  $('#bookAuthor').value = cleanAuthorName(it.author) || $('#bookAuthor').value;
   $('#bookPublisher').value = it.publisher || $('#bookPublisher').value;
   $('#bookLink').value = it.link || $('#bookLink').value;
   if (cover) $('#bookCover').value = cover;
@@ -1378,7 +1435,7 @@ $('#gbResults').addEventListener('click', (e) => {
   if (!it) return;
   // 제목·저자·표지만 채움 (알라딘 링크는 별도 워크플로우로 처리)
   $('#bookTitle').value = it.title;
-  $('#bookAuthor').value = it.author;
+  $('#bookAuthor').value = cleanAuthorName(it.author) || $('#bookAuthor').value;
   if (it.cover) {
     $('#bookCover').value = it.cover;
     $('#bookCoverPreview').src = it.cover;
@@ -1411,6 +1468,17 @@ $('#bookTranslateBtn').addEventListener('click', async (e) => {
     e.target.disabled = false;
     e.target.textContent = prev;
   }
+});
+
+/* 저자 칸에 직접 붙여넣었을 때도 역할 표기를 정리한다.
+ * 역할 꼬리표가 없는 평범한 이름은 건드리지 않는다. */
+$('#bookAuthor').addEventListener('blur', () => {
+  const el = $('#bookAuthor');
+  const raw = el.value.trim();
+  if (!raw) return;
+  const cleaned = cleanAuthorName(raw);
+  // 역자만 적혀 빈 값이 나오면 사용자가 직접 고치도록 원문을 남긴다
+  if (cleaned && cleaned !== raw) el.value = cleaned;
 });
 
 $('#bookAuthorTranslateBtn').addEventListener('click', async (e) => {
