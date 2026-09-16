@@ -195,7 +195,8 @@ function loadCsv(text) {
     c.books.push({
       title,
       title_en: get('title_en'),
-      author: get('author'),
+      // 예전에 저장된 값에도 '저 / 역자'가 남아 있을 수 있어 불러올 때 정리한다
+      author: cleanAuthorName(get('author')) || get('author'),
       author_en: get('author_en'),
       publisher: get('pub'),
       source: get('source'),
@@ -1143,22 +1144,40 @@ const AUTHOR_ROLE_RE = new RegExp(
 function cleanAuthorName(raw) {
   if (!raw) return '';
   const src = String(raw).replace(/\s+/g, ' ').trim();
-  const out = [];
+
+  // 1) 항목마다 이름과 역할을 떼어 낸다
+  const parts = [];
   for (const part of src.split(/\s*[\/,;]\s*/)) {
     let name = part.trim();
     if (!name) continue;
-    let dropped = false;
+    let role = '';
     // "홍길동 (지은이)"처럼 꼬리표가 겹칠 수 있어 몇 번 벗겨 본다
     for (let i = 0; i < 3; i++) {
       const m = name.match(AUTHOR_ROLE_RE);
       if (!m) break;
-      const role = m[1].replace(/\s/g, '');
+      role = m[1].replace(/\s/g, '');
       name = name.slice(0, m.index).trim();
-      if (AUTHOR_DROP_ROLES.has(role) && !AUTHOR_KEEP_ROLES.has(role)) { dropped = true; break; }
+      if (AUTHOR_DROP_ROLES.has(role)) break;
     }
-    if (dropped) continue;
-    name = name.replace(/\s*\([^)]*\)\s*/g, ' ').replace(/\s+/g, ' ').trim();
-    if (name && !out.includes(name)) out.push(name);
+    // 역할 괄호는 위에서 이미 떼어냈다. 남은 괄호는 필명·본명 같은 정보이므로
+    // 건드리지 않는다 ('설레다(최민정)' 를 '설레다' 로 줄이지 않기 위해).
+    name = name.replace(/\s+/g, ' ').trim();
+    if (name) parts.push({ name, role });
+  }
+
+  // 2) 역할이 안 적힌 이름은 뒤에 오는 역할을 따른다.
+  //    "패트릭 브링리 (지은이), 김희정, 조현주 (옮긴이)" 에서 김희정도 옮긴이다
+  //    — 서점들이 같은 역할의 사람을 쉼표로 묶고 마지막에만 역할을 적기 때문.
+  let following = '';
+  for (let i = parts.length - 1; i >= 0; i--) {
+    if (parts[i].role) following = parts[i].role;
+    else parts[i].role = following;
+  }
+
+  const out = [];
+  for (const { name, role } of parts) {
+    if (role && AUTHOR_DROP_ROLES.has(role)) continue;
+    if (!out.includes(name)) out.push(name);
   }
   // 전부 걸러졌다면(예: 역자만 적힌 경우) 빈 값을 돌려준다.
   // 호출부가 `|| 기존값`으로 받으므로 역자가 저자 칸에 들어가는 일이 없다.
