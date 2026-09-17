@@ -1,4 +1,4 @@
-/* Favoread Editor — single-page editor for data.csv
+/* Favorbook Editor — single-page editor for data.csv
  * Auth: GitHub PAT in localStorage, commits via Git Data API
  *       (blob → tree → commit → ref). Contents API는 1MB 한도가 있어 못 쓴다.
  * Aladin: JSONP (Output=JS&Callback=...) — bypasses CORS.
