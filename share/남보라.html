@@ -144,6 +144,30 @@
     .bc-author { font-size: 12px; color: #555; margin-bottom: 6px; }
     .bc-badge { display: inline-block; font-size: 11px; background: #fde047; border: 1px solid #000; padding: 1px 6px; font-weight: 700; }
     .celeb-bio { margin: 4px 0 8px; padding: 6px 10px; background: #fff8e7; border-left: 4px solid #000; font-size: 14px; line-height: 1.45; color: #222; }
+    .shelf-head { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
+    .shelf-head h2 { margin-bottom: 0; border-bottom: none; padding-bottom: 0; }
+    .shelf-tabs { display: flex; gap: 6px; flex: none; }
+    .sh-tab { font: inherit; font-size: 12px; font-weight: 700; cursor: pointer; padding: 5px 12px;
+              background: #fff; color: #000; border: 2px solid #000; box-shadow: 2px 2px 0 0 #000; }
+    .sh-tab:hover { background: #fde047; }
+    .sh-tab.on { background: #000; color: #fff; }
+    .shelf { display: flex; flex-wrap: wrap; align-items: flex-end; gap: 5px 3px;
+             margin-top: 18px; padding: 0 6px 10px; border-bottom: 5px solid #000; }
+    .shelf[hidden], .reading-list[hidden] { display: none; }
+    .sp { position: relative; flex: none; width: var(--w, 46px); height: var(--h, 200px);
+          background: var(--c, #555); border: 1px solid rgba(0,0,0,.45); border-radius: 2px 2px 0 0;
+          box-shadow: inset -3px 0 6px rgba(0,0,0,.28), inset 3px 0 5px rgba(255,255,255,.14);
+          overflow: hidden; text-decoration: none; transition: transform .12s; }
+    .sp:hover { transform: translateY(-7px); z-index: 2; text-decoration: none; }
+    .sp-t { position: absolute; inset: 0; display: flex; align-items: stretch;
+            justify-content: center; padding: 11px 2px; overflow: hidden; }
+    .sp-t i { writing-mode: vertical-rl; text-orientation: mixed; font-style: normal;
+              white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+              font-size: 13px; font-weight: 700; color: #fff;
+              text-shadow: 0 1px 2px rgba(0,0,0,.55); }
+    .sp-i { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; display: block; }
+    @media (max-width: 480px) { .sp { width: calc(var(--w, 46px) * .82); }
+                                 .sp-t i { font-size: 11.5px; } .sp-t { padding: 9px 2px; } }
     .reading-list { list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 14px; counter-reset: rl; }
     .rl-item { position: relative; background: #fff; border: 2px solid #000; box-shadow: 4px 4px 0 0 #000; padding: 14px 14px 14px 52px; transition: transform .12s, box-shadow .12s; }
     .rl-item:hover { transform: translate(-1px,-1px); box-shadow: 6px 6px 0 0 #000; }
@@ -200,10 +224,19 @@
     <p style="margin:0">남보라의 독서 기록을 한곳에 모았어요. 유튜브·인터뷰·SNS 등 공개 출처에서 확인된 인생책·추천 도서 <strong>1권</strong>을 한 페이지에 정리한 독서 리스트입니다. 아래 목록에서 책 제목·저자·출처 링크를 한눈에 확인할 수 있어요.</p>
   </section>
 
-  <section>
-    <h2>📚 남보라의 독서 리스트 (1권)</h2>
-    <p class="muted">1권은 다른 셀럽도 함께 추천한 책이에요. 카드 안에 함께 추천한 셀럽 이름이 표시됩니다.</p>
-    <ol class="reading-list">
+  <section id="shelf-sec">
+    <div class="shelf-head">
+      <h2>📚 남보라의 독서 리스트 (1권)</h2>
+      <div class="shelf-tabs" role="tablist">
+        <button type="button" class="sh-tab on" data-view="spine" aria-pressed="true">▊ 책등</button>
+        <button type="button" class="sh-tab" data-view="list" aria-pressed="false">☰ 목록</button>
+      </div>
+    </div>
+    <p class="muted">1권은 다른 셀럽도 함께 추천한 책이에요. 목록 보기에서 함께 추천한 셀럽 이름을 볼 수 있어요.</p>
+    <div class="shelf" id="shelf">
+    <a class="sp" style="--c:hsl(320,38%,41%);--h:196px;--w:47px" href="https://www.aladin.co.kr/shop/wproduct.aspx?ItemId=268611799&amp;partner=openAPI&amp;start=api" rel="nofollow noopener noreferrer" target="_blank" title="프레임"><span class="sp-t"><i>프레임</i></span></a>
+    </div>
+    <ol class="reading-list" id="rlist" hidden>
     <li class="rl-item">
       <span class="rl-num">1</span>
       <a class="rl-cover" href="https://www.aladin.co.kr/shop/wproduct.aspx?ItemId=268611799&amp;partner=openAPI&amp;start=api" rel="nofollow noopener noreferrer" target="_blank" aria-label="프레임 알라딘에서 보기"><img src="https://image.aladin.co.kr/product/26861/17/cover500/8950994518_2.jpg" alt="프레임 표지" loading="lazy"></a>
@@ -216,6 +249,30 @@
     </li>
     </ol>
   </section>
+  <script>
+  (function () {
+    var sec = document.getElementById("shelf-sec");
+    if (!sec) return;
+    var shelf = document.getElementById("shelf"), list = document.getElementById("rlist");
+    sec.querySelectorAll(".sh-tab").forEach(function (b) {
+      b.addEventListener("click", function () {
+        var spine = b.dataset.view === "spine";
+        shelf.hidden = !spine; list.hidden = spine;
+        sec.querySelectorAll(".sh-tab").forEach(function (o) {
+          var on = o === b;
+          o.classList.toggle("on", on);
+          o.setAttribute("aria-pressed", on ? "true" : "false");
+        });
+        try { localStorage.setItem("fb.shelfView", b.dataset.view); } catch (e) {}
+      });
+    });
+    try {
+      if (localStorage.getItem("fb.shelfView") === "list") {
+        sec.querySelector('.sh-tab[data-view="list"]').click();
+      }
+    } catch (e) {}
+  })();
+  </script>
 
   <section>
     <h2>📝 남보라의 책 취향</h2>

@@ -140,6 +140,70 @@ EN_TR_NOTE_TEXT = (
 EN_TR_NOTE_HTML = '  <p class="tr-note">' + EN_TR_NOTE_TEXT + '</p>\n'
 
 
+# ── 책등(spine) ──────────────────────────────────────────────────────
+# 예스24는 표지와 같은 상품 ID로 책등 이미지를 준다.
+#   표지  https://image.yes24.com/goods/91901136/L
+#   책등  https://image.yes24.com/goods/91901136/side
+# 표지를 예스24에서 가져온 책만 바로 유도된다. 알라딘 표지인 책은 예스24
+# 상품 ID를 모르니 아래 spine_tint()로 만든 색 책등으로 대신한다.
+
+YES24_ID_RE = re.compile(r'image\.yes24\.com/goods/(?:detail/)?(\d+)', re.I)
+
+
+def yes24_spine_url(cover_url):
+    """표지 URL에서 예스24 책등 이미지 URL을 유도. 못 하면 None."""
+    m = YES24_ID_RE.search(cover_url or '')
+    return 'https://image.yes24.com/goods/' + m.group(1) + '/side' if m else None
+
+
+def load_spines():
+    """tools/fetch_spines.py 가 채운 제목 → 책등 URL 표. 없으면 빈 표."""
+    path = os.path.join('data', 'spines.json')
+    if not os.path.exists(path):
+        return {}
+    try:
+        with open(path, encoding='utf-8') as fp:
+            return (json.load(fp) or {}).get('spines') or {}
+    except (json.JSONDecodeError, OSError) as e:
+        print('⚠️ data/spines.json 읽기 실패 — 표지 URL에서만 유도합니다: %s' % e)
+        return {}
+
+
+SPINES = load_spines()
+
+
+def spine_image_url(title, cover_url):
+    """배치가 찾아둔 책등이 우선. 없으면 표지 URL에서 유도(표지가 예스24일 때만)."""
+    return SPINES.get((title or '').strip()) or yes24_spine_url(cover_url)
+
+
+def spine_tint(title):
+    """책등 이미지가 없을 때 쓸 색. 제목에서 만들어 항상 같은 색이 나온다."""
+    h = 0
+    for ch in (title or ''):
+        h = (h * 31 + ord(ch)) & 0xFFFFFFFF
+    hue = h % 360
+    sat = 32 + (h >> 9) % 26          # 32~57%
+    lig = 26 + (h >> 17) % 22         # 26~47% — 흰 글자가 읽히는 범위
+    return 'hsl(' + str(hue) + ',' + str(sat) + '%,' + str(lig) + '%)'
+
+
+def spine_height(title):
+    """책마다 높이를 조금씩 달리해 실제 책장처럼 들쭉날쭉하게."""
+    h = 0
+    for ch in (title or ''):
+        h = (h * 17 + ord(ch)) & 0xFFFFFFFF
+    return 188 + h % 34               # 188~221px
+
+
+def spine_width(title):
+    """두께도 책마다 조금씩. 얇은 책 두꺼운 책이 섞여야 책장처럼 보인다."""
+    h = 0
+    for ch in (title or ''):
+        h = (h * 13 + ord(ch)) & 0xFFFFFFFF
+    return 38 + h % 17                # 38~54px
+
+
 def make_en_celeb_url(name_en):
     return BASE + 'en/share/' + safe_en_filename(name_en) + '.html'
 
@@ -365,6 +429,12 @@ with open("data.csv", encoding="utf-8") as f:
 print(f"CSV 파싱 완료: {len(celebs)}명")
 
 # ── 2. data.json 생성 ────────────────────────────────────────────────
+
+for _info in celebs.values():
+    for _b in _info['books']:
+        _sp = spine_image_url(_b['title'], _b['coverUrl'])
+        if _sp:
+            _b['spineUrl'] = _sp
 
 data_json = {
     'generated': TODAY,
@@ -841,6 +911,7 @@ for name, info in celebs.items():
 
     # 책 테이블 행 (표지·도서명은 알라딘 외부 링크, 출처는 별도 외부링크)
     book_cards_html = ''   # 카드 그리드 (표 대체)
+    spine_html = ''        # 책등 보기
     shared_count = 0       # 다른 셀럽과 공유된 책 권수 (섹션 헤더용)
     for i, b in enumerate(books):
         has_book_page = b['title'] in books_with_pages
@@ -906,6 +977,26 @@ for name, info in celebs.items():
                     + chips +
                     '</div>'
                 )
+
+        # 책등 한 칸 — 예스24 책등이 있으면 그 이미지를, 없으면 색 책등을 쓴다.
+        # 이미지를 색 책등 위에 덮어두고 못 불러오면 스스로 사라지게 해서,
+        # 자바스크립트 없이도 자연스럽게 색 책등으로 떨어진다.
+        _spine_url = spine_image_url(b['title'], b['coverUrl'])
+        _spine_inner = (
+            '<span class="sp-t"><i>' + esc(b['title']) + '</i></span>'
+            + ('<img class="sp-i" src="' + esc(_spine_url) + '" alt="" loading="lazy" '
+               'referrerpolicy="no-referrer" onerror="this.remove()">' if _spine_url else '')
+        )
+        _spine_style = ('--c:' + spine_tint(b['title'])
+                        + ';--h:' + str(spine_height(b['title'])) + 'px'
+                        + ';--w:' + str(spine_width(b['title'])) + 'px')
+        if aladin_url:
+            spine_html += ('    <a class="sp" style="' + _spine_style + '" href="' + aladin_url
+                           + '" rel="nofollow noopener noreferrer" target="_blank" title="'
+                           + esc(b['title']) + '">' + _spine_inner + '</a>\n')
+        else:
+            spine_html += ('    <span class="sp" style="' + _spine_style + '" title="'
+                           + esc(b['title']) + '">' + _spine_inner + '</span>\n')
 
         book_cards_html += (
             '    <li class="rl-item">\n'
@@ -1107,6 +1198,36 @@ for name, info in celebs.items():
         '    .bc-author { font-size: 12px; color: #555; margin-bottom: 6px; }\n'
         '    .bc-badge { display: inline-block; font-size: 11px; background: #fde047; border: 1px solid #000; padding: 1px 6px; font-weight: 700; }\n'
         '    .celeb-bio { margin: 4px 0 8px; padding: 6px 10px; background: #fff8e7; border-left: 4px solid #000; font-size: 14px; line-height: 1.45; color: #222; }\n'
+        '    .shelf-head { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; flex-wrap: wrap; }\n'
+        '    .shelf-head h2 { margin-bottom: 0; border-bottom: none; padding-bottom: 0; }\n'
+        '    .shelf-tabs { display: flex; gap: 6px; flex: none; }\n'
+        '    .sh-tab { font: inherit; font-size: 12px; font-weight: 700; cursor: pointer; padding: 5px 12px;\n'
+        '              background: #fff; color: #000; border: 2px solid #000; box-shadow: 2px 2px 0 0 #000; }\n'
+        '    .sh-tab:hover { background: #fde047; }\n'
+        '    .sh-tab.on { background: #000; color: #fff; }\n'
+        # 책장 — 책등을 세워 늘어놓는다. 아래 선이 선반이다.
+        '    .shelf { display: flex; flex-wrap: wrap; align-items: flex-end; gap: 5px 3px;\n'
+        '             margin-top: 18px; padding: 0 6px 10px; border-bottom: 5px solid #000; }\n'
+        '    .shelf[hidden], .reading-list[hidden] { display: none; }\n'
+        '    .sp { position: relative; flex: none; width: var(--w, 46px); height: var(--h, 200px);\n'
+        '          background: var(--c, #555); border: 1px solid rgba(0,0,0,.45); border-radius: 2px 2px 0 0;\n'
+        '          box-shadow: inset -3px 0 6px rgba(0,0,0,.28), inset 3px 0 5px rgba(255,255,255,.14);\n'
+        '          overflow: hidden; text-decoration: none; transition: transform .12s; }\n'
+        '    .sp:hover { transform: translateY(-7px); z-index: 2; text-decoration: none; }\n'
+        # 색 책등의 제목 — 세로쓰기 한 줄. 길면 말줄임한다.
+        # 실제 책등 이미지가 오면 그 위에 덮여 안 보인다.
+        # align-items를 stretch로 둬야 안쪽 i의 높이가 확정된다. flex-start면 높이가
+        # 내용 기준이 되고, 거기에 max-height:100%를 걸면 엉뚱한 값으로 풀려서
+        # 제목이 중간에 잘린다.
+        '    .sp-t { position: absolute; inset: 0; display: flex; align-items: stretch;\n'
+        '            justify-content: center; padding: 11px 2px; overflow: hidden; }\n'
+        '    .sp-t i { writing-mode: vertical-rl; text-orientation: mixed; font-style: normal;\n'
+        '              white-space: nowrap; overflow: hidden; text-overflow: ellipsis;\n'
+        '              font-size: 13px; font-weight: 700; color: #fff;\n'
+        '              text-shadow: 0 1px 2px rgba(0,0,0,.55); }\n'
+        '    .sp-i { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; display: block; }\n'
+        '    @media (max-width: 480px) { .sp { width: calc(var(--w, 46px) * .82); }\n'
+        '                                 .sp-t i { font-size: 11.5px; } .sp-t { padding: 9px 2px; } }\n'
         '    .reading-list { list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 14px; counter-reset: rl; }\n'
         '    .rl-item { position: relative; background: #fff; border: 2px solid #000; box-shadow: 4px 4px 0 0 #000; padding: 14px 14px 14px 52px; transition: transform .12s, box-shadow .12s; }\n'
         '    .rl-item:hover { transform: translate(-1px,-1px); box-shadow: 6px 6px 0 0 #000; }\n'
@@ -1169,14 +1290,47 @@ for name, info in celebs.items():
         '    <p style="margin:0">' + intro_p + '</p>\n'
         '  </section>\n'
         '\n'
-        '  <section>\n'
-        '    <h2>📚 ' + esc(sname) + '의 독서 리스트 (' + str(n_books) + '권)</h2>\n'
-        + (('    <p class="muted">' + str(shared_count) + '권은 다른 셀럽도 함께 추천한 책이에요. 카드 안에 함께 추천한 셀럽 이름이 표시됩니다.</p>\n')
+        '  <section id="shelf-sec">\n'
+        '    <div class="shelf-head">\n'
+        '      <h2>📚 ' + esc(sname) + '의 독서 리스트 (' + str(n_books) + '권)</h2>\n'
+        '      <div class="shelf-tabs" role="tablist">\n'
+        '        <button type="button" class="sh-tab on" data-view="spine" aria-pressed="true">▊ 책등</button>\n'
+        '        <button type="button" class="sh-tab" data-view="list" aria-pressed="false">☰ 목록</button>\n'
+        '      </div>\n'
+        '    </div>\n'
+        + (('    <p class="muted">' + str(shared_count) + '권은 다른 셀럽도 함께 추천한 책이에요. 목록 보기에서 함께 추천한 셀럽 이름을 볼 수 있어요.</p>\n')
            if shared_count else '')
-        + '    <ol class="reading-list">\n'
+        + '    <div class="shelf" id="shelf">\n'
+        + spine_html +
+        '    </div>\n'
+        '    <ol class="reading-list" id="rlist" hidden>\n'
         + book_cards_html +
         '    </ol>\n'
         '  </section>\n'
+        '  <script>\n'
+        '  (function () {\n'
+        '    var sec = document.getElementById("shelf-sec");\n'
+        '    if (!sec) return;\n'
+        '    var shelf = document.getElementById("shelf"), list = document.getElementById("rlist");\n'
+        '    sec.querySelectorAll(".sh-tab").forEach(function (b) {\n'
+        '      b.addEventListener("click", function () {\n'
+        '        var spine = b.dataset.view === "spine";\n'
+        '        shelf.hidden = !spine; list.hidden = spine;\n'
+        '        sec.querySelectorAll(".sh-tab").forEach(function (o) {\n'
+        '          var on = o === b;\n'
+        '          o.classList.toggle("on", on);\n'
+        '          o.setAttribute("aria-pressed", on ? "true" : "false");\n'
+        '        });\n'
+        '        try { localStorage.setItem("fb.shelfView", b.dataset.view); } catch (e) {}\n'
+        '      });\n'
+        '    });\n'
+        '    try {\n'
+        '      if (localStorage.getItem("fb.shelfView") === "list") {\n'
+        '        sec.querySelector(\'.sh-tab[data-view="list"]\').click();\n'
+        '      }\n'
+        '    } catch (e) {}\n'
+        '  })();\n'
+        '  </script>\n'
         '\n'
         + (('  <section>\n'
             '    <h2>📝 ' + esc(sname) + '의 책 취향</h2>\n'

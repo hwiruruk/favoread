@@ -691,6 +691,30 @@
     .bc-author { font-size: 12px; color: #555; margin-bottom: 6px; }
     .bc-badge { display: inline-block; font-size: 11px; background: #fde047; border: 1px solid #000; padding: 1px 6px; font-weight: 700; }
     .celeb-bio { margin: 4px 0 8px; padding: 6px 10px; background: #fff8e7; border-left: 4px solid #000; font-size: 14px; line-height: 1.45; color: #222; }
+    .shelf-head { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
+    .shelf-head h2 { margin-bottom: 0; border-bottom: none; padding-bottom: 0; }
+    .shelf-tabs { display: flex; gap: 6px; flex: none; }
+    .sh-tab { font: inherit; font-size: 12px; font-weight: 700; cursor: pointer; padding: 5px 12px;
+              background: #fff; color: #000; border: 2px solid #000; box-shadow: 2px 2px 0 0 #000; }
+    .sh-tab:hover { background: #fde047; }
+    .sh-tab.on { background: #000; color: #fff; }
+    .shelf { display: flex; flex-wrap: wrap; align-items: flex-end; gap: 5px 3px;
+             margin-top: 18px; padding: 0 6px 10px; border-bottom: 5px solid #000; }
+    .shelf[hidden], .reading-list[hidden] { display: none; }
+    .sp { position: relative; flex: none; width: var(--w, 46px); height: var(--h, 200px);
+          background: var(--c, #555); border: 1px solid rgba(0,0,0,.45); border-radius: 2px 2px 0 0;
+          box-shadow: inset -3px 0 6px rgba(0,0,0,.28), inset 3px 0 5px rgba(255,255,255,.14);
+          overflow: hidden; text-decoration: none; transition: transform .12s; }
+    .sp:hover { transform: translateY(-7px); z-index: 2; text-decoration: none; }
+    .sp-t { position: absolute; inset: 0; display: flex; align-items: stretch;
+            justify-content: center; padding: 11px 2px; overflow: hidden; }
+    .sp-t i { writing-mode: vertical-rl; text-orientation: mixed; font-style: normal;
+              white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+              font-size: 13px; font-weight: 700; color: #fff;
+              text-shadow: 0 1px 2px rgba(0,0,0,.55); }
+    .sp-i { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; display: block; }
+    @media (max-width: 480px) { .sp { width: calc(var(--w, 46px) * .82); }
+                                 .sp-t i { font-size: 11.5px; } .sp-t { padding: 9px 2px; } }
     .reading-list { list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 14px; counter-reset: rl; }
     .rl-item { position: relative; background: #fff; border: 2px solid #000; box-shadow: 4px 4px 0 0 #000; padding: 14px 14px 14px 52px; transition: transform .12s, box-shadow .12s; }
     .rl-item:hover { transform: translate(-1px,-1px); box-shadow: 6px 6px 0 0 #000; }
@@ -751,10 +775,53 @@
     <p style="margin:0">홍경의 독서 기록을 한곳에 모았어요. 유튜브·인터뷰·SNS 등 공개 출처에서 확인된 인생책·추천 도서 <strong>35권</strong>을 한 페이지에 정리한 독서 리스트입니다. 아래 목록에서 책 제목·저자·출처 링크를 한눈에 확인할 수 있어요.</p>
   </section>
 
-  <section>
-    <h2>📚 홍경의 독서 리스트 (35권)</h2>
-    <p class="muted">12권은 다른 셀럽도 함께 추천한 책이에요. 카드 안에 함께 추천한 셀럽 이름이 표시됩니다.</p>
-    <ol class="reading-list">
+  <section id="shelf-sec">
+    <div class="shelf-head">
+      <h2>📚 홍경의 독서 리스트 (35권)</h2>
+      <div class="shelf-tabs" role="tablist">
+        <button type="button" class="sh-tab on" data-view="spine" aria-pressed="true">▊ 책등</button>
+        <button type="button" class="sh-tab" data-view="list" aria-pressed="false">☰ 목록</button>
+      </div>
+    </div>
+    <p class="muted">12권은 다른 셀럽도 함께 추천한 책이에요. 목록 보기에서 함께 추천한 셀럽 이름을 볼 수 있어요.</p>
+    <div class="shelf" id="shelf">
+    <a class="sp" style="--c:hsl(337,47%,32%);--h:221px;--w:52px" href="https://www.aladin.co.kr/shop/wproduct.aspx?ItemId=248169469&amp;partner=openAPI&amp;start=api" rel="nofollow noopener noreferrer" target="_blank" title="2020 제11회 젊은작가상 수상작품집"><span class="sp-t"><i>2020 제11회 젊은작가상 수상작품집</i></span></a>
+    <a class="sp" style="--c:hsl(359,49%,30%);--h:193px;--w:54px" href="https://www.yes24.com/product/goods/99018415" rel="nofollow noopener noreferrer" target="_blank" title="2021 제12회 젊은작가상 수상작품집"><span class="sp-t"><i>2021 제12회 젊은작가상 수상작품집</i></span><img class="sp-i" src="https://image.yes24.com/goods/99018415/side" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.remove()"></a>
+    <a class="sp" style="--c:hsl(64,42%,36%);--h:188px;--w:38px" href="https://www.aladin.co.kr/shop/wproduct.aspx?ItemId=126069723&amp;partner=openAPI&amp;start=api" rel="nofollow noopener noreferrer" target="_blank" title="검은 사슴"><span class="sp-t"><i>검은 사슴</i></span></a>
+    <a class="sp" style="--c:hsl(352,38%,42%);--h:218px;--w:43px" href="https://www.yes24.com/product/goods/89969235" rel="nofollow noopener noreferrer" target="_blank" title="공간이 만든 공간"><span class="sp-t"><i>공간이 만든 공간</i></span><img class="sp-i" src="https://image.yes24.com/goods/89969235/side" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.remove()"></a>
+    <a class="sp" style="--c:hsl(233,54%,37%);--h:203px;--w:50px" href="https://www.aladin.co.kr/shop/wproduct.aspx?ItemId=339905072&amp;partner=openAPI&amp;start=api" rel="nofollow noopener noreferrer" target="_blank" title="나목"><span class="sp-t"><i>나목</i></span></a>
+    <a class="sp" style="--c:hsl(312,44%,42%);--h:220px;--w:51px" href="https://www.yes24.com/product/goods/103168353" rel="nofollow noopener noreferrer" target="_blank" title="남아 있는 나날"><span class="sp-t"><i>남아 있는 나날</i></span><img class="sp-i" src="https://image.yes24.com/goods/103168353/side" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.remove()"></a>
+    <a class="sp" style="--c:hsl(240,35%,37%);--h:206px;--w:42px" href="https://www.yes24.com/product/goods/66752465" rel="nofollow noopener noreferrer" target="_blank" title="내 여자의 열매"><span class="sp-t"><i>내 여자의 열매</i></span><img class="sp-i" src="https://image.yes24.com/goods/66752465/side" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.remove()"></a>
+    <a class="sp" style="--c:hsl(228,46%,45%);--h:188px;--w:53px" href="https://www.yes24.com/product/goods/107679350" rel="nofollow noopener noreferrer" target="_blank" title="방랑자들"><span class="sp-t"><i>방랑자들</i></span><img class="sp-i" src="https://image.yes24.com/goods/107679350/side" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.remove()"></a>
+    <a class="sp" style="--c:hsl(164,56%,40%);--h:204px;--w:38px" href="https://www.yes24.com/product/goods/12591797" rel="nofollow noopener noreferrer" target="_blank" title="불안의 서"><span class="sp-t"><i>불안의 서</i></span><img class="sp-i" src="https://image.yes24.com/goods/12591797/side" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.remove()"></a>
+    <a class="sp" style="--c:hsl(283,48%,29%);--h:191px;--w:46px" href="https://www.aladin.co.kr/shop/wproduct.aspx?ItemId=28023107" rel="nofollow noopener noreferrer" target="_blank" title="색채가 없는 다자키 쓰쿠루와 그가 순례를 떠낸 해"><span class="sp-t"><i>색채가 없는 다자키 쓰쿠루와 그가 순례를 떠낸 해</i></span></a>
+    <a class="sp" style="--c:hsl(346,39%,47%);--h:190px;--w:49px" href="https://www.aladin.co.kr/shop/wproduct.aspx?ItemId=251549846&amp;partner=openAPI&amp;start=api" rel="nofollow noopener noreferrer" target="_blank" title="생각하지 않는 사람들"><span class="sp-t"><i>생각하지 않는 사람들</i></span></a>
+    <a class="sp" style="--c:hsl(70,37%,34%);--h:190px;--w:42px" href="https://www.yes24.com/product/goods/90628215" rel="nofollow noopener noreferrer" target="_blank" title="소설 보다 : 여름 2020"><span class="sp-t"><i>소설 보다 : 여름 2020</i></span><img class="sp-i" src="https://image.yes24.com/goods/90628215/side" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.remove()"></a>
+    <a class="sp" style="--c:hsl(248,55%,33%);--h:216px;--w:54px" href="https://www.yes24.com/product/goods/90115037" rel="nofollow noopener noreferrer" target="_blank" title="아녜스 바르다의 말"><span class="sp-t"><i>아녜스 바르다의 말</i></span><img class="sp-i" src="https://image.yes24.com/goods/90115037/side" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.remove()"></a>
+    <a class="sp" style="--c:hsl(36,37%,42%);--h:200px;--w:44px" href="https://www.yes24.com/product/goods/147069400" rel="nofollow noopener noreferrer" target="_blank" title="아침의 피아노"><span class="sp-t"><i>아침의 피아노</i></span><img class="sp-i" src="https://image.yes24.com/goods/147069400/side" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.remove()"></a>
+    <a class="sp" style="--c:hsl(202,36%,42%);--h:194px;--w:38px" href="https://www.yes24.com/product/goods/109080475" rel="nofollow noopener noreferrer" target="_blank" title="애쓰지 않아도"><span class="sp-t"><i>애쓰지 않아도</i></span><img class="sp-i" src="https://image.yes24.com/goods/109080475/side" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.remove()"></a>
+    <a class="sp" style="--c:hsl(211,43%,39%);--h:201px;--w:45px" href="https://www.yes24.com/product/goods/102220939" rel="nofollow noopener noreferrer" target="_blank" title="어둠 속에서 헤엄치기"><span class="sp-t"><i>어둠 속에서 헤엄치기</i></span><img class="sp-i" src="https://image.yes24.com/goods/102220939/side" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.remove()"></a>
+    <a class="sp" style="--c:hsl(268,52%,33%);--h:204px;--w:45px" href="https://www.aladin.co.kr/shop/wproduct.aspx?ItemId=193876266&amp;partner=openAPI&amp;start=api" rel="nofollow noopener noreferrer" target="_blank" title="엘리트 독식 사회"><span class="sp-t"><i>엘리트 독식 사회</i></span></a>
+    <a class="sp" style="--c:hsl(80,43%,27%);--h:192px;--w:43px" href="https://www.yes24.com/product/goods/103756493" rel="nofollow noopener noreferrer" target="_blank" title="여름 상설 공연"><span class="sp-t"><i>여름 상설 공연</i></span><img class="sp-i" src="https://image.yes24.com/goods/103756493/side" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.remove()"></a>
+    <a class="sp" style="--c:hsl(355,48%,31%);--h:197px;--w:44px" href="https://www.yes24.com/product/goods/30435587" rel="nofollow noopener noreferrer" target="_blank" title="여름은 오래 그곳에 남아"><span class="sp-t"><i>여름은 오래 그곳에 남아</i></span><img class="sp-i" src="https://image.yes24.com/goods/30435587/side" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.remove()"></a>
+    <a class="sp" style="--c:hsl(249,32%,33%);--h:193px;--w:38px" href="https://www.aladin.co.kr/shop/wproduct.aspx?ItemId=173930433&amp;partner=openAPI&amp;start=api" rel="nofollow noopener noreferrer" target="_blank" title="여수의 사랑"><span class="sp-t"><i>여수의 사랑</i></span></a>
+    <a class="sp" style="--c:hsl(110,36%,38%);--h:206px;--w:53px" href="https://www.aladin.co.kr/shop/wproduct.aspx?ItemId=44906963&amp;partner=openAPI&amp;start=api" rel="nofollow noopener noreferrer" target="_blank" title="여자 없는 남자들"><span class="sp-t"><i>여자 없는 남자들</i></span></a>
+    <a class="sp" style="--c:hsl(332,49%,30%);--h:206px;--w:51px" href="https://www.yes24.com/product/goods/62096461" rel="nofollow noopener noreferrer" target="_blank" title="예민함이라는 무기"><span class="sp-t"><i>예민함이라는 무기</i></span><img class="sp-i" src="https://image.yes24.com/goods/62096461/side" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.remove()"></a>
+    <a class="sp" style="--c:hsl(15,42%,35%);--h:219px;--w:41px" href="https://www.yes24.com/product/goods/98983220" rel="nofollow noopener noreferrer" target="_blank" title="우리는 모두 집으로 돌아간다"><span class="sp-t"><i>우리는 모두 집으로 돌아간다</i></span><img class="sp-i" src="https://image.yes24.com/goods/98983220/side" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.remove()"></a>
+    <a class="sp" style="--c:hsl(229,39%,39%);--h:191px;--w:43px" href="https://www.yes24.com/product/goods/42702060" rel="nofollow noopener noreferrer" target="_blank" title="운다고 달라지는 일은 아무것도 없겠지만"><span class="sp-t"><i>운다고 달라지는 일은 아무것도 없겠지만</i></span><img class="sp-i" src="https://image.yes24.com/goods/42702060/side" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.remove()"></a>
+    <a class="sp" style="--c:hsl(200,40%,36%);--h:212px;--w:42px" href="https://www.yes24.com/product/goods/370331" rel="nofollow noopener noreferrer" target="_blank" title="위대한 개츠비"><span class="sp-t"><i>위대한 개츠비</i></span><img class="sp-i" src="https://image.yes24.com/goods/370331/side" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.remove()"></a>
+    <a class="sp" style="--c:hsl(289,37%,44%);--h:195px;--w:48px" href="https://www.yes24.com/product/goods/195804435" rel="nofollow noopener noreferrer" target="_blank" title="이기적 유전자"><span class="sp-t"><i>이기적 유전자</i></span><img class="sp-i" src="https://image.yes24.com/goods/195804435/side" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.remove()"></a>
+    <a class="sp" style="--c:hsl(49,47%,41%);--h:205px;--w:39px" href="https://www.yes24.com/product/goods/1387488" rel="nofollow noopener noreferrer" target="_blank" title="인간 실격"><span class="sp-t"><i>인간 실격</i></span><img class="sp-i" src="https://image.yes24.com/goods/1387488/side" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.remove()"></a>
+    <a class="sp" style="--c:hsl(231,34%,40%);--h:219px;--w:40px" href="https://www.yes24.com/product/goods/95538356" rel="nofollow noopener noreferrer" target="_blank" title="일인칭 단수"><span class="sp-t"><i>일인칭 단수</i></span><img class="sp-i" src="https://image.yes24.com/goods/95538356/side" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.remove()"></a>
+    <a class="sp" style="--c:hsl(157,34%,43%);--h:217px;--w:39px" href="https://www.aladin.co.kr/shop/wproduct.aspx?ItemId=278770576&amp;partner=openAPI&amp;start=api" rel="nofollow noopener noreferrer" target="_blank" title="작별하지 않는다"><span class="sp-t"><i>작별하지 않는다</i></span></a>
+    <a class="sp" style="--c:hsl(276,42%,36%);--h:194px;--w:52px" href="https://www.aladin.co.kr/shop/wproduct.aspx?ItemId=379686146&amp;partner=openAPI&amp;start=api" rel="nofollow noopener noreferrer" target="_blank" title="작은 땅의 야수들"><span class="sp-t"><i>작은 땅의 야수들</i></span></a>
+    <a class="sp" style="--c:hsl(16,44%,41%);--h:216px;--w:43px" href="https://www.yes24.com/product/goods/118399675" rel="nofollow noopener noreferrer" target="_blank" title="저주토끼"><span class="sp-t"><i>저주토끼</i></span><img class="sp-i" src="https://image.yes24.com/goods/118399675/side" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.remove()"></a>
+    <a class="sp" style="--c:hsl(319,36%,45%);--h:217px;--w:42px" href="https://www.yes24.com/product/goods/4810410" rel="nofollow noopener noreferrer" target="_blank" title="집을, 순례하다"><span class="sp-t"><i>집을, 순례하다</i></span><img class="sp-i" src="https://image.yes24.com/goods/4810410/side" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.remove()"></a>
+    <a class="sp" style="--c:hsl(3,55%,38%);--h:207px;--w:50px" href="https://www.yes24.com/product/goods/108422348" rel="nofollow noopener noreferrer" target="_blank" title="채식주의자"><span class="sp-t"><i>채식주의자</i></span><img class="sp-i" src="https://image.yes24.com/goods/108422348/side" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.remove()"></a>
+    <a class="sp" style="--c:hsl(358,35%,32%);--h:206px;--w:38px" href="https://www.yes24.com/product/goods/17972275" rel="nofollow noopener noreferrer" target="_blank" title="한국이 싫어서"><span class="sp-t"><i>한국이 싫어서</i></span><img class="sp-i" src="https://image.yes24.com/goods/17972275/side" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.remove()"></a>
+    <a class="sp" style="--c:hsl(72,35%,26%);--h:192px;--w:42px" href="https://www.aladin.co.kr/shop/wproduct.aspx?ItemId=360994667&amp;partner=openAPI&amp;start=api" rel="nofollow noopener noreferrer" target="_blank" title="흰"><span class="sp-t"><i>흰</i></span></a>
+    </div>
+    <ol class="reading-list" id="rlist" hidden>
     <li class="rl-item">
       <span class="rl-num">1</span>
       <a class="rl-cover" href="https://www.aladin.co.kr/shop/wproduct.aspx?ItemId=248169469&amp;partner=openAPI&amp;start=api" rel="nofollow noopener noreferrer" target="_blank" aria-label="2020 제11회 젊은작가상 수상작품집 알라딘에서 보기"><img src="https://image.aladin.co.kr/product/24816/94/cover500/8954673953_2.jpg" alt="2020 제11회 젊은작가상 수상작품집 표지" loading="lazy"></a>
@@ -1083,6 +1150,30 @@
     </li>
     </ol>
   </section>
+  <script>
+  (function () {
+    var sec = document.getElementById("shelf-sec");
+    if (!sec) return;
+    var shelf = document.getElementById("shelf"), list = document.getElementById("rlist");
+    sec.querySelectorAll(".sh-tab").forEach(function (b) {
+      b.addEventListener("click", function () {
+        var spine = b.dataset.view === "spine";
+        shelf.hidden = !spine; list.hidden = spine;
+        sec.querySelectorAll(".sh-tab").forEach(function (o) {
+          var on = o === b;
+          o.classList.toggle("on", on);
+          o.setAttribute("aria-pressed", on ? "true" : "false");
+        });
+        try { localStorage.setItem("fb.shelfView", b.dataset.view); } catch (e) {}
+      });
+    });
+    try {
+      if (localStorage.getItem("fb.shelfView") === "list") {
+        sec.querySelector('.sh-tab[data-view="list"]').click();
+      }
+    } catch (e) {}
+  })();
+  </script>
 
   <section>
     <h2>📝 홍경의 책 취향</h2>
