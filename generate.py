@@ -156,6 +156,25 @@ def yes24_spine_url(cover_url):
     return 'https://image.yes24.com/goods/' + m.group(1) + '/side' if m else None
 
 
+def normalize_spine_value(v):
+    """spines.json 값을 책등 이미지 URL로 맞춘다.
+
+    손으로 채워 넣기 쉽게 세 가지를 다 받는다.
+      · 상품 번호만          "13137546"
+      · 예스24 상품 페이지 URL "https://www.yes24.com/product/goods/13137546"
+      · 책등 이미지 URL 그대로 "https://image.yes24.com/goods/13137546/side"
+    """
+    v = str(v or '').strip()
+    if not v:
+        return None
+    if v.isdigit():
+        return 'https://image.yes24.com/goods/' + v + '/side'
+    m = re.search(r'yes24\.com/(?:product/)?goods/(?:detail/)?(\d+)', v, re.I)
+    if m:
+        return 'https://image.yes24.com/goods/' + m.group(1) + '/side'
+    return v if v.startswith('http') else None
+
+
 def load_spines():
     """tools/fetch_spines.py 가 채운 제목 → 책등 URL 표. 없으면 빈 표."""
     path = os.path.join('data', 'spines.json')
@@ -163,10 +182,18 @@ def load_spines():
         return {}
     try:
         with open(path, encoding='utf-8') as fp:
-            return (json.load(fp) or {}).get('spines') or {}
+            raw = (json.load(fp) or {}).get('spines') or {}
     except (json.JSONDecodeError, OSError) as e:
         print('⚠️ data/spines.json 읽기 실패 — 표지 URL에서만 유도합니다: %s' % e)
         return {}
+    out = {}
+    for title, v in raw.items():
+        u = normalize_spine_value(v)
+        if u:
+            out[str(title).strip()] = u
+        else:
+            print('⚠️ data/spines.json 의 %r 값을 알아볼 수 없어 건너뜁니다: %r' % (title, v))
+    return out
 
 
 SPINES = load_spines()
@@ -188,12 +215,7 @@ def spine_tint(title):
     return 'hsl(' + str(hue) + ',' + str(sat) + '%,' + str(lig) + '%)'
 
 
-def spine_height(title):
-    """책마다 높이를 조금씩 달리해 실제 책장처럼 들쭉날쭉하게."""
-    h = 0
-    for ch in (title or ''):
-        h = (h * 17 + ord(ch)) & 0xFFFFFFFF
-    return 188 + h % 34               # 188~221px
+SPINE_H = 205                        # 책등 높이는 모두 같게
 
 
 def spine_width(title):
@@ -985,17 +1007,19 @@ for name, info in celebs.items():
         _spine_inner = (
             '<span class="sp-t"><i>' + esc(b['title']) + '</i></span>'
             + ('<img class="sp-i" src="' + esc(_spine_url) + '" alt="" loading="lazy" '
-               'referrerpolicy="no-referrer" onerror="this.remove()">' if _spine_url else '')
+               'referrerpolicy="no-referrer" '
+               'onerror="this.parentNode.classList.add(\'sp-fail\');this.remove()">'
+               if _spine_url else '')
         )
         _spine_style = ('--c:' + spine_tint(b['title'])
-                        + ';--h:' + str(spine_height(b['title'])) + 'px'
                         + ';--w:' + str(spine_width(b['title'])) + 'px')
+        _sp_cls = 'sp' if _spine_url else 'sp no-img'
         if aladin_url:
-            spine_html += ('    <a class="sp" style="' + _spine_style + '" href="' + aladin_url
+            spine_html += ('    <a class="' + _sp_cls + '" style="' + _spine_style + '" href="' + aladin_url
                            + '" rel="nofollow noopener noreferrer" target="_blank" title="'
                            + esc(b['title']) + '">' + _spine_inner + '</a>\n')
         else:
-            spine_html += ('    <span class="sp" style="' + _spine_style + '" title="'
+            spine_html += ('    <span class="' + _sp_cls + '" style="' + _spine_style + '" title="'
                            + esc(b['title']) + '">' + _spine_inner + '</span>\n')
 
         book_cards_html += (
@@ -1153,6 +1177,8 @@ for name, info in celebs.items():
         '  <link rel="apple-touch-icon" href="' + BASE + 'favicon.png">\n'
         '  <link rel="alternate" type="application/rss+xml" title="최애의 독서 RSS" href="' + BASE + 'feed.xml">\n'
         '\n'
+        '  <link rel="preconnect" href="https://image.yes24.com">\n'
+        '  <link rel="dns-prefetch" href="https://image.yes24.com">\n'
         '  <link rel="preconnect" href="https://image.aladin.co.kr">\n'
         '  <link rel="dns-prefetch" href="https://image.aladin.co.kr">\n'
         '\n'
@@ -1209,7 +1235,7 @@ for name, info in celebs.items():
         '    .shelf { display: flex; flex-wrap: wrap; align-items: flex-end; gap: 5px 3px;\n'
         '             margin-top: 18px; padding: 0 6px 10px; border-bottom: 5px solid #000; }\n'
         '    .shelf[hidden], .reading-list[hidden] { display: none; }\n'
-        '    .sp { position: relative; flex: none; width: var(--w, 46px); height: var(--h, 200px);\n'
+        '    .sp { position: relative; flex: none; width: auto; height: ' + str(SPINE_H) + 'px;\n'
         '          background: var(--c, #555); border: 1px solid rgba(0,0,0,.45); border-radius: 2px 2px 0 0;\n'
         '          box-shadow: inset -3px 0 6px rgba(0,0,0,.28), inset 3px 0 5px rgba(255,255,255,.14);\n'
         '          overflow: hidden; text-decoration: none; transition: transform .12s; }\n'
@@ -1225,8 +1251,11 @@ for name, info in celebs.items():
         '              white-space: nowrap; overflow: hidden; text-overflow: ellipsis;\n'
         '              font-size: 13px; font-weight: 700; color: #fff;\n'
         '              text-shadow: 0 1px 2px rgba(0,0,0,.55); }\n'
-        '    .sp-i { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; display: block; }\n'
-        '    @media (max-width: 480px) { .sp { width: calc(var(--w, 46px) * .82); }\n'
+        '    .sp-i { position: relative; z-index: 1; display: block;\n'
+        '            height: 100%; width: auto; max-width: 130px; object-fit: contain; }\n'
+        # 책등 이미지가 없거나 못 불러오면 색 책등 폭으로 돌아간다
+        '    .sp.no-img, .sp.sp-fail { width: var(--w, 46px); }\n'
+        '    @media (max-width: 480px) { .sp.no-img, .sp.sp-fail { width: calc(var(--w, 46px) * .82); }\n'
         '                                 .sp-t i { font-size: 11.5px; } .sp-t { padding: 9px 2px; } }\n'
         '    .reading-list { list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 14px; counter-reset: rl; }\n'
         '    .rl-item { position: relative; background: #fff; border: 2px solid #000; box-shadow: 4px 4px 0 0 #000; padding: 14px 14px 14px 52px; transition: transform .12s, box-shadow .12s; }\n'
@@ -1473,6 +1502,8 @@ for title, binfo in book_celebs.items():
         '  <link rel="apple-touch-icon" href="' + BASE + 'favicon.png">\n'
         '  <link rel="alternate" type="application/rss+xml" title="최애의 독서 RSS" href="' + BASE + 'feed.xml">\n'
         '\n'
+        '  <link rel="preconnect" href="https://image.yes24.com">\n'
+        '  <link rel="dns-prefetch" href="https://image.yes24.com">\n'
         '  <link rel="preconnect" href="https://image.aladin.co.kr">\n'
         '  <link rel="dns-prefetch" href="https://image.aladin.co.kr">\n'
         '\n'

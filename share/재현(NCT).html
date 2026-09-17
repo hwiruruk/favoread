@@ -45,6 +45,8 @@
   <link rel="apple-touch-icon" href="https://favorbook.co.kr/favicon.png">
   <link rel="alternate" type="application/rss+xml" title="최애의 독서 RSS" href="https://favorbook.co.kr/feed.xml">
 
+  <link rel="preconnect" href="https://image.yes24.com">
+  <link rel="dns-prefetch" href="https://image.yes24.com">
   <link rel="preconnect" href="https://image.aladin.co.kr">
   <link rel="dns-prefetch" href="https://image.aladin.co.kr">
 
@@ -237,7 +239,7 @@
     .shelf { display: flex; flex-wrap: wrap; align-items: flex-end; gap: 5px 3px;
              margin-top: 18px; padding: 0 6px 10px; border-bottom: 5px solid #000; }
     .shelf[hidden], .reading-list[hidden] { display: none; }
-    .sp { position: relative; flex: none; width: var(--w, 46px); height: var(--h, 200px);
+    .sp { position: relative; flex: none; width: auto; height: 205px;
           background: var(--c, #555); border: 1px solid rgba(0,0,0,.45); border-radius: 2px 2px 0 0;
           box-shadow: inset -3px 0 6px rgba(0,0,0,.28), inset 3px 0 5px rgba(255,255,255,.14);
           overflow: hidden; text-decoration: none; transition: transform .12s; }
@@ -248,8 +250,10 @@
               white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
               font-size: 13px; font-weight: 700; color: #fff;
               text-shadow: 0 1px 2px rgba(0,0,0,.55); }
-    .sp-i { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; display: block; }
-    @media (max-width: 480px) { .sp { width: calc(var(--w, 46px) * .82); }
+    .sp-i { position: relative; z-index: 1; display: block;
+            height: 100%; width: auto; max-width: 130px; object-fit: contain; }
+    .sp.no-img, .sp.sp-fail { width: var(--w, 46px); }
+    @media (max-width: 480px) { .sp.no-img, .sp.sp-fail { width: calc(var(--w, 46px) * .82); }
                                  .sp-t i { font-size: 11.5px; } .sp-t { padding: 9px 2px; } }
     .reading-list { list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 14px; counter-reset: rl; }
     .rl-item { position: relative; background: #fff; border: 2px solid #000; box-shadow: 4px 4px 0 0 #000; padding: 14px 14px 14px 52px; transition: transform .12s, box-shadow .12s; }
@@ -321,12 +325,12 @@
     </div>
     <p class="muted">5권은 다른 셀럽도 함께 추천한 책이에요. 목록 보기에서 함께 추천한 셀럽 이름을 볼 수 있어요.</p>
     <div class="shelf" id="shelf">
-    <a class="sp" style="--c:hsl(160,49%,37%);--h:204px;--w:49px" href="https://www.aladin.co.kr/shop/wproduct.aspx?ItemId=7332337&amp;partner=openAPI&amp;start=api" rel="nofollow noopener noreferrer" target="_blank" title="끌림"><span class="sp-t"><i>끌림</i></span><img class="sp-i" src="https://image.yes24.com/goods/3986918/side" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.remove()"></a>
-    <a class="sp" style="--c:hsl(160,49%,37%);--h:204px;--w:49px" href="https://www.yes24.com/product/goods/3986918" rel="nofollow noopener noreferrer" target="_blank" title="끌림"><span class="sp-t"><i>끌림</i></span><img class="sp-i" src="https://image.yes24.com/goods/3986918/side" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.remove()"></a>
-    <a class="sp" style="--c:hsl(277,51%,30%);--h:191px;--w:45px" href="https://www.yes24.com/product/goods/143873336" rel="nofollow noopener noreferrer" target="_blank" title="배우수업"><span class="sp-t"><i>배우수업</i></span><img class="sp-i" src="https://image.yes24.com/goods/143873336/side" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.remove()"></a>
-    <a class="sp" style="--c:hsl(127,50%,26%);--h:219px;--w:40px" href="https://www.yes24.com/product/goods/32695057" rel="nofollow noopener noreferrer" target="_blank" title="약간의 거리를 둔다"><span class="sp-t"><i>약간의 거리를 둔다</i></span><img class="sp-i" src="https://image.yes24.com/goods/32695057/side" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.remove()"></a>
-    <a class="sp" style="--c:hsl(6,50%,39%);--h:198px;--w:42px" href="https://www.yes24.com/product/goods/103492818" rel="nofollow noopener noreferrer" target="_blank" title="죽기 전에 꼭 들어야 할 팝송 1001"><span class="sp-t"><i>죽기 전에 꼭 들어야 할 팝송 1001</i></span><img class="sp-i" src="https://image.yes24.com/goods/103492818/side" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.remove()"></a>
-    <a class="sp" style="--c:hsl(21,35%,29%);--h:213px;--w:54px" href="https://www.yes24.com/product/goods/118755085" rel="nofollow noopener noreferrer" target="_blank" title="총 균 쇠"><span class="sp-t"><i>총 균 쇠</i></span><img class="sp-i" src="https://image.yes24.com/goods/118755085/side" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.remove()"></a>
+    <a class="sp" style="--c:hsl(160,49%,37%);--w:49px" href="https://www.aladin.co.kr/shop/wproduct.aspx?ItemId=7332337&amp;partner=openAPI&amp;start=api" rel="nofollow noopener noreferrer" target="_blank" title="끌림"><span class="sp-t"><i>끌림</i></span><img class="sp-i" src="https://image.yes24.com/goods/3986918/side" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.parentNode.classList.add('sp-fail');this.remove()"></a>
+    <a class="sp" style="--c:hsl(160,49%,37%);--w:49px" href="https://www.yes24.com/product/goods/3986918" rel="nofollow noopener noreferrer" target="_blank" title="끌림"><span class="sp-t"><i>끌림</i></span><img class="sp-i" src="https://image.yes24.com/goods/3986918/side" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.parentNode.classList.add('sp-fail');this.remove()"></a>
+    <a class="sp" style="--c:hsl(277,51%,30%);--w:45px" href="https://www.yes24.com/product/goods/143873336" rel="nofollow noopener noreferrer" target="_blank" title="배우수업"><span class="sp-t"><i>배우수업</i></span><img class="sp-i" src="https://image.yes24.com/goods/143873336/side" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.parentNode.classList.add('sp-fail');this.remove()"></a>
+    <a class="sp" style="--c:hsl(127,50%,26%);--w:40px" href="https://www.yes24.com/product/goods/32695057" rel="nofollow noopener noreferrer" target="_blank" title="약간의 거리를 둔다"><span class="sp-t"><i>약간의 거리를 둔다</i></span><img class="sp-i" src="https://image.yes24.com/goods/32695057/side" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.parentNode.classList.add('sp-fail');this.remove()"></a>
+    <a class="sp" style="--c:hsl(6,50%,39%);--w:42px" href="https://www.yes24.com/product/goods/103492818" rel="nofollow noopener noreferrer" target="_blank" title="죽기 전에 꼭 들어야 할 팝송 1001"><span class="sp-t"><i>죽기 전에 꼭 들어야 할 팝송 1001</i></span><img class="sp-i" src="https://image.yes24.com/goods/103492818/side" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.parentNode.classList.add('sp-fail');this.remove()"></a>
+    <a class="sp" style="--c:hsl(21,35%,29%);--w:54px" href="https://www.yes24.com/product/goods/118755085" rel="nofollow noopener noreferrer" target="_blank" title="총 균 쇠"><span class="sp-t"><i>총 균 쇠</i></span><img class="sp-i" src="https://image.yes24.com/goods/118755085/side" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.parentNode.classList.add('sp-fail');this.remove()"></a>
     </div>
     <ol class="reading-list" id="rlist" hidden>
     <li class="rl-item">

@@ -47,7 +47,7 @@ const L = {
     tagline: '당신이 좋아하는, 그들이 읽은 책',
     book: 'BOOK', source: 'SOURCE', books: 'BOOKS',
     sources: '출처', imgGroup: '이미지', txtGroup: '텍스트',
-    bookCoverCredit: '도서 표지 ⓒ 알라딘 (aladin.co.kr)',
+    bookCredit: (names) => `도서 이미지 ⓒ ${names}`,
     coverPhoto: '표지 사진',
     promoTag: '당신이 좋아하는, 그들이 읽은 책',
     promoStat: (c, b) => `셀럽 ${c.toLocaleString()}명의 책 ${b.toLocaleString()}권을 만나보세요`,
@@ -61,7 +61,7 @@ const L = {
     tagline: 'The books your faves are reading',
     book: 'BOOK', source: 'SOURCE', books: 'BOOKS',
     sources: 'Sources', imgGroup: 'Images', txtGroup: 'Text',
-    bookCoverCredit: 'Book covers ⓒ Aladin (aladin.co.kr)',
+    bookCredit: (names) => `Book images ⓒ ${names}`,
     coverPhoto: 'Cover photo',
     promoTag: 'The books your faves are reading',
     promoStat: (c, b) => `Discover ${b.toLocaleString()} books from ${c} celebrities`,
@@ -1294,11 +1294,15 @@ function bookSpines(sel, sq) {
   const w = Math.max(14, Math.min(byWidth, byHeight, 96));
   const cells = sel.map((b) => {
     const t = b.ref.title;
-    const hv = 1 + ((hashOf(t, 17) % 14) - 7) / 100;          // 높이 ±7%
-    const h = Math.round(w * SPINE_RATIO * hv);
+    const h = Math.round(w * SPINE_RATIO);                    // 높이는 모두 같게
     const sp = b.ref.spineUrl || yes24SpineUrl(b.ref.coverUrl);
-    const img = sp ? `<img class="cn-sp-i" src="${esc(proxify(sp))}" alt="" onerror="this.remove()">` : '';
-    return `<div class="cn-sp" style="width:${w}px;height:${h}px;--c:${spineTint(t)}">
+    // 상자 폭을 고정하면 실제 책등이 좌우로 잘린다. 높이만 맞추고 폭은
+    // 이미지 원본 비율을 따르게 두고, 못 불러오면 색 책등 폭으로 돌아간다.
+    const img = sp
+      ? `<img class="cn-sp-i" src="${esc(proxify(sp))}" alt=""
+           onerror="this.parentNode.classList.add('cn-sp-fail');this.remove()">`
+      : '';
+    return `<div class="cn-sp${sp ? '' : ' cn-sp-noimg'}" style="--w:${w}px;height:${h}px;--c:${spineTint(t)}">
       <span class="cn-sp-t" style="font-size:${Math.max(9, Math.round(w * 0.34))}px"><i>${esc(t)}</i></span>${img}
     </div>`;
   }).join('');
@@ -1433,6 +1437,34 @@ function bookHTML(b, idx, total) {
   </div>`;
 }
 
+/* 카드에 실제로 실린 도서 이미지의 출처를 뽑는다.
+ * 표지는 알라딘·예스24·교보가 섞여 있고 책등은 전부 예스24라서,
+ * 한 곳으로 고정해 적으면 어느 쪽이든 사실과 어긋난다.
+ * 그래서 이번 카드가 쓴 이미지 주소만 보고 적는다. */
+const IMG_HOSTS = [
+  [/(^|\.)yes24\.com$/i,        '예스24 (yes24.com)',      'Yes24 (yes24.com)'],
+  [/(^|\.)aladin\.co\.kr$/i,    '알라딘 (aladin.co.kr)',   'Aladin (aladin.co.kr)'],
+  [/kyobobook\.co\.kr$/i,       '교보문고 (kyobobook.co.kr)', 'Kyobo Book (kyobobook.co.kr)'],
+];
+
+function bookImageCredit(sel) {
+  const seen = new Map();
+  sel.forEach((b) => {
+    // 책등 모드면 책등을, 표지 모드면 표지를 — 실제로 카드에 그려진 쪽
+    const url = state.opts.bookFace === 'spine'
+      ? (b.ref.spineUrl || yes24SpineUrl(b.ref.coverUrl) || b.ref.coverUrl)
+      : b.ref.coverUrl;
+    let host;
+    try { host = new URL(cleanUrl(url)).hostname; } catch { return; }
+    const hit = IMG_HOSTS.find(([re]) => re.test(host));
+    if (hit) seen.set(hit[0], hit);
+    else seen.set(host, [null, host, host]);
+  });
+  const i = state.opts.lang === 'en' ? 2 : 1;
+  const names = [...seen.values()].map((h) => h[i]);
+  return names.length ? T().bookCredit(names.join(' · ')) : '';
+}
+
 function outroHTML() {
   const sel = selectedBooks();
   // 텍스트(인용) 출처
@@ -1445,7 +1477,8 @@ function outroHTML() {
   // 이미지 출처
   const imgItems = [];
   if (state.opts.coverSrc) imgItems.push(`${T().coverPhoto} — ${srcDisp(state.opts.coverSrc).replace(/^ⓒ\s*/, '')}`);
-  imgItems.push(T().bookCoverCredit);
+  const bookCredit = bookImageCredit(sel);
+  if (bookCredit) imgItems.push(bookCredit);
   const img = imgItems.map((s, i) =>
     `<li><span class="n">${String(i + 1).padStart(2, '0')}</span><span class="t">${esc(s)}</span></li>`).join('');
   return `<div class="cn-pad cn-outro">
@@ -2102,7 +2135,8 @@ function buildScript() {
   });
   lines.push(`· ${T().imgGroup}`);
   if (state.opts.coverSrc) lines.push(`  - ${T().coverPhoto} — ${state.opts.coverSrc.replace(/^ⓒ\s*/, '')}`);
-  lines.push(`  - ${T().bookCoverCredit}`);
+  const _bc = bookImageCredit(sel);
+  if (_bc) lines.push(`  - ${_bc}`);
   lines.push('');
   lines.push(`${T().brand} · ${T().promoTag}`);
   lines.push(`${T().promoStat(state.celebCount, state.bookCount)} · ${state.opts.handle}`);
