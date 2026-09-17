@@ -1296,8 +1296,13 @@ function bookSpines(sel, sq) {
     const t = b.ref.title;
     const h = Math.round(w * SPINE_RATIO);                    // 높이는 모두 같게
     const sp = b.ref.spineUrl || yes24SpineUrl(b.ref.coverUrl);
-    const img = sp ? `<img class="cn-sp-i" src="${esc(proxify(sp))}" alt="" onerror="this.remove()">` : '';
-    return `<div class="cn-sp" style="width:${w}px;height:${h}px;--c:${spineTint(t)}">
+    // 상자 폭을 고정하면 실제 책등이 좌우로 잘린다. 높이만 맞추고 폭은
+    // 이미지 원본 비율을 따르게 두고, 못 불러오면 색 책등 폭으로 돌아간다.
+    const img = sp
+      ? `<img class="cn-sp-i" src="${esc(proxify(sp))}" alt=""
+           onerror="this.parentNode.classList.add('cn-sp-fail');this.remove()">`
+      : '';
+    return `<div class="cn-sp${sp ? '' : ' cn-sp-noimg'}" style="--w:${w}px;height:${h}px;--c:${spineTint(t)}">
       <span class="cn-sp-t" style="font-size:${Math.max(9, Math.round(w * 0.34))}px"><i>${esc(t)}</i></span>${img}
     </div>`;
   }).join('');

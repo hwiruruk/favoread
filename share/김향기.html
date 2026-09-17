@@ -223,7 +223,7 @@
     .shelf { display: flex; flex-wrap: wrap; align-items: flex-end; gap: 5px 3px;
              margin-top: 18px; padding: 0 6px 10px; border-bottom: 5px solid #000; }
     .shelf[hidden], .reading-list[hidden] { display: none; }
-    .sp { position: relative; flex: none; width: var(--w, 46px); height: 205px;
+    .sp { position: relative; flex: none; width: auto; height: 205px;
           background: var(--c, #555); border: 1px solid rgba(0,0,0,.45); border-radius: 2px 2px 0 0;
           box-shadow: inset -3px 0 6px rgba(0,0,0,.28), inset 3px 0 5px rgba(255,255,255,.14);
           overflow: hidden; text-decoration: none; transition: transform .12s; }
@@ -234,8 +234,10 @@
               white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
               font-size: 13px; font-weight: 700; color: #fff;
               text-shadow: 0 1px 2px rgba(0,0,0,.55); }
-    .sp-i { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; display: block; }
-    @media (max-width: 480px) { .sp { width: calc(var(--w, 46px) * .82); }
+    .sp-i { position: relative; z-index: 1; display: block;
+            height: 100%; width: auto; max-width: 130px; object-fit: contain; }
+    .sp.no-img, .sp.sp-fail { width: var(--w, 46px); }
+    @media (max-width: 480px) { .sp.no-img, .sp.sp-fail { width: calc(var(--w, 46px) * .82); }
                                  .sp-t i { font-size: 11.5px; } .sp-t { padding: 9px 2px; } }
     .reading-list { list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 14px; counter-reset: rl; }
     .rl-item { position: relative; background: #fff; border: 2px solid #000; box-shadow: 4px 4px 0 0 #000; padding: 14px 14px 14px 52px; transition: transform .12s, box-shadow .12s; }
@@ -306,11 +308,11 @@
     </div>
     <p class="muted">1권은 다른 셀럽도 함께 추천한 책이에요. 목록 보기에서 함께 추천한 셀럽 이름을 볼 수 있어요.</p>
     <div class="shelf" id="shelf">
-    <a class="sp" style="--c:hsl(213,44%,40%);--w:41px" href="https://www.aladin.co.kr/shop/wproduct.aspx?ItemId=383612001&amp;partner=openAPI&amp;start=api" rel="nofollow noopener noreferrer" target="_blank" title="뉴필로소퍼 2026 33호 - vol 33 : 감정은 ‘감정적’인 것이 아니다"><span class="sp-t"><i>뉴필로소퍼 2026 33호 - vol 33 : 감정은 ‘감정적’인 것이 아니다</i></span><img class="sp-i" src="https://image.yes24.com/goods/193059981/side" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.remove()"></a>
-    <a class="sp" style="--c:hsl(278,56%,43%);--w:42px" href="https://www.aladin.co.kr/shop/wproduct.aspx?ItemId=276088365&amp;partner=openAPI&amp;start=api" rel="nofollow noopener noreferrer" target="_blank" title="다정한 것이 살아남는다"><span class="sp-t"><i>다정한 것이 살아남는다</i></span><img class="sp-i" src="https://image.yes24.com/goods/102836095/side" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.remove()"></a>
-    <a class="sp" style="--c:hsl(23,53%,27%);--w:46px" href="https://www.aladin.co.kr/shop/wproduct.aspx?ItemId=383843383&amp;partner=openAPI&amp;start=api" rel="nofollow noopener noreferrer" target="_blank" title="일본 광고 카피 도감"><span class="sp-t"><i>일본 광고 카피 도감</i></span><img class="sp-i" src="https://image.yes24.com/goods/173654407/side" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.remove()"></a>
-    <a class="sp" style="--c:hsl(110,37%,47%);--w:43px" href="https://www.aladin.co.kr/shop/wproduct.aspx?ItemId=388319072&amp;partner=openAPI&amp;start=api" rel="nofollow noopener noreferrer" target="_blank" title="참을 수 없는 존재의 가벼움"><span class="sp-t"><i>참을 수 없는 존재의 가벼움</i></span><img class="sp-i" src="https://image.yes24.com/goods/61933303/side" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.remove()"></a>
-    <a class="sp" style="--c:hsl(59,42%,26%);--w:51px" href="https://www.aladin.co.kr/shop/wproduct.aspx?ItemId=384909081&amp;partner=openAPI&amp;start=api" rel="nofollow noopener noreferrer" target="_blank" title="쾌적한 사회의 불쾌함"><span class="sp-t"><i>쾌적한 사회의 불쾌함</i></span><img class="sp-i" src="https://image.yes24.com/goods/175882885/side" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.remove()"></a>
+    <a class="sp" style="--c:hsl(213,44%,40%);--w:41px" href="https://www.aladin.co.kr/shop/wproduct.aspx?ItemId=383612001&amp;partner=openAPI&amp;start=api" rel="nofollow noopener noreferrer" target="_blank" title="뉴필로소퍼 2026 33호 - vol 33 : 감정은 ‘감정적’인 것이 아니다"><span class="sp-t"><i>뉴필로소퍼 2026 33호 - vol 33 : 감정은 ‘감정적’인 것이 아니다</i></span><img class="sp-i" src="https://image.yes24.com/goods/193059981/side" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.parentNode.classList.add('sp-fail');this.remove()"></a>
+    <a class="sp" style="--c:hsl(278,56%,43%);--w:42px" href="https://www.aladin.co.kr/shop/wproduct.aspx?ItemId=276088365&amp;partner=openAPI&amp;start=api" rel="nofollow noopener noreferrer" target="_blank" title="다정한 것이 살아남는다"><span class="sp-t"><i>다정한 것이 살아남는다</i></span><img class="sp-i" src="https://image.yes24.com/goods/102836095/side" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.parentNode.classList.add('sp-fail');this.remove()"></a>
+    <a class="sp" style="--c:hsl(23,53%,27%);--w:46px" href="https://www.aladin.co.kr/shop/wproduct.aspx?ItemId=383843383&amp;partner=openAPI&amp;start=api" rel="nofollow noopener noreferrer" target="_blank" title="일본 광고 카피 도감"><span class="sp-t"><i>일본 광고 카피 도감</i></span><img class="sp-i" src="https://image.yes24.com/goods/173654407/side" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.parentNode.classList.add('sp-fail');this.remove()"></a>
+    <a class="sp" style="--c:hsl(110,37%,47%);--w:43px" href="https://www.aladin.co.kr/shop/wproduct.aspx?ItemId=388319072&amp;partner=openAPI&amp;start=api" rel="nofollow noopener noreferrer" target="_blank" title="참을 수 없는 존재의 가벼움"><span class="sp-t"><i>참을 수 없는 존재의 가벼움</i></span><img class="sp-i" src="https://image.yes24.com/goods/61933303/side" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.parentNode.classList.add('sp-fail');this.remove()"></a>
+    <a class="sp" style="--c:hsl(59,42%,26%);--w:51px" href="https://www.aladin.co.kr/shop/wproduct.aspx?ItemId=384909081&amp;partner=openAPI&amp;start=api" rel="nofollow noopener noreferrer" target="_blank" title="쾌적한 사회의 불쾌함"><span class="sp-t"><i>쾌적한 사회의 불쾌함</i></span><img class="sp-i" src="https://image.yes24.com/goods/175882885/side" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.parentNode.classList.add('sp-fail');this.remove()"></a>
     </div>
     <ol class="reading-list" id="rlist" hidden>
     <li class="rl-item">

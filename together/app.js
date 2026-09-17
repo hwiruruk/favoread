@@ -87,7 +87,15 @@ function spineTint(title) {
   const h = hashOf(title, 31);
   return `hsl(${h % 360},${32 + (h >>> 9) % 26}%,${26 + (h >>> 17) % 22}%)`;
 }
-const SPINE_RATIO = 4.3;   // 높이 / 폭
+const SPINE_RATIO = 4.3;   // 책등 이미지를 아직 못 읽었을 때 쓰는 기본 비율
+
+/* 책등 상자 폭. 이미지 원본 비율을 알면 그걸 따르고(안 잘리게),
+ * 모르면 기본 비율로 둔다. 원본 크기는 noteMeta가 미리 읽어 imgMeta에 넣는다. */
+function spineBoxWidth(spineUrl, h, fallbackW) {
+  const m = spineUrl ? imgMeta[proxify(spineUrl)] : null;
+  if (m && m.w > 0 && m.h > 0) return Math.max(10, Math.round(h * m.w / m.h));
+  return fallbackW;
+}
 const displayName = (n) => String(n || '').replace(/\s*\(.*?\)\s*$/, '').trim() || n;
 
 /* ---------- 한글 조사 ---------- */
@@ -133,7 +141,17 @@ function noteMeta(url) {
   im.onload = () => {
     imgMeta[url] = { w: im.naturalWidth || 0, h: im.naturalHeight || 0 };
     clearTimeout(refitTimer);
-    refitTimer = setTimeout(() => { applyFits(document); }, 60);
+    refitTimer = setTimeout(() => {
+      // 책등은 원본 비율로 폭이 정해지므로, 크기를 알게 되면 다시 배치한다.
+      // noteMeta가 같은 url을 두 번 읽지 않아 무한 반복되지 않는다.
+      if (state.celeb && state.bookFace === 'spine'
+          && state.items.some((i) => i.type === 'book')) {
+        layoutBooks();
+        render();
+      } else {
+        applyFits(document);
+      }
+    }, 60);
   };
   im.onerror = () => { imgMeta[url] = { w: 0, h: 0 }; };
   im.src = url;
@@ -322,20 +340,27 @@ function layoutBooks() {
     const byHeight = Math.floor((H * 0.62) / SPINE_RATIO);
     const wEach = clamp(
       Math.round(Math.min(byWidth, byHeight, 150) * (state.bookScale || 1)), 20, 240);
-    const step = n > 1
-      ? Math.min(wEach + gap, Math.round((W - margin * 2 - wEach) / (n - 1)))
-      : 0;
-    const totalW = wEach + step * (n - 1);
-    const startX = Math.round((W - totalW) / 2);
     const floorY = H - Math.round(H * 0.11);   // 바닥 여백
+    // 높이는 모두 같게 두고, 폭은 책등 이미지 원본 비율을 따른다
+    const h = Math.round(wEach * SPINE_RATIO);
+    const widths = books.map((b) => {
+      const sp = b.spine || yes24SpineUrl(b.url);
+      if (sp) noteMeta(proxify(sp));
+      return spineBoxWidth(sp, h, wEach);
+    });
+    const avail = W - margin * 2 - gap * (n - 1);
+    const sumW = widths.reduce((a, x) => a + x, 0);
+    const squeeze = sumW > avail ? avail / sumW : 1;   // 넘치면 같은 비율로 줄인다
+    const finals = widths.map((x) => Math.max(10, Math.round(x * squeeze)));
+    const total = finals.reduce((a, x) => a + x, 0) + gap * (n - 1);
+    let x = Math.round((W - total) / 2);
     books.forEach((b, i) => {
-      b.w = wEach;
+      b.w = finals[i];
       b.rot = 0;
-      // 높이는 모두 같게 — 두께만 책마다 다르다
-      const h = Math.round(wEach * SPINE_RATIO);
       b.spineH = h;
-      b.x = startX + i * step;
+      b.x = x;
       b.y = clamp(floorY - h, 20, H - 120);
+      x += finals[i] + gap;
     });
     return;
   }
@@ -372,12 +397,15 @@ function itemHTML(it) {
   if (it.type === 'book') {
     if (state.bookFace === 'spine') {
       const sp = it.spine || yes24SpineUrl(it.url);
+      if (sp) noteMeta(proxify(sp));
+      const h = it.spineH || Math.round(it.w * SPINE_RATIO);
+      const w = spineBoxWidth(sp, h, it.w);
       const img = sp
         ? `<img class="tg-spine-i" src="${esc(proxify(sp))}" alt="" onerror="this.remove()">`
         : '';
       return `<div class="tg-item tg-spine${selCls}" data-id="${it.id}"
-        style="${base}width:${it.w}px;height:${it.spineH || Math.round(it.w * SPINE_RATIO)}px;--c:${spineTint(it.title)}">
-        <span class="tg-spine-t" style="font-size:${Math.max(11, Math.round(it.w * 0.34))}px"><i>${esc(it.title)}</i></span>${img}
+        style="${base}width:${w}px;height:${h}px;--c:${spineTint(it.title)}">
+        <span class="tg-spine-t" style="font-size:${Math.max(11, Math.round(w * 0.34))}px"><i>${esc(it.title)}</i></span>${img}
       </div>`;
     }
     const url = it.url.startsWith('data:') ? it.url : proxify(it.url);

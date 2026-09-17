@@ -980,16 +980,19 @@ for name, info in celebs.items():
         _spine_inner = (
             '<span class="sp-t"><i>' + esc(b['title']) + '</i></span>'
             + ('<img class="sp-i" src="' + esc(_spine_url) + '" alt="" loading="lazy" '
-               'referrerpolicy="no-referrer" onerror="this.remove()">' if _spine_url else '')
+               'referrerpolicy="no-referrer" '
+               'onerror="this.parentNode.classList.add(\'sp-fail\');this.remove()">'
+               if _spine_url else '')
         )
         _spine_style = ('--c:' + spine_tint(b['title'])
                         + ';--w:' + str(spine_width(b['title'])) + 'px')
+        _sp_cls = 'sp' if _spine_url else 'sp no-img'
         if aladin_url:
-            spine_html += ('    <a class="sp" style="' + _spine_style + '" href="' + aladin_url
+            spine_html += ('    <a class="' + _sp_cls + '" style="' + _spine_style + '" href="' + aladin_url
                            + '" rel="nofollow noopener noreferrer" target="_blank" title="'
                            + esc(b['title']) + '">' + _spine_inner + '</a>\n')
         else:
-            spine_html += ('    <span class="sp" style="' + _spine_style + '" title="'
+            spine_html += ('    <span class="' + _sp_cls + '" style="' + _spine_style + '" title="'
                            + esc(b['title']) + '">' + _spine_inner + '</span>\n')
 
         book_cards_html += (
@@ -1205,7 +1208,7 @@ for name, info in celebs.items():
         '    .shelf { display: flex; flex-wrap: wrap; align-items: flex-end; gap: 5px 3px;\n'
         '             margin-top: 18px; padding: 0 6px 10px; border-bottom: 5px solid #000; }\n'
         '    .shelf[hidden], .reading-list[hidden] { display: none; }\n'
-        '    .sp { position: relative; flex: none; width: var(--w, 46px); height: ' + str(SPINE_H) + 'px;\n'
+        '    .sp { position: relative; flex: none; width: auto; height: ' + str(SPINE_H) + 'px;\n'
         '          background: var(--c, #555); border: 1px solid rgba(0,0,0,.45); border-radius: 2px 2px 0 0;\n'
         '          box-shadow: inset -3px 0 6px rgba(0,0,0,.28), inset 3px 0 5px rgba(255,255,255,.14);\n'
         '          overflow: hidden; text-decoration: none; transition: transform .12s; }\n'
@@ -1221,8 +1224,11 @@ for name, info in celebs.items():
         '              white-space: nowrap; overflow: hidden; text-overflow: ellipsis;\n'
         '              font-size: 13px; font-weight: 700; color: #fff;\n'
         '              text-shadow: 0 1px 2px rgba(0,0,0,.55); }\n'
-        '    .sp-i { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; display: block; }\n'
-        '    @media (max-width: 480px) { .sp { width: calc(var(--w, 46px) * .82); }\n'
+        '    .sp-i { position: relative; z-index: 1; display: block;\n'
+        '            height: 100%; width: auto; max-width: 130px; object-fit: contain; }\n'
+        # 책등 이미지가 없거나 못 불러오면 색 책등 폭으로 돌아간다
+        '    .sp.no-img, .sp.sp-fail { width: var(--w, 46px); }\n'
+        '    @media (max-width: 480px) { .sp.no-img, .sp.sp-fail { width: calc(var(--w, 46px) * .82); }\n'
         '                                 .sp-t i { font-size: 11.5px; } .sp-t { padding: 9px 2px; } }\n'
         '    .reading-list { list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 14px; counter-reset: rl; }\n'
         '    .rl-item { position: relative; background: #fff; border: 2px solid #000; box-shadow: 4px 4px 0 0 #000; padding: 14px 14px 14px 52px; transition: transform .12s, box-shadow .12s; }\n'

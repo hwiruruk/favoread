@@ -255,7 +255,7 @@
     .shelf { display: flex; flex-wrap: wrap; align-items: flex-end; gap: 5px 3px;
              margin-top: 18px; padding: 0 6px 10px; border-bottom: 5px solid #000; }
     .shelf[hidden], .reading-list[hidden] { display: none; }
-    .sp { position: relative; flex: none; width: var(--w, 46px); height: 205px;
+    .sp { position: relative; flex: none; width: auto; height: 205px;
           background: var(--c, #555); border: 1px solid rgba(0,0,0,.45); border-radius: 2px 2px 0 0;
           box-shadow: inset -3px 0 6px rgba(0,0,0,.28), inset 3px 0 5px rgba(255,255,255,.14);
           overflow: hidden; text-decoration: none; transition: transform .12s; }
@@ -266,8 +266,10 @@
               white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
               font-size: 13px; font-weight: 700; color: #fff;
               text-shadow: 0 1px 2px rgba(0,0,0,.55); }
-    .sp-i { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; display: block; }
-    @media (max-width: 480px) { .sp { width: calc(var(--w, 46px) * .82); }
+    .sp-i { position: relative; z-index: 1; display: block;
+            height: 100%; width: auto; max-width: 130px; object-fit: contain; }
+    .sp.no-img, .sp.sp-fail { width: var(--w, 46px); }
+    @media (max-width: 480px) { .sp.no-img, .sp.sp-fail { width: calc(var(--w, 46px) * .82); }
                                  .sp-t i { font-size: 11.5px; } .sp-t { padding: 9px 2px; } }
     .reading-list { list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 14px; counter-reset: rl; }
     .rl-item { position: relative; background: #fff; border: 2px solid #000; box-shadow: 4px 4px 0 0 #000; padding: 14px 14px 14px 52px; transition: transform .12s, box-shadow .12s; }
@@ -338,13 +340,13 @@
     </div>
     <p class="muted">3권은 다른 셀럽도 함께 추천한 책이에요. 목록 보기에서 함께 추천한 셀럽 이름을 볼 수 있어요.</p>
     <div class="shelf" id="shelf">
-    <a class="sp" style="--c:hsl(203,42%,37%);--w:44px" href="https://www.yes24.com/product/goods/95275828" rel="nofollow noopener noreferrer" target="_blank" title="그런 사람 또 없습니다"><span class="sp-t"><i>그런 사람 또 없습니다</i></span><img class="sp-i" src="https://image.yes24.com/goods/95275828/side" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.remove()"></a>
-    <a class="sp" style="--c:hsl(12,54%,37%);--w:53px" href="https://www.yes24.com/product/goods/2876081" rel="nofollow noopener noreferrer" target="_blank" title="나무"><span class="sp-t"><i>나무</i></span><img class="sp-i" src="https://image.yes24.com/goods/2876081/side" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.remove()"></a>
-    <a class="sp" style="--c:hsl(142,52%,44%);--w:44px" href="https://www.yes24.com/product/goods/124127709" rel="nofollow noopener noreferrer" target="_blank" title="내가 한 말을 내가 오해하지 않기로 함"><span class="sp-t"><i>내가 한 말을 내가 오해하지 않기로 함</i></span><img class="sp-i" src="https://image.yes24.com/goods/124127709/side" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.remove()"></a>
-    <a class="sp" style="--c:hsl(149,53%,27%);--w:49px" href="https://www.yes24.com/product/goods/124420633" rel="nofollow noopener noreferrer" target="_blank" title="마음 지구력"><span class="sp-t"><i>마음 지구력</i></span><img class="sp-i" src="https://image.yes24.com/goods/124420633/side" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.remove()"></a>
-    <a class="sp" style="--c:hsl(293,36%,38%);--w:49px" href="https://www.yes24.com/product/goods/153497469" rel="nofollow noopener noreferrer" target="_blank" title="절창"><span class="sp-t"><i>절창</i></span><img class="sp-i" src="https://image.yes24.com/goods/153497469/side" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.remove()"></a>
-    <a class="sp" style="--c:hsl(237,35%,28%);--w:50px" href="https://www.yes24.com/product/goods/126590468" rel="nofollow noopener noreferrer" target="_blank" title="초역 부처의 말"><span class="sp-t"><i>초역 부처의 말</i></span><img class="sp-i" src="https://image.yes24.com/goods/126590468/side" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.remove()"></a>
-    <a class="sp" style="--c:hsl(291,54%,41%);--w:38px" href="https://www.yes24.com/product/goods/129775130" rel="nofollow noopener noreferrer" target="_blank" title="행복할 거야 이래도 되나 싶을 정도로"><span class="sp-t"><i>행복할 거야 이래도 되나 싶을 정도로</i></span><img class="sp-i" src="https://image.yes24.com/goods/129775130/side" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.remove()"></a>
+    <a class="sp" style="--c:hsl(203,42%,37%);--w:44px" href="https://www.yes24.com/product/goods/95275828" rel="nofollow noopener noreferrer" target="_blank" title="그런 사람 또 없습니다"><span class="sp-t"><i>그런 사람 또 없습니다</i></span><img class="sp-i" src="https://image.yes24.com/goods/95275828/side" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.parentNode.classList.add('sp-fail');this.remove()"></a>
+    <a class="sp" style="--c:hsl(12,54%,37%);--w:53px" href="https://www.yes24.com/product/goods/2876081" rel="nofollow noopener noreferrer" target="_blank" title="나무"><span class="sp-t"><i>나무</i></span><img class="sp-i" src="https://image.yes24.com/goods/2876081/side" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.parentNode.classList.add('sp-fail');this.remove()"></a>
+    <a class="sp" style="--c:hsl(142,52%,44%);--w:44px" href="https://www.yes24.com/product/goods/124127709" rel="nofollow noopener noreferrer" target="_blank" title="내가 한 말을 내가 오해하지 않기로 함"><span class="sp-t"><i>내가 한 말을 내가 오해하지 않기로 함</i></span><img class="sp-i" src="https://image.yes24.com/goods/124127709/side" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.parentNode.classList.add('sp-fail');this.remove()"></a>
+    <a class="sp" style="--c:hsl(149,53%,27%);--w:49px" href="https://www.yes24.com/product/goods/124420633" rel="nofollow noopener noreferrer" target="_blank" title="마음 지구력"><span class="sp-t"><i>마음 지구력</i></span><img class="sp-i" src="https://image.yes24.com/goods/124420633/side" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.parentNode.classList.add('sp-fail');this.remove()"></a>
+    <a class="sp" style="--c:hsl(293,36%,38%);--w:49px" href="https://www.yes24.com/product/goods/153497469" rel="nofollow noopener noreferrer" target="_blank" title="절창"><span class="sp-t"><i>절창</i></span><img class="sp-i" src="https://image.yes24.com/goods/153497469/side" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.parentNode.classList.add('sp-fail');this.remove()"></a>
+    <a class="sp" style="--c:hsl(237,35%,28%);--w:50px" href="https://www.yes24.com/product/goods/126590468" rel="nofollow noopener noreferrer" target="_blank" title="초역 부처의 말"><span class="sp-t"><i>초역 부처의 말</i></span><img class="sp-i" src="https://image.yes24.com/goods/126590468/side" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.parentNode.classList.add('sp-fail');this.remove()"></a>
+    <a class="sp" style="--c:hsl(291,54%,41%);--w:38px" href="https://www.yes24.com/product/goods/129775130" rel="nofollow noopener noreferrer" target="_blank" title="행복할 거야 이래도 되나 싶을 정도로"><span class="sp-t"><i>행복할 거야 이래도 되나 싶을 정도로</i></span><img class="sp-i" src="https://image.yes24.com/goods/129775130/side" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.parentNode.classList.add('sp-fail');this.remove()"></a>
     </div>
     <ol class="reading-list" id="rlist" hidden>
     <li class="rl-item">
