@@ -298,11 +298,12 @@ const Gh = {
     return r.json();
   },
 
-  async getFile() {
+  async getFile(path = Config.path, { allowMissing = false } = {}) {
     if (!Config.token) throw new Error('GitHub Token이 설정되지 않았습니다.');
-    const url = `/repos/${Config.repo}/contents/${encodeURIComponent(Config.path)}?ref=${encodeURIComponent(Config.branch)}`;
+    const url = `/repos/${Config.repo}/contents/${encodeURIComponent(path)}?ref=${encodeURIComponent(Config.branch)}`;
     const r = await this.api(url);
     if (!r.ok) {
+      if (r.status === 404 && allowMissing) return { content: null, sha: null };
       const t = await r.text();
       if (r.status === 403) {
         throw new Error(
@@ -311,7 +312,7 @@ const Gh = {
         );
       }
       if (r.status === 404) {
-        throw new Error(`GitHub 로드 실패 (404): repo/branch/path 또는 PAT 저장소 권한 확인. (${Config.repo}@${Config.branch}:${Config.path})`);
+        throw new Error(`GitHub 로드 실패 (404): repo/branch/path 또는 PAT 저장소 권한 확인. (${Config.repo}@${Config.branch}:${path})`);
       }
       throw new Error(`GitHub 로드 실패 (${r.status}): ${t}`);
     }
@@ -330,7 +331,7 @@ const Gh = {
    * 그 선을 넘으면 GitHub이 503 "Could not create file"을 돌려준다(크기 얘기가
    * 아니라 헷갈리는 메시지). Blob → Tree → Commit → Ref 순서로 올리면
    * 100MB까지 가능하고, 커밋 하나로 떨어지는 결과는 똑같다. */
-  async putFile({ content, sha, message }) {
+  async putFile({ content, sha, message, path = Config.path }) {
     if (!Config.token) throw new Error('GitHub Token이 설정되지 않았습니다.');
     const repo = Config.repo;
     const branch = Config.branch;
@@ -355,7 +356,7 @@ const Gh = {
       // 2. 내가 불러온 뒤로 남이 이 파일을 바꿨는지 확인
       if (sha) {
         const cur = await this.api(
-          `/repos/${repo}/contents/${encodeURIComponent(Config.path)}?ref=${encodeURIComponent(headSha)}`
+          `/repos/${repo}/contents/${encodeURIComponent(path)}?ref=${encodeURIComponent(headSha)}`
         );
         if (cur.ok) {
           const curJson = await cur.json();
@@ -369,7 +370,7 @@ const Gh = {
       const blob = await json(`/repos/${repo}/git/blobs`, { content, encoding: 'utf-8' });
       const tree = await json(`/repos/${repo}/git/trees`, {
         base_tree: headCommit.tree.sha,
-        tree: [{ path: Config.path, mode: '100644', type: 'blob', sha: blob.sha }],
+        tree: [{ path, mode: '100644', type: 'blob', sha: blob.sha }],
       });
       const commitBody = { message, tree: tree.sha, parents: [headSha] };
       if (who) { commitBody.author = who; commitBody.committer = who; }
@@ -1798,6 +1799,180 @@ $('#missingApplyBtn').addEventListener('click', () => {
 });
 
 /* -------------------- Boot -------------------- */
+/* -------------------- Featured ("요즘 핫한 사람") --------------------
+ * 메인 index.html 상단에 한 줄로 고정 노출할 인물 목록.
+ * data.csv와 섞지 않고 data/featured.json 이라는 별도 파일로 관리한다 —
+ * 큐레이션은 데이터가 아니라 편집자의 선택이고, 저장 주기도 다르기 때문.
+ * 이 창의 저장 버튼은 data.csv와 무관하게 이 파일만 따로 커밋한다. */
+const FEATURED_PATH = 'data/featured.json';
+const FEATURED_MAX  = 12;
+
+const featuredDlg = $('#featuredDialog');
+let _featured = { title: '', subtitle: '', picks: [], sha: null, loaded: false };
+
+function setFeaturedStatus(msg) { $('#featuredStatus').textContent = msg || ''; }
+
+async function openFeaturedDialog() {
+  if (!Config.token) { toast('GitHub Token을 먼저 설정하세요', 'err'); settingsDlg.showModal(); return; }
+  if (!State.celebs.size) { toast('먼저 ↻ 불러오기로 CSV를 가져오세요', 'err'); return; }
+
+  if (!_featured.loaded) {
+    setFeaturedStatus('불러오는 중…');
+    featuredDlg.showModal();
+    try {
+      const { content, sha } = await Gh.getFile(FEATURED_PATH, { allowMissing: true });
+      if (content) {
+        const j = JSON.parse(content);
+        _featured.title    = j.title || '';
+        _featured.subtitle = j.subtitle || '';
+        _featured.picks    = (j.picks || []).map(x => (
+          typeof x === 'string'
+            ? { name: x, badge: '', note: '' }
+            : { name: x.name || '', badge: x.badge || '', note: x.note || '' }
+        )).filter(x => x.name);
+      }
+      _featured.sha = sha;
+      _featured.loaded = true;
+      setFeaturedStatus(sha ? `sha ${sha.slice(0, 7)}` : '새 파일로 생성됩니다');
+    } catch (err) {
+      setFeaturedStatus('');
+      toast('고정 목록 불러오기 실패: ' + err.message, 'err');
+      return;
+    }
+  } else {
+    featuredDlg.showModal();
+  }
+
+  $('#featuredTitle').value    = _featured.title;
+  $('#featuredSubtitle').value = _featured.subtitle;
+  $('#featuredSearch').value   = '';
+  renderFeaturedPicks();
+  renderFeaturedResults('');
+}
+
+function renderFeaturedPicks() {
+  const ul = $('#featuredPicks');
+  $('#featuredCount').textContent =
+    `${_featured.picks.length}명 / 최대 ${FEATURED_MAX}명 (데스크톱 한 줄 = 6명)`;
+
+  if (!_featured.picks.length) {
+    ul.innerHTML = '<li class="muted small">아직 고정한 사람이 없습니다. 아래에서 검색해 추가하세요. ' +
+                   '비워두면 메인에서 섹션 전체가 숨겨집니다.</li>';
+    return;
+  }
+
+  ul.innerHTML = _featured.picks.map((p, i) => {
+    const c = State.celebs.get(p.name);
+    const missing = c ? '' : ' <span class="badge">데이터에 없는 이름</span>';
+    const books = c ? `${c.books.length}권` : '—';
+    return `
+      <li class="featured-pick" data-i="${i}">
+        <span class="featured-pick-rank">${i + 1}</span>
+        <img class="featured-pick-img" src="${esc(c?.img || '')}" alt="" referrerpolicy="no-referrer">
+        <span class="featured-pick-name">${esc(p.name)}${missing}
+          <span class="muted small">${books}</span>
+        </span>
+        <input class="featured-pick-badge" type="text" maxlength="8"
+               placeholder="뱃지" value="${esc(p.badge)}" data-i="${i}">
+        <button type="button" class="btn small" data-fup="${i}" ${i === 0 ? 'disabled' : ''}>↑</button>
+        <button type="button" class="btn small" data-fdown="${i}" ${i === _featured.picks.length - 1 ? 'disabled' : ''}>↓</button>
+        <button type="button" class="btn small danger" data-fdel="${i}">삭제</button>
+      </li>`;
+  }).join('');
+
+  ul.querySelectorAll('[data-fup]').forEach(b => b.addEventListener('click', () => {
+    const i = +b.dataset.fup;
+    [_featured.picks[i - 1], _featured.picks[i]] = [_featured.picks[i], _featured.picks[i - 1]];
+    renderFeaturedPicks();
+  }));
+  ul.querySelectorAll('[data-fdown]').forEach(b => b.addEventListener('click', () => {
+    const i = +b.dataset.fdown;
+    [_featured.picks[i + 1], _featured.picks[i]] = [_featured.picks[i], _featured.picks[i + 1]];
+    renderFeaturedPicks();
+  }));
+  ul.querySelectorAll('[data-fdel]').forEach(b => b.addEventListener('click', () => {
+    _featured.picks.splice(+b.dataset.fdel, 1);
+    renderFeaturedPicks();
+    renderFeaturedResults($('#featuredSearch').value);
+  }));
+  ul.querySelectorAll('.featured-pick-badge').forEach(inp => inp.addEventListener('input', () => {
+    _featured.picks[+inp.dataset.i].badge = inp.value.trim();
+  }));
+}
+
+function renderFeaturedResults(query) {
+  const box = $('#featuredResults');
+  const q = (query || '').trim().toLowerCase();
+  const picked = new Set(_featured.picks.map(p => p.name));
+
+  const hits = State.order
+    .filter(n => !picked.has(n))
+    .filter(n => !q || n.toLowerCase().includes(q)
+              || (State.celebs.get(n)?.name_en || '').toLowerCase().includes(q))
+    .slice(0, 40);
+
+  if (!hits.length) {
+    box.innerHTML = '<p class="muted small">검색 결과가 없습니다.</p>';
+    return;
+  }
+
+  box.innerHTML = hits.map(n => {
+    const c = State.celebs.get(n);
+    return `<button type="button" class="featured-add" data-name="${esc(n)}">
+      + ${esc(n)} <span class="muted small">${c.books.length}권</span>
+    </button>`;
+  }).join('');
+
+  box.querySelectorAll('.featured-add').forEach(b => b.addEventListener('click', () => {
+    if (_featured.picks.length >= FEATURED_MAX) {
+      toast(`최대 ${FEATURED_MAX}명까지만 고정할 수 있습니다`, 'err');
+      return;
+    }
+    _featured.picks.push({ name: b.dataset.name, badge: '', note: '' });
+    renderFeaturedPicks();
+    renderFeaturedResults($('#featuredSearch').value);
+  }));
+}
+
+async function saveFeatured() {
+  _featured.title    = $('#featuredTitle').value.trim();
+  _featured.subtitle = $('#featuredSubtitle').value.trim();
+
+  const unknown = _featured.picks.filter(p => !State.celebs.has(p.name)).map(p => p.name);
+  if (unknown.length && !confirm(
+    `다음 이름은 현재 데이터에 없어 메인에서 그냥 빠집니다:\n${unknown.join(', ')}\n\n그래도 저장할까요?`
+  )) return;
+
+  const payload = {
+    title:    _featured.title,
+    subtitle: _featured.subtitle,
+    picks:    _featured.picks.map(p => ({ name: p.name, badge: p.badge || '', note: p.note || '' })),
+  };
+  const content = JSON.stringify(payload, null, 2) + '\n';
+  const message = prompt('커밋 메시지',
+    `메인 고정 인물 ${payload.picks.length}명 업데이트 (${new Date().toISOString().slice(0, 16).replace('T', ' ')})`);
+  if (!message) return;
+
+  const btn = $('#featuredSaveBtn');
+  btn.disabled = true;
+  setFeaturedStatus('저장 중…');
+  try {
+    const { sha } = await Gh.putFile({ content, sha: _featured.sha, message, path: FEATURED_PATH });
+    _featured.sha = sha;
+    setFeaturedStatus(sha ? `저장 완료 · sha ${sha.slice(0, 7)}` : '저장 완료');
+    toast('고정 목록 저장됨 — 다음 빌드에서 메인에 반영됩니다', 'ok');
+  } catch (err) {
+    setFeaturedStatus('');
+    toast(err.message, 'err');
+  } finally {
+    btn.disabled = false;
+  }
+}
+
+$('#featuredBtn').addEventListener('click', openFeaturedDialog);
+$('#featuredSaveBtn').addEventListener('click', saveFeatured);
+$('#featuredSearch').addEventListener('input', (e) => renderFeaturedResults(e.target.value));
+
 (function init() {
   $('#branchTag').textContent = `${Config.repo} @ ${Config.branch}`;
   if (!Config.token || !Config.ttb) {

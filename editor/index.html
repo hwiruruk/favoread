@@ -23,6 +23,7 @@
     <button id="reloadBtn" class="btn" title="GitHub에서 최신 CSV 다시 가져오기">↻ 불러오기</button>
     <button id="sortBtn" class="btn" title="모든 셀럽의 추천 도서를 도서명·저자 가나다순으로 정렬">🔤 정렬</button>
     <button id="missingBtn" class="btn" title="영문 누락된 셀럽·책 목록 (TSV 복사 → AI 의뢰 → 일괄 적용)">📋 누락 영문</button>
+    <button id="featuredBtn" class="btn" title="메인 상단에 고정 노출할 &apos;요즘 핫한 사람&apos; 한 줄 지정">🔥 핫한 사람</button>
     <button id="saveBtn" class="btn primary" disabled>💾 GitHub에 저장</button>
     <button id="settingsBtn" class="btn ghost" title="설정">⚙️</button>
   </div>
@@ -254,6 +255,45 @@
 </dialog>
 
 <!-- 누락 영문 다이얼로그 -->
+<!-- 메인 고정 "요즘 핫한 사람" 편집 -->
+<dialog id="featuredDialog" class="modal" style="width: min(760px, 96vw);">
+  <header class="modal-head">
+    <h3>🔥 메인에 고정할 핫한 사람</h3>
+    <button type="button" class="x" data-close>✕</button>
+  </header>
+
+  <div class="modal-body" style="max-height: calc(90vh - 130px);">
+    <p class="muted small">
+      여기서 고른 사람이 <b>메인 첫 화면 상단에 한 줄로 고정</b>됩니다.
+      데스크톱에서 한 줄은 6명이고, 최대 12명까지 넣을 수 있어요.
+      이 목록은 <code>data/featured.json</code>에 따로 저장되며,
+      <b>data.csv와는 별개로 이 창의 저장 버튼으로 바로 커밋</b>됩니다.
+    </p>
+
+    <label>섹션 제목
+      <input id="featuredTitle" type="text" placeholder="🔥 요즘 핫한 사람">
+    </label>
+    <label>섹션 설명 (한 줄, 비워도 됨)
+      <input id="featuredSubtitle" type="text" placeholder="지금 가장 화제인 인물을 직접 골라 고정해 뒀어요.">
+    </label>
+
+    <h4 style="margin-top: 18px;">고정된 사람 <span id="featuredCount" class="muted small"></span></h4>
+    <ul id="featuredPicks" class="featured-picks"></ul>
+
+    <h4 style="margin-top: 18px;">사람 추가</h4>
+    <div class="row">
+      <input id="featuredSearch" type="search" placeholder="이름으로 검색…">
+    </div>
+    <div id="featuredResults" class="featured-results"></div>
+  </div>
+
+  <footer class="modal-foot">
+    <span id="featuredStatus" class="status"></span>
+    <button type="button" class="btn" data-close>닫기</button>
+    <button type="button" id="featuredSaveBtn" class="btn primary">💾 GitHub에 저장</button>
+  </footer>
+</dialog>
+
 <dialog id="missingDialog" class="modal" style="width: min(1100px, 96vw);">
   <header class="modal-head">
     <h3>📋 누락된 영문 데이터</h3>
