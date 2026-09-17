@@ -120,6 +120,8 @@
   <style>
     body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; max-width: 860px; margin: 0 auto; padding: 20px; color: #222; line-height: 1.6; background: #fcfaf5; }
     .lang-toggle { position: absolute; top: 16px; right: 16px; display: flex; gap: 6px; }
+    .copy-btn { cursor: pointer; font-family: inherit; }
+    .copy-btn.done { background: #86efac; }
     .lang-btn { padding: 6px 12px; border: 2px solid #000; background: #fff; box-shadow: 2px 2px 0 0 #000; font-size: 12px; font-weight: 700; text-decoration: none; color: #000; transition: transform .1s, box-shadow .1s; }
     .lang-btn:hover { transform: translate(-1px,-1px); box-shadow: 3px 3px 0 0 #000; background: #fde047; text-decoration: none; }
     .lang-btn.active { background: #000; color: #fff; }
@@ -214,6 +216,7 @@
 </head>
 <body>
   <div class="lang-toggle">
+    <button class="lang-btn copy-btn" type="button" data-url="https://favorbook.co.kr/s/chaeyoung-twice.html" data-done="복사했어요!">🔗 링크 복사</button>
     <span class="lang-btn active">한국어</span>
     <a class="lang-btn" href="https://favorbook.co.kr/en/share/chaeyoung-twice.html" hreflang="en">EN</a>
   </div>
@@ -307,5 +310,26 @@
     <p>이 페이지의 독서 기록은 유튜브·인터뷰·SNS 등 공개된 출처를 기반으로 정리됐어요.</p>
   </footer>
 
+  <script>
+  document.querySelectorAll(".copy-btn").forEach(function (b) {
+    b.addEventListener("click", function () {
+      var u = b.dataset.url, was = b.textContent;
+      function done() {
+        b.textContent = b.dataset.done; b.classList.add("done");
+        setTimeout(function () { b.textContent = was; b.classList.remove("done"); }, 1600);
+      }
+      function fallback() {
+        var ta = document.createElement("textarea");
+        ta.value = u; ta.style.cssText = "position:fixed;top:-9999px;left:-9999px";
+        document.body.appendChild(ta); ta.focus(); ta.select();
+        try { document.execCommand("copy"); done(); } catch (e) { prompt(was, u); }
+        document.body.removeChild(ta);
+      }
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(u).then(done, fallback);
+      } else { fallback(); }
+    });
+  });
+  </script>
 </body>
 </html>

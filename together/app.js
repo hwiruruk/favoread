@@ -52,7 +52,7 @@ const state = {
   proxy: true,
   watermark: true,
   credit: '',
-  bg: { src: '', custom: null, fit: 'cover', zoom: 1, x: 50, y: 50, dim: 0 },
+  bg: { src: '', custom: null, off: false, fit: 'cover', zoom: 1, x: 50, y: 50, dim: 0 },
   items: [],
   sel: null,
   seq: 1,
@@ -495,6 +495,7 @@ function selectCeleb(name) {
   state.celeb = state.data.celebs[name];
   state.bg.custom = null;
   state.bg.src = state.celeb.imageUrl || '';
+  state.bg.off = false;
   state.bg.fit = 'cover'; state.bg.zoom = 1; state.bg.x = 50; state.bg.y = 50; state.bg.dim = 18;
   state.credit = '';
   state.items = [];
@@ -568,7 +569,10 @@ function layoutBooks() {
     const byHeight = Math.floor((H * 0.62) / SPINE_RATIO);
     const wEach = clamp(
       Math.round(Math.min(byWidth, byHeight, 150) * (state.bookScale || 1)), 20, 240);
-    const floorY = H - Math.round(H * 0.11);   // 바닥 여백
+    // 사진 위에서는 인물 앞에 세우도록 아래쪽에, 배경색만일 때는 가운데에 세운다
+    const floorY = state.bg.off
+      ? Math.round((H + Math.round(wEach * SPINE_RATIO)) / 2)
+      : H - Math.round(H * 0.11);
     // 높이는 모두 같게 두고, 폭은 책등 이미지 원본 비율을 따른다
     const h = Math.round(wEach * SPINE_RATIO);
     const widths = books.map((b) => {
@@ -602,7 +606,9 @@ function layoutBooks() {
     : 0;
   const totalW = wEach + step * (n - 1);
   const startX = Math.round((W - totalW) / 2);
-  const baseY = H - Math.round(wEach * 1.45) - 150;
+  const baseY = state.bg.off
+    ? Math.round((H - wEach * 1.45) / 2)
+    : H - Math.round(wEach * 1.45) - 150;
   books.forEach((b, i) => {
     b.w = wEach;
     b.x = startX + i * step;
@@ -615,7 +621,7 @@ function layoutBooks() {
    카드 렌더
    ======================================================== */
 function themeDef() { return THEMES[state.theme] || THEMES.pop; }
-function bgSrc() { return state.bg.custom || proxify(state.bg.src); }
+function bgSrc() { return state.bg.off ? '' : (state.bg.custom || proxify(state.bg.src)); }
 
 function itemHTML(it) {
   const t = themeDef();
@@ -679,8 +685,9 @@ function cardHTML() {
     ? `<div class="tg-bg tg-fit" data-src="${esc(url)}" data-fit="${state.bg.fit}" data-zoom="${state.bg.zoom}"
          data-x="${state.bg.x}" data-y="${state.bg.y}"
          style="background-image:url('${esc(url)}');background-size:${state.bg.fit};background-position:${state.bg.x}% ${state.bg.y}%"></div>`
-    : '<div class="tg-bg empty"></div>';
-  const dim = state.bg.dim ? `<div class="tg-dim" style="opacity:${state.bg.dim / 100}"></div>` : '';
+    : `<div class="tg-bg ${state.bg.off ? 'solid' : 'empty'}"></div>`;
+  // 사진이 없으면 어둡게는 의미가 없다
+  const dim = (url && state.bg.dim) ? `<div class="tg-dim" style="opacity:${state.bg.dim / 100}"></div>` : '';
   const mark = state.watermark
     ? `<div class="tg-mark">
          <span class="tg-mark-l">최애의 독서 · favorbook.co.kr</span>
@@ -1017,6 +1024,9 @@ function syncColorControls() {
 
 function syncPhotoControls() {
   const b = state.bg;
+  $('#bgOff').checked = !!b.off;
+  $('#photoOnly').hidden = !!b.off;
+  $('#bgOffHint').hidden = !b.off;
   $$('input[name=bgfit]').forEach((r) => { r.checked = r.value === b.fit; });
   $('#bgZoom').value = Math.round(b.zoom * 100); $('#bgZoomOut').textContent = `${Math.round(b.zoom * 100)}%`;
   $('#bgX').value = b.x; $('#bgXOut').textContent = `${b.x}%`;
@@ -1032,6 +1042,13 @@ function bindOptions() {
     layoutBooks();
     render();
   }));
+  $('#bgOff').addEventListener('change', (e) => {
+    state.bg.off = e.target.checked;
+    $('#photoOnly').hidden = state.bg.off;
+    $('#bgOffHint').hidden = !state.bg.off;
+    layoutBooks();          // 사진이 있을 때와 없을 때 책 자리가 다르다 (Ctrl+Z로 되돌릴 수 있다)
+    render();
+  });
   $$('input[name=bgfit]').forEach((r) => r.addEventListener('change', (e) => {
     if (e.target.checked) { state.bg.fit = e.target.value; render(); }
   }));
@@ -1053,6 +1070,8 @@ function bindOptions() {
     const f = e.target.files[0]; if (!f) return;
     readImageFile(f, (dataUrl) => {
       state.bg.custom = dataUrl;
+      state.bg.off = false;              // 사진을 올렸으면 당연히 보여줘야 한다
+      syncPhotoControls();
       $('#celebThumb').src = dataUrl;
       render();
     });

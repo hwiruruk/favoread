@@ -127,6 +127,16 @@ def has_auto_translated(*values):
     return any(is_auto_translated(v) for v in values)
 
 
+def plain_en(value):
+    """직역 표시(*)를 뗀 값.
+
+    *는 사람에게 '이건 기계 번역'이라고 알려주는 표시라 본문 목록에만 쓴다.
+    alt·aria-label·메타 설명·구조화 데이터처럼 기계가 읽고 검색 결과에
+    그대로 나오는 자리에서는 오타처럼 보이므로 뗀다.
+    """
+    return re.sub(r'\s*\*\s*$', '', (value or '').strip())
+
+
 # 영문 셀럽/책 페이지(자체 <style> 사용)용 각주
 EN_TR_NOTE_CSS = (
     '    .tr-note { margin: 24px 0 0; padding: 10px 12px; background: #fff8e7; '
@@ -231,6 +241,47 @@ def make_en_celeb_url(name_en):
 
 def make_en_book_url(title_en):
     return BASE + 'en/share/book/' + safe_en_filename(title_en) + '.html'
+
+# ── '링크 복사' 버튼 ─────────────────────────────────────────────────
+#
+# 페이지에 직접 들어온 사람도 짧은 주소를 바로 가져갈 수 있게 한다.
+# 한글 주소는 주소창에서 복사하면 퍼센트 인코딩돼 60~200자가 된다.
+
+COPY_BTN_CSS = (
+    '    .copy-btn { cursor: pointer; font-family: inherit; }\n'
+    '    .copy-btn.done { background: #86efac; }\n'
+)
+
+
+def copy_btn_html(url, label='🔗 링크 복사', done='복사했어요!'):
+    return ('    <button class="lang-btn copy-btn" type="button"'
+            ' data-url="' + esc(url) + '" data-done="' + esc(done) + '">'
+            + esc(label) + '</button>\n')
+
+
+COPY_BTN_JS = (
+    '  <script>\n'
+    '  document.querySelectorAll(".copy-btn").forEach(function (b) {\n'
+    '    b.addEventListener("click", function () {\n'
+    '      var u = b.dataset.url, was = b.textContent;\n'
+    '      function done() {\n'
+    '        b.textContent = b.dataset.done; b.classList.add("done");\n'
+    '        setTimeout(function () { b.textContent = was; b.classList.remove("done"); }, 1600);\n'
+    '      }\n'
+    '      function fallback() {\n'
+    '        var ta = document.createElement("textarea");\n'
+    '        ta.value = u; ta.style.cssText = "position:fixed;top:-9999px;left:-9999px";\n'
+    '        document.body.appendChild(ta); ta.focus(); ta.select();\n'
+    '        try { document.execCommand("copy"); done(); } catch (e) { prompt(was, u); }\n'
+    '        document.body.removeChild(ta);\n'
+    '      }\n'
+    '      if (navigator.clipboard && navigator.clipboard.writeText) {\n'
+    '        navigator.clipboard.writeText(u).then(done, fallback);\n'
+    '      } else { fallback(); }\n'
+    '    });\n'
+    '  });\n'
+    '  </script>\n'
+)
 
 # ── 업데이트 내역 (git log of data.csv) ─────────────────────────────
 
@@ -890,6 +941,10 @@ for _name, _info in celebs.items():
         if _b.get('author_en') and _t not in book_author_en:
             book_author_en[_t] = _b['author_en']
 
+# 짧은 공유 주소는 페이지 안의 '링크 복사' 버튼에서도 쓰므로 여기서 미리 배정한다
+assign_shorts('book', sorted(
+    (t, book_title_en.get(t) or '') for t in books_with_pages), cap=36)
+
 # sitemap 이미지 정보 수집용
 sitemap_images = {}  # { url: [image_url, ...] }
 
@@ -1288,6 +1343,7 @@ for name, info in celebs.items():
         '  <style>\n'
         '    body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; max-width: 860px; margin: 0 auto; padding: 20px; color: #222; line-height: 1.6; background: #fcfaf5; }\n'
         '    .lang-toggle { position: absolute; top: 16px; right: 16px; display: flex; gap: 6px; }\n'
+        + COPY_BTN_CSS +
         '    .lang-btn { padding: 6px 12px; border: 2px solid #000; background: #fff; box-shadow: 2px 2px 0 0 #000; font-size: 12px; font-weight: 700; text-decoration: none; color: #000; transition: transform .1s, box-shadow .1s; }\n'
         '    .lang-btn:hover { transform: translate(-1px,-1px); box-shadow: 3px 3px 0 0 #000; background: #fde047; text-decoration: none; }\n'
         '    .lang-btn.active { background: #000; color: #fff; }\n'
@@ -1388,10 +1444,11 @@ for name, info in celebs.items():
         '  </style>\n'
         '</head>\n'
         '<body>\n'
-        + (('  <div class="lang-toggle">\n'
-            '    <span class="lang-btn active">한국어</span>\n'
-            '    <a class="lang-btn" href="' + esc(make_en_celeb_url(name_en)) + '" hreflang="en">EN</a>\n'
-            '  </div>\n') if name_en else '')
+        + '  <div class="lang-toggle">\n'
+        + copy_btn_html(make_celeb_short_url(name))
+        + (('    <span class="lang-btn active">한국어</span>\n'
+            '    <a class="lang-btn" href="' + esc(make_en_celeb_url(name_en)) + '" hreflang="en">EN</a>\n') if name_en else '')
+        + '  </div>\n'
         + '  <nav><a href="' + BASE + '">← 최애의 독서 홈</a> · <a href="' + BASE + 'share/ranking.html">셀럽 독서 랭킹</a></nav>\n'
         '\n'
         '  <header class="celeb-header">\n'
@@ -1479,6 +1536,7 @@ for name, info in celebs.items():
         '    <p>이 페이지의 독서 기록은 유튜브·인터뷰·SNS 등 공개된 출처를 기반으로 정리됐어요.</p>\n'
         '  </footer>\n'
         '\n'
+        + COPY_BTN_JS +
         '</body>\n'
         '</html>'
     )
@@ -1610,6 +1668,7 @@ for title, binfo in book_celebs.items():
         '  <style>\n'
         '    body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; max-width: 800px; margin: 0 auto; padding: 20px; color: #222; background: #fcfaf5; line-height: 1.6; }\n'
         '    .lang-toggle { position: absolute; top: 16px; right: 16px; display: flex; gap: 6px; }\n'
+        + COPY_BTN_CSS +
         '    .lang-btn { padding: 6px 12px; border: 2px solid #000; background: #fff; box-shadow: 2px 2px 0 0 #000; font-size: 12px; font-weight: 700; text-decoration: none; color: #000; transition: transform .1s, box-shadow .1s; }\n'
         '    .lang-btn:hover { transform: translate(-1px,-1px); box-shadow: 3px 3px 0 0 #000; background: #fde047; text-decoration: none; }\n'
         '    .lang-btn.active { background: #000; color: #fff; }\n'
@@ -1622,10 +1681,11 @@ for title, binfo in book_celebs.items():
         '  </style>\n'
         '</head>\n'
         '<body>\n'
-        + (('  <div class="lang-toggle">\n'
-            '    <span class="lang-btn active">한국어</span>\n'
-            '    <a class="lang-btn" href="' + esc(make_en_book_url(title_en)) + '" hreflang="en">EN</a>\n'
-            '  </div>\n') if title_en else '')
+        + '  <div class="lang-toggle">\n'
+        + copy_btn_html(make_book_short_url(title))
+        + (('    <span class="lang-btn active">한국어</span>\n'
+            '    <a class="lang-btn" href="' + esc(make_en_book_url(title_en)) + '" hreflang="en">EN</a>\n') if title_en else '')
+        + '  </div>\n'
         + '  <nav><a href="' + BASE + '">← 최애의 독서 홈</a></nav>\n'
         '\n'
         '  <h1>' + esc(title) + '</h1>\n'
@@ -1636,6 +1696,7 @@ for title, binfo in book_celebs.items():
         '\n'
         '  <p><a href="' + BASE + '">최애의 독서 홈으로 →</a></p>\n'
         '\n'
+        + COPY_BTN_JS +
         '</body>\n'
         '</html>'
     )
@@ -1697,15 +1758,19 @@ for name, info in celebs.items():
         ):
             aladin_url = esc(html.unescape(raw_link))
 
+        # 검색 결과 요약에 그대로 실리는 자리라 직역 표시(*)는 떼고 저자까지 넣는다
+        t_plain = plain_en(b['title_en'])
+        a_plain = plain_en(b.get('author_en') or b['author'])
+        alt_text = t_plain + (' by ' + a_plain if a_plain else '') + ' — book cover'
         if b['coverUrl'] and b['coverUrl'].startswith('http'):
-            cover_inner = ('<img src="' + esc(b['coverUrl']) + '" alt="' + esc(b['title_en'])
-                           + ' cover" loading="lazy">')
+            cover_inner = ('<img src="' + esc(b['coverUrl']) + '" alt="' + esc(alt_text)
+                           + '" loading="lazy">')
         else:
             cover_inner = '<div class="rl-no-cover">📕</div>'
         if aladin_url:
             cover_html = ('<a class="rl-cover" href="' + aladin_url
                           + '" rel="nofollow noopener noreferrer" target="_blank" '
-                          'aria-label="View ' + esc(b['title_en']) + ' on Aladin">'
+                          'aria-label="' + esc(t_plain) + ' — buy or read more">'
                           + cover_inner + '</a>')
         else:
             cover_html = '<div class="rl-cover">' + cover_inner + '</div>'
@@ -1738,10 +1803,52 @@ for name, info in celebs.items():
             '    </li>\n'
         )
 
-    title_text = name_en + ' Reading List · ' + str(n) + ' Books ' + name_en + ' Has Read'
-    desc_text  = ('What is ' + name_en + ' (Korean: ' + esc(name) + ') reading? '
-                  + str(n) + ' books recommended by ' + name_en
-                  + ' from interviews, YouTube, and SNS — full reading list with sources.')
+    # 제목에 이름을 세 번 넣으면 구글이 키워드 반복으로 보고 제목을 갈아치운다.
+    # 한 번만 쓰고, 검색어와 맞닿는 말(reading list · books)만 남긴다.
+    title_text = name_en + ' Reading List — ' + str(n) + ' Books'
+
+    # 설명도 이름 한 번. 대신 실제 책 제목 세 권을 넣는다 —
+    # 구글이 meta description을 버리고 본문에서 목록을 긁어가던 자리를
+    # 사람이 읽을 만한 문장으로 채운다.
+    def _desc(k):
+        picks = [plain_en(b['title_en']) for b in en_books[:k] if b.get('title_en')]
+        picks = [t for t in picks if t]
+        if len(picks) >= 2:
+            txt = ', '.join(picks[:-1]) + ' and ' + picks[-1]
+        else:
+            txt = picks[0] if picks else ''
+        return (name_en + ' has read ' + str(n) + ' books'
+                + ((', including ' + txt) if txt else '')
+                + '. Full reading list with the interview, YouTube or SNS source for each.')
+
+    # 검색 결과에 잘리지 않게 165자 안쪽으로. 제목이 길면 권수를 줄인다.
+    desc_text = _desc(3)
+    for _k in (2, 1, 0):
+        if len(desc_text) <= 165:
+            break
+        desc_text = _desc(_k)
+
+    # 읽은 책을 Book 항목으로 함께 내보낸다. 인물과 책이 이어져 있다는 걸
+    # 검색엔진이 본문 파싱에 기대지 않고 바로 알 수 있다.
+    book_items = []
+    for _i, _b in enumerate(en_books):
+        _t = plain_en(_b['title_en'])
+        if not _t:
+            continue
+        _a = plain_en(_b.get('author_en') or _b['author'])
+        book_items.append({
+            '@type': 'ListItem',
+            'position': _i + 1,
+            'item': clean_none({
+                '@type': 'Book',
+                'name': _t,
+                'alternateName': _b['title'] or None,
+                'author': ({'@type': 'Person', 'name': _a} if _a else None),
+                'image': _b['coverUrl'] if (_b['coverUrl'] or '').startswith('http') else None,
+                'publisher': ({'@type': 'Organization', 'name': _b['publisher']}
+                              if _b.get('publisher') else None),
+            }),
+        })
 
     json_ld = clean_none({
         '@context': 'https://schema.org',
@@ -1750,12 +1857,20 @@ for name, info in celebs.items():
         'url': page_url,
         'inLanguage': 'en',
         'description': desc_text,
-        'mainEntity': {
+        'mainEntity': clean_none({
             '@type': 'Person',
             'name': name_en,
             'alternateName': name,
+            'description': get_bio(name, 'en') or None,
             'image': img if img.startswith('http') else None,
-        },
+        }),
+        'mainEntityOfPage': page_url,
+        'hasPart': clean_none({
+            '@type': 'ItemList',
+            'name': 'Books read by ' + name_en,
+            'numberOfItems': len(book_items),
+            'itemListElement': book_items or None,
+        }),
         'isPartOf': {'@type': 'WebSite', 'name': 'Favorbook', 'url': EN_BASE},
     })
     breadcrumb_ld = {
@@ -1801,6 +1916,7 @@ for name, info in celebs.items():
         '  <style>\n'
         '    body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; max-width: 860px; margin: 0 auto; padding: 20px; color: #222; line-height: 1.6; background: #fcfaf5; }\n'
         '    .lang-toggle { position: absolute; top: 16px; right: 16px; display: flex; gap: 6px; }\n'
+        + COPY_BTN_CSS +
         '    .lang-btn { padding: 6px 12px; border: 2px solid #000; background: #fff; box-shadow: 2px 2px 0 0 #000; font-size: 12px; font-weight: 700; text-decoration: none; color: #000; transition: transform .1s, box-shadow .1s; }\n'
         '    .lang-btn:hover { transform: translate(-1px,-1px); box-shadow: 3px 3px 0 0 #000; background: #fde047; text-decoration: none; }\n'
         '    .lang-btn.active { background: #000; color: #fff; }\n'
@@ -1834,7 +1950,8 @@ for name, info in celebs.items():
         '</head>\n'
         '<body>\n'
         '  <div class="lang-toggle">\n'
-        '    <a class="lang-btn" href="' + esc(ko_url) + '" hreflang="ko">한국어</a>\n'
+        + copy_btn_html(page_url, '🔗 Copy link', 'Copied!')
+        + '    <a class="lang-btn" href="' + esc(ko_url) + '" hreflang="ko">한국어</a>\n'
         '    <span class="lang-btn active">EN</span>\n'
         '  </div>\n'
         '  <nav><a href="' + EN_BASE + '">← Favorbook Home</a></nav>\n'
@@ -1862,6 +1979,7 @@ for name, info in celebs.items():
         '    <p>Curated from public Korean-language sources. Korean original page: <a href="'
         + esc(ko_url) + '" hreflang="ko">' + esc(name) + '</a>.</p>\n'
         '  </footer>\n'
+        + COPY_BTN_JS +
         '</body>\n'
         '</html>'
     )
@@ -1971,6 +2089,7 @@ for title, t_en in book_title_en.items():
         '  <style>\n'
         '    body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; max-width: 800px; margin: 0 auto; padding: 20px; color: #222; background: #fcfaf5; line-height: 1.6; }\n'
         '    .lang-toggle { position: absolute; top: 16px; right: 16px; display: flex; gap: 6px; }\n'
+        + COPY_BTN_CSS +
         '    .lang-btn { padding: 6px 12px; border: 2px solid #000; background: #fff; box-shadow: 2px 2px 0 0 #000; font-size: 12px; font-weight: 700; text-decoration: none; color: #000; transition: transform .1s, box-shadow .1s; }\n'
         '    .lang-btn:hover { transform: translate(-1px,-1px); box-shadow: 3px 3px 0 0 #000; background: #fde047; text-decoration: none; }\n'
         '    .lang-btn.active { background: #000; color: #fff; }\n'
@@ -1986,7 +2105,8 @@ for title, t_en in book_title_en.items():
         '</head>\n'
         '<body>\n'
         '  <div class="lang-toggle">\n'
-        '    <a class="lang-btn" href="' + esc(ko_url) + '" hreflang="ko">한국어</a>\n'
+        + copy_btn_html(page_url, '🔗 Copy link', 'Copied!')
+        + '    <a class="lang-btn" href="' + esc(ko_url) + '" hreflang="ko">한국어</a>\n'
         '    <span class="lang-btn active">EN</span>\n'
         '  </div>\n'
         '  <nav><a href="' + EN_BASE + '">← Favorbook Home</a></nav>\n'
@@ -2000,6 +2120,7 @@ for title, t_en in book_title_en.items():
         '  <ul>\n' + celeb_list + '\n  </ul>\n'
         + (EN_TR_NOTE_HTML if en_show_tr_note else '')
         + '  <p style="margin-top:32px"><a href="' + EN_BASE + '">← Back to Favorbook</a></p>\n'
+        + COPY_BTN_JS +
         '</body>\n'
         '</html>'
     )
@@ -2475,9 +2596,6 @@ print(f"✅ 고아 share 파일 정리: {removed}개 삭제")
 
 os.makedirs('s', exist_ok=True)
 os.makedirs('s/b', exist_ok=True)
-
-assign_shorts('book', sorted(
-    (t, book_title_en.get(t) or '') for t in books_with_pages), cap=36)
 
 with io.open(SHORTLINK_FILE, 'w', encoding='utf-8') as f:
     json.dump(SHORTLINKS, f, ensure_ascii=False, indent=1, sort_keys=True)
