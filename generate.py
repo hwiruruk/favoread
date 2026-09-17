@@ -524,9 +524,120 @@ def _inject_updates_banner(html_text, entries):
         1,
     )
 
+# ── 3.6. 메인 고정 "요즘 핫한 사람" 한 줄 ──────────────────────────
+# data/featured.json 에 적어둔 인물을 메인 상단에 고정 노출한다.
+# 실제 카드(사진 포함)는 index.html의 JS가 그리지만, 크롤러가 JS 없이도
+# 링크를 볼 수 있도록 여기서 정적 마크업을 함께 넣어둔다.
+
+FEATURED_PATH = os.path.join('data', 'featured.json')
+
+
+def load_featured(known_names):
+    """featured.json을 읽어 (title, subtitle, picks) 반환. 없으면 picks=[]"""
+    if not os.path.exists(FEATURED_PATH):
+        return '', '', []
+    try:
+        with open(FEATURED_PATH, encoding='utf-8') as fp:
+            raw = json.load(fp)
+    except (json.JSONDecodeError, OSError) as e:
+        print(f"⚠️ {FEATURED_PATH} 읽기 실패 — 고정 섹션을 건너뜁니다: {e}")
+        return '', '', []
+
+    picks = []
+    for item in (raw.get('picks') or []):
+        if isinstance(item, str):
+            item = {'name': item}
+        if not isinstance(item, dict):
+            continue
+        name = (item.get('name') or '').strip()
+        if not name:
+            continue
+        if name not in known_names:
+            print(f"⚠️ 고정 목록의 '{name}' 은(는) 데이터에 없는 이름이라 건너뜁니다")
+            continue
+        if any(p['name'] == name for p in picks):
+            print(f"⚠️ 고정 목록에 '{name}' 이(가) 중복되어 한 번만 노출합니다")
+            continue
+        picks.append({
+            'name':  name,
+            'badge': (item.get('badge') or '').strip(),
+            'note':  (item.get('note') or '').strip(),
+        })
+
+    return (raw.get('title') or '').strip(), (raw.get('subtitle') or '').strip(), picks[:12]
+
+
+def _inject_featured(html_text, title, subtitle, picks):
+    if picks:
+        cards = []
+        for p in picks:
+            n = p['name']
+            href = 'share/' + quote(safe_filename(n), safe='') + '.html'
+            badge = (' <span class="font-sans font-bold text-[9px] tracking-widest uppercase '
+                     'border border-ink bg-neo-pink px-1 py-0.5">'
+                     + esc(p['badge']) + '</span>') if p['badge'] else ''
+            cards.append(
+                '      <a href="' + href + '" class="flex flex-col justify-center border-2 border-ink '
+                'bg-white shadow-neo px-3 py-4 text-center no-underline text-ink">\n'
+                '        <span class="font-black text-sm">' + esc(n) + '</span>' + badge + '\n'
+                '        <span class="text-[10px] text-muted mt-1">'
+                + str(len(celebs[n]['books'])) + ' records</span>\n'
+                '      </a>'
+            )
+        inner = '\n'.join(cards)
+    else:
+        inner = ''
+
+    # 섹션 / 스크롤 탭 노출 여부
+    sec_cls = 'w-full' if picks else 'w-full hidden'
+    html_text = re.sub(
+        r'<section id="featured" class="[^"]*">',
+        '<section id="featured" class="' + sec_cls + '">',
+        html_text,
+        count=1,
+    )
+    tab_cls = 'spy-tab spy-tab-featured' if picks else 'spy-tab spy-tab-featured hidden'
+    html_text = re.sub(
+        r'(<a href="#featured" data-spy="featured" class=")[^"]*(">)',
+        lambda m: m.group(1) + tab_cls + m.group(2),
+        html_text,
+    )
+
+    if title:
+        html_text = re.sub(
+            r'(<h2 id="featured-title"[^>]*>).*?(</h2>)',
+            lambda m: m.group(1) + esc(title) + m.group(2),
+            html_text,
+            count=1,
+            flags=re.DOTALL,
+        )
+    html_text = re.sub(
+        r'(<p id="featured-subtitle"[^>]*>).*?(</p>)',
+        lambda m: m.group(1) + esc(subtitle) + m.group(2),
+        html_text,
+        count=1,
+        flags=re.DOTALL,
+    )
+    return re.sub(
+        r'(<div id="featured-container"[^>]*>).*?(</div>)',
+        lambda m: m.group(1) + ('\n' + inner + '\n    ' if inner else '') + m.group(2),
+        html_text,
+        count=1,
+        flags=re.DOTALL,
+    )
+
+
+featured_title, featured_subtitle, featured_picks = load_featured(celebs)
+idx_html = _inject_featured(idx_html, featured_title, featured_subtitle, featured_picks)
+
 idx_html = _inject_updates_banner(idx_html, update_entries)
 
 write_if_changed('index.html', idx_html)
+if featured_picks:
+    print("✅ 메인 고정 인물 " + str(len(featured_picks)) + "명: "
+          + ', '.join(p['name'] for p in featured_picks))
+else:
+    print("ℹ️ 메인 고정 인물 없음 (data/featured.json) — 섹션 숨김")
 print(f"✅ index.html 정적 목록 갱신: {len(sorted_names)}명")
 print(f"✅ updates.html 생성 ({len(update_entries)} 항목)")
 

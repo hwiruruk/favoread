@@ -392,6 +392,7 @@
   <a href="#hero" data-spy="hero" class="spy-tab active">홈</a>
   <a href="#about" data-spy="about" class="spy-tab">소개</a>
   <a href="#search" data-spy="search" class="spy-tab">검색</a>
+  <a href="#featured" data-spy="featured" class="spy-tab spy-tab-featured">핫</a>
   <a href="#make-card" data-spy="make-card" class="spy-tab">카드</a>
   <a href="#report" data-spy="report" class="spy-tab">제보</a>
   <a href="#seo-top-readers" data-spy="seo-top-readers" class="spy-tab">TOP</a>
@@ -405,6 +406,7 @@
     <a href="#hero" data-spy="hero" class="spy-tab active">홈</a>
     <a href="#about" data-spy="about" class="spy-tab">소개</a>
     <a href="#search" data-spy="search" class="spy-tab">검색</a>
+    <a href="#featured" data-spy="featured" class="spy-tab spy-tab-featured">핫</a>
     <a href="#make-card" data-spy="make-card" class="spy-tab">카드</a>
     <a href="#report" data-spy="report" class="spy-tab">제보</a>
     <a href="#seo-top-readers" data-spy="seo-top-readers" class="spy-tab">TOP</a>
@@ -467,6 +469,44 @@
       <button id="btn-list" class="font-sans font-bold text-[10px] sm:text-xs tracking-widest uppercase border-2 border-ink bg-white hover:bg-neo-yellow shadow-neo-sm px-5 py-2 hover:-translate-y-0.5 transition-all">≡ LIST</button>
     </div>
   </section>
+
+  <!-- featured:start (data/featured.json → generate.py가 정적 주입, JS가 사진 카드로 교체) -->
+  <section id="featured" class="w-full">
+    <div class="flex items-end justify-between gap-3 mb-4 md:mb-6">
+      <div>
+        <h2 id="featured-title" class="text-2xl md:text-3xl font-black word-break-keep">🔥 요즘 핫한 사람</h2>
+        <p id="featured-subtitle" class="text-sm md:text-base font-bold text-muted word-break-keep mt-1">지금 가장 화제인 인물을 직접 골라 고정해 뒀어요.</p>
+      </div>
+      <span class="hidden sm:inline-block font-sans font-bold text-[10px] tracking-widest uppercase border-2 border-ink bg-neo-pink shadow-neo-sm px-3 py-1 whitespace-nowrap">PICKED</span>
+    </div>
+    <div id="featured-container" class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3 md:gap-4">
+      <a href="share/%EC%B9%B4%EB%A6%AC%EB%82%98%28%EC%97%90%EC%8A%A4%ED%8C%8C%29.html" class="flex flex-col justify-center border-2 border-ink bg-white shadow-neo px-3 py-4 text-center no-underline text-ink">
+        <span class="font-black text-sm">카리나(에스파)</span> <span class="font-sans font-bold text-[9px] tracking-widest uppercase border border-ink bg-neo-pink px-1 py-0.5">HOT</span>
+        <span class="text-[10px] text-muted mt-1">26 records</span>
+      </a>
+      <a href="share/%EC%9B%90%EC%9A%B0%28%EC%84%B8%EB%B8%90%ED%8B%B4%29.html" class="flex flex-col justify-center border-2 border-ink bg-white shadow-neo px-3 py-4 text-center no-underline text-ink">
+        <span class="font-black text-sm">원우(세븐틴)</span> <span class="font-sans font-bold text-[9px] tracking-widest uppercase border border-ink bg-neo-pink px-1 py-0.5">HOT</span>
+        <span class="text-[10px] text-muted mt-1">25 records</span>
+      </a>
+      <a href="share/%EC%86%A1%EA%B0%95.html" class="flex flex-col justify-center border-2 border-ink bg-white shadow-neo px-3 py-4 text-center no-underline text-ink">
+        <span class="font-black text-sm">송강</span> <span class="font-sans font-bold text-[9px] tracking-widest uppercase border border-ink bg-neo-pink px-1 py-0.5">NEW</span>
+        <span class="text-[10px] text-muted mt-1">9 records</span>
+      </a>
+      <a href="share/%EA%B9%80%EC%84%A4%ED%98%84.html" class="flex flex-col justify-center border-2 border-ink bg-white shadow-neo px-3 py-4 text-center no-underline text-ink">
+        <span class="font-black text-sm">김설현</span>
+        <span class="text-[10px] text-muted mt-1">13 records</span>
+      </a>
+      <a href="share/%EB%A6%B4%EB%A6%AC%28NMIXX%29.html" class="flex flex-col justify-center border-2 border-ink bg-white shadow-neo px-3 py-4 text-center no-underline text-ink">
+        <span class="font-black text-sm">릴리(NMIXX)</span>
+        <span class="text-[10px] text-muted mt-1">7 records</span>
+      </a>
+      <a href="share/%EB%B7%94%28BTS%29.html" class="flex flex-col justify-center border-2 border-ink bg-white shadow-neo px-3 py-4 text-center no-underline text-ink">
+        <span class="font-black text-sm">뷔(BTS)</span>
+        <span class="text-[10px] text-muted mt-1">7 records</span>
+      </a>
+    </div>
+  </section>
+  <!-- featured:end -->
 
   <section id="make-card" class="w-full">
     <a href="together/" class="block border-4 border-ink bg-neo-pink shadow-neo hover:shadow-neo-lg hover:-translate-y-1 transition-all p-5 sm:p-7 no-underline text-ink">
@@ -1003,6 +1043,7 @@
 
   /* ── CONFIG ─────────────────────────────────────────────── */
   const DATA_URL  = 'data.json';
+  const FEATURED_URL = 'data/featured.json';
   const WIKI_API  = 'https://ko.wikipedia.org/w/api.php';
   const BASE_PATH = window.location.pathname;
   const SITE_URL  = (() => {
@@ -1013,6 +1054,7 @@
   /* ── STATE ──────────────────────────────────────────────── */
   let celebMap = {};
   let entries  = [];
+  let featured = null;   // data/featured.json (없으면 null)
   let modal    = { open: false, name: '', books: [], idx: 0, allView: false };
   
   let filteredEntries = [];
@@ -1050,6 +1092,10 @@
     btnList:    document.getElementById('btn-list'),
     
     // 자동화 추가 영역
+    featuredSection:  document.getElementById('featured'),
+    featuredWrap:     document.getElementById('featured-container'),
+    featuredTitle:    document.getElementById('featured-title'),
+    featuredSubtitle: document.getElementById('featured-subtitle'),
     topReaders: document.getElementById('top-readers-container'),
     commonBooks: document.getElementById('common-books-container'),
     allCelebs: document.getElementById('all-celebs-container'),
@@ -1160,6 +1206,18 @@
     if (!r.ok) throw new Error();
     const json = await r.json();
     return json.celebs;
+  }
+
+  /* data/featured.json — 메인에 고정해 둘 '요즘 핫한 사람' 목록.
+   * 파일이 없거나 깨져 있어도 페이지 전체가 죽지 않게 조용히 null을 돌려준다. */
+  async function loadFeatured() {
+    try {
+      const r = await fetch(FEATURED_URL, { cache: 'no-cache' });
+      if (!r.ok) return null;
+      const j = await r.json();
+      if (!j || !Array.isArray(j.picks)) return null;
+      return j;
+    } catch { return null; }
   }
 
   async function wikiImg(name) {
@@ -1423,7 +1481,81 @@
   }
 
   /* ── DYNAMIC SECTIONS ───────────────────────────────────── */
+  function escHtml(v) {
+    return String(v ?? '').replace(/[&<>"']/g, c => (
+      { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]
+    ));
+  }
+
+  /* 메인 상단에 고정해 두는 '요즘 핫한 사람' 한 줄.
+   * 목록은 data/featured.json에서 오고, 데이터에 없는 이름은 조용히 건너뛴다.
+   * 고를 사람이 하나도 없으면 섹션과 스크롤 탭을 통째로 숨긴다. */
+  function renderFeatured() {
+    const tabs  = document.querySelectorAll('.spy-tab-featured');
+    const hide  = () => {
+      D.featuredSection.classList.add('hidden');
+      tabs.forEach(t => t.classList.add('hidden'));
+    };
+    if (!D.featuredSection || !D.featuredWrap) return;
+    if (!featured) return hide();
+
+    const picks = featured.picks
+      .map(p => (typeof p === 'string' ? { name: p } : (p || {})))
+      .filter(p => p.name && celebMap[p.name])
+      .slice(0, 12);
+    if (!picks.length) return hide();
+
+    if (featured.title) D.featuredTitle.textContent = featured.title;
+    D.featuredSubtitle.textContent = featured.subtitle || '';
+    D.featuredSubtitle.classList.toggle('hidden', !featured.subtitle);
+
+    D.featuredWrap.innerHTML = '';
+    picks.forEach(pick => {
+      const name = pick.name;
+      const data = celebMap[name];
+      const celebUrl = `${BASE_PATH}?celeb=${encodeURIComponent(name)}`;
+      const note = pick.note || data.books.slice(0, 2).map(b => b.title).join(' · ');
+
+      const card = document.createElement('a');
+      card.href = celebUrl;
+      card.dataset.name = name;
+      card.className = 'top-celeb-card group flex flex-col border-2 border-ink bg-white shadow-neo hover:shadow-neo-lg hover:-translate-y-1 transition-all overflow-hidden cursor-pointer no-underline text-ink';
+
+      const imgHtml = data.imageUrl
+        ? `<img src="${escHtml(data.imageUrl)}" alt="${escHtml(name)} 책 추천" loading="lazy" class="celeb-portrait w-full h-full object-cover group-hover:scale-105 transition-transform duration-300">`
+        : `<div class="w-full h-full flex items-center justify-center font-sans font-bold text-[10px] tracking-widest text-muted">PHOTO</div>`;
+      const badgeHtml = pick.badge
+        ? `<span class="absolute top-1.5 left-1.5 font-sans font-bold text-[9px] tracking-widest uppercase border-2 border-ink bg-neo-pink px-1.5 py-0.5 shadow-neo-sm">${escHtml(pick.badge)}</span>`
+        : '';
+
+      card.innerHTML = `
+        <div class="celeb-photo-wrap w-full aspect-square bg-paper-dark border-b-2 border-ink overflow-hidden relative">
+          ${imgHtml}${badgeHtml}
+        </div>
+        <div class="p-2.5 text-center flex-1 flex flex-col justify-center group-hover:bg-neo-mint transition-colors">
+          <p class="font-black text-sm mb-1 truncate">${escHtml(name)}</p>
+          <p class="font-sans font-bold text-[9px] bg-neo-yellow border border-ink px-1.5 py-0.5 inline-block mx-auto mb-1.5 shadow-neo-sm">${data.books.length} records</p>
+          <p class="text-[10px] text-muted line-clamp-1">${escHtml(note)}</p>
+        </div>`;
+
+      card.addEventListener('click', (e) => {
+        if (e.ctrlKey || e.metaKey || e.shiftKey) return;
+        e.preventDefault();
+        openModal(name);
+        history.pushState({ celeb: name }, '', celebUrl);
+      });
+
+      D.featuredWrap.appendChild(card);
+      if (!data.imageUrl) imgObserver.observe(card);
+    });
+
+    D.featuredSection.classList.remove('hidden');
+    tabs.forEach(t => t.classList.remove('hidden'));
+  }
+
   function renderDynamicSections() {
+    renderFeatured();
+
     // 1. 내 최애가 읽은 책 (12명으로 2줄)
     const topCelebs = [...entries]
       .sort((a, b) => b[1].books.length - a[1].books.length)
@@ -1524,7 +1656,9 @@
     setStatus('loading', 'Loading data...');
 
     try {
-      celebMap = await loadData();
+      const [celebData, featuredData] = await Promise.all([loadData(), loadFeatured()]);
+      celebMap = celebData;
+      featured = featuredData;
       entries  = Object.entries(celebMap).sort(() => Math.random() - .5);
       filterEntries(); 
       setStatus('success', `${entries.length} RECORDS`);
