@@ -156,6 +156,25 @@ def yes24_spine_url(cover_url):
     return 'https://image.yes24.com/goods/' + m.group(1) + '/side' if m else None
 
 
+def normalize_spine_value(v):
+    """spines.json 값을 책등 이미지 URL로 맞춘다.
+
+    손으로 채워 넣기 쉽게 세 가지를 다 받는다.
+      · 상품 번호만          "13137546"
+      · 예스24 상품 페이지 URL "https://www.yes24.com/product/goods/13137546"
+      · 책등 이미지 URL 그대로 "https://image.yes24.com/goods/13137546/side"
+    """
+    v = str(v or '').strip()
+    if not v:
+        return None
+    if v.isdigit():
+        return 'https://image.yes24.com/goods/' + v + '/side'
+    m = re.search(r'yes24\.com/(?:product/)?goods/(?:detail/)?(\d+)', v, re.I)
+    if m:
+        return 'https://image.yes24.com/goods/' + m.group(1) + '/side'
+    return v if v.startswith('http') else None
+
+
 def load_spines():
     """tools/fetch_spines.py 가 채운 제목 → 책등 URL 표. 없으면 빈 표."""
     path = os.path.join('data', 'spines.json')
@@ -163,10 +182,18 @@ def load_spines():
         return {}
     try:
         with open(path, encoding='utf-8') as fp:
-            return (json.load(fp) or {}).get('spines') or {}
+            raw = (json.load(fp) or {}).get('spines') or {}
     except (json.JSONDecodeError, OSError) as e:
         print('⚠️ data/spines.json 읽기 실패 — 표지 URL에서만 유도합니다: %s' % e)
         return {}
+    out = {}
+    for title, v in raw.items():
+        u = normalize_spine_value(v)
+        if u:
+            out[str(title).strip()] = u
+        else:
+            print('⚠️ data/spines.json 의 %r 값을 알아볼 수 없어 건너뜁니다: %r' % (title, v))
+    return out
 
 
 SPINES = load_spines()
