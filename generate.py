@@ -450,6 +450,98 @@ with open("data.csv", encoding="utf-8") as f:
 
 print(f"CSV 파싱 완료: {len(celebs)}명")
 
+# ── 1.5. 짧은 공유 링크 (/s/) ────────────────────────────────────────
+#
+# 한글 주소는 브라우저 밖에서 퍼센트 인코딩되어 60~200자가 된다.
+# 메신저에 붙여넣기 곤란하지만, 검색에는 문제가 없고 옮기면 4개월 쌓은
+# 색인을 다시 평가받아야 한다(GitHub Pages라 진짜 301도 못 쓴다).
+# 그래서 색인된 주소는 그대로 두고, 사람이 주고받을 짧은 주소를 따로 만들어
+# 원래 페이지로 넘긴다. rel=canonical로 검색 신호는 원래 주소에 모인다.
+
+SHORTLINK_FILE = 'data/shortlinks.json'
+
+# 국어의 로마자 표기법(초성/중성/종성) — 영문명이 없는 이름의 대비책.
+# 자음동화 같은 예외는 반영하지 않는다. 늘 같은 결과만 나오면 된다.
+RR_CHO = ('g', 'kk', 'n', 'd', 'tt', 'r', 'm', 'b', 'pp', 's', 'ss', '',
+          'j', 'jj', 'ch', 'k', 't', 'p', 'h')
+RR_JUNG = ('a', 'ae', 'ya', 'yae', 'eo', 'e', 'yeo', 'ye', 'o', 'wa', 'wae',
+           'oe', 'yo', 'u', 'wo', 'we', 'wi', 'yu', 'eu', 'ui', 'i')
+RR_JONG = ('', 'k', 'k', 'k', 'n', 'n', 'n', 't', 'l', 'l', 'l', 'l', 'l',
+           'l', 'l', 'l', 'm', 'p', 'p', 't', 't', 'ng', 't', 't', 'k', 't',
+           'p', 't')
+
+
+def romanize_ko(text):
+    """한글 → 로마자. 한글이 아닌 글자는 그대로 둔다."""
+    # 괄호 속 소속명은 이름과 붙어 있다 — 띄워 둬야 슬러그에서 단어가 갈린다
+    text = re.sub(r"[()\[\]{}·,/]+", ' ', text or '')
+    out = []
+    for ch in text:
+        code = ord(ch) - 0xAC00
+        if 0 <= code < 11172:
+            out.append(RR_CHO[code // 588] + RR_JUNG[(code % 588) // 28]
+                       + RR_JONG[code % 28])
+        else:
+            out.append(ch)
+    return re.sub(r'lr', 'll', ''.join(out))      # ㄹㄹ은 ll로 (신라 같은 예외는 생략)
+
+
+def short_slug(ko, en, taken, cap=36):
+    """짧은 주소 한 칸. 영문명이 있으면 그걸 쓰고, 없으면 로마자로 만든다."""
+    base = safe_en_filename(en) if en else ''
+    if not base or base == 'untitled':
+        base = safe_en_filename(romanize_ko(ko))
+    if len(base) > cap:                       # 긴 영문 제목은 단어 경계에서 자른다
+        cut = base[:cap].rsplit('-', 1)[0].strip('-')
+        base = (cut if len(cut) >= 4 else base[:cap]).strip('-')
+    base = base or 'x'
+    slug, i = base, 1
+    while slug in taken:                      # 같은 이름이 겹치면 뒤에 번호
+        i += 1
+        slug = base + '-' + str(i)
+    return slug
+
+
+def load_shortlinks():
+    """한번 정한 짧은 주소는 바꾸지 않는다 — 이미 퍼진 링크가 죽으면 안 된다."""
+    try:
+        with io.open(SHORTLINK_FILE, encoding='utf-8') as f:
+            d = json.load(f)
+    except Exception:
+        d = {}
+    return {'celeb': dict(d.get('celeb') or {}),
+            'book':  dict(d.get('book') or {})}
+
+
+SHORTLINKS = load_shortlinks()
+
+
+def assign_shorts(kind, items, cap=36):
+    """items: [(원래 이름, 영문 이름 or None)] → 새로 생긴 것만 주소를 붙인다."""
+    m = SHORTLINKS[kind]
+    taken = set(m.values())
+    for ko, en in items:
+        if ko in m:
+            continue
+        m[ko] = short_slug(ko, en, taken, cap)
+        taken.add(m[ko])
+    return m
+
+
+assign_shorts('celeb', sorted(
+    (n, (info.get('name_en') or '')) for n, info in celebs.items()), cap=28)
+
+
+def make_celeb_short_url(name):
+    s = SHORTLINKS['celeb'].get(name)
+    return (BASE + 's/' + s + '.html') if s else make_celeb_url(name)
+
+
+def make_book_short_url(title):
+    s = SHORTLINKS['book'].get(title)
+    return (BASE + 's/b/' + s + '.html') if s else make_book_url(title)
+
+
 # ── 2. data.json 생성 ────────────────────────────────────────────────
 
 for _info in celebs.values():
@@ -463,6 +555,7 @@ data_json = {
     'celebs': {
         name: {
             'imageUrl': info['img'],
+            'shortUrl': make_celeb_short_url(name),
             'books':    info['books'],
         }
         for name, info in celebs.items()
@@ -2372,6 +2465,92 @@ for f in os.listdir('en/share/book'):
         os.remove(p)
         removed += 1
 print(f"✅ 고아 share 파일 정리: {removed}개 삭제")
+
+# ── 6.6. 짧은 공유 링크 파일 (/s/*.html, /s/b/*.html) ───────────────
+#
+# 원래 페이지의 <title>과 og:* 태그를 그대로 베껴 온다. 그래야 카카오톡·트위터
+# 미리보기가 짧은 주소로 공유해도 똑같이 뜬다. og:url만 원래 주소로 덮어쓴다.
+# noindex는 일부러 넣지 않는다 — canonical이 가리키는 쪽으로 noindex가 번질 수
+# 있어서, 즉시 이동(meta refresh) + canonical 조합만 쓴다.
+
+os.makedirs('s', exist_ok=True)
+os.makedirs('s/b', exist_ok=True)
+
+assign_shorts('book', sorted(
+    (t, book_title_en.get(t) or '') for t in books_with_pages), cap=36)
+
+with io.open(SHORTLINK_FILE, 'w', encoding='utf-8') as f:
+    json.dump(SHORTLINKS, f, ensure_ascii=False, indent=1, sort_keys=True)
+
+_OG_RE = re.compile(r'<meta (?:property="og:|name="twitter:)[^"]+"[^>]*>')
+_TITLE_RE = re.compile(r'<title>(.*?)</title>', re.S)
+_OGURL_RE = re.compile(r'<meta property="og:url"[^>]*>')
+
+
+def write_short_page(path, target, source_html):
+    """원래 페이지로 곧장 넘기는 한 장짜리 파일."""
+    m = _TITLE_RE.search(source_html)
+    title = m.group(1) if m else '최애의 독서'
+    # og:* 와 twitter:* 를 그대로 옮겨야 카카오톡·X 미리보기가 똑같이 뜬다
+    og = [t for t in _OG_RE.findall(source_html) if not _OGURL_RE.match(t)]
+    og.insert(0, '<meta property="og:url" content="' + esc(target) + '">')
+    with io.open(path, 'w', encoding='utf-8') as f:
+        f.write(
+            '<!DOCTYPE html>\n<html lang="ko">\n<head>\n'
+            '  <meta charset="UTF-8">\n'
+            '  <title>' + title + '</title>\n'
+            '  <link rel="canonical" href="' + esc(target) + '">\n'
+            '  <meta http-equiv="refresh" content="0; url=' + esc(target) + '">\n'
+            + ''.join('  ' + t + '\n' for t in og) +
+            '  <script>location.replace(' + json.dumps(target) + ');</script>\n'
+            '</head>\n<body>\n'
+            '  <p><a href="' + esc(target) + '">' + title + '</a></p>\n'
+            '</body>\n</html>\n')
+
+
+short_written = 0
+short_celeb_paths, short_book_paths = set(), set()
+
+for _name in celebs.keys():
+    _slug = SHORTLINKS['celeb'].get(_name)
+    _src = 'share/' + safe_filename(_name) + '.html'
+    if not _slug or not os.path.isfile(_src):
+        continue
+    with io.open(_src, encoding='utf-8') as f:
+        _html = f.read()
+    _p = 's/' + _slug + '.html'
+    write_short_page(_p, make_celeb_url(_name), _html)
+    short_celeb_paths.add(_p)
+    short_written += 1
+
+for _fn, _title in book_pages:
+    _slug = SHORTLINKS['book'].get(_title)
+    _src = 'share/book/' + _fn + '.html'
+    if not _slug or not os.path.isfile(_src):
+        continue
+    with io.open(_src, encoding='utf-8') as f:
+        _html = f.read()
+    _p = 's/b/' + _slug + '.html'
+    write_short_page(_p, make_book_url(_title), _html)
+    short_book_paths.add(_p)
+    short_written += 1
+
+# 없어진 셀럽·책의 짧은 주소도 같이 치운다
+_short_removed = 0
+for _f in os.listdir('s'):
+    _p = 's/' + _f
+    if os.path.isfile(_p) and _f.endswith('.html') and _p not in short_celeb_paths:
+        os.remove(_p)
+        _short_removed += 1
+for _f in os.listdir('s/b'):
+    _p = 's/b/' + _f
+    if os.path.isfile(_p) and _f.endswith('.html') and _p not in short_book_paths:
+        os.remove(_p)
+        _short_removed += 1
+
+print(f"✅ 짧은 공유 링크: {short_written}개 생성"
+      + (f", {_short_removed}개 삭제" if _short_removed else ""))
+
 
 # ── 7. sitemap.xml 생성 (이미지 사이트맵 포함) ──────────────────────
 #
