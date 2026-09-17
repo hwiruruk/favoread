@@ -188,12 +188,7 @@ def spine_tint(title):
     return 'hsl(' + str(hue) + ',' + str(sat) + '%,' + str(lig) + '%)'
 
 
-def spine_height(title):
-    """책마다 높이를 조금씩 달리해 실제 책장처럼 들쭉날쭉하게."""
-    h = 0
-    for ch in (title or ''):
-        h = (h * 17 + ord(ch)) & 0xFFFFFFFF
-    return 188 + h % 34               # 188~221px
+SPINE_H = 205                        # 책등 높이는 모두 같게
 
 
 def spine_width(title):
@@ -988,7 +983,6 @@ for name, info in celebs.items():
                'referrerpolicy="no-referrer" onerror="this.remove()">' if _spine_url else '')
         )
         _spine_style = ('--c:' + spine_tint(b['title'])
-                        + ';--h:' + str(spine_height(b['title'])) + 'px'
                         + ';--w:' + str(spine_width(b['title'])) + 'px')
         if aladin_url:
             spine_html += ('    <a class="sp" style="' + _spine_style + '" href="' + aladin_url
@@ -1153,6 +1147,8 @@ for name, info in celebs.items():
         '  <link rel="apple-touch-icon" href="' + BASE + 'favicon.png">\n'
         '  <link rel="alternate" type="application/rss+xml" title="최애의 독서 RSS" href="' + BASE + 'feed.xml">\n'
         '\n'
+        '  <link rel="preconnect" href="https://image.yes24.com">\n'
+        '  <link rel="dns-prefetch" href="https://image.yes24.com">\n'
         '  <link rel="preconnect" href="https://image.aladin.co.kr">\n'
         '  <link rel="dns-prefetch" href="https://image.aladin.co.kr">\n'
         '\n'
@@ -1209,7 +1205,7 @@ for name, info in celebs.items():
         '    .shelf { display: flex; flex-wrap: wrap; align-items: flex-end; gap: 5px 3px;\n'
         '             margin-top: 18px; padding: 0 6px 10px; border-bottom: 5px solid #000; }\n'
         '    .shelf[hidden], .reading-list[hidden] { display: none; }\n'
-        '    .sp { position: relative; flex: none; width: var(--w, 46px); height: var(--h, 200px);\n'
+        '    .sp { position: relative; flex: none; width: var(--w, 46px); height: ' + str(SPINE_H) + 'px;\n'
         '          background: var(--c, #555); border: 1px solid rgba(0,0,0,.45); border-radius: 2px 2px 0 0;\n'
         '          box-shadow: inset -3px 0 6px rgba(0,0,0,.28), inset 3px 0 5px rgba(255,255,255,.14);\n'
         '          overflow: hidden; text-decoration: none; transition: transform .12s; }\n'
@@ -1473,6 +1469,8 @@ for title, binfo in book_celebs.items():
         '  <link rel="apple-touch-icon" href="' + BASE + 'favicon.png">\n'
         '  <link rel="alternate" type="application/rss+xml" title="최애의 독서 RSS" href="' + BASE + 'feed.xml">\n'
         '\n'
+        '  <link rel="preconnect" href="https://image.yes24.com">\n'
+        '  <link rel="dns-prefetch" href="https://image.yes24.com">\n'
         '  <link rel="preconnect" href="https://image.aladin.co.kr">\n'
         '  <link rel="dns-prefetch" href="https://image.aladin.co.kr">\n'
         '\n'

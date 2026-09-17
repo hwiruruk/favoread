@@ -331,9 +331,8 @@ function layoutBooks() {
     books.forEach((b, i) => {
       b.w = wEach;
       b.rot = 0;
-      // 높이를 조금씩 달리하고 바닥을 맞춘다
-      const hv = 1 + ((hashOf(b.title, 17) % 14) - 7) / 100;   // ±7%
-      const h = Math.round(wEach * SPINE_RATIO * hv);
+      // 높이는 모두 같게 — 두께만 책마다 다르다
+      const h = Math.round(wEach * SPINE_RATIO);
       b.spineH = h;
       b.x = startX + i * step;
       b.y = clamp(floorY - h, 20, H - 120);
