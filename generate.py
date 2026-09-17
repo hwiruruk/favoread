@@ -2,6 +2,21 @@ import csv, datetime, os, json, re, html, subprocess, io
 from urllib.parse import quote
 
 BASE = "https://favorbook.co.kr/"
+
+# ── Google Analytics 4 (gtag.js) ─────────────────────────────────
+# 공개 페이지 <head> 최상단에 공통으로 삽입되는 측정 태그.
+# 내부 관리 도구(editor/, cardnews/)는 noindex이며 통계를 왜곡하므로 제외한다.
+GA_MEASUREMENT_ID = "G-42YXZRRS25"
+GA_TAG = (
+    '  <!-- Google tag (gtag.js) -->\n'
+    '  <script async src="https://www.googletagmanager.com/gtag/js?id=' + GA_MEASUREMENT_ID + '"></script>\n'
+    '  <script>\n'
+    '    window.dataLayer = window.dataLayer || [];\n'
+    '    function gtag(){dataLayer.push(arguments);}\n'
+    "    gtag('js', new Date());\n"
+    "    gtag('config', '" + GA_MEASUREMENT_ID + "');\n"
+    '  </script>\n'
+)
 TODAY = datetime.date.today().isoformat()
 
 # 변경된 파일 추적: path → True/False (이번 실행에서 내용이 바뀐 경우 True)
@@ -430,7 +445,7 @@ def _write_updates_page(entries):
     page = (
         '<!DOCTYPE html>\n'
         '<html lang="ko">\n'
-        '<head>\n'
+        '<head>\n' + GA_TAG +
         '  <meta charset="utf-8">\n'
         '  <meta name="viewport" content="width=device-width, initial-scale=1">\n'
         '  <title>업데이트 내역 | 최애의 독서</title>\n'
@@ -874,7 +889,7 @@ for name, info in celebs.items():
     page = (
         '<!DOCTYPE html>\n'
         '<html lang="ko">\n'
-        '<head>\n'
+        '<head>\n' + GA_TAG +
         '  <meta charset="utf-8">\n'
         '  <meta name="viewport" content="width=device-width, initial-scale=1">\n'
         '  <title>' + page_title + '</title>\n'
@@ -1134,7 +1149,7 @@ for title, binfo in book_celebs.items():
     page = (
         '<!DOCTYPE html>\n'
         '<html lang="ko">\n'
-        '<head>\n'
+        '<head>\n' + GA_TAG +
         '  <meta charset="utf-8">\n'
         '  <meta name="viewport" content="width=device-width, initial-scale=1">\n'
         '  <title>' + esc(title) + ' - ' + str(celeb_count) + '명의 셀럽이 읽은 책 | 최애의 독서</title>\n'
@@ -1332,7 +1347,7 @@ for name, info in celebs.items():
     page = (
         '<!DOCTYPE html>\n'
         '<html lang="en">\n'
-        '<head>\n'
+        '<head>\n' + GA_TAG +
         '  <meta charset="utf-8">\n'
         '  <meta name="viewport" content="width=device-width, initial-scale=1">\n'
         '  <title>' + esc(title_text) + ' | Favorbook</title>\n'
@@ -1500,7 +1515,7 @@ for title, t_en in book_title_en.items():
     page = (
         '<!DOCTYPE html>\n'
         '<html lang="en">\n'
-        '<head>\n'
+        '<head>\n' + GA_TAG +
         '  <meta charset="utf-8">\n'
         '  <meta name="viewport" content="width=device-width, initial-scale=1">\n'
         '  <title>' + esc(title_text) + ' | Favorbook</title>\n'
@@ -1625,7 +1640,7 @@ en_index_jsonld = json.dumps({
 en_index = (
     '<!DOCTYPE html>\n'
     '<html lang="en">\n'
-    '<head>\n'
+    '<head>\n' + GA_TAG +
     '  <meta charset="UTF-8">\n'
     '  <meta name="viewport" content="width=device-width, initial-scale=1.0">\n'
     '  <title>What K-pop Idols Read · BTS, IVE, NewJeans Reading Lists | Favorbook</title>\n'
@@ -1898,7 +1913,7 @@ ranking_itemlist_ld = json.dumps({
 ranking_page = (
     '<!DOCTYPE html>\n'
     '<html lang="ko">\n'
-    '<head>\n'
+    '<head>\n' + GA_TAG +
     '  <meta charset="utf-8">\n'
     '  <meta name="viewport" content="width=device-width, initial-scale=1">\n'
     '  <title>셀럽이 가장 많이 읽은 책·저자·출판사 랭킹 | 최애의 독서</title>\n'
