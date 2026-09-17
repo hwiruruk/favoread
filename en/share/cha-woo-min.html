@@ -580,6 +580,34 @@
     h2 { font-size: 19px; margin: 32px 0 12px; padding-bottom: 4px; border-bottom: 2px solid #000; font-weight: 800; }
     .intro { background: #fff; border: 2px solid #000; box-shadow: 4px 4px 0 0 #000; padding: 14px 16px; margin: 16px 0 24px; font-size: 15px; }
     .celeb-bio { margin: 4px 0 8px; padding: 6px 10px; background: #fff8e7; border-left: 4px solid #000; font-size: 14px; line-height: 1.45; color: #222; }
+    .shelf-head { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
+    .shelf-head h2 { margin-bottom: 0; border-bottom: none; padding-bottom: 0; }
+    .shelf-tabs { display: flex; gap: 6px; flex: none; }
+    .sh-tab { font: inherit; font-size: 12px; font-weight: 700; cursor: pointer; padding: 5px 12px;
+              background: #fff; color: #000; border: 2px solid #000; box-shadow: 2px 2px 0 0 #000; }
+    .sh-tab:hover { background: #fde047; }
+    .sh-tab.on { background: #000; color: #fff; }
+    .shelf { display: flex; flex-wrap: wrap; align-items: flex-end; gap: 5px 3px;
+             margin-top: 18px; padding: 0 6px 10px; border-bottom: 5px solid #000; }
+    .shelf[hidden], .reading-list[hidden] { display: none; }
+    .sp { position: relative; flex: none; width: auto; height: 270px;
+          background: var(--c, #555); border: 1px solid rgba(0,0,0,.45); border-radius: 2px 2px 0 0;
+          box-shadow: inset -3px 0 6px rgba(0,0,0,.28), inset 3px 0 5px rgba(255,255,255,.14);
+          overflow: hidden; text-decoration: none; transition: transform .12s; }
+    .sp:hover { transform: translateY(-7px); z-index: 2; text-decoration: none; }
+    .sp-t { position: absolute; inset: 0; display: flex; align-items: stretch;
+            justify-content: center; padding: 14px 2px; overflow: hidden; }
+    .sp-t i { writing-mode: vertical-rl; text-orientation: mixed; font-style: normal;
+              white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+              font-size: 15px; font-weight: 700; color: #fff;
+              text-shadow: 0 1px 2px rgba(0,0,0,.55); }
+    .sp-i { position: relative; z-index: 1; display: block;
+            height: 100%; width: auto; max-width: 172px; object-fit: contain; }
+    .sp.no-img, .sp.sp-fail { width: var(--w, 60px); }
+    @media (max-width: 480px) { .shelf .sp { height: 205px; }
+                                 .sp.no-img, .sp.sp-fail { width: calc(var(--w, 60px) * .78); }
+                                 .sp-i { max-width: 130px; }
+                                 .sp-t i { font-size: 12.5px; } .sp-t { padding: 9px 2px; } }
     .reading-list { list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 14px; }
     .rl-item { position: relative; background: #fff; border: 2px solid #000; box-shadow: 4px 4px 0 0 #000; padding: 14px 14px 14px 52px; transition: transform .12s, box-shadow .12s; }
     .rl-item:hover { transform: translate(-1px,-1px); box-shadow: 6px 6px 0 0 #000; }
@@ -619,9 +647,44 @@
   <section class="intro">
     <p style="margin:0">27 books read or recommended by <strong>Cha Woo-min</strong> (차우민), gathered from interviews, YouTube, and SNS sources.</p>
   </section>
-  <section>
-    <h2>Reading list</h2>
-    <ol class="reading-list">
+  <section id="shelf-sec">
+    <div class="shelf-head">
+      <h2>Reading list</h2>
+      <div class="shelf-tabs" role="tablist">
+        <button type="button" class="sh-tab on" data-view="spine" aria-pressed="true">▊ Spines</button>
+        <button type="button" class="sh-tab" data-view="list" aria-pressed="false">☰ List</button>
+      </div>
+    </div>
+    <div class="shelf" id="shelf">
+    <a class="sp" style="--c:hsl(284,39%,26%);--w:64px" href="https://www.aladin.co.kr/shop/wproduct.aspx?ItemId=489254&amp;partner=openAPI&amp;start=api" rel="nofollow noopener noreferrer" target="_blank" title="11 Minutes"><span class="sp-t"><i>11 Minutes</i></span><img class="sp-i" src="https://image.yes24.com/goods/1385150/side" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.parentNode.classList.add('sp-fail');this.remove()"></a>
+    <a class="sp" style="--c:hsl(4,55%,37%);--w:64px" href="https://www.yes24.com/product/goods/372300" rel="nofollow noopener noreferrer" target="_blank" title="1984"><span class="sp-t"><i>1984</i></span><img class="sp-i" src="https://image.yes24.com/goods/372300/side" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.parentNode.classList.add('sp-fail');this.remove()"></a>
+    <a class="sp" style="--c:hsl(139,35%,33%);--w:71px" href="https://www.yes24.com/product/goods/102908354" rel="nofollow noopener noreferrer" target="_blank" title="A Little Bit Of A Lie"><span class="sp-t"><i>A Little Bit Of A Lie</i></span><img class="sp-i" src="https://image.yes24.com/goods/102908354/side" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.parentNode.classList.add('sp-fail');this.remove()"></a>
+    <a class="sp" style="--c:hsl(61,43%,28%);--w:57px" href="https://www.yes24.com/product/goods/2560" rel="nofollow noopener noreferrer" target="_blank" title="Praise For Laziness"><span class="sp-t"><i>Praise For Laziness</i></span><img class="sp-i" src="https://image.yes24.com/goods/2560/side" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.parentNode.classList.add('sp-fail');this.remove()"></a>
+    <a class="sp" style="--c:hsl(20,42%,36%);--w:56px" href="https://www.yes24.com/product/goods/96651059" rel="nofollow noopener noreferrer" target="_blank" title="Puke"><span class="sp-t"><i>Puke</i></span><img class="sp-i" src="https://image.yes24.com/goods/96651059/side" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.parentNode.classList.add('sp-fail');this.remove()"></a>
+    <a class="sp" style="--c:hsl(68,44%,39%);--w:60px" href="https://www.yes24.com/product/goods/108590831" rel="nofollow noopener noreferrer" target="_blank" title="If You Are Shaken By The Breeze From The Flower Spring, You Are A Flower"><span class="sp-t"><i>If You Are Shaken By The Breeze From The Flower Spring, You Are A Flower</i></span><img class="sp-i" src="https://image.yes24.com/goods/108590831/side" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.parentNode.classList.add('sp-fail');this.remove()"></a>
+    <a class="sp" style="--c:hsl(348,33%,41%);--w:62px" href="https://www.yes24.com/product/goods/1398241" rel="nofollow noopener noreferrer" target="_blank" title="Neruda&#x27;s Postman"><span class="sp-t"><i>Neruda&#x27;s Postman</i></span><img class="sp-i" src="https://image.yes24.com/goods/1398241/side" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.parentNode.classList.add('sp-fail');this.remove()"></a>
+    <a class="sp no-img" style="--c:hsl(200,55%,44%);--w:50px" href="https://www.aladin.co.kr/shop/wproduct.aspx?ItemId=31428375&amp;partner=openAPI&amp;start=api" rel="nofollow noopener noreferrer" target="_blank" title="Analects Of Confucius"><span class="sp-t"><i>Analects Of Confucius</i></span></a>
+    <a class="sp" style="--c:hsl(270,54%,44%);--w:70px" href="https://www.yes24.com/product/goods/135880" rel="nofollow noopener noreferrer" target="_blank" title="Moon And Sixpence"><span class="sp-t"><i>Moon And Sixpence</i></span><img class="sp-i" src="https://image.yes24.com/goods/135880/side" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.parentNode.classList.add('sp-fail');this.remove()"></a>
+    <a class="sp" style="--c:hsl(136,56%,45%);--w:54px" href="https://www.yes24.com/product/goods/15205532" rel="nofollow noopener noreferrer" target="_blank" title="Don Quixote"><span class="sp-t"><i>Don Quixote</i></span><img class="sp-i" src="https://image.yes24.com/goods/15205532/side" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.parentNode.classList.add('sp-fail');this.remove()"></a>
+    <a class="sp" style="--c:hsl(288,39%,36%);--w:54px" href="https://www.aladin.co.kr/shop/wproduct.aspx?ItemId=341555925&amp;partner=openAPI&amp;start=api" rel="nofollow noopener noreferrer" target="_blank" title="Listen To The Song Of The Wind"><span class="sp-t"><i>Listen To The Song Of The Wind</i></span><img class="sp-i" src="https://image.yes24.com/goods/127914251/side" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.parentNode.classList.add('sp-fail');this.remove()"></a>
+    <a class="sp" style="--c:hsl(179,51%,45%);--w:71px" href="https://www.yes24.com/product/goods/374091" rel="nofollow noopener noreferrer" target="_blank" title="Spider Monkey At Night"><span class="sp-t"><i>Spider Monkey At Night</i></span><img class="sp-i" src="https://image.yes24.com/goods/374091/side" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.parentNode.classList.add('sp-fail');this.remove()"></a>
+    <a class="sp" style="--c:hsl(280,57%,39%);--w:70px" href="https://www.yes24.com/product/goods/83527299" rel="nofollow noopener noreferrer" target="_blank" title="Side Of Things"><span class="sp-t"><i>Side Of Things</i></span><img class="sp-i" src="https://image.yes24.com/goods/83527299/side" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.parentNode.classList.add('sp-fail');this.remove()"></a>
+    <a class="sp" style="--c:hsl(243,39%,41%);--w:69px" href="https://www.yes24.com/product/goods/3620143" rel="nofollow noopener noreferrer" target="_blank" title="There Is No Problem On The Western Front."><span class="sp-t"><i>There Is No Problem On The Western Front.</i></span><img class="sp-i" src="https://image.yes24.com/goods/3620143/side" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.parentNode.classList.add('sp-fail');this.remove()"></a>
+    <a class="sp" style="--c:hsl(173,35%,26%);--w:59px" href="https://www.yes24.com/product/goods/101317041" rel="nofollow noopener noreferrer" target="_blank" title="Socrates Express"><span class="sp-t"><i>Socrates Express</i></span><img class="sp-i" src="https://image.yes24.com/goods/101317041/side" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.parentNode.classList.add('sp-fail');this.remove()"></a>
+    <a class="sp" style="--c:hsl(252,38%,38%);--w:58px" href="https://www.yes24.com/product/goods/2822910" rel="nofollow noopener noreferrer" target="_blank" title="Existentialism Is Humanism"><span class="sp-t"><i>Existentialism Is Humanism</i></span><img class="sp-i" src="https://image.yes24.com/goods/2822910/side" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.parentNode.classList.add('sp-fail');this.remove()"></a>
+    <a class="sp" style="--c:hsl(182,56%,42%);--w:58px" href="https://www.yes24.com/product/goods/27558484" rel="nofollow noopener noreferrer" target="_blank" title="Flower Of Evil"><span class="sp-t"><i>Flower Of Evil</i></span><img class="sp-i" src="https://image.yes24.com/goods/27558484/side" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.parentNode.classList.add('sp-fail');this.remove()"></a>
+    <a class="sp" style="--c:hsl(64,57%,35%);--w:54px" href="https://www.yes24.com/product/goods/26932917" rel="nofollow noopener noreferrer" target="_blank" title="Love Of A One-Eyed Fish"><span class="sp-t"><i>Love Of A One-Eyed Fish</i></span><img class="sp-i" src="https://image.yes24.com/goods/26932917/side" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.parentNode.classList.add('sp-fail');this.remove()"></a>
+    <a class="sp" style="--c:hsl(244,32%,38%);--w:50px" href="https://www.yes24.com/product/goods/147069329" rel="nofollow noopener noreferrer" target="_blank" title="Walden"><span class="sp-t"><i>Walden</i></span><img class="sp-i" src="https://image.yes24.com/goods/5531156/side" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.parentNode.classList.add('sp-fail');this.remove()"></a>
+    <a class="sp" style="--c:hsl(132,41%,36%);--w:54px" href="https://www.yes24.com/product/goods/17378" rel="nofollow noopener noreferrer" target="_blank" title="In Human Bondage"><span class="sp-t"><i>In Human Bondage</i></span><img class="sp-i" src="https://image.yes24.com/goods/17378/side" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.parentNode.classList.add('sp-fail');this.remove()"></a>
+    <a class="sp" style="--c:hsl(326,51%,45%);--w:62px" href="https://www.yes24.com/product/goods/172501401" rel="nofollow noopener noreferrer" target="_blank" title="Reading Sadness, Speaking Love"><span class="sp-t"><i>Reading Sadness, Speaking Love</i></span><img class="sp-i" src="https://image.yes24.com/goods/172501401/side" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.parentNode.classList.add('sp-fail');this.remove()"></a>
+    <a class="sp" style="--c:hsl(176,39%,33%);--w:70px" href="https://www.yes24.com/product/goods/8873079" rel="nofollow noopener noreferrer" target="_blank" title="Shaving In The Evening"><span class="sp-t"><i>Shaving In The Evening</i></span><img class="sp-i" src="https://image.yes24.com/goods/8873079/side" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.parentNode.classList.add('sp-fail');this.remove()"></a>
+    <a class="sp" style="--c:hsl(36,48%,28%);--w:50px" href="https://www.yes24.com/product/goods/3729147" rel="nofollow noopener noreferrer" target="_blank" title="Notes From Underground"><span class="sp-t"><i>Notes From Underground</i></span><img class="sp-i" src="https://image.yes24.com/goods/3729147/side" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.parentNode.classList.add('sp-fail');this.remove()"></a>
+    <a class="sp" style="--c:hsl(179,42%,31%);--w:57px" href="https://www.yes24.com/product/goods/93538105" rel="nofollow noopener noreferrer" target="_blank" title="Coffee Reading"><span class="sp-t"><i>Coffee Reading</i></span><img class="sp-i" src="https://image.yes24.com/goods/93538105/side" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.parentNode.classList.add('sp-fail');this.remove()"></a>
+    <a class="sp" style="--c:hsl(10,53%,34%);--w:50px" href="https://www.yes24.com/product/goods/107489763" rel="nofollow noopener noreferrer" target="_blank" title="Bask In The Sun"><span class="sp-t"><i>Bask In The Sun</i></span><img class="sp-i" src="https://image.yes24.com/goods/107489763/side" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.parentNode.classList.add('sp-fail');this.remove()"></a>
+    <a class="sp" style="--c:hsl(149,50%,31%);--w:51px" href="https://www.yes24.com/product/goods/14382339" rel="nofollow noopener noreferrer" target="_blank" title="Dead Heat On The Carousel"><span class="sp-t"><i>Dead Heat On The Carousel</i></span><img class="sp-i" src="https://image.yes24.com/goods/14382339/side" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.parentNode.classList.add('sp-fail');this.remove()"></a>
+    <a class="sp" style="--c:hsl(249,33%,42%);--w:65px" href="https://www.yes24.com/product/goods/90895702" rel="nofollow noopener noreferrer" target="_blank" title="Joe Hisaishi&#x27;s Music Diary"><span class="sp-t"><i>Joe Hisaishi&#x27;s Music Diary</i></span><img class="sp-i" src="https://image.yes24.com/goods/90895702/side" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.parentNode.classList.add('sp-fail');this.remove()"></a>
+    </div>
+    <ol class="reading-list" id="rlist" hidden>
     <li class="rl-item">
       <span class="rl-num">1</span>
       <a class="rl-cover" href="https://www.aladin.co.kr/shop/wproduct.aspx?ItemId=489254&amp;partner=openAPI&amp;start=api" rel="nofollow noopener noreferrer" target="_blank" aria-label="11 Minutes — buy or read more"><img src="https://image.aladin.co.kr/product/48/92/cover500/8982818227_2.jpg" alt="11 Minutes by Paulo Coelho — book cover" loading="lazy"></a>
@@ -867,6 +930,30 @@
     </li>
     </ol>
   </section>
+  <script>
+  (function () {
+    var sec = document.getElementById("shelf-sec");
+    if (!sec) return;
+    var shelf = document.getElementById("shelf"), list = document.getElementById("rlist");
+    sec.querySelectorAll(".sh-tab").forEach(function (b) {
+      b.addEventListener("click", function () {
+        var spine = b.dataset.view === "spine";
+        shelf.hidden = !spine; list.hidden = spine;
+        sec.querySelectorAll(".sh-tab").forEach(function (o) {
+          var on = o === b;
+          o.classList.toggle("on", on);
+          o.setAttribute("aria-pressed", on ? "true" : "false");
+        });
+        try { localStorage.setItem("fb.shelfView", b.dataset.view); } catch (e) {}
+      });
+    });
+    try {
+      if (localStorage.getItem("fb.shelfView") === "list") {
+        sec.querySelector('.sh-tab[data-view="list"]').click();
+      }
+    } catch (e) {}
+  })();
+  </script>
   <p class="tr-note">Book titles and author names marked with an asterisk (<strong>*</strong>) are machine-translated from Korean. No official English edition was confirmed for them, so read them as approximations of the Korean original shown next to them.</p>
   <footer>
     <p>Curated from public Korean-language sources. Korean original page: <a href="https://favorbook.co.kr/share/%EC%B0%A8%EC%9A%B0%EB%AF%BC.html" hreflang="ko">차우민</a>.</p>

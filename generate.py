@@ -225,7 +225,7 @@ def spine_tint(title):
     return 'hsl(' + str(hue) + ',' + str(sat) + '%,' + str(lig) + '%)'
 
 
-SPINE_H = 205                        # 책등 높이는 모두 같게
+SPINE_H = 270                        # 책등 높이는 모두 같게
 
 
 def spine_width(title):
@@ -233,8 +233,78 @@ def spine_width(title):
     h = 0
     for ch in (title or ''):
         h = (h * 13 + ord(ch)) & 0xFFFFFFFF
-    return 38 + h % 17                # 38~54px
+    return 50 + h % 22                # 50~71px
 
+
+# 책등 보기 · 목록 보기 전환 — 한국어 share 페이지와 /en/ 페이지가 함께 쓴다.
+# 고른 보기는 localStorage에 남겨 다음 페이지에서도 이어진다.
+SHELF_JS = (
+    '  <script>\n'
+    '  (function () {\n'
+    '    var sec = document.getElementById("shelf-sec");\n'
+    '    if (!sec) return;\n'
+    '    var shelf = document.getElementById("shelf"), list = document.getElementById("rlist");\n'
+    '    sec.querySelectorAll(".sh-tab").forEach(function (b) {\n'
+    '      b.addEventListener("click", function () {\n'
+    '        var spine = b.dataset.view === "spine";\n'
+    '        shelf.hidden = !spine; list.hidden = spine;\n'
+    '        sec.querySelectorAll(".sh-tab").forEach(function (o) {\n'
+    '          var on = o === b;\n'
+    '          o.classList.toggle("on", on);\n'
+    '          o.setAttribute("aria-pressed", on ? "true" : "false");\n'
+    '        });\n'
+    '        try { localStorage.setItem("fb.shelfView", b.dataset.view); } catch (e) {}\n'
+    '      });\n'
+    '    });\n'
+    '    try {\n'
+    '      if (localStorage.getItem("fb.shelfView") === "list") {\n'
+    '        sec.querySelector(\'.sh-tab[data-view="list"]\').click();\n'
+    '      }\n'
+    '    } catch (e) {}\n'
+    '  })();\n'
+    '  </script>\n'
+)
+
+
+# 책장(책등 보기) CSS — 한국어 share 페이지와 /en/ 페이지가 함께 쓴다
+SHELF_CSS = (
+    '    .shelf-head { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; flex-wrap: wrap; }\n'
+    '    .shelf-head h2 { margin-bottom: 0; border-bottom: none; padding-bottom: 0; }\n'
+    '    .shelf-tabs { display: flex; gap: 6px; flex: none; }\n'
+    '    .sh-tab { font: inherit; font-size: 12px; font-weight: 700; cursor: pointer; padding: 5px 12px;\n'
+    '              background: #fff; color: #000; border: 2px solid #000; box-shadow: 2px 2px 0 0 #000; }\n'
+    '    .sh-tab:hover { background: #fde047; }\n'
+    '    .sh-tab.on { background: #000; color: #fff; }\n'
+    # 책장 — 책등을 세워 늘어놓는다. 아래 선이 선반이다.
+    '    .shelf { display: flex; flex-wrap: wrap; align-items: flex-end; gap: 5px 3px;\n'
+    '             margin-top: 18px; padding: 0 6px 10px; border-bottom: 5px solid #000; }\n'
+    '    .shelf[hidden], .reading-list[hidden] { display: none; }\n'
+    '    .sp { position: relative; flex: none; width: auto; height: ' + str(SPINE_H) + 'px;\n'
+    '          background: var(--c, #555); border: 1px solid rgba(0,0,0,.45); border-radius: 2px 2px 0 0;\n'
+    '          box-shadow: inset -3px 0 6px rgba(0,0,0,.28), inset 3px 0 5px rgba(255,255,255,.14);\n'
+    '          overflow: hidden; text-decoration: none; transition: transform .12s; }\n'
+    '    .sp:hover { transform: translateY(-7px); z-index: 2; text-decoration: none; }\n'
+    # 색 책등의 제목 — 세로쓰기 한 줄. 길면 말줄임한다.
+    # 실제 책등 이미지가 오면 그 위에 덮여 안 보인다.
+    # align-items를 stretch로 둬야 안쪽 i의 높이가 확정된다. flex-start면 높이가
+    # 내용 기준이 되고, 거기에 max-height:100%를 걸면 엉뚱한 값으로 풀려서
+    # 제목이 중간에 잘린다.
+    '    .sp-t { position: absolute; inset: 0; display: flex; align-items: stretch;\n'
+    '            justify-content: center; padding: 14px 2px; overflow: hidden; }\n'
+    '    .sp-t i { writing-mode: vertical-rl; text-orientation: mixed; font-style: normal;\n'
+    '              white-space: nowrap; overflow: hidden; text-overflow: ellipsis;\n'
+    '              font-size: 15px; font-weight: 700; color: #fff;\n'
+    '              text-shadow: 0 1px 2px rgba(0,0,0,.55); }\n'
+    '    .sp-i { position: relative; z-index: 1; display: block;\n'
+    '            height: 100%; width: auto; max-width: 172px; object-fit: contain; }\n'
+    # 책등 이미지가 없거나 못 불러오면 색 책등 폭으로 돌아간다
+    '    .sp.no-img, .sp.sp-fail { width: var(--w, 60px); }\n'
+    # 좁은 화면에서는 한 줄에 너무 적게 들어가므로 조금 줄인다
+    '    @media (max-width: 480px) { .shelf .sp { height: 205px; }\n'
+    '                                 .sp.no-img, .sp.sp-fail { width: calc(var(--w, 60px) * .78); }\n'
+    '                                 .sp-i { max-width: 130px; }\n'
+    '                                 .sp-t i { font-size: 12.5px; } .sp-t { padding: 9px 2px; } }\n'
+)
 
 def make_en_celeb_url(name_en):
     return BASE + 'en/share/' + safe_en_filename(name_en) + '.html'
@@ -1373,39 +1443,7 @@ for name, info in celebs.items():
         '    .bc-author { font-size: 12px; color: #555; margin-bottom: 6px; }\n'
         '    .bc-badge { display: inline-block; font-size: 11px; background: #fde047; border: 1px solid #000; padding: 1px 6px; font-weight: 700; }\n'
         '    .celeb-bio { margin: 4px 0 8px; padding: 6px 10px; background: #fff8e7; border-left: 4px solid #000; font-size: 14px; line-height: 1.45; color: #222; }\n'
-        '    .shelf-head { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; flex-wrap: wrap; }\n'
-        '    .shelf-head h2 { margin-bottom: 0; border-bottom: none; padding-bottom: 0; }\n'
-        '    .shelf-tabs { display: flex; gap: 6px; flex: none; }\n'
-        '    .sh-tab { font: inherit; font-size: 12px; font-weight: 700; cursor: pointer; padding: 5px 12px;\n'
-        '              background: #fff; color: #000; border: 2px solid #000; box-shadow: 2px 2px 0 0 #000; }\n'
-        '    .sh-tab:hover { background: #fde047; }\n'
-        '    .sh-tab.on { background: #000; color: #fff; }\n'
-        # 책장 — 책등을 세워 늘어놓는다. 아래 선이 선반이다.
-        '    .shelf { display: flex; flex-wrap: wrap; align-items: flex-end; gap: 5px 3px;\n'
-        '             margin-top: 18px; padding: 0 6px 10px; border-bottom: 5px solid #000; }\n'
-        '    .shelf[hidden], .reading-list[hidden] { display: none; }\n'
-        '    .sp { position: relative; flex: none; width: auto; height: ' + str(SPINE_H) + 'px;\n'
-        '          background: var(--c, #555); border: 1px solid rgba(0,0,0,.45); border-radius: 2px 2px 0 0;\n'
-        '          box-shadow: inset -3px 0 6px rgba(0,0,0,.28), inset 3px 0 5px rgba(255,255,255,.14);\n'
-        '          overflow: hidden; text-decoration: none; transition: transform .12s; }\n'
-        '    .sp:hover { transform: translateY(-7px); z-index: 2; text-decoration: none; }\n'
-        # 색 책등의 제목 — 세로쓰기 한 줄. 길면 말줄임한다.
-        # 실제 책등 이미지가 오면 그 위에 덮여 안 보인다.
-        # align-items를 stretch로 둬야 안쪽 i의 높이가 확정된다. flex-start면 높이가
-        # 내용 기준이 되고, 거기에 max-height:100%를 걸면 엉뚱한 값으로 풀려서
-        # 제목이 중간에 잘린다.
-        '    .sp-t { position: absolute; inset: 0; display: flex; align-items: stretch;\n'
-        '            justify-content: center; padding: 11px 2px; overflow: hidden; }\n'
-        '    .sp-t i { writing-mode: vertical-rl; text-orientation: mixed; font-style: normal;\n'
-        '              white-space: nowrap; overflow: hidden; text-overflow: ellipsis;\n'
-        '              font-size: 13px; font-weight: 700; color: #fff;\n'
-        '              text-shadow: 0 1px 2px rgba(0,0,0,.55); }\n'
-        '    .sp-i { position: relative; z-index: 1; display: block;\n'
-        '            height: 100%; width: auto; max-width: 130px; object-fit: contain; }\n'
-        # 책등 이미지가 없거나 못 불러오면 색 책등 폭으로 돌아간다
-        '    .sp.no-img, .sp.sp-fail { width: var(--w, 46px); }\n'
-        '    @media (max-width: 480px) { .sp.no-img, .sp.sp-fail { width: calc(var(--w, 46px) * .82); }\n'
-        '                                 .sp-t i { font-size: 11.5px; } .sp-t { padding: 9px 2px; } }\n'
+        + SHELF_CSS +
         '    .reading-list { list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 14px; counter-reset: rl; }\n'
         '    .rl-item { position: relative; background: #fff; border: 2px solid #000; box-shadow: 4px 4px 0 0 #000; padding: 14px 14px 14px 52px; transition: transform .12s, box-shadow .12s; }\n'
         '    .rl-item:hover { transform: translate(-1px,-1px); box-shadow: 6px 6px 0 0 #000; }\n'
@@ -1486,30 +1524,7 @@ for name, info in celebs.items():
         + book_cards_html +
         '    </ol>\n'
         '  </section>\n'
-        '  <script>\n'
-        '  (function () {\n'
-        '    var sec = document.getElementById("shelf-sec");\n'
-        '    if (!sec) return;\n'
-        '    var shelf = document.getElementById("shelf"), list = document.getElementById("rlist");\n'
-        '    sec.querySelectorAll(".sh-tab").forEach(function (b) {\n'
-        '      b.addEventListener("click", function () {\n'
-        '        var spine = b.dataset.view === "spine";\n'
-        '        shelf.hidden = !spine; list.hidden = spine;\n'
-        '        sec.querySelectorAll(".sh-tab").forEach(function (o) {\n'
-        '          var on = o === b;\n'
-        '          o.classList.toggle("on", on);\n'
-        '          o.setAttribute("aria-pressed", on ? "true" : "false");\n'
-        '        });\n'
-        '        try { localStorage.setItem("fb.shelfView", b.dataset.view); } catch (e) {}\n'
-        '      });\n'
-        '    });\n'
-        '    try {\n'
-        '      if (localStorage.getItem("fb.shelfView") === "list") {\n'
-        '        sec.querySelector(\'.sh-tab[data-view="list"]\').click();\n'
-        '      }\n'
-        '    } catch (e) {}\n'
-        '  })();\n'
-        '  </script>\n'
+        + SHELF_JS +
         '\n'
         + (('  <section>\n'
             '    <h2>📝 ' + esc(sname) + '의 책 취향</h2>\n'
@@ -1749,6 +1764,7 @@ for name, info in celebs.items():
 
     # 책 행 (영문 제목 + 한국어 원제 부기)
     rows = ''
+    en_spine_html = ''
     for i, b in enumerate(en_books):
         # 알라딘 상품 URL (CSV의 &amp; 디코드)
         aladin_url = ''
@@ -1790,6 +1806,27 @@ for name, info in celebs.items():
         if b['source'] and b['source'].startswith('http'):
             src_html = ('<a class="rl-source" href="' + esc(b['source'])
                         + '" rel="nofollow noopener noreferrer" target="_blank">📺 Source</a>')
+
+        # 책등 한 칸 — 한국어 페이지와 같은 규칙. 예스24 책등이 있으면 그 이미지를,
+        # 없으면 제목에서 만든 색 책등을 쓴다. 제목은 영문으로 적는다.
+        _sp_url = spine_image_url(b['title'], b['coverUrl'])
+        _sp_inner = (
+            '<span class="sp-t"><i>' + esc(t_plain) + '</i></span>'
+            + ('<img class="sp-i" src="' + esc(_sp_url) + '" alt="" loading="lazy" '
+               'referrerpolicy="no-referrer" '
+               'onerror="this.parentNode.classList.add(\'sp-fail\');this.remove()">'
+               if _sp_url else '')
+        )
+        _sp_style = ('--c:' + spine_tint(b['title'])
+                     + ';--w:' + str(spine_width(b['title'])) + 'px')
+        _sp_cls = 'sp' if _sp_url else 'sp no-img'
+        if aladin_url:
+            en_spine_html += ('    <a class="' + _sp_cls + '" style="' + _sp_style + '" href="' + aladin_url
+                              + '" rel="nofollow noopener noreferrer" target="_blank" title="'
+                              + esc(t_plain) + '">' + _sp_inner + '</a>\n')
+        else:
+            en_spine_html += ('    <span class="' + _sp_cls + '" style="' + _sp_style + '" title="'
+                              + esc(t_plain) + '">' + _sp_inner + '</span>\n')
 
         rows += (
             '    <li class="rl-item">\n'
@@ -1927,6 +1964,7 @@ for name, info in celebs.items():
         '    h2 { font-size: 19px; margin: 32px 0 12px; padding-bottom: 4px; border-bottom: 2px solid #000; font-weight: 800; }\n'
         '    .intro { background: #fff; border: 2px solid #000; box-shadow: 4px 4px 0 0 #000; padding: 14px 16px; margin: 16px 0 24px; font-size: 15px; }\n'
         '    .celeb-bio { margin: 4px 0 8px; padding: 6px 10px; background: #fff8e7; border-left: 4px solid #000; font-size: 14px; line-height: 1.45; color: #222; }\n'
+        + SHELF_CSS +
         '    .reading-list { list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 14px; }\n'
         '    .rl-item { position: relative; background: #fff; border: 2px solid #000; box-shadow: 4px 4px 0 0 #000; padding: 14px 14px 14px 52px; transition: transform .12s, box-shadow .12s; }\n'
         '    .rl-item:hover { transform: translate(-1px,-1px); box-shadow: 6px 6px 0 0 #000; }\n'
@@ -1969,11 +2007,20 @@ for name, info in celebs.items():
         + ' read or recommended by <strong>' + esc(name_en) + '</strong> (' + esc(name)
         + '), gathered from interviews, YouTube, and SNS sources.</p>\n'
         '  </section>\n'
-        '  <section>\n'
-        '    <h2>Reading list</h2>\n'
-        '    <ol class="reading-list">\n' + rows +
+        '  <section id="shelf-sec">\n'
+        '    <div class="shelf-head">\n'
+        '      <h2>Reading list</h2>\n'
+        '      <div class="shelf-tabs" role="tablist">\n'
+        '        <button type="button" class="sh-tab on" data-view="spine" aria-pressed="true">\u258a Spines</button>\n'
+        '        <button type="button" class="sh-tab" data-view="list" aria-pressed="false">\u2630 List</button>\n'
+        '      </div>\n'
+        '    </div>\n'
+        '    <div class="shelf" id="shelf">\n' + en_spine_html +
+        '    </div>\n'
+        '    <ol class="reading-list" id="rlist" hidden>\n' + rows +
         '    </ol>\n'
         '  </section>\n'
+        + SHELF_JS
         + (EN_TR_NOTE_HTML if en_show_tr_note else '')
         + '  <footer>\n'
         '    <p>Curated from public Korean-language sources. Korean original page: <a href="'
