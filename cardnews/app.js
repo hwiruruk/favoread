@@ -1197,8 +1197,10 @@ function bindOptions() {
     if (state.selSticker && state.selSticker.sscope !== state.stickerScope) state.selSticker = null;
     renderStickerPanel();
   });
-  $$('button[data-stk-add]').forEach((b) =>
-    b.addEventListener('click', () => addSticker(b.dataset.stkAdd)));
+  $('#stkGal').addEventListener('click', (e) => {
+    const cell = e.target.closest('.stk-cell');
+    if (cell) addSticker(cell.dataset.preset);
+  });
 
   $('#saveBtn').addEventListener('click', saveProject);
   $('#loadBtn').addEventListener('click', () => $('#loadFile').click());
@@ -1771,8 +1773,12 @@ function promoHTML() {
    카드뉴스에도 들여온 것. 장(sscope)마다 따로 얹히고, 카드 좌표(1080 기준)에
    절대 위치로 놓인다. 글자를 비워도 남고, 크기·기울기·앞뒤를 바꿀 수 있다.
    ======================================================== */
-const STK_LABEL = { title: '🔠 큰 제목', bubble: '💬 말풍선', stars: '⭐ 별점', emoji: '✨ 이모지', tag: '🏷 라벨' };
+const STK_LABEL = {
+  title: '🔠 큰 제목', bubble: '💬 말풍선', stars: '⭐ 별점', emoji: '✨ 이모지', tag: '🏷 라벨',
+  soft: '🧁 요즘 박스', deco: '🧸 그림', outline: '🖍 외곽선 글자',
+};
 const STK_SHAPES = { blob: '몽글', pill: '알약', burst: '뾰족' };
+const SOFT_SHAPES = { round: '둥근 박스', chip: '단색 라벨', line: '얇은 테두리', note: '메모지', tape: '테이프' };
 const isBlank = (v) => !String(v == null ? '' : v).trim();
 
 /* ── 책등 ─────────────────────────────────────────────────────────
@@ -1831,6 +1837,27 @@ function stickerHTML(it, sscope) {
   if (it.type === 'emoji') {
     return `<div class="cn-stk cn-stk-emoji${boxCls}"${at} style="${style}">${escML(it.text)}</div>`;
   }
+  // 요즘 스타일 박스 — 두꺼운 테두리 없이 옅은 바탕에 진한 글자.
+  // 모양만 바꿔 라벨·얇은 테두리·메모지·테이프까지 한 종류로 쓴다.
+  if (it.type === 'soft') {
+    const pal = paletteFor(state.opts.bg, state.opts.inkAuto ? '' : state.opts.ink);
+    const c = stickerColor(it), sh = it.shape || 'round';
+    const bg = mix(c, pal['--paper'], 0.76), fg = mix(c, pal['--ink'], 0.58);
+    let sty = '';
+    if (sh === 'chip') sty = `background:${c};color:${onColor(c)};`;
+    else if (sh === 'line') sty = `background:${pal['--paper']};color:${fg};border-color:${fg};`;
+    else if (sh === 'tape') sty = `background:${mix(c, pal['--paper'], 0.45)};color:${fg};`;
+    else sty = `background:${bg};color:${fg};`;
+    return `<div class="cn-stk cn-stk-soft${boxCls}"${at} data-shape="${esc(sh)}" style="${style}${sty}">${escML(it.text)}</div>`;
+  }
+  // 그림 스티커 — 상자 없이 이모지만. 여백을 채우는 용도.
+  if (it.type === 'deco') {
+    return `<div class="cn-stk cn-stk-deco${boxCls}"${at} style="${style}">${escML(it.text)}</div>`;
+  }
+  // 외곽선 글자 — 사진 위에 얹어도 읽히는 한 줄 문구
+  if (it.type === 'outline') {
+    return `<div class="cn-stk cn-stk-outline${boxCls}"${at} style="${style}">${escML(it.text)}</div>`;
+  }
   return `<div class="cn-stk cn-stk-tag${boxCls}"${at} style="${style}">${escML(it.text)}</div>`;
 }
 
@@ -1856,31 +1883,113 @@ function stickerEstHeight(it) {
   if (it.type === 'title') return size * 1.15 * lines + 20;
   if (it.type === 'bubble') return size * 1.35 * lines + 105;
   if (it.type === 'stars') return size * (it.text ? 2.7 : 1.6) + 40;
+  if (it.type === 'soft') return size * 1.35 * lines + 40;
+  if (it.type === 'deco') return size * 1.05;
+  if (it.type === 'outline') return size * 1.2 * lines + 16;
   return size * 1.3 + 30;
 }
 
-function addSticker(kind) {
+/* ========================================================
+   스티커 고르기 — 미리보기 갤러리
+   버튼 이름만 보고는 어떤 모양이 나오는지 알 수 없어서,
+   실제로 올라갈 모습을 그대로 작게 그려 보여준다.
+   글자는 예시일 뿐이라 그대로 써도 되고 지워도 된다.
+   ======================================================== */
+const STK_PRESETS = [
+  { key: 'soft-round', name: '둥근 박스', group: 'soft',
+    make: () => ({ type: 'soft', shape: 'round', color: 'accent', text: '가을이 오면은', size: 52, rot: -1 }) },
+  { key: 'soft-chip', name: '단색 라벨', group: 'soft',
+    make: () => ({ type: 'soft', shape: 'chip', color: 'accent', text: '깊생 금지', size: 44, rot: -2 }) },
+  { key: 'soft-line', name: '얇은 테두리', group: 'soft',
+    make: () => ({ type: 'soft', shape: 'line', color: 'ink', text: '느낌 좋은', size: 42, rot: 2 }) },
+  { key: 'soft-note', name: '메모지', group: 'soft',
+    make: () => ({ type: 'soft', shape: 'note', color: 'accent', text: '천고마비의\n계절', size: 44, rot: -3 }) },
+  { key: 'soft-tape', name: '테이프 (빈 칸)', group: 'soft',
+    make: () => ({ type: 'soft', shape: 'tape', color: 'accent', text: '', size: 36, w: 420, h: 72, rot: -7 }) },
+  { key: 'outline', name: '외곽선 글자', group: 'soft',
+    make: () => ({ type: 'outline', text: '행복은 이렇게나 많다', size: 64, rot: -9 }) },
+
+  { key: 'deco-bear', name: '곰돌이', group: 'deco',
+    make: () => ({ type: 'deco', text: '🧸', size: 130, rot: -6 }) },
+  { key: 'deco-cafe', name: '커피', group: 'deco',
+    make: () => ({ type: 'deco', text: '☕', size: 120, rot: 5 }) },
+  { key: 'deco-ribbon', name: '리본', group: 'deco',
+    make: () => ({ type: 'deco', text: '🎀', size: 120, rot: -8 }) },
+  { key: 'deco-moon', name: '달·별', group: 'deco',
+    make: () => ({ type: 'deco', text: '🌙', size: 120, rot: 4 }) },
+
+  { key: 'title', name: '큰 제목', group: 'basic',
+    make: (dn) => ({ type: 'title', text: `${dn}의\n책장`, size: 92, w: 820, rot: -2 }) },
+  { key: 'bubble', name: '말풍선', group: 'basic',
+    make: (dn) => ({ type: 'bubble', text: `${josa(dn, '이', '가')} 읽은 책`, size: 44, shape: 'blob', color: 'accent', rot: -4 }) },
+  { key: 'stars', name: '별점', group: 'basic',
+    make: () => ({ type: 'stars', text: '별이 다섯 개!', size: 40, n: 5, rot: 3 }) },
+  { key: 'emoji', name: '이모지 줄', group: 'basic',
+    make: () => ({ type: 'emoji', text: '✨ 📚 🩷 ⭐️', size: 54, rot: 0 }) },
+  { key: 'tag', name: '작은 라벨', group: 'basic',
+    make: (dn) => ({ type: 'tag', text: `#${dn}_독서`, size: 34, rot: -3 }) },
+];
+
+const STK_GROUPS = [
+  ['soft', '요즘 스타일'],
+  ['deco', '그림 스티커'],
+  ['basic', '기본'],
+];
+
+function presetSticker(p) {
+  const dn = displayName(state.name) || '최애';
+  return { id: 'prev', x: 0, y: 0, rot: 0, ...p.make(dn) };
+}
+
+function buildStickerGallery() {
+  const box = $('#stkGal');
+  if (!box) return;
+  // 장 위와 똑같은 색이 나오도록 팔레트를 그대로 넘긴다
+  const pal = paletteFor(state.opts.bg, state.opts.inkAuto ? '' : state.opts.ink);
+  let vars = '';
+  for (const k in pal) vars += `${k}:${pal[k]};`;
+  vars += `--accent:${accentColor()};`;
+  box.innerHTML = STK_GROUPS.map(([g, label]) => {
+    const cells = STK_PRESETS.filter((p) => p.group === g).map((p) => `
+      <button class="stk-cell" type="button" data-preset="${p.key}" title="${esc(p.name)} 올리기">
+        <span class="stk-prev" style="${vars}background:${pal['--paper']}">
+          <span class="stk-prev-in">${stickerHTML(presetSticker(p), 'prev')}</span>
+        </span>
+        <span class="stk-cell-n">${esc(p.name)}</span>
+      </button>`).join('');
+    return `<div class="stk-gal-h">${esc(label)}</div><div class="stk-gal-row">${cells}</div>`;
+  }).join('');
+  fitStickerPreviews();
+}
+
+/* 실제 크기 그대로 그린 뒤 칸에 맞게 줄인다 — 미리 정한 배율을 쓰면
+   글자 수가 다른 스티커끼리 크기가 들쭉날쭉해진다. */
+function fitStickerPreviews() {
+  $$('.stk-prev').forEach((box) => {
+    const inner = box.querySelector('.stk-prev-in');
+    if (!inner) return;
+    inner.style.transform = 'none';
+    const w = inner.offsetWidth, h = inner.offsetHeight;
+    if (!w || !h) return;
+    const s = Math.min((box.clientWidth - 10) / w, (box.clientHeight - 10) / h, 1);
+    inner.style.transform = `scale(${s})`;
+  });
+}
+
+function addSticker(key) {
   const sscope = state.stickerScope;
   if (!sscope) { status('스티커를 올릴 장을 먼저 고르세요'); return; }
+  const p = STK_PRESETS.find((x) => x.key === key);
+  if (!p) return;
   const [W, H] = dims();
   const list = stickersOf(sscope);
   const bottom = list.reduce((m, i) => Math.max(m, i.y + stickerEstHeight(i)), 0);
-  const dn = displayName(state.name);
-  const base = {
-    id: 's' + (state.opts.stickerSeq = (state.opts.stickerSeq || 1) + 1),
-    x: Math.max(60, Math.min(80 + list.length * 14, W - 360)),
-    // 첫 스티커는 카드 중간쯤에서 시작한다 — 위쪽은 제목·브랜드가 이미 차 있다.
-    // 두 번째부터는 앞 스티커 아래로 쌓는다.
-    y: Math.max(70, Math.min(bottom ? bottom + 34 : Math.round(H * 0.42), H - 300)),
-    rot: 0, w: null, h: null,
-  };
-  let it;
-  if (kind === 'title') it = { ...base, type: 'title', text: `${dn}의\n책장`, size: 92, w: 820, rot: -2 };
-  else if (kind === 'bubble') it = { ...base, type: 'bubble', text: `${josa(dn, '이', '가')} 읽은 책`, size: 44, shape: 'blob', color: 'accent', rot: -4 };
-  else if (kind === 'stars') it = { ...base, type: 'stars', text: '별이 다섯 개!', size: 40, n: 5, rot: 3 };
-  else if (kind === 'emoji') it = { ...base, type: 'emoji', text: '✨ 📚 🩷 ⭐️', size: 54 };
-  else it = { ...base, type: 'tag', text: `#${dn}_독서`, size: 34, rot: -3 };
-
+  const it = presetSticker(p);
+  it.id = 's' + (state.opts.stickerSeq = (state.opts.stickerSeq || 1) + 1);
+  it.x = Math.max(60, Math.min(80 + list.length * 14, W - 360));
+  // 첫 스티커는 카드 중간쯤에서 시작한다 — 위쪽은 제목·브랜드가 이미 차 있다.
+  // 두 번째부터는 앞 스티커 아래로 쌓는다.
+  it.y = Math.max(70, Math.min(bottom ? bottom + 34 : Math.round(H * 0.42), H - 300));
   list.push(it);
   state.selSticker = { sscope, id: it.id };
   renderPreview();
@@ -1913,6 +2022,7 @@ function renderStickerPanel() {
     return `<option value="${esc(sl.sscope)}"${sl.sscope === state.stickerScope ? ' selected' : ''}>${esc(slideLabel(sl, i))}${n ? ` · 스티커 ${n}` : ''}</option>`;
   }).join('');
 
+  buildStickerGallery();   // 지금 배경색·포인트색으로 미리보기를 다시 그린다
   renderStickerEditor();
   renderStickerLayers();
 }
@@ -1967,7 +2077,14 @@ function renderStickerEditor() {
         <div class="seg seg-row">
           ${Object.keys(STK_SHAPES).map((sh) => `<label><input type="radio" name="stkShape" value="${sh}"${it.shape === sh ? ' checked' : ''}> ${STK_SHAPES[sh]}</label>`).join('')}
         </div>
-      </div>
+      </div>` : ''}
+    ${it.type === 'soft' ? `
+      <div class="field"><span>모양</span>
+        <div class="seg">
+          ${Object.keys(SOFT_SHAPES).map((sh) => `<label><input type="radio" name="stkShape" value="${sh}"${(it.shape || 'round') === sh ? ' checked' : ''}> ${SOFT_SHAPES[sh]}</label>`).join('')}
+        </div>
+      </div>` : ''}
+    ${(it.type === 'bubble' || it.type === 'soft') ? `
       <div class="field"><span>색</span>
         <div class="seg seg-row">
           ${[['accent', '포인트'], ['paper', '배경'], ['ink', '글자']].map(([k, lb]) => `<label><input type="radio" name="stkColor" value="${k}"${(it.color || 'accent') === k ? ' checked' : ''}> ${lb}</label>`).join('')}

@@ -590,3 +590,64 @@ input[type=range]{width:100%;accent-color:var(--ui-accent);background:none;paddi
   background:var(--ink);color:var(--paper);border-radius:999px;
   padding:9px 22px;font-weight:800;line-height:1.2;
 }
+
+/* ── 요즘 스타일 스티커 ──────────────────────────────────────────
+   기존 스티커는 두꺼운 테두리라 인스타에서 흔히 쓰는 말랑한 느낌과
+   결이 다르다. 테두리를 없애고 옅은 바탕에 진한 글자로, 모양만 바꿔 쓴다.
+   바탕색·글자색은 JS에서 팔레트 색을 섞어 넣는다. */
+.cn-stk-soft{
+  padding:16px 28px;border-radius:18px;line-height:1.35;font-weight:800;
+  text-align:center;max-width:640px;letter-spacing:-.01em;
+}
+.cn-stk-soft.has-w,.cn-stk-soft.has-h{max-width:none}
+.cn-stk-soft[data-shape=chip]{border-radius:10px;padding:10px 20px}
+.cn-stk-soft[data-shape=line]{border-radius:999px;padding:11px 24px;border:3px solid currentColor}
+.cn-stk-soft[data-shape=note]{border-radius:4px;padding:20px 26px;text-align:left}
+/* 메모지 오른쪽 아래 접힌 모서리 */
+.cn-stk-soft[data-shape=note]::after{
+  content:'';position:absolute;right:0;bottom:0;border:14px solid transparent;
+  border-right-color:rgba(0,0,0,.09);border-bottom-color:rgba(0,0,0,.09);
+}
+.cn-stk-soft[data-shape=tape]{border-radius:2px;padding:9px 34px;opacity:.92}
+
+/* 그림 스티커 — 상자 없이 이모지만 */
+.cn-stk-deco{line-height:1}
+
+/* 외곽선 글자 — 사진 위에서도 읽히게 배경색으로 테두리를 두른다 */
+.cn-stk-outline{
+  font-family:'KoPubWorld Batang',serif;font-weight:900;line-height:1.2;color:var(--ink);
+  text-align:center;letter-spacing:-.01em;
+  text-shadow:
+    3px 0 0 var(--paper),-3px 0 0 var(--paper),0 3px 0 var(--paper),0 -3px 0 var(--paper),
+    2px 2px 0 var(--paper),-2px 2px 0 var(--paper),2px -2px 0 var(--paper),-2px -2px 0 var(--paper);
+}
+
+/* ── 스티커 고르기 갤러리 ─────────────────────────────────────────
+   이름만 적힌 버튼으로는 어떤 모양이 올라오는지 알 수 없어서,
+   실제 스티커를 그대로 작게 그려 보여준다. */
+.stk-gal{margin:0 0 4px}
+.stk-gal-h{
+  font-size:11px;font-weight:800;color:var(--ui-muted);
+  letter-spacing:.04em;margin:12px 0 6px;
+}
+.stk-gal-h:first-child{margin-top:0}
+.stk-gal-row{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:7px}
+.stk-cell{
+  display:flex;flex-direction:column;gap:4px;padding:0;min-width:0;
+  background:none;border:none;cursor:pointer;font:inherit;text-align:center;
+}
+.stk-prev{
+  height:64px;min-width:0;display:flex;align-items:center;justify-content:center;
+  border:1px solid var(--ui-line);border-radius:6px;overflow:hidden;
+  transition:border-color .1s;
+}
+.stk-cell:hover .stk-prev{border-color:var(--ui-accent)}
+/* 미리보기 안에서는 장 위 좌표를 쓰지 않고 가운데에 둔다 */
+.stk-prev .cn-stk{position:static;pointer-events:none;cursor:pointer;max-width:none}
+/* 좁은 칸에 맞춰 글자가 세로로 말리면 안 된다 — 제 크기대로 그린 뒤 줄인다 */
+.stk-prev-in{
+  display:inline-block;transform-origin:center center;white-space:nowrap;
+  flex:0 0 auto;width:max-content;
+}
+.stk-cell-n{font-size:10.5px;font-weight:700;color:var(--ui-text);line-height:1.3}
+
