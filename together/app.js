@@ -48,6 +48,7 @@ const state = {
   ink: '#111111',
   bookBorder: false,    // 책 표지 테두리(기본 없음)
   bookScale: 1,         // 책 표지 크기 배율 (자동 정렬 기준 폭에 곱한다)
+  bookFace: 'spine',    // 책을 어떻게 보여줄지 — 'spine'(책등) | 'cover'(표지)
   proxy: true,
   watermark: true,
   credit: '',
@@ -65,6 +66,28 @@ const escML = (s) => esc(s).replace(/\r\n|\r|\n/g, '<br>');
 const status = (m) => { $('#statusMsg').textContent = m || ''; };
 const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
 const isBlank = (s) => !String(s == null ? '' : s).trim();
+
+/* ── 책등 ─────────────────────────────────────────────────────────
+ * 예스24는 표지와 같은 상품 ID로 책등 이미지를 준다.
+ *   표지  https://image.yes24.com/goods/91901136/L
+ *   책등  https://image.yes24.com/goods/91901136/side
+ * 표지가 알라딘인 책은 ID를 모르니 제목에서 만든 색 책등으로 대신한다.
+ * (generate.py의 yes24_spine_url / spine_tint 와 같은 규칙) */
+const YES24_ID_RE = /image\.yes24\.com\/goods\/(?:detail\/)?(\d+)/i;
+function yes24SpineUrl(coverUrl) {
+  const m = YES24_ID_RE.exec(coverUrl || '');
+  return m ? 'https://image.yes24.com/goods/' + m[1] + '/side' : '';
+}
+function hashOf(str, mul) {
+  let h = 0;
+  for (const ch of String(str || '')) h = (Math.imul(h, mul) + ch.codePointAt(0)) >>> 0;
+  return h;
+}
+function spineTint(title) {
+  const h = hashOf(title, 31);
+  return `hsl(${h % 360},${32 + (h >>> 9) % 26}%,${26 + (h >>> 17) % 22}%)`;
+}
+const SPINE_RATIO = 4.3;   // 높이 / 폭
 const displayName = (n) => String(n || '').replace(/\s*\(.*?\)\s*$/, '').trim() || n;
 
 /* ---------- 한글 조사 ---------- */
@@ -285,6 +308,35 @@ function layoutBooks() {
   if (!n) return;
   const [W, H] = SIZES[state.size];
   const margin = 70;
+
+  if (state.bookFace === 'spine') {
+    // 책장처럼 — 바닥선을 맞춰 나란히 세운다. 기울이지 않는다.
+    // 카드를 시원하게 채우도록 — 가로로 들어갈 수 있는 폭과
+    // 카드 높이의 62%를 넘지 않는 폭 중 작은 쪽을 쓴다.
+    const gap = 6;
+    const byWidth = Math.floor((W - margin * 2 - gap * (n - 1)) / n);
+    const byHeight = Math.floor((H * 0.62) / SPINE_RATIO);
+    const wEach = clamp(
+      Math.round(Math.min(byWidth, byHeight, 150) * (state.bookScale || 1)), 20, 240);
+    const step = n > 1
+      ? Math.min(wEach + gap, Math.round((W - margin * 2 - wEach) / (n - 1)))
+      : 0;
+    const totalW = wEach + step * (n - 1);
+    const startX = Math.round((W - totalW) / 2);
+    const floorY = H - Math.round(H * 0.11);   // 바닥 여백
+    books.forEach((b, i) => {
+      b.w = wEach;
+      b.rot = 0;
+      // 높이를 조금씩 달리하고 바닥을 맞춘다
+      const hv = 1 + ((hashOf(b.title, 17) % 14) - 7) / 100;   // ±7%
+      const h = Math.round(wEach * SPINE_RATIO * hv);
+      b.spineH = h;
+      b.x = startX + i * step;
+      b.y = clamp(floorY - h, 20, H - 120);
+    });
+    return;
+  }
+
   const gap = n > 4 ? 14 : 22;
   const fitW = Math.floor((W - margin * 2 - gap * (n - 1)) / n);
   const wEach = clamp(Math.round(Math.min(300, fitW) * (state.bookScale || 1)), BOOK_W_MIN, BOOK_W_MAX);
@@ -315,6 +367,16 @@ function itemHTML(it) {
   const base = `left:${it.x}px;top:${it.y}px;transform:rotate(${it.rot || 0}deg);`;
 
   if (it.type === 'book') {
+    if (state.bookFace === 'spine') {
+      const sp = yes24SpineUrl(it.url);
+      const img = sp
+        ? `<img class="tg-spine-i" src="${esc(proxify(sp))}" alt="" onerror="this.remove()">`
+        : '';
+      return `<div class="tg-item tg-spine${selCls}" data-id="${it.id}"
+        style="${base}width:${it.w}px;height:${it.spineH || Math.round(it.w * SPINE_RATIO)}px;--c:${spineTint(it.title)}">
+        <span class="tg-spine-t" style="font-size:${Math.max(11, Math.round(it.w * 0.34))}px"><i>${esc(it.title)}</i></span>${img}
+      </div>`;
+    }
     const url = it.url.startsWith('data:') ? it.url : proxify(it.url);
     noteMeta(url);
     return `<div class="tg-item tg-book${selCls}" data-id="${it.id}" style="${base}width:${it.w}px">
@@ -765,6 +827,13 @@ function bindOptions() {
     renderBookList(); render();
   });
   $('#bkTidy').addEventListener('click', () => { layoutBooks(); render(); });
+
+  $$('input[name=bookFace]').forEach((r) => r.addEventListener('change', (e) => {
+    if (!e.target.checked) return;
+    state.bookFace = e.target.value;
+    layoutBooks();
+    render();
+  }));
 
   $('#bkScale').addEventListener('input', (e) => {
     state.bookScale = (+e.target.value) / 100;

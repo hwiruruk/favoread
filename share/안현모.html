@@ -483,6 +483,30 @@
     .bc-author { font-size: 12px; color: #555; margin-bottom: 6px; }
     .bc-badge { display: inline-block; font-size: 11px; background: #fde047; border: 1px solid #000; padding: 1px 6px; font-weight: 700; }
     .celeb-bio { margin: 4px 0 8px; padding: 6px 10px; background: #fff8e7; border-left: 4px solid #000; font-size: 14px; line-height: 1.45; color: #222; }
+    .shelf-head { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
+    .shelf-head h2 { margin-bottom: 0; border-bottom: none; padding-bottom: 0; }
+    .shelf-tabs { display: flex; gap: 6px; flex: none; }
+    .sh-tab { font: inherit; font-size: 12px; font-weight: 700; cursor: pointer; padding: 5px 12px;
+              background: #fff; color: #000; border: 2px solid #000; box-shadow: 2px 2px 0 0 #000; }
+    .sh-tab:hover { background: #fde047; }
+    .sh-tab.on { background: #000; color: #fff; }
+    .shelf { display: flex; flex-wrap: wrap; align-items: flex-end; gap: 5px 3px;
+             margin-top: 18px; padding: 0 6px 10px; border-bottom: 5px solid #000; }
+    .shelf[hidden], .reading-list[hidden] { display: none; }
+    .sp { position: relative; flex: none; width: var(--w, 46px); height: var(--h, 200px);
+          background: var(--c, #555); border: 1px solid rgba(0,0,0,.45); border-radius: 2px 2px 0 0;
+          box-shadow: inset -3px 0 6px rgba(0,0,0,.28), inset 3px 0 5px rgba(255,255,255,.14);
+          overflow: hidden; text-decoration: none; transition: transform .12s; }
+    .sp:hover { transform: translateY(-7px); z-index: 2; text-decoration: none; }
+    .sp-t { position: absolute; inset: 0; display: flex; align-items: stretch;
+            justify-content: center; padding: 11px 2px; overflow: hidden; }
+    .sp-t i { writing-mode: vertical-rl; text-orientation: mixed; font-style: normal;
+              white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+              font-size: 13px; font-weight: 700; color: #fff;
+              text-shadow: 0 1px 2px rgba(0,0,0,.55); }
+    .sp-i { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; display: block; }
+    @media (max-width: 480px) { .sp { width: calc(var(--w, 46px) * .82); }
+                                 .sp-t i { font-size: 11.5px; } .sp-t { padding: 9px 2px; } }
     .reading-list { list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 14px; counter-reset: rl; }
     .rl-item { position: relative; background: #fff; border: 2px solid #000; box-shadow: 4px 4px 0 0 #000; padding: 14px 14px 14px 52px; transition: transform .12s, box-shadow .12s; }
     .rl-item:hover { transform: translate(-1px,-1px); box-shadow: 6px 6px 0 0 #000; }
@@ -543,10 +567,40 @@
     <p style="margin:0">안현모의 독서 기록을 한곳에 모았어요. 유튜브·인터뷰·SNS 등 공개 출처에서 확인된 인생책·추천 도서 <strong>22권</strong>을 한 페이지에 정리한 독서 리스트입니다. 아래 목록에서 책 제목·저자·출처 링크를 한눈에 확인할 수 있어요.</p>
   </section>
 
-  <section>
-    <h2>📚 안현모의 독서 리스트 (22권)</h2>
-    <p class="muted">2권은 다른 셀럽도 함께 추천한 책이에요. 카드 안에 함께 추천한 셀럽 이름이 표시됩니다.</p>
-    <ol class="reading-list">
+  <section id="shelf-sec">
+    <div class="shelf-head">
+      <h2>📚 안현모의 독서 리스트 (22권)</h2>
+      <div class="shelf-tabs" role="tablist">
+        <button type="button" class="sh-tab on" data-view="spine" aria-pressed="true">▊ 책등</button>
+        <button type="button" class="sh-tab" data-view="list" aria-pressed="false">☰ 목록</button>
+      </div>
+    </div>
+    <p class="muted">2권은 다른 셀럽도 함께 추천한 책이에요. 목록 보기에서 함께 추천한 셀럽 이름을 볼 수 있어요.</p>
+    <div class="shelf" id="shelf">
+    <a class="sp" style="--c:hsl(88,45%,46%);--h:210px;--w:48px" href="https://www.aladin.co.kr/shop/wproduct.aspx?ItemId=320983480&amp;partner=openAPI&amp;start=api" rel="nofollow noopener noreferrer" target="_blank" title="그렇게 인생은 이야기가 된다"><span class="sp-t"><i>그렇게 인생은 이야기가 된다</i></span></a>
+    <a class="sp" style="--c:hsl(148,56%,35%);--h:196px;--w:49px" href="https://www.aladin.co.kr/shop/wproduct.aspx?ItemId=309922398&amp;partner=openAPI&amp;start=api" rel="nofollow noopener noreferrer" target="_blank" title="기후위기인간"><span class="sp-t"><i>기후위기인간</i></span></a>
+    <a class="sp" style="--c:hsl(172,46%,40%);--h:206px;--w:54px" href="https://www.aladin.co.kr/shop/wproduct.aspx?ItemId=128491157&amp;partner=openAPI&amp;start=api" rel="nofollow noopener noreferrer" target="_blank" title="먹고 기도하고 사랑하라"><span class="sp-t"><i>먹고 기도하고 사랑하라</i></span></a>
+    <a class="sp" style="--c:hsl(94,40%,45%);--h:188px;--w:54px" href="https://www.aladin.co.kr/shop/wproduct.aspx?ItemId=16447629&amp;partner=openAPI&amp;start=api" rel="nofollow noopener noreferrer" target="_blank" title="무엇이 되기 위해 살지 마라 - 세계은행 총재 김용의 마음 습관"><span class="sp-t"><i>무엇이 되기 위해 살지 마라 - 세계은행 총재 김용의 마음 습관</i></span></a>
+    <a class="sp" style="--c:hsl(113,56%,29%);--h:215px;--w:53px" href="https://www.aladin.co.kr/shop/wproduct.aspx?ItemId=285703872&amp;partner=openAPI&amp;start=api" rel="nofollow noopener noreferrer" target="_blank" title="미식가의 어원 사전"><span class="sp-t"><i>미식가의 어원 사전</i></span></a>
+    <a class="sp" style="--c:hsl(276,43%,37%);--h:188px;--w:48px" href="https://www.aladin.co.kr/shop/wproduct.aspx?ItemId=47044935&amp;partner=openAPI&amp;start=api" rel="nofollow noopener noreferrer" target="_blank" title="발칙한 현대미술사 - 천재 예술가들의 크리에이티브 경쟁"><span class="sp-t"><i>발칙한 현대미술사 - 천재 예술가들의 크리에이티브 경쟁</i></span></a>
+    <a class="sp" style="--c:hsl(145,48%,29%);--h:195px;--w:40px" href="https://www.aladin.co.kr/shop/wproduct.aspx?ItemId=290394111&amp;partner=openAPI&amp;start=api" rel="nofollow noopener noreferrer" target="_blank" title="백만장자와 승려"><span class="sp-t"><i>백만장자와 승려</i></span></a>
+    <a class="sp" style="--c:hsl(17,34%,39%);--h:205px;--w:40px" href="https://www.aladin.co.kr/shop/wproduct.aspx?ItemId=295391843&amp;partner=openAPI&amp;start=api" rel="nofollow noopener noreferrer" target="_blank" title="법관의 일"><span class="sp-t"><i>법관의 일</i></span></a>
+    <a class="sp" style="--c:hsl(61,43%,36%);--h:213px;--w:52px" href="https://www.aladin.co.kr/shop/wproduct.aspx?ItemId=343152097&amp;partner=openAPI&amp;start=api" rel="nofollow noopener noreferrer" target="_blank" title="빨강머리 앤"><span class="sp-t"><i>빨강머리 앤</i></span></a>
+    <a class="sp" style="--c:hsl(272,33%,40%);--h:200px;--w:42px" href="https://www.aladin.co.kr/shop/wproduct.aspx?ItemId=33850809&amp;partner=openAPI&amp;start=api" rel="nofollow noopener noreferrer" target="_blank" title="술 취한 코끼리 길들이기"><span class="sp-t"><i>술 취한 코끼리 길들이기</i></span></a>
+    <a class="sp" style="--c:hsl(72,56%,32%);--h:220px;--w:48px" href="https://www.aladin.co.kr/shop/wproduct.aspx?ItemId=123058688&amp;partner=openAPI&amp;start=api" rel="nofollow noopener noreferrer" target="_blank" title="시간은 이야기가 된다"><span class="sp-t"><i>시간은 이야기가 된다</i></span></a>
+    <a class="sp" style="--c:hsl(75,52%,37%);--h:205px;--w:39px" href="https://www.aladin.co.kr/shop/wproduct.aspx?ItemId=173745155&amp;partner=openAPI&amp;start=api" rel="nofollow noopener noreferrer" target="_blank" title="아름다움이란 무엇인가"><span class="sp-t"><i>아름다움이란 무엇인가</i></span></a>
+    <a class="sp" style="--c:hsl(69,41%,46%);--h:201px;--w:44px" href="https://www.aladin.co.kr/shop/wproduct.aspx?ItemId=289586973&amp;partner=openAPI&amp;start=api" rel="nofollow noopener noreferrer" target="_blank" title="엑설런스 - 인간의 탁월함을 결정하는 9가지 능력"><span class="sp-t"><i>엑설런스 - 인간의 탁월함을 결정하는 9가지 능력</i></span></a>
+    <a class="sp" style="--c:hsl(113,38%,28%);--h:221px;--w:52px" href="https://www.aladin.co.kr/shop/wproduct.aspx?ItemId=355984897&amp;partner=openAPI&amp;start=api" rel="nofollow noopener noreferrer" target="_blank" title="예쁘다 예쁘다 말하면 사랑이 오고"><span class="sp-t"><i>예쁘다 예쁘다 말하면 사랑이 오고</i></span></a>
+    <a class="sp" style="--c:hsl(300,56%,47%);--h:208px;--w:52px" href="https://www.aladin.co.kr/shop/wproduct.aspx?ItemId=193591681&amp;partner=openAPI&amp;start=api" rel="nofollow noopener noreferrer" target="_blank" title="우리가 빛의 속도로 갈 수 없다면"><span class="sp-t"><i>우리가 빛의 속도로 갈 수 없다면</i></span></a>
+    <a class="sp" style="--c:hsl(123,43%,37%);--h:203px;--w:40px" href="https://www.aladin.co.kr/shop/wproduct.aspx?ItemId=257344149&amp;partner=openAPI&amp;start=api" rel="nofollow noopener noreferrer" target="_blank" title="우리가 할 일은 인생의 아름다움을 발견하는 일뿐이다"><span class="sp-t"><i>우리가 할 일은 인생의 아름다움을 발견하는 일뿐이다</i></span></a>
+    <a class="sp" style="--c:hsl(288,40%,36%);--h:206px;--w:51px" href="https://www.aladin.co.kr/shop/wproduct.aspx?ItemId=257284078&amp;partner=openAPI&amp;start=api" rel="nofollow noopener noreferrer" target="_blank" title="이해인의 말"><span class="sp-t"><i>이해인의 말</i></span></a>
+    <a class="sp" style="--c:hsl(163,42%,43%);--h:209px;--w:48px" href="https://www.aladin.co.kr/shop/wproduct.aspx?ItemId=196183163&amp;partner=openAPI&amp;start=api" rel="nofollow noopener noreferrer" target="_blank" title="지구별 여행자"><span class="sp-t"><i>지구별 여행자</i></span></a>
+    <a class="sp" style="--c:hsl(64,35%,38%);--h:208px;--w:45px" href="https://www.aladin.co.kr/shop/wproduct.aspx?ItemId=233080859&amp;partner=openAPI&amp;start=api" rel="nofollow noopener noreferrer" target="_blank" title="진리의 발견"><span class="sp-t"><i>진리의 발견</i></span></a>
+    <a class="sp" style="--c:hsl(165,52%,37%);--h:219px;--w:53px" href="https://www.aladin.co.kr/shop/wproduct.aspx?ItemId=296796166&amp;partner=openAPI&amp;start=api" rel="nofollow noopener noreferrer" target="_blank" title="포르투갈은 블루다 - 느릿느릿, 걸음마다 블루가 일렁일렁"><span class="sp-t"><i>포르투갈은 블루다 - 느릿느릿, 걸음마다 블루가 일렁일렁</i></span></a>
+    <a class="sp" style="--c:hsl(162,50%,30%);--h:204px;--w:52px" href="https://www.aladin.co.kr/shop/wproduct.aspx?ItemId=265611847&amp;partner=openAPI&amp;start=api" rel="nofollow noopener noreferrer" target="_blank" title="하버드 상위 1퍼센트의 비밀 (2021 리커버 에디션) - 신호를 차단하고 깊이 몰입하라"><span class="sp-t"><i>하버드 상위 1퍼센트의 비밀 (2021 리커버 에디션) - 신호를 차단하고 깊이 몰입하라</i></span></a>
+    <a class="sp" style="--c:hsl(140,51%,33%);--h:218px;--w:40px" href="https://www.aladin.co.kr/shop/wproduct.aspx?ItemId=339904279&amp;partner=openAPI&amp;start=api" rel="nofollow noopener noreferrer" target="_blank" title="행복의 기원"><span class="sp-t"><i>행복의 기원</i></span></a>
+    </div>
+    <ol class="reading-list" id="rlist" hidden>
     <li class="rl-item">
       <span class="rl-num">1</span>
       <a class="rl-cover" href="https://www.aladin.co.kr/shop/wproduct.aspx?ItemId=320983480&amp;partner=openAPI&amp;start=api" rel="nofollow noopener noreferrer" target="_blank" aria-label="그렇게 인생은 이야기가 된다 알라딘에서 보기"><img src="https://image.aladin.co.kr/product/32098/34/cover500/k642834903_1.jpg" alt="그렇게 인생은 이야기가 된다 표지" loading="lazy"></a>
@@ -749,6 +803,30 @@
     </li>
     </ol>
   </section>
+  <script>
+  (function () {
+    var sec = document.getElementById("shelf-sec");
+    if (!sec) return;
+    var shelf = document.getElementById("shelf"), list = document.getElementById("rlist");
+    sec.querySelectorAll(".sh-tab").forEach(function (b) {
+      b.addEventListener("click", function () {
+        var spine = b.dataset.view === "spine";
+        shelf.hidden = !spine; list.hidden = spine;
+        sec.querySelectorAll(".sh-tab").forEach(function (o) {
+          var on = o === b;
+          o.classList.toggle("on", on);
+          o.setAttribute("aria-pressed", on ? "true" : "false");
+        });
+        try { localStorage.setItem("fb.shelfView", b.dataset.view); } catch (e) {}
+      });
+    });
+    try {
+      if (localStorage.getItem("fb.shelfView") === "list") {
+        sec.querySelector('.sh-tab[data-view="list"]').click();
+      }
+    } catch (e) {}
+  })();
+  </script>
 
   <section>
     <h2>📝 안현모의 책 취향</h2>

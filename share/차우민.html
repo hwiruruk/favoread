@@ -611,6 +611,30 @@
     .bc-author { font-size: 12px; color: #555; margin-bottom: 6px; }
     .bc-badge { display: inline-block; font-size: 11px; background: #fde047; border: 1px solid #000; padding: 1px 6px; font-weight: 700; }
     .celeb-bio { margin: 4px 0 8px; padding: 6px 10px; background: #fff8e7; border-left: 4px solid #000; font-size: 14px; line-height: 1.45; color: #222; }
+    .shelf-head { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
+    .shelf-head h2 { margin-bottom: 0; border-bottom: none; padding-bottom: 0; }
+    .shelf-tabs { display: flex; gap: 6px; flex: none; }
+    .sh-tab { font: inherit; font-size: 12px; font-weight: 700; cursor: pointer; padding: 5px 12px;
+              background: #fff; color: #000; border: 2px solid #000; box-shadow: 2px 2px 0 0 #000; }
+    .sh-tab:hover { background: #fde047; }
+    .sh-tab.on { background: #000; color: #fff; }
+    .shelf { display: flex; flex-wrap: wrap; align-items: flex-end; gap: 5px 3px;
+             margin-top: 18px; padding: 0 6px 10px; border-bottom: 5px solid #000; }
+    .shelf[hidden], .reading-list[hidden] { display: none; }
+    .sp { position: relative; flex: none; width: var(--w, 46px); height: var(--h, 200px);
+          background: var(--c, #555); border: 1px solid rgba(0,0,0,.45); border-radius: 2px 2px 0 0;
+          box-shadow: inset -3px 0 6px rgba(0,0,0,.28), inset 3px 0 5px rgba(255,255,255,.14);
+          overflow: hidden; text-decoration: none; transition: transform .12s; }
+    .sp:hover { transform: translateY(-7px); z-index: 2; text-decoration: none; }
+    .sp-t { position: absolute; inset: 0; display: flex; align-items: stretch;
+            justify-content: center; padding: 11px 2px; overflow: hidden; }
+    .sp-t i { writing-mode: vertical-rl; text-orientation: mixed; font-style: normal;
+              white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+              font-size: 13px; font-weight: 700; color: #fff;
+              text-shadow: 0 1px 2px rgba(0,0,0,.55); }
+    .sp-i { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; display: block; }
+    @media (max-width: 480px) { .sp { width: calc(var(--w, 46px) * .82); }
+                                 .sp-t i { font-size: 11.5px; } .sp-t { padding: 9px 2px; } }
     .reading-list { list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 14px; counter-reset: rl; }
     .rl-item { position: relative; background: #fff; border: 2px solid #000; box-shadow: 4px 4px 0 0 #000; padding: 14px 14px 14px 52px; transition: transform .12s, box-shadow .12s; }
     .rl-item:hover { transform: translate(-1px,-1px); box-shadow: 6px 6px 0 0 #000; }
@@ -671,10 +695,48 @@
     <p style="margin:0">차우민의 독서 기록을 한곳에 모았어요. 유튜브·인터뷰·SNS 등 공개 출처에서 확인된 인생책·추천 도서 <strong>30권</strong>을 한 페이지에 정리한 독서 리스트입니다. 아래 목록에서 책 제목·저자·출처 링크를 한눈에 확인할 수 있어요.</p>
   </section>
 
-  <section>
-    <h2>📚 차우민의 독서 리스트 (30권)</h2>
-    <p class="muted">5권은 다른 셀럽도 함께 추천한 책이에요. 카드 안에 함께 추천한 셀럽 이름이 표시됩니다.</p>
-    <ol class="reading-list">
+  <section id="shelf-sec">
+    <div class="shelf-head">
+      <h2>📚 차우민의 독서 리스트 (30권)</h2>
+      <div class="shelf-tabs" role="tablist">
+        <button type="button" class="sh-tab on" data-view="spine" aria-pressed="true">▊ 책등</button>
+        <button type="button" class="sh-tab" data-view="list" aria-pressed="false">☰ 목록</button>
+      </div>
+    </div>
+    <p class="muted">5권은 다른 셀럽도 함께 추천한 책이에요. 목록 보기에서 함께 추천한 셀럽 이름을 볼 수 있어요.</p>
+    <div class="shelf" id="shelf">
+    <a class="sp" style="--c:hsl(284,39%,26%);--h:220px;--w:46px" href="https://www.aladin.co.kr/shop/wproduct.aspx?ItemId=489254&amp;partner=openAPI&amp;start=api" rel="nofollow noopener noreferrer" target="_blank" title="11분"><span class="sp-t"><i>11분</i></span></a>
+    <a class="sp" style="--c:hsl(4,55%,37%);--h:206px;--w:39px" href="https://www.yes24.com/product/goods/372300" rel="nofollow noopener noreferrer" target="_blank" title="1984"><span class="sp-t"><i>1984</i></span><img class="sp-i" src="https://image.yes24.com/goods/372300/side" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.remove()"></a>
+    <a class="sp" style="--c:hsl(139,35%,33%);--h:219px;--w:40px" href="https://www.yes24.com/product/goods/102908354" rel="nofollow noopener noreferrer" target="_blank" title="거짓의 조금"><span class="sp-t"><i>거짓의 조금</i></span><img class="sp-i" src="https://image.yes24.com/goods/102908354/side" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.remove()"></a>
+    <a class="sp" style="--c:hsl(61,43%,28%);--h:217px;--w:51px" href="https://www.yes24.com/product/goods/2560" rel="nofollow noopener noreferrer" target="_blank" title="게으름에 대한 찬양"><span class="sp-t"><i>게으름에 대한 찬양</i></span><img class="sp-i" src="https://image.yes24.com/goods/2560/side" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.remove()"></a>
+    <a class="sp" style="--c:hsl(20,42%,36%);--h:200px;--w:48px" href="https://www.yes24.com/product/goods/96651059" rel="nofollow noopener noreferrer" target="_blank" title="구토"><span class="sp-t"><i>구토</i></span><img class="sp-i" src="https://image.yes24.com/goods/96651059/side" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.remove()"></a>
+    <a class="sp" style="--c:hsl(68,44%,39%);--h:216px;--w:45px" href="https://www.yes24.com/product/goods/108590831" rel="nofollow noopener noreferrer" target="_blank" title="꽃샘바람에 흔들린다면 너는 꽃"><span class="sp-t"><i>꽃샘바람에 흔들린다면 너는 꽃</i></span><img class="sp-i" src="https://image.yes24.com/goods/108590831/side" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.remove()"></a>
+    <a class="sp" style="--c:hsl(348,33%,41%);--h:206px;--w:54px" href="https://www.yes24.com/product/goods/1398241" rel="nofollow noopener noreferrer" target="_blank" title="네루다의 우편배달부"><span class="sp-t"><i>네루다의 우편배달부</i></span><img class="sp-i" src="https://image.yes24.com/goods/1398241/side" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.remove()"></a>
+    <a class="sp" style="--c:hsl(200,55%,44%);--h:196px;--w:42px" href="https://www.aladin.co.kr/shop/wproduct.aspx?ItemId=31428375&amp;partner=openAPI&amp;start=api" rel="nofollow noopener noreferrer" target="_blank" title="논어여설"><span class="sp-t"><i>논어여설</i></span></a>
+    <a class="sp" style="--c:hsl(270,54%,44%);--h:190px;--w:44px" href="https://www.yes24.com/product/goods/135880" rel="nofollow noopener noreferrer" target="_blank" title="달과 6펜스"><span class="sp-t"><i>달과 6펜스</i></span><img class="sp-i" src="https://image.yes24.com/goods/135880/side" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.remove()"></a>
+    <a class="sp" style="--c:hsl(277,49%,27%);--h:207px;--w:49px" href="https://www.yes24.com/product/goods/13946987" rel="nofollow noopener noreferrer" target="_blank" title="도쿄기담집"><span class="sp-t"><i>도쿄기담집</i></span><img class="sp-i" src="https://image.yes24.com/goods/13946987/side" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.remove()"></a>
+    <a class="sp" style="--c:hsl(136,56%,45%);--h:218px;--w:47px" href="https://www.yes24.com/product/goods/15205532" rel="nofollow noopener noreferrer" target="_blank" title="돈키호테"><span class="sp-t"><i>돈키호테</i></span><img class="sp-i" src="https://image.yes24.com/goods/15205532/side" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.remove()"></a>
+    <a class="sp" style="--c:hsl(288,39%,36%);--h:216px;--w:53px" href="https://www.aladin.co.kr/shop/wproduct.aspx?ItemId=341555925&amp;partner=openAPI&amp;start=api" rel="nofollow noopener noreferrer" target="_blank" title="바람의 노래를 들어라"><span class="sp-t"><i>바람의 노래를 들어라</i></span></a>
+    <a class="sp" style="--c:hsl(179,51%,45%);--h:221px;--w:38px" href="https://www.yes24.com/product/goods/374091" rel="nofollow noopener noreferrer" target="_blank" title="밤의 거미원숭이"><span class="sp-t"><i>밤의 거미원숭이</i></span><img class="sp-i" src="https://image.yes24.com/goods/374091/side" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.remove()"></a>
+    <a class="sp" style="--c:hsl(280,57%,39%);--h:208px;--w:44px" href="https://www.yes24.com/product/goods/83527299" rel="nofollow noopener noreferrer" target="_blank" title="사물의 편"><span class="sp-t"><i>사물의 편</i></span><img class="sp-i" src="https://image.yes24.com/goods/83527299/side" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.remove()"></a>
+    <a class="sp" style="--c:hsl(243,39%,41%);--h:193px;--w:44px" href="https://www.yes24.com/product/goods/3620143" rel="nofollow noopener noreferrer" target="_blank" title="서부전선 이상없다"><span class="sp-t"><i>서부전선 이상없다</i></span><img class="sp-i" src="https://image.yes24.com/goods/3620143/side" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.remove()"></a>
+    <a class="sp" style="--c:hsl(173,35%,26%);--h:189px;--w:47px" href="https://www.yes24.com/product/goods/101317041" rel="nofollow noopener noreferrer" target="_blank" title="소크라테스 익스프레스"><span class="sp-t"><i>소크라테스 익스프레스</i></span><img class="sp-i" src="https://image.yes24.com/goods/101317041/side" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.remove()"></a>
+    <a class="sp" style="--c:hsl(252,38%,38%);--h:200px;--w:52px" href="https://www.yes24.com/product/goods/2822910" rel="nofollow noopener noreferrer" target="_blank" title="실존주의는 휴머니즘이다"><span class="sp-t"><i>실존주의는 휴머니즘이다</i></span><img class="sp-i" src="https://image.yes24.com/goods/2822910/side" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.remove()"></a>
+    <a class="sp" style="--c:hsl(182,56%,42%);--h:192px;--w:45px" href="https://www.yes24.com/product/goods/27558484" rel="nofollow noopener noreferrer" target="_blank" title="악의 꽃"><span class="sp-t"><i>악의 꽃</i></span><img class="sp-i" src="https://image.yes24.com/goods/27558484/side" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.remove()"></a>
+    <a class="sp" style="--c:hsl(64,57%,35%);--h:220px;--w:48px" href="https://www.yes24.com/product/goods/26932917" rel="nofollow noopener noreferrer" target="_blank" title="외눈박이 물고기의 사랑"><span class="sp-t"><i>외눈박이 물고기의 사랑</i></span><img class="sp-i" src="https://image.yes24.com/goods/26932917/side" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.remove()"></a>
+    <a class="sp" style="--c:hsl(244,32%,38%);--h:218px;--w:43px" href="https://www.yes24.com/product/goods/147069329" rel="nofollow noopener noreferrer" target="_blank" title="월든"><span class="sp-t"><i>월든</i></span><img class="sp-i" src="https://image.yes24.com/goods/147069329/side" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.remove()"></a>
+    <a class="sp" style="--c:hsl(132,41%,36%);--h:196px;--w:46px" href="https://www.yes24.com/product/goods/17378" rel="nofollow noopener noreferrer" target="_blank" title="인간의 굴레에서"><span class="sp-t"><i>인간의 굴레에서</i></span><img class="sp-i" src="https://image.yes24.com/goods/17378/side" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.remove()"></a>
+    <a class="sp" style="--c:hsl(326,51%,45%);--h:218px;--w:48px" href="https://www.yes24.com/product/goods/172501401" rel="nofollow noopener noreferrer" target="_blank" title="읽는 슬픔, 말하는 사랑"><span class="sp-t"><i>읽는 슬픔, 말하는 사랑</i></span><img class="sp-i" src="https://image.yes24.com/goods/172501401/side" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.remove()"></a>
+    <a class="sp" style="--c:hsl(176,39%,33%);--h:214px;--w:42px" href="https://www.yes24.com/product/goods/8873079" rel="nofollow noopener noreferrer" target="_blank" title="저녁 무렵에 면도하기"><span class="sp-t"><i>저녁 무렵에 면도하기</i></span><img class="sp-i" src="https://image.yes24.com/goods/8873079/side" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.remove()"></a>
+    <a class="sp" style="--c:hsl(36,48%,28%);--h:190px;--w:44px" href="https://www.yes24.com/product/goods/3729147" rel="nofollow noopener noreferrer" target="_blank" title="지하로부터의 수기"><span class="sp-t"><i>지하로부터의 수기</i></span><img class="sp-i" src="https://image.yes24.com/goods/3729147/side" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.remove()"></a>
+    <a class="sp" style="--c:hsl(179,42%,31%);--h:205px;--w:50px" href="https://www.yes24.com/product/goods/93538105" rel="nofollow noopener noreferrer" target="_blank" title="커피 읽기"><span class="sp-t"><i>커피 읽기</i></span><img class="sp-i" src="https://image.yes24.com/goods/93538105/side" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.remove()"></a>
+    <a class="sp" style="--c:hsl(320,35%,32%);--h:192px;--w:54px" href="https://www.yes24.com/product/goods/144889199" rel="nofollow noopener noreferrer" target="_blank" title="페터 카멘친트"><span class="sp-t"><i>페터 카멘친트</i></span><img class="sp-i" src="https://image.yes24.com/goods/144889199/side" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.remove()"></a>
+    <a class="sp" style="--c:hsl(10,53%,34%);--h:188px;--w:46px" href="https://www.yes24.com/product/goods/107489763" rel="nofollow noopener noreferrer" target="_blank" title="햇볕 쬐기"><span class="sp-t"><i>햇볕 쬐기</i></span><img class="sp-i" src="https://image.yes24.com/goods/107489763/side" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.remove()"></a>
+    <a class="sp" style="--c:hsl(149,50%,31%);--h:205px;--w:44px" href="https://www.yes24.com/product/goods/14382339" rel="nofollow noopener noreferrer" target="_blank" title="회전목마의 데드 히트"><span class="sp-t"><i>회전목마의 데드 히트</i></span><img class="sp-i" src="https://image.yes24.com/goods/14382339/side" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.remove()"></a>
+    <a class="sp" style="--c:hsl(249,33%,42%);--h:203px;--w:54px" href="https://www.yes24.com/product/goods/90895702" rel="nofollow noopener noreferrer" target="_blank" title="히사이시 조의 음악일기"><span class="sp-t"><i>히사이시 조의 음악일기</i></span><img class="sp-i" src="https://image.yes24.com/goods/90895702/side" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.remove()"></a>
+    <a class="sp" style="--c:hsl(155,48%,32%);--h:191px;--w:40px" href="https://www.yes24.com/product/goods/115535055" rel="nofollow noopener noreferrer" target="_blank" title="poco a poco 포코 아 포코"><span class="sp-t"><i>poco a poco 포코 아 포코</i></span><img class="sp-i" src="https://image.yes24.com/goods/115535055/side" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.remove()"></a>
+    </div>
+    <ol class="reading-list" id="rlist" hidden>
     <li class="rl-item">
       <span class="rl-num">1</span>
       <a class="rl-cover" href="https://www.aladin.co.kr/shop/wproduct.aspx?ItemId=489254&amp;partner=openAPI&amp;start=api" rel="nofollow noopener noreferrer" target="_blank" aria-label="11분 알라딘에서 보기"><img src="https://image.aladin.co.kr/product/48/92/cover500/8982818227_2.jpg" alt="11분 표지" loading="lazy"></a>
@@ -952,6 +1014,30 @@
     </li>
     </ol>
   </section>
+  <script>
+  (function () {
+    var sec = document.getElementById("shelf-sec");
+    if (!sec) return;
+    var shelf = document.getElementById("shelf"), list = document.getElementById("rlist");
+    sec.querySelectorAll(".sh-tab").forEach(function (b) {
+      b.addEventListener("click", function () {
+        var spine = b.dataset.view === "spine";
+        shelf.hidden = !spine; list.hidden = spine;
+        sec.querySelectorAll(".sh-tab").forEach(function (o) {
+          var on = o === b;
+          o.classList.toggle("on", on);
+          o.setAttribute("aria-pressed", on ? "true" : "false");
+        });
+        try { localStorage.setItem("fb.shelfView", b.dataset.view); } catch (e) {}
+      });
+    });
+    try {
+      if (localStorage.getItem("fb.shelfView") === "list") {
+        sec.querySelector('.sh-tab[data-view="list"]').click();
+      }
+    } catch (e) {}
+  })();
+  </script>
 
   <section>
     <h2>📝 차우민의 책 취향</h2>

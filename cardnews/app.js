@@ -104,6 +104,7 @@ const state = {
     covers: true,           // 표지에 책 표지 노출
     bookGrid: true,         // (구버전 호환) 그리드 여부 — 새 파일은 bookCols를 본다
     bookCols: 2,            // 표지 그리드 열 수 0=한 줄 | 2 | 3 | 4
+    bookFace: 'spine',      // 표지 장에서 책을 어떻게 — 'spine'(책등) | 'cover'(표지)
     imgPos: 'center',       // 표지 사진 세로 위치 top|center|bottom
     noImage: false,         // 표지 사진 비우고 프레임만
     outro: true,
@@ -884,6 +885,13 @@ function bindOptions() {
   $$('input[name=coverLayout]').forEach((r) => r.addEventListener('change', () => {
     state.opts.coverLayout = $$('input[name=coverLayout]').find((x) => x.checked).value; renderPreview();
   }));
+  $$('input[name=bookFace]').forEach((r) => r.addEventListener('change', (e) => {
+    if (!e.target.checked) return;
+    state.opts.bookFace = e.target.value;
+    $('#bookColsField').hidden = state.opts.bookFace === 'spine';
+    renderPreview();
+  }));
+
   $$('input[name=bookGrid]').forEach((r) => r.addEventListener('change', () => {
     const v = $$('input[name=bookGrid]').find((x) => x.checked).value;
     state.opts.bookCols = v === 'row' ? 0 : +v;
@@ -968,6 +976,8 @@ function syncControls() {
   setRadio('coverLayout', state.opts.coverLayout);
   setRadio('imgPos', state.opts.imgPos);
   setRadio('bookGrid', bookCols() ? String(bookCols()) : 'row');
+  setRadio('bookFace', state.opts.bookFace === 'cover' ? 'cover' : 'spine');
+  $('#bookColsField').hidden = state.opts.bookFace !== 'cover';
   $('#optMono').checked = !!state.opts.mono;
   $('#optCovers').checked = !!state.opts.covers;
   $('#optNoImage').checked = !!state.opts.noImage;
@@ -1272,8 +1282,32 @@ function bookCols() {
   return state.opts.bookGrid ? 2 : 0;
 }
 
+/* 책등 줄 — 표지 장에 책장처럼 세워 놓는다 */
+function bookSpines(sel, sq) {
+  const at = adjAttr('cover', 'covers'), st = adjStyle('cover', 'covers');
+  const [W, H] = dims();
+  const n = sel.length;
+  const avail = (state.opts.coverLayout === 'split' ? 430 : 880);
+  const gap = 5;
+  const byWidth = Math.floor((avail - gap * (n - 1)) / n);
+  const byHeight = Math.floor((sq ? 360 : 470) / SPINE_RATIO);
+  const w = Math.max(14, Math.min(byWidth, byHeight, 96));
+  const cells = sel.map((b) => {
+    const t = b.ref.title;
+    const hv = 1 + ((hashOf(t, 17) % 14) - 7) / 100;          // 높이 ±7%
+    const h = Math.round(w * SPINE_RATIO * hv);
+    const sp = yes24SpineUrl(b.ref.coverUrl);
+    const img = sp ? `<img class="cn-sp-i" src="${esc(proxify(sp))}" alt="" onerror="this.remove()">` : '';
+    return `<div class="cn-sp" style="width:${w}px;height:${h}px;--c:${spineTint(t)}">
+      <span class="cn-sp-t" style="font-size:${Math.max(9, Math.round(w * 0.34))}px"><i>${esc(t)}</i></span>${img}
+    </div>`;
+  }).join('');
+  return `<div class="cn-covers shelf"${at} style="gap:${gap}px;${st}">${cells}</div>`;
+}
+
 function bookCovers(sel, sq) {
   if (!state.opts.covers || !sel.length) return '';
+  if (state.opts.bookFace === 'spine') return bookSpines(sel, sq);
   const at = adjAttr('cover', 'covers') , st = adjStyle('cover', 'covers');
   const cols = bookCols();
   if (cols) {
@@ -1447,6 +1481,28 @@ function promoHTML() {
 const STK_LABEL = { title: '🔠 큰 제목', bubble: '💬 말풍선', stars: '⭐ 별점', emoji: '✨ 이모지', tag: '🏷 라벨' };
 const STK_SHAPES = { blob: '몽글', pill: '알약', burst: '뾰족' };
 const isBlank = (v) => !String(v == null ? '' : v).trim();
+
+/* ── 책등 ─────────────────────────────────────────────────────────
+ * 예스24는 표지와 같은 상품 ID로 책등 이미지를 준다.
+ *   표지  https://image.yes24.com/goods/91901136/L
+ *   책등  https://image.yes24.com/goods/91901136/side
+ * 표지가 알라딘인 책은 ID를 모르니 제목에서 만든 색 책등으로 대신한다.
+ * (generate.py · together/app.js 와 같은 규칙) */
+const YES24_ID_RE = /image\.yes24\.com\/goods\/(?:detail\/)?(\d+)/i;
+function yes24SpineUrl(coverUrl) {
+  const m = YES24_ID_RE.exec(coverUrl || '');
+  return m ? 'https://image.yes24.com/goods/' + m[1] + '/side' : '';
+}
+function hashOf(str, mul) {
+  let h = 0;
+  for (const ch of String(str || '')) h = (Math.imul(h, mul) + ch.codePointAt(0)) >>> 0;
+  return h;
+}
+function spineTint(title) {
+  const h = hashOf(title, 31);
+  return `hsl(${h % 360},${32 + (h >>> 9) % 26}%,${26 + (h >>> 17) % 22}%)`;
+}
+const SPINE_RATIO = 4.3;
 
 function stickersOf(sscope) {
   if (!state.opts.stickers) state.opts.stickers = {};
