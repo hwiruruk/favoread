@@ -316,6 +316,34 @@
     h2 { font-size: 19px; margin: 32px 0 12px; padding-bottom: 4px; border-bottom: 2px solid #000; font-weight: 800; }
     .intro { background: #fff; border: 2px solid #000; box-shadow: 4px 4px 0 0 #000; padding: 14px 16px; margin: 16px 0 24px; font-size: 15px; }
     .celeb-bio { margin: 4px 0 8px; padding: 6px 10px; background: #fff8e7; border-left: 4px solid #000; font-size: 14px; line-height: 1.45; color: #222; }
+    .shelf-head { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
+    .shelf-head h2 { margin-bottom: 0; border-bottom: none; padding-bottom: 0; }
+    .shelf-tabs { display: flex; gap: 6px; flex: none; }
+    .sh-tab { font: inherit; font-size: 12px; font-weight: 700; cursor: pointer; padding: 5px 12px;
+              background: #fff; color: #000; border: 2px solid #000; box-shadow: 2px 2px 0 0 #000; }
+    .sh-tab:hover { background: #fde047; }
+    .sh-tab.on { background: #000; color: #fff; }
+    .shelf { display: flex; flex-wrap: wrap; align-items: flex-end; gap: 5px 3px;
+             margin-top: 18px; padding: 0 6px 10px; border-bottom: 5px solid #000; }
+    .shelf[hidden], .reading-list[hidden] { display: none; }
+    .sp { position: relative; flex: none; width: auto; height: 270px;
+          background: var(--c, #555); border: 1px solid rgba(0,0,0,.45); border-radius: 2px 2px 0 0;
+          box-shadow: inset -3px 0 6px rgba(0,0,0,.28), inset 3px 0 5px rgba(255,255,255,.14);
+          overflow: hidden; text-decoration: none; transition: transform .12s; }
+    .sp:hover { transform: translateY(-7px); z-index: 2; text-decoration: none; }
+    .sp-t { position: absolute; inset: 0; display: flex; align-items: stretch;
+            justify-content: center; padding: 14px 2px; overflow: hidden; }
+    .sp-t i { writing-mode: vertical-rl; text-orientation: mixed; font-style: normal;
+              white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+              font-size: 15px; font-weight: 700; color: #fff;
+              text-shadow: 0 1px 2px rgba(0,0,0,.55); }
+    .sp-i { position: relative; z-index: 1; display: block;
+            height: 100%; width: auto; max-width: 172px; object-fit: contain; }
+    .sp.no-img, .sp.sp-fail { width: var(--w, 60px); }
+    @media (max-width: 480px) { .shelf .sp { height: 205px; }
+                                 .sp.no-img, .sp.sp-fail { width: calc(var(--w, 60px) * .78); }
+                                 .sp-i { max-width: 130px; }
+                                 .sp-t i { font-size: 12.5px; } .sp-t { padding: 9px 2px; } }
     .reading-list { list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 14px; }
     .rl-item { position: relative; background: #fff; border: 2px solid #000; box-shadow: 4px 4px 0 0 #000; padding: 14px 14px 14px 52px; transition: transform .12s, box-shadow .12s; }
     .rl-item:hover { transform: translate(-1px,-1px); box-shadow: 6px 6px 0 0 #000; }
@@ -355,9 +383,34 @@
   <section class="intro">
     <p style="margin:0">17 books read or recommended by <strong>Lee Seol</strong> (이설), gathered from interviews, YouTube, and SNS sources.</p>
   </section>
-  <section>
-    <h2>Reading list</h2>
-    <ol class="reading-list">
+  <section id="shelf-sec">
+    <div class="shelf-head">
+      <h2>Reading list</h2>
+      <div class="shelf-tabs" role="tablist">
+        <button type="button" class="sh-tab on" data-view="spine" aria-pressed="true">▊ Spines</button>
+        <button type="button" class="sh-tab" data-view="list" aria-pressed="false">☰ List</button>
+      </div>
+    </div>
+    <div class="shelf" id="shelf">
+    <a class="sp" style="--c:hsl(128,36%,28%);--w:56px" href="https://www.aladin.co.kr/shop/wproduct.aspx?ItemId=213543424&amp;partner=openAPI&amp;start=api" rel="nofollow noopener noreferrer" target="_blank" title="Self Before Us (or The Life Before Us)"><span class="sp-t"><i>Self Before Us (or The Life Before Us)</i></span><img class="sp-i" src="https://image.yes24.com/goods/80993781/side" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.parentNode.classList.add('sp-fail');this.remove()"></a>
+    <a class="sp" style="--c:hsl(354,51%,29%);--w:56px" href="https://www.aladin.co.kr/shop/wproduct.aspx?ItemId=97913356&amp;partner=openAPI&amp;start=api" rel="nofollow noopener noreferrer" target="_blank" title="No Date"><span class="sp-t"><i>No Date</i></span><img class="sp-i" src="https://image.yes24.com/goods/33632899/side" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.parentNode.classList.add('sp-fail');this.remove()"></a>
+    <a class="sp" style="--c:hsl(324,42%,29%);--w:58px" href="https://www.aladin.co.kr/shop/wproduct.aspx?ItemId=253989088&amp;partner=openAPI&amp;start=api" rel="nofollow noopener noreferrer" target="_blank" title="Lovers of Tomorrow"><span class="sp-t"><i>Lovers of Tomorrow</i></span><img class="sp-i" src="https://image.yes24.com/goods/93960899/side" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.parentNode.classList.add('sp-fail');this.remove()"></a>
+    <a class="sp" style="--c:hsl(92,48%,44%);--w:52px" href="https://www.aladin.co.kr/shop/wproduct.aspx?ItemId=255929552&amp;partner=openAPI&amp;start=api" rel="nofollow noopener noreferrer" target="_blank" title="Bibi Sister Crossed the Desert of Bipolar"><span class="sp-t"><i>Bibi Sister Crossed the Desert of Bipolar</i></span><img class="sp-i" src="https://image.yes24.com/goods/95313913/side" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.parentNode.classList.add('sp-fail');this.remove()"></a>
+    <a class="sp" style="--c:hsl(241,54%,40%);--w:69px" href="https://www.aladin.co.kr/shop/wproduct.aspx?ItemId=245127051&amp;partner=openAPI&amp;start=api" rel="nofollow noopener noreferrer" target="_blank" title="The Midnight Library (or Dream Department Store)"><span class="sp-t"><i>The Midnight Library (or Dream Department Store)</i></span><img class="sp-i" src="https://image.yes24.com/goods/91065309/side" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.parentNode.classList.add('sp-fail');this.remove()"></a>
+    <a class="sp" style="--c:hsl(303,35%,33%);--w:57px" href="https://www.aladin.co.kr/shop/wproduct.aspx?ItemId=269873776&amp;partner=openAPI&amp;start=api" rel="nofollow noopener noreferrer" target="_blank" title="Winter Vacation"><span class="sp-t"><i>Winter Vacation</i></span><img class="sp-i" src="https://image.yes24.com/goods/99534783/side" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.parentNode.classList.add('sp-fail');this.remove()"></a>
+    <a class="sp no-img" style="--c:hsl(7,50%,47%);--w:51px" href="https://www.aladin.co.kr/shop/wproduct.aspx?ItemId=237706048&amp;partner=openAPI&amp;start=api" rel="nofollow noopener noreferrer" target="_blank" title="The Hole (or Fracture)"><span class="sp-t"><i>The Hole (or Fracture)</i></span></a>
+    <a class="sp" style="--c:hsl(92,52%,33%);--w:50px" href="https://www.aladin.co.kr/shop/wproduct.aspx?ItemId=337280683&amp;partner=openAPI&amp;start=api" rel="nofollow noopener noreferrer" target="_blank" title="The Hole (or Gills)"><span class="sp-t"><i>The Hole (or Gills)</i></span><img class="sp-i" src="https://image.yes24.com/goods/125761510/side" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.parentNode.classList.add('sp-fail');this.remove()"></a>
+    <a class="sp no-img" style="--c:hsl(135,49%,44%);--w:67px" href="https://www.aladin.co.kr/shop/wproduct.aspx?ItemId=8721225&amp;partner=openAPI&amp;start=api" rel="nofollow noopener noreferrer" target="_blank" title="Very Old Joke"><span class="sp-t"><i>Very Old Joke</i></span></a>
+    <a class="sp" style="--c:hsl(274,53%,47%);--w:50px" href="https://www.aladin.co.kr/shop/wproduct.aspx?ItemId=204202708&amp;partner=openAPI&amp;start=api" rel="nofollow noopener noreferrer" target="_blank" title="Eleanor Oliphant Is Completely Fine"><span class="sp-t"><i>Eleanor Oliphant Is Completely Fine</i></span><img class="sp-i" src="https://image.yes24.com/goods/78212610/side" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.parentNode.classList.add('sp-fail');this.remove()"></a>
+    <a class="sp" style="--c:hsl(274,53%,47%);--w:50px" href="https://www.aladin.co.kr/shop/wproduct.aspx?ItemId=204202708&amp;partner=openAPI&amp;start=api" rel="nofollow noopener noreferrer" target="_blank" title="Eleanor Oliphant Is Completely Fine"><span class="sp-t"><i>Eleanor Oliphant Is Completely Fine</i></span><img class="sp-i" src="https://image.yes24.com/goods/78212610/side" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.parentNode.classList.add('sp-fail');this.remove()"></a>
+    <a class="sp" style="--c:hsl(64,56%,26%);--w:62px" href="https://www.aladin.co.kr/shop/wproduct.aspx?ItemId=244899880&amp;partner=openAPI&amp;start=api" rel="nofollow noopener noreferrer" target="_blank" title="Summer Villa"><span class="sp-t"><i>Summer Villa</i></span><img class="sp-i" src="https://image.yes24.com/goods/91053468/side" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.parentNode.classList.add('sp-fail');this.remove()"></a>
+    <a class="sp" style="--c:hsl(351,55%,30%);--w:65px" href="https://www.aladin.co.kr/shop/wproduct.aspx?ItemId=97517868&amp;partner=openAPI&amp;start=api" rel="nofollow noopener noreferrer" target="_blank" title="Olive Again"><span class="sp-t"><i>Olive Again</i></span><img class="sp-i" src="https://image.yes24.com/goods/359901/side" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.parentNode.classList.add('sp-fail');this.remove()"></a>
+    <a class="sp no-img" style="--c:hsl(76,54%,45%);--w:52px" href="https://www.aladin.co.kr/shop/wproduct.aspx?ItemId=173785595&amp;partner=openAPI&amp;start=api" rel="nofollow noopener noreferrer" target="_blank" title="Conversation With Friends"><span class="sp-t"><i>Conversation With Friends</i></span></a>
+    <a class="sp" style="--c:hsl(152,35%,39%);--w:62px" href="https://www.aladin.co.kr/shop/wproduct.aspx?ItemId=337280601&amp;partner=openAPI&amp;start=api" rel="nofollow noopener noreferrer" target="_blank" title="The Sky Is Everywhere"><span class="sp-t"><i>The Sky Is Everywhere</i></span><img class="sp-i" src="https://image.yes24.com/goods/125761518/side" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.parentNode.classList.add('sp-fail');this.remove()"></a>
+    <a class="sp no-img" style="--c:hsl(284,49%,43%);--w:66px" href="https://www.aladin.co.kr/shop/wproduct.aspx?ItemId=269155104&amp;partner=openAPI&amp;start=api" rel="nofollow noopener noreferrer" target="_blank" title="The Dream of Becoming Me"><span class="sp-t"><i>The Dream of Becoming Me</i></span></a>
+    <a class="sp" style="--c:hsl(139,56%,42%);--w:61px" href="https://www.aladin.co.kr/shop/wproduct.aspx?ItemId=112811885&amp;partner=openAPI&amp;start=api" rel="nofollow noopener noreferrer" target="_blank" title="Where the Sun Sets"><span class="sp-t"><i>Where the Sun Sets</i></span><img class="sp-i" src="https://image.yes24.com/goods/43504366/side" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.parentNode.classList.add('sp-fail');this.remove()"></a>
+    </div>
+    <ol class="reading-list" id="rlist" hidden>
     <li class="rl-item">
       <span class="rl-num">1</span>
       <a class="rl-cover" href="https://www.aladin.co.kr/shop/wproduct.aspx?ItemId=213543424&amp;partner=openAPI&amp;start=api" rel="nofollow noopener noreferrer" target="_blank" aria-label="Self Before Us (or The Life Before Us) — buy or read more"><img src="https://image.aladin.co.kr/product/21354/34/cover500/893747977x_2.jpg" alt="Self Before Us (or The Life Before Us) by Choi Jin-young — book cover" loading="lazy"></a>
@@ -504,6 +557,30 @@
     </li>
     </ol>
   </section>
+  <script>
+  (function () {
+    var sec = document.getElementById("shelf-sec");
+    if (!sec) return;
+    var shelf = document.getElementById("shelf"), list = document.getElementById("rlist");
+    sec.querySelectorAll(".sh-tab").forEach(function (b) {
+      b.addEventListener("click", function () {
+        var spine = b.dataset.view === "spine";
+        shelf.hidden = !spine; list.hidden = spine;
+        sec.querySelectorAll(".sh-tab").forEach(function (o) {
+          var on = o === b;
+          o.classList.toggle("on", on);
+          o.setAttribute("aria-pressed", on ? "true" : "false");
+        });
+        try { localStorage.setItem("fb.shelfView", b.dataset.view); } catch (e) {}
+      });
+    });
+    try {
+      if (localStorage.getItem("fb.shelfView") === "list") {
+        sec.querySelector('.sh-tab[data-view="list"]').click();
+      }
+    } catch (e) {}
+  })();
+  </script>
   <p class="tr-note">Book titles and author names marked with an asterisk (<strong>*</strong>) are machine-translated from Korean. No official English edition was confirmed for them, so read them as approximations of the Korean original shown next to them.</p>
   <footer>
     <p>Curated from public Korean-language sources. Korean original page: <a href="https://favorbook.co.kr/share/%EC%9D%B4%EC%84%A4.html" hreflang="ko">이설</a>.</p>

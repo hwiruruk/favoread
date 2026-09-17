@@ -540,6 +540,15 @@
     </a>
   </section>
 
+  <!-- 책 제목으로 검색하면 그 책과 읽은 셀럽을 먼저 보여준다 -->
+  <section id="book-hits" class="hidden w-full">
+    <div class="flex items-end justify-between gap-3 mb-4">
+      <h2 class="text-xl md:text-2xl font-black word-break-keep">📚 검색한 책</h2>
+      <span id="book-hits-count" class="font-sans font-bold text-[10px] sm:text-xs tracking-widest text-muted"></span>
+    </div>
+    <div id="book-hits-list" class="flex flex-col gap-3"></div>
+  </section>
+
   <section id="grid" class="w-full">
     <div id="grid-container" class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-x-4 sm:gap-x-6 gap-y-8 sm:gap-y-12"></div>
     <div id="empty-state" class="hidden text-center py-20 text-ink font-sans font-bold tracking-widest">No results found.</div>
@@ -1021,8 +1030,11 @@
         <button id="prev-btn"
           class="font-sans font-bold text-[9px] md:text-xs tracking-widest border-2 border-ink bg-white shadow-neo-sm px-3 py-1.5 md:px-4 md:py-2 hover:bg-neo-yellow disabled:opacity-30 transition-all">◀ PREV</button>
         <div id="dots-container" class="flex items-center justify-center gap-2">
+          <div id="page-indicator" class="font-sans font-bold text-[10px] md:text-xs bg-white border-2 border-ink px-3 md:px-4 py-1.5 md:py-2 text-ink shadow-neo-sm tracking-widest"></div>
           <button id="btn-all-books"
             class="font-sans font-bold text-[9px] md:text-xs tracking-widest border-2 border-ink bg-white shadow-neo-sm px-3 py-1.5 md:px-4 md:py-2 hover:bg-neo-mint transition-all">▦ ALL</button>
+          <button id="btn-spine-books"
+            class="font-sans font-bold text-[9px] md:text-xs tracking-widest border-2 border-ink bg-white shadow-neo-sm px-3 py-1.5 md:px-4 md:py-2 hover:bg-neo-mint transition-all">▊ 책등</button>
         </div>
         <button id="next-btn"
           class="font-sans font-bold text-[9px] md:text-xs tracking-widest border-2 border-ink bg-white shadow-neo-sm px-3 py-1.5 md:px-4 md:py-2 hover:bg-neo-yellow disabled:opacity-30 transition-all">NEXT ▶</button>
@@ -1054,7 +1066,7 @@
   let celebMap = {};
   let entries  = [];
   let featured = null;   // data/featured.json (없으면 null)
-  let modal    = { open: false, name: '', books: [], idx: 0, allView: false };
+  let modal    = { open: false, name: '', books: [], idx: 0, view: 'slide' };
   
   let filteredEntries = [];
   let renderIndex = 0;
@@ -1067,6 +1079,9 @@
     statusText: document.getElementById('status-text'),
     search:     document.getElementById('search-input'),
     grid:       document.getElementById('grid-container'),
+    bookHits:      document.getElementById('book-hits'),
+    bookHitsList:  document.getElementById('book-hits-list'),
+    bookHitsCount: document.getElementById('book-hits-count'),
     empty:      document.getElementById('empty-state'),
     loadWrap:   document.getElementById('load-more-wrap'),
     loadBtn:    document.getElementById('btn-load-more'),
@@ -1084,6 +1099,7 @@
     prevBtn:    document.getElementById('prev-btn'),
     nextBtn:    document.getElementById('next-btn'),
     btnAllBooks: document.getElementById('btn-all-books'),
+    btnSpineBooks: document.getElementById('btn-spine-books'),
     dots:       document.getElementById('dots-container'),
     toast:      document.getElementById('toast'),
     floatMenus: document.getElementById('floating-menus'),
@@ -1260,6 +1276,75 @@
     } catch(e) {}
   }
 
+  /* 책 제목으로 검색했을 때 — 그 책과 그 책을 읽은 셀럽을 태그로 보여준다.
+     이름으로 검색하면 셀럽 카드만 나오면 되지만, 책 제목을 쳤을 때
+     '누가 이 책을 읽었나'가 궁금한 것이지 셀럽 카드가 궁금한 게 아니다. */
+  function bookIndex() {
+    if (bookIndex._cache) return bookIndex._cache;
+    const map = new Map();
+    entries.forEach(([name, data]) => {
+      data.books.forEach((b) => {
+        const key = (b.title || '').trim();
+        if (!key) return;
+        let hit = map.get(key);
+        if (!hit) {
+          hit = { title: key, author: b.author || '', publisher: b.publisher || '',
+                  coverUrl: b.coverUrl || '', celebs: [] };
+          map.set(key, hit);
+        }
+        // 표지가 비어 있던 항목이라면 뒤에 나온 값으로 채운다
+        if (!hit.coverUrl && b.coverUrl) hit.coverUrl = b.coverUrl;
+        if (!hit.author && b.author) hit.author = b.author;
+        if (!hit.celebs.includes(name)) hit.celebs.push(name);
+      });
+    });
+    // 메인의 셀럽 목록은 새로고침마다 순서를 섞는다(entries). 태그까지 매번
+    // 순서가 바뀌면 산만하므로 이름순으로 고정한다.
+    bookIndex._cache = [...map.values()];
+    bookIndex._cache.forEach((b) => b.celebs.sort((x, y) => x.localeCompare(y, 'ko')));
+    return bookIndex._cache;
+  }
+
+  function renderBookHits(q) {
+    const kw = q.trim().toLowerCase();
+    // 두 글자는 돼야 쓸모 있는 결과가 나온다
+    if (kw.length < 2) { D.bookHits.classList.add('hidden'); return false; }
+
+    const hits = bookIndex()
+      .filter((b) => b.title.toLowerCase().includes(kw)
+                  || (b.author || '').toLowerCase().includes(kw))
+      // 여러 셀럽이 읽은 책을 먼저, 그다음 제목 순
+      .sort((a, b) => b.celebs.length - a.celebs.length || a.title.localeCompare(b.title, 'ko'))
+      .slice(0, 12);
+
+    if (!hits.length) { D.bookHits.classList.add('hidden'); return false; }
+
+    D.bookHits.classList.remove('hidden');
+    D.bookHitsCount.textContent = `${hits.length}권`;
+    D.bookHitsList.innerHTML = hits.map((b) => {
+      const chips = b.celebs.map((n) => `
+        <button type="button" data-celeb="${escHtml(n)}"
+          class="font-sans font-bold text-[10px] sm:text-xs border-2 border-ink bg-white shadow-neo-sm px-2.5 py-1 hover:bg-neo-mint hover:-translate-y-0.5 transition-all">
+          ${escHtml(n)}</button>`).join('');
+      const cover = b.coverUrl
+        ? `<img src="${escHtml(b.coverUrl)}" alt="${escHtml(b.title)} 표지" loading="lazy" referrerpolicy="no-referrer"
+             class="w-full h-full object-cover">`
+        : `<div class="w-full h-full bg-paper-dark flex items-center justify-center text-2xl">📕</div>`;
+      const meta = [b.author, b.publisher].filter(Boolean).join(' · ');
+      return `
+        <div class="flex gap-3 sm:gap-4 bg-white border-2 border-ink shadow-neo p-3 sm:p-4">
+          <div class="w-[62px] sm:w-[74px] flex-none aspect-[2/3] border-2 border-ink overflow-hidden bg-paper-dark">${cover}</div>
+          <div class="min-w-0 flex-1">
+            <h3 class="text-sm sm:text-base font-black leading-snug word-break-keep">${escHtml(b.title)}</h3>
+            ${meta ? `<p class="text-[11px] sm:text-xs font-bold text-muted mt-0.5 mb-2">${escHtml(meta)}</p>` : '<div class="mb-2"></div>'}
+            <p class="text-[10px] sm:text-[11px] font-sans font-bold tracking-widest text-muted mb-1.5">읽은 셀럽 ${b.celebs.length}명</p>
+            <div class="flex flex-wrap gap-1.5">${chips}</div>
+          </div>
+        </div>`;
+    }).join('');
+    return true;
+  }
+
   function filterEntries(kw = '') {
     const q = kw.toLowerCase();
     
@@ -1273,9 +1358,16 @@
       return str.includes(q);
     });
     
+    const bookHitsShown = renderBookHits(kw);
+    // 책 제목으로 찾았는데 사람 이름은 안 걸렸다면, 아래 셀럽 목록은 위 태그와
+    // 같은 사람들이라 중복이다. 그럴 때는 목록을 접는다.
+    const nameHit = !!q && currentEntries.some(([name]) => name.toLowerCase().includes(q));
+    const hideGrid = bookHitsShown && !nameHit;
+    document.getElementById('grid').classList.toggle('hidden', hideGrid);
+
     D.grid.innerHTML = '';
     renderIndex = 0;
-    D.empty.classList.toggle('hidden', filteredEntries.length > 0);
+    D.empty.classList.toggle('hidden', filteredEntries.length > 0 || hideGrid);
     renderNextChunk();
   }
 
@@ -1335,7 +1427,7 @@
   function openModal(name, isHistoryNav = false) {
     if (!celebMap[name]) return;
     const data = celebMap[name];
-    modal = { open: true, name, books: data.books, idx: 0, allView: false };
+    modal = { open: true, name, books: data.books, idx: 0, view: 'slide' };
 
     D.mImg.src = data.imageUrl || '';
     D.mImg.alt = data.imageUrl ? `${name} 책 추천` : '';
@@ -1373,14 +1465,13 @@
       history.pushState(null, '', BASE_PATH);
     }
 
-    setTimeout(() => { D.track.innerHTML = ''; D.dots.innerHTML = ''; }, 300);
+    setTimeout(() => { D.track.innerHTML = ''; }, 300);
     
     updateSEO(null); 
   }
 
   function buildSlides() {
     D.track.innerHTML = '';
-    D.dots.innerHTML  = '<div id="page-indicator" class="font-sans font-bold text-[10px] md:text-xs bg-white border-2 border-ink px-3 md:px-4 py-1.5 md:py-2 text-ink shadow-neo-sm tracking-widest"></div>';
     
     modal.books.forEach((book, i) => {
       const slide = document.createElement('div');
@@ -1433,50 +1524,103 @@
     }
   }
 
-  function toggleAllView() {
-    modal.allView = !modal.allView;
-    if (modal.allView) {
-      D.btnAllBooks.classList.replace('bg-white', 'bg-neo-mint');
-      D.prevBtn.style.display = 'none';
-      D.nextBtn.style.display = 'none';
-      D.track.style.transform = 'none';
-      D.track.style.flexWrap = 'wrap';
-      D.track.style.gap = '12px';
-      D.track.style.padding = '12px';
-      D.track.style.overflowY = 'auto';
-      D.viewport.style.overflow = 'auto';
-      D.track.querySelectorAll('.slide-area').forEach(s => {
-        s.style.width = '';
-        s.style.flexShrink = '';
-      });
-      D.track.innerHTML = '';
-      const colors = ['bg-neo-yellow', 'bg-neo-mint', 'bg-neo-pink', 'bg-white'];
-      modal.books.forEach((book, i) => {
-        const thumb = book.coverUrl
-          ? `<img src="${book.coverUrl}" class="w-full h-full object-cover" alt="${book.title}" loading="lazy">`
-          : `<div class="w-full h-full ${colors[i % colors.length]} flex items-center justify-center p-1"><span class="font-black text-[9px] text-ink text-center leading-tight word-break-keep">${book.title}</span></div>`;
-        const el = document.createElement('div');
-        el.className = 'cursor-pointer border-2 border-ink shadow-neo-sm hover:shadow-neo hover:-translate-y-0.5 transition-all overflow-hidden';
-        el.style.width = 'calc(33.333% - 8px)';
-        el.innerHTML = `
-          <div class="aspect-[2/3]">${thumb}</div>
-          <div class="p-1.5 bg-white border-t border-ink">
-            <p class="font-bold text-[8px] sm:text-[9px] text-ink text-center line-clamp-2 leading-tight">${book.title}</p>
-          </div>`;
-        el.addEventListener('click', () => { toggleAllView(); goSlide(i); });
-        D.track.appendChild(el);
-      });
-    } else {
-      D.btnAllBooks.classList.replace('bg-neo-mint', 'bg-white');
-      D.prevBtn.style.display = '';
-      D.nextBtn.style.display = '';
-      D.track.style.flexWrap = '';
-      D.track.style.gap = '';
-      D.track.style.padding = '';
-      D.track.style.overflowY = '';
-      D.viewport.style.overflow = 'hidden';
-      buildSlides();
-    }
+  /* 모달 보기 방식 — 'slide'(기본, 카드 넘기기) | 'grid'(표지 모아보기) | 'spine'(책등 모아보기)
+     책등은 셀럽 페이지의 책장과 같은 규칙: 예스24 책등이 있으면 그 이미지를,
+     없으면 제목에서 만든 색 책등을 쓴다. */
+  function spineTint(title) {
+    let h = 0;
+    for (const ch of String(title || '')) h = (h * 31 + ch.charCodeAt(0)) >>> 0;
+    return `hsl(${h % 360},${34 + (h >> 3) % 22}%,${26 + (h >> 7) % 20}%)`;
+  }
+  function spineWidth(title) {
+    let h = 0;
+    for (const ch of String(title || '')) h = (h * 13 + ch.charCodeAt(0)) >>> 0;
+    return 50 + h % 22;
+  }
+
+  function setModalView(mode) {
+    modal.view = mode;
+    const on = 'bg-neo-mint', off = 'bg-white';
+    D.btnAllBooks.classList.toggle(on, mode === 'grid');
+    D.btnAllBooks.classList.toggle(off, mode !== 'grid');
+    D.btnSpineBooks.classList.toggle(on, mode === 'spine');
+    D.btnSpineBooks.classList.toggle(off, mode !== 'spine');
+
+    const flip = mode === 'slide';
+    const ind = document.getElementById('page-indicator');
+    if (ind) ind.style.display = flip ? '' : 'none';
+    D.prevBtn.style.display = flip ? '' : 'none';
+    D.nextBtn.style.display = flip ? '' : 'none';
+    D.viewport.style.overflow = flip ? 'hidden' : 'auto';
+    D.track.style.transform = flip ? '' : 'none';
+    D.track.style.flexWrap = flip ? '' : 'wrap';
+    D.track.style.gap = flip ? '' : '12px';
+    D.track.style.padding = flip ? '' : '12px';
+    D.track.style.overflowY = flip ? '' : 'auto';
+
+    if (flip) { buildSlides(); return; }
+    if (mode === 'grid') { buildCoverGrid(); return; }
+    buildSpineShelf();
+  }
+
+  function buildCoverGrid() {
+    D.track.innerHTML = '';
+    D.track.style.alignItems = '';
+    const colors = ['bg-neo-yellow', 'bg-neo-mint', 'bg-neo-pink', 'bg-white'];
+    modal.books.forEach((book, i) => {
+      const thumb = book.coverUrl
+        ? `<img src="${book.coverUrl}" class="w-full h-full object-cover" alt="${book.title}" loading="lazy">`
+        : `<div class="w-full h-full ${colors[i % colors.length]} flex items-center justify-center p-1"><span class="font-black text-[9px] text-ink text-center leading-tight word-break-keep">${book.title}</span></div>`;
+      const el = document.createElement('div');
+      el.className = 'cursor-pointer border-2 border-ink shadow-neo-sm hover:shadow-neo hover:-translate-y-0.5 transition-all overflow-hidden';
+      el.style.width = 'calc(33.333% - 8px)';
+      el.innerHTML = `
+        <div class="aspect-[2/3]">${thumb}</div>
+        <div class="p-1.5 bg-white border-t border-ink">
+          <p class="font-bold text-[8px] sm:text-[9px] text-ink text-center line-clamp-2 leading-tight">${book.title}</p>
+        </div>`;
+      el.addEventListener('click', () => { setModalView('slide'); goSlide(i); });
+      D.track.appendChild(el);
+    });
+  }
+
+  function buildSpineShelf() {
+    D.track.innerHTML = '';
+    D.track.style.alignItems = 'flex-start';
+    // 책등은 세로쓰기·바닥 맞춤이라 Tailwind 임의값 대신 인라인 스타일로 박는다.
+    // (CDN이 늦게 뜨거나 막혀도 모양이 무너지지 않는다)
+    const shelf = document.createElement('div');
+    shelf.style.cssText = 'width:100%;display:flex;flex-wrap:wrap;align-items:flex-end;'
+      + 'gap:5px 3px;padding:0 6px 10px;border-bottom:4px solid #111;';
+    modal.books.forEach((book, i) => {
+      const w = spineWidth(book.title);
+      const el = document.createElement('button');
+      el.type = 'button';
+      el.title = book.title;          // 속성은 DOM API로 넣으므로 이스케이프가 따로 필요 없다
+      el.style.cssText = 'position:relative;flex:none;height:200px;padding:0;'
+        + 'background:' + spineTint(book.title) + ';border:1px solid rgba(0,0,0,.45);'
+        + 'border-radius:2px 2px 0 0;overflow:hidden;cursor:pointer;'
+        + 'box-shadow:inset -3px 0 6px rgba(0,0,0,.28), inset 3px 0 5px rgba(255,255,255,.14);'
+        + 'transition:transform .12s;'
+        + 'width:' + (book.spineUrl ? 'auto' : w + 'px') + ';';
+      el.onmouseenter = () => { el.style.transform = 'translateY(-6px)'; };
+      el.onmouseleave = () => { el.style.transform = ''; };
+      const img = book.spineUrl
+        ? '<img src="' + escHtml(book.spineUrl) + '" alt="" loading="lazy" referrerpolicy="no-referrer"'
+          + ' style="position:relative;z-index:1;display:block;height:100%;width:auto;max-width:128px;object-fit:contain"'
+          + ' onerror="this.parentNode.style.width=\'' + w + 'px\';this.remove()">'
+        : '';
+      el.innerHTML =
+        '<span style="position:absolute;inset:0;display:flex;align-items:stretch;'
+        + 'justify-content:center;padding:11px 2px;overflow:hidden">'
+        + '<i style="writing-mode:vertical-rl;text-orientation:mixed;font-style:normal;'
+        + 'white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-size:12px;'
+        + 'font-weight:700;color:#fff;text-shadow:0 1px 2px rgba(0,0,0,.55)">'
+        + escHtml(book.title) + '</i></span>' + img;
+      el.addEventListener('click', () => { setModalView('slide'); goSlide(i); });
+      shelf.appendChild(el);
+    });
+    D.track.appendChild(shelf);
   }
 
   /* ── DYNAMIC SECTIONS ───────────────────────────────────── */
@@ -1678,6 +1822,10 @@
 
   function bindEvents() {
     D.search.addEventListener('input', e => filterEntries(e.target.value));
+    D.bookHitsList.addEventListener('click', (e) => {
+      const b = e.target.closest('button[data-celeb]');
+      if (b) openModal(b.dataset.celeb);
+    });
     D.closeBtn.addEventListener('click', () => closeModal(false));
     D.overlay.addEventListener('click', e => { if (e.target === D.overlay) closeModal(false); });
     
@@ -1706,7 +1854,8 @@
 
     D.prevBtn.addEventListener('click', () => goSlide(modal.idx - 1));
     D.nextBtn.addEventListener('click', () => goSlide(modal.idx + 1));
-    D.btnAllBooks.addEventListener('click', () => toggleAllView());
+    D.btnAllBooks.addEventListener('click', () => setModalView(modal.view === 'grid' ? 'slide' : 'grid'));
+    D.btnSpineBooks.addEventListener('click', () => setModalView(modal.view === 'spine' ? 'slide' : 'spine'));
 
     document.addEventListener('keydown', e => {
       if (!modal.open) return;

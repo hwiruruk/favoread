@@ -436,6 +436,34 @@
     h2 { font-size: 19px; margin: 32px 0 12px; padding-bottom: 4px; border-bottom: 2px solid #000; font-weight: 800; }
     .intro { background: #fff; border: 2px solid #000; box-shadow: 4px 4px 0 0 #000; padding: 14px 16px; margin: 16px 0 24px; font-size: 15px; }
     .celeb-bio { margin: 4px 0 8px; padding: 6px 10px; background: #fff8e7; border-left: 4px solid #000; font-size: 14px; line-height: 1.45; color: #222; }
+    .shelf-head { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
+    .shelf-head h2 { margin-bottom: 0; border-bottom: none; padding-bottom: 0; }
+    .shelf-tabs { display: flex; gap: 6px; flex: none; }
+    .sh-tab { font: inherit; font-size: 12px; font-weight: 700; cursor: pointer; padding: 5px 12px;
+              background: #fff; color: #000; border: 2px solid #000; box-shadow: 2px 2px 0 0 #000; }
+    .sh-tab:hover { background: #fde047; }
+    .sh-tab.on { background: #000; color: #fff; }
+    .shelf { display: flex; flex-wrap: wrap; align-items: flex-end; gap: 5px 3px;
+             margin-top: 18px; padding: 0 6px 10px; border-bottom: 5px solid #000; }
+    .shelf[hidden], .reading-list[hidden] { display: none; }
+    .sp { position: relative; flex: none; width: auto; height: 270px;
+          background: var(--c, #555); border: 1px solid rgba(0,0,0,.45); border-radius: 2px 2px 0 0;
+          box-shadow: inset -3px 0 6px rgba(0,0,0,.28), inset 3px 0 5px rgba(255,255,255,.14);
+          overflow: hidden; text-decoration: none; transition: transform .12s; }
+    .sp:hover { transform: translateY(-7px); z-index: 2; text-decoration: none; }
+    .sp-t { position: absolute; inset: 0; display: flex; align-items: stretch;
+            justify-content: center; padding: 14px 2px; overflow: hidden; }
+    .sp-t i { writing-mode: vertical-rl; text-orientation: mixed; font-style: normal;
+              white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+              font-size: 15px; font-weight: 700; color: #fff;
+              text-shadow: 0 1px 2px rgba(0,0,0,.55); }
+    .sp-i { position: relative; z-index: 1; display: block;
+            height: 100%; width: auto; max-width: 172px; object-fit: contain; }
+    .sp.no-img, .sp.sp-fail { width: var(--w, 60px); }
+    @media (max-width: 480px) { .shelf .sp { height: 205px; }
+                                 .sp.no-img, .sp.sp-fail { width: calc(var(--w, 60px) * .78); }
+                                 .sp-i { max-width: 130px; }
+                                 .sp-t i { font-size: 12.5px; } .sp-t { padding: 9px 2px; } }
     .reading-list { list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 14px; }
     .rl-item { position: relative; background: #fff; border: 2px solid #000; box-shadow: 4px 4px 0 0 #000; padding: 14px 14px 14px 52px; transition: transform .12s, box-shadow .12s; }
     .rl-item:hover { transform: translate(-1px,-1px); box-shadow: 6px 6px 0 0 #000; }
@@ -474,9 +502,36 @@
   <section class="intro">
     <p style="margin:0">19 books read or recommended by <strong>Lee Bo-young</strong> (이보영), gathered from interviews, YouTube, and SNS sources.</p>
   </section>
-  <section>
-    <h2>Reading list</h2>
-    <ol class="reading-list">
+  <section id="shelf-sec">
+    <div class="shelf-head">
+      <h2>Reading list</h2>
+      <div class="shelf-tabs" role="tablist">
+        <button type="button" class="sh-tab on" data-view="spine" aria-pressed="true">▊ Spines</button>
+        <button type="button" class="sh-tab" data-view="list" aria-pressed="false">☰ List</button>
+      </div>
+    </div>
+    <div class="shelf" id="shelf">
+    <a class="sp no-img" style="--c:hsl(188,35%,46%);--w:66px" href="https://www.aladin.co.kr/shop/wproduct.aspx?ItemId=619038&amp;partner=openAPI&amp;start=api" rel="nofollow noopener noreferrer" target="_blank" title="Your Back View"><span class="sp-t"><i>Your Back View</i></span></a>
+    <span class="sp" style="--c:hsl(213,54%,29%);--w:69px" title="Hector and the Search for Happiness"><span class="sp-t"><i>Hector and the Search for Happiness</i></span><img class="sp-i" src="https://image.yes24.com/goods/1403766/side" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.parentNode.classList.add('sp-fail');this.remove()"></span>
+    <a class="sp" style="--c:hsl(316,35%,41%);--w:56px" href="https://www.aladin.co.kr/shop/wproduct.aspx?ItemId=6946832&amp;partner=openAPI&amp;start=api" rel="nofollow noopener noreferrer" target="_blank" title="My Sweet Orange Tree"><span class="sp-t"><i>My Sweet Orange Tree</i></span><img class="sp-i" src="https://image.yes24.com/goods/1446998/side" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.parentNode.classList.add('sp-fail');this.remove()"></a>
+    <a class="sp" style="--c:hsl(140,36%,33%);--w:50px" href="https://www.aladin.co.kr/shop/wproduct.aspx?ItemId=14671590&amp;partner=openAPI&amp;start=api" rel="nofollow noopener noreferrer" target="_blank" title="My Uncle Bruce Lee"><span class="sp-t"><i>My Uncle Bruce Lee</i></span><img class="sp-i" src="https://image.yes24.com/goods/6194565/side" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.parentNode.classList.add('sp-fail');this.remove()"></a>
+    <a class="sp" style="--c:hsl(82,49%,38%);--w:50px" href="https://www.aladin.co.kr/shop/wproduct.aspx?ItemId=555927&amp;partner=openAPI&amp;start=api" rel="nofollow noopener noreferrer" target="_blank" title="Memories of My Melancholy Whores"><span class="sp-t"><i>Memories of My Melancholy Whores</i></span><img class="sp-i" src="https://image.yes24.com/goods/1481953/side" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.parentNode.classList.add('sp-fail');this.remove()"></a>
+    <a class="sp" style="--c:hsl(105,33%,34%);--w:51px" href="https://www.aladin.co.kr/shop/wproduct.aspx?ItemId=385201611&amp;partner=openAPI&amp;start=api" rel="nofollow noopener noreferrer" target="_blank" title="Shoot Me (or Save Me)"><span class="sp-t"><i>Shoot Me (or Save Me)</i></span><img class="sp-i" src="https://image.yes24.com/goods/176521109/side" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.parentNode.classList.add('sp-fail');this.remove()"></a>
+    <a class="sp no-img" style="--c:hsl(334,37%,29%);--w:52px" href="https://www.aladin.co.kr/shop/wproduct.aspx?ItemId=2098670&amp;partner=openAPI&amp;start=api" rel="nofollow noopener noreferrer" target="_blank" title="My Son Died"><span class="sp-t"><i>My Son Died</i></span></a>
+    <a class="sp" style="--c:hsl(300,52%,37%);--w:70px" href="https://www.aladin.co.kr/shop/wproduct.aspx?ItemId=11822730&amp;partner=openAPI&amp;start=api" rel="nofollow noopener noreferrer" target="_blank" title="Tess of the d&#x27;Urbervilles"><span class="sp-t"><i>Tess of the d&#x27;Urbervilles</i></span><img class="sp-i" src="https://image.yes24.com/goods/5180209/side" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.parentNode.classList.add('sp-fail');this.remove()"></a>
+    <a class="sp" style="--c:hsl(184,43%,37%);--w:56px" href="https://www.aladin.co.kr/shop/wproduct.aspx?ItemId=338505472&amp;partner=openAPI&amp;start=api" rel="nofollow noopener noreferrer" target="_blank" title="Me Before You"><span class="sp-t"><i>Me Before You</i></span><img class="sp-i" src="https://image.yes24.com/goods/126159296/side" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.parentNode.classList.add('sp-fail');this.remove()"></a>
+    <a class="sp" style="--c:hsl(215,41%,27%);--w:61px" href="https://www.aladin.co.kr/shop/wproduct.aspx?ItemId=353287023&amp;partner=openAPI&amp;start=api" rel="nofollow noopener noreferrer" target="_blank" title="Van Gogh&#x27;s Letters"><span class="sp-t"><i>Van Gogh&#x27;s Letters</i></span><img class="sp-i" src="https://image.yes24.com/goods/139871136/side" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.parentNode.classList.add('sp-fail');this.remove()"></a>
+    <a class="sp" style="--c:hsl(229,47%,27%);--w:59px" href="https://www.aladin.co.kr/shop/wproduct.aspx?ItemId=18518312&amp;partner=openAPI&amp;start=api" rel="nofollow noopener noreferrer" target="_blank" title="Special Criteria for Choosing Love"><span class="sp-t"><i>Special Criteria for Choosing Love</i></span><img class="sp-i" src="https://image.yes24.com/goods/7358910/side" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.parentNode.classList.add('sp-fail');this.remove()"></a>
+    <a class="sp" style="--c:hsl(106,38%,41%);--w:64px" href="https://www.aladin.co.kr/shop/wproduct.aspx?ItemId=40991707&amp;partner=openAPI&amp;start=api" rel="nofollow noopener noreferrer" target="_blank" title="I Want to Live"><span class="sp-t"><i>I Want to Live</i></span><img class="sp-i" src="https://image.yes24.com/goods/13165156/side" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.parentNode.classList.add('sp-fail');this.remove()"></a>
+    <a class="sp" style="--c:hsl(148,44%,29%);--w:70px" href="https://www.aladin.co.kr/shop/wproduct.aspx?ItemId=353016715&amp;partner=openAPI&amp;start=api" rel="nofollow noopener noreferrer" target="_blank" title="Monk&#x27;s Wedding Speech"><span class="sp-t"><i>Monk&#x27;s Wedding Speech</i></span><img class="sp-i" src="https://image.yes24.com/goods/139752580/side" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.parentNode.classList.add('sp-fail');this.remove()"></a>
+    <a class="sp" style="--c:hsl(119,47%,32%);--w:65px" href="https://www.aladin.co.kr/shop/wproduct.aspx?ItemId=251847567&amp;partner=openAPI&amp;start=api" rel="nofollow noopener noreferrer" target="_blank" title="The Little Prince"><span class="sp-t"><i>The Little Prince</i></span><img class="sp-i" src="https://image.yes24.com/goods/92901787/side" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.parentNode.classList.add('sp-fail');this.remove()"></a>
+    <a class="sp" style="--c:hsl(187,54%,47%);--w:71px" href="https://www.aladin.co.kr/shop/wproduct.aspx?ItemId=304662591" rel="nofollow noopener noreferrer" target="_blank" title="Why We Love"><span class="sp-t"><i>Why We Love</i></span><img class="sp-i" src="https://image.yes24.com/goods/115275383/side" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.parentNode.classList.add('sp-fail');this.remove()"></a>
+    <a class="sp" style="--c:hsl(138,35%,35%);--w:60px" href="https://www.aladin.co.kr/shop/wproduct.aspx?ItemId=79646753&amp;partner=openAPI&amp;start=api" rel="nofollow noopener noreferrer" target="_blank" title="Why Is the World Half Starving?"><span class="sp-t"><i>Why Is the World Half Starving?</i></span><img class="sp-i" src="https://image.yes24.com/goods/24937700/side" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.parentNode.classList.add('sp-fail');this.remove()"></a>
+    <a class="sp" style="--c:hsl(300,53%,38%);--w:60px" href="https://www.aladin.co.kr/shop/wproduct.aspx?ItemId=351454336&amp;partner=openAPI&amp;start=api" rel="nofollow noopener noreferrer" target="_blank" title="Wicked"><span class="sp-t"><i>Wicked</i></span><img class="sp-i" src="https://image.yes24.com/goods/136740990/side" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.parentNode.classList.add('sp-fail');this.remove()"></a>
+    <a class="sp" style="--c:hsl(11,55%,36%);--w:65px" href="https://www.aladin.co.kr/shop/wproduct.aspx?ItemId=195834968&amp;partner=openAPI&amp;start=api" rel="nofollow noopener noreferrer" target="_blank" title="Totto-chan"><span class="sp-t"><i>Totto-chan</i></span><img class="sp-i" src="https://image.yes24.com/goods/75192817/side" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.parentNode.classList.add('sp-fail');this.remove()"></a>
+    <a class="sp" style="--c:hsl(229,47%,31%);--w:57px" href="https://www.aladin.co.kr/shop/wproduct.aspx?ItemId=300053175&amp;partner=openAPI&amp;start=api" rel="nofollow noopener noreferrer" target="_blank" title="A Thousand Splendid Suns"><span class="sp-t"><i>A Thousand Splendid Suns</i></span><img class="sp-i" src="https://image.yes24.com/goods/112072262/side" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.parentNode.classList.add('sp-fail');this.remove()"></a>
+    </div>
+    <ol class="reading-list" id="rlist" hidden>
     <li class="rl-item">
       <span class="rl-num">1</span>
       <a class="rl-cover" href="https://www.aladin.co.kr/shop/wproduct.aspx?ItemId=619038&amp;partner=openAPI&amp;start=api" rel="nofollow noopener noreferrer" target="_blank" aria-label="Your Back View — buy or read more"><img src="https://image.aladin.co.kr/product/61/90/cover500/8946415339_1.jpg" alt="Your Back View by Jung Chae-bong — book cover" loading="lazy"></a>
@@ -650,6 +705,30 @@
     </li>
     </ol>
   </section>
+  <script>
+  (function () {
+    var sec = document.getElementById("shelf-sec");
+    if (!sec) return;
+    var shelf = document.getElementById("shelf"), list = document.getElementById("rlist");
+    sec.querySelectorAll(".sh-tab").forEach(function (b) {
+      b.addEventListener("click", function () {
+        var spine = b.dataset.view === "spine";
+        shelf.hidden = !spine; list.hidden = spine;
+        sec.querySelectorAll(".sh-tab").forEach(function (o) {
+          var on = o === b;
+          o.classList.toggle("on", on);
+          o.setAttribute("aria-pressed", on ? "true" : "false");
+        });
+        try { localStorage.setItem("fb.shelfView", b.dataset.view); } catch (e) {}
+      });
+    });
+    try {
+      if (localStorage.getItem("fb.shelfView") === "list") {
+        sec.querySelector('.sh-tab[data-view="list"]').click();
+      }
+    } catch (e) {}
+  })();
+  </script>
   <footer>
     <p>Curated from public Korean-language sources. Korean original page: <a href="https://favorbook.co.kr/share/%EC%9D%B4%EB%B3%B4%EC%98%81.html" hreflang="ko">이보영</a>.</p>
   </footer>

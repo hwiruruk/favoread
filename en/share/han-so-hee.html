@@ -148,6 +148,34 @@
     h2 { font-size: 19px; margin: 32px 0 12px; padding-bottom: 4px; border-bottom: 2px solid #000; font-weight: 800; }
     .intro { background: #fff; border: 2px solid #000; box-shadow: 4px 4px 0 0 #000; padding: 14px 16px; margin: 16px 0 24px; font-size: 15px; }
     .celeb-bio { margin: 4px 0 8px; padding: 6px 10px; background: #fff8e7; border-left: 4px solid #000; font-size: 14px; line-height: 1.45; color: #222; }
+    .shelf-head { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
+    .shelf-head h2 { margin-bottom: 0; border-bottom: none; padding-bottom: 0; }
+    .shelf-tabs { display: flex; gap: 6px; flex: none; }
+    .sh-tab { font: inherit; font-size: 12px; font-weight: 700; cursor: pointer; padding: 5px 12px;
+              background: #fff; color: #000; border: 2px solid #000; box-shadow: 2px 2px 0 0 #000; }
+    .sh-tab:hover { background: #fde047; }
+    .sh-tab.on { background: #000; color: #fff; }
+    .shelf { display: flex; flex-wrap: wrap; align-items: flex-end; gap: 5px 3px;
+             margin-top: 18px; padding: 0 6px 10px; border-bottom: 5px solid #000; }
+    .shelf[hidden], .reading-list[hidden] { display: none; }
+    .sp { position: relative; flex: none; width: auto; height: 270px;
+          background: var(--c, #555); border: 1px solid rgba(0,0,0,.45); border-radius: 2px 2px 0 0;
+          box-shadow: inset -3px 0 6px rgba(0,0,0,.28), inset 3px 0 5px rgba(255,255,255,.14);
+          overflow: hidden; text-decoration: none; transition: transform .12s; }
+    .sp:hover { transform: translateY(-7px); z-index: 2; text-decoration: none; }
+    .sp-t { position: absolute; inset: 0; display: flex; align-items: stretch;
+            justify-content: center; padding: 14px 2px; overflow: hidden; }
+    .sp-t i { writing-mode: vertical-rl; text-orientation: mixed; font-style: normal;
+              white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+              font-size: 15px; font-weight: 700; color: #fff;
+              text-shadow: 0 1px 2px rgba(0,0,0,.55); }
+    .sp-i { position: relative; z-index: 1; display: block;
+            height: 100%; width: auto; max-width: 172px; object-fit: contain; }
+    .sp.no-img, .sp.sp-fail { width: var(--w, 60px); }
+    @media (max-width: 480px) { .shelf .sp { height: 205px; }
+                                 .sp.no-img, .sp.sp-fail { width: calc(var(--w, 60px) * .78); }
+                                 .sp-i { max-width: 130px; }
+                                 .sp-t i { font-size: 12.5px; } .sp-t { padding: 9px 2px; } }
     .reading-list { list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 14px; }
     .rl-item { position: relative; background: #fff; border: 2px solid #000; box-shadow: 4px 4px 0 0 #000; padding: 14px 14px 14px 52px; transition: transform .12s, box-shadow .12s; }
     .rl-item:hover { transform: translate(-1px,-1px); box-shadow: 6px 6px 0 0 #000; }
@@ -186,9 +214,20 @@
   <section class="intro">
     <p style="margin:0">3 books read or recommended by <strong>Han So-hee</strong> (한소희), gathered from interviews, YouTube, and SNS sources.</p>
   </section>
-  <section>
-    <h2>Reading list</h2>
-    <ol class="reading-list">
+  <section id="shelf-sec">
+    <div class="shelf-head">
+      <h2>Reading list</h2>
+      <div class="shelf-tabs" role="tablist">
+        <button type="button" class="sh-tab on" data-view="spine" aria-pressed="true">▊ Spines</button>
+        <button type="button" class="sh-tab" data-view="list" aria-pressed="false">☰ List</button>
+      </div>
+    </div>
+    <div class="shelf" id="shelf">
+    <a class="sp" style="--c:hsl(164,56%,40%);--w:70px" href="https://www.aladin.co.kr/shop/wproduct.aspx?ItemId=39212974&amp;partner=openAPI&amp;start=api" rel="nofollow noopener noreferrer" target="_blank" title="The Book of Disquiet"><span class="sp-t"><i>The Book of Disquiet</i></span><img class="sp-i" src="https://image.yes24.com/goods/12591797/side" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.parentNode.classList.add('sp-fail');this.remove()"></a>
+    <a class="sp" style="--c:hsl(311,41%,44%);--w:55px" href="https://www.aladin.co.kr/shop/wproduct.aspx?ItemId=18012102&amp;partner=openAPI&amp;start=api" rel="nofollow noopener noreferrer" target="_blank" title="Flight (or Cloud Drift)"><span class="sp-t"><i>Flight (or Cloud Drift)</i></span><img class="sp-i" src="https://image.yes24.com/goods/7328528/side" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.parentNode.classList.add('sp-fail');this.remove()"></a>
+    <a class="sp" style="--c:hsl(304,40%,37%);--w:60px" href="https://www.aladin.co.kr/shop/wproduct.aspx?ItemId=174498760&amp;partner=openAPI&amp;start=api" rel="nofollow noopener noreferrer" target="_blank" title="Mourning Diary"><span class="sp-t"><i>Mourning Diary</i></span><img class="sp-i" src="https://image.yes24.com/goods/66998695/side" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.parentNode.classList.add('sp-fail');this.remove()"></a>
+    </div>
+    <ol class="reading-list" id="rlist" hidden>
     <li class="rl-item">
       <span class="rl-num">1</span>
       <a class="rl-cover" href="https://www.aladin.co.kr/shop/wproduct.aspx?ItemId=39212974&amp;partner=openAPI&amp;start=api" rel="nofollow noopener noreferrer" target="_blank" aria-label="The Book of Disquiet — buy or read more"><img src="https://image.aladin.co.kr/product/3921/29/cover500/899699796x_1.jpg" alt="The Book of Disquiet by Fernando Pessoa — book cover" loading="lazy"></a>
@@ -218,6 +257,30 @@
     </li>
     </ol>
   </section>
+  <script>
+  (function () {
+    var sec = document.getElementById("shelf-sec");
+    if (!sec) return;
+    var shelf = document.getElementById("shelf"), list = document.getElementById("rlist");
+    sec.querySelectorAll(".sh-tab").forEach(function (b) {
+      b.addEventListener("click", function () {
+        var spine = b.dataset.view === "spine";
+        shelf.hidden = !spine; list.hidden = spine;
+        sec.querySelectorAll(".sh-tab").forEach(function (o) {
+          var on = o === b;
+          o.classList.toggle("on", on);
+          o.setAttribute("aria-pressed", on ? "true" : "false");
+        });
+        try { localStorage.setItem("fb.shelfView", b.dataset.view); } catch (e) {}
+      });
+    });
+    try {
+      if (localStorage.getItem("fb.shelfView") === "list") {
+        sec.querySelector('.sh-tab[data-view="list"]').click();
+      }
+    } catch (e) {}
+  })();
+  </script>
   <footer>
     <p>Curated from public Korean-language sources. Korean original page: <a href="https://favorbook.co.kr/share/%ED%95%9C%EC%86%8C%ED%9D%AC.html" hreflang="ko">한소희</a>.</p>
   </footer>

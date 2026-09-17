@@ -328,6 +328,34 @@
     h2 { font-size: 19px; margin: 32px 0 12px; padding-bottom: 4px; border-bottom: 2px solid #000; font-weight: 800; }
     .intro { background: #fff; border: 2px solid #000; box-shadow: 4px 4px 0 0 #000; padding: 14px 16px; margin: 16px 0 24px; font-size: 15px; }
     .celeb-bio { margin: 4px 0 8px; padding: 6px 10px; background: #fff8e7; border-left: 4px solid #000; font-size: 14px; line-height: 1.45; color: #222; }
+    .shelf-head { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
+    .shelf-head h2 { margin-bottom: 0; border-bottom: none; padding-bottom: 0; }
+    .shelf-tabs { display: flex; gap: 6px; flex: none; }
+    .sh-tab { font: inherit; font-size: 12px; font-weight: 700; cursor: pointer; padding: 5px 12px;
+              background: #fff; color: #000; border: 2px solid #000; box-shadow: 2px 2px 0 0 #000; }
+    .sh-tab:hover { background: #fde047; }
+    .sh-tab.on { background: #000; color: #fff; }
+    .shelf { display: flex; flex-wrap: wrap; align-items: flex-end; gap: 5px 3px;
+             margin-top: 18px; padding: 0 6px 10px; border-bottom: 5px solid #000; }
+    .shelf[hidden], .reading-list[hidden] { display: none; }
+    .sp { position: relative; flex: none; width: auto; height: 270px;
+          background: var(--c, #555); border: 1px solid rgba(0,0,0,.45); border-radius: 2px 2px 0 0;
+          box-shadow: inset -3px 0 6px rgba(0,0,0,.28), inset 3px 0 5px rgba(255,255,255,.14);
+          overflow: hidden; text-decoration: none; transition: transform .12s; }
+    .sp:hover { transform: translateY(-7px); z-index: 2; text-decoration: none; }
+    .sp-t { position: absolute; inset: 0; display: flex; align-items: stretch;
+            justify-content: center; padding: 14px 2px; overflow: hidden; }
+    .sp-t i { writing-mode: vertical-rl; text-orientation: mixed; font-style: normal;
+              white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+              font-size: 15px; font-weight: 700; color: #fff;
+              text-shadow: 0 1px 2px rgba(0,0,0,.55); }
+    .sp-i { position: relative; z-index: 1; display: block;
+            height: 100%; width: auto; max-width: 172px; object-fit: contain; }
+    .sp.no-img, .sp.sp-fail { width: var(--w, 60px); }
+    @media (max-width: 480px) { .shelf .sp { height: 205px; }
+                                 .sp.no-img, .sp.sp-fail { width: calc(var(--w, 60px) * .78); }
+                                 .sp-i { max-width: 130px; }
+                                 .sp-t i { font-size: 12.5px; } .sp-t { padding: 9px 2px; } }
     .reading-list { list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 14px; }
     .rl-item { position: relative; background: #fff; border: 2px solid #000; box-shadow: 4px 4px 0 0 #000; padding: 14px 14px 14px 52px; transition: transform .12s, box-shadow .12s; }
     .rl-item:hover { transform: translate(-1px,-1px); box-shadow: 6px 6px 0 0 #000; }
@@ -366,9 +394,30 @@
   <section class="intro">
     <p style="margin:0">13 books read or recommended by <strong>Son Soo-hyun</strong> (손수현), gathered from interviews, YouTube, and SNS sources.</p>
   </section>
-  <section>
-    <h2>Reading list</h2>
-    <ol class="reading-list">
+  <section id="shelf-sec">
+    <div class="shelf-head">
+      <h2>Reading list</h2>
+      <div class="shelf-tabs" role="tablist">
+        <button type="button" class="sh-tab on" data-view="spine" aria-pressed="true">▊ Spines</button>
+        <button type="button" class="sh-tab" data-view="list" aria-pressed="false">☰ List</button>
+      </div>
+    </div>
+    <div class="shelf" id="shelf">
+    <a class="sp" style="--c:hsl(44,52%,28%);--w:56px" href="https://www.aladin.co.kr/shop/wproduct.aspx?ItemId=94764887&amp;partner=openAPI&amp;start=api" rel="nofollow noopener noreferrer" target="_blank" title="Kim Ji-young, Born 1982"><span class="sp-t"><i>Kim Ji-young, Born 1982</i></span><img class="sp-i" src="https://image.yes24.com/goods/32972572/side" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.parentNode.classList.add('sp-fail');this.remove()"></a>
+    <a class="sp" style="--c:hsl(284,53%,27%);--w:64px" href="https://www.aladin.co.kr/shop/wproduct.aspx?ItemId=375526019&amp;partner=openAPI&amp;start=api" rel="nofollow noopener noreferrer" target="_blank" title="My Crazy Feminist Girlfriend"><span class="sp-t"><i>My Crazy Feminist Girlfriend</i></span><img class="sp-i" src="https://image.yes24.com/goods/161880383/side" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.parentNode.classList.add('sp-fail');this.remove()"></a>
+    <a class="sp" style="--c:hsl(28,43%,33%);--w:62px" href="https://www.aladin.co.kr/shop/wproduct.aspx?ItemId=227344478&amp;partner=openAPI&amp;start=api" rel="nofollow noopener noreferrer" target="_blank" title="My Veganism Comic"><span class="sp-t"><i>My Veganism Comic</i></span><img class="sp-i" src="https://image.yes24.com/goods/86154834/side" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.parentNode.classList.add('sp-fail');this.remove()"></a>
+    <a class="sp" style="--c:hsl(132,45%,42%);--w:70px" href="https://www.aladin.co.kr/shop/wproduct.aspx?ItemId=348501560&amp;partner=openAPI&amp;start=api" rel="nofollow noopener noreferrer" target="_blank" title="Story (or Screenplay: How to Write One)"><span class="sp-t"><i>Story (or Screenplay: How to Write One)</i></span><img class="sp-i" src="https://image.yes24.com/goods/133969637/side" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.parentNode.classList.add('sp-fail');this.remove()"></a>
+    <a class="sp" style="--c:hsl(189,34%,26%);--w:59px" href="https://www.aladin.co.kr/shop/wproduct.aspx?ItemId=321129321" rel="nofollow noopener noreferrer" target="_blank" title="The Death of a Dog No One Hates"><span class="sp-t"><i>The Death of a Dog No One Hates</i></span><img class="sp-i" src="https://image.yes24.com/goods/120529026/side" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.parentNode.classList.add('sp-fail');this.remove()"></a>
+    <a class="sp" style="--c:hsl(344,52%,31%);--w:62px" href="https://www.aladin.co.kr/shop/wproduct.aspx?ItemId=162341344&amp;partner=openAPI&amp;start=api" rel="nofollow noopener noreferrer" target="_blank" title="See You on the Roof"><span class="sp-t"><i>See You on the Roof</i></span><img class="sp-i" src="https://image.yes24.com/goods/66591620/side" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.parentNode.classList.add('sp-fail');this.remove()"></a>
+    <a class="sp" style="--c:hsl(247,36%,28%);--w:53px" href="http://aladin.kr/p/XK8xr" rel="nofollow noopener noreferrer" target="_blank" title="European Abortion Journey"><span class="sp-t"><i>European Abortion Journey</i></span><img class="sp-i" src="https://image.yes24.com/goods/62100632/side" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.parentNode.classList.add('sp-fail');this.remove()"></a>
+    <a class="sp no-img" style="--c:hsl(291,52%,42%);--w:51px" href="https://www.aladin.co.kr/shop/wproduct.aspx?ItemId=119875425" rel="nofollow noopener noreferrer" target="_blank" title="In Search of the Lost King"><span class="sp-t"><i>In Search of the Lost King</i></span></a>
+    <a class="sp no-img" style="--c:hsl(355,43%,45%);--w:53px" href="https://www.aladin.co.kr/shop/wproduct.aspx?ItemId=252621763&amp;partner=openAPI&amp;start=api" rel="nofollow noopener noreferrer" target="_blank" title="Abortion"><span class="sp-t"><i>Abortion</i></span></a>
+    <a class="sp" style="--c:hsl(43,56%,46%);--w:71px" href="https://www.aladin.co.kr/shop/wproduct.aspx?ItemId=2040923&amp;partner=openAPI&amp;start=api" rel="nofollow noopener noreferrer" target="_blank" title="The Ethics of What We Eat (or Practical Ethics on Death)"><span class="sp-t"><i>The Ethics of What We Eat (or Practical Ethics on Death)</i></span><img class="sp-i" src="https://image.yes24.com/goods/2914676/side" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.parentNode.classList.add('sp-fail');this.remove()"></a>
+    <a class="sp" style="--c:hsl(120,36%,29%);--w:56px" href="https://www.aladin.co.kr/shop/wproduct.aspx?ItemId=277214767&amp;partner=openAPI&amp;start=api" rel="nofollow noopener noreferrer" target="_blank" title="Fifty People"><span class="sp-t"><i>Fifty People</i></span><img class="sp-i" src="https://image.yes24.com/goods/103102524/side" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.parentNode.classList.add('sp-fail');this.remove()"></a>
+    <a class="sp no-img" style="--c:hsl(100,32%,29%);--w:62px" href="https://www.aladin.co.kr/shop/wproduct.aspx?ItemId=193862231&amp;partner=openAPI&amp;start=api" rel="nofollow noopener noreferrer" target="_blank" title="Love at the Port"><span class="sp-t"><i>Love at the Port</i></span></a>
+    <a class="sp no-img" style="--c:hsl(348,38%,42%);--w:66px" href="https://www.aladin.co.kr/shop/wproduct.aspx?ItemId=122235693" rel="nofollow noopener noreferrer" target="_blank" title="To Brother Hyun-nam (or Sister)"><span class="sp-t"><i>To Brother Hyun-nam (or Sister)</i></span></a>
+    </div>
+    <ol class="reading-list" id="rlist" hidden>
     <li class="rl-item">
       <span class="rl-num">1</span>
       <a class="rl-cover" href="https://www.aladin.co.kr/shop/wproduct.aspx?ItemId=94764887&amp;partner=openAPI&amp;start=api" rel="nofollow noopener noreferrer" target="_blank" aria-label="Kim Ji-young, Born 1982 — buy or read more"><img src="https://image.aladin.co.kr/product/9476/48/cover500/8937473135_1.jpg" alt="Kim Ji-young, Born 1982 by Cho Nam-joo — book cover" loading="lazy"></a>
@@ -488,6 +537,30 @@
     </li>
     </ol>
   </section>
+  <script>
+  (function () {
+    var sec = document.getElementById("shelf-sec");
+    if (!sec) return;
+    var shelf = document.getElementById("shelf"), list = document.getElementById("rlist");
+    sec.querySelectorAll(".sh-tab").forEach(function (b) {
+      b.addEventListener("click", function () {
+        var spine = b.dataset.view === "spine";
+        shelf.hidden = !spine; list.hidden = spine;
+        sec.querySelectorAll(".sh-tab").forEach(function (o) {
+          var on = o === b;
+          o.classList.toggle("on", on);
+          o.setAttribute("aria-pressed", on ? "true" : "false");
+        });
+        try { localStorage.setItem("fb.shelfView", b.dataset.view); } catch (e) {}
+      });
+    });
+    try {
+      if (localStorage.getItem("fb.shelfView") === "list") {
+        sec.querySelector('.sh-tab[data-view="list"]').click();
+      }
+    } catch (e) {}
+  })();
+  </script>
   <footer>
     <p>Curated from public Korean-language sources. Korean original page: <a href="https://favorbook.co.kr/share/%EC%86%90%EC%88%98%ED%98%84.html" hreflang="ko">손수현</a>.</p>
   </footer>
