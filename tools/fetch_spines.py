@@ -39,6 +39,7 @@ import os
 import re
 import sys
 import time
+import urllib.error
 import urllib.parse
 import urllib.request
 
@@ -74,16 +75,26 @@ def http_json(url, headers=None, timeout=12):
 
 
 def head_ok(url, timeout=10):
-    """책등 이미지가 실제로 있는지. 예스24는 없는 책등에 404를 준다."""
+    """책등 이미지가 실제로 있는지 확인한다.
+
+    True  = 있다
+    False = 확실히 없다 (예스24가 404를 줬다)
+    None  = 알 수 없다 (연결 실패 등) — 이때는 '없음'으로 기록하면 안 된다.
+            네트워크가 잠깐 흔들린 책이 영영 색 책등으로 남아버리기 때문.
+    """
     req = urllib.request.Request(url, headers=UA, method='HEAD')
     try:
         with urllib.request.urlopen(req, timeout=timeout) as r:
             ctype = (r.headers.get('Content-Type') or '').lower()
             length = int(r.headers.get('Content-Length') or 0)
             # 아주 작은 응답은 '이미지 없음' 자리표시일 수 있다
-            return r.status == 200 and ctype.startswith('image/') and length > 1500
+            if r.status == 200 and ctype.startswith('image/') and length > 1500:
+                return True
+            return False
+    except urllib.error.HTTPError as e:
+        return False if e.code in (403, 404, 410) else None
     except Exception:
-        return False
+        return None
 
 
 # ── 알라딘 ─────────────────────────────────────────────────────────
@@ -137,13 +148,18 @@ class Yes24:
 
 
 def resolve(book, y24, ttb_key, sleep):
-    """한 권의 예스24 상품 ID를 찾는다. (goods_id, 방법, 실패이유) 반환."""
+    """한 권의 예스24 상품 ID를 찾는다.
+
+    (goods_id, 방법, 실패이유, 일시적오류여부) 반환.
+    네트워크·API 오류는 '일시적'으로 표시한다 — 그런 실패까지 misses에 남기면
+    잠깐 서버가 흔들린 책들이 영영 건너뛰어지기 때문.
+    """
     title = book['title']
 
     # 1) 표지가 이미 예스24면 조회가 필요 없다
     gid = yes24_id_from_cover(book.get('coverUrl'))
     if gid:
-        return gid, 'cover', None
+        return gid, 'cover', None, False
 
     # 2) 알라딘 ItemId → ISBN13 → 예스24
     m = ALADIN_ID_RE.search(book.get('link') or '')
@@ -155,11 +171,10 @@ def resolve(book, y24, ttb_key, sleep):
                 it = y24.by_isbn(isbn)
                 time.sleep(sleep)
             except Exception as e:
-                it = None
-                err = 'yes24 isbn: %s' % e
+                return None, None, 'yes24 isbn 조회 실패: %s' % e, True
             gid = yes24_id_from_cover((it or {}).get('cover'))
             if gid:
-                return gid, 'isbn', None
+                return gid, 'isbn', None, False
 
     # 3) 제목+저자 검색 — 제목이 맞을 때만 받는다
     q = ' '.join(x for x in (title, book.get('author')) if x).strip()
@@ -168,7 +183,7 @@ def resolve(book, y24, ttb_key, sleep):
             items = y24.search(q)
             time.sleep(sleep)
         except Exception as e:
-            return None, None, 'yes24 search: %s' % e
+            return None, None, 'yes24 검색 실패: %s' % e, True
         want = norm(title)
         for it in items:
             got = norm(it.get('title'))
@@ -177,10 +192,10 @@ def resolve(book, y24, ttb_key, sleep):
             if got == want or want in got or got in want:
                 gid = yes24_id_from_cover(it.get('cover'))
                 if gid:
-                    return gid, 'search', None
-        return None, None, '검색 결과에 제목이 맞는 책이 없음'
+                    return gid, 'search', None, False
+        return None, None, '검색 결과에 제목이 맞는 책이 없음', False
 
-    return None, None, '조회할 단서 없음'
+    return None, None, '조회할 단서 없음', False
 
 
 def load_books():
@@ -247,28 +262,55 @@ def main():
     print('고유 도서 %d권 · 이미 찾음 %d · 실패 기록 %d · 이번에 조회 %d'
           % (len(books), len(prev['spines']), len(prev['misses']), len(todo)))
 
-    stats = {'cover': 0, 'isbn': 0, 'search': 0, 'no_image': 0, 'fail': 0}
+    stats = {'cover': 0, 'isbn': 0, 'search': 0, 'no_image': 0, 'fail': 0, 'net': 0}
+    streak = 0            # 연달아 난 일시적 오류 — 서버가 죽었는지 판단용
     for i, b in enumerate(todo, 1):
         t = b['title']
-        gid, how, err = resolve(b, y24, ttb_key, args.sleep)
+        gid, how, err, transient = resolve(b, y24, ttb_key, args.sleep)
         if not gid:
+            if transient:
+                # 네트워크·API 오류는 기록하지 않는다. 다음 실행 때 다시 시도한다.
+                streak += 1
+                stats['net'] += 1
+                print('  [%d/%d] ⚠ %s — %s (기록 안 함, 다음에 다시 시도)' % (i, len(todo), t, err))
+                if streak >= 8:
+                    print('\n일시적 오류가 %d번 연달아 났습니다. 키나 프록시 주소를 확인하고'
+                          ' 잠시 뒤 다시 돌려 주세요. 여기서 멈춥니다.' % streak)
+                    break
+                continue
+            streak = 0
             misses[t] = err or '알 수 없음'
             stats['fail'] += 1
             print('  [%d/%d] ✗ %s — %s' % (i, len(todo), t, err))
             continue
         url = spine_url(gid)
-        if not head_ok(url):
+        exists = head_ok(url)
+        if exists is None:
+            streak += 1
+            stats['net'] += 1
+            print('  [%d/%d] ⚠ %s — 책등 확인 실패 (기록 안 함, 다음에 다시 시도)'
+                  % (i, len(todo), t))
+            if streak >= 8:
+                print('\n일시적 오류가 %d번 연달아 났습니다. 키나 프록시 주소를 확인하고'
+                      ' 잠시 뒤 다시 돌려 주세요. 여기서 멈춥니다.' % streak)
+                break
+            continue
+        if not exists:
+            streak = 0
             misses[t] = '예스24에 책등 이미지 없음 (goods %s)' % gid
             stats['no_image'] += 1
             print('  [%d/%d] – %s — 상품은 찾았지만 책등 없음 (%s)' % (i, len(todo), t, gid))
             continue
+        streak = 0
         spines[t] = url
         misses.pop(t, None)
         stats[how] += 1
         print('  [%d/%d] ✓ %s — %s (%s)' % (i, len(todo), t, gid, how))
 
-    print('\n표지에서 바로 %d · ISBN으로 %d · 검색으로 %d · 책등 없음 %d · 실패 %d'
-          % (stats['cover'], stats['isbn'], stats['search'], stats['no_image'], stats['fail']))
+    print('\n표지에서 바로 %d · ISBN으로 %d · 검색으로 %d · 책등 없음 %d'
+          ' · 못 찾음 %d · 일시적 오류 %d'
+          % (stats['cover'], stats['isbn'], stats['search'], stats['no_image'],
+             stats['fail'], stats['net']))
     print('합계: 책등 %d / %d권 (%d%%)'
           % (len(spines), len(books), (len(spines) * 100 // len(books)) if books else 0))
 
