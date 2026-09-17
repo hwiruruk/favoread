@@ -293,7 +293,11 @@ function bookItemFor(ref) {
 }
 function addBook(ref, doLayout = true) {
   if (bookItemFor(ref)) return;
-  addItem({ type: 'book', url: ref.coverUrl, title: ref.title, x: 120, y: 700, w: 260, rot: 0 });
+  addItem({ type: 'book', url: ref.coverUrl, title: ref.title,
+            // 배치(tools/fetch_spines.py)가 찾아둔 책등이 있으면 그것,
+            // 없으면 표지 URL에서 유도한다
+            spine: ref.spineUrl || yes24SpineUrl(ref.coverUrl),
+            x: 120, y: 700, w: 260, rot: 0 });
   if (doLayout) layoutBooks();
 }
 function removeBook(ref) {
@@ -368,7 +372,7 @@ function itemHTML(it) {
 
   if (it.type === 'book') {
     if (state.bookFace === 'spine') {
-      const sp = yes24SpineUrl(it.url);
+      const sp = it.spine || yes24SpineUrl(it.url);
       const img = sp
         ? `<img class="tg-spine-i" src="${esc(proxify(sp))}" alt="" onerror="this.remove()">`
         : '';

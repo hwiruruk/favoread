@@ -1296,7 +1296,7 @@ function bookSpines(sel, sq) {
     const t = b.ref.title;
     const hv = 1 + ((hashOf(t, 17) % 14) - 7) / 100;          // 높이 ±7%
     const h = Math.round(w * SPINE_RATIO * hv);
-    const sp = yes24SpineUrl(b.ref.coverUrl);
+    const sp = b.ref.spineUrl || yes24SpineUrl(b.ref.coverUrl);
     const img = sp ? `<img class="cn-sp-i" src="${esc(proxify(sp))}" alt="" onerror="this.remove()">` : '';
     return `<div class="cn-sp" style="width:${w}px;height:${h}px;--c:${spineTint(t)}">
       <span class="cn-sp-t" style="font-size:${Math.max(9, Math.round(w * 0.34))}px"><i>${esc(t)}</i></span>${img}

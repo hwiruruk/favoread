@@ -156,6 +156,27 @@ def yes24_spine_url(cover_url):
     return 'https://image.yes24.com/goods/' + m.group(1) + '/side' if m else None
 
 
+def load_spines():
+    """tools/fetch_spines.py 가 채운 제목 → 책등 URL 표. 없으면 빈 표."""
+    path = os.path.join('data', 'spines.json')
+    if not os.path.exists(path):
+        return {}
+    try:
+        with open(path, encoding='utf-8') as fp:
+            return (json.load(fp) or {}).get('spines') or {}
+    except (json.JSONDecodeError, OSError) as e:
+        print('⚠️ data/spines.json 읽기 실패 — 표지 URL에서만 유도합니다: %s' % e)
+        return {}
+
+
+SPINES = load_spines()
+
+
+def spine_image_url(title, cover_url):
+    """배치가 찾아둔 책등이 우선. 없으면 표지 URL에서 유도(표지가 예스24일 때만)."""
+    return SPINES.get((title or '').strip()) or yes24_spine_url(cover_url)
+
+
 def spine_tint(title):
     """책등 이미지가 없을 때 쓸 색. 제목에서 만들어 항상 같은 색이 나온다."""
     h = 0
@@ -408,6 +429,12 @@ with open("data.csv", encoding="utf-8") as f:
 print(f"CSV 파싱 완료: {len(celebs)}명")
 
 # ── 2. data.json 생성 ────────────────────────────────────────────────
+
+for _info in celebs.values():
+    for _b in _info['books']:
+        _sp = spine_image_url(_b['title'], _b['coverUrl'])
+        if _sp:
+            _b['spineUrl'] = _sp
 
 data_json = {
     'generated': TODAY,
@@ -954,7 +981,7 @@ for name, info in celebs.items():
         # 책등 한 칸 — 예스24 책등이 있으면 그 이미지를, 없으면 색 책등을 쓴다.
         # 이미지를 색 책등 위에 덮어두고 못 불러오면 스스로 사라지게 해서,
         # 자바스크립트 없이도 자연스럽게 색 책등으로 떨어진다.
-        _spine_url = yes24_spine_url(b['coverUrl'])
+        _spine_url = spine_image_url(b['title'], b['coverUrl'])
         _spine_inner = (
             '<span class="sp-t"><i>' + esc(b['title']) + '</i></span>'
             + ('<img class="sp-i" src="' + esc(_spine_url) + '" alt="" loading="lazy" '
