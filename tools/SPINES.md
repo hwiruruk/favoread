@@ -79,6 +79,8 @@ python3 tools/fetch_spines.py                        # 전체
 - `data.json` 의 각 책에 `spineUrl` 을 실어 보냅니다 →
   `together/`·`cardnews/` 가 그대로 씁니다
 
-그러니 배치를 돌린 뒤에는 **`python3 generate.py` 를 한 번 돌려야** 사이트에 반영됩니다.
+`data/spines.json` 을 푸시하면 **Update Site Data 워크플로가 알아서 다시 빌드**합니다
+(`.github/workflows/update-sitemap.yml` 의 트리거 경로에 들어 있어요).
+로컬에서 바로 보고 싶으면 `python3 generate.py` 를 돌리면 됩니다.
 
 책등 이미지를 못 찾은 책은 제목에서 만든 **색 책등**으로 그려집니다. 화면이 비지 않아요.
