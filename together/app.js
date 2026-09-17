@@ -198,6 +198,231 @@ function readImageFile(file, cb) {
 }
 
 /* ========================================================
+   되돌리기 · 단축키
+   상태가 작아서(항목 수십 개) 통째로 찍어 쌓는 방식이 가장 간단하고 안전하다.
+   끌거나 슬라이더를 미는 동안에는 같은 키로 묶어 한 동작 = 한 번 되돌리기가 되게 한다.
+   ======================================================== */
+const UNDO_MAX = 60;
+const undoStack = [];
+const redoStack = [];
+let undoAt = 0;
+
+/* 올린 사진은 data: 주소라 그대로 담으면 한 장 찍을 때마다 수 MB가 복사된다.
+   문자열 하나만 따로 모아 두고 자리표시자로 바꿔 둔다. */
+const BIG_TAG = '__bigref__';
+const bigRefs = [];
+const packBig = (v) => {
+  if (typeof v !== 'string' || !v.startsWith('data:')) return v;
+  let i = bigRefs.indexOf(v);
+  if (i < 0) i = bigRefs.push(v) - 1;
+  return BIG_TAG + i;
+};
+const unpackBig = (v) =>
+  (typeof v === 'string' && v.startsWith(BIG_TAG)) ? bigRefs[+v.slice(BIG_TAG.length)] : v;
+
+/* 되돌릴 대상만 골라 찍는다 — data/celeb 같은 큰 원본은 뺀다 */
+function snapshot() {
+  return JSON.stringify({
+    items: state.items, sel: state.sel, seq: state.seq,
+    size: state.size, theme: state.theme,
+    paperAuto: state.paperAuto, paper: state.paper,
+    inkAuto: state.inkAuto, ink: state.ink,
+    bookBorder: state.bookBorder, bookScale: state.bookScale, bookFace: state.bookFace,
+    bg: state.bg, credit: state.credit, watermark: state.watermark, proxy: state.proxy,
+  }, (k, v) => packBig(v));
+}
+
+function applySnapshot(json) {
+  const o = JSON.parse(json, (k, v) => unpackBig(v));
+  Object.assign(state, o);
+  syncPhotoControls();
+  syncColorControls();
+  markTheme();
+  $$('input[name=size]').forEach((r) => { r.checked = r.value === state.size; });
+  $$('input[name=bookFace]').forEach((r) => { r.checked = r.value === state.bookFace; });
+  $('#optBookBorder').checked = !!state.bookBorder;
+  $('#optProxy').checked = !!state.proxy;
+  $('#optWatermark').checked = !!state.watermark;
+  const bs = $('#bkScale');
+  if (bs) {
+    bs.value = Math.round((state.bookScale || 1) * 100);
+    $('#bkScaleOut').textContent = bs.value + '%';
+  }
+  renderBookList();
+  render();
+}
+
+/* 바뀌기 '직전'을 찍어 두되, 바로 쌓지 않고 한 칸(pending)에 들고 있는다.
+   다음에 또 부를 때 그 사이에 실제로 바뀐 게 있을 때만 쌓는다 —
+   아무것도 안 바꾼 클릭까지 되돌리기 목록에 들어가 Ctrl+Z가 헛도는 걸 막는다.
+   key를 주면 잠깐 사이에 같은 key로 또 부를 때 묶는다 (드래그·슬라이더용). */
+let pending = null;
+
+function flushUndo() {
+  if (!pending) return;
+  if (pending.snap !== snapshot()) {
+    undoStack.push(pending.snap);
+    if (undoStack.length > UNDO_MAX) undoStack.shift();
+    redoStack.length = 0;
+  }
+  pending = null;
+}
+
+function pushUndo(key) {
+  if (!state.celeb) return;
+  const now = Date.now();
+  if (pending && key && key === pending.key && now - undoAt < 700) { undoAt = now; return; }
+  flushUndo();
+  undoAt = now;
+  pending = { key: key || null, snap: snapshot() };
+}
+
+/* 최애를 바꾸면 이전 셀럽 기준으로 찍어 둔 것은 못 쓴다 — 목록을 비운다 */
+function resetUndo() {
+  undoStack.length = 0;
+  redoStack.length = 0;
+  pending = null;
+}
+
+/* 같은 상태가 겹쳐 쌓였으면 건너뛴다 (안전망) */
+function popDifferent(stack, cur) {
+  while (stack.length) { const s = stack.pop(); if (s !== cur) return s; }
+  return null;
+}
+
+function undo() {
+  flushUndo();
+  const cur = snapshot();
+  const prev = popDifferent(undoStack, cur);
+  if (prev === null) { status('되돌릴 게 없어요'); return; }
+  redoStack.push(cur);
+  applySnapshot(prev);
+  status('되돌렸어요 (Ctrl+Shift+Z로 다시)');
+}
+
+function redo() {
+  flushUndo();
+  const cur = snapshot();
+  const next = popDifferent(redoStack, cur);
+  if (next === null) { status('다시 할 게 없어요'); return; }
+  undoStack.push(cur);
+  applySnapshot(next);
+  status('다시 했어요');
+}
+
+function duplicateSelected() {
+  const it = findItem(state.sel);
+  if (!it) return;
+  pushUndo();
+  const copy = Object.assign({}, it, {
+    id: 'i' + (state.seq++),
+    x: (it.x || 0) + 24,
+    y: (it.y || 0) + 24,
+  });
+  state.items.push(copy);
+  state.sel = copy.id;
+  if (copy.type === 'book') renderBookList();
+  render();
+}
+
+function nudgeSelected(dx, dy) {
+  const it = findItem(state.sel);
+  if (!it) return;
+  pushUndo('nudge');
+  const [W, H] = SIZES[state.size];
+  it.x = Math.round(clamp((it.x || 0) + dx, -200, W - 40));
+  it.y = Math.round(clamp((it.y || 0) + dy, -120, H - 40));
+  render({ keepEditor: true });
+}
+
+/* 왼쪽 패널에서 일어나는 변경을 한 군데서 찍어 둔다.
+   각 핸들러가 값을 바꾸기 '전'에 잡아야 하므로 캡처 단계에서 듣는다.
+   키는 '어떤 칸'이 아니라 '지금 화면에 있는 바로 그 칸'으로 잡는다 —
+   같은 슬라이더를 죽 미는 동안엔 한 번만 쌓이고, 패널이 다시 그려지면
+   새 칸이라 다음 동작으로 끊긴다. */
+const ctlKeys = new WeakMap();
+let ctlSeq = 0;
+function ctlKey(el) {
+  let k = ctlKeys.get(el);
+  if (!k) { k = 'c' + (++ctlSeq); ctlKeys.set(el, k); }
+  return k;
+}
+
+function bindPanelUndo() {
+  const panel = $('.panel');
+  if (!panel) return;
+  const grab = (e) => {
+    const t = e.target;
+    if (!t || !/^(INPUT|TEXTAREA|SELECT)$/.test(t.tagName || '')) return;
+    if (t.type === 'file') return;          // 파일 고르기는 읽은 뒤에 따로 찍는다
+    pushUndo(ctlKey(t));
+  };
+  panel.addEventListener('input', grab, true);
+  panel.addEventListener('change', grab, true);
+  panel.addEventListener('click', (e) => {
+    if (e.target.closest('button')) pushUndo();
+  }, true);
+}
+
+function bindShortcuts() {
+  const TEXT_TYPES = /^(text|search|email|url|tel|number|password)$/;
+  document.addEventListener('keydown', (e) => {
+    const t = e.target, tag = (t && t.tagName) || '';
+    // 글자를 치는 중엔 브라우저 기본 동작에 맡긴다 (textarea의 Ctrl+Z 등)
+    const typing = tag === 'TEXTAREA' || (t && t.isContentEditable)
+                || (tag === 'INPUT' && TEXT_TYPES.test(t.type));
+    if (typing) {
+      if (e.key === 'Escape') t.blur();
+      return;
+    }
+    if (!state.celeb) return;
+    const mod = e.ctrlKey || e.metaKey;
+    const k = e.key.toLowerCase();
+    // 라디오·체크박스·슬라이더·드롭다운은 낱개 키(화살표 등)를 스스로 쓴다.
+    // Ctrl 조합만 가로채고 나머지는 그대로 넘긴다.
+    const onControl = tag === 'SELECT' || (tag === 'INPUT' && !TEXT_TYPES.test(t.type));
+
+    if (mod && k === 'z') { e.preventDefault(); e.shiftKey ? redo() : undo(); return; }
+    if (mod && k === 'y') { e.preventDefault(); redo(); return; }
+    if (mod && k === 'd') { e.preventDefault(); duplicateSelected(); return; }
+    if (mod && k === 's') { e.preventDefault(); exportPNG(); return; }
+    if (mod) return;                       // 그 밖의 Ctrl 조합은 브라우저에 넘긴다
+    if (onControl) { if (e.key === 'Escape') t.blur(); return; }
+
+    if (e.key === 'Escape') { state.sel = null; render(); return; }
+
+    if (e.key === 'Delete' || e.key === 'Backspace') {
+      const it = findItem(state.sel);
+      if (!it) return;
+      e.preventDefault();
+      pushUndo();
+      removeItem(it.id);
+      if (it.type === 'book') { layoutBooks(); renderBookList(); }
+      render();
+      return;
+    }
+
+    const step = e.shiftKey ? 10 : 1;
+    if (e.key === 'ArrowLeft')  { e.preventDefault(); nudgeSelected(-step, 0); return; }
+    if (e.key === 'ArrowRight') { e.preventDefault(); nudgeSelected(step, 0); return; }
+    if (e.key === 'ArrowUp')    { e.preventDefault(); nudgeSelected(0, -step); return; }
+    if (e.key === 'ArrowDown')  { e.preventDefault(); nudgeSelected(0, step); return; }
+
+    // [ 뒤로  ] 앞으로
+    if (e.key === '[' || e.key === ']') {
+      const it = findItem(state.sel);
+      if (!it) return;
+      e.preventDefault();
+      pushUndo();
+      const i = state.items.findIndex((x) => x.id === it.id);
+      if (e.key === ']') state.items.push(state.items.splice(i, 1)[0]);
+      else state.items.unshift(state.items.splice(i, 1)[0]);
+      render();
+    }
+  });
+}
+
+/* ========================================================
    부트
    ======================================================== */
 async function boot() {
@@ -215,6 +440,8 @@ async function boot() {
   bindSearch();
   bindOptions();
   bindCardEvents();
+  bindShortcuts();
+  bindPanelUndo();
   const q = new URLSearchParams(location.search).get('celeb');
   if (q && state.data.celebs[q]) { $('#search').value = q; selectCeleb(q); }
 }
@@ -263,6 +490,7 @@ function bindSearch() {
    최애 선택 — 기본 카드 한 장을 자동으로 만들어 준다
    ======================================================== */
 function selectCeleb(name) {
+  resetUndo();
   state.name = name;
   state.celeb = state.data.celebs[name];
   state.bg.custom = null;
@@ -512,6 +740,7 @@ function bindCardEvents() {
     $$('.tg-item', card).forEach((n) => n.classList.toggle('sel', n === el));
     renderItemEditor(); renderLayers();
     const scale = parseFloat($('#cardFrame').dataset.scale) || 1;
+    pushUndo('drag:' + it.id);
     drag = { it, el, scale, sx: e.clientX, sy: e.clientY, ox: it.x, oy: it.y, moved: false };
     el.setPointerCapture(e.pointerId);
     e.preventDefault();
@@ -648,7 +877,8 @@ function renderItemEditor() {
     </div>`;
 
   const upd = (fn) => { fn(); render(); };
-  // 슬라이더용 — 카드만 다시 그리고 편집 패널은 그대로 둔다
+  // 슬라이더용 — 카드만 다시 그리고 편집 패널은 그대로 둔다.
+  // 미는 동안은 같은 key로 묶여 한 번만 찍힌다.
   const live = (fn) => { fn(); render({ keepEditor: true }); };
   const setOut = (cls, v) => { const o = box.querySelector(cls); if (o) o.textContent = v; };
   const txt = box.querySelector('.ie-text');
