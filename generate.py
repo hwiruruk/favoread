@@ -114,6 +114,32 @@ def clean_en(value):
         return None
     return v
 
+# 편집기의 "직역*" 버튼이 기계 번역한 값에는 끝에 ` *` 를 붙인다
+# (editor/app.js의 cased + ' *'). 공식 영문판 제목이나 표준 로마자 표기가
+# 확인되지 않았다는 뜻이라, 영문 페이지에서는 이 표시가 뭔지 알려줘야 한다.
+
+def is_auto_translated(value):
+    return bool(re.search(r'\*\s*$', (value or '').strip()))
+
+
+def has_auto_translated(*values):
+    """값 중 하나라도 직역 표시가 붙어 있으면 True."""
+    return any(is_auto_translated(v) for v in values)
+
+
+# 영문 셀럽/책 페이지(자체 <style> 사용)용 각주
+EN_TR_NOTE_CSS = (
+    '    .tr-note { margin: 24px 0 0; padding: 10px 12px; background: #fff8e7; '
+    'border-left: 4px solid #000; font-size: 13px; line-height: 1.5; color: #444; }\n'
+)
+EN_TR_NOTE_TEXT = (
+    'Book titles and author names marked with an asterisk (<strong>*</strong>) are '
+    'machine-translated from Korean. No official English edition was confirmed for '
+    'them, so read them as approximations of the Korean original shown next to them.'
+)
+EN_TR_NOTE_HTML = '  <p class="tr-note">' + EN_TR_NOTE_TEXT + '</p>\n'
+
+
 def make_en_celeb_url(name_en):
     return BASE + 'en/share/' + safe_en_filename(name_en) + '.html'
 
@@ -1369,6 +1395,13 @@ for name, info in celebs.items():
     slug = safe_en_filename(name_en)
     en_celeb_pages.append((slug, name_en, name))
 
+    # 책 제목·저자에 직역 표시(*)가 있으면 각주를 단다.
+    # 인물 영문명의 *는 각주 대상이 아니다.
+    en_show_tr_note = has_auto_translated(
+        *[b.get('title_en') for b in en_books],
+        *[b.get('author_en') for b in en_books],
+    )
+
     page_url = make_en_celeb_url(name_en)
     ko_url   = make_celeb_url(name)
     img      = info['img']
@@ -1517,7 +1550,8 @@ for name, info in celebs.items():
         '    a { color: #2563eb; text-decoration: none; }\n'
         '    a:hover { text-decoration: underline; }\n'
         '    footer { margin-top: 48px; padding-top: 16px; border-top: 2px solid #000; font-size: 13px; color: #666; }\n'
-        '  </style>\n'
+        + (EN_TR_NOTE_CSS if en_show_tr_note else '')
+        + '  </style>\n'
         '</head>\n'
         '<body>\n'
         '  <div class="lang-toggle">\n'
@@ -1544,7 +1578,8 @@ for name, info in celebs.items():
         '    <ol class="reading-list">\n' + rows +
         '    </ol>\n'
         '  </section>\n'
-        '  <footer>\n'
+        + (EN_TR_NOTE_HTML if en_show_tr_note else '')
+        + '  <footer>\n'
         '    <p>Curated from public Korean-language sources. Korean original page: <a href="'
         + esc(ko_url) + '" hreflang="ko">' + esc(name) + '</a>.</p>\n'
         '  </footer>\n'
@@ -1610,6 +1645,9 @@ for title, t_en in book_title_en.items():
     author_en = book_author_en.get(title)
     author_display = author_en if author_en else binfo['author']
 
+    # 책 제목·저자에만 해당. 함께 노출되는 인물 영문명의 *는 각주 대상이 아니다.
+    en_show_tr_note = has_auto_translated(t_en, author_en)
+
     json_ld = clean_none({
         '@context': 'https://schema.org',
         '@type': 'Book',
@@ -1661,7 +1699,8 @@ for title, t_en in book_title_en.items():
         '    h1 { font-size: 28px; margin: 0 0 6px; font-weight: 900; }\n'
         '    h2 { font-size: 19px; margin: 32px 0 12px; padding-bottom: 4px; border-bottom: 2px solid #000; font-weight: 800; }\n'
         '    .meta { color: #666; margin: 0 0 16px; }\n'
-        '    ul { line-height: 2; padding-left: 22px; }\n'
+        + (EN_TR_NOTE_CSS if en_show_tr_note else '')
+        + '    ul { line-height: 2; padding-left: 22px; }\n'
         '    a { color: #2563eb; text-decoration: none; }\n'
         '    a:hover { text-decoration: underline; }\n'
         '  </style>\n'
@@ -1680,7 +1719,8 @@ for title, t_en in book_title_en.items():
         + cover_html
         + '  <h2>Read by ' + str(n_celebs) + ' Korean celebrities</h2>\n'
         '  <ul>\n' + celeb_list + '\n  </ul>\n'
-        '  <p style="margin-top:32px"><a href="' + EN_BASE + '">← Back to Favorbook</a></p>\n'
+        + (EN_TR_NOTE_HTML if en_show_tr_note else '')
+        + '  <p style="margin-top:32px"><a href="' + EN_BASE + '">← Back to Favorbook</a></p>\n'
         '</body>\n'
         '</html>'
     )
@@ -1736,6 +1776,10 @@ for slug, t_en, t_ko in sorted(en_book_pages, key=lambda x: x[1].lower()):
         '    </a>'
     )
 en_book_grid = '\n'.join(en_book_cards)
+
+en_index_show_tr_note = has_auto_translated(
+    *[title_en for _, title_en, _ in en_book_pages],
+)
 
 en_index_jsonld = json.dumps({
     '@context': 'https://schema.org',
@@ -1903,7 +1947,10 @@ en_index = (
     '      Only entries with verified sources (YouTube, interviews, SNS) are listed.<br>\n'
     '      Names follow <a href="https://kpop.fandom.com/" target="_blank" rel="noopener" class="underline decoration-2">Kpop Wiki</a> / <a href="https://www.imdb.com/" target="_blank" rel="noopener" class="underline decoration-2">IMDb</a> conventions.\n'
     '    </p>\n'
-    '  </section>\n'
+    + ('    <p class="text-xs sm:text-sm font-bold leading-relaxed text-muted word-break-keep mt-4 pt-3 border-t-2 border-ink/20">\n'
+       '      ' + EN_TR_NOTE_TEXT + '\n'
+       '    </p>\n' if en_index_show_tr_note else '')
+    + '  </section>\n'
     '\n'
     + ('  <section id="celebs" class="w-full">\n'
        '    <h2 class="text-2xl md:text-3xl font-black mb-2 word-break-keep">Browse Celebrities (' + str(len(en_celeb_pages)) + ')</h2>\n'

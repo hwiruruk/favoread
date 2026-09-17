@@ -6,6 +6,8 @@
 'use strict';
 
 const OUTPUT_SCALE = 2;
+const BOOK_W_MIN = 90;    // 책 표지 폭 최소/최대 (카드 1080px 기준)
+const BOOK_W_MAX = 900;
 const PROXY = 'https://images.weserv.nl/?url=';
 const SIZES = {
   portrait: [1080, 1350],
@@ -45,6 +47,7 @@ const state = {
   inkAuto: true,        // 글자색: 테마 기본값 사용
   ink: '#111111',
   bookBorder: false,    // 책 표지 테두리(기본 없음)
+  bookScale: 1,         // 책 표지 크기 배율 (자동 정렬 기준 폭에 곱한다)
   proxy: true,
   watermark: true,
   credit: '',
@@ -61,6 +64,7 @@ const esc = (s) => String(s == null ? '' : s).replace(/[&<>"]/g, (c) =>
 const escML = (s) => esc(s).replace(/\r\n|\r|\n/g, '<br>');
 const status = (m) => { $('#statusMsg').textContent = m || ''; };
 const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
+const isBlank = (s) => !String(s == null ? '' : s).trim();
 const displayName = (n) => String(n || '').replace(/\s*\(.*?\)\s*$/, '').trim() || n;
 
 /* ---------- 한글 조사 ---------- */
@@ -282,14 +286,19 @@ function layoutBooks() {
   const [W, H] = SIZES[state.size];
   const margin = 70;
   const gap = n > 4 ? 14 : 22;
-  const wEach = Math.min(300, Math.floor((W - margin * 2 - gap * (n - 1)) / n));
-  const totalW = wEach * n + gap * (n - 1);
+  const fitW = Math.floor((W - margin * 2 - gap * (n - 1)) / n);
+  const wEach = clamp(Math.round(Math.min(300, fitW) * (state.bookScale || 1)), BOOK_W_MIN, BOOK_W_MAX);
+  // 크게 키우면 한 줄에 다 안 들어가므로 카드 폭 안에서 겹쳐 편다
+  const step = n > 1
+    ? Math.min(wEach + gap, Math.round((W - margin * 2 - wEach) / (n - 1)))
+    : 0;
+  const totalW = wEach + step * (n - 1);
   const startX = Math.round((W - totalW) / 2);
   const baseY = H - Math.round(wEach * 1.45) - 150;
   books.forEach((b, i) => {
     b.w = wEach;
-    b.x = startX + i * (wEach + gap);
-    b.y = baseY + (i % 2 ? 26 : 0);
+    b.x = startX + i * step;
+    b.y = clamp(baseY + (i % 2 ? 26 : 0), 30, H - 220);
     b.rot = (i - (n - 1) / 2) * 4;
   });
 }
@@ -312,26 +321,33 @@ function itemHTML(it) {
       <div class="tg-bookimg" data-src="${esc(url)}" style="background-image:url('${esc(url)}');height:${Math.round(it.w * 1.45)}px"></div>
     </div>`;
   }
+  // 글자 스티커는 글자를 비워 둬도 쓸 수 있다 — 빈 말풍선·빈 라벨을 색 블록처럼
+  // 올려두는 용도. 비면 글자 크기에 비례하는 최소 크기(em)를 줘서 카드 위에서
+  // 잡아 끌 수 있게 하고, 폭·높이를 직접 정하면 그 값이 우선한다.
+  const emptyCls = isBlank(it.text) ? ' is-empty' : '';
+  const boxCls = emptyCls + (it.w ? ' has-w' : '') + (it.h ? ' has-h' : '');
+  const boxStyle = (it.w ? `width:${it.w}px;max-width:none;` : '') + (it.h ? `height:${it.h}px;` : '');
+
   if (it.type === 'title') {
-    return `<div class="tg-item tg-title${selCls}" data-id="${it.id}"
-      style="${base}width:${it.w || 880}px;font-size:${it.size}px">${escML(it.text)}</div>`;
+    return `<div class="tg-item tg-title${selCls}${boxCls}" data-id="${it.id}"
+      style="${base}${boxStyle}font-size:${it.size}px">${escML(it.text)}</div>`;
   }
   if (it.type === 'bubble') {
     const bg = t[it.color] || t.b;
-    return `<div class="tg-item tg-bubble${selCls}" data-id="${it.id}" data-shape="${it.shape}"
-      style="${base}font-size:${it.size}px;--bubble:${bg};background:${bg};color:${onColor(bg)}">${escML(it.text)}</div>`;
+    return `<div class="tg-item tg-bubble${selCls}${boxCls}" data-id="${it.id}" data-shape="${it.shape}"
+      style="${base}${boxStyle}font-size:${it.size}px;--bubble:${bg};background:${bg};color:${onColor(bg)}">${escML(it.text)}</div>`;
   }
   if (it.type === 'stars') {
-    return `<div class="tg-item tg-stars${selCls}" data-id="${it.id}" style="${base}font-size:${it.size}px">
+    return `<div class="tg-item tg-stars${selCls}${boxCls}" data-id="${it.id}" style="${base}${boxStyle}font-size:${it.size}px">
       <span class="tg-star-row">${'★'.repeat(clamp(it.n || 5, 1, 5))}</span>
       ${it.text ? `<span class="tg-star-cap">${escML(it.text)}</span>` : ''}
     </div>`;
   }
   if (it.type === 'emoji') {
-    return `<div class="tg-item tg-emoji${selCls}" data-id="${it.id}" style="${base}font-size:${it.size}px">${escML(it.text)}</div>`;
+    return `<div class="tg-item tg-emoji${selCls}${boxCls}" data-id="${it.id}" style="${base}${boxStyle}font-size:${it.size}px">${escML(it.text)}</div>`;
   }
   // tag
-  return `<div class="tg-item tg-tag${selCls}" data-id="${it.id}" style="${base}font-size:${it.size}px">${escML(it.text)}</div>`;
+  return `<div class="tg-item tg-tag${selCls}${boxCls}" data-id="${it.id}" style="${base}${boxStyle}font-size:${it.size}px">${escML(it.text)}</div>`;
 }
 
 function cardHTML() {
@@ -353,7 +369,7 @@ function cardHTML() {
   return photo + dim + state.items.map(itemHTML).join('') + mark;
 }
 
-function render() {
+function render(opts) {
   if (!state.celeb) return;
   const t = themeDef();
   const [W, H] = SIZES[state.size];
@@ -379,7 +395,9 @@ function render() {
 
   applyFits(card);
   renderLayers();
-  renderItemEditor();
+  // 슬라이더를 끄는 중에는 편집 패널을 새로 그리지 않는다 — 입력 요소가
+  // 교체되면 드래그가 거기서 끊기기 때문.
+  if (!opts || !opts.keepEditor) renderItemEditor();
 }
 
 let resizeT;
@@ -455,7 +473,9 @@ const TYPE_LABEL = { book: '📕 책', title: '🔠 큰 제목', bubble: '💬 �
 function renderLayers() {
   const ul = $('#layerList');
   ul.innerHTML = state.items.map((it, i) => {
-    const txt = it.type === 'book' ? it.title : (it.text || '').split('\n')[0];
+    const txt = it.type === 'book'
+      ? it.title
+      : (isBlank(it.text) ? '(빈 칸)' : it.text.split('\n')[0]);
     return `<li class="layer${it.id === state.sel ? ' sel' : ''}" data-id="${it.id}">
       <span class="lb">${TYPE_LABEL[it.type] || it.type}</span>
       <span class="lt">${esc(txt)}</span>
@@ -494,14 +514,15 @@ function renderItemEditor() {
   const isText = it.type !== 'book';
   const sizeLabel = it.type === 'book' ? '크기(폭)' : '글자 크기';
   const sizeVal = it.type === 'book' ? it.w : it.size;
-  const sizeMin = it.type === 'book' ? 90 : 20;
-  const sizeMax = it.type === 'book' ? 640 : 180;
+  const sizeMin = it.type === 'book' ? BOOK_W_MIN : 20;
+  const sizeMax = it.type === 'book' ? BOOK_W_MAX : 180;
+  const [CW, CH] = SIZES[state.size];
 
   box.innerHTML = `
     <div class="ie-head">${TYPE_LABEL[it.type] || it.type} 고치기</div>
     ${isText ? `<label class="field"><span>글자 <em>(엔터로 줄바꿈)</em></span>
       <textarea class="ie-text" rows="2">${esc(it.text || '')}</textarea></label>` : ''}
-    ${it.type === 'stars' ? `<label class="field range"><span>별 개수 <output>${it.n}</output></span>
+    ${it.type === 'stars' ? `<label class="field range"><span>별 개수 <output class="ie-n-o">${it.n}</output></span>
       <input class="ie-n" type="range" min="1" max="5" value="${it.n}"></label>` : ''}
     ${it.type === 'bubble' ? `
       <div class="field"><span>모양</span>
@@ -516,6 +537,15 @@ function renderItemEditor() {
       </div>` : ''}
     <label class="field range"><span>${sizeLabel} <output class="ie-size-o">${sizeVal}</output></span>
       <input class="ie-size" type="range" min="${sizeMin}" max="${sizeMax}" value="${sizeVal}"></label>
+    ${isText ? `
+    <label class="field range"><span>가로 폭
+        <label class="chk inline"><input class="ie-w-auto" type="checkbox" ${it.w ? '' : 'checked'}> 자동</label>
+        <output class="ie-w-o">${it.w ? it.w + 'px' : '글자에 맞춤'}</output></span>
+      <input class="ie-w" type="range" min="60" max="${CW}" step="10" value="${it.w || Math.round(CW * 0.5)}" ${it.w ? '' : 'disabled'}></label>
+    <label class="field range"><span>높이
+        <label class="chk inline"><input class="ie-h-auto" type="checkbox" ${it.h ? '' : 'checked'}> 자동</label>
+        <output class="ie-h-o">${it.h ? it.h + 'px' : '글자에 맞춤'}</output></span>
+      <input class="ie-h" type="range" min="40" max="${CH}" step="10" value="${it.h || 160}" ${it.h ? '' : 'disabled'}></label>` : ''}
     <label class="field range"><span>기울기 <output class="ie-rot-o">${it.rot || 0}°</output></span>
       <input class="ie-rot" type="range" min="-25" max="25" value="${it.rot || 0}"></label>
     <div class="add-row">
@@ -525,20 +555,56 @@ function renderItemEditor() {
     </div>`;
 
   const upd = (fn) => { fn(); render(); };
+  // 슬라이더용 — 카드만 다시 그리고 편집 패널은 그대로 둔다
+  const live = (fn) => { fn(); render({ keepEditor: true }); };
+  const setOut = (cls, v) => { const o = box.querySelector(cls); if (o) o.textContent = v; };
   const txt = box.querySelector('.ie-text');
   if (txt) txt.addEventListener('input', (e) => {
     it.text = e.target.value;
     const el = $(`.tg-item[data-id="${it.id}"]`);
     if (it.type === 'stars') { const c = el && el.querySelector('.tg-star-cap'); if (c) c.innerHTML = escML(it.text); }
     else if (el) el.innerHTML = escML(it.text);
+    // 글자를 다 지우면 빈 칸용 최소 크기가 붙어야 카드 위에서 계속 잡을 수 있다
+    if (el) el.classList.toggle('is-empty', isBlank(it.text));
     renderLayers();
   });
   const nRange = box.querySelector('.ie-n');
-  if (nRange) nRange.addEventListener('input', (e) => upd(() => { it.n = +e.target.value; }));
-  box.querySelector('.ie-size').addEventListener('input', (e) => upd(() => {
-    if (it.type === 'book') it.w = +e.target.value; else it.size = +e.target.value;
+  if (nRange) nRange.addEventListener('input', (e) => live(() => {
+    it.n = +e.target.value;
+    setOut('.ie-n-o', it.n);
   }));
-  box.querySelector('.ie-rot').addEventListener('input', (e) => upd(() => { it.rot = +e.target.value; }));
+  box.querySelector('.ie-size').addEventListener('input', (e) => live(() => {
+    const v = +e.target.value;
+    if (it.type === 'book') it.w = v; else it.size = v;
+    setOut('.ie-size-o', v);
+  }));
+  box.querySelector('.ie-rot').addEventListener('input', (e) => live(() => {
+    it.rot = +e.target.value;
+    setOut('.ie-rot-o', it.rot + '°');
+  }));
+
+  // 가로 폭 · 높이 — '자동'이면 글자에 맞추고, 끄면 슬라이더 값으로 고정한다.
+  [['w', 'ie-w'], ['h', 'ie-h']].forEach(([key, cls]) => {
+    const auto = box.querySelector('.' + cls + '-auto');
+    const range = box.querySelector('.' + cls);
+    if (!auto || !range) return;
+    const out = '.' + cls + '-o';
+    auto.addEventListener('change', (e) => {
+      range.disabled = e.target.checked;
+      live(() => {
+        it[key] = e.target.checked ? null : +range.value;
+        setOut(out, it[key] ? it[key] + 'px' : '글자에 맞춤');
+      });
+    });
+    range.addEventListener('input', (e) => {
+      auto.checked = false;
+      range.disabled = false;
+      live(() => {
+        it[key] = +e.target.value;
+        setOut(out, it[key] + 'px');
+      });
+    });
+  });
   $$('input[name=ieShape]', box).forEach((r) => r.addEventListener('change', (e) => {
     if (e.target.checked) upd(() => { it.shape = e.target.value; });
   }));
@@ -700,6 +766,13 @@ function bindOptions() {
   });
   $('#bkTidy').addEventListener('click', () => { layoutBooks(); render(); });
 
+  $('#bkScale').addEventListener('input', (e) => {
+    state.bookScale = (+e.target.value) / 100;
+    $('#bkScaleOut').textContent = e.target.value + '%';
+    layoutBooks();
+    render();
+  });
+
   $$('button[data-add]').forEach((b) => b.addEventListener('click', () => addSticker(b.dataset.add)));
 
   $('#pngBtn').addEventListener('click', exportPNG);
@@ -707,8 +780,9 @@ function bindOptions() {
 
 /* 스티커의 대략적인 높이 — 새 스티커를 겹치지 않게 놓는 데만 쓴다 */
 function estHeight(it) {
+  if (it.h) return it.h + 20;
   const size = it.size || 40;
-  const lines = String(it.text || '').split('\n').length;
+  const lines = isBlank(it.text) ? 1 : String(it.text).split('\n').length;
   if (it.type === 'title') return size * 1.15 * lines + 20;
   if (it.type === 'bubble') return size * 1.35 * lines + 105;
   if (it.type === 'stars') return size * (it.text ? 2.7 : 1.6) + 40;
