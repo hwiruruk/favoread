@@ -133,10 +133,9 @@ EN_TR_NOTE_CSS = (
     'border-left: 4px solid #000; font-size: 13px; line-height: 1.5; color: #444; }\n'
 )
 EN_TR_NOTE_TEXT = (
-    'Titles, author names, and celebrity names marked with an asterisk '
-    '(<strong>*</strong>) are machine-translated from Korean. No official English '
-    'edition or standard romanization was confirmed for them, so read them as '
-    'approximations of the Korean original shown next to them.'
+    'Book titles and author names marked with an asterisk (<strong>*</strong>) are '
+    'machine-translated from Korean. No official English edition was confirmed for '
+    'them, so read them as approximations of the Korean original shown next to them.'
 )
 EN_TR_NOTE_HTML = '  <p class="tr-note">' + EN_TR_NOTE_TEXT + '</p>\n'
 
@@ -1396,9 +1395,9 @@ for name, info in celebs.items():
     slug = safe_en_filename(name_en)
     en_celeb_pages.append((slug, name_en, name))
 
-    # 이 페이지에 직역 표시(*)가 하나라도 있으면 각주를 단다
+    # 책 제목·저자에 직역 표시(*)가 있으면 각주를 단다.
+    # 인물 영문명의 *는 각주 대상이 아니다.
     en_show_tr_note = has_auto_translated(
-        name_en,
         *[b.get('title_en') for b in en_books],
         *[b.get('author_en') for b in en_books],
     )
@@ -1646,11 +1645,8 @@ for title, t_en in book_title_en.items():
     author_en = book_author_en.get(title)
     author_display = author_en if author_en else binfo['author']
 
-    # 이 페이지에 직역 표시(*)가 하나라도 있으면 각주를 단다
-    en_show_tr_note = has_auto_translated(
-        t_en, author_en,
-        *[celebs[c].get('name_en') for c in binfo['celebs']],
-    )
+    # 책 제목·저자에만 해당. 함께 노출되는 인물 영문명의 *는 각주 대상이 아니다.
+    en_show_tr_note = has_auto_translated(t_en, author_en)
 
     json_ld = clean_none({
         '@context': 'https://schema.org',
@@ -1782,7 +1778,6 @@ for slug, t_en, t_ko in sorted(en_book_pages, key=lambda x: x[1].lower()):
 en_book_grid = '\n'.join(en_book_cards)
 
 en_index_show_tr_note = has_auto_translated(
-    *[name_en for _, name_en, _ in en_celeb_pages],
     *[title_en for _, title_en, _ in en_book_pages],
 )
 
