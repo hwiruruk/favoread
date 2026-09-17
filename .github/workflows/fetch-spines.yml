@@ -1,0 +1,106 @@
+name: Fetch Book Spines
+
+# 책등(spine) 이미지 URL을 예스24에서 찾아 data/spines.json 에 채운다.
+# GitHub 웹에서 Actions → 이 워크플로 → "Run workflow" 버튼으로 돌린다.
+# 터미널도, 파이썬 설치도 필요 없다. 결과는 PR로 올라온다.
+#
+# 미리 넣어둬야 할 Secret (Settings → Secrets and variables → Actions):
+#   ALADIN_TTB_KEY  알라딘 TTB 키           (편집기 ⚙️ 설정에 넣어둔 그 값)
+#   YES24_PROXY     예스24 프록시 Worker URL (편집기 ⚙️ 설정에 넣어둔 그 값)
+#   YES24_API_KEY   위 Worker 대신 키를 직접 쓸 때만
+# 자세한 설명은 tools/SPINES.md 참고.
+
+on:
+  workflow_dispatch:
+    inputs:
+      limit:
+        description: '이번에 조회할 책 수 (0 = 전부). 처음엔 30 정도로 시험해 보세요'
+        required: false
+        default: '30'
+      dry_run:
+        description: '연습 모드 — 결과만 보고 파일은 안 바꿈'
+        required: false
+        default: true
+        type: boolean
+      refresh:
+        description: '지난번에 못 찾은 책도 다시 조회'
+        required: false
+        default: false
+        type: boolean
+      recheck:
+        description: '이미 찾은 책등이 아직 살아있는지 다시 확인'
+        required: false
+        default: false
+        type: boolean
+
+jobs:
+  spines:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pull-requests: write
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: 키가 들어있는지 확인
+        env:
+          YES24_PROXY: ${{ secrets.YES24_PROXY }}
+          YES24_API_KEY: ${{ secrets.YES24_API_KEY }}
+        run: |
+          if [ -z "$YES24_PROXY" ] && [ -z "$YES24_API_KEY" ]; then
+            echo "::error::YES24_PROXY 또는 YES24_API_KEY Secret이 없습니다."
+            echo "::error::Settings → Secrets and variables → Actions 에서 추가하세요. (tools/SPINES.md 참고)"
+            exit 1
+          fi
+
+      - name: 책등 찾기
+        env:
+          ALADIN_TTB_KEY: ${{ secrets.ALADIN_TTB_KEY }}
+          YES24_PROXY: ${{ secrets.YES24_PROXY }}
+          YES24_API_KEY: ${{ secrets.YES24_API_KEY }}
+        run: |
+          ARGS=""
+          LIMIT="${{ github.event.inputs.limit }}"
+          if [ -n "$LIMIT" ] && [ "$LIMIT" != "0" ]; then ARGS="$ARGS --limit $LIMIT"; fi
+          if [ "${{ github.event.inputs.dry_run }}" = "true" ]; then ARGS="$ARGS --dry-run"; fi
+          if [ "${{ github.event.inputs.refresh }}" = "true" ]; then ARGS="$ARGS --refresh"; fi
+          if [ "${{ github.event.inputs.recheck }}" = "true" ]; then ARGS="$ARGS --recheck"; fi
+          echo "실행: python3 tools/fetch_spines.py $ARGS"
+          python3 tools/fetch_spines.py $ARGS
+
+      - name: 바뀐 게 있는지 확인
+        id: diff
+        run: |
+          if git diff --quiet -- data/spines.json; then
+            echo "changed=false" >> $GITHUB_OUTPUT
+            echo "바뀐 내용이 없습니다 (연습 모드였거나 새로 찾은 책이 없음)."
+          else
+            echo "changed=true" >> $GITHUB_OUTPUT
+          fi
+
+      - name: PR 만들기
+        if: steps.diff.outputs.changed == 'true'
+        uses: peter-evans/create-pull-request@v6
+        with:
+          commit-message: "chore: 책등 이미지 URL 갱신"
+          title: "chore: 책등 이미지 URL 갱신"
+          body: |
+            ## 책등 이미지 URL 갱신
+
+            `tools/fetch_spines.py` 가 예스24에서 찾은 책등 이미지 URL입니다.
+            바뀐 파일은 `data/spines.json` 하나뿐이에요.
+
+            ### 보는 법
+            - `spines` — 찾은 책등. `"책 제목": "https://image.yes24.com/goods/.../side"`
+            - `misses` — 못 찾은 책과 그 이유. 다음 실행 때 건너뜁니다
+
+            ### 잘못 찾은 책이 있으면
+            `spines` 에서 그 줄을 지우고 머지하세요. 그 책은 제목으로 만든 **색 책등**으로 돌아갑니다.
+            (책등이 없어도 화면은 비지 않습니다.)
+
+            머지하면 **Update Site Data 워크플로가 자동으로 다시 빌드**해서
+            책장 페이지와 카드 도구에 반영합니다.
+          branch: chore/spines
+          delete-branch: true
+          base: ${{ github.ref_name }}
