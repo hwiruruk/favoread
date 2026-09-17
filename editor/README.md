@@ -1,4 +1,4 @@
-# Favoread 데이터 편집기
+# Favorbook 데이터 편집기
 
 브라우저에서 `data.csv`를 직접 편집하고 GitHub에 commit/push까지 처리하는
 정적 웹앱입니다. 알라딘 TTB API를 통해 책 정보(제목/저자/출판사/표지)를
@@ -8,11 +8,11 @@
 
 **1) GitHub Pages 사이트로 사용 (권장)**
 
-저장소가 GitHub Pages로 호스팅되고 있으므로 (`https://favoread.com`),
+저장소가 GitHub Pages로 호스팅되고 있으므로 (`https://favorbook.co.kr`),
 브랜치가 main에 머지된 후에는 다음 주소로 접속하면 됩니다:
 
 ```
-https://favoread.com/editor/
+https://favorbook.co.kr/editor/
 ```
 
 머지 전 브랜치에서 미리 보고 싶으면 raw 사이트는 별도 빌드가 필요하므로

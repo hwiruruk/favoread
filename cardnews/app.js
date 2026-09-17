@@ -1,5 +1,5 @@
 /* ========================================================
-   Favoread 카드뉴스 빌더
+   Favorbook 카드뉴스 빌더
    인물 검색 → 읽은 책/출처 불러오기 → antiegg 풍 인스타 카드
    (표지 · 본문 · 출처 · 홍보) 생성 → PNG/ZIP 내보내기
    ======================================================== */
@@ -962,7 +962,7 @@ function syncControls() {
 function saveProject() {
   if (!state.celeb) return;
   const proj = {
-    app: 'favoread-cardnews', version: 1, savedAt: new Date().toISOString(),
+    app: 'favorbook-cardnews', version: 1, savedAt: new Date().toISOString(),
     name: state.name,
     autoText: state.autoText,
     customImage: state.customImage || null,
@@ -987,7 +987,8 @@ function saveProject() {
 function loadProject(text) {
   let proj;
   try { proj = JSON.parse(text); } catch { status('JSON을 읽지 못했어요'); return; }
-  if (!proj || proj.app !== 'favoread-cardnews') { status('이 도구의 프로젝트 파일이 아니에요'); return; }
+  // 'favoread-cardnews'는 구버전(구 영문명) 프로젝트 파일 — 계속 읽을 수 있게 함께 허용
+  if (!proj || (proj.app !== 'favorbook-cardnews' && proj.app !== 'favoread-cardnews')) { status('이 도구의 프로젝트 파일이 아니에요'); return; }
   const name = proj.name;
   if (!name || !state.data.celebs[name]) { status(`'${name || '?'}'(은)는 현재 데이터에 없어요`); return; }
 

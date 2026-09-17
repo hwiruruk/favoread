@@ -27,7 +27,7 @@ WIKIDATA_API     = "https://www.wikidata.org/w/api.php"
 
 
 def http_get_json(url, timeout=10):
-    req = urllib.request.Request(url, headers={'User-Agent': 'favoread-enrich/1.0'})
+    req = urllib.request.Request(url, headers={'User-Agent': 'favorbook-enrich/1.0'})
     with urllib.request.urlopen(req, timeout=timeout) as r:
         return json.loads(r.read())
 
