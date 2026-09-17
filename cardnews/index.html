@@ -157,10 +157,12 @@
       </div>
 
       <div class="field">
-        <span>책 표지 배치</span>
+        <span>책 표지 배치 <em>(열을 늘리면 표지가 작아지는 대신 더 많이 들어가요)</em></span>
         <div class="seg seg-row">
-          <label><input type="radio" name="bookGrid" value="grid" checked> 2열 그리드 <em>(크게)</em></label>
           <label><input type="radio" name="bookGrid" value="row"> 한 줄</label>
+          <label><input type="radio" name="bookGrid" value="2" checked> 2열 <em>(크게)</em></label>
+          <label><input type="radio" name="bookGrid" value="3"> 3열</label>
+          <label><input type="radio" name="bookGrid" value="4"> 4열 <em>(많이)</em></label>
         </div>
       </div>
 
@@ -198,6 +200,32 @@
       <ul id="bookList" class="book-list"></ul>
     </section>
 
+    <section class="block hidden" id="stickerBlock">
+      <div class="block-title">⑤ 스티커 &amp; 글자</div>
+      <p class="hint">‘함께 읽기 카드 만들기’와 같은 자유 배치 레이어예요.
+        장을 고르고 올린 뒤, 카드 위에서 <b>끌어서 옮기고 휠로 크기</b>를 바꿉니다.</p>
+
+      <div class="field">
+        <span>올릴 장</span>
+        <select id="stkScope"></select>
+      </div>
+
+      <div class="add-row" id="stkAddRow">
+        <button class="btn tiny" data-stk-add="title">＋ 큰 제목</button>
+        <button class="btn tiny" data-stk-add="bubble">＋ 말풍선</button>
+        <button class="btn tiny" data-stk-add="stars">＋ 별점</button>
+        <button class="btn tiny" data-stk-add="emoji">＋ 이모지</button>
+        <button class="btn tiny" data-stk-add="tag">＋ 작은 라벨</button>
+      </div>
+      <p class="hint"><b>글자를 다 지워도</b> 말풍선·라벨은 빈 스티커로 남아요.
+        가로 폭·높이를 직접 정하면 색 블록이나 띠처럼 쓸 수 있습니다.</p>
+
+      <div id="stkEditor" class="item-editor hidden"></div>
+      <p id="stkPickHint" class="hint">카드 위의 스티커를 누르면 여기에서 고칠 수 있어요.</p>
+
+      <ul id="stkLayers" class="layer-list"></ul>
+    </section>
+
   </aside>
 
   <section class="stage">
@@ -210,7 +238,8 @@
     </div>
     <p id="stageTip" class="stage-tip hidden">
       카드 위에서 <b>제목 · 인용구 · 책 표지</b>를 끌면 위치가 옮겨지고, <b>휠</b>을 굴리면 커지고 작아져요.<br>
-      <b>사진</b>은 끌면 초점이 움직이고 휠로 확대됩니다. 되돌리려면 각 장의 <b>↺ 조정 초기화</b>를 누르세요.
+      <b>사진</b>은 끌면 초점이 움직이고 휠로 확대됩니다. 되돌리려면 각 장의 <b>↺ 조정 초기화</b>를 누르세요.<br>
+      ⑤에서 올린 <b>스티커</b>도 같은 방식으로 끌고 휠로 크기를 바꿉니다.
     </p>
     <div id="slides" class="slides"></div>
   </section>

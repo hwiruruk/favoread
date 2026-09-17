@@ -82,6 +82,8 @@ const state = {
   celeb: null,
   customImage: null,
   autoText: true,           // 제목/부제 자동 채움 여부
+  stickerScope: null,       // 스티커를 올릴 장
+  selSticker: null,         // { sscope, id } — 지금 고른 스티커
   books: [],
   opts: {
     lang: 'ko',
@@ -96,9 +98,12 @@ const state = {
     accent: '#ff4d6d',
     coverPhoto: { x: 50, y: 50, zoom: 1 },  // 표지 인물 사진 초점·확대 (마우스로 조정)
     adj: {},                // 표지 슬라이드 요소별 마우스 조정값
+    stickers: {},           // 장(scope)별 스티커 목록 — '함께 읽기 카드'와 같은 자유 배치 레이어
+    stickerSeq: 1,
     mono: false,
     covers: true,           // 표지에 책 표지 노출
-    bookGrid: true,         // 책 표지 2열 그리드(아니면 한 줄)
+    bookGrid: true,         // (구버전 호환) 그리드 여부 — 새 파일은 bookCols를 본다
+    bookCols: 2,            // 표지 그리드 열 수 0=한 줄 | 2 | 3 | 4
     imgPos: 'center',       // 표지 사진 세로 위치 top|center|bottom
     noImage: false,         // 표지 사진 비우고 프레임만
     outro: true,
@@ -150,6 +155,9 @@ function luminance(h) {
   });
   return 0.2126 * r + 0.7152 * g + 0.0722 * b;
 }
+/* 어떤 바탕색 위에 글자를 얹을 때 읽히는 색 */
+const onColor = (bg) => (luminance(bg) < 0.5 ? '#ffffff' : '#141414');
+
 function paletteFor(bg, inkOverride) {
   const dark = luminance(bg) < 0.42;
   const ink = /^#[0-9a-f]{6}$/i.test(inkOverride || '')
@@ -546,6 +554,7 @@ function selectCeleb(name) {
   $('#celebBlock').classList.remove('hidden');
   $('#optsBlock').classList.remove('hidden');
   $('#booksBlock').classList.remove('hidden');
+  $('#stickerBlock').classList.remove('hidden');
   $('#celebThumb').src = proxify(state.celeb.imageUrl);
   $('#celebName').textContent = name;
   $('#celebCount').textContent = `책 ${state.celeb.books.length}권`;
@@ -876,7 +885,10 @@ function bindOptions() {
     state.opts.coverLayout = $$('input[name=coverLayout]').find((x) => x.checked).value; renderPreview();
   }));
   $$('input[name=bookGrid]').forEach((r) => r.addEventListener('change', () => {
-    state.opts.bookGrid = $$('input[name=bookGrid]').find((x) => x.checked).value === 'grid'; renderPreview();
+    const v = $$('input[name=bookGrid]').find((x) => x.checked).value;
+    state.opts.bookCols = v === 'row' ? 0 : +v;
+    state.opts.bookGrid = state.opts.bookCols !== 0;   // 구버전 필드도 맞춰 둔다
+    renderPreview();
   }));
   $$('input[name=imgPos]').forEach((r) => r.addEventListener('change', () => {
     state.opts.imgPos = $$('input[name=imgPos]').find((x) => x.checked).value;
@@ -914,6 +926,14 @@ function bindOptions() {
 
   $('#zipBtn').addEventListener('click', exportZip);
   $('#copyBtn').addEventListener('click', copyScript);
+  $('#stkScope').addEventListener('change', (e) => {
+    state.stickerScope = e.target.value;
+    if (state.selSticker && state.selSticker.sscope !== state.stickerScope) state.selSticker = null;
+    renderStickerPanel();
+  });
+  $$('button[data-stk-add]').forEach((b) =>
+    b.addEventListener('click', () => addSticker(b.dataset.stkAdd)));
+
   $('#saveBtn').addEventListener('click', saveProject);
   $('#loadBtn').addEventListener('click', () => $('#loadFile').click());
   $('#loadFile').addEventListener('change', (e) => {
@@ -947,7 +967,7 @@ function syncControls() {
   setRadio('fit', state.opts.fit);
   setRadio('coverLayout', state.opts.coverLayout);
   setRadio('imgPos', state.opts.imgPos);
-  setRadio('bookGrid', state.opts.bookGrid ? 'grid' : 'row');
+  setRadio('bookGrid', bookCols() ? String(bookCols()) : 'row');
   $('#optMono').checked = !!state.opts.mono;
   $('#optCovers').checked = !!state.opts.covers;
   $('#optNoImage').checked = !!state.opts.noImage;
@@ -1002,6 +1022,9 @@ function loadProject(text) {
     };
   }
   if (!state.opts.adj) state.opts.adj = {};
+  if (!state.opts.stickers || typeof state.opts.stickers !== 'object') state.opts.stickers = {};
+  state.selSticker = null;
+  state.stickerScope = null;
   state.autoText = proj.autoText !== undefined ? proj.autoText : false;
   state.customImage = proj.customImage || null;
 
@@ -1242,15 +1265,31 @@ function photoSrc(ph) {
 }
 function coverCell(b, w, h) { return coverBox(proxify(b.ref.coverUrl), 'bk', w, h); }
 
+/* 표지 그리드 열 수. 0이면 한 줄. 구버전 프로젝트 파일은 bookGrid만 갖고 있다. */
+function bookCols() {
+  const c = state.opts.bookCols;
+  if (c === 0 || c === 2 || c === 3 || c === 4) return c;
+  return state.opts.bookGrid ? 2 : 0;
+}
+
 function bookCovers(sel, sq) {
   if (!state.opts.covers || !sel.length) return '';
   const at = adjAttr('cover', 'covers') , st = adjStyle('cover', 'covers');
-  if (state.opts.bookGrid) {
-    const n = Math.min(sel.length, 10);            // 최대 2열 × 5행
-    const rows = Math.ceil(n / 2), gap = 16, budget = sq ? 460 : 640;
-    const h = Math.max(96, Math.min(sq ? 230 : 300, Math.floor((budget - (rows - 1) * gap) / rows)));
+  const cols = bookCols();
+  if (cols) {
+    const n = Math.min(sel.length, cols * 5);      // 최대 5행
+    const rows = Math.ceil(n / cols);
+    const gap = cols >= 4 ? 10 : (cols === 3 ? 13 : 16);
+    // 세로로 남은 자리와 가로로 남은 자리 중 좁은 쪽에 맞춘다.
+    // split 레이아웃은 왼쪽 단(1080의 53%)에서 여백을 뺀 만큼만 쓸 수 있어서
+    // 열을 늘리면 가로가 먼저 걸린다.
+    const hBudget = sq ? 460 : 640;
+    const wBudget = (state.opts.coverLayout === 'split' ? 430 : 880) - (cols - 1) * gap;
+    const hByRow = Math.floor((hBudget - (rows - 1) * gap) / rows);
+    const hByCol = Math.floor((wBudget / cols) / 0.66);
+    const h = Math.max(72, Math.min(sq ? 230 : 300, hByRow, hByCol));
     const w = Math.round(h * 0.66);
-    return `<div class="cn-covers grid"${at} style="gap:${gap}px;${st}">${sel.slice(0, n).map((b) => coverCell(b, w, h)).join('')}</div>`;
+    return `<div class="cn-covers grid"${at} style="gap:${gap}px;grid-template-columns:repeat(${cols},auto);${st}">${sel.slice(0, n).map((b) => coverCell(b, w, h)).join('')}</div>`;
   }
   const n = Math.min(sel.length, sq ? 4 : 5), h = sq ? 128 : 168, w = Math.round(h * 0.66);
   return `<div class="cn-covers row"${at} style="${st}">${sel.slice(0, n).map((b) => coverCell(b, w, h)).join('')}</div>`;
@@ -1400,6 +1439,261 @@ function promoHTML() {
   </div>`;
 }
 
+/* ========================================================
+   스티커 레이어 — '함께 읽기 카드 만들기'(/together/)의 자유 배치 기능을
+   카드뉴스에도 들여온 것. 장(sscope)마다 따로 얹히고, 카드 좌표(1080 기준)에
+   절대 위치로 놓인다. 글자를 비워도 남고, 크기·기울기·앞뒤를 바꿀 수 있다.
+   ======================================================== */
+const STK_LABEL = { title: '🔠 큰 제목', bubble: '💬 말풍선', stars: '⭐ 별점', emoji: '✨ 이모지', tag: '🏷 라벨' };
+const STK_SHAPES = { blob: '몽글', pill: '알약', burst: '뾰족' };
+const isBlank = (v) => !String(v == null ? '' : v).trim();
+
+function stickersOf(sscope) {
+  if (!state.opts.stickers) state.opts.stickers = {};
+  if (!state.opts.stickers[sscope]) state.opts.stickers[sscope] = [];
+  return state.opts.stickers[sscope];
+}
+function findSticker(sscope, id) { return stickersOf(sscope).find((x) => x.id === id); }
+function selSticker() {
+  const s = state.selSticker;
+  return s ? findSticker(s.sscope, s.id) : null;
+}
+
+function stickerHTML(it, sscope) {
+  const base = `left:${it.x}px;top:${it.y}px;transform:rotate(${it.rot || 0}deg);`;
+  const boxCls = (isBlank(it.text) ? ' is-empty' : '') + (it.w ? ' has-w' : '') + (it.h ? ' has-h' : '');
+  const boxStyle = (it.w ? `width:${it.w}px;max-width:none;` : '') + (it.h ? `height:${it.h}px;` : '');
+  const at = ` data-stk="${it.id}" data-sscope="${sscope}"`;
+  const style = `${base}${boxStyle}font-size:${it.size}px;`;
+
+  if (it.type === 'title') {
+    return `<div class="cn-stk cn-stk-title${boxCls}"${at} style="${style}">${escML(it.text)}</div>`;
+  }
+  if (it.type === 'bubble') {
+    return `<div class="cn-stk cn-stk-bubble${boxCls}"${at} data-shape="${esc(it.shape)}"
+      style="${style}--bubble:${esc(stickerColor(it))};background:${esc(stickerColor(it))};color:${esc(onColor(stickerColor(it)))}">${escML(it.text)}</div>`;
+  }
+  if (it.type === 'stars') {
+    return `<div class="cn-stk cn-stk-stars${boxCls}"${at} style="${style}">
+      <span class="cn-stk-starrow">${'★'.repeat(Math.max(1, Math.min(5, it.n || 5)))}</span>
+      ${it.text ? `<span class="cn-stk-starcap">${escML(it.text)}</span>` : ''}
+    </div>`;
+  }
+  if (it.type === 'emoji') {
+    return `<div class="cn-stk cn-stk-emoji${boxCls}"${at} style="${style}">${escML(it.text)}</div>`;
+  }
+  return `<div class="cn-stk cn-stk-tag${boxCls}"${at} style="${style}">${escML(it.text)}</div>`;
+}
+
+/* 말풍선 색: 포인트 색 / 배경색 / 글자색 중에서 고른다 (테마를 바꿔도 따라온다) */
+function stickerColor(it) {
+  const pal = paletteFor(state.opts.bg, state.opts.inkAuto ? '' : state.opts.ink);
+  if (it.color === 'paper') return pal['--paper'];
+  if (it.color === 'ink') return pal['--ink'];
+  return accentColor();
+}
+
+function stickerLayerHTML(sscope) {
+  const list = (state.opts.stickers && state.opts.stickers[sscope]) || [];
+  if (!list.length) return '';
+  return `<div class="cn-stk-layer">${list.map((it) => stickerHTML(it, sscope)).join('')}</div>`;
+}
+
+/* 새 스티커는 이미 올려둔 것 아래로 차곡차곡 (겹치지 않게) */
+function stickerEstHeight(it) {
+  if (it.h) return it.h + 20;
+  const size = it.size || 40;
+  const lines = isBlank(it.text) ? 1 : String(it.text).split('\n').length;
+  if (it.type === 'title') return size * 1.15 * lines + 20;
+  if (it.type === 'bubble') return size * 1.35 * lines + 105;
+  if (it.type === 'stars') return size * (it.text ? 2.7 : 1.6) + 40;
+  return size * 1.3 + 30;
+}
+
+function addSticker(kind) {
+  const sscope = state.stickerScope;
+  if (!sscope) { status('스티커를 올릴 장을 먼저 고르세요'); return; }
+  const [W, H] = dims();
+  const list = stickersOf(sscope);
+  const bottom = list.reduce((m, i) => Math.max(m, i.y + stickerEstHeight(i)), 0);
+  const dn = displayName(state.name);
+  const base = {
+    id: 's' + (state.opts.stickerSeq = (state.opts.stickerSeq || 1) + 1),
+    x: Math.max(60, Math.min(80 + list.length * 14, W - 360)),
+    // 첫 스티커는 카드 중간쯤에서 시작한다 — 위쪽은 제목·브랜드가 이미 차 있다.
+    // 두 번째부터는 앞 스티커 아래로 쌓는다.
+    y: Math.max(70, Math.min(bottom ? bottom + 34 : Math.round(H * 0.42), H - 300)),
+    rot: 0, w: null, h: null,
+  };
+  let it;
+  if (kind === 'title') it = { ...base, type: 'title', text: `${dn}의\n책장`, size: 92, w: 820, rot: -2 };
+  else if (kind === 'bubble') it = { ...base, type: 'bubble', text: `${josa(dn, '이', '가')} 읽은 책`, size: 44, shape: 'blob', color: 'accent', rot: -4 };
+  else if (kind === 'stars') it = { ...base, type: 'stars', text: '별이 다섯 개!', size: 40, n: 5, rot: 3 };
+  else if (kind === 'emoji') it = { ...base, type: 'emoji', text: '✨ 📚 🩷 ⭐️', size: 54 };
+  else it = { ...base, type: 'tag', text: `#${dn}_독서`, size: 34, rot: -3 };
+
+  list.push(it);
+  state.selSticker = { sscope, id: it.id };
+  renderPreview();
+}
+
+function removeSticker(sscope, id) {
+  state.opts.stickers[sscope] = stickersOf(sscope).filter((x) => x.id !== id);
+  if (state.selSticker && state.selSticker.id === id) state.selSticker = null;
+}
+
+/* ---- 스티커 패널 ---- */
+function slideLabel(sl, i) {
+  const labels = { cover: '표지', sources: '출처', promo: '홍보' };
+  return `${String(i + 1).padStart(2, '0')} ${labels[sl.name] || '본문 ' + sl.name.replace('book', '')}`;
+}
+
+function renderStickerPanel() {
+  const block = $('#stickerBlock');
+  if (!state.celeb) { block.classList.add('hidden'); return; }
+  block.classList.remove('hidden');
+
+  // 올릴 장 목록 — 슬라이드 구성이 바뀌면 같이 바뀐다
+  const slides = buildSlides();
+  const sel = $('#stkScope');
+  if (!slides.some((sl) => sl.sscope === state.stickerScope)) {
+    state.stickerScope = slides.length ? slides[0].sscope : null;
+  }
+  sel.innerHTML = slides.map((sl, i) => {
+    const n = ((state.opts.stickers || {})[sl.sscope] || []).length;
+    return `<option value="${esc(sl.sscope)}"${sl.sscope === state.stickerScope ? ' selected' : ''}>${esc(slideLabel(sl, i))}${n ? ` · 스티커 ${n}` : ''}</option>`;
+  }).join('');
+
+  renderStickerEditor();
+  renderStickerLayers();
+}
+
+function renderStickerLayers() {
+  const ul = $('#stkLayers');
+  const list = (state.opts.stickers || {})[state.stickerScope] || [];
+  if (!list.length) { ul.innerHTML = ''; return; }
+  ul.innerHTML = list.map((it) => {
+    const txt = isBlank(it.text) ? '(빈 칸)' : it.text.split('\n')[0];
+    const on = state.selSticker && state.selSticker.id === it.id;
+    return `<li class="layer${on ? ' sel' : ''}" data-id="${it.id}">
+      <span class="lb">${STK_LABEL[it.type] || it.type}</span>
+      <span class="lt">${esc(txt)}</span>
+      <span class="ltools">
+        <button class="btn tiny" data-act="up" title="앞으로">▲</button>
+        <button class="btn tiny" data-act="down" title="뒤로">▼</button>
+        <button class="btn tiny" data-act="del" title="빼기">✕</button>
+      </span>
+    </li>`;
+  }).join('');
+  ul.onclick = (e) => {
+    const li = e.target.closest('.layer'); if (!li) return;
+    const id = li.dataset.id, btn = e.target.closest('button[data-act]');
+    const arr = stickersOf(state.stickerScope);
+    const idx = arr.findIndex((x) => x.id === id);
+    if (!btn) { state.selSticker = { sscope: state.stickerScope, id }; }
+    else if (btn.dataset.act === 'del') removeSticker(state.stickerScope, id);
+    else if (btn.dataset.act === 'up' && idx < arr.length - 1) arr.splice(idx + 1, 0, arr.splice(idx, 1)[0]);
+    else if (btn.dataset.act === 'down' && idx > 0) arr.splice(idx - 1, 0, arr.splice(idx, 1)[0]);
+    renderStickerPanel();
+    renderPreview();
+  };
+}
+
+function renderStickerEditor() {
+  const box = $('#stkEditor'), hint = $('#stkPickHint');
+  const it = selSticker();
+  if (!it) { box.classList.add('hidden'); box.innerHTML = ''; hint.classList.remove('hidden'); return; }
+  hint.classList.add('hidden');
+  box.classList.remove('hidden');
+  const [CW, CH] = dims();
+
+  box.innerHTML = `
+    <div class="ie-head">${STK_LABEL[it.type] || it.type} 고치기</div>
+    <label class="field"><span>글자 <em>(엔터로 줄바꿈 · 비워도 됩니다)</em></span>
+      <textarea class="stk-text" rows="2">${esc(it.text || '')}</textarea></label>
+    ${it.type === 'stars' ? `<label class="field range"><span>별 개수 <output class="stk-n-o">${it.n}</output></span>
+      <input class="stk-n" type="range" min="1" max="5" value="${it.n}"></label>` : ''}
+    ${it.type === 'bubble' ? `
+      <div class="field"><span>모양</span>
+        <div class="seg seg-row">
+          ${Object.keys(STK_SHAPES).map((sh) => `<label><input type="radio" name="stkShape" value="${sh}"${it.shape === sh ? ' checked' : ''}> ${STK_SHAPES[sh]}</label>`).join('')}
+        </div>
+      </div>
+      <div class="field"><span>색</span>
+        <div class="seg seg-row">
+          ${[['accent', '포인트'], ['paper', '배경'], ['ink', '글자']].map(([k, lb]) => `<label><input type="radio" name="stkColor" value="${k}"${(it.color || 'accent') === k ? ' checked' : ''}> ${lb}</label>`).join('')}
+        </div>
+      </div>` : ''}
+    <label class="field range"><span>글자 크기 <output class="stk-size-o">${it.size}</output></span>
+      <input class="stk-size" type="range" min="20" max="200" value="${it.size}"></label>
+    <label class="field range"><span>가로 폭
+        <label class="chk inline"><input class="stk-w-auto" type="checkbox"${it.w ? '' : ' checked'}> 자동</label>
+        <output class="stk-w-o">${it.w ? it.w + 'px' : '글자에 맞춤'}</output></span>
+      <input class="stk-w" type="range" min="60" max="${CW}" step="10" value="${it.w || Math.round(CW * 0.5)}"${it.w ? '' : ' disabled'}></label>
+    <label class="field range"><span>높이
+        <label class="chk inline"><input class="stk-h-auto" type="checkbox"${it.h ? '' : ' checked'}> 자동</label>
+        <output class="stk-h-o">${it.h ? it.h + 'px' : '글자에 맞춤'}</output></span>
+      <input class="stk-h" type="range" min="40" max="${CH}" step="10" value="${it.h || 160}"${it.h ? '' : ' disabled'}></label>
+    <label class="field range"><span>기울기 <output class="stk-rot-o">${it.rot || 0}°</output></span>
+      <input class="stk-rot" type="range" min="-25" max="25" value="${it.rot || 0}"></label>
+    <div class="add-row">
+      <button class="btn tiny" data-stk-ie="front">맨 앞으로</button>
+      <button class="btn tiny" data-stk-ie="back">맨 뒤로</button>
+      <button class="btn tiny" data-stk-ie="del">이 스티커 빼기</button>
+    </div>`;
+
+  // 슬라이더를 끄는 동안 패널을 다시 그리면 input이 교체돼 드래그가 끊긴다.
+  // 카드만 다시 그리고 출력 라벨은 직접 갱신한다.
+  const live = (fn) => { fn(); renderPreview({ keepPanel: true }); };
+  const setOut = (cls, v) => { const o = box.querySelector(cls); if (o) o.textContent = v; };
+
+  box.querySelector('.stk-text').addEventListener('input', (e) => {
+    it.text = e.target.value;
+    renderPreview({ keepPanel: true });
+    renderStickerLayers();
+  });
+  const nR = box.querySelector('.stk-n');
+  if (nR) nR.addEventListener('input', (e) => live(() => { it.n = +e.target.value; setOut('.stk-n-o', it.n); }));
+  box.querySelector('.stk-size').addEventListener('input', (e) => live(() => {
+    it.size = +e.target.value; setOut('.stk-size-o', it.size);
+  }));
+  box.querySelector('.stk-rot').addEventListener('input', (e) => live(() => {
+    it.rot = +e.target.value; setOut('.stk-rot-o', it.rot + '°');
+  }));
+  [['w', 'stk-w'], ['h', 'stk-h']].forEach(([key, cls]) => {
+    const auto = box.querySelector('.' + cls + '-auto');
+    const range = box.querySelector('.' + cls);
+    const out = '.' + cls + '-o';
+    auto.addEventListener('change', (e) => {
+      range.disabled = e.target.checked;
+      live(() => {
+        it[key] = e.target.checked ? null : +range.value;
+        setOut(out, it[key] ? it[key] + 'px' : '글자에 맞춤');
+      });
+    });
+    range.addEventListener('input', (e) => {
+      auto.checked = false; range.disabled = false;
+      live(() => { it[key] = +e.target.value; setOut(out, it[key] + 'px'); });
+    });
+  });
+  $$('input[name=stkShape]', box).forEach((r) => r.addEventListener('change', (e) => {
+    if (e.target.checked) { it.shape = e.target.value; renderPreview(); }
+  }));
+  $$('input[name=stkColor]', box).forEach((r) => r.addEventListener('change', (e) => {
+    if (e.target.checked) { it.color = e.target.value; renderPreview(); }
+  }));
+  box.querySelectorAll('button[data-stk-ie]').forEach((b) => b.addEventListener('click', () => {
+    const arr = stickersOf(state.selSticker.sscope);
+    const idx = arr.findIndex((x) => x.id === it.id);
+    const act = b.dataset.stkIe;
+    if (act === 'del') removeSticker(state.selSticker.sscope, it.id);
+    else if (act === 'front') arr.push(arr.splice(idx, 1)[0]);
+    else arr.unshift(arr.splice(idx, 1)[0]);
+    renderStickerPanel();
+    renderPreview();
+  }));
+}
+
 function buildSlides() {
   const slides = [], sel = selectedBooks();
   slides.push({ name: 'cover', html: coverHTML(), scope: 'cover' });
@@ -1409,6 +1703,12 @@ function buildSlides() {
   }));
   if (state.opts.outro && sel.length) slides.push({ name: 'sources', html: outroHTML() });
   if (state.opts.promo) slides.push({ name: 'promo', html: promoHTML() });
+  // 스티커는 장 위에 얹는 별도 레이어라 본문 HTML을 만든 뒤 붙인다.
+  // scope는 기존 마우스 조정 전용이므로 건드리지 않고 sscope를 따로 둔다.
+  slides.forEach((sl) => {
+    sl.sscope = sl.scope || sl.name;
+    sl.html += stickerLayerHTML(sl.sscope);
+  });
   return slides;
 }
 
@@ -1437,7 +1737,7 @@ function makeSlideEl(html) {
 /* ========================================================
    미리보기
    ======================================================== */
-function renderPreview() {
+function renderPreview(opts) {
   if (!state.celeb) return;
   const wrap = $('#slides');
   $('#stageEmpty').classList.add('hidden');
@@ -1481,6 +1781,20 @@ function renderPreview() {
     wrap.appendChild(sw);
   });
   applyPhotoFits(wrap);   // DOM에 올라간 뒤 실제 상자 크기로 사진 배율 확정
+  // 슬라이더를 끄는 중에는 패널을 다시 그리지 않는다 — 끌고 있던 input이
+  // 교체되면 거기서 조절이 끊기기 때문.
+  if (!opts || !opts.keepPanel) renderStickerPanel();
+  markSelectedSticker();  // 선택 표시는 미리보기에만 (PNG에는 안 나가야 하므로)
+}
+
+/* 선택 테두리는 HTML에 넣지 않고 그린 뒤에 붙인다 — slideToCanvas는 같은 HTML을
+   다시 쓰기 때문에, 클래스로 넣어두면 PNG에도 점선이 찍힌다. */
+function markSelectedSticker() {
+  $$('#slides .cn-stk.sel').forEach((el) => el.classList.remove('sel'));
+  const s = state.selSticker;
+  if (!s) return;
+  const el = $(`#slides .cn-stk[data-stk="${s.id}"][data-sscope="${s.sscope}"]`);
+  if (el) el.classList.add('sel');
 }
 let resizeT;
 window.addEventListener('resize', () => { clearTimeout(resizeT); resizeT = setTimeout(renderPreview, 150); });
@@ -1497,6 +1811,26 @@ function bindAdjust() {
   const scaleOf = (el) => parseFloat(el.closest('.cn-frame')?.dataset.scale) || 1;
 
   wrap.addEventListener('pointerdown', (e) => {
+    // 스티커가 먼저 — 장 위에 얹힌 레이어라 아래 요소보다 우선한다
+    const stk = e.target.closest('[data-stk]');
+    if (stk && e.button === 0) {
+      const { stk: id, sscope } = stk.dataset;
+      const it = findSticker(sscope, id);
+      if (it) {
+        state.stickerScope = sscope;
+        state.selSticker = { sscope, id };
+        renderStickerPanel();
+        markSelectedSticker();
+        drag = {
+          el: stk, kind: 'stk', it, scale: scaleOf(stk),
+          sx: e.clientX, sy: e.clientY, ox: it.x, oy: it.y,
+        };
+        stk.setPointerCapture(e.pointerId);
+        stk.classList.add('adj-on');
+        e.preventDefault();
+        return;
+      }
+    }
     const el = e.target.closest('[data-adj]');
     if (!el || e.button !== 0) return;
     const { adj: key, scope, kind } = el.dataset;
@@ -1522,6 +1856,14 @@ function bindAdjust() {
     if (!drag) return;
     const dx = (e.clientX - drag.sx) / drag.scale;
     const dy = (e.clientY - drag.sy) / drag.scale;
+    if (drag.kind === 'stk') {
+      const [W, H] = dims();
+      drag.it.x = Math.round(Math.max(-200, Math.min(drag.ox + dx, W - 40)));
+      drag.it.y = Math.round(Math.max(-120, Math.min(drag.oy + dy, H - 40)));
+      drag.el.style.left = `${drag.it.x}px`;
+      drag.el.style.top = `${drag.it.y}px`;
+      return;
+    }
     if (drag.kind === 'pan') {
       // 0~100% 가 움직이는 실제 거리(넘치는 폭 또는 남는 여백)로 나눠야 손끝을 따라온다.
       // 꽉 채움이면 사진이 반대로, 전체 보기(여백 있음)면 같은 방향으로 움직인다.
@@ -1555,6 +1897,17 @@ function bindAdjust() {
   wrap.addEventListener('pointercancel', endDrag);
 
   wrap.addEventListener('wheel', (e) => {
+    const stk = e.target.closest('[data-stk]');
+    if (stk) {
+      const it = findSticker(stk.dataset.sscope, stk.dataset.stk);
+      if (!it) return;
+      e.preventDefault();
+      it.size = Math.round(clampNum(it.size * (e.deltaY < 0 ? 1.06 : 1 / 1.06), 20, 200));
+      stk.style.fontSize = `${it.size}px`;
+      const o = $('#stkEditor .stk-size-o'), r = $('#stkEditor .stk-size');
+      if (o && state.selSticker && state.selSticker.id === it.id) { o.textContent = it.size; r.value = it.size; }
+      return;
+    }
     const el = e.target.closest('[data-adj]');
     if (!el) return;
     e.preventDefault();
