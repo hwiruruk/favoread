@@ -455,6 +455,261 @@ const citeHead = (b) => [b.srcName ? srcDisp(b.srcName.trim()) : '', b.srcHandle
 /* ========================================================
    부트
    ======================================================== */
+/* ========================================================
+   되돌리기 · 단축키
+   상태가 작아서 통째로 찍어 쌓는 방식이 가장 간단하고 안전하다.
+   끌거나 슬라이더를 미는 동안에는 같은 키로 묶어 한 동작 = 한 번 되돌리기가 되게 한다.
+   ======================================================== */
+const UNDO_MAX = 60;
+const undoStack = [];
+const redoStack = [];
+let undoAt = 0;
+
+/* 올린 사진은 data: 주소라 그대로 담으면 한 장 찍을 때마다 수 MB가 복사된다.
+   문자열 하나만 따로 모아 두고 자리표시자로 바꿔 둔다. */
+const BIG_TAG = '__bigref__';
+const bigRefs = [];
+const packBig = (v) => {
+  if (typeof v !== 'string' || !v.startsWith('data:')) return v;
+  let i = bigRefs.indexOf(v);
+  if (i < 0) i = bigRefs.push(v) - 1;
+  return BIG_TAG + i;
+};
+const unpackBig = (v) =>
+  (typeof v === 'string' && v.startsWith(BIG_TAG)) ? bigRefs[+v.slice(BIG_TAG.length)] : v;
+
+/* 되돌릴 대상만 골라 찍는다 — data.json 원본은 뺀다.
+   담는 항목은 프로젝트 저장(saveProject)과 같은 것들이다. */
+function snapshot() {
+  return JSON.stringify({
+    opts: state.opts,
+    autoText: state.autoText,
+    customImage: state.customImage,
+    stickerScope: state.stickerScope,
+    selSticker: state.selSticker,
+    books: state.books.map((b) => ({
+      selected: b.selected, quote: b.quote, noQuote: b.noQuote,
+      srcName: b.srcName, srcHandle: b.srcHandle, srcTitle: b.srcTitle, srcDate: b.srcDate,
+      photo: b.photo || null,
+      adj: b.adj || {},
+    })),
+  }, (k, v) => packBig(v));
+}
+
+function applySnapshot(json) {
+  const o = JSON.parse(json, (k, v) => unpackBig(v));
+  state.opts = o.opts;
+  state.autoText = o.autoText;
+  state.customImage = o.customImage;
+  state.stickerScope = o.stickerScope;
+  state.selSticker = o.selSticker;
+  (o.books || []).forEach((m, i) => {
+    const b = state.books[i];
+    if (!b) return;
+    b.selected = m.selected; b.quote = m.quote; b.noQuote = m.noQuote;
+    b.srcName = m.srcName; b.srcHandle = m.srcHandle;
+    b.srcTitle = m.srcTitle; b.srcDate = m.srcDate;
+    b.photo = m.photo || null;
+    b.adj = m.adj || {};
+  });
+  const thumb = $('#celebThumb');
+  if (thumb) thumb.src = state.customImage || (state.celeb ? proxify(state.celeb.imageUrl) : '');
+  syncControls();
+  renderBookList();
+  renderPreview();
+}
+
+/* 바뀌기 '직전'을 찍어 두되, 바로 쌓지 않고 한 칸(pending)에 들고 있는다.
+   다음에 또 부를 때 그 사이에 실제로 바뀐 게 있을 때만 쌓는다 —
+   아무것도 안 바꾼 클릭까지 되돌리기 목록에 들어가 Ctrl+Z가 헛도는 걸 막는다.
+   key를 주면 잠깐 사이에 같은 key로 또 부를 때 묶는다 (드래그·슬라이더용). */
+let pending = null;
+
+function flushUndo() {
+  if (!pending) return;
+  if (pending.snap !== snapshot()) {
+    undoStack.push(pending.snap);
+    if (undoStack.length > UNDO_MAX) undoStack.shift();
+    redoStack.length = 0;
+  }
+  pending = null;
+}
+
+function pushUndo(key) {
+  if (!state.celeb) return;
+  const now = Date.now();
+  if (pending && key && key === pending.key && now - undoAt < 700) { undoAt = now; return; }
+  flushUndo();
+  undoAt = now;
+  pending = { key: key || null, snap: snapshot() };
+}
+
+/* 최애를 바꾸면 이전 셀럽 기준으로 찍어 둔 것은 못 쓴다 — 목록을 비운다 */
+function resetUndo() {
+  undoStack.length = 0;
+  redoStack.length = 0;
+  pending = null;
+}
+
+/* 같은 상태가 겹쳐 쌓였으면 건너뛴다 (안전망) */
+function popDifferent(stack, cur) {
+  while (stack.length) { const s = stack.pop(); if (s !== cur) return s; }
+  return null;
+}
+
+function undo() {
+  flushUndo();
+  const cur = snapshot();
+  const prev = popDifferent(undoStack, cur);
+  if (prev === null) { status('되돌릴 게 없어요'); return; }
+  redoStack.push(cur);
+  applySnapshot(prev);
+  status('되돌렸어요 (Ctrl+Shift+Z로 다시)');
+}
+
+function redo() {
+  flushUndo();
+  const cur = snapshot();
+  const next = popDifferent(redoStack, cur);
+  if (next === null) { status('다시 할 게 없어요'); return; }
+  undoStack.push(cur);
+  applySnapshot(next);
+  status('다시 했어요');
+}
+
+function duplicateSticker() {
+  const it = selSticker();
+  if (!it) return;
+  pushUndo();
+  const sscope = state.selSticker.sscope;
+  const copy = {
+    ...it,
+    id: 's' + (state.opts.stickerSeq = (state.opts.stickerSeq || 1) + 1),
+    x: (it.x || 0) + 30, y: (it.y || 0) + 30,
+  };
+  stickersOf(sscope).push(copy);
+  state.selSticker = { sscope, id: copy.id };
+  renderPreview();
+}
+
+function nudgeSticker(dx, dy) {
+  const it = selSticker();
+  if (!it) return;
+  pushUndo('nudge');
+  const [W, H] = dims();
+  it.x = Math.round(Math.max(-200, Math.min((it.x || 0) + dx, W - 40)));
+  it.y = Math.round(Math.max(-120, Math.min((it.y || 0) + dy, H - 40)));
+  renderPreview({ keepPanel: true });
+}
+
+function resizeSticker(mul) {
+  const it = selSticker();
+  if (!it) return;
+  pushUndo('stksize');
+  it.size = Math.round(clampNum(it.size * mul, 20, 200));
+  renderPreview({ keepPanel: true });
+  const o = $('#stkEditor .stk-size-o'), r = $('#stkEditor .stk-size');
+  if (o) o.textContent = it.size;
+  if (r) r.value = it.size;
+}
+
+/* 왼쪽 패널에서 일어나는 변경을 한 군데서 찍어 둔다.
+   각 핸들러가 값을 바꾸기 '전'에 잡아야 하므로 캡처 단계에서 듣는다.
+   키는 '어떤 칸'이 아니라 '지금 화면에 있는 바로 그 칸'으로 잡는다 —
+   같은 슬라이더를 죽 미는 동안엔 한 번만 쌓이고, 패널이 다시 그려지면
+   새 칸이라 다음 동작으로 끊긴다. */
+const ctlKeys = new WeakMap();
+let ctlSeq = 0;
+function ctlKey(el) {
+  let k = ctlKeys.get(el);
+  if (!k) { k = 'c' + (++ctlSeq); ctlKeys.set(el, k); }
+  return k;
+}
+
+function bindPanelUndo() {
+  const panel = $('.panel');
+  if (!panel) return;
+  const grab = (e) => {
+    const t = e.target;
+    if (!t || !/^(INPUT|TEXTAREA|SELECT)$/.test(t.tagName || '')) return;
+    if (t.type === 'file') return;          // 파일 고르기는 읽은 뒤에 따로 찍는다
+    pushUndo(ctlKey(t));
+  };
+  panel.addEventListener('input', grab, true);
+  panel.addEventListener('change', grab, true);
+  panel.addEventListener('click', (e) => {
+    if (e.target.closest('button')) pushUndo();
+  }, true);
+}
+
+function bindShortcuts() {
+  const TEXT_TYPES = /^(text|search|email|url|tel|number|password)$/;
+  document.addEventListener('keydown', (e) => {
+    const t = e.target, tag = (t && t.tagName) || '';
+    // 글자를 치는 중엔 브라우저 기본 동작에 맡긴다 (textarea의 Ctrl+Z 등)
+    const typing = tag === 'TEXTAREA' || (t && t.isContentEditable)
+                || (tag === 'INPUT' && TEXT_TYPES.test(t.type));
+    if (typing) {
+      if (e.key === 'Escape') t.blur();
+      return;
+    }
+    if (!state.celeb) return;
+    const mod = e.ctrlKey || e.metaKey;
+    const k = e.key.toLowerCase();
+    // 라디오·체크박스·슬라이더·드롭다운은 낱개 키(화살표 등)를 스스로 쓴다.
+    // Ctrl 조합만 가로채고 나머지는 그대로 넘긴다.
+    const onControl = tag === 'SELECT' || (tag === 'INPUT' && !TEXT_TYPES.test(t.type));
+
+    if (mod && k === 'z') { e.preventDefault(); e.shiftKey ? redo() : undo(); return; }
+    if (mod && k === 'y') { e.preventDefault(); redo(); return; }
+    if (mod && k === 'd') { e.preventDefault(); duplicateSticker(); return; }
+    if (mod && k === 's') { e.preventDefault(); e.shiftKey ? saveProject() : exportZip(); return; }
+    if (mod) return;                       // 그 밖의 Ctrl 조합은 브라우저에 넘긴다
+    if (onControl) { if (e.key === 'Escape') t.blur(); return; }
+
+    if (e.key === 'Escape') {
+      state.selSticker = null;
+      renderStickerPanel();
+      markSelectedSticker();
+      return;
+    }
+
+    if (e.key === 'Delete' || e.key === 'Backspace') {
+      const it = selSticker();
+      if (!it) return;
+      e.preventDefault();
+      pushUndo();
+      removeSticker(state.selSticker.sscope, it.id);
+      renderPreview();
+      return;
+    }
+
+    // 카드가 1080px이라 1px씩은 티가 안 난다 — 기본 3px, Shift면 30px
+    const step = (e.shiftKey ? 10 : 1) * 3;
+    if (e.key === 'ArrowLeft')  { e.preventDefault(); nudgeSticker(-step, 0); return; }
+    if (e.key === 'ArrowRight') { e.preventDefault(); nudgeSticker(step, 0); return; }
+    if (e.key === 'ArrowUp')    { e.preventDefault(); nudgeSticker(0, -step); return; }
+    if (e.key === 'ArrowDown')  { e.preventDefault(); nudgeSticker(0, step); return; }
+
+    // + - 글자 크기
+    if (e.key === '+' || e.key === '=') { e.preventDefault(); resizeSticker(1.06); return; }
+    if (e.key === '-' || e.key === '_') { e.preventDefault(); resizeSticker(1 / 1.06); return; }
+
+    // [ 뒤로  ] 앞으로
+    if (e.key === '[' || e.key === ']') {
+      const it = selSticker();
+      if (!it) return;
+      e.preventDefault();
+      pushUndo();
+      const arr = stickersOf(state.selSticker.sscope);
+      const i = arr.findIndex((x) => x.id === it.id);
+      if (e.key === ']') arr.push(arr.splice(i, 1)[0]);
+      else arr.unshift(arr.splice(i, 1)[0]);
+      renderPreview();
+    }
+  });
+}
+
 async function boot() {
   status('데이터 불러오는 중…');
   try {
@@ -470,6 +725,8 @@ async function boot() {
   bindOptions();
   bindSearch();
   bindAdjust();
+  bindShortcuts();
+  bindPanelUndo();
   $('#loadBtn').disabled = false;
 }
 
@@ -529,6 +786,7 @@ function refreshAutoText() {
 }
 
 function selectCeleb(name) {
+  resetUndo();
   state.name = name;
   state.celeb = state.data.celebs[name];
   state.customImage = null;
@@ -1060,6 +1318,7 @@ function loadProject(text) {
   syncControls();
   renderBookList();
   renderPreview();
+  resetUndo();                             // 불러온 파일이 새 출발점
   status('프로젝트를 불러왔어요');
 }
 
@@ -1260,6 +1519,7 @@ function syncPhotoPanel(scope) {
 
 /* 한 슬라이드의 조정값을 모두 되돌린다 */
 function resetAdj(scope) {
+  pushUndo();
   const st = scopeStore(scope);
   if (st) Object.keys(st).forEach((k) => delete st[k]);
   const ph = photoProps(scope);
@@ -1906,6 +2166,7 @@ function bindAdjust() {
       const { stk: id, sscope } = stk.dataset;
       const it = findSticker(sscope, id);
       if (it) {
+        pushUndo('drag:' + id);
         state.stickerScope = sscope;
         state.selSticker = { sscope, id };
         renderStickerPanel();
@@ -1927,6 +2188,7 @@ function bindAdjust() {
       const ph = photoProps(scope);
       if (!ph) return;
       const m = /(\d+(?:\.\d+)?)px\s+(\d+(?:\.\d+)?)px/.exec(el.style.backgroundSize || '');
+      pushUndo('pan:' + scope);
       drag = {
         el, kind, ph, sx: e.clientX, sy: e.clientY, ox: ph.x, oy: ph.y, scale: scaleOf(el),
         imgW: m ? +m[1] : 0, imgH: m ? +m[2] : 0,
@@ -1934,6 +2196,7 @@ function bindAdjust() {
     } else {
       const a = getAdj(scope, key);
       if (!a) return;
+      pushUndo('move:' + scope + ':' + key);
       drag = { el, kind: 'move', a, sx: e.clientX, sy: e.clientY, ox: a.dx, oy: a.dy, scale: scaleOf(el) };
     }
     el.setPointerCapture(e.pointerId);
@@ -1991,6 +2254,7 @@ function bindAdjust() {
       const it = findSticker(stk.dataset.sscope, stk.dataset.stk);
       if (!it) return;
       e.preventDefault();
+      pushUndo('wheel:' + it.id);
       it.size = Math.round(clampNum(it.size * (e.deltaY < 0 ? 1.06 : 1 / 1.06), 20, 200));
       stk.style.fontSize = `${it.size}px`;
       const o = $('#stkEditor .stk-size-o'), r = $('#stkEditor .stk-size');
@@ -2001,6 +2265,7 @@ function bindAdjust() {
     if (!el) return;
     e.preventDefault();
     const { adj: key, scope, kind } = el.dataset;
+    pushUndo('wheel:' + scope + ':' + (key || kind));
     const step = e.deltaY < 0 ? 1.06 : 1 / 1.06;
     if (kind === 'pan') {
       const ph = photoProps(scope);
