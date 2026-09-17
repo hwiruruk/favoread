@@ -121,6 +121,19 @@ function luminance(h) {
 }
 const onColor = (bg) => (luminance(bg) < 0.5 ? '#ffffff' : '#141414');
 
+/* 두 색을 t만큼 섞는다 (t=0이면 a, 1이면 b).
+   요즘 유행하는 연한 파스텔 박스는 '같은 색의 옅은 바탕 + 진한 글자'라
+   테마 색 하나에서 바탕색과 글자색을 함께 뽑아 쓴다. */
+function mixHex(a, b, t) {
+  const [r1, g1, b1] = hexToRgb(a), [r2, g2, b2] = hexToRgb(b);
+  const m = (x, y) => Math.round(x + (y - x) * t).toString(16).padStart(2, '0');
+  return '#' + m(r1, r2) + m(g1, g2) + m(b1, b2);
+}
+/* 옅은 바탕 — 배경색 쪽으로 많이 섞는다 */
+const softBg = (c, t) => mixHex(c, t.paper, 0.76);
+/* 진한 글자 — 글자색 쪽으로 섞어 바탕과 또렷이 갈린다 */
+const softFg = (c, t) => mixHex(c, t.ink, 0.58);
+
 /* ---------- 이미지 ---------- */
 function cleanUrl(u) { return String(u || '').replace(/&amp;/g, '&').trim(); }
 function proxify(u) {
@@ -512,6 +525,7 @@ function selectCeleb(name) {
 
   seedDefaults();
   syncPhotoControls();
+  buildStickerGallery();     // 예시 글자에 최애 이름이 들어간다
   renderBookList();
   render();
 }
@@ -673,6 +687,28 @@ function itemHTML(it) {
   if (it.type === 'emoji') {
     return `<div class="tg-item tg-emoji${selCls}${boxCls}" data-id="${it.id}" style="${base}${boxStyle}font-size:${it.size}px">${escML(it.text)}</div>`;
   }
+  // 요즘 스타일 박스 — 두꺼운 테두리 없이 옅은 바탕에 진한 글자.
+  // 모양만 바꿔 라벨·얇은 테두리·메모지·테이프까지 한 종류로 쓴다.
+  if (it.type === 'soft') {
+    const c = t[it.color] || t.a;
+    const sh = it.shape || 'round';
+    let sty = '';
+    if (sh === 'chip') sty = `background:${c};color:${onColor(c)};`;
+    else if (sh === 'line') sty = `background:${t.paper};color:${softFg(c, t)};border-color:${softFg(c, t)};`;
+    else if (sh === 'note') sty = `background:${softBg(c, t)};color:${softFg(c, t)};`;
+    else if (sh === 'tape') sty = `background:${mixHex(c, t.paper, 0.45)};color:${softFg(c, t)};`;
+    else sty = `background:${softBg(c, t)};color:${softFg(c, t)};`;
+    return `<div class="tg-item tg-soft${selCls}${boxCls}" data-id="${it.id}" data-shape="${sh}"
+      style="${base}${boxStyle}${sty}font-size:${it.size}px">${escML(it.text)}</div>`;
+  }
+  // 그림 스티커 — 상자 없이 이모지만. 카드 여백을 채우는 용도.
+  if (it.type === 'deco') {
+    return `<div class="tg-item tg-deco${selCls}${boxCls}" data-id="${it.id}" style="${base}${boxStyle}font-size:${it.size}px">${escML(it.text)}</div>`;
+  }
+  // 외곽선 글자 — 사진 위에 얹어도 읽히는 한 줄 문구. 기울여 쓰면 잘 어울린다.
+  if (it.type === 'outline') {
+    return `<div class="tg-item tg-outline${selCls}${boxCls}" data-id="${it.id}" style="${base}${boxStyle}font-size:${it.size}px">${escML(it.text)}</div>`;
+  }
   // tag
   return `<div class="tg-item tg-tag${selCls}${boxCls}" data-id="${it.id}" style="${base}${boxStyle}font-size:${it.size}px">${escML(it.text)}</div>`;
 }
@@ -797,7 +833,12 @@ function renderBookList() {
 /* ========================================================
    패널 — 레이어 목록 / 선택 항목 편집
    ======================================================== */
-const TYPE_LABEL = { book: '📕 책', title: '🔠 큰 제목', bubble: '💬 말풍선', stars: '⭐ 별점', emoji: '✨ 이모지', tag: '🏷 라벨' };
+const TYPE_LABEL = {
+  book: '📕 책', title: '🔠 큰 제목', bubble: '💬 말풍선', stars: '⭐ 별점',
+  emoji: '✨ 이모지', tag: '🏷 라벨',
+  soft: '🧁 요즘 박스', deco: '🧸 그림', outline: '🖍 외곽선 글자',
+};
+const SOFT_SHAPES = { round: '둥근 박스', chip: '단색 라벨', line: '얇은 테두리', note: '메모지', tape: '테이프' };
 
 function renderLayers() {
   const ul = $('#layerList');
@@ -858,7 +899,14 @@ function renderItemEditor() {
         <div class="seg seg-row">
           ${['blob', 'pill', 'burst'].map((sh) => `<label><input type="radio" name="ieShape" value="${sh}" ${it.shape === sh ? 'checked' : ''}> ${{ blob: '몽글', pill: '알약', burst: '뾰족' }[sh]}</label>`).join('')}
         </div>
-      </div>
+      </div>` : ''}
+    ${it.type === 'soft' ? `
+      <div class="field"><span>모양</span>
+        <div class="seg">
+          ${Object.keys(SOFT_SHAPES).map((sh) => `<label><input type="radio" name="ieShape" value="${sh}" ${(it.shape || 'round') === sh ? 'checked' : ''}> ${SOFT_SHAPES[sh]}</label>`).join('')}
+        </div>
+      </div>` : ''}
+    ${(it.type === 'bubble' || it.type === 'soft') ? `
       <div class="field"><span>색</span>
         <div class="seg seg-row">
           ${['a', 'b', 'c'].map((k) => `<label><input type="radio" name="ieColor" value="${k}" ${it.color === k ? 'checked' : ''}> <i class="dot" style="background:${themeDef()[k]}"></i></label>`).join('')}
@@ -981,6 +1029,8 @@ function buildThemeGrid() {
 }
 function markTheme() {
   $$('#themeGrid button').forEach((b) => b.classList.toggle('active', b.dataset.t === state.theme));
+  // 미리보기도 지금 테마·색으로 다시 그린다 (syncColorControls가 여기로 들어온다)
+  buildStickerGallery();
 }
 
 /* ---- 배경색 · 글자색 ---- */
@@ -1122,7 +1172,10 @@ function bindOptions() {
     render();
   });
 
-  $$('button[data-add]').forEach((b) => b.addEventListener('click', () => addSticker(b.dataset.add)));
+  $('#stkGal').addEventListener('click', (e) => {
+    const cell = e.target.closest('.stk-cell');
+    if (cell) addPreset(cell.dataset.preset);
+  });
 
   $('#pngBtn').addEventListener('click', exportPNG);
 }
@@ -1136,25 +1189,116 @@ function estHeight(it) {
   if (it.type === 'bubble') return size * 1.35 * lines + 105;
   if (it.type === 'stars') return size * (it.text ? 2.7 : 1.6) + 40;
   if (it.type === 'emoji') return size * 1.3 + 30;
+  if (it.type === 'soft') return size * 1.35 * lines + 40;
+  if (it.type === 'deco') return size * 1.05;
+  if (it.type === 'outline') return size * 1.2 * lines + 16;
   return size * 1.3 + 30;
 }
 
-function addSticker(kind) {
+/* ========================================================
+   스티커 고르기 — 미리보기 갤러리
+   버튼 이름만 보고는 어떤 모양이 나오는지 알 수 없어서,
+   실제로 올라갈 모습을 그대로 작게 그려 보여준다.
+   글자는 예시일 뿐이라 그대로 써도 되고 지워도 된다.
+   ======================================================== */
+const STK_PRESETS = [
+  { key: 'soft-round', name: '둥근 박스', group: 'soft',
+    make: () => ({ type: 'soft', shape: 'round', color: 'b', text: '가을이 오면은', size: 42, rot: -1 }) },
+  { key: 'soft-chip', name: '단색 라벨', group: 'soft',
+    make: () => ({ type: 'soft', shape: 'chip', color: 'a', text: '깊생 금지', size: 36, rot: -2 }) },
+  { key: 'soft-line', name: '얇은 테두리', group: 'soft',
+    make: () => ({ type: 'soft', shape: 'line', color: 'c', text: '느낌 좋은', size: 34, rot: 2 }) },
+  { key: 'soft-note', name: '메모지', group: 'soft',
+    make: () => ({ type: 'soft', shape: 'note', color: 'c', text: '천고마비의\n계절', size: 36, rot: -3 }) },
+  { key: 'soft-tape', name: '테이프 (빈 칸)', group: 'soft',
+    make: () => ({ type: 'soft', shape: 'tape', color: 'a', text: '', size: 30, w: 360, h: 64, rot: -7 }) },
+  { key: 'outline', name: '외곽선 글자', group: 'soft',
+    make: () => ({ type: 'outline', text: '행복은 이렇게나 많다', size: 52, rot: -9 }) },
+
+  { key: 'deco-bear', name: '곰돌이', group: 'deco',
+    make: () => ({ type: 'deco', text: '🧸', size: 110, rot: -6 }) },
+  { key: 'deco-cafe', name: '커피', group: 'deco',
+    make: () => ({ type: 'deco', text: '☕', size: 100, rot: 5 }) },
+  { key: 'deco-ribbon', name: '리본', group: 'deco',
+    make: () => ({ type: 'deco', text: '🎀', size: 100, rot: -8 }) },
+  { key: 'deco-moon', name: '달·별', group: 'deco',
+    make: () => ({ type: 'deco', text: '🌙', size: 100, rot: 4 }) },
+
+  { key: 'title', name: '큰 제목', group: 'basic',
+    make: (dn) => ({ type: 'title', text: `${dn}가 읽은 책\n함께 읽기`, size: 90, w: 860, rot: -2 }) },
+  { key: 'bubble', name: '말풍선', group: 'basic',
+    make: (dn) => ({ type: 'bubble', text: `${josa(dn, '이', '가')} 읽은 책`, size: 44, shape: 'blob', color: 'a', rot: -5 }) },
+  { key: 'stars', name: '별점', group: 'basic',
+    make: () => ({ type: 'stars', text: '별이 다섯 개!', size: 40, n: 5, rot: 3 }) },
+  { key: 'emoji', name: '이모지 줄', group: 'basic',
+    make: () => ({ type: 'emoji', text: '✨ 📚 🩷 ⭐️', size: 54, rot: 0 }) },
+  { key: 'tag', name: '작은 라벨', group: 'basic',
+    make: (dn) => ({ type: 'tag', text: `#${dn}_독서`, size: 34, rot: -3 }) },
+];
+
+const STK_GROUPS = [
+  ['soft', '요즘 스타일'],
+  ['deco', '그림 스티커'],
+  ['basic', '기본'],
+];
+
+/* 카드와 똑같은 색이 나오도록 CSS 변수를 그대로 넘긴다 */
+function cardVars() {
+  const t = themeDef();
+  return `--ink:${state.inkAuto ? t.ink : state.ink};`
+       + `--paper:${state.paperAuto ? t.paper : state.paper};`
+       + `--a:${t.a};--b:${t.b};--c:${t.c};`;
+}
+
+function presetItem(p) {
+  const dn = displayName(state.name) || '최애';
+  return { id: 'prev', x: 0, y: 0, rot: 0, ...p.make(dn) };
+}
+
+function buildStickerGallery() {
+  const box = $('#stkGal');
+  if (!box) return;
+  const t = themeDef();
+  const cls = `tg-card th-${state.theme} font-${t.font}`;
+  box.innerHTML = STK_GROUPS.map(([g, label]) => {
+    const cells = STK_PRESETS.filter((p) => p.group === g).map((p) => `
+      <button class="stk-cell" type="button" data-preset="${p.key}" title="${esc(p.name)} 올리기">
+        <span class="stk-prev ${cls}" style="${cardVars()}">
+          <span class="stk-prev-in">${itemHTML(presetItem(p))}</span>
+        </span>
+        <span class="stk-cell-n">${esc(p.name)}</span>
+      </button>`).join('');
+    return `<div class="stk-gal-h">${esc(label)}</div><div class="stk-gal-row">${cells}</div>`;
+  }).join('');
+  fitStickerPreviews();
+}
+
+/* 실제 크기 그대로 그린 뒤 칸에 맞게 줄인다 — 미리 정한 배율을 쓰면
+   글자 수가 다른 스티커끼리 크기가 들쭉날쭉해진다. */
+function fitStickerPreviews() {
+  $$('.stk-prev').forEach((box) => {
+    const inner = box.querySelector('.stk-prev-in');
+    if (!inner) return;
+    inner.style.transform = 'none';
+    const w = inner.offsetWidth, h = inner.offsetHeight;
+    if (!w || !h) return;
+    const s = Math.min((box.clientWidth - 10) / w, (box.clientHeight - 10) / h, 1);
+    inner.style.transform = `scale(${s})`;
+  });
+}
+
+function addPreset(key) {
+  const p = STK_PRESETS.find((x) => x.key === key);
+  if (!p) return;
   const [W, H] = SIZES[state.size];
-  const dn = displayName(state.name);
   // 새 스티커는 이미 올려둔 글자 아래에 차곡차곡 (겹치지 않게)
   const texts = state.items.filter((i) => i.type !== 'book');
   const bottom = texts.reduce((m, i) => Math.max(m, i.y + estHeight(i)), 0);
-  const base = {
-    x: clamp(80 + texts.length * 14, 40, W - 340),
-    y: clamp(bottom ? bottom + 34 : 120, 60, H - 320),
-  };
-  let it;
-  if (kind === 'title') it = addItem({ type: 'title', text: '내 최애가 읽은 책\n함께 읽기', size: 90, w: 860, rot: -2, ...base });
-  else if (kind === 'bubble') it = addItem({ type: 'bubble', text: `${josa(dn, '이', '가')} 읽은 책`, size: 44, shape: 'blob', color: 'a', rot: -5, ...base });
-  else if (kind === 'stars') it = addItem({ type: 'stars', text: '별이 다섯 개!', size: 40, n: 5, rot: 3, ...base });
-  else if (kind === 'emoji') it = addItem({ type: 'emoji', text: '✨ 📚 🩷 ⭐️', size: 54, rot: 0, ...base });
-  else it = addItem({ type: 'tag', text: `#${dn}_독서`, size: 34, rot: -3, ...base });
+  const o = presetItem(p);
+  delete o.id;                       // addItem이 새 id를 붙인다
+  o.x = clamp(80 + texts.length * 14, 40, W - 340);
+  o.y = clamp(bottom ? bottom + 34 : 120, 60, H - 320);
+  const it = addItem(o);
   state.sel = it.id;
   render();
 }
