@@ -1562,7 +1562,8 @@ function bookSpines(sel, sq) {
     // 이미지 원본 비율을 따르게 두고, 못 불러오면 색 책등 폭으로 돌아간다.
     const img = sp
       ? `<img class="cn-sp-i" src="${esc(proxify(sp))}" alt=""
-           onerror="this.parentNode.classList.add('cn-sp-fail');this.remove()">`
+           onerror="this.parentNode.classList.add('cn-sp-fail');this.remove()"
+           onload="if(this.naturalWidth/this.naturalHeight>${SPINE_MAX_RATIO}){this.parentNode.classList.add('cn-sp-fail');this.remove()}">`
       : '';
     return `<div class="cn-sp${sp ? '' : ' cn-sp-noimg'}" style="--w:${w}px;height:${h}px;--c:${spineTint(t)}">
       <span class="cn-sp-t" style="font-size:${Math.max(9, Math.round(w * 0.34))}px"><i>${esc(t)}</i></span>${img}
@@ -1801,6 +1802,10 @@ function spineTint(title) {
   const h = hashOf(title, 31);
   return `hsl(${h % 360},${32 + (h >>> 9) % 26}%,${26 + (h >>> 17) % 22}%)`;
 }
+/* 예스24는 책등 사진이 없는 책에 '이미지 준비중' 안내 그림을 200으로 내려준다.
+   404가 아니라 onerror로는 못 거르므로 비율을 본다 — 진짜 책등은 홀쭉하고,
+   안내 그림은 표지처럼 네모나다. */
+const SPINE_MAX_RATIO = 0.4;
 const SPINE_RATIO = 4.3;
 
 function stickersOf(sscope) {

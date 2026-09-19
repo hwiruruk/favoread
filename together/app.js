@@ -89,11 +89,17 @@ function spineTint(title) {
 }
 const SPINE_RATIO = 4.3;   // 책등 이미지를 아직 못 읽었을 때 쓰는 기본 비율
 
+/* 예스24는 책등 사진이 없는 책에 '이미지 준비중' 안내 그림을 200으로 내려준다.
+   404가 아니라 onerror로는 못 거르므로 비율을 본다 — 진짜 책등은 아주 홀쭉하고
+   (가로/세로 0.1~0.3), 안내 그림은 표지처럼 네모나다(0.65쯤). */
+const SPINE_MAX_RATIO = 0.4;
+const isSpineShaped = (m) => !!(m && m.w > 0 && m.h > 0 && m.w / m.h <= SPINE_MAX_RATIO);
+
 /* 책등 상자 폭. 이미지 원본 비율을 알면 그걸 따르고(안 잘리게),
  * 모르면 기본 비율로 둔다. 원본 크기는 noteMeta가 미리 읽어 imgMeta에 넣는다. */
 function spineBoxWidth(spineUrl, h, fallbackW) {
   const m = spineUrl ? imgMeta[proxify(spineUrl)] : null;
-  if (m && m.w > 0 && m.h > 0) return Math.max(10, Math.round(h * m.w / m.h));
+  if (isSpineShaped(m)) return Math.max(10, Math.round(h * m.w / m.h));
   return fallbackW;
 }
 const displayName = (n) => String(n || '').replace(/\s*\(.*?\)\s*$/, '').trim() || n;
@@ -649,7 +655,8 @@ function itemHTML(it) {
       const h = it.spineH || Math.round(it.w * SPINE_RATIO);
       const w = spineBoxWidth(sp, h, it.w);
       const img = sp
-        ? `<img class="tg-spine-i" src="${esc(proxify(sp))}" alt="" onerror="this.remove()">`
+        ? `<img class="tg-spine-i" src="${esc(proxify(sp))}" alt="" onerror="this.remove()"
+             onload="if(this.naturalWidth/this.naturalHeight>${SPINE_MAX_RATIO})this.remove()">`
         : '';
       return `<div class="tg-item tg-spine${selCls}" data-id="${it.id}"
         style="${base}width:${w}px;height:${h}px;--c:${spineTint(it.title)}">
