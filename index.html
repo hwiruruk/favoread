@@ -471,6 +471,12 @@
       <button id="btn-grid" class="font-sans font-bold text-[10px] sm:text-xs tracking-widest uppercase border-2 border-ink bg-neo-yellow shadow-neo-sm px-5 py-2 hover:-translate-y-0.5 transition-all">■ GRID</button>
       <button id="btn-list" class="font-sans font-bold text-[10px] sm:text-xs tracking-widest uppercase border-2 border-ink bg-white hover:bg-neo-yellow shadow-neo-sm px-5 py-2 hover:-translate-y-0.5 transition-all">≡ LIST</button>
     </div>
+
+    <!-- 검색 중에만 보이는 줄 — 결과 수와 '전체 보기' -->
+    <div id="search-bar" class="hidden flex items-center justify-center gap-3 flex-wrap">
+      <span id="search-summary" class="font-sans font-bold text-[11px] sm:text-xs tracking-wide text-muted"></span>
+      <button id="btn-clear-search" class="font-sans font-bold text-[10px] sm:text-xs tracking-widest uppercase border-2 border-ink bg-white hover:bg-neo-pink shadow-neo-sm px-4 py-1.5 hover:-translate-y-0.5 transition-all">✕ 전체 보기</button>
+    </div>
   </section>
 
   <!-- featured:start (data/featured.json → generate.py가 정적 주입, JS가 사진 카드로 교체) -->
@@ -1097,6 +1103,9 @@
     bookHits:      document.getElementById('book-hits'),
     bookHitsList:  document.getElementById('book-hits-list'),
     bookHitsCount: document.getElementById('book-hits-count'),
+    searchBar:     document.getElementById('search-bar'),
+    searchSummary: document.getElementById('search-summary'),
+    btnClearSearch: document.getElementById('btn-clear-search'),
     empty:      document.getElementById('empty-state'),
     loadWrap:   document.getElementById('load-more-wrap'),
     loadBtn:    document.getElementById('btn-load-more'),
@@ -1323,7 +1332,7 @@
   function renderBookHits(q) {
     const kw = q.trim().toLowerCase();
     // 두 글자는 돼야 쓸모 있는 결과가 나온다
-    if (kw.length < 2) { D.bookHits.classList.add('hidden'); return false; }
+    if (kw.length < 2) { D.bookHits.classList.add('hidden'); return 0; }
 
     const hits = bookIndex()
       .filter((b) => b.title.toLowerCase().includes(kw)
@@ -1332,7 +1341,7 @@
       .sort((a, b) => b.celebs.length - a.celebs.length || a.title.localeCompare(b.title, 'ko'))
       .slice(0, 12);
 
-    if (!hits.length) { D.bookHits.classList.add('hidden'); return false; }
+    if (!hits.length) { D.bookHits.classList.add('hidden'); return 0; }
 
     D.bookHits.classList.remove('hidden');
     D.bookHitsCount.textContent = `${hits.length}권`;
@@ -1357,7 +1366,30 @@
           </div>
         </div>`;
     }).join('');
-    return true;
+    return hits.length;
+  }
+
+  /* 검색하는 동안에는 결과만 남긴다.
+     검색창과 결과 사이에 '요즘 핫한 사람 · 카드 만들기 · 제보하기'가 끼어 있어서
+     이름을 쳐도 결과를 보려면 한참 스크롤해야 했다. 검색 중에는 그 사이 칸과
+     아래쪽 둘러보기 칸을 접어 결과가 검색창 바로 밑에 오게 한다. */
+  const SEARCH_HIDDEN = ['featured', 'make-card', 'report',
+                         'seo-top-readers', 'common-books', 'all-celebs'];
+
+  function setSearchMode(on, { bookCount = 0, celebCount = 0, hideGrid = false } = {}) {
+    SEARCH_HIDDEN.forEach((id) => {
+      const el = document.getElementById(id);
+      if (el) el.classList.toggle('hidden', on);
+    });
+    D.searchBar.classList.toggle('hidden', !on);
+    if (!on) return;
+    const parts = [];
+    if (bookCount) parts.push(`책 ${bookCount}권`);
+    // 셀럽 목록을 접었을 때는 그 숫자를 적지 않는다 — 화면에 없는 걸 세는 셈이라
+    // 헷갈린다. 읽은 사람 수는 책 카드가 따로 적어 준다.
+    if (!hideGrid) parts.push(`셀럽 ${celebCount}명`);
+    const empty = !bookCount && !celebCount;
+    D.searchSummary.textContent = empty ? '결과 없음' : parts.join(' · ');
   }
 
   function filterEntries(kw = '') {
@@ -1373,12 +1405,13 @@
       return str.includes(q);
     });
     
-    const bookHitsShown = renderBookHits(kw);
+    const bookCount = renderBookHits(kw);
     // 책 제목으로 찾았는데 사람 이름은 안 걸렸다면, 아래 셀럽 목록은 위 태그와
     // 같은 사람들이라 중복이다. 그럴 때는 목록을 접는다.
     const nameHit = !!q && currentEntries.some(([name]) => name.toLowerCase().includes(q));
-    const hideGrid = bookHitsShown && !nameHit;
+    const hideGrid = bookCount > 0 && !nameHit;
     document.getElementById('grid').classList.toggle('hidden', hideGrid);
+    setSearchMode(!!q, { bookCount, celebCount: filteredEntries.length, hideGrid });
 
     D.grid.innerHTML = '';
     renderIndex = 0;
@@ -1623,7 +1656,11 @@
       const img = book.spineUrl
         ? '<img src="' + escHtml(book.spineUrl) + '" alt="" loading="lazy" referrerpolicy="no-referrer"'
           + ' style="position:relative;z-index:1;display:block;height:100%;width:auto;max-width:128px;object-fit:contain"'
-          + ' onerror="this.parentNode.style.width=\'' + w + 'px\';this.remove()">'
+          + ' onerror="this.parentNode.style.width=\'' + w + 'px\';this.remove()"'
+          // 예스24가 '이미지 준비중' 안내 그림을 200으로 내려주는 책이 있다.
+          // 404가 아니라 onerror로는 못 거르므로 비율로 가린다.
+          + ' onload="if(this.naturalWidth/this.naturalHeight>0.4)'
+          + '{this.parentNode.style.width=\'' + w + 'px\';this.remove()}">'
         : '';
       el.innerHTML =
         '<span style="position:absolute;inset:0;display:flex;align-items:stretch;'
@@ -1837,6 +1874,11 @@
 
   function bindEvents() {
     D.search.addEventListener('input', e => filterEntries(e.target.value));
+    D.btnClearSearch.addEventListener('click', () => {
+      D.search.value = '';
+      filterEntries('');
+      D.search.focus();
+    });
     D.bookHitsList.addEventListener('click', (e) => {
       const b = e.target.closest('button[data-celeb]');
       if (b) openModal(b.dataset.celeb);

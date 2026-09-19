@@ -236,6 +236,18 @@ def spine_width(title):
     return 50 + h % 22                # 50~71px
 
 
+# 예스24가 책등 사진이 없는 책에 '이미지 준비중' 안내 그림을 대신 내려준다.
+# 404가 아니라 200으로 오므로 onerror로는 못 거른다. 대신 비율을 본다 —
+# 진짜 책등은 아주 홀쭉하고(가로/세로 0.1~0.3), 안내 그림은 표지처럼 네모나다(0.65쯤).
+# 걸리면 이미지를 지워 색 책등 + 제목으로 떨어뜨린다.
+SPINE_MAX_RATIO = 0.4
+SPINE_IMG_GUARD = (
+    ' onerror="this.parentNode.classList.add(\'sp-fail\');this.remove()"'
+    ' onload="if(this.naturalWidth/this.naturalHeight>' + str(SPINE_MAX_RATIO) + ')'
+    '{this.parentNode.classList.add(\'sp-fail\');this.remove()}"'
+)
+
+
 # 책등 보기 · 목록 보기 전환 — 한국어 share 페이지와 /en/ 페이지가 함께 쓴다.
 # 고른 보기는 localStorage에 남겨 다음 페이지에서도 이어진다.
 SHELF_JS = (
@@ -291,9 +303,12 @@ SHELF_CSS = (
     # 제목이 중간에 잘린다.
     '    .sp-t { position: absolute; inset: 0; display: flex; align-items: stretch;\n'
     '            justify-content: center; padding: 14px 2px; overflow: hidden; }\n'
+    # 책등 제목은 바탕(세리프)으로 — 시스템 고딕은 책등에 얹으면 안내문처럼 보인다.
+    # 굵기 500이라 kopubworld.css의 medium 한 벌만 받는다(364KB, swap).
     '    .sp-t i { writing-mode: vertical-rl; text-orientation: mixed; font-style: normal;\n'
     '              white-space: nowrap; overflow: hidden; text-overflow: ellipsis;\n'
-    '              font-size: 15px; font-weight: 700; color: #fff;\n'
+    '              font-family: "KoPubWorld Batang", "Noto Serif KR", Batang, serif;\n'
+    '              font-size: 15px; font-weight: 500; letter-spacing: .01em; color: #fff;\n'
     '              text-shadow: 0 1px 2px rgba(0,0,0,.55); }\n'
     '    .sp-i { position: relative; z-index: 1; display: block;\n'
     '            height: 100%; width: auto; max-width: 172px; object-fit: contain; }\n'
@@ -1225,8 +1240,7 @@ for name, info in celebs.items():
         _spine_inner = (
             '<span class="sp-t"><i>' + esc(b['title']) + '</i></span>'
             + ('<img class="sp-i" src="' + esc(_spine_url) + '" alt="" loading="lazy" '
-               'referrerpolicy="no-referrer" '
-               'onerror="this.parentNode.classList.add(\'sp-fail\');this.remove()">'
+               'referrerpolicy="no-referrer"' + SPINE_IMG_GUARD + '>'
                if _spine_url else '')
         )
         _spine_style = ('--c:' + spine_tint(b['title'])
@@ -1410,6 +1424,9 @@ for name, info in celebs.items():
         '  ' + json.dumps(itemlist_ld, ensure_ascii=False, indent=2) + '\n'
         '  </script>\n'
         '\n'
+        # 책등 제목에 쓰는 바탕체. font-display:swap이라 글자는 바로 보이고
+        # 실제로 쓰는 굵기 한 벌만 받는다.
+        '  <link rel="stylesheet" href="' + BASE + 'assets/fonts/kopubworld.css">\n'
         '  <style>\n'
         '    body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; max-width: 860px; margin: 0 auto; padding: 20px; color: #222; line-height: 1.6; background: #fcfaf5; }\n'
         '    .lang-toggle { position: absolute; top: 16px; right: 16px; display: flex; gap: 6px; }\n'
@@ -1813,8 +1830,7 @@ for name, info in celebs.items():
         _sp_inner = (
             '<span class="sp-t"><i>' + esc(t_plain) + '</i></span>'
             + ('<img class="sp-i" src="' + esc(_sp_url) + '" alt="" loading="lazy" '
-               'referrerpolicy="no-referrer" '
-               'onerror="this.parentNode.classList.add(\'sp-fail\');this.remove()">'
+               'referrerpolicy="no-referrer"' + SPINE_IMG_GUARD + '>'
                if _sp_url else '')
         )
         _sp_style = ('--c:' + spine_tint(b['title'])
@@ -1950,6 +1966,9 @@ for name, info in celebs.items():
         + json.dumps(json_ld, ensure_ascii=False, indent=2) + '\n  </script>\n'
         '  <script type="application/ld+json">\n  '
         + json.dumps(breadcrumb_ld, ensure_ascii=False, indent=2) + '\n  </script>\n'
+        # 책등 제목에 쓰는 바탕체. font-display:swap이라 글자는 바로 보이고
+        # 실제로 쓰는 굵기 한 벌만 받는다.
+        '  <link rel="stylesheet" href="' + BASE + 'assets/fonts/kopubworld.css">\n'
         '  <style>\n'
         '    body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; max-width: 860px; margin: 0 auto; padding: 20px; color: #222; line-height: 1.6; background: #fcfaf5; }\n'
         '    .lang-toggle { position: absolute; top: 16px; right: 16px; display: flex; gap: 6px; }\n'
