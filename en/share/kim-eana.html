@@ -214,6 +214,20 @@
     var PROXY = "https://images.weserv.nl/?url=";
     var PAPER = "#fcfaf5";
     var FONT = '-apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif';
+    // 캔버스 한계. 넘기면 빈 그림이 나오거나 아예 실패한다. 사파리는 한 변보다
+    // 넓이를 먼저 막는다(약 1677만 픽셀). 제목·여백을 얹을 몫을 빼고 잡는다.
+    var MAX_SIDE = 32767, MAX_AREA = 14000000;
+
+    /* 어느 한 걸음이라도 영영 안 끝나면 버튼이 "저장 중…"에 갇힌다.
+       모든 걸음에 시간 제한을 걸어 둔다. */
+    function guard(p, ms, tag) {
+      return new Promise(function (ok, no) {
+        var t = setTimeout(function () { no(new Error("시간 초과: " + tag)); }, ms);
+        Promise.resolve(p).then(
+          function (v) { clearTimeout(t); ok(v); },
+          function (e) { clearTimeout(t); no(e); });
+      });
+    }
 
     function loadH2C() {
       if (window.html2canvas) return Promise.resolve();
@@ -227,28 +241,79 @@
       if (!u || u.indexOf("data:") === 0) return u;
       return PROXY + encodeURIComponent(u.replace(/^https?:\/\//i, "")) + "&output=jpg&q=92";
     }
-    /* 프록시 주소로 바꾼 뒤 다 받아질 때까지 기다린다. 못 받은 것은 지워서
-       색 책등으로 떨어뜨린다 — 반쯤 그려진 그림이 남는 것보다 낫다. */
+    /* 프록시 주소로 바꾼 뒤 다 받아질 때까지 기다린다. 못 받은 것은 감춰서
+       색 책등으로 떨어뜨린다 — 반쯤 그려진 그림이 남는 것보다 낫다.
+       화면 밖 표지는 loading="lazy"라 주소만 바꿔서는 받아 오지 않는다.
+       목록 보기에서 표지 수십 장이 시간 초과로 통째로 사라지던 원인이다.
+       건드린 것은 끝나고 모두 원래대로 되돌린다. */
     function swapImages(root) {
       var undo = [];
       var jobs = [].slice.call(root.querySelectorAll("img")).map(function (img) {
-        var was = img.getAttribute("src");
-        undo.push([img, was]);
+        var src = img.getAttribute("src"), lazy = img.getAttribute("loading");
+        var par = img.parentNode, hid = false;
+        undo.push(function () {
+          img.onload = img.onerror = null;
+          if (lazy != null) img.setAttribute("loading", lazy);
+          img.style.display = "";
+          if (hid && par) par.classList.remove("sp-fail");
+          if (src != null) img.setAttribute("src", src);
+        });
         return new Promise(function (done) {
           // 프록시가 느리거나 막혀도 버튼이 영영 멈추지 않게 제한을 둔다
-          var t = setTimeout(function () { img.remove(); done(); }, 6000);
-          var fin = function (drop) {
+          var t = setTimeout(function () { fin(true); }, 8000);
+          function fin(drop) {
             clearTimeout(t);
-            if (drop && img.parentNode) img.remove();
+            if (drop) {
+              // 주소까지 떼어 둔다. 남겨 두면 복사본 쪽에서 또 기다린다.
+              img.removeAttribute("src");
+              img.style.display = "none";
+              if (par && par.classList && par.classList.contains("sp")
+                  && !par.classList.contains("sp-fail")) {
+                par.classList.add("sp-fail"); hid = true;
+              }
+            }
             done();
-          };
+          }
           img.onload = function () { fin(false); };
           img.onerror = function () { fin(true); };
+          img.removeAttribute("loading");
           img.crossOrigin = "anonymous";
-          img.src = proxied(was);
+          img.src = proxied(src);
         });
       });
       return { ready: Promise.all(jobs), undo: undo };
+    }
+
+    /* 아이폰에서 버튼이 "저장 중…"에 멈춰 있던 진짜 이유.
+
+       html2canvas는 찍을 상자만 보는 게 아니라 문서를 통째로 복사한 뒤,
+       사파리에서는 그 복사본 안의 <img>가 하나도 빠짐없이 다 받아지기를
+       기다린다(시간 제한 없음). 그런데 지금 안 보고 있는 쪽 — 책등을 보는
+       중이면 목록의 표지 수십 장 — 은 hidden 안에 있고 loading="lazy"라
+       사파리에서는 영영 받아지지 않는다. 그래서 그 기다림이 끝나지 않는다.
+
+       찍는 동안만 그런 그림의 주소를 떼어 둔다. 주소가 없는 <img>는
+       기다릴 것이 없다고 보고 바로 넘어간다. 아직 안 받아진 것만 건드리니
+       화면에서 사라지는 그림은 없다. */
+    function muteUnloaded(view) {
+      var off = [];
+      [].slice.call(document.images).forEach(function (img) {
+        if (view.contains(img) || img.complete) return;
+        off.push([img, img.getAttribute("src")]);
+        img.removeAttribute("src");
+      });
+      return off;
+    }
+    function unmute(off) {
+      off.forEach(function (p) {
+        if (p[0].parentNode && p[1] != null) p[0].setAttribute("src", p[1]);
+      });
+    }
+
+    /* 긴 목록은 두 배로 찍으면 사파리 캔버스 한계를 넘는다. 넘칠 만큼만 줄인다. */
+    function fitScale(w, h) {
+      var s = Math.min(2, MAX_SIDE / w, MAX_SIDE / h, Math.sqrt(MAX_AREA / (w * h)));
+      return Math.max(0.5, s);
     }
 
     /* 찍은 그림 둘레에 여백을 두고 제목과 출처를 얹는다 */
@@ -273,6 +338,30 @@
       return c;
     }
 
+    /* 사파리는 큰 캔버스에서 toBlob이 null을 주기도 한다. 그때는 주소로 받는다. */
+    function toBlob(c) {
+      return new Promise(function (ok, no) {
+        if (!c.toBlob) { no(new Error("toBlob 없음")); return; }
+        c.toBlob(function (b) { b ? ok(b) : no(new Error("toBlob null")); }, "image/png");
+      }).catch(function () {
+        var d = c.toDataURL("image/png");
+        var bin = atob(d.slice(d.indexOf(",") + 1));
+        var buf = new Uint8Array(bin.length);
+        for (var i = 0; i < bin.length; i++) buf[i] = bin.charCodeAt(i);
+        return new Blob([buf], { type: "image/png" });
+      });
+    }
+
+    function download(blob) {
+      var url = URL.createObjectURL(blob);
+      var a = document.createElement("a");
+      a.href = url; a.download = "bookshelf_kim-eana.png"; a.rel = "noopener";
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      setTimeout(function () { URL.revokeObjectURL(url); }, 6000);
+    }
+
     btn.addEventListener("click", function () {
       // 숨어 있는 쪽까지 그려지지 않도록, 지금 보이는 상자 하나만 넘긴다
       var shelf = document.getElementById("shelf");
@@ -280,11 +369,12 @@
       if (!view) return;
       var was = btn.textContent;
       btn.disabled = true; btn.textContent = "Saving…";
-      var swap = null;
-      loadH2C().then(function () {
+      var swap = null, muted = null;
+      guard(loadH2C(), 15000, "html2canvas").then(function () {
         swap = swapImages(view);
         return swap.ready;
       }).then(function () {
+        muted = muteUnloaded(view);
         // 책등은 상자 왼쪽에만 서 있어서 그대로 찍으면 오른쪽이 휑하다.
         // 내용이 실제로 차지한 폭까지만 자른다.
         var left = view.getBoundingClientRect().left, right = 0;
@@ -293,26 +383,23 @@
           if (b.right > right) right = b.right;
         });
         var w = right > left ? Math.ceil(right - left) + 4 : view.offsetWidth;
-        return html2canvas(view, {
-          backgroundColor: PAPER, scale: 2, useCORS: true, logging: false,
-          width: Math.min(w, view.offsetWidth), windowWidth: document.documentElement.clientWidth,
-        });
+        w = Math.min(w, view.offsetWidth);
+        return guard(html2canvas(view, {
+          backgroundColor: PAPER, scale: fitScale(w, view.offsetHeight),
+          useCORS: true, logging: false, imageTimeout: 8000,
+          width: w, windowWidth: document.documentElement.clientWidth,
+        }), 40000, "그리기");
       }).then(function (inner) {
         // data: 주소는 길어지면 브라우저가 파일 이름을 무시한다. Blob으로 넘긴다.
-        return new Promise(function (ok) { compose(inner).toBlob(ok, "image/png"); });
+        return guard(toBlob(compose(inner)), 25000, "내보내기");
       }).then(function (blob) {
-        var a = document.createElement("a");
-        a.href = URL.createObjectURL(blob);
-        a.download = "bookshelf_kim-eana.png";
-        document.body.appendChild(a);
-        a.click();
-        a.remove();
-        setTimeout(function () { URL.revokeObjectURL(a.href); }, 4000);
+        download(blob);
       }).catch(function (e) {
         console.error(e);
         alert("Could not create the image. Please try again.");
       }).then(function () {
-        if (swap) swap.undo.forEach(function (p) { if (p[0].parentNode) p[0].src = p[1]; });
+        if (swap) swap.undo.forEach(function (f) { f(); });
+        if (muted) unmute(muted);
         btn.disabled = false; btn.textContent = was;
       });
     });
