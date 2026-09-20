@@ -692,10 +692,11 @@
     .shelf-head { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
     .shelf-head h2 { margin-bottom: 0; border-bottom: none; padding-bottom: 0; }
     .shelf-tabs { display: flex; gap: 6px; flex: none; }
-    .sh-tab { font: inherit; font-size: 12px; font-weight: 700; cursor: pointer; padding: 5px 12px;
+    .sh-tab, .sh-cap { font: inherit; font-size: 12px; font-weight: 700; cursor: pointer; padding: 5px 12px;
               background: #fff; color: #000; border: 2px solid #000; box-shadow: 2px 2px 0 0 #000; }
-    .sh-tab:hover { background: #fde047; }
+    .sh-tab:hover, .sh-cap:hover { background: #fde047; }
     .sh-tab.on { background: #000; color: #fff; }
+    .sh-cap[disabled] { opacity: .55; cursor: default; }
     .shelf { display: flex; flex-wrap: wrap; align-items: flex-end; gap: 5px 3px;
              margin-top: 18px; padding: 0 6px 10px; border-bottom: 5px solid #000; }
     .shelf[hidden], .reading-list[hidden] { display: none; }
@@ -709,15 +710,16 @@
     .sp-t i { writing-mode: vertical-rl; text-orientation: mixed; font-style: normal;
               white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
               font-family: "KoPubWorld Batang", "Noto Serif KR", Batang, serif;
-              font-size: 15px; font-weight: 500; letter-spacing: .01em; color: #fff;
+              font-size: var(--fs, 15px); font-weight: 500; letter-spacing: .01em; color: #fff;
               text-shadow: 0 1px 2px rgba(0,0,0,.55); }
     .sp-i { position: relative; z-index: 1; display: block;
             height: 100%; width: auto; max-width: 172px; object-fit: contain; }
-    .sp.no-img, .sp.sp-fail { width: var(--w, 60px); }
+    .sp.no-img, .sp.sp-fail { width: var(--w, 38px); }
     @media (max-width: 480px) { .shelf .sp { height: 205px; }
-                                 .sp.no-img, .sp.sp-fail { width: calc(var(--w, 60px) * .78); }
+                                 .sp.no-img, .sp.sp-fail { width: calc(var(--w, 38px) * .88); }
                                  .sp-i { max-width: 130px; }
-                                 .sp-t i { font-size: 12.5px; } .sp-t { padding: 9px 2px; } }
+                                 .sp-t i { font-size: calc(var(--fs, 15px) * .76); }
+                                 .sp-t { padding: 10px 2px; } }
     .reading-list { list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 14px; }
     .rl-item { position: relative; background: #fff; border: 2px solid #000; box-shadow: 4px 4px 0 0 #000; padding: 14px 14px 14px 52px; transition: transform .12s, box-shadow .12s; }
     .rl-item:hover { transform: translate(-1px,-1px); box-shadow: 6px 6px 0 0 #000; }
@@ -763,42 +765,43 @@
       <div class="shelf-tabs" role="tablist">
         <button type="button" class="sh-tab on" data-view="spine" aria-pressed="true">▊ Spines</button>
         <button type="button" class="sh-tab" data-view="list" aria-pressed="false">☰ List</button>
+        <button type="button" class="sh-cap" id="shelf-cap" title="Download what you see as an image">⤓ Save image</button>
       </div>
     </div>
     <div class="shelf" id="shelf">
-    <a class="sp" style="--c:hsl(337,47%,32%);--w:57px" href="https://www.aladin.co.kr/shop/wproduct.aspx?ItemId=248169469&amp;partner=openAPI&amp;start=api" rel="nofollow noopener noreferrer" target="_blank" title="2020 11th Young Writer Award Collection Of Winning Works"><span class="sp-t"><i>2020 11th Young Writer Award Collection Of Winning Works</i></span><img class="sp-i" src="https://image.yes24.com/goods/91555358/side" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.parentNode.classList.add('sp-fail');this.remove()" onload="if(this.naturalWidth/this.naturalHeight>0.4){this.parentNode.classList.add('sp-fail');this.remove()}"></a>
-    <a class="sp" style="--c:hsl(359,49%,30%);--w:65px" href="https://www.yes24.com/product/goods/99018415" rel="nofollow noopener noreferrer" target="_blank" title="2021 12th Young Writer Award Collection Of Winning Works"><span class="sp-t"><i>2021 12th Young Writer Award Collection Of Winning Works</i></span><img class="sp-i" src="https://image.yes24.com/goods/99018415/side" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.parentNode.classList.add('sp-fail');this.remove()" onload="if(this.naturalWidth/this.naturalHeight>0.4){this.parentNode.classList.add('sp-fail');this.remove()}"></a>
-    <a class="sp" style="--c:hsl(64,42%,36%);--w:54px" href="https://www.aladin.co.kr/shop/wproduct.aspx?ItemId=126069723&amp;partner=openAPI&amp;start=api" rel="nofollow noopener noreferrer" target="_blank" title="Black Deer"><span class="sp-t"><i>Black Deer</i></span><img class="sp-i" src="https://image.yes24.com/goods/57665662/side" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.parentNode.classList.add('sp-fail');this.remove()" onload="if(this.naturalWidth/this.naturalHeight>0.4){this.parentNode.classList.add('sp-fail');this.remove()}"></a>
-    <a class="sp" style="--c:hsl(352,38%,42%);--w:62px" href="https://www.yes24.com/product/goods/89969235" rel="nofollow noopener noreferrer" target="_blank" title="Space Created By Space"><span class="sp-t"><i>Space Created By Space</i></span><img class="sp-i" src="https://image.yes24.com/goods/89969235/side" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.parentNode.classList.add('sp-fail');this.remove()" onload="if(this.naturalWidth/this.naturalHeight>0.4){this.parentNode.classList.add('sp-fail');this.remove()}"></a>
-    <a class="sp" style="--c:hsl(233,54%,37%);--w:69px" href="https://www.aladin.co.kr/shop/wproduct.aspx?ItemId=339905072&amp;partner=openAPI&amp;start=api" rel="nofollow noopener noreferrer" target="_blank" title="Naked Tree"><span class="sp-t"><i>Naked Tree</i></span><img class="sp-i" src="https://image.yes24.com/goods/126646573/side" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.parentNode.classList.add('sp-fail');this.remove()" onload="if(this.naturalWidth/this.naturalHeight>0.4){this.parentNode.classList.add('sp-fail');this.remove()}"></a>
-    <a class="sp" style="--c:hsl(312,44%,42%);--w:66px" href="https://www.yes24.com/product/goods/103168353" rel="nofollow noopener noreferrer" target="_blank" title="The Remaining Days"><span class="sp-t"><i>The Remaining Days</i></span><img class="sp-i" src="https://image.yes24.com/goods/103168353/side" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.parentNode.classList.add('sp-fail');this.remove()" onload="if(this.naturalWidth/this.naturalHeight>0.4){this.parentNode.classList.add('sp-fail');this.remove()}"></a>
-    <a class="sp" style="--c:hsl(240,35%,37%);--w:54px" href="https://www.yes24.com/product/goods/66752465" rel="nofollow noopener noreferrer" target="_blank" title="My Woman&#x27;s Fruit"><span class="sp-t"><i>My Woman&#x27;s Fruit</i></span><img class="sp-i" src="https://image.yes24.com/goods/66752465/side" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.parentNode.classList.add('sp-fail');this.remove()" onload="if(this.naturalWidth/this.naturalHeight>0.4){this.parentNode.classList.add('sp-fail');this.remove()}"></a>
-    <a class="sp" style="--c:hsl(228,46%,45%);--w:60px" href="https://www.yes24.com/product/goods/107679350" rel="nofollow noopener noreferrer" target="_blank" title="Wanderers"><span class="sp-t"><i>Wanderers</i></span><img class="sp-i" src="https://image.yes24.com/goods/107679350/side" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.parentNode.classList.add('sp-fail');this.remove()" onload="if(this.naturalWidth/this.naturalHeight>0.4){this.parentNode.classList.add('sp-fail');this.remove()}"></a>
-    <a class="sp no-img" style="--c:hsl(283,48%,29%);--w:55px" href="https://www.aladin.co.kr/shop/wproduct.aspx?ItemId=28023107" rel="nofollow noopener noreferrer" target="_blank" title="Colorless Tsukuru Tazaki and His Years of Pilgrimage"><span class="sp-t"><i>Colorless Tsukuru Tazaki and His Years of Pilgrimage</i></span></a>
-    <a class="sp" style="--c:hsl(346,39%,47%);--w:56px" href="https://www.aladin.co.kr/shop/wproduct.aspx?ItemId=251549846&amp;partner=openAPI&amp;start=api" rel="nofollow noopener noreferrer" target="_blank" title="The Shallows"><span class="sp-t"><i>The Shallows</i></span><img class="sp-i" src="https://image.yes24.com/goods/92744494/side" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.parentNode.classList.add('sp-fail');this.remove()" onload="if(this.naturalWidth/this.naturalHeight>0.4){this.parentNode.classList.add('sp-fail');this.remove()}"></a>
-    <a class="sp" style="--c:hsl(70,37%,34%);--w:52px" href="https://www.yes24.com/product/goods/90628215" rel="nofollow noopener noreferrer" target="_blank" title="Reading Novel: Summer 2020"><span class="sp-t"><i>Reading Novel: Summer 2020</i></span><img class="sp-i" src="https://image.yes24.com/goods/90628215/side" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.parentNode.classList.add('sp-fail');this.remove()" onload="if(this.naturalWidth/this.naturalHeight>0.4){this.parentNode.classList.add('sp-fail');this.remove()}"></a>
-    <a class="sp" style="--c:hsl(248,55%,33%);--w:58px" href="https://www.yes24.com/product/goods/90115037" rel="nofollow noopener noreferrer" target="_blank" title="Agnes Varda Says"><span class="sp-t"><i>Agnes Varda Says</i></span><img class="sp-i" src="https://image.yes24.com/goods/90115037/side" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.parentNode.classList.add('sp-fail');this.remove()" onload="if(this.naturalWidth/this.naturalHeight>0.4){this.parentNode.classList.add('sp-fail');this.remove()}"></a>
-    <a class="sp" style="--c:hsl(36,37%,42%);--w:52px" href="https://www.yes24.com/product/goods/147069400" rel="nofollow noopener noreferrer" target="_blank" title="Morning Piano"><span class="sp-t"><i>Morning Piano</i></span><img class="sp-i" src="https://image.yes24.com/goods/147069400/side" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.parentNode.classList.add('sp-fail');this.remove()" onload="if(this.naturalWidth/this.naturalHeight>0.4){this.parentNode.classList.add('sp-fail');this.remove()}"></a>
-    <a class="sp" style="--c:hsl(202,36%,42%);--w:56px" href="https://www.yes24.com/product/goods/109080475" rel="nofollow noopener noreferrer" target="_blank" title="Even Without Trying"><span class="sp-t"><i>Even Without Trying</i></span><img class="sp-i" src="https://image.yes24.com/goods/109080475/side" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.parentNode.classList.add('sp-fail');this.remove()" onload="if(this.naturalWidth/this.naturalHeight>0.4){this.parentNode.classList.add('sp-fail');this.remove()}"></a>
-    <a class="sp" style="--c:hsl(211,43%,39%);--w:53px" href="https://www.yes24.com/product/goods/102220939" rel="nofollow noopener noreferrer" target="_blank" title="Swimming In The Dark"><span class="sp-t"><i>Swimming In The Dark</i></span><img class="sp-i" src="https://image.yes24.com/goods/102220939/side" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.parentNode.classList.add('sp-fail');this.remove()" onload="if(this.naturalWidth/this.naturalHeight>0.4){this.parentNode.classList.add('sp-fail');this.remove()}"></a>
-    <a class="sp no-img" style="--c:hsl(268,52%,33%);--w:70px" href="https://www.aladin.co.kr/shop/wproduct.aspx?ItemId=193876266&amp;partner=openAPI&amp;start=api" rel="nofollow noopener noreferrer" target="_blank" title="Elite Monopoly Society"><span class="sp-t"><i>Elite Monopoly Society</i></span></a>
-    <a class="sp" style="--c:hsl(355,48%,31%);--w:65px" href="https://www.yes24.com/product/goods/30435587" rel="nofollow noopener noreferrer" target="_blank" title="Summer Stays There For A Long Time"><span class="sp-t"><i>Summer Stays There For A Long Time</i></span><img class="sp-i" src="https://image.yes24.com/goods/30435587/side" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.parentNode.classList.add('sp-fail');this.remove()" onload="if(this.naturalWidth/this.naturalHeight>0.4){this.parentNode.classList.add('sp-fail');this.remove()}"></a>
-    <a class="sp" style="--c:hsl(249,32%,33%);--w:69px" href="https://www.aladin.co.kr/shop/wproduct.aspx?ItemId=173930433&amp;partner=openAPI&amp;start=api" rel="nofollow noopener noreferrer" target="_blank" title="Yeosu&#x27;s Love"><span class="sp-t"><i>Yeosu&#x27;s Love</i></span><img class="sp-i" src="https://image.yes24.com/goods/66752481/side" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.parentNode.classList.add('sp-fail');this.remove()" onload="if(this.naturalWidth/this.naturalHeight>0.4){this.parentNode.classList.add('sp-fail');this.remove()}"></a>
-    <a class="sp" style="--c:hsl(110,36%,38%);--w:62px" href="https://www.aladin.co.kr/shop/wproduct.aspx?ItemId=44906963&amp;partner=openAPI&amp;start=api" rel="nofollow noopener noreferrer" target="_blank" title="Men Without Women"><span class="sp-t"><i>Men Without Women</i></span><img class="sp-i" src="https://image.yes24.com/goods/14170073/side" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.parentNode.classList.add('sp-fail');this.remove()" onload="if(this.naturalWidth/this.naturalHeight>0.4){this.parentNode.classList.add('sp-fail');this.remove()}"></a>
-    <a class="sp" style="--c:hsl(332,49%,30%);--w:58px" href="https://www.yes24.com/product/goods/62096461" rel="nofollow noopener noreferrer" target="_blank" title="Sensitivity Is A Weapon"><span class="sp-t"><i>Sensitivity Is A Weapon</i></span><img class="sp-i" src="https://image.yes24.com/goods/62096461/side" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.parentNode.classList.add('sp-fail');this.remove()" onload="if(this.naturalWidth/this.naturalHeight>0.4){this.parentNode.classList.add('sp-fail');this.remove()}"></a>
-    <a class="sp" style="--c:hsl(15,42%,35%);--w:51px" href="https://www.yes24.com/product/goods/98983220" rel="nofollow noopener noreferrer" target="_blank" title="We All Go Home"><span class="sp-t"><i>We All Go Home</i></span><img class="sp-i" src="https://image.yes24.com/goods/98983220/side" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.parentNode.classList.add('sp-fail');this.remove()" onload="if(this.naturalWidth/this.naturalHeight>0.4){this.parentNode.classList.add('sp-fail');this.remove()}"></a>
-    <a class="sp" style="--c:hsl(229,39%,39%);--w:53px" href="https://www.yes24.com/product/goods/42702060" rel="nofollow noopener noreferrer" target="_blank" title="Nothing Will Change If You Cry"><span class="sp-t"><i>Nothing Will Change If You Cry</i></span><img class="sp-i" src="https://image.yes24.com/goods/42702060/side" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.parentNode.classList.add('sp-fail');this.remove()" onload="if(this.naturalWidth/this.naturalHeight>0.4){this.parentNode.classList.add('sp-fail');this.remove()}"></a>
-    <a class="sp" style="--c:hsl(200,40%,36%);--w:64px" href="https://www.yes24.com/product/goods/370331" rel="nofollow noopener noreferrer" target="_blank" title="The Great Gatsby"><span class="sp-t"><i>The Great Gatsby</i></span><img class="sp-i" src="https://image.yes24.com/goods/370331/side" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.parentNode.classList.add('sp-fail');this.remove()" onload="if(this.naturalWidth/this.naturalHeight>0.4){this.parentNode.classList.add('sp-fail');this.remove()}"></a>
-    <a class="sp" style="--c:hsl(289,37%,44%);--w:69px" href="https://www.yes24.com/product/goods/195804435" rel="nofollow noopener noreferrer" target="_blank" title="The Selfish Gene"><span class="sp-t"><i>The Selfish Gene</i></span><img class="sp-i" src="https://image.yes24.com/goods/195804435/side" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.parentNode.classList.add('sp-fail');this.remove()" onload="if(this.naturalWidth/this.naturalHeight>0.4){this.parentNode.classList.add('sp-fail');this.remove()}"></a>
-    <a class="sp" style="--c:hsl(49,47%,41%);--w:53px" href="https://www.yes24.com/product/goods/1387488" rel="nofollow noopener noreferrer" target="_blank" title="Disqualified From Being Human"><span class="sp-t"><i>Disqualified From Being Human</i></span><img class="sp-i" src="https://image.yes24.com/goods/1387488/side" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.parentNode.classList.add('sp-fail');this.remove()" onload="if(this.naturalWidth/this.naturalHeight>0.4){this.parentNode.classList.add('sp-fail');this.remove()}"></a>
-    <a class="sp" style="--c:hsl(231,34%,40%);--w:57px" href="https://www.yes24.com/product/goods/95538356" rel="nofollow noopener noreferrer" target="_blank" title="First Person Singular"><span class="sp-t"><i>First Person Singular</i></span><img class="sp-i" src="https://image.yes24.com/goods/95538356/side" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.parentNode.classList.add('sp-fail');this.remove()" onload="if(this.naturalWidth/this.naturalHeight>0.4){this.parentNode.classList.add('sp-fail');this.remove()}"></a>
-    <a class="sp" style="--c:hsl(157,34%,43%);--w:71px" href="https://www.aladin.co.kr/shop/wproduct.aspx?ItemId=278770576&amp;partner=openAPI&amp;start=api" rel="nofollow noopener noreferrer" target="_blank" title="We Do Not Part"><span class="sp-t"><i>We Do Not Part</i></span><img class="sp-i" src="https://image.yes24.com/goods/103495056/side" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.parentNode.classList.add('sp-fail');this.remove()" onload="if(this.naturalWidth/this.naturalHeight>0.4){this.parentNode.classList.add('sp-fail');this.remove()}"></a>
-    <a class="sp" style="--c:hsl(276,42%,36%);--w:66px" href="https://www.aladin.co.kr/shop/wproduct.aspx?ItemId=379686146&amp;partner=openAPI&amp;start=api" rel="nofollow noopener noreferrer" target="_blank" title="Beasts of a Small Land"><span class="sp-t"><i>Beasts of a Small Land</i></span><img class="sp-i" src="https://image.yes24.com/goods/119149162/side" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.parentNode.classList.add('sp-fail');this.remove()" onload="if(this.naturalWidth/this.naturalHeight>0.4){this.parentNode.classList.add('sp-fail');this.remove()}"></a>
-    <a class="sp" style="--c:hsl(16,44%,41%);--w:56px" href="https://www.yes24.com/product/goods/118399675" rel="nofollow noopener noreferrer" target="_blank" title="Curse Rabbit"><span class="sp-t"><i>Curse Rabbit</i></span><img class="sp-i" src="https://image.yes24.com/goods/118399675/side" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.parentNode.classList.add('sp-fail');this.remove()" onload="if(this.naturalWidth/this.naturalHeight>0.4){this.parentNode.classList.add('sp-fail');this.remove()}"></a>
-    <a class="sp" style="--c:hsl(319,36%,45%);--w:63px" href="https://www.yes24.com/product/goods/4810410" rel="nofollow noopener noreferrer" target="_blank" title="Home, Pilgrimage"><span class="sp-t"><i>Home, Pilgrimage</i></span><img class="sp-i" src="https://image.yes24.com/goods/4810410/side" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.parentNode.classList.add('sp-fail');this.remove()" onload="if(this.naturalWidth/this.naturalHeight>0.4){this.parentNode.classList.add('sp-fail');this.remove()}"></a>
-    <a class="sp" style="--c:hsl(3,55%,38%);--w:59px" href="https://www.yes24.com/product/goods/108422348" rel="nofollow noopener noreferrer" target="_blank" title="Vegetarian"><span class="sp-t"><i>Vegetarian</i></span><img class="sp-i" src="https://image.yes24.com/goods/108422348/side" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.parentNode.classList.add('sp-fail');this.remove()" onload="if(this.naturalWidth/this.naturalHeight>0.4){this.parentNode.classList.add('sp-fail');this.remove()}"></a>
-    <a class="sp" style="--c:hsl(358,35%,32%);--w:52px" href="https://www.yes24.com/product/goods/17972275" rel="nofollow noopener noreferrer" target="_blank" title="Because I Hate Korea"><span class="sp-t"><i>Because I Hate Korea</i></span><img class="sp-i" src="https://image.yes24.com/goods/17972275/side" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.parentNode.classList.add('sp-fail');this.remove()" onload="if(this.naturalWidth/this.naturalHeight>0.4){this.parentNode.classList.add('sp-fail');this.remove()}"></a>
-    <a class="sp" style="--c:hsl(72,35%,26%);--w:70px" href="https://www.aladin.co.kr/shop/wproduct.aspx?ItemId=360994667&amp;partner=openAPI&amp;start=api" rel="nofollow noopener noreferrer" target="_blank" title="White"><span class="sp-t"><i>White</i></span><img class="sp-i" src="https://image.yes24.com/goods/143896198/side" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.parentNode.classList.add('sp-fail');this.remove()" onload="if(this.naturalWidth/this.naturalHeight>0.4){this.parentNode.classList.add('sp-fail');this.remove()}"></a>
+    <a class="sp" style="--c:hsl(337,47%,32%);--w:43px;--fs:8px" href="https://www.aladin.co.kr/shop/wproduct.aspx?ItemId=248169469&amp;partner=openAPI&amp;start=api" rel="nofollow noopener noreferrer" target="_blank" title="2020 11th Young Writer Award Collection Of Winning Works"><span class="sp-t"><i>2020 11th Young Writer Award Collection Of Winning Works</i></span><img class="sp-i" src="https://image.yes24.com/goods/91555358/side" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.parentNode.classList.add('sp-fail');this.remove()" onload="if(this.naturalWidth/this.naturalHeight>0.4){this.parentNode.classList.add('sp-fail');this.remove()}"></a>
+    <a class="sp" style="--c:hsl(359,49%,30%);--w:34px;--fs:8px" href="https://www.yes24.com/product/goods/99018415" rel="nofollow noopener noreferrer" target="_blank" title="2021 12th Young Writer Award Collection Of Winning Works"><span class="sp-t"><i>2021 12th Young Writer Award Collection Of Winning Works</i></span><img class="sp-i" src="https://image.yes24.com/goods/99018415/side" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.parentNode.classList.add('sp-fail');this.remove()" onload="if(this.naturalWidth/this.naturalHeight>0.4){this.parentNode.classList.add('sp-fail');this.remove()}"></a>
+    <a class="sp" style="--c:hsl(64,42%,36%);--w:40px;--fs:15px" href="https://www.aladin.co.kr/shop/wproduct.aspx?ItemId=126069723&amp;partner=openAPI&amp;start=api" rel="nofollow noopener noreferrer" target="_blank" title="Black Deer"><span class="sp-t"><i>Black Deer</i></span><img class="sp-i" src="https://image.yes24.com/goods/57665662/side" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.parentNode.classList.add('sp-fail');this.remove()" onload="if(this.naturalWidth/this.naturalHeight>0.4){this.parentNode.classList.add('sp-fail');this.remove()}"></a>
+    <a class="sp" style="--c:hsl(352,38%,42%);--w:37px;--fs:15px" href="https://www.yes24.com/product/goods/89969235" rel="nofollow noopener noreferrer" target="_blank" title="Space Created By Space"><span class="sp-t"><i>Space Created By Space</i></span><img class="sp-i" src="https://image.yes24.com/goods/89969235/side" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.parentNode.classList.add('sp-fail');this.remove()" onload="if(this.naturalWidth/this.naturalHeight>0.4){this.parentNode.classList.add('sp-fail');this.remove()}"></a>
+    <a class="sp" style="--c:hsl(233,54%,37%);--w:44px;--fs:15px" href="https://www.aladin.co.kr/shop/wproduct.aspx?ItemId=339905072&amp;partner=openAPI&amp;start=api" rel="nofollow noopener noreferrer" target="_blank" title="Naked Tree"><span class="sp-t"><i>Naked Tree</i></span><img class="sp-i" src="https://image.yes24.com/goods/126646573/side" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.parentNode.classList.add('sp-fail');this.remove()" onload="if(this.naturalWidth/this.naturalHeight>0.4){this.parentNode.classList.add('sp-fail');this.remove()}"></a>
+    <a class="sp" style="--c:hsl(312,44%,42%);--w:42px;--fs:15px" href="https://www.yes24.com/product/goods/103168353" rel="nofollow noopener noreferrer" target="_blank" title="The Remaining Days"><span class="sp-t"><i>The Remaining Days</i></span><img class="sp-i" src="https://image.yes24.com/goods/103168353/side" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.parentNode.classList.add('sp-fail');this.remove()" onload="if(this.naturalWidth/this.naturalHeight>0.4){this.parentNode.classList.add('sp-fail');this.remove()}"></a>
+    <a class="sp" style="--c:hsl(240,35%,37%);--w:40px;--fs:15px" href="https://www.yes24.com/product/goods/66752465" rel="nofollow noopener noreferrer" target="_blank" title="My Woman&#x27;s Fruit"><span class="sp-t"><i>My Woman&#x27;s Fruit</i></span><img class="sp-i" src="https://image.yes24.com/goods/66752465/side" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.parentNode.classList.add('sp-fail');this.remove()" onload="if(this.naturalWidth/this.naturalHeight>0.4){this.parentNode.classList.add('sp-fail');this.remove()}"></a>
+    <a class="sp" style="--c:hsl(228,46%,45%);--w:42px;--fs:15px" href="https://www.yes24.com/product/goods/107679350" rel="nofollow noopener noreferrer" target="_blank" title="Wanderers"><span class="sp-t"><i>Wanderers</i></span><img class="sp-i" src="https://image.yes24.com/goods/107679350/side" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.parentNode.classList.add('sp-fail');this.remove()" onload="if(this.naturalWidth/this.naturalHeight>0.4){this.parentNode.classList.add('sp-fail');this.remove()}"></a>
+    <a class="sp no-img" style="--c:hsl(283,48%,29%);--w:40px;--fs:8px" href="https://www.aladin.co.kr/shop/wproduct.aspx?ItemId=28023107" rel="nofollow noopener noreferrer" target="_blank" title="Colorless Tsukuru Tazaki and His Years of Pilgrimage"><span class="sp-t"><i>Colorless Tsukuru Tazaki and His Years of Pilgrimage</i></span></a>
+    <a class="sp" style="--c:hsl(346,39%,47%);--w:32px;--fs:15px" href="https://www.aladin.co.kr/shop/wproduct.aspx?ItemId=251549846&amp;partner=openAPI&amp;start=api" rel="nofollow noopener noreferrer" target="_blank" title="The Shallows"><span class="sp-t"><i>The Shallows</i></span><img class="sp-i" src="https://image.yes24.com/goods/92744494/side" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.parentNode.classList.add('sp-fail');this.remove()" onload="if(this.naturalWidth/this.naturalHeight>0.4){this.parentNode.classList.add('sp-fail');this.remove()}"></a>
+    <a class="sp" style="--c:hsl(70,37%,34%);--w:42px;--fs:14px" href="https://www.yes24.com/product/goods/90628215" rel="nofollow noopener noreferrer" target="_blank" title="Reading Novel: Summer 2020"><span class="sp-t"><i>Reading Novel: Summer 2020</i></span><img class="sp-i" src="https://image.yes24.com/goods/90628215/side" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.parentNode.classList.add('sp-fail');this.remove()" onload="if(this.naturalWidth/this.naturalHeight>0.4){this.parentNode.classList.add('sp-fail');this.remove()}"></a>
+    <a class="sp" style="--c:hsl(248,55%,33%);--w:34px;--fs:15px" href="https://www.yes24.com/product/goods/90115037" rel="nofollow noopener noreferrer" target="_blank" title="Agnes Varda Says"><span class="sp-t"><i>Agnes Varda Says</i></span><img class="sp-i" src="https://image.yes24.com/goods/90115037/side" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.parentNode.classList.add('sp-fail');this.remove()" onload="if(this.naturalWidth/this.naturalHeight>0.4){this.parentNode.classList.add('sp-fail');this.remove()}"></a>
+    <a class="sp" style="--c:hsl(36,37%,42%);--w:39px;--fs:15px" href="https://www.yes24.com/product/goods/147069400" rel="nofollow noopener noreferrer" target="_blank" title="Morning Piano"><span class="sp-t"><i>Morning Piano</i></span><img class="sp-i" src="https://image.yes24.com/goods/147069400/side" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.parentNode.classList.add('sp-fail');this.remove()" onload="if(this.naturalWidth/this.naturalHeight>0.4){this.parentNode.classList.add('sp-fail');this.remove()}"></a>
+    <a class="sp" style="--c:hsl(202,36%,42%);--w:30px;--fs:15px" href="https://www.yes24.com/product/goods/109080475" rel="nofollow noopener noreferrer" target="_blank" title="Even Without Trying"><span class="sp-t"><i>Even Without Trying</i></span><img class="sp-i" src="https://image.yes24.com/goods/109080475/side" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.parentNode.classList.add('sp-fail');this.remove()" onload="if(this.naturalWidth/this.naturalHeight>0.4){this.parentNode.classList.add('sp-fail');this.remove()}"></a>
+    <a class="sp" style="--c:hsl(211,43%,39%);--w:34px;--fs:15px" href="https://www.yes24.com/product/goods/102220939" rel="nofollow noopener noreferrer" target="_blank" title="Swimming In The Dark"><span class="sp-t"><i>Swimming In The Dark</i></span><img class="sp-i" src="https://image.yes24.com/goods/102220939/side" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.parentNode.classList.add('sp-fail');this.remove()" onload="if(this.naturalWidth/this.naturalHeight>0.4){this.parentNode.classList.add('sp-fail');this.remove()}"></a>
+    <a class="sp no-img" style="--c:hsl(268,52%,33%);--w:40px;--fs:15px" href="https://www.aladin.co.kr/shop/wproduct.aspx?ItemId=193876266&amp;partner=openAPI&amp;start=api" rel="nofollow noopener noreferrer" target="_blank" title="Elite Monopoly Society"><span class="sp-t"><i>Elite Monopoly Society</i></span></a>
+    <a class="sp" style="--c:hsl(355,48%,31%);--w:44px;--fs:10px" href="https://www.yes24.com/product/goods/30435587" rel="nofollow noopener noreferrer" target="_blank" title="Summer Stays There For A Long Time"><span class="sp-t"><i>Summer Stays There For A Long Time</i></span><img class="sp-i" src="https://image.yes24.com/goods/30435587/side" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.parentNode.classList.add('sp-fail');this.remove()" onload="if(this.naturalWidth/this.naturalHeight>0.4){this.parentNode.classList.add('sp-fail');this.remove()}"></a>
+    <a class="sp" style="--c:hsl(249,32%,33%);--w:35px;--fs:15px" href="https://www.aladin.co.kr/shop/wproduct.aspx?ItemId=173930433&amp;partner=openAPI&amp;start=api" rel="nofollow noopener noreferrer" target="_blank" title="Yeosu&#x27;s Love"><span class="sp-t"><i>Yeosu&#x27;s Love</i></span><img class="sp-i" src="https://image.yes24.com/goods/66752481/side" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.parentNode.classList.add('sp-fail');this.remove()" onload="if(this.naturalWidth/this.naturalHeight>0.4){this.parentNode.classList.add('sp-fail');this.remove()}"></a>
+    <a class="sp" style="--c:hsl(110,36%,38%);--w:31px;--fs:15px" href="https://www.aladin.co.kr/shop/wproduct.aspx?ItemId=44906963&amp;partner=openAPI&amp;start=api" rel="nofollow noopener noreferrer" target="_blank" title="Men Without Women"><span class="sp-t"><i>Men Without Women</i></span><img class="sp-i" src="https://image.yes24.com/goods/14170073/side" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.parentNode.classList.add('sp-fail');this.remove()" onload="if(this.naturalWidth/this.naturalHeight>0.4){this.parentNode.classList.add('sp-fail');this.remove()}"></a>
+    <a class="sp" style="--c:hsl(332,49%,30%);--w:31px;--fs:15px" href="https://www.yes24.com/product/goods/62096461" rel="nofollow noopener noreferrer" target="_blank" title="Sensitivity Is A Weapon"><span class="sp-t"><i>Sensitivity Is A Weapon</i></span><img class="sp-i" src="https://image.yes24.com/goods/62096461/side" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.parentNode.classList.add('sp-fail');this.remove()" onload="if(this.naturalWidth/this.naturalHeight>0.4){this.parentNode.classList.add('sp-fail');this.remove()}"></a>
+    <a class="sp" style="--c:hsl(15,42%,35%);--w:31px;--fs:15px" href="https://www.yes24.com/product/goods/98983220" rel="nofollow noopener noreferrer" target="_blank" title="We All Go Home"><span class="sp-t"><i>We All Go Home</i></span><img class="sp-i" src="https://image.yes24.com/goods/98983220/side" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.parentNode.classList.add('sp-fail');this.remove()" onload="if(this.naturalWidth/this.naturalHeight>0.4){this.parentNode.classList.add('sp-fail');this.remove()}"></a>
+    <a class="sp" style="--c:hsl(229,39%,39%);--w:40px;--fs:12px" href="https://www.yes24.com/product/goods/42702060" rel="nofollow noopener noreferrer" target="_blank" title="Nothing Will Change If You Cry"><span class="sp-t"><i>Nothing Will Change If You Cry</i></span><img class="sp-i" src="https://image.yes24.com/goods/42702060/side" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.parentNode.classList.add('sp-fail');this.remove()" onload="if(this.naturalWidth/this.naturalHeight>0.4){this.parentNode.classList.add('sp-fail');this.remove()}"></a>
+    <a class="sp" style="--c:hsl(200,40%,36%);--w:34px;--fs:15px" href="https://www.yes24.com/product/goods/370331" rel="nofollow noopener noreferrer" target="_blank" title="The Great Gatsby"><span class="sp-t"><i>The Great Gatsby</i></span><img class="sp-i" src="https://image.yes24.com/goods/370331/side" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.parentNode.classList.add('sp-fail');this.remove()" onload="if(this.naturalWidth/this.naturalHeight>0.4){this.parentNode.classList.add('sp-fail');this.remove()}"></a>
+    <a class="sp" style="--c:hsl(289,37%,44%);--w:44px;--fs:15px" href="https://www.yes24.com/product/goods/195804435" rel="nofollow noopener noreferrer" target="_blank" title="The Selfish Gene"><span class="sp-t"><i>The Selfish Gene</i></span><img class="sp-i" src="https://image.yes24.com/goods/195804435/side" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.parentNode.classList.add('sp-fail');this.remove()" onload="if(this.naturalWidth/this.naturalHeight>0.4){this.parentNode.classList.add('sp-fail');this.remove()}"></a>
+    <a class="sp" style="--c:hsl(49,47%,41%);--w:36px;--fs:12px" href="https://www.yes24.com/product/goods/1387488" rel="nofollow noopener noreferrer" target="_blank" title="Disqualified From Being Human"><span class="sp-t"><i>Disqualified From Being Human</i></span><img class="sp-i" src="https://image.yes24.com/goods/1387488/side" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.parentNode.classList.add('sp-fail');this.remove()" onload="if(this.naturalWidth/this.naturalHeight>0.4){this.parentNode.classList.add('sp-fail');this.remove()}"></a>
+    <a class="sp" style="--c:hsl(231,34%,40%);--w:35px;--fs:15px" href="https://www.yes24.com/product/goods/95538356" rel="nofollow noopener noreferrer" target="_blank" title="First Person Singular"><span class="sp-t"><i>First Person Singular</i></span><img class="sp-i" src="https://image.yes24.com/goods/95538356/side" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.parentNode.classList.add('sp-fail');this.remove()" onload="if(this.naturalWidth/this.naturalHeight>0.4){this.parentNode.classList.add('sp-fail');this.remove()}"></a>
+    <a class="sp" style="--c:hsl(157,34%,43%);--w:32px;--fs:15px" href="https://www.aladin.co.kr/shop/wproduct.aspx?ItemId=278770576&amp;partner=openAPI&amp;start=api" rel="nofollow noopener noreferrer" target="_blank" title="We Do Not Part"><span class="sp-t"><i>We Do Not Part</i></span><img class="sp-i" src="https://image.yes24.com/goods/103495056/side" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.parentNode.classList.add('sp-fail');this.remove()" onload="if(this.naturalWidth/this.naturalHeight>0.4){this.parentNode.classList.add('sp-fail');this.remove()}"></a>
+    <a class="sp" style="--c:hsl(276,42%,36%);--w:43px;--fs:15px" href="https://www.aladin.co.kr/shop/wproduct.aspx?ItemId=379686146&amp;partner=openAPI&amp;start=api" rel="nofollow noopener noreferrer" target="_blank" title="Beasts of a Small Land"><span class="sp-t"><i>Beasts of a Small Land</i></span><img class="sp-i" src="https://image.yes24.com/goods/119149162/side" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.parentNode.classList.add('sp-fail');this.remove()" onload="if(this.naturalWidth/this.naturalHeight>0.4){this.parentNode.classList.add('sp-fail');this.remove()}"></a>
+    <a class="sp" style="--c:hsl(16,44%,41%);--w:40px;--fs:15px" href="https://www.yes24.com/product/goods/118399675" rel="nofollow noopener noreferrer" target="_blank" title="Curse Rabbit"><span class="sp-t"><i>Curse Rabbit</i></span><img class="sp-i" src="https://image.yes24.com/goods/118399675/side" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.parentNode.classList.add('sp-fail');this.remove()" onload="if(this.naturalWidth/this.naturalHeight>0.4){this.parentNode.classList.add('sp-fail');this.remove()}"></a>
+    <a class="sp" style="--c:hsl(319,36%,45%);--w:35px;--fs:15px" href="https://www.yes24.com/product/goods/4810410" rel="nofollow noopener noreferrer" target="_blank" title="Home, Pilgrimage"><span class="sp-t"><i>Home, Pilgrimage</i></span><img class="sp-i" src="https://image.yes24.com/goods/4810410/side" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.parentNode.classList.add('sp-fail');this.remove()" onload="if(this.naturalWidth/this.naturalHeight>0.4){this.parentNode.classList.add('sp-fail');this.remove()}"></a>
+    <a class="sp" style="--c:hsl(3,55%,38%);--w:44px;--fs:15px" href="https://www.yes24.com/product/goods/108422348" rel="nofollow noopener noreferrer" target="_blank" title="Vegetarian"><span class="sp-t"><i>Vegetarian</i></span><img class="sp-i" src="https://image.yes24.com/goods/108422348/side" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.parentNode.classList.add('sp-fail');this.remove()" onload="if(this.naturalWidth/this.naturalHeight>0.4){this.parentNode.classList.add('sp-fail');this.remove()}"></a>
+    <a class="sp" style="--c:hsl(358,35%,32%);--w:33px;--fs:15px" href="https://www.yes24.com/product/goods/17972275" rel="nofollow noopener noreferrer" target="_blank" title="Because I Hate Korea"><span class="sp-t"><i>Because I Hate Korea</i></span><img class="sp-i" src="https://image.yes24.com/goods/17972275/side" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.parentNode.classList.add('sp-fail');this.remove()" onload="if(this.naturalWidth/this.naturalHeight>0.4){this.parentNode.classList.add('sp-fail');this.remove()}"></a>
+    <a class="sp" style="--c:hsl(72,35%,26%);--w:42px;--fs:15px" href="https://www.aladin.co.kr/shop/wproduct.aspx?ItemId=360994667&amp;partner=openAPI&amp;start=api" rel="nofollow noopener noreferrer" target="_blank" title="White"><span class="sp-t"><i>White</i></span><img class="sp-i" src="https://image.yes24.com/goods/143896198/side" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.parentNode.classList.add('sp-fail');this.remove()" onload="if(this.naturalWidth/this.naturalHeight>0.4){this.parentNode.classList.add('sp-fail');this.remove()}"></a>
     </div>
     <ol class="reading-list" id="rlist" hidden>
     <li class="rl-item">
@@ -1101,14 +1104,126 @@
   </section>
   <script>
   (function () {
+    var btn = document.getElementById("shelf-cap");
+    if (!btn) return;
+    var H2C = "https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js";
+    var PROXY = "https://images.weserv.nl/?url=";
+    var PAPER = "#fcfaf5";
+    var FONT = '-apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif';
+
+    function loadH2C() {
+      if (window.html2canvas) return Promise.resolve();
+      return new Promise(function (ok, no) {
+        var s = document.createElement("script");
+        s.src = H2C; s.onload = ok; s.onerror = no;
+        document.head.appendChild(s);
+      });
+    }
+    function proxied(u) {
+      if (!u || u.indexOf("data:") === 0) return u;
+      return PROXY + encodeURIComponent(u.replace(/^https?:\/\//i, "")) + "&output=jpg&q=92";
+    }
+    /* 프록시 주소로 바꾼 뒤 다 받아질 때까지 기다린다. 못 받은 것은 지워서
+       색 책등으로 떨어뜨린다 — 반쯤 그려진 그림이 남는 것보다 낫다. */
+    function swapImages(root) {
+      var undo = [];
+      var jobs = [].slice.call(root.querySelectorAll("img")).map(function (img) {
+        var was = img.getAttribute("src");
+        undo.push([img, was]);
+        return new Promise(function (done) {
+          // 프록시가 느리거나 막혀도 버튼이 영영 멈추지 않게 제한을 둔다
+          var t = setTimeout(function () { img.remove(); done(); }, 6000);
+          var fin = function (drop) {
+            clearTimeout(t);
+            if (drop && img.parentNode) img.remove();
+            done();
+          };
+          img.onload = function () { fin(false); };
+          img.onerror = function () { fin(true); };
+          img.crossOrigin = "anonymous";
+          img.src = proxied(was);
+        });
+      });
+      return { ready: Promise.all(jobs), undo: undo };
+    }
+
+    /* 찍은 그림 둘레에 여백을 두고 제목과 출처를 얹는다 */
+    function compose(inner) {
+      var pad = Math.round(inner.width * 0.035) + 16;
+      var fs = Math.max(26, Math.round(inner.width / 24));
+      var head = Math.round(fs * 2.2), foot = Math.round(fs * 1.9);
+      var c = document.createElement("canvas");
+      c.width = inner.width + pad * 2;
+      c.height = inner.height + head + foot;
+      var g = c.getContext("2d");
+      g.fillStyle = PAPER; g.fillRect(0, 0, c.width, c.height);
+      g.fillStyle = "#111";
+      g.font = "800 " + fs + "px " + FONT;
+      g.textBaseline = "middle"; g.textAlign = "left";
+      g.fillText("Hong Kyung — 33 books", pad, head / 2);
+      g.drawImage(inner, pad, head);
+      g.fillStyle = "#8a8578";
+      g.font = "600 " + Math.round(fs * 0.62) + "px " + FONT;
+      g.textAlign = "right"; g.textBaseline = "bottom";
+      g.fillText("favorbook.co.kr", c.width - pad, c.height - Math.round(foot * 0.35));
+      return c;
+    }
+
+    btn.addEventListener("click", function () {
+      // 숨어 있는 쪽까지 그려지지 않도록, 지금 보이는 상자 하나만 넘긴다
+      var shelf = document.getElementById("shelf");
+      var view = (shelf && !shelf.hidden) ? shelf : document.getElementById("rlist");
+      if (!view) return;
+      var was = btn.textContent;
+      btn.disabled = true; btn.textContent = "Saving…";
+      var swap = null;
+      loadH2C().then(function () {
+        swap = swapImages(view);
+        return swap.ready;
+      }).then(function () {
+        // 책등은 상자 왼쪽에만 서 있어서 그대로 찍으면 오른쪽이 휑하다.
+        // 내용이 실제로 차지한 폭까지만 자른다.
+        var left = view.getBoundingClientRect().left, right = 0;
+        [].forEach.call(view.children, function (ch) {
+          var b = ch.getBoundingClientRect();
+          if (b.right > right) right = b.right;
+        });
+        var w = right > left ? Math.ceil(right - left) + 4 : view.offsetWidth;
+        return html2canvas(view, {
+          backgroundColor: PAPER, scale: 2, useCORS: true, logging: false,
+          width: Math.min(w, view.offsetWidth), windowWidth: document.documentElement.clientWidth,
+        });
+      }).then(function (inner) {
+        // data: 주소는 길어지면 브라우저가 파일 이름을 무시한다. Blob으로 넘긴다.
+        return new Promise(function (ok) { compose(inner).toBlob(ok, "image/png"); });
+      }).then(function (blob) {
+        var a = document.createElement("a");
+        a.href = URL.createObjectURL(blob);
+        a.download = "bookshelf_hong-kyung.png";
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+        setTimeout(function () { URL.revokeObjectURL(a.href); }, 4000);
+      }).catch(function (e) {
+        console.error(e);
+        alert("Could not create the image. Please try again.");
+      }).then(function () {
+        if (swap) swap.undo.forEach(function (p) { if (p[0].parentNode) p[0].src = p[1]; });
+        btn.disabled = false; btn.textContent = was;
+      });
+    });
+  })();
+  </script>
+  <script>
+  (function () {
     var sec = document.getElementById("shelf-sec");
     if (!sec) return;
     var shelf = document.getElementById("shelf"), list = document.getElementById("rlist");
-    sec.querySelectorAll(".sh-tab").forEach(function (b) {
+    sec.querySelectorAll(".sh-tab[data-view]").forEach(function (b) {
       b.addEventListener("click", function () {
         var spine = b.dataset.view === "spine";
         shelf.hidden = !spine; list.hidden = spine;
-        sec.querySelectorAll(".sh-tab").forEach(function (o) {
+        sec.querySelectorAll(".sh-tab[data-view]").forEach(function (o) {
           var on = o === b;
           o.classList.toggle("on", on);
           o.setAttribute("aria-pressed", on ? "true" : "false");
