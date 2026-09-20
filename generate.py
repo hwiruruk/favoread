@@ -1940,6 +1940,37 @@ os.makedirs('en/share/book', exist_ok=True)
 
 EN_BASE = BASE + 'en/'
 
+EN_GROUP_ROLES = {
+    'director', 'actor', 'actress', 'comedian', 'singer', 'producer',
+    'writer', 'model', 'mc', 'rapper', 'dj', 'author', 'host',
+}
+EN_GROUP_RE = re.compile(r'\(([^)]+)\)\s*$')
+
+
+def en_group_of(name_en):
+    """영문명 끝 괄호에서 소속을 꺼낸다. 소속이 아니면 None."""
+    m = EN_GROUP_RE.search(name_en or '')
+    if not m:
+        return None
+    # 'Myeong JAEHYUN((BOYNEXTDOOR)' 처럼 괄호가 더 붙은 오타를 흡수한다
+    g = m.group(1).strip().strip('()[]').strip()
+    if not g or g.lower() in EN_GROUP_ROLES:
+        return None
+    return g
+
+
+# 어떤 그룹이 '2명 이상 영문 페이지'를 갖게 되는지 미리 센다 —
+# 멤버 페이지에서 그룹 페이지로 이어 주려면 페이지를 만들기 전에 알아야 한다.
+_en_group_count = {}
+for _n, _i in celebs.items():
+    _ne = _i.get('name_en')
+    if not _ne or not any(b.get('title_en') for b in _i['books']):
+        continue
+    _g = en_group_of(_ne)
+    if _g:
+        _en_group_count[_g] = _en_group_count.get(_g, 0) + 1
+EN_GROUPS_WITH_PAGE = {g for g, c in _en_group_count.items() if c >= 2}
+
 en_celeb_pages = []   # [(slug, name_en, name_ko)]
 en_book_pages  = []   # [(slug, title_en, title_ko)]
 
@@ -1965,6 +1996,10 @@ for name, info in celebs.items():
         *[b.get('title_en') for b in en_books],
         *[b.get('author_en') for b in en_books],
     )
+
+    # 2명 이상 영문 페이지가 있는 그룹이면 그룹 모아보기로 이어 준다
+    _g = en_group_of(name_en)
+    _en_group = _g if _g in EN_GROUPS_WITH_PAGE else None
 
     page_url = make_en_celeb_url(name_en)
     ko_url   = make_celeb_url(name)
@@ -2176,6 +2211,7 @@ for name, info in celebs.items():
         '    h2 { font-size: 19px; margin: 32px 0 12px; padding-bottom: 4px; border-bottom: 2px solid #000; font-weight: 800; }\n'
         '    .intro { background: #fff; border: 2px solid #000; box-shadow: 4px 4px 0 0 #000; padding: 14px 16px; margin: 16px 0 24px; font-size: 15px; }\n'
         '    .celeb-bio { margin: 4px 0 8px; padding: 6px 10px; background: #fff8e7; border-left: 4px solid #000; font-size: 14px; line-height: 1.45; color: #222; }\n'
+        '    .grp-link { margin: 10px 0 0; padding: 8px 12px; background: #fff8e7; border: 2px solid #000; box-shadow: 3px 3px 0 0 #000; font-size: 14px; }\n'
         + SHELF_CSS +
         '    .reading-list { list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 14px; }\n'
         '    .rl-item { position: relative; background: #fff; border: 2px solid #000; box-shadow: 4px 4px 0 0 #000; padding: 14px 14px 14px 52px; transition: transform .12s, box-shadow .12s; }\n'
@@ -2219,7 +2255,12 @@ for name, info in celebs.items():
         + ' read or recommended by <strong>' + esc(name_en) + '</strong> (' + esc(name)
         + '), gathered from interviews, YouTube, and SNS sources.</p>\n'
         '  </section>\n'
-        '  <section id="shelf-sec">\n'
+        + ((
+            '  <p class="grp-link">Part of <strong>' + esc(_en_group) + '</strong> — '
+            '<a href="' + EN_BASE + 'group/' + safe_en_filename(_en_group) + '.html">'
+            'see what every ' + esc(_en_group) + ' member reads →</a></p>\n'
+          ) if _en_group else '')
+        + '  <section id="shelf-sec">\n'
         '    <div class="shelf-head">\n'
         '      <h2>Reading list</h2>\n'
         '      <div class="shelf-tabs" role="tablist">\n'
@@ -2392,6 +2433,198 @@ for title, t_en in book_title_en.items():
 
 print(f"✅ /en/ 책 페이지: {len(en_book_pages)}개")
 
+# ── /en/group/*.html — 그룹별 모아보기 ───────────────────────────────
+#
+# 해외에서는 "what do kpop idols read", "bts members books" 처럼 사람 이름이
+# 아니라 그룹이나 주제로 찾는다. 사람 페이지만 있으면 그런 검색에 걸릴 페이지가
+# 없다. 영문명 끝의 괄호(예: "Karina (aespa)")가 곧 소속이므로 그걸로 묶는다.
+
+en_groups = {}
+for _slug, _name_en, _name_ko in en_celeb_pages:
+    _g = en_group_of(_name_en)
+    if _g:
+        en_groups.setdefault(_g, []).append((_slug, _name_en, _name_ko))
+
+# 혼자인 소속은 그룹이라고 보기 어렵다 (배우 이름 뒤 괄호 등)
+en_groups = {g: ms for g, ms in en_groups.items() if len(ms) >= 2}
+
+os.makedirs('en/group', exist_ok=True)
+en_group_pages = []          # [(slug, group, 멤버 수, 책 수)]
+
+# 영문 책 페이지가 있는 책은 제목에서 그리로 이어 준다 (안쪽 연결)
+en_book_slug_by_ko = {t_ko: bslug for bslug, _t_en, t_ko in en_book_pages}
+
+for _group in sorted(en_groups, key=lambda g: g.lower()):
+    members = sorted(en_groups[_group], key=lambda m: m[1].lower())
+    gslug = safe_en_filename(_group)
+    gurl = EN_BASE + 'group/' + gslug + '.html'
+
+    # 그룹이 읽은 책을 모은다 — 여러 멤버가 읽은 책이 앞으로
+    gbooks = {}
+    for _slug, _name_en, _name_ko in members:
+        for b in celebs[_name_ko]['books']:
+            if not b.get('title_en'):
+                continue
+            t = plain_en(b['title_en'])
+            if not t:
+                continue
+            hit = gbooks.setdefault(t, {'readers': [], 'ko': b['title'],
+                                        'cover': b.get('coverUrl', ''),
+                                        'author': plain_en(b.get('author_en') or b['author'])})
+            if _name_en not in hit['readers']:
+                hit['readers'].append(_name_en)
+            if not hit['cover'] and b.get('coverUrl'):
+                hit['cover'] = b['coverUrl']
+    ranked = sorted(gbooks.items(), key=lambda kv: (-len(kv[1]['readers']), kv[0].lower()))
+    shared = [x for x in ranked if len(x[1]['readers']) >= 2]
+
+    _slug_by_en = {m[1]: m[0] for m in members}
+    member_cards = ''
+    for _slug, _name_en, _name_ko in members:
+        n_b = sum(1 for b in celebs[_name_ko]['books'] if b.get('title_en'))
+        img = celebs[_name_ko]['img']
+        short = EN_GROUP_RE.sub('', _name_en).strip() or _name_en
+        member_cards += (
+            '    <li class="gm">\n'
+            '      <a href="' + EN_BASE + 'share/' + _slug + '.html">\n'
+            + (('        <img src="' + esc(img) + '" alt="' + esc(_name_en)
+                + ' profile photo" loading="lazy" referrerpolicy="no-referrer">\n')
+               if img.startswith('http') else '')
+            + '        <span class="gm-n">' + esc(short) + '</span>\n'
+            '        <span class="gm-c">' + str(n_b) + ' book' + ('s' if n_b != 1 else '') + '</span>\n'
+            '      </a>\n'
+            '    </li>\n'
+        )
+
+    book_rows = ''
+    for t, info in ranked[:40]:
+        who = ', '.join(
+            '<a href="' + EN_BASE + 'share/' + _slug_by_en[r] + '.html">'
+            + esc(EN_GROUP_RE.sub('', r).strip() or r) + '</a>'
+            for r in info['readers'])
+        _bslug = en_book_slug_by_ko.get(info['ko'])
+        _t_html = (('<a href="' + EN_BASE + 'share/book/' + _bslug + '.html">' + esc(t) + '</a>')
+                   if _bslug else esc(t))
+        book_rows += (
+            '    <li class="gb">\n'
+            '      <span class="gb-t">' + _t_html + '</span>\n'
+            + (('      <span class="gb-a">' + esc(info['author']) + '</span>\n') if info['author'] else '')
+            + '      <span class="gb-w">' + who + '</span>\n'
+            '    </li>\n'
+        )
+
+    n_members, n_books = len(members), len(gbooks)
+    # 이름을 두 번 넣으면 길어지고 구글이 제목을 갈아치운다. 짧을 때만 꼬리를 붙인다.
+    g_title = _group + ' Members’ Book Recommendations'
+    _with_tail = g_title + ' — What ' + _group + ' Reads'
+    if len(_with_tail) <= 62:
+        g_title = _with_tail
+    picks = [t for t, _ in ranked[:3]]
+    g_desc = (_group + ' members have read ' + str(n_books) + ' books'
+              + ((', including ' + ', '.join(picks[:-1]) + ' and ' + picks[-1])
+                 if len(picks) >= 2 else (', including ' + picks[0] if picks else ''))
+              + '. Reading lists for all ' + str(n_members)
+              + ' members, with the source for each book.')
+    if len(g_desc) > 165:
+        g_desc = (_group + ' members have read ' + str(n_books) + ' books. Reading lists for all '
+                  + str(n_members) + ' members, with the source for each book.')
+
+    g_ld = clean_none({
+        '@context': 'https://schema.org',
+        '@type': 'CollectionPage',
+        'name': g_title,
+        'url': gurl,
+        'inLanguage': 'en',
+        'description': g_desc,
+        'about': {'@type': 'MusicGroup', 'name': _group},
+        'isPartOf': {'@type': 'WebSite', 'name': 'Favorbook', 'url': EN_BASE},
+        'hasPart': {
+            '@type': 'ItemList',
+            'name': 'Members of ' + _group,
+            'numberOfItems': n_members,
+            'itemListElement': [
+                {'@type': 'ListItem', 'position': i + 1,
+                 'item': {'@type': 'Person', 'name': m[1],
+                          'url': EN_BASE + 'share/' + m[0] + '.html'}}
+                for i, m in enumerate(members)
+            ],
+        },
+    })
+
+    page = (
+        '<!DOCTYPE html>\n'
+        '<html lang="en">\n'
+        '<head>\n' + GA_TAG +
+        '  <meta charset="utf-8">\n'
+        '  <meta name="viewport" content="width=device-width, initial-scale=1">\n'
+        '  <title>' + esc(g_title) + ' | Favorbook</title>\n'
+        '  <meta name="description" content="' + esc(g_desc) + '">\n'
+        '  <meta name="robots" content="index, follow, max-image-preview:large">\n'
+        '  <meta property="og:title" content="' + esc(g_title) + '">\n'
+        '  <meta property="og:description" content="' + esc(g_desc) + '">\n'
+        '  <meta property="og:url" content="' + esc(gurl) + '">\n'
+        '  <meta property="og:type" content="website">\n'
+        '  <meta property="og:locale" content="en_US">\n'
+        '  <meta property="og:site_name" content="Favorbook">\n'
+        '  <meta name="twitter:card" content="summary_large_image">\n'
+        '  <link rel="canonical" href="' + esc(gurl) + '">\n'
+        '  <link rel="icon" href="' + BASE + 'favicon.svg" type="image/svg+xml">\n'
+        '  <script type="application/ld+json">\n  '
+        + json.dumps(g_ld, ensure_ascii=False, indent=2) + '\n  </script>\n'
+        '  <style>\n'
+        '    body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; max-width: 860px; margin: 0 auto; padding: 20px; color: #222; line-height: 1.6; background: #fcfaf5; }\n'
+        '    a { color: #2563eb; text-decoration: none; }\n'
+        '    a:hover { text-decoration: underline; }\n'
+        '    nav { margin: 8px 0 16px; font-size: 13px; }\n'
+        '    h1 { font-size: 27px; margin: 0 0 8px; font-weight: 900; line-height: 1.25; }\n'
+        '    h2 { font-size: 19px; margin: 32px 0 12px; padding-bottom: 4px; border-bottom: 2px solid #000; font-weight: 800; }\n'
+        '    .lead { background: #fff; border: 2px solid #000; box-shadow: 4px 4px 0 0 #000; padding: 14px 16px; margin: 14px 0 6px; font-size: 15px; }\n'
+        '    .members { list-style: none; padding: 0; margin: 0; display: grid; grid-template-columns: repeat(auto-fill, minmax(116px, 1fr)); gap: 12px; }\n'
+        '    .gm a { display: block; color: #000; text-align: center; }\n'
+        '    .gm a:hover { text-decoration: none; }\n'
+        '    .gm img { width: 100%; aspect-ratio: 1/1; object-fit: cover; border: 2px solid #000; box-shadow: 2px 2px 0 0 #000; display: block; background: #f4f4f0; }\n'
+        '    .gm-n { display: block; font-weight: 800; font-size: 13px; margin-top: 6px; line-height: 1.25; }\n'
+        '    .gm-c { display: block; font-size: 11px; color: #666; }\n'
+        '    .gb { background: #fff; border: 2px solid #000; box-shadow: 3px 3px 0 0 #000; padding: 10px 12px; margin-bottom: 10px; list-style: none; }\n'
+        '    .gb-t { display: block; font-weight: 800; font-size: 15px; line-height: 1.3; }\n'
+        '    .gb-a { display: block; font-size: 12px; color: #555; }\n'
+        '    .gb-w { display: block; font-size: 12px; color: #2563eb; margin-top: 3px; }\n'
+        '    .books { padding: 0; margin: 0; }\n'
+        '    footer { margin-top: 40px; padding-top: 16px; border-top: 2px solid #000; font-size: 12px; color: #666; }\n'
+        '  </style>\n'
+        '</head>\n'
+        '<body>\n'
+        '  <nav><a href="' + EN_BASE + '">← Favorbook</a></nav>\n'
+        '  <h1>' + esc(_group) + ' Members’ Book Recommendations</h1>\n'
+        '  <div class="lead">\n'
+        '    <p style="margin:0">Every book we could verify that <strong>' + esc(_group)
+        + '</strong> members have read or recommended — ' + str(n_books) + ' books across '
+        + str(n_members) + ' members'
+        + ((', ' + str(len(shared)) + ' of them read by more than one member') if shared else '')
+        + '. Each entry links to the interview, YouTube video or SNS post it came from.</p>\n'
+        '  </div>\n'
+        '  <h2>Members</h2>\n'
+        '  <ul class="members">\n' + member_cards +
+        '  </ul>\n'
+        '  <h2>Books ' + esc(_group) + ' has read</h2>\n'
+        '  <ul class="books">\n' + book_rows +
+        '  </ul>\n'
+        + (('  <p>Showing the ' + str(min(40, len(ranked))) + ' most shared of '
+            + str(n_books) + ' books. Open a member above for their full list.</p>\n')
+           if len(ranked) > 40 else '')
+        + '  <footer>\n'
+        '    <p>Curated from public Korean-language sources. '
+        '<a href="' + EN_BASE + '">Browse every K-pop idol and Korean celebrity →</a></p>\n'
+        '  </footer>\n'
+        '</body>\n'
+        '</html>'
+    )
+    write_if_changed('en/group/' + gslug + '.html', page)
+    en_group_pages.append((gslug, _group, n_members, n_books))
+
+print(f"✅ /en/group/ 그룹 페이지: {len(en_group_pages)}개")
+
+
 # /en/index.html — 영문 랜딩 페이지 (메인 한국어 사이트와 동일한 Tailwind/Neo 디자인)
 en_celeb_pages.sort(key=lambda x: x[1].lower())  # name_en 알파벳 정렬
 
@@ -2440,6 +2673,66 @@ for slug, t_en, t_ko in sorted(en_book_pages, key=lambda x: x[1].lower()):
     )
 en_book_grid = '\n'.join(en_book_cards)
 
+
+# /en/ 허브에 얹을 '그룹으로 찾기' 칸. 사람 이름을 모르는 해외 방문자는
+# 그룹부터 찾으므로 목록으로 들어가는 문을 하나 더 둔다.
+en_group_chips = '\n'.join(
+    '    <a href="group/' + gslug + '.html" class="flex flex-col justify-between border-2 border-ink '
+    'bg-white shadow-neo-sm hover:shadow-neo hover:-translate-y-0.5 transition-all px-3 py-2.5">\n'
+    '      <span class="font-black text-sm md:text-base leading-tight word-break-keep">' + esc(group) + '</span>\n'
+    '      <span class="font-sans text-[10px] md:text-xs text-muted">' + str(n_m) + ' members · '
+    + str(n_b) + ' books</span>\n'
+    '    </a>'
+    for gslug, group, n_m, n_b in sorted(en_group_pages, key=lambda g: (-g[2], g[1].lower()))
+)
+
+# 해외 방문자가 실제로 치는 문장들. 사람 이름을 모른 채 "what do kpop idols
+# read" 처럼 물어보는 검색이 많은데, 그 말에 답하는 문장이 사이트에 한 줄도
+# 없었다. 눈에 보이는 본문으로 넣고 FAQPage로도 표시해 둔다.
+EN_FAQ = [
+    ('What books do K-pop idols read?',
+     'Across ' + str(len(en_celeb_pages)) + ' idols and actors in this archive, the books that come up '
+     'most are Korean literary fiction and essays — Kim Ae-ran, Baek Se-hee, Kim Cho-yeop — '
+     'alongside translated classics like Demian and The Unbearable Lightness of Being. '
+     'Every reading list on this site is built from a source you can open and check yourself.'),
+    ('Where do these book recommendations come from?',
+     'From public Korean-language sources only: interviews, YouTube and V Live clips, variety shows, '
+     'fan-cafe posts and Instagram stories. A book is added only when the mention can be linked, '
+     'and each entry keeps that link. Nothing is inferred from rumours or fan speculation.'),
+    ('Can I see the books by group instead of by person?',
+     'Yes. The Browse by Group section above opens a page per group — '
+     + ', '.join(g for _, g, _, _ in sorted(en_group_pages, key=lambda g: -g[2])[:4])
+     + ' and more — showing every member side by side and which books more than one member has read.'),
+    ('Are the books available in English?',
+     'Many are. Korean titles are shown with the published English title when one exists. '
+     'Where no official English edition was confirmed, the title is machine-translated and marked '
+     'with an asterisk, with the Korean original shown next to it so you can search for it directly.'),
+    ('How often is the archive updated?',
+     'New entries are added as idols mention books, usually a few times a month. '
+     'The Korean site carries the full archive of ' + str(len(celebs)) + ' people; '
+     'English pages are published for the ones whose names and book titles have been checked.'),
+]
+
+en_faq_html = '\n'.join(
+    '      <details class="border-2 border-ink bg-white shadow-neo-sm px-4 py-3">\n'
+    '        <summary class="font-black text-sm md:text-base cursor-pointer word-break-keep">'
+    + esc(q) + '</summary>\n'
+    '        <p class="text-sm font-bold leading-relaxed text-muted mt-2 word-break-keep">'
+    + esc(a) + '</p>\n'
+    '      </details>'
+    for q, a in EN_FAQ
+)
+
+en_faq_jsonld = json.dumps({
+    '@context': 'https://schema.org',
+    '@type': 'FAQPage',
+    'mainEntity': [
+        {'@type': 'Question', 'name': q,
+         'acceptedAnswer': {'@type': 'Answer', 'text': a}}
+        for q, a in EN_FAQ
+    ],
+}, ensure_ascii=False, indent=2)
+
 en_index_show_tr_note = has_auto_translated(
     *[title_en for _, title_en, _ in en_book_pages],
 )
@@ -2461,9 +2754,9 @@ en_index = (
     '<head>\n' + GA_TAG +
     '  <meta charset="UTF-8">\n'
     '  <meta name="viewport" content="width=device-width, initial-scale=1.0">\n'
-    '  <title>What K-pop Idols Read · BTS, IVE, NewJeans Reading Lists | Favorbook</title>\n'
-    '  <meta name="description" content="Discover what K-pop idols and Korean celebrities are reading. BTS RM, IU, IVE, SEVENTEEN, NewJeans, K-drama actors — verified book recommendations and reading lists from interviews, YouTube, and SNS.">\n'
-    '  <meta name="keywords" content="kpop idol books, what bts reads, BTS reading list, RM book recommendations, IU books, what kpop idols read, kpop star reading, korean celebrity books, k-drama actor books, IVE books, NewJeans reading list, SEVENTEEN books, kpop idol favorite books, korean idol book recommendations, kpop reading list, books read by kpop idols, korean drama actor reading list, kdrama books, kpop fandom books">\n'
+    '  <title>K-pop Star Book Archive — What K-pop Idols Read | Favorbook</title>\n'
+    '  <meta name="description" content="A searchable archive of what K-pop stars read. Reading lists for BTS, aespa, SEVENTEEN, IVE, NewJeans and Korean actors, each book traced to the interview, video or post it came from.">\n'
+    '  <meta name="keywords" content="kpop idol books, what bts reads, BTS reading list, RM book recommendations, IU books, what kpop idols read, kpop star reading, korean celebrity books, k-drama actor books, IVE books, NewJeans reading list, SEVENTEEN books, kpop idol favorite books, korean idol book recommendations, kpop reading list, books read by kpop idols, korean drama actor reading list, kdrama books, kpop fandom books, kpop star book archive, kpop star reading, kpop idol reading list, korean celebrity reading archive, what do kpop idols read">\n'
     '  <meta name="referrer" content="no-referrer">\n'
     '\n'
     '  <link rel="icon" href="' + BASE + 'favicon.svg" type="image/svg+xml">\n'
@@ -2471,8 +2764,8 @@ en_index = (
     '  <link rel="apple-touch-icon" href="' + BASE + 'favicon.png">\n'
     '\n'
     '  <meta property="og:site_name" content="Favorbook">\n'
-    '  <meta property="og:title" content="What K-pop Idols Read · BTS, IVE, NewJeans Reading Lists | Favorbook">\n'
-    '  <meta property="og:description" content="Discover what K-pop idols and Korean celebrities are reading. BTS RM, IU, IVE, SEVENTEEN, NewJeans — verified book recommendations from interviews, YouTube, and SNS.">\n'
+    '  <meta property="og:title" content="K-pop Star Book Archive — What K-pop Idols Read | Favorbook">\n'
+    '  <meta property="og:description" content="A searchable archive of what K-pop stars read — BTS, aespa, SEVENTEEN, IVE, NewJeans and Korean actors, with a source for every book.">\n'
     '  <meta property="og:type" content="website">\n'
     '  <meta property="og:url" content="' + EN_BASE + '">\n'
     '  <meta property="og:image" content="' + BASE + 'og-image.jpg">\n'
@@ -2483,8 +2776,8 @@ en_index = (
     '  <meta property="og:locale:alternate" content="ko_KR">\n'
     '\n'
     '  <meta name="twitter:card" content="summary_large_image">\n'
-    '  <meta name="twitter:title" content="What K-pop Idols Read · BTS, IVE, NewJeans Reading Lists | Favorbook">\n'
-    '  <meta name="twitter:description" content="What are K-pop idols and Korean celebrities reading? BTS RM, IU, IVE, NewJeans, SEVENTEEN, K-drama actors and their book picks.">\n'
+    '  <meta name="twitter:title" content="K-pop Star Book Archive — What K-pop Idols Read | Favorbook">\n'
+    '  <meta name="twitter:description" content="The K-pop star book archive — reading lists for BTS, aespa, SEVENTEEN, IVE, NewJeans and Korean actors.">\n'
     '  <meta name="twitter:image" content="' + BASE + 'og-image.jpg">\n'
     '\n'
     '  <link rel="canonical" href="' + EN_BASE + '">\n'
@@ -2501,6 +2794,7 @@ en_index = (
     '  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>\n'
     '\n'
     '  <script type="application/ld+json">\n  ' + en_index_jsonld + '\n  </script>\n'
+    '  <script type="application/ld+json">\n  ' + en_faq_jsonld + '\n  </script>\n'
     '\n'
     '  <script src="https://cdn.tailwindcss.com"></script>\n'
     '  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;700&display=swap" rel="stylesheet">\n'
@@ -2604,8 +2898,16 @@ en_index = (
     '  <section id="about" class="text-center max-w-2xl mx-auto border-4 border-ink p-6 md:p-8 bg-white shadow-neo w-full">\n'
     '    <h2 class="text-xl md:text-2xl font-black mb-4 bg-neo-pink inline-block px-3 py-1 border-2 border-ink shadow-neo-sm">What is Favorbook?</h2>\n'
     '    <p class="text-sm md:text-base font-bold leading-relaxed text-ink word-break-keep mb-3">\n'
-    '      From K-POP idols like <strong>BTS, IVE, SEVENTEEN</strong> to Korean drama actors and musicians — '
-    '      a curated archive of <strong>books they read, recommend, and call life-changing</strong>.\n'
+    '      Favorbook is a <strong>book archive for K-pop stars</strong>. From idols like '
+    '<strong>BTS, aespa, SEVENTEEN, IVE and NewJeans</strong> to Korean drama actors and musicians, '
+    'it collects the books they have read, recommended, or called life-changing — and keeps the '
+    'receipt for each one.\n'
+    '    </p>\n'
+    '    <p class="text-sm md:text-base font-bold leading-relaxed text-ink word-break-keep mb-3">\n'
+    '      Korean idols talk about books constantly — in live streams, in fan letters, in variety shows — '
+    'but those mentions scatter across Korean-language clips and posts that never reach international fans. '
+    'Every entry here is traced back to the interview, YouTube video or SNS post where the book came up, '
+    'so you can read what they read instead of guessing.\n'
     '    </p>\n'
     '    <p class="text-sm md:text-base font-bold leading-relaxed text-ink word-break-keep">\n'
     '      Only entries with verified sources (YouTube, interviews, SNS) are listed.<br>\n'
@@ -2616,6 +2918,14 @@ en_index = (
        '    </p>\n' if en_index_show_tr_note else '')
     + '  </section>\n'
     '\n'
+    + (('  <section id="groups" class="w-full">\n'
+        '    <h2 class="text-2xl md:text-3xl font-black mb-2 word-break-keep">Browse by Group</h2>\n'
+        '    <p class="text-sm md:text-base font-bold text-muted mb-8 word-break-keep">'
+        'Reading lists for every member, side by side (' + str(len(en_group_pages)) + ' groups).</p>\n'
+        '    <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3 md:gap-4">\n'
+        + en_group_chips + '\n'
+        '    </div>\n'
+        '  </section>\n\n') if en_group_pages else '')
     + ('  <section id="celebs" class="w-full">\n'
        '    <h2 class="text-2xl md:text-3xl font-black mb-2 word-break-keep">Browse Celebrities (' + str(len(en_celeb_pages)) + ')</h2>\n'
        '    <p class="text-sm md:text-base font-bold text-muted mb-8 word-break-keep">Click a card to see their full reading list.</p>\n'
@@ -2633,6 +2943,12 @@ en_index = (
        + en_book_grid + '\n'
        '    </div>\n'
        '  </section>\n\n' if en_book_cards else '')
+    + '  <section id="faq" class="border-t-4 border-ink pt-12 md:pt-16 w-full">\n'
+    '    <h2 class="text-2xl md:text-3xl font-black mb-8 word-break-keep">Questions people ask</h2>\n'
+    '    <div class="flex flex-col gap-3 max-w-3xl">\n'
+    + en_faq_html + '\n'
+    '    </div>\n'
+    '  </section>\n\n'
     + '  <footer class="border-t-4 border-ink pt-8 text-center font-sans text-xs text-muted">\n'
     '    <p>An English gateway to <a href="' + BASE + '" hreflang="ko" class="underline decoration-2 hover:text-ink">최애의 독서</a> — full archive of <strong>' + str(len(celebs)) + ' Korean celebrities</strong> in Korean.</p>\n'
     '  </footer>\n'
@@ -2641,7 +2957,7 @@ en_index = (
     '\n'
     '<script>\n'
     '(function() {\n'
-    '  const ids = ["hero", "about", "celebs", "books"];\n'
+    '  const ids = ["hero", "about", "groups", "celebs", "books", "faq"];\n'
     '  const sections = ids.map(id => document.getElementById(id)).filter(Boolean);\n'
     '  const tabs = document.querySelectorAll(".spy-tab");\n'
     '  if (!sections.length || !tabs.length) return;\n'
@@ -2848,6 +3164,13 @@ for f in os.listdir('en/share/book'):
     if os.path.isfile(p) and f.endswith('.html') and p not in generated_en_book_paths:
         os.remove(p)
         removed += 1
+# 멤버가 빠져 1명이 된 그룹의 페이지도 같이 치운다
+generated_en_group_paths = {'en/group/' + gslug + '.html' for gslug, _, _, _ in en_group_pages}
+for f in os.listdir('en/group'):
+    p = 'en/group/' + f
+    if os.path.isfile(p) and f.endswith('.html') and p not in generated_en_group_paths:
+        os.remove(p)
+        removed += 1
 print(f"✅ 고아 share 파일 정리: {removed}개 삭제")
 
 # ── 6.6. 짧은 공유 링크 파일 (/s/*.html, /s/b/*.html) ───────────────
@@ -3044,6 +3367,15 @@ if en_celeb_pages or en_book_pages:
         '    <priority>0.7</priority>',
         '  </url>',
     ]
+    for gslug, _g, _nm, _nb in en_group_pages:
+        lines += [
+            '  <url>',
+            '    <loc>' + EN_BASE + 'group/' + gslug + '.html</loc>',
+            '    <lastmod>' + lastmod_for('en/group/' + gslug + '.html') + '</lastmod>',
+            '    <changefreq>weekly</changefreq>',
+            '    <priority>0.6</priority>',
+            '  </url>',
+        ]
     for slug, name_en, name_ko in en_celeb_pages:
         url = make_en_celeb_url(name_en)
         lines += [
