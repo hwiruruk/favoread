@@ -113,13 +113,15 @@
     h2 { font-size: 19px; margin: 32px 0 12px; padding-bottom: 4px; border-bottom: 2px solid #000; font-weight: 800; }
     .intro { background: #fff; border: 2px solid #000; box-shadow: 4px 4px 0 0 #000; padding: 14px 16px; margin: 16px 0 24px; font-size: 15px; }
     .celeb-bio { margin: 4px 0 8px; padding: 6px 10px; background: #fff8e7; border-left: 4px solid #000; font-size: 14px; line-height: 1.45; color: #222; }
+    .grp-link { margin: 10px 0 0; padding: 8px 12px; background: #fff8e7; border: 2px solid #000; box-shadow: 3px 3px 0 0 #000; font-size: 14px; }
     .shelf-head { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
     .shelf-head h2 { margin-bottom: 0; border-bottom: none; padding-bottom: 0; }
     .shelf-tabs { display: flex; gap: 6px; flex: none; }
-    .sh-tab { font: inherit; font-size: 12px; font-weight: 700; cursor: pointer; padding: 5px 12px;
+    .sh-tab, .sh-cap { font: inherit; font-size: 12px; font-weight: 700; cursor: pointer; padding: 5px 12px;
               background: #fff; color: #000; border: 2px solid #000; box-shadow: 2px 2px 0 0 #000; }
-    .sh-tab:hover { background: #fde047; }
+    .sh-tab:hover, .sh-cap:hover { background: #fde047; }
     .sh-tab.on { background: #000; color: #fff; }
+    .sh-cap[disabled] { opacity: .55; cursor: default; }
     .shelf { display: flex; flex-wrap: wrap; align-items: flex-end; gap: 5px 3px;
              margin-top: 18px; padding: 0 6px 10px; border-bottom: 5px solid #000; }
     .shelf[hidden], .reading-list[hidden] { display: none; }
@@ -133,15 +135,16 @@
     .sp-t i { writing-mode: vertical-rl; text-orientation: mixed; font-style: normal;
               white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
               font-family: "KoPubWorld Batang", "Noto Serif KR", Batang, serif;
-              font-size: 15px; font-weight: 500; letter-spacing: .01em; color: #fff;
+              font-size: var(--fs, 15px); font-weight: 500; letter-spacing: .01em; color: #fff;
               text-shadow: 0 1px 2px rgba(0,0,0,.55); }
     .sp-i { position: relative; z-index: 1; display: block;
             height: 100%; width: auto; max-width: 172px; object-fit: contain; }
-    .sp.no-img, .sp.sp-fail { width: var(--w, 60px); }
+    .sp.no-img, .sp.sp-fail { width: var(--w, 38px); }
     @media (max-width: 480px) { .shelf .sp { height: 205px; }
-                                 .sp.no-img, .sp.sp-fail { width: calc(var(--w, 60px) * .78); }
+                                 .sp.no-img, .sp.sp-fail { width: calc(var(--w, 38px) * .88); }
                                  .sp-i { max-width: 130px; }
-                                 .sp-t i { font-size: 12.5px; } .sp-t { padding: 9px 2px; } }
+                                 .sp-t i { font-size: calc(var(--fs, 15px) * .76); }
+                                 .sp-t { padding: 10px 2px; } }
     .reading-list { list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 14px; }
     .rl-item { position: relative; background: #fff; border: 2px solid #000; box-shadow: 4px 4px 0 0 #000; padding: 14px 14px 14px 52px; transition: transform .12s, box-shadow .12s; }
     .rl-item:hover { transform: translate(-1px,-1px); box-shadow: 6px 6px 0 0 #000; }
@@ -186,10 +189,11 @@
       <div class="shelf-tabs" role="tablist">
         <button type="button" class="sh-tab on" data-view="spine" aria-pressed="true">▊ Spines</button>
         <button type="button" class="sh-tab" data-view="list" aria-pressed="false">☰ List</button>
+        <button type="button" class="sh-cap" id="shelf-cap" title="Download what you see as an image">⤓ Save image</button>
       </div>
     </div>
     <div class="shelf" id="shelf">
-    <a class="sp" style="--c:hsl(251,45%,45%);--w:57px" href="https://www.aladin.co.kr/shop/wproduct.aspx?ItemId=324233792&amp;partner=openAPI&amp;start=api" rel="nofollow noopener noreferrer" target="_blank" title="It&#x27;s Good to Think of Death in the Morning"><span class="sp-t"><i>It&#x27;s Good to Think of Death in the Morning</i></span><img class="sp-i" src="https://image.yes24.com/goods/122328597/side" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.parentNode.classList.add('sp-fail');this.remove()" onload="if(this.naturalWidth/this.naturalHeight>0.4){this.parentNode.classList.add('sp-fail');this.remove()}"></a>
+    <a class="sp" style="--c:hsl(251,45%,45%);--w:35px;--fs:8px" href="https://www.aladin.co.kr/shop/wproduct.aspx?ItemId=324233792&amp;partner=openAPI&amp;start=api" rel="nofollow noopener noreferrer" target="_blank" title="It&#x27;s Good to Think of Death in the Morning"><span class="sp-t"><i>It&#x27;s Good to Think of Death in the Morning</i></span><img class="sp-i" src="https://image.yes24.com/goods/122328597/side" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.parentNode.classList.add('sp-fail');this.remove()" onload="if(this.naturalWidth/this.naturalHeight>0.4){this.parentNode.classList.add('sp-fail');this.remove()}"></a>
     </div>
     <ol class="reading-list" id="rlist" hidden>
     <li class="rl-item">
@@ -205,14 +209,126 @@
   </section>
   <script>
   (function () {
+    var btn = document.getElementById("shelf-cap");
+    if (!btn) return;
+    var H2C = "https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js";
+    var PROXY = "https://images.weserv.nl/?url=";
+    var PAPER = "#fcfaf5";
+    var FONT = '-apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif';
+
+    function loadH2C() {
+      if (window.html2canvas) return Promise.resolve();
+      return new Promise(function (ok, no) {
+        var s = document.createElement("script");
+        s.src = H2C; s.onload = ok; s.onerror = no;
+        document.head.appendChild(s);
+      });
+    }
+    function proxied(u) {
+      if (!u || u.indexOf("data:") === 0) return u;
+      return PROXY + encodeURIComponent(u.replace(/^https?:\/\//i, "")) + "&output=jpg&q=92";
+    }
+    /* 프록시 주소로 바꾼 뒤 다 받아질 때까지 기다린다. 못 받은 것은 지워서
+       색 책등으로 떨어뜨린다 — 반쯤 그려진 그림이 남는 것보다 낫다. */
+    function swapImages(root) {
+      var undo = [];
+      var jobs = [].slice.call(root.querySelectorAll("img")).map(function (img) {
+        var was = img.getAttribute("src");
+        undo.push([img, was]);
+        return new Promise(function (done) {
+          // 프록시가 느리거나 막혀도 버튼이 영영 멈추지 않게 제한을 둔다
+          var t = setTimeout(function () { img.remove(); done(); }, 6000);
+          var fin = function (drop) {
+            clearTimeout(t);
+            if (drop && img.parentNode) img.remove();
+            done();
+          };
+          img.onload = function () { fin(false); };
+          img.onerror = function () { fin(true); };
+          img.crossOrigin = "anonymous";
+          img.src = proxied(was);
+        });
+      });
+      return { ready: Promise.all(jobs), undo: undo };
+    }
+
+    /* 찍은 그림 둘레에 여백을 두고 제목과 출처를 얹는다 */
+    function compose(inner) {
+      var pad = Math.round(inner.width * 0.035) + 16;
+      var fs = Math.max(26, Math.round(inner.width / 24));
+      var head = Math.round(fs * 2.2), foot = Math.round(fs * 1.9);
+      var c = document.createElement("canvas");
+      c.width = inner.width + pad * 2;
+      c.height = inner.height + head + foot;
+      var g = c.getContext("2d");
+      g.fillStyle = PAPER; g.fillRect(0, 0, c.width, c.height);
+      g.fillStyle = "#111";
+      g.font = "800 " + fs + "px " + FONT;
+      g.textBaseline = "middle"; g.textAlign = "left";
+      g.fillText("Han Gyeong-Rok (Crying Nut) * — 1 books", pad, head / 2);
+      g.drawImage(inner, pad, head);
+      g.fillStyle = "#8a8578";
+      g.font = "600 " + Math.round(fs * 0.62) + "px " + FONT;
+      g.textAlign = "right"; g.textBaseline = "bottom";
+      g.fillText("favorbook.co.kr", c.width - pad, c.height - Math.round(foot * 0.35));
+      return c;
+    }
+
+    btn.addEventListener("click", function () {
+      // 숨어 있는 쪽까지 그려지지 않도록, 지금 보이는 상자 하나만 넘긴다
+      var shelf = document.getElementById("shelf");
+      var view = (shelf && !shelf.hidden) ? shelf : document.getElementById("rlist");
+      if (!view) return;
+      var was = btn.textContent;
+      btn.disabled = true; btn.textContent = "Saving…";
+      var swap = null;
+      loadH2C().then(function () {
+        swap = swapImages(view);
+        return swap.ready;
+      }).then(function () {
+        // 책등은 상자 왼쪽에만 서 있어서 그대로 찍으면 오른쪽이 휑하다.
+        // 내용이 실제로 차지한 폭까지만 자른다.
+        var left = view.getBoundingClientRect().left, right = 0;
+        [].forEach.call(view.children, function (ch) {
+          var b = ch.getBoundingClientRect();
+          if (b.right > right) right = b.right;
+        });
+        var w = right > left ? Math.ceil(right - left) + 4 : view.offsetWidth;
+        return html2canvas(view, {
+          backgroundColor: PAPER, scale: 2, useCORS: true, logging: false,
+          width: Math.min(w, view.offsetWidth), windowWidth: document.documentElement.clientWidth,
+        });
+      }).then(function (inner) {
+        // data: 주소는 길어지면 브라우저가 파일 이름을 무시한다. Blob으로 넘긴다.
+        return new Promise(function (ok) { compose(inner).toBlob(ok, "image/png"); });
+      }).then(function (blob) {
+        var a = document.createElement("a");
+        a.href = URL.createObjectURL(blob);
+        a.download = "bookshelf_han-gyeong-rok-crying-nut.png";
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+        setTimeout(function () { URL.revokeObjectURL(a.href); }, 4000);
+      }).catch(function (e) {
+        console.error(e);
+        alert("Could not create the image. Please try again.");
+      }).then(function () {
+        if (swap) swap.undo.forEach(function (p) { if (p[0].parentNode) p[0].src = p[1]; });
+        btn.disabled = false; btn.textContent = was;
+      });
+    });
+  })();
+  </script>
+  <script>
+  (function () {
     var sec = document.getElementById("shelf-sec");
     if (!sec) return;
     var shelf = document.getElementById("shelf"), list = document.getElementById("rlist");
-    sec.querySelectorAll(".sh-tab").forEach(function (b) {
+    sec.querySelectorAll(".sh-tab[data-view]").forEach(function (b) {
       b.addEventListener("click", function () {
         var spine = b.dataset.view === "spine";
         shelf.hidden = !spine; list.hidden = spine;
-        sec.querySelectorAll(".sh-tab").forEach(function (o) {
+        sec.querySelectorAll(".sh-tab[data-view]").forEach(function (o) {
           var on = o === b;
           o.classList.toggle("on", on);
           o.setAttribute("aria-pressed", on ? "true" : "false");

@@ -795,10 +795,11 @@
     .shelf-head { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
     .shelf-head h2 { margin-bottom: 0; border-bottom: none; padding-bottom: 0; }
     .shelf-tabs { display: flex; gap: 6px; flex: none; }
-    .sh-tab { font: inherit; font-size: 12px; font-weight: 700; cursor: pointer; padding: 5px 12px;
+    .sh-tab, .sh-cap { font: inherit; font-size: 12px; font-weight: 700; cursor: pointer; padding: 5px 12px;
               background: #fff; color: #000; border: 2px solid #000; box-shadow: 2px 2px 0 0 #000; }
-    .sh-tab:hover { background: #fde047; }
+    .sh-tab:hover, .sh-cap:hover { background: #fde047; }
     .sh-tab.on { background: #000; color: #fff; }
+    .sh-cap[disabled] { opacity: .55; cursor: default; }
     .shelf { display: flex; flex-wrap: wrap; align-items: flex-end; gap: 5px 3px;
              margin-top: 18px; padding: 0 6px 10px; border-bottom: 5px solid #000; }
     .shelf[hidden], .reading-list[hidden] { display: none; }
@@ -812,15 +813,16 @@
     .sp-t i { writing-mode: vertical-rl; text-orientation: mixed; font-style: normal;
               white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
               font-family: "KoPubWorld Batang", "Noto Serif KR", Batang, serif;
-              font-size: 15px; font-weight: 500; letter-spacing: .01em; color: #fff;
+              font-size: var(--fs, 15px); font-weight: 500; letter-spacing: .01em; color: #fff;
               text-shadow: 0 1px 2px rgba(0,0,0,.55); }
     .sp-i { position: relative; z-index: 1; display: block;
             height: 100%; width: auto; max-width: 172px; object-fit: contain; }
-    .sp.no-img, .sp.sp-fail { width: var(--w, 60px); }
+    .sp.no-img, .sp.sp-fail { width: var(--w, 38px); }
     @media (max-width: 480px) { .shelf .sp { height: 205px; }
-                                 .sp.no-img, .sp.sp-fail { width: calc(var(--w, 60px) * .78); }
+                                 .sp.no-img, .sp.sp-fail { width: calc(var(--w, 38px) * .88); }
                                  .sp-i { max-width: 130px; }
-                                 .sp-t i { font-size: 12.5px; } .sp-t { padding: 9px 2px; } }
+                                 .sp-t i { font-size: calc(var(--fs, 15px) * .76); }
+                                 .sp-t { padding: 10px 2px; } }
     .reading-list { list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 14px; counter-reset: rl; }
     .rl-item { position: relative; background: #fff; border: 2px solid #000; box-shadow: 4px 4px 0 0 #000; padding: 14px 14px 14px 52px; transition: transform .12s, box-shadow .12s; }
     .rl-item:hover { transform: translate(-1px,-1px); box-shadow: 6px 6px 0 0 #000; }
@@ -888,51 +890,52 @@
       <div class="shelf-tabs" role="tablist">
         <button type="button" class="sh-tab on" data-view="spine" aria-pressed="true">▊ 책등</button>
         <button type="button" class="sh-tab" data-view="list" aria-pressed="false">☰ 목록</button>
+        <button type="button" class="sh-cap" id="shelf-cap" title="지금 보고 있는 쪽을 그림으로 내려받아요">⤓ 이미지 저장</button>
       </div>
     </div>
     <p class="muted">16권은 다른 셀럽도 함께 추천한 책이에요. 목록 보기에서 함께 추천한 셀럽 이름을 볼 수 있어요.</p>
     <div class="shelf" id="shelf">
-    <a class="sp" style="--c:hsl(28,48%,37%);--w:50px" href="https://www.aladin.co.kr/shop/wproduct.aspx?ItemId=4342463&amp;partner=openAPI&amp;start=api" rel="nofollow noopener noreferrer" target="_blank" title="1Q84"><span class="sp-t"><i>1Q84</i></span><img class="sp-i" src="https://image.yes24.com/goods/3489078/side" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.parentNode.classList.add('sp-fail');this.remove()" onload="if(this.naturalWidth/this.naturalHeight>0.4){this.parentNode.classList.add('sp-fail');this.remove()}"></a>
-    <a class="sp no-img" style="--c:hsl(217,54%,29%);--w:59px" href="https://www.aladin.co.kr/shop/wproduct.aspx?ItemId=115091346&amp;partner=openAPI&amp;start=api" rel="nofollow noopener noreferrer" target="_blank" title="감각의 미래"><span class="sp-t"><i>감각의 미래</i></span></a>
-    <a class="sp" style="--c:hsl(68,42%,46%);--w:58px" href="https://www.aladin.co.kr/shop/wproduct.aspx?ItemId=371119291&amp;partner=openAPI&amp;start=api" rel="nofollow noopener noreferrer" target="_blank" title="게임이론"><span class="sp-t"><i>게임이론</i></span><img class="sp-i" src="https://image.yes24.com/goods/152827044/side" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.parentNode.classList.add('sp-fail');this.remove()" onload="if(this.naturalWidth/this.naturalHeight>0.4){this.parentNode.classList.add('sp-fail');this.remove()}"></a>
-    <a class="sp no-img" style="--c:hsl(36,46%,43%);--w:52px" href="https://www.aladin.co.kr/shop/wproduct.aspx?ItemId=2227980&amp;partner=openAPI&amp;start=api" rel="nofollow noopener noreferrer" target="_blank" title="골든 슬럼버"><span class="sp-t"><i>골든 슬럼버</i></span></a>
-    <a class="sp no-img" style="--c:hsl(134,39%,35%);--w:60px" href="https://www.aladin.co.kr/shop/wproduct.aspx?ItemId=101158454&amp;partner=openAPI&amp;start=api" rel="nofollow noopener noreferrer" target="_blank" title="국가란 무엇인가"><span class="sp-t"><i>국가란 무엇인가</i></span></a>
-    <a class="sp no-img" style="--c:hsl(172,50%,28%);--w:62px" href="https://www.aladin.co.kr/shop/wproduct.aspx?ItemId=355165726&amp;partner=openAPI&amp;start=api" rel="nofollow noopener noreferrer" target="_blank" title="나는 나로 살기로 했다"><span class="sp-t"><i>나는 나로 살기로 했다</i></span></a>
-    <a class="sp" style="--c:hsl(24,47%,34%);--w:62px" href="https://www.aladin.co.kr/shop/wproduct.aspx?ItemId=113801752&amp;partner=openAPI&amp;start=api" rel="nofollow noopener noreferrer" target="_blank" title="나를 모르는 나에게"><span class="sp-t"><i>나를 모르는 나에게</i></span><img class="sp-i" src="https://image.yes24.com/goods/44135491/side" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.parentNode.classList.add('sp-fail');this.remove()" onload="if(this.naturalWidth/this.naturalHeight>0.4){this.parentNode.classList.add('sp-fail');this.remove()}"></a>
-    <a class="sp" style="--c:hsl(338,42%,47%);--w:50px" href="https://www.aladin.co.kr/shop/wproduct.aspx?ItemId=307689982&amp;partner=openAPI&amp;start=api" rel="nofollow noopener noreferrer" target="_blank" title="나미야 잡화점의 기적"><span class="sp-t"><i>나미야 잡화점의 기적</i></span><img class="sp-i" src="https://image.yes24.com/goods/116586056/side" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.parentNode.classList.add('sp-fail');this.remove()" onload="if(this.naturalWidth/this.naturalHeight>0.4){this.parentNode.classList.add('sp-fail');this.remove()}"></a>
-    <a class="sp" style="--c:hsl(300,56%,27%);--w:52px" href="https://www.aladin.co.kr/shop/wproduct.aspx?ItemId=135389438&amp;partner=openAPI&amp;start=api" rel="nofollow noopener noreferrer" target="_blank" title="날마다 천체 물리"><span class="sp-t"><i>날마다 천체 물리</i></span><img class="sp-i" src="https://image.yes24.com/goods/59006530/side" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.parentNode.classList.add('sp-fail');this.remove()" onload="if(this.naturalWidth/this.naturalHeight>0.4){this.parentNode.classList.add('sp-fail');this.remove()}"></a>
-    <a class="sp" style="--c:hsl(5,57%,32%);--w:61px" href="https://www.aladin.co.kr/shop/wproduct.aspx?ItemId=292691257" rel="nofollow noopener noreferrer" target="_blank" title="내가 틀릴 수도 있습니다"><span class="sp-t"><i>내가 틀릴 수도 있습니다</i></span><img class="sp-i" src="https://image.yes24.com/goods/108850617/side" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.parentNode.classList.add('sp-fail');this.remove()" onload="if(this.naturalWidth/this.naturalHeight>0.4){this.parentNode.classList.add('sp-fail');this.remove()}"></a>
-    <a class="sp" style="--c:hsl(121,34%,43%);--w:63px" href="https://www.aladin.co.kr/shop/wproduct.aspx?ItemId=311899364" rel="nofollow noopener noreferrer" target="_blank" title="내면소통"><span class="sp-t"><i>내면소통</i></span><img class="sp-i" src="https://image.yes24.com/goods/117643865/side" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.parentNode.classList.add('sp-fail');this.remove()" onload="if(this.naturalWidth/this.naturalHeight>0.4){this.parentNode.classList.add('sp-fail');this.remove()}"></a>
-    <a class="sp" style="--c:hsl(306,54%,31%);--w:50px" href="https://www.aladin.co.kr/shop/wproduct.aspx?ItemId=115614994&amp;partner=openAPI&amp;start=api" rel="nofollow noopener noreferrer" target="_blank" title="노르웨이의 숲"><span class="sp-t"><i>노르웨이의 숲</i></span><img class="sp-i" src="https://image.yes24.com/goods/44499829/side" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.parentNode.classList.add('sp-fail');this.remove()" onload="if(this.naturalWidth/this.naturalHeight>0.4){this.parentNode.classList.add('sp-fail');this.remove()}"></a>
-    <a class="sp no-img" style="--c:hsl(150,42%,44%);--w:70px" href="https://www.aladin.co.kr/shop/wproduct.aspx?ItemId=174275034&amp;partner=openAPI&amp;start=api" rel="nofollow noopener noreferrer" target="_blank" title="다산의 마지막 공부"><span class="sp-t"><i>다산의 마지막 공부</i></span></a>
-    <a class="sp" style="--c:hsl(160,33%,46%);--w:68px" href="https://www.aladin.co.kr/shop/wproduct.aspx?ItemId=105691833&amp;partner=openAPI&amp;start=api" rel="nofollow noopener noreferrer" target="_blank" title="라프 코스터의 재미이론"><span class="sp-t"><i>라프 코스터의 재미이론</i></span><img class="sp-i" src="https://image.yes24.com/goods/37335066/side" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.parentNode.classList.add('sp-fail');this.remove()" onload="if(this.naturalWidth/this.naturalHeight>0.4){this.parentNode.classList.add('sp-fail');this.remove()}"></a>
-    <a class="sp" style="--c:hsl(216,50%,35%);--w:60px" href="https://www.aladin.co.kr/shop/wproduct.aspx?ItemId=72885569&amp;partner=openAPI&amp;start=api" rel="nofollow noopener noreferrer" target="_blank" title="라플라스의 마녀"><span class="sp-t"><i>라플라스의 마녀</i></span><img class="sp-i" src="https://image.yes24.com/goods/23630397/side" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.parentNode.classList.add('sp-fail');this.remove()" onload="if(this.naturalWidth/this.naturalHeight>0.4){this.parentNode.classList.add('sp-fail');this.remove()}"></a>
-    <a class="sp" style="--c:hsl(336,44%,37%);--w:60px" href="https://www.aladin.co.kr/shop/wproduct.aspx?ItemId=56869333&amp;partner=openAPI&amp;start=api" rel="nofollow noopener noreferrer" target="_blank" title="마션"><span class="sp-t"><i>마션</i></span><img class="sp-i" src="https://image.yes24.com/goods/101375809/side" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.parentNode.classList.add('sp-fail');this.remove()" onload="if(this.naturalWidth/this.naturalHeight>0.4){this.parentNode.classList.add('sp-fail');this.remove()}"></a>
-    <a class="sp" style="--c:hsl(38,52%,39%);--w:66px" href="https://www.aladin.co.kr/shop/wproduct.aspx?ItemId=375389788&amp;partner=openAPI&amp;start=api" rel="nofollow noopener noreferrer" target="_blank" title="망델브로가 들려주는 프랙털 이야기"><span class="sp-t"><i>망델브로가 들려주는 프랙털 이야기</i></span><img class="sp-i" src="https://image.yes24.com/goods/161405235/side" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.parentNode.classList.add('sp-fail');this.remove()" onload="if(this.naturalWidth/this.naturalHeight>0.4){this.parentNode.classList.add('sp-fail');this.remove()}"></a>
-    <a class="sp" style="--c:hsl(248,47%,36%);--w:54px" href="https://www.aladin.co.kr/shop/wproduct.aspx?ItemId=92577628&amp;partner=openAPI&amp;start=api" rel="nofollow noopener noreferrer" target="_blank" title="모든 것을 기억하는 남자"><span class="sp-t"><i>모든 것을 기억하는 남자</i></span><img class="sp-i" src="https://image.yes24.com/goods/32400671/side" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.parentNode.classList.add('sp-fail');this.remove()" onload="if(this.naturalWidth/this.naturalHeight>0.4){this.parentNode.classList.add('sp-fail');this.remove()}"></a>
-    <a class="sp" style="--c:hsl(326,57%,40%);--w:54px" href="https://www.aladin.co.kr/shop/wproduct.aspx?ItemId=314636155&amp;partner=openAPI&amp;start=api" rel="nofollow noopener noreferrer" target="_blank" title="무례한 사람에게 웃으며 대처하는 법"><span class="sp-t"><i>무례한 사람에게 웃으며 대처하는 법</i></span><img class="sp-i" src="https://image.yes24.com/goods/118303541/side" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.parentNode.classList.add('sp-fail');this.remove()" onload="if(this.naturalWidth/this.naturalHeight>0.4){this.parentNode.classList.add('sp-fail');this.remove()}"></a>
-    <a class="sp" style="--c:hsl(229,47%,40%);--w:69px" href="https://www.aladin.co.kr/shop/wproduct.aspx?ItemId=332273361&amp;partner=openAPI&amp;start=api" rel="nofollow noopener noreferrer" target="_blank" title="미라클모닝 확장판"><span class="sp-t"><i>미라클모닝 확장판</i></span><img class="sp-i" src="https://image.yes24.com/goods/124574978/side" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.parentNode.classList.add('sp-fail');this.remove()" onload="if(this.naturalWidth/this.naturalHeight>0.4){this.parentNode.classList.add('sp-fail');this.remove()}"></a>
-    <a class="sp no-img" style="--c:hsl(115,32%,33%);--w:51px" href="https://www.aladin.co.kr/shop/wproduct.aspx?ItemId=216792703&amp;partner=openAPI&amp;start=api" rel="nofollow noopener noreferrer" target="_blank" title="소크라테스의 변명·크리톤·파이돈·향연"><span class="sp-t"><i>소크라테스의 변명·크리톤·파이돈·향연</i></span></a>
-    <a class="sp no-img" style="--c:hsl(41,38%,30%);--w:65px" href="https://www.aladin.co.kr/shop/wproduct.aspx?ItemId=178703465&amp;partner=openAPI&amp;start=api" rel="nofollow noopener noreferrer" target="_blank" title="스탠퍼드식 최고의 피로회복법"><span class="sp-t"><i>스탠퍼드식 최고의 피로회복법</i></span></a>
-    <a class="sp" style="--c:hsl(295,53%,28%);--w:61px" href="https://www.aladin.co.kr/shop/wproduct.aspx?ItemId=120057939&amp;partner=openAPI&amp;start=api" rel="nofollow noopener noreferrer" target="_blank" title="신경 끄기의 기술"><span class="sp-t"><i>신경 끄기의 기술</i></span><img class="sp-i" src="https://image.yes24.com/goods/54233937/side" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.parentNode.classList.add('sp-fail');this.remove()" onload="if(this.naturalWidth/this.naturalHeight>0.4){this.parentNode.classList.add('sp-fail');this.remove()}"></a>
-    <a class="sp" style="--c:hsl(104,38%,28%);--w:66px" href="https://www.aladin.co.kr/shop/wproduct.aspx?ItemId=240184371&amp;partner=openAPI&amp;start=api" rel="nofollow noopener noreferrer" target="_blank" title="아인슈타인이 괴델과 함께 걸을 때"><span class="sp-t"><i>아인슈타인이 괴델과 함께 걸을 때</i></span><img class="sp-i" src="https://image.yes24.com/goods/90225942/side" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.parentNode.classList.add('sp-fail');this.remove()" onload="if(this.naturalWidth/this.naturalHeight>0.4){this.parentNode.classList.add('sp-fail');this.remove()}"></a>
-    <a class="sp" style="--c:hsl(33,42%,31%);--w:57px" href="https://www.aladin.co.kr/shop/wproduct.aspx?ItemId=134947105&amp;partner=openAPI&amp;start=api" rel="nofollow noopener noreferrer" target="_blank" title="우울할 땐 뇌 과학"><span class="sp-t"><i>우울할 땐 뇌 과학</i></span><img class="sp-i" src="https://image.yes24.com/goods/58787793/side" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.parentNode.classList.add('sp-fail');this.remove()" onload="if(this.naturalWidth/this.naturalHeight>0.4){this.parentNode.classList.add('sp-fail');this.remove()}"></a>
-    <a class="sp" style="--c:hsl(8,56%,31%);--w:54px" href="https://www.aladin.co.kr/shop/wproduct.aspx?ItemId=570453&amp;partner=openAPI&amp;start=api" rel="nofollow noopener noreferrer" target="_blank" title="우주의 구조"><span class="sp-t"><i>우주의 구조</i></span><img class="sp-i" src="https://image.yes24.com/goods/1511432/side" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.parentNode.classList.add('sp-fail');this.remove()" onload="if(this.naturalWidth/this.naturalHeight>0.4){this.parentNode.classList.add('sp-fail');this.remove()}"></a>
-    <a class="sp" style="--c:hsl(244,32%,38%);--w:50px" href="https://www.aladin.co.kr/shop/wproduct.aspx?ItemId=12840843" rel="nofollow noopener noreferrer" target="_blank" title="월든"><span class="sp-t"><i>월든</i></span><img class="sp-i" src="https://image.yes24.com/goods/5531156/side" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.parentNode.classList.add('sp-fail');this.remove()" onload="if(this.naturalWidth/this.naturalHeight>0.4){this.parentNode.classList.add('sp-fail');this.remove()}"></a>
-    <a class="sp" style="--c:hsl(289,37%,44%);--w:69px" href="https://www.aladin.co.kr/shop/wproduct.aspx?ItemId=48988418" rel="nofollow noopener noreferrer" target="_blank" title="이기적 유전자"><span class="sp-t"><i>이기적 유전자</i></span><img class="sp-i" src="https://image.yes24.com/goods/195804435/side" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.parentNode.classList.add('sp-fail');this.remove()" onload="if(this.naturalWidth/this.naturalHeight>0.4){this.parentNode.classList.add('sp-fail');this.remove()}"></a>
-    <a class="sp" style="--c:hsl(344,53%,26%);--w:70px" href="https://www.aladin.co.kr/shop/wproduct.aspx?ItemId=343492328&amp;partner=openAPI&amp;start=api" rel="nofollow noopener noreferrer" target="_blank" title="잠"><span class="sp-t"><i>잠</i></span><img class="sp-i" src="https://image.yes24.com/goods/129367072/side" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.parentNode.classList.add('sp-fail');this.remove()" onload="if(this.naturalWidth/this.naturalHeight>0.4){this.parentNode.classList.add('sp-fail');this.remove()}"></a>
-    <a class="sp" style="--c:hsl(238,48%,42%);--w:70px" href="https://www.aladin.co.kr/shop/wproduct.aspx?ItemId=48988418" rel="nofollow noopener noreferrer" target="_blank" title="정의란 무엇인가"><span class="sp-t"><i>정의란 무엇인가</i></span><img class="sp-i" src="https://image.yes24.com/goods/15156691/side" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.parentNode.classList.add('sp-fail');this.remove()" onload="if(this.naturalWidth/this.naturalHeight>0.4){this.parentNode.classList.add('sp-fail');this.remove()}"></a>
-    <a class="sp no-img" style="--c:hsl(117,49%,33%);--w:61px" href="https://www.aladin.co.kr/shop/wproduct.aspx?ItemId=135080640&amp;partner=openAPI&amp;start=api" rel="nofollow noopener noreferrer" target="_blank" title="죄의 목소리"><span class="sp-t"><i>죄의 목소리</i></span></a>
-    <a class="sp no-img" style="--c:hsl(162,51%,36%);--w:52px" href="https://www.aladin.co.kr/shop/wproduct.aspx?ItemId=20004432&amp;partner=openAPI&amp;start=api" rel="nofollow noopener noreferrer" target="_blank" title="지금 시작하는 인문학"><span class="sp-t"><i>지금 시작하는 인문학</i></span></a>
-    <a class="sp" style="--c:hsl(222,57%,30%);--w:60px" href="https://www.aladin.co.kr/shop/wproduct.aspx?ItemId=219841523&amp;partner=openAPI&amp;start=api" rel="nofollow noopener noreferrer" target="_blank" title="지적 대화를 위한 넓고 얕은 지식 : 제로 편"><span class="sp-t"><i>지적 대화를 위한 넓고 얕은 지식 : 제로 편</i></span><img class="sp-i" src="https://image.yes24.com/goods/84659792/side" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.parentNode.classList.add('sp-fail');this.remove()" onload="if(this.naturalWidth/this.naturalHeight>0.4){this.parentNode.classList.add('sp-fail');this.remove()}"></a>
-    <a class="sp" style="--c:hsl(173,45%,41%);--w:67px" href="https://www.aladin.co.kr/shop/wproduct.aspx?ItemId=92772351&amp;partner=openAPI&amp;start=api" rel="nofollow noopener noreferrer" target="_blank" title="처음 만나는 뇌과학 이야기"><span class="sp-t"><i>처음 만나는 뇌과학 이야기</i></span><img class="sp-i" src="https://image.yes24.com/goods/32452801/side" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.parentNode.classList.add('sp-fail');this.remove()" onload="if(this.naturalWidth/this.naturalHeight>0.4){this.parentNode.classList.add('sp-fail');this.remove()}"></a>
-    <a class="sp" style="--c:hsl(151,54%,28%);--w:67px" href="https://www.aladin.co.kr/shop/wproduct.aspx?ItemId=338537229" rel="nofollow noopener noreferrer" target="_blank" title="침묵의 봄"><span class="sp-t"><i>침묵의 봄</i></span><img class="sp-i" src="https://image.yes24.com/goods/126181478/side" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.parentNode.classList.add('sp-fail');this.remove()" onload="if(this.naturalWidth/this.naturalHeight>0.4){this.parentNode.classList.add('sp-fail');this.remove()}"></a>
-    <a class="sp" style="--c:hsl(236,37%,36%);--w:70px" href="https://www.aladin.co.kr/shop/wproduct.aspx?ItemId=540789&amp;partner=openAPI&amp;start=api" rel="nofollow noopener noreferrer" target="_blank" title="코스모스"><span class="sp-t"><i>코스모스</i></span><img class="sp-i" src="https://image.yes24.com/goods/2312211/side" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.parentNode.classList.add('sp-fail');this.remove()" onload="if(this.naturalWidth/this.naturalHeight>0.4){this.parentNode.classList.add('sp-fail');this.remove()}"></a>
-    <a class="sp" style="--c:hsl(139,38%,33%);--w:59px" href="https://www.aladin.co.kr/shop/wproduct.aspx?ItemId=74921141&amp;partner=openAPI&amp;start=api" rel="nofollow noopener noreferrer" target="_blank" title="틀리지 않는 법"><span class="sp-t"><i>틀리지 않는 법</i></span><img class="sp-i" src="https://image.yes24.com/goods/26035944/side" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.parentNode.classList.add('sp-fail');this.remove()" onload="if(this.naturalWidth/this.naturalHeight>0.4){this.parentNode.classList.add('sp-fail');this.remove()}"></a>
-    <a class="sp" style="--c:hsl(285,39%,31%);--w:55px" href="https://www.aladin.co.kr/shop/wproduct.aspx?ItemId=345384332&amp;partner=openAPI&amp;start=api" rel="nofollow noopener noreferrer" target="_blank" title="팩트풀니스"><span class="sp-t"><i>팩트풀니스</i></span><img class="sp-i" src="https://image.yes24.com/goods/132226737/side" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.parentNode.classList.add('sp-fail');this.remove()" onload="if(this.naturalWidth/this.naturalHeight>0.4){this.parentNode.classList.add('sp-fail');this.remove()}"></a>
-    <a class="sp" style="--c:hsl(12,53%,45%);--w:66px" href="https://www.aladin.co.kr/shop/wproduct.aspx?ItemId=316296278&amp;partner=openAPI&amp;start=api" rel="nofollow noopener noreferrer" target="_blank" title="프로이트의 의자"><span class="sp-t"><i>프로이트의 의자</i></span><img class="sp-i" src="https://image.yes24.com/goods/118754371/side" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.parentNode.classList.add('sp-fail');this.remove()" onload="if(this.naturalWidth/this.naturalHeight>0.4){this.parentNode.classList.add('sp-fail');this.remove()}"></a>
-    <a class="sp" style="--c:hsl(307,54%,38%);--w:51px" href="https://www.aladin.co.kr/shop/wproduct.aspx?ItemId=238629446&amp;partner=openAPI&amp;start=api" rel="nofollow noopener noreferrer" target="_blank" title="하쿠바산장 살인사건"><span class="sp-t"><i>하쿠바산장 살인사건</i></span><img class="sp-i" src="https://image.yes24.com/goods/90108338/side" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.parentNode.classList.add('sp-fail');this.remove()" onload="if(this.naturalWidth/this.naturalHeight>0.4){this.parentNode.classList.add('sp-fail');this.remove()}"></a>
-    <a class="sp" style="--c:hsl(180,40%,30%);--w:64px" href="https://www.aladin.co.kr/shop/wproduct.aspx?ItemId=3420907&amp;partner=openAPI&amp;start=api" rel="nofollow noopener noreferrer" target="_blank" title="화씨 451"><span class="sp-t"><i>화씨 451</i></span><img class="sp-i" src="https://image.yes24.com/goods/3315954/side" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.parentNode.classList.add('sp-fail');this.remove()" onload="if(this.naturalWidth/this.naturalHeight>0.4){this.parentNode.classList.add('sp-fail');this.remove()}"></a>
+    <a class="sp" style="--c:hsl(28,48%,37%);--w:37px;--fs:15px" href="https://www.aladin.co.kr/shop/wproduct.aspx?ItemId=4342463&amp;partner=openAPI&amp;start=api" rel="nofollow noopener noreferrer" target="_blank" title="1Q84"><span class="sp-t"><i>1Q84</i></span><img class="sp-i" src="https://image.yes24.com/goods/3489078/side" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.parentNode.classList.add('sp-fail');this.remove()" onload="if(this.naturalWidth/this.naturalHeight>0.4){this.parentNode.classList.add('sp-fail');this.remove()}"></a>
+    <a class="sp no-img" style="--c:hsl(217,54%,29%);--w:30px;--fs:15px" href="https://www.aladin.co.kr/shop/wproduct.aspx?ItemId=115091346&amp;partner=openAPI&amp;start=api" rel="nofollow noopener noreferrer" target="_blank" title="감각의 미래"><span class="sp-t"><i>감각의 미래</i></span></a>
+    <a class="sp" style="--c:hsl(68,42%,46%);--w:38px;--fs:15px" href="https://www.aladin.co.kr/shop/wproduct.aspx?ItemId=371119291&amp;partner=openAPI&amp;start=api" rel="nofollow noopener noreferrer" target="_blank" title="게임이론"><span class="sp-t"><i>게임이론</i></span><img class="sp-i" src="https://image.yes24.com/goods/152827044/side" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.parentNode.classList.add('sp-fail');this.remove()" onload="if(this.naturalWidth/this.naturalHeight>0.4){this.parentNode.classList.add('sp-fail');this.remove()}"></a>
+    <a class="sp no-img" style="--c:hsl(36,46%,43%);--w:40px;--fs:15px" href="https://www.aladin.co.kr/shop/wproduct.aspx?ItemId=2227980&amp;partner=openAPI&amp;start=api" rel="nofollow noopener noreferrer" target="_blank" title="골든 슬럼버"><span class="sp-t"><i>골든 슬럼버</i></span></a>
+    <a class="sp no-img" style="--c:hsl(134,39%,35%);--w:36px;--fs:15px" href="https://www.aladin.co.kr/shop/wproduct.aspx?ItemId=101158454&amp;partner=openAPI&amp;start=api" rel="nofollow noopener noreferrer" target="_blank" title="국가란 무엇인가"><span class="sp-t"><i>국가란 무엇인가</i></span></a>
+    <a class="sp no-img" style="--c:hsl(172,50%,28%);--w:33px;--fs:15px" href="https://www.aladin.co.kr/shop/wproduct.aspx?ItemId=355165726&amp;partner=openAPI&amp;start=api" rel="nofollow noopener noreferrer" target="_blank" title="나는 나로 살기로 했다"><span class="sp-t"><i>나는 나로 살기로 했다</i></span></a>
+    <a class="sp" style="--c:hsl(24,47%,34%);--w:38px;--fs:15px" href="https://www.aladin.co.kr/shop/wproduct.aspx?ItemId=113801752&amp;partner=openAPI&amp;start=api" rel="nofollow noopener noreferrer" target="_blank" title="나를 모르는 나에게"><span class="sp-t"><i>나를 모르는 나에게</i></span><img class="sp-i" src="https://image.yes24.com/goods/44135491/side" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.parentNode.classList.add('sp-fail');this.remove()" onload="if(this.naturalWidth/this.naturalHeight>0.4){this.parentNode.classList.add('sp-fail');this.remove()}"></a>
+    <a class="sp" style="--c:hsl(338,42%,47%);--w:39px;--fs:15px" href="https://www.aladin.co.kr/shop/wproduct.aspx?ItemId=307689982&amp;partner=openAPI&amp;start=api" rel="nofollow noopener noreferrer" target="_blank" title="나미야 잡화점의 기적"><span class="sp-t"><i>나미야 잡화점의 기적</i></span><img class="sp-i" src="https://image.yes24.com/goods/116586056/side" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.parentNode.classList.add('sp-fail');this.remove()" onload="if(this.naturalWidth/this.naturalHeight>0.4){this.parentNode.classList.add('sp-fail');this.remove()}"></a>
+    <a class="sp" style="--c:hsl(300,56%,27%);--w:36px;--fs:15px" href="https://www.aladin.co.kr/shop/wproduct.aspx?ItemId=135389438&amp;partner=openAPI&amp;start=api" rel="nofollow noopener noreferrer" target="_blank" title="날마다 천체 물리"><span class="sp-t"><i>날마다 천체 물리</i></span><img class="sp-i" src="https://image.yes24.com/goods/59006530/side" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.parentNode.classList.add('sp-fail');this.remove()" onload="if(this.naturalWidth/this.naturalHeight>0.4){this.parentNode.classList.add('sp-fail');this.remove()}"></a>
+    <a class="sp" style="--c:hsl(5,57%,32%);--w:38px;--fs:13px" href="https://www.aladin.co.kr/shop/wproduct.aspx?ItemId=292691257" rel="nofollow noopener noreferrer" target="_blank" title="내가 틀릴 수도 있습니다"><span class="sp-t"><i>내가 틀릴 수도 있습니다</i></span><img class="sp-i" src="https://image.yes24.com/goods/108850617/side" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.parentNode.classList.add('sp-fail');this.remove()" onload="if(this.naturalWidth/this.naturalHeight>0.4){this.parentNode.classList.add('sp-fail');this.remove()}"></a>
+    <a class="sp" style="--c:hsl(121,34%,43%);--w:34px;--fs:15px" href="https://www.aladin.co.kr/shop/wproduct.aspx?ItemId=311899364" rel="nofollow noopener noreferrer" target="_blank" title="내면소통"><span class="sp-t"><i>내면소통</i></span><img class="sp-i" src="https://image.yes24.com/goods/117643865/side" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.parentNode.classList.add('sp-fail');this.remove()" onload="if(this.naturalWidth/this.naturalHeight>0.4){this.parentNode.classList.add('sp-fail');this.remove()}"></a>
+    <a class="sp" style="--c:hsl(306,54%,31%);--w:39px;--fs:15px" href="https://www.aladin.co.kr/shop/wproduct.aspx?ItemId=115614994&amp;partner=openAPI&amp;start=api" rel="nofollow noopener noreferrer" target="_blank" title="노르웨이의 숲"><span class="sp-t"><i>노르웨이의 숲</i></span><img class="sp-i" src="https://image.yes24.com/goods/44499829/side" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.parentNode.classList.add('sp-fail');this.remove()" onload="if(this.naturalWidth/this.naturalHeight>0.4){this.parentNode.classList.add('sp-fail');this.remove()}"></a>
+    <a class="sp no-img" style="--c:hsl(150,42%,44%);--w:33px;--fs:15px" href="https://www.aladin.co.kr/shop/wproduct.aspx?ItemId=174275034&amp;partner=openAPI&amp;start=api" rel="nofollow noopener noreferrer" target="_blank" title="다산의 마지막 공부"><span class="sp-t"><i>다산의 마지막 공부</i></span></a>
+    <a class="sp" style="--c:hsl(160,33%,46%);--w:41px;--fs:14px" href="https://www.aladin.co.kr/shop/wproduct.aspx?ItemId=105691833&amp;partner=openAPI&amp;start=api" rel="nofollow noopener noreferrer" target="_blank" title="라프 코스터의 재미이론"><span class="sp-t"><i>라프 코스터의 재미이론</i></span><img class="sp-i" src="https://image.yes24.com/goods/37335066/side" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.parentNode.classList.add('sp-fail');this.remove()" onload="if(this.naturalWidth/this.naturalHeight>0.4){this.parentNode.classList.add('sp-fail');this.remove()}"></a>
+    <a class="sp" style="--c:hsl(216,50%,35%);--w:35px;--fs:15px" href="https://www.aladin.co.kr/shop/wproduct.aspx?ItemId=72885569&amp;partner=openAPI&amp;start=api" rel="nofollow noopener noreferrer" target="_blank" title="라플라스의 마녀"><span class="sp-t"><i>라플라스의 마녀</i></span><img class="sp-i" src="https://image.yes24.com/goods/23630397/side" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.parentNode.classList.add('sp-fail');this.remove()" onload="if(this.naturalWidth/this.naturalHeight>0.4){this.parentNode.classList.add('sp-fail');this.remove()}"></a>
+    <a class="sp" style="--c:hsl(336,44%,37%);--w:36px;--fs:15px" href="https://www.aladin.co.kr/shop/wproduct.aspx?ItemId=56869333&amp;partner=openAPI&amp;start=api" rel="nofollow noopener noreferrer" target="_blank" title="마션"><span class="sp-t"><i>마션</i></span><img class="sp-i" src="https://image.yes24.com/goods/101375809/side" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.parentNode.classList.add('sp-fail');this.remove()" onload="if(this.naturalWidth/this.naturalHeight>0.4){this.parentNode.classList.add('sp-fail');this.remove()}"></a>
+    <a class="sp" style="--c:hsl(38,52%,39%);--w:40px;--fs:9px" href="https://www.aladin.co.kr/shop/wproduct.aspx?ItemId=375389788&amp;partner=openAPI&amp;start=api" rel="nofollow noopener noreferrer" target="_blank" title="망델브로가 들려주는 프랙털 이야기"><span class="sp-t"><i>망델브로가 들려주는 프랙털 이야기</i></span><img class="sp-i" src="https://image.yes24.com/goods/161405235/side" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.parentNode.classList.add('sp-fail');this.remove()" onload="if(this.naturalWidth/this.naturalHeight>0.4){this.parentNode.classList.add('sp-fail');this.remove()}"></a>
+    <a class="sp" style="--c:hsl(248,47%,36%);--w:41px;--fs:13px" href="https://www.aladin.co.kr/shop/wproduct.aspx?ItemId=92577628&amp;partner=openAPI&amp;start=api" rel="nofollow noopener noreferrer" target="_blank" title="모든 것을 기억하는 남자"><span class="sp-t"><i>모든 것을 기억하는 남자</i></span><img class="sp-i" src="https://image.yes24.com/goods/32400671/side" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.parentNode.classList.add('sp-fail');this.remove()" onload="if(this.naturalWidth/this.naturalHeight>0.4){this.parentNode.classList.add('sp-fail');this.remove()}"></a>
+    <a class="sp" style="--c:hsl(326,57%,40%);--w:43px;--fs:9px" href="https://www.aladin.co.kr/shop/wproduct.aspx?ItemId=314636155&amp;partner=openAPI&amp;start=api" rel="nofollow noopener noreferrer" target="_blank" title="무례한 사람에게 웃으며 대처하는 법"><span class="sp-t"><i>무례한 사람에게 웃으며 대처하는 법</i></span><img class="sp-i" src="https://image.yes24.com/goods/118303541/side" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.parentNode.classList.add('sp-fail');this.remove()" onload="if(this.naturalWidth/this.naturalHeight>0.4){this.parentNode.classList.add('sp-fail');this.remove()}"></a>
+    <a class="sp" style="--c:hsl(229,47%,40%);--w:31px;--fs:15px" href="https://www.aladin.co.kr/shop/wproduct.aspx?ItemId=332273361&amp;partner=openAPI&amp;start=api" rel="nofollow noopener noreferrer" target="_blank" title="미라클모닝 확장판"><span class="sp-t"><i>미라클모닝 확장판</i></span><img class="sp-i" src="https://image.yes24.com/goods/124574978/side" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.parentNode.classList.add('sp-fail');this.remove()" onload="if(this.naturalWidth/this.naturalHeight>0.4){this.parentNode.classList.add('sp-fail');this.remove()}"></a>
+    <a class="sp no-img" style="--c:hsl(115,32%,33%);--w:30px;--fs:8px" href="https://www.aladin.co.kr/shop/wproduct.aspx?ItemId=216792703&amp;partner=openAPI&amp;start=api" rel="nofollow noopener noreferrer" target="_blank" title="소크라테스의 변명·크리톤·파이돈·향연"><span class="sp-t"><i>소크라테스의 변명·크리톤·파이돈·향연</i></span></a>
+    <a class="sp no-img" style="--c:hsl(41,38%,30%);--w:35px;--fs:11px" href="https://www.aladin.co.kr/shop/wproduct.aspx?ItemId=178703465&amp;partner=openAPI&amp;start=api" rel="nofollow noopener noreferrer" target="_blank" title="스탠퍼드식 최고의 피로회복법"><span class="sp-t"><i>스탠퍼드식 최고의 피로회복법</i></span></a>
+    <a class="sp" style="--c:hsl(295,53%,28%);--w:31px;--fs:15px" href="https://www.aladin.co.kr/shop/wproduct.aspx?ItemId=120057939&amp;partner=openAPI&amp;start=api" rel="nofollow noopener noreferrer" target="_blank" title="신경 끄기의 기술"><span class="sp-t"><i>신경 끄기의 기술</i></span><img class="sp-i" src="https://image.yes24.com/goods/54233937/side" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.parentNode.classList.add('sp-fail');this.remove()" onload="if(this.naturalWidth/this.naturalHeight>0.4){this.parentNode.classList.add('sp-fail');this.remove()}"></a>
+    <a class="sp" style="--c:hsl(104,38%,28%);--w:31px;--fs:9px" href="https://www.aladin.co.kr/shop/wproduct.aspx?ItemId=240184371&amp;partner=openAPI&amp;start=api" rel="nofollow noopener noreferrer" target="_blank" title="아인슈타인이 괴델과 함께 걸을 때"><span class="sp-t"><i>아인슈타인이 괴델과 함께 걸을 때</i></span><img class="sp-i" src="https://image.yes24.com/goods/90225942/side" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.parentNode.classList.add('sp-fail');this.remove()" onload="if(this.naturalWidth/this.naturalHeight>0.4){this.parentNode.classList.add('sp-fail');this.remove()}"></a>
+    <a class="sp" style="--c:hsl(33,42%,31%);--w:40px;--fs:15px" href="https://www.aladin.co.kr/shop/wproduct.aspx?ItemId=134947105&amp;partner=openAPI&amp;start=api" rel="nofollow noopener noreferrer" target="_blank" title="우울할 땐 뇌 과학"><span class="sp-t"><i>우울할 땐 뇌 과학</i></span><img class="sp-i" src="https://image.yes24.com/goods/58787793/side" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.parentNode.classList.add('sp-fail');this.remove()" onload="if(this.naturalWidth/this.naturalHeight>0.4){this.parentNode.classList.add('sp-fail');this.remove()}"></a>
+    <a class="sp" style="--c:hsl(8,56%,31%);--w:42px;--fs:15px" href="https://www.aladin.co.kr/shop/wproduct.aspx?ItemId=570453&amp;partner=openAPI&amp;start=api" rel="nofollow noopener noreferrer" target="_blank" title="우주의 구조"><span class="sp-t"><i>우주의 구조</i></span><img class="sp-i" src="https://image.yes24.com/goods/1511432/side" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.parentNode.classList.add('sp-fail');this.remove()" onload="if(this.naturalWidth/this.naturalHeight>0.4){this.parentNode.classList.add('sp-fail');this.remove()}"></a>
+    <a class="sp" style="--c:hsl(244,32%,38%);--w:34px;--fs:15px" href="https://www.aladin.co.kr/shop/wproduct.aspx?ItemId=12840843" rel="nofollow noopener noreferrer" target="_blank" title="월든"><span class="sp-t"><i>월든</i></span><img class="sp-i" src="https://image.yes24.com/goods/5531156/side" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.parentNode.classList.add('sp-fail');this.remove()" onload="if(this.naturalWidth/this.naturalHeight>0.4){this.parentNode.classList.add('sp-fail');this.remove()}"></a>
+    <a class="sp" style="--c:hsl(289,37%,44%);--w:44px;--fs:15px" href="https://www.aladin.co.kr/shop/wproduct.aspx?ItemId=48988418" rel="nofollow noopener noreferrer" target="_blank" title="이기적 유전자"><span class="sp-t"><i>이기적 유전자</i></span><img class="sp-i" src="https://image.yes24.com/goods/195804435/side" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.parentNode.classList.add('sp-fail');this.remove()" onload="if(this.naturalWidth/this.naturalHeight>0.4){this.parentNode.classList.add('sp-fail');this.remove()}"></a>
+    <a class="sp" style="--c:hsl(344,53%,26%);--w:44px;--fs:15px" href="https://www.aladin.co.kr/shop/wproduct.aspx?ItemId=343492328&amp;partner=openAPI&amp;start=api" rel="nofollow noopener noreferrer" target="_blank" title="잠"><span class="sp-t"><i>잠</i></span><img class="sp-i" src="https://image.yes24.com/goods/129367072/side" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.parentNode.classList.add('sp-fail');this.remove()" onload="if(this.naturalWidth/this.naturalHeight>0.4){this.parentNode.classList.add('sp-fail');this.remove()}"></a>
+    <a class="sp" style="--c:hsl(238,48%,42%);--w:37px;--fs:15px" href="https://www.aladin.co.kr/shop/wproduct.aspx?ItemId=48988418" rel="nofollow noopener noreferrer" target="_blank" title="정의란 무엇인가"><span class="sp-t"><i>정의란 무엇인가</i></span><img class="sp-i" src="https://image.yes24.com/goods/15156691/side" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.parentNode.classList.add('sp-fail');this.remove()" onload="if(this.naturalWidth/this.naturalHeight>0.4){this.parentNode.classList.add('sp-fail');this.remove()}"></a>
+    <a class="sp no-img" style="--c:hsl(117,49%,33%);--w:31px;--fs:15px" href="https://www.aladin.co.kr/shop/wproduct.aspx?ItemId=135080640&amp;partner=openAPI&amp;start=api" rel="nofollow noopener noreferrer" target="_blank" title="죄의 목소리"><span class="sp-t"><i>죄의 목소리</i></span></a>
+    <a class="sp no-img" style="--c:hsl(162,51%,36%);--w:40px;--fs:15px" href="https://www.aladin.co.kr/shop/wproduct.aspx?ItemId=20004432&amp;partner=openAPI&amp;start=api" rel="nofollow noopener noreferrer" target="_blank" title="지금 시작하는 인문학"><span class="sp-t"><i>지금 시작하는 인문학</i></span></a>
+    <a class="sp" style="--c:hsl(222,57%,30%);--w:30px;--fs:8px" href="https://www.aladin.co.kr/shop/wproduct.aspx?ItemId=219841523&amp;partner=openAPI&amp;start=api" rel="nofollow noopener noreferrer" target="_blank" title="지적 대화를 위한 넓고 얕은 지식 : 제로 편"><span class="sp-t"><i>지적 대화를 위한 넓고 얕은 지식 : 제로 편</i></span><img class="sp-i" src="https://image.yes24.com/goods/84659792/side" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.parentNode.classList.add('sp-fail');this.remove()" onload="if(this.naturalWidth/this.naturalHeight>0.4){this.parentNode.classList.add('sp-fail');this.remove()}"></a>
+    <a class="sp" style="--c:hsl(173,45%,41%);--w:34px;--fs:12px" href="https://www.aladin.co.kr/shop/wproduct.aspx?ItemId=92772351&amp;partner=openAPI&amp;start=api" rel="nofollow noopener noreferrer" target="_blank" title="처음 만나는 뇌과학 이야기"><span class="sp-t"><i>처음 만나는 뇌과학 이야기</i></span><img class="sp-i" src="https://image.yes24.com/goods/32452801/side" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.parentNode.classList.add('sp-fail');this.remove()" onload="if(this.naturalWidth/this.naturalHeight>0.4){this.parentNode.classList.add('sp-fail');this.remove()}"></a>
+    <a class="sp" style="--c:hsl(151,54%,28%);--w:42px;--fs:15px" href="https://www.aladin.co.kr/shop/wproduct.aspx?ItemId=338537229" rel="nofollow noopener noreferrer" target="_blank" title="침묵의 봄"><span class="sp-t"><i>침묵의 봄</i></span><img class="sp-i" src="https://image.yes24.com/goods/126181478/side" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.parentNode.classList.add('sp-fail');this.remove()" onload="if(this.naturalWidth/this.naturalHeight>0.4){this.parentNode.classList.add('sp-fail');this.remove()}"></a>
+    <a class="sp" style="--c:hsl(236,37%,36%);--w:44px;--fs:15px" href="https://www.aladin.co.kr/shop/wproduct.aspx?ItemId=540789&amp;partner=openAPI&amp;start=api" rel="nofollow noopener noreferrer" target="_blank" title="코스모스"><span class="sp-t"><i>코스모스</i></span><img class="sp-i" src="https://image.yes24.com/goods/2312211/side" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.parentNode.classList.add('sp-fail');this.remove()" onload="if(this.naturalWidth/this.naturalHeight>0.4){this.parentNode.classList.add('sp-fail');this.remove()}"></a>
+    <a class="sp" style="--c:hsl(139,38%,33%);--w:41px;--fs:15px" href="https://www.aladin.co.kr/shop/wproduct.aspx?ItemId=74921141&amp;partner=openAPI&amp;start=api" rel="nofollow noopener noreferrer" target="_blank" title="틀리지 않는 법"><span class="sp-t"><i>틀리지 않는 법</i></span><img class="sp-i" src="https://image.yes24.com/goods/26035944/side" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.parentNode.classList.add('sp-fail');this.remove()" onload="if(this.naturalWidth/this.naturalHeight>0.4){this.parentNode.classList.add('sp-fail');this.remove()}"></a>
+    <a class="sp" style="--c:hsl(285,39%,31%);--w:42px;--fs:15px" href="https://www.aladin.co.kr/shop/wproduct.aspx?ItemId=345384332&amp;partner=openAPI&amp;start=api" rel="nofollow noopener noreferrer" target="_blank" title="팩트풀니스"><span class="sp-t"><i>팩트풀니스</i></span><img class="sp-i" src="https://image.yes24.com/goods/132226737/side" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.parentNode.classList.add('sp-fail');this.remove()" onload="if(this.naturalWidth/this.naturalHeight>0.4){this.parentNode.classList.add('sp-fail');this.remove()}"></a>
+    <a class="sp" style="--c:hsl(12,53%,45%);--w:34px;--fs:15px" href="https://www.aladin.co.kr/shop/wproduct.aspx?ItemId=316296278&amp;partner=openAPI&amp;start=api" rel="nofollow noopener noreferrer" target="_blank" title="프로이트의 의자"><span class="sp-t"><i>프로이트의 의자</i></span><img class="sp-i" src="https://image.yes24.com/goods/118754371/side" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.parentNode.classList.add('sp-fail');this.remove()" onload="if(this.naturalWidth/this.naturalHeight>0.4){this.parentNode.classList.add('sp-fail');this.remove()}"></a>
+    <a class="sp" style="--c:hsl(307,54%,38%);--w:31px;--fs:15px" href="https://www.aladin.co.kr/shop/wproduct.aspx?ItemId=238629446&amp;partner=openAPI&amp;start=api" rel="nofollow noopener noreferrer" target="_blank" title="하쿠바산장 살인사건"><span class="sp-t"><i>하쿠바산장 살인사건</i></span><img class="sp-i" src="https://image.yes24.com/goods/90108338/side" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.parentNode.classList.add('sp-fail');this.remove()" onload="if(this.naturalWidth/this.naturalHeight>0.4){this.parentNode.classList.add('sp-fail');this.remove()}"></a>
+    <a class="sp" style="--c:hsl(180,40%,30%);--w:41px;--fs:15px" href="https://www.aladin.co.kr/shop/wproduct.aspx?ItemId=3420907&amp;partner=openAPI&amp;start=api" rel="nofollow noopener noreferrer" target="_blank" title="화씨 451"><span class="sp-t"><i>화씨 451</i></span><img class="sp-i" src="https://image.yes24.com/goods/3315954/side" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.parentNode.classList.add('sp-fail');this.remove()" onload="if(this.naturalWidth/this.naturalHeight>0.4){this.parentNode.classList.add('sp-fail');this.remove()}"></a>
     </div>
     <ol class="reading-list" id="rlist" hidden>
     <li class="rl-item">
@@ -1321,11 +1324,11 @@
     var sec = document.getElementById("shelf-sec");
     if (!sec) return;
     var shelf = document.getElementById("shelf"), list = document.getElementById("rlist");
-    sec.querySelectorAll(".sh-tab").forEach(function (b) {
+    sec.querySelectorAll(".sh-tab[data-view]").forEach(function (b) {
       b.addEventListener("click", function () {
         var spine = b.dataset.view === "spine";
         shelf.hidden = !spine; list.hidden = spine;
-        sec.querySelectorAll(".sh-tab").forEach(function (o) {
+        sec.querySelectorAll(".sh-tab[data-view]").forEach(function (o) {
           var on = o === b;
           o.classList.toggle("on", on);
           o.setAttribute("aria-pressed", on ? "true" : "false");
@@ -1338,6 +1341,118 @@
         sec.querySelector('.sh-tab[data-view="list"]').click();
       }
     } catch (e) {}
+  })();
+  </script>
+  <script>
+  (function () {
+    var btn = document.getElementById("shelf-cap");
+    if (!btn) return;
+    var H2C = "https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js";
+    var PROXY = "https://images.weserv.nl/?url=";
+    var PAPER = "#fcfaf5";
+    var FONT = '-apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif';
+
+    function loadH2C() {
+      if (window.html2canvas) return Promise.resolve();
+      return new Promise(function (ok, no) {
+        var s = document.createElement("script");
+        s.src = H2C; s.onload = ok; s.onerror = no;
+        document.head.appendChild(s);
+      });
+    }
+    function proxied(u) {
+      if (!u || u.indexOf("data:") === 0) return u;
+      return PROXY + encodeURIComponent(u.replace(/^https?:\/\//i, "")) + "&output=jpg&q=92";
+    }
+    /* 프록시 주소로 바꾼 뒤 다 받아질 때까지 기다린다. 못 받은 것은 지워서
+       색 책등으로 떨어뜨린다 — 반쯤 그려진 그림이 남는 것보다 낫다. */
+    function swapImages(root) {
+      var undo = [];
+      var jobs = [].slice.call(root.querySelectorAll("img")).map(function (img) {
+        var was = img.getAttribute("src");
+        undo.push([img, was]);
+        return new Promise(function (done) {
+          // 프록시가 느리거나 막혀도 버튼이 영영 멈추지 않게 제한을 둔다
+          var t = setTimeout(function () { img.remove(); done(); }, 6000);
+          var fin = function (drop) {
+            clearTimeout(t);
+            if (drop && img.parentNode) img.remove();
+            done();
+          };
+          img.onload = function () { fin(false); };
+          img.onerror = function () { fin(true); };
+          img.crossOrigin = "anonymous";
+          img.src = proxied(was);
+        });
+      });
+      return { ready: Promise.all(jobs), undo: undo };
+    }
+
+    /* 찍은 그림 둘레에 여백을 두고 제목과 출처를 얹는다 */
+    function compose(inner) {
+      var pad = Math.round(inner.width * 0.035) + 16;
+      var fs = Math.max(26, Math.round(inner.width / 24));
+      var head = Math.round(fs * 2.2), foot = Math.round(fs * 1.9);
+      var c = document.createElement("canvas");
+      c.width = inner.width + pad * 2;
+      c.height = inner.height + head + foot;
+      var g = c.getContext("2d");
+      g.fillStyle = PAPER; g.fillRect(0, 0, c.width, c.height);
+      g.fillStyle = "#111";
+      g.font = "800 " + fs + "px " + FONT;
+      g.textBaseline = "middle"; g.textAlign = "left";
+      g.fillText("페이커의 독서 리스트 41권", pad, head / 2);
+      g.drawImage(inner, pad, head);
+      g.fillStyle = "#8a8578";
+      g.font = "600 " + Math.round(fs * 0.62) + "px " + FONT;
+      g.textAlign = "right"; g.textBaseline = "bottom";
+      g.fillText("favorbook.co.kr", c.width - pad, c.height - Math.round(foot * 0.35));
+      return c;
+    }
+
+    btn.addEventListener("click", function () {
+      // 숨어 있는 쪽까지 그려지지 않도록, 지금 보이는 상자 하나만 넘긴다
+      var shelf = document.getElementById("shelf");
+      var view = (shelf && !shelf.hidden) ? shelf : document.getElementById("rlist");
+      if (!view) return;
+      var was = btn.textContent;
+      btn.disabled = true; btn.textContent = "저장 중…";
+      var swap = null;
+      loadH2C().then(function () {
+        swap = swapImages(view);
+        return swap.ready;
+      }).then(function () {
+        // 책등은 상자 왼쪽에만 서 있어서 그대로 찍으면 오른쪽이 휑하다.
+        // 내용이 실제로 차지한 폭까지만 자른다.
+        var left = view.getBoundingClientRect().left, right = 0;
+        [].forEach.call(view.children, function (ch) {
+          var b = ch.getBoundingClientRect();
+          if (b.right > right) right = b.right;
+        });
+        var w = right > left ? Math.ceil(right - left) + 4 : view.offsetWidth;
+        return html2canvas(view, {
+          backgroundColor: PAPER, scale: 2, useCORS: true, logging: false,
+          width: Math.min(w, view.offsetWidth), windowWidth: document.documentElement.clientWidth,
+        });
+      }).then(function (inner) {
+        // data: 주소는 길어지면 브라우저가 파일 이름을 무시한다. Blob으로 넘긴다.
+        return new Promise(function (ok) { compose(inner).toBlob(ok, "image/png"); });
+      }).then(function (blob) {
+        var a = document.createElement("a");
+        a.href = URL.createObjectURL(blob);
+        a.download = "책장_페이커.png";
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+        setTimeout(function () { URL.revokeObjectURL(a.href); }, 4000);
+      }).catch(function (e) {
+        console.error(e);
+        alert("이미지를 만들지 못했어요. 잠시 뒤 다시 눌러 주세요.");
+      }).then(function () {
+        if (swap) swap.undo.forEach(function (p) { if (p[0].parentNode) p[0].src = p[1]; });
+        btn.disabled = false; btn.textContent = was;
+      });
+    });
   })();
   </script>
 

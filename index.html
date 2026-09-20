@@ -1583,7 +1583,25 @@
   function spineWidth(title) {
     let h = 0;
     for (const ch of String(title || '')) h = (h * 13 + ch.charCodeAt(0)) >>> 0;
-    return 50 + h % 22;
+    // 사진이 붙는 책등은 대개 25~45px이라 색 책등도 그 범위로 맞춘다
+    return 30 + h % 15;
+  }
+  /* 책등에 적는 제목 — 서점 목록 제목을 그대로 쓰면 부제까지 다 들어간다.
+     실제 책등에는 본제목만 찍히므로 부제와 끝에 붙은 판형 표기를 뗀다. */
+  function spineTitle(title) {
+    let t = String(title || '').trim();
+    t = t.split(/\s+[-–—]\s+/)[0];
+    t = t.replace(/\s*[([][^)\]]*[)\]]\s*$/, '').trim();
+    return t || String(title || '').trim();
+  }
+  /* 색 책등 제목은 세로 한 줄이라 글자 수가 곧 길이다.
+     기본 크기로 넘치면 말줄임 대신 글자를 줄여 끝까지 보이게 한다.
+     한 글자가 잡아먹는 높이는 브라우저에서 재서 넣었다. */
+  function spineFontSize(title, boxH) {
+    let em = 0;
+    for (const ch of String(title || '')) em += ch.codePointAt(0) > 0x2E7F ? 1.56 : 0.65;
+    if (!em) return 13;
+    return Math.max(7, Math.min(13, Math.floor((boxH - 22) / em)));
   }
 
   function setModalView(mode) {
@@ -1666,9 +1684,11 @@
         '<span style="position:absolute;inset:0;display:flex;align-items:stretch;'
         + 'justify-content:center;padding:11px 2px;overflow:hidden">'
         + '<i style="writing-mode:vertical-rl;text-orientation:mixed;font-style:normal;'
-        + 'white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-size:12px;'
+        + 'white-space:nowrap;overflow:hidden;text-overflow:ellipsis;'
+        + 'font-family:"KoPubWorld Batang","Noto Serif KR",Batang,serif;'
+        + 'font-size:' + spineFontSize(spineTitle(book.title), 200) + 'px;'
         + 'font-weight:700;color:#fff;text-shadow:0 1px 2px rgba(0,0,0,.55)">'
-        + escHtml(book.title) + '</i></span>' + img;
+        + escHtml(spineTitle(book.title)) + '</i></span>' + img;
       el.addEventListener('click', () => { setModalView('slide'); goSlide(i); });
       shelf.appendChild(el);
     });

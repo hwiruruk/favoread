@@ -229,11 +229,53 @@ SPINE_H = 270                        # 책등 높이는 모두 같게
 
 
 def spine_width(title):
-    """두께도 책마다 조금씩. 얇은 책 두꺼운 책이 섞여야 책장처럼 보인다."""
+    """두께도 책마다 조금씩. 얇은 책 두꺼운 책이 섞여야 책장처럼 보인다.
+
+    예스24 책등 사진이 붙는 책은 사진 비율대로 폭이 정해지고 대개 25~45px이다.
+    사진이 없어 색 책등으로 그리는 책만 이 값을 쓰므로, 옆에 나란히 섰을 때
+    혼자 뚱뚱해 보이지 않게 그 범위에 맞춘다.
+    """
     h = 0
     for ch in (title or ''):
         h = (h * 13 + ord(ch)) & 0xFFFFFFFF
-    return 50 + h % 22                # 50~71px
+    return 30 + h % 15                # 30~44px
+
+
+# 책등에 적는 제목 — 서점 목록 제목을 그대로 쓰면 부제까지 다 들어가
+# "하버드 상위 1퍼센트의 비밀 (2021 리커버 에디션) - 신호를 차단하고…"가 된다.
+# 실제 책등에는 본제목만 찍히므로 부제와 끝에 붙은 판형 표기를 뗀다.
+# 링크와 툴팁에는 원래 제목을 그대로 남긴다.
+SPINE_SUBTITLE_RE = re.compile(r'\s+[-–—]\s+')
+SPINE_TRAILING_RE = re.compile(r'\s*[\(\[][^)\]]*[\)\]]\s*$')
+
+
+def spine_title(title):
+    t = (title or '').strip()
+    t = SPINE_SUBTITLE_RE.split(t)[0]
+    t = SPINE_TRAILING_RE.sub('', t).strip()
+    return t or (title or '').strip()
+
+
+# 색 책등 제목은 세로 한 줄이라 글자 수가 곧 길이다. 기본 크기로 넘치면
+# 말줄임(…) 대신 글자를 줄여 끝까지 보이게 한다.
+SPINE_FS = 15                        # 기본 글자 크기
+SPINE_FS_MIN = 8                     # 이보다 작아지면 읽기 어려우니 여기서 멈춘다
+SPINE_TEXT_PAD = 14                  # .sp-t 위아래 여백
+# 세로쓰기에서 한 글자가 잡아먹는 높이(em). 브라우저에서 직접 재서 넣었다 —
+# 한글은 글자 칸에 줄 간격이 더해져 1em보다 훨씬 크다.
+SPINE_EM_KO = 1.56
+SPINE_EM_ETC = 0.65
+
+
+def spine_font_size(title):
+    """책등 높이 안에 제목이 다 들어가는 글자 크기."""
+    em = 0.0
+    for ch in (title or ''):
+        em += SPINE_EM_KO if ord(ch) > 0x2E7F else SPINE_EM_ETC
+    if em <= 0:
+        return SPINE_FS
+    room = SPINE_H - SPINE_TEXT_PAD * 2
+    return max(SPINE_FS_MIN, min(SPINE_FS, int(room / em)))
 
 
 # 예스24가 책등 사진이 없는 책에 '이미지 준비중' 안내 그림을 대신 내려준다.
@@ -248,6 +290,146 @@ SPINE_IMG_GUARD = (
 )
 
 
+# 책장 이미지로 저장 — 한국어 share 페이지와 /en/ 페이지가 함께 쓴다.
+#
+# 지금 보고 있는 쪽(책등 또는 목록)을 통째로 PNG로 내려받는다. 인물 사진은
+# 넣지 않는다 — 책장만 오려 공유하는 용도다.
+#
+# html2canvas는 처음 누를 때만 받아 온다. 이 페이지는 평소엔 자바스크립트가
+# 거의 없는 정적 페이지라 미리 받아 둘 이유가 없다.
+#
+# 섹션을 통째로 넘기면 html2canvas가 숨겨 둔 쪽(display:none)까지 그려 버려서,
+# 책등을 보고 있는데 목록이 찍히는 일이 있었다. 그래서 '지금 보이는 상자'
+# 하나만 넘기고, 제목과 출처 한 줄은 그린 뒤에 캔버스에 직접 얹는다.
+#
+# 외부 이미지(예스24·알라딘)는 CORS 헤더가 없어 캔버스를 오염시킨다.
+# 그리는 동안만 이미지 프록시 주소로 바꿔 두고 끝나면 되돌린다.
+SHELF_CAPTURE_JS_TEMPLATE = (
+    '  <script>\n'
+    '  (function () {\n'
+    '    var btn = document.getElementById("shelf-cap");\n'
+    '    if (!btn) return;\n'
+    '    var H2C = "https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js";\n'
+    '    var PROXY = "https://images.weserv.nl/?url=";\n'
+    '    var PAPER = "#fcfaf5";\n'
+    '    var FONT = \'-apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif\';\n'
+    '\n'
+    '    function loadH2C() {\n'
+    '      if (window.html2canvas) return Promise.resolve();\n'
+    '      return new Promise(function (ok, no) {\n'
+    '        var s = document.createElement("script");\n'
+    '        s.src = H2C; s.onload = ok; s.onerror = no;\n'
+    '        document.head.appendChild(s);\n'
+    '      });\n'
+    '    }\n'
+    '    function proxied(u) {\n'
+    '      if (!u || u.indexOf("data:") === 0) return u;\n'
+    '      return PROXY + encodeURIComponent(u.replace(/^https?:\\/\\//i, "")) + "&output=jpg&q=92";\n'
+    '    }\n'
+    '    /* 프록시 주소로 바꾼 뒤 다 받아질 때까지 기다린다. 못 받은 것은 지워서\n'
+    '       색 책등으로 떨어뜨린다 — 반쯤 그려진 그림이 남는 것보다 낫다. */\n'
+    '    function swapImages(root) {\n'
+    '      var undo = [];\n'
+    '      var jobs = [].slice.call(root.querySelectorAll("img")).map(function (img) {\n'
+    '        var was = img.getAttribute("src");\n'
+    '        undo.push([img, was]);\n'
+    '        return new Promise(function (done) {\n'
+    '          // 프록시가 느리거나 막혀도 버튼이 영영 멈추지 않게 제한을 둔다\n'
+    '          var t = setTimeout(function () { img.remove(); done(); }, 6000);\n'
+    '          var fin = function (drop) {\n'
+    '            clearTimeout(t);\n'
+    '            if (drop && img.parentNode) img.remove();\n'
+    '            done();\n'
+    '          };\n'
+    '          img.onload = function () { fin(false); };\n'
+    '          img.onerror = function () { fin(true); };\n'
+    '          img.crossOrigin = "anonymous";\n'
+    '          img.src = proxied(was);\n'
+    '        });\n'
+    '      });\n'
+    '      return { ready: Promise.all(jobs), undo: undo };\n'
+    '    }\n'
+    '\n'
+    '    /* 찍은 그림 둘레에 여백을 두고 제목과 출처를 얹는다 */\n'
+    '    function compose(inner) {\n'
+    '      var pad = Math.round(inner.width * 0.035) + 16;\n'
+    '      var fs = Math.max(26, Math.round(inner.width / 24));\n'
+    '      var head = Math.round(fs * 2.2), foot = Math.round(fs * 1.9);\n'
+    '      var c = document.createElement("canvas");\n'
+    '      c.width = inner.width + pad * 2;\n'
+    '      c.height = inner.height + head + foot;\n'
+    '      var g = c.getContext("2d");\n'
+    '      g.fillStyle = PAPER; g.fillRect(0, 0, c.width, c.height);\n'
+    '      g.fillStyle = "#111";\n'
+    '      g.font = "800 " + fs + "px " + FONT;\n'
+    '      g.textBaseline = "middle"; g.textAlign = "left";\n'
+    '      g.fillText(__TITLE__, pad, head / 2);\n'
+    '      g.drawImage(inner, pad, head);\n'
+    '      g.fillStyle = "#8a8578";\n'
+    '      g.font = "600 " + Math.round(fs * 0.62) + "px " + FONT;\n'
+    '      g.textAlign = "right"; g.textBaseline = "bottom";\n'
+    '      g.fillText("favorbook.co.kr", c.width - pad, c.height - Math.round(foot * 0.35));\n'
+    '      return c;\n'
+    '    }\n'
+    '\n'
+    '    btn.addEventListener("click", function () {\n'
+    '      // 숨어 있는 쪽까지 그려지지 않도록, 지금 보이는 상자 하나만 넘긴다\n'
+    '      var shelf = document.getElementById("shelf");\n'
+    '      var view = (shelf && !shelf.hidden) ? shelf : document.getElementById("rlist");\n'
+    '      if (!view) return;\n'
+    '      var was = btn.textContent;\n'
+    '      btn.disabled = true; btn.textContent = __BUSY__;\n'
+    '      var swap = null;\n'
+    '      loadH2C().then(function () {\n'
+    '        swap = swapImages(view);\n'
+    '        return swap.ready;\n'
+    '      }).then(function () {\n'
+    '        // 책등은 상자 왼쪽에만 서 있어서 그대로 찍으면 오른쪽이 휑하다.\n'
+    '        // 내용이 실제로 차지한 폭까지만 자른다.\n'
+    '        var left = view.getBoundingClientRect().left, right = 0;\n'
+    '        [].forEach.call(view.children, function (ch) {\n'
+    '          var b = ch.getBoundingClientRect();\n'
+    '          if (b.right > right) right = b.right;\n'
+    '        });\n'
+    '        var w = right > left ? Math.ceil(right - left) + 4 : view.offsetWidth;\n'
+    '        return html2canvas(view, {\n'
+    '          backgroundColor: PAPER, scale: 2, useCORS: true, logging: false,\n'
+    '          width: Math.min(w, view.offsetWidth), windowWidth: document.documentElement.clientWidth,\n'
+    '        });\n'
+    '      }).then(function (inner) {\n'
+    '        // data: 주소는 길어지면 브라우저가 파일 이름을 무시한다. Blob으로 넘긴다.\n'
+    '        return new Promise(function (ok) { compose(inner).toBlob(ok, "image/png"); });\n'
+    '      }).then(function (blob) {\n'
+    '        var a = document.createElement("a");\n'
+    '        a.href = URL.createObjectURL(blob);\n'
+    '        a.download = __FILE__;\n'
+    '        document.body.appendChild(a);\n'
+    '        a.click();\n'
+    '        a.remove();\n'
+    '        setTimeout(function () { URL.revokeObjectURL(a.href); }, 4000);\n'
+    '      }).catch(function (e) {\n'
+    '        console.error(e);\n'
+    '        alert(__FAIL__);\n'
+    '      }).then(function () {\n'
+    '        if (swap) swap.undo.forEach(function (p) { if (p[0].parentNode) p[0].src = p[1]; });\n'
+    '        btn.disabled = false; btn.textContent = was;\n'
+    '      });\n'
+    '    });\n'
+    '  })();\n'
+    '  </script>\n'
+)
+
+
+def shelf_capture_js(busy, filename, fail, headline):
+    """언어별 문구만 갈아 끼운다."""
+    j = lambda v: json.dumps(v, ensure_ascii=False)
+    return (SHELF_CAPTURE_JS_TEMPLATE
+            .replace('__BUSY__', j(busy))
+            .replace('__FILE__', j(filename))
+            .replace('__FAIL__', j(fail))
+            .replace('__TITLE__', j(headline)))
+
+
 # 책등 보기 · 목록 보기 전환 — 한국어 share 페이지와 /en/ 페이지가 함께 쓴다.
 # 고른 보기는 localStorage에 남겨 다음 페이지에서도 이어진다.
 SHELF_JS = (
@@ -256,11 +438,12 @@ SHELF_JS = (
     '    var sec = document.getElementById("shelf-sec");\n'
     '    if (!sec) return;\n'
     '    var shelf = document.getElementById("shelf"), list = document.getElementById("rlist");\n'
-    '    sec.querySelectorAll(".sh-tab").forEach(function (b) {\n'
+    # data-view가 없는 버튼(이미지 저장)까지 잡으면 누르는 순간 보기가 바뀐다
+    '    sec.querySelectorAll(".sh-tab[data-view]").forEach(function (b) {\n'
     '      b.addEventListener("click", function () {\n'
     '        var spine = b.dataset.view === "spine";\n'
     '        shelf.hidden = !spine; list.hidden = spine;\n'
-    '        sec.querySelectorAll(".sh-tab").forEach(function (o) {\n'
+    '        sec.querySelectorAll(".sh-tab[data-view]").forEach(function (o) {\n'
     '          var on = o === b;\n'
     '          o.classList.toggle("on", on);\n'
     '          o.setAttribute("aria-pressed", on ? "true" : "false");\n'
@@ -283,10 +466,11 @@ SHELF_CSS = (
     '    .shelf-head { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; flex-wrap: wrap; }\n'
     '    .shelf-head h2 { margin-bottom: 0; border-bottom: none; padding-bottom: 0; }\n'
     '    .shelf-tabs { display: flex; gap: 6px; flex: none; }\n'
-    '    .sh-tab { font: inherit; font-size: 12px; font-weight: 700; cursor: pointer; padding: 5px 12px;\n'
+    '    .sh-tab, .sh-cap { font: inherit; font-size: 12px; font-weight: 700; cursor: pointer; padding: 5px 12px;\n'
     '              background: #fff; color: #000; border: 2px solid #000; box-shadow: 2px 2px 0 0 #000; }\n'
-    '    .sh-tab:hover { background: #fde047; }\n'
+    '    .sh-tab:hover, .sh-cap:hover { background: #fde047; }\n'
     '    .sh-tab.on { background: #000; color: #fff; }\n'
+    '    .sh-cap[disabled] { opacity: .55; cursor: default; }\n'
     # 책장 — 책등을 세워 늘어놓는다. 아래 선이 선반이다.
     '    .shelf { display: flex; flex-wrap: wrap; align-items: flex-end; gap: 5px 3px;\n'
     '             margin-top: 18px; padding: 0 6px 10px; border-bottom: 5px solid #000; }\n'
@@ -308,17 +492,19 @@ SHELF_CSS = (
     '    .sp-t i { writing-mode: vertical-rl; text-orientation: mixed; font-style: normal;\n'
     '              white-space: nowrap; overflow: hidden; text-overflow: ellipsis;\n'
     '              font-family: "KoPubWorld Batang", "Noto Serif KR", Batang, serif;\n'
-    '              font-size: 15px; font-weight: 500; letter-spacing: .01em; color: #fff;\n'
+    '              font-size: var(--fs, 15px); font-weight: 500; letter-spacing: .01em; color: #fff;\n'
     '              text-shadow: 0 1px 2px rgba(0,0,0,.55); }\n'
     '    .sp-i { position: relative; z-index: 1; display: block;\n'
     '            height: 100%; width: auto; max-width: 172px; object-fit: contain; }\n'
     # 책등 이미지가 없거나 못 불러오면 색 책등 폭으로 돌아간다
-    '    .sp.no-img, .sp.sp-fail { width: var(--w, 60px); }\n'
+    '    .sp.no-img, .sp.sp-fail { width: var(--w, 38px); }\n'
     # 좁은 화면에서는 한 줄에 너무 적게 들어가므로 조금 줄인다
+    # 좁은 화면에서는 책등을 낮추므로 글자도 그 비율(205/270)만큼 줄인다
     '    @media (max-width: 480px) { .shelf .sp { height: 205px; }\n'
-    '                                 .sp.no-img, .sp.sp-fail { width: calc(var(--w, 60px) * .78); }\n'
+    '                                 .sp.no-img, .sp.sp-fail { width: calc(var(--w, 38px) * .88); }\n'
     '                                 .sp-i { max-width: 130px; }\n'
-    '                                 .sp-t i { font-size: 12.5px; } .sp-t { padding: 9px 2px; } }\n'
+    '                                 .sp-t i { font-size: calc(var(--fs, 15px) * .76); }\n'
+    '                                 .sp-t { padding: 10px 2px; } }\n'
 )
 
 def make_en_celeb_url(name_en):
@@ -1238,13 +1424,14 @@ for name, info in celebs.items():
         # 자바스크립트 없이도 자연스럽게 색 책등으로 떨어진다.
         _spine_url = spine_image_url(b['title'], b['coverUrl'])
         _spine_inner = (
-            '<span class="sp-t"><i>' + esc(b['title']) + '</i></span>'
+            '<span class="sp-t"><i>' + esc(spine_title(b['title'])) + '</i></span>'
             + ('<img class="sp-i" src="' + esc(_spine_url) + '" alt="" loading="lazy" '
                'referrerpolicy="no-referrer"' + SPINE_IMG_GUARD + '>'
                if _spine_url else '')
         )
         _spine_style = ('--c:' + spine_tint(b['title'])
-                        + ';--w:' + str(spine_width(b['title'])) + 'px')
+                        + ';--w:' + str(spine_width(b['title'])) + 'px'
+                        + ';--fs:' + str(spine_font_size(spine_title(b['title']))) + 'px')
         _sp_cls = 'sp' if _spine_url else 'sp no-img'
         if aladin_url:
             spine_html += ('    <a class="' + _sp_cls + '" style="' + _spine_style + '" href="' + aladin_url
@@ -1530,6 +1717,7 @@ for name, info in celebs.items():
         '      <div class="shelf-tabs" role="tablist">\n'
         '        <button type="button" class="sh-tab on" data-view="spine" aria-pressed="true">▊ 책등</button>\n'
         '        <button type="button" class="sh-tab" data-view="list" aria-pressed="false">☰ 목록</button>\n'
+        '        <button type="button" class="sh-cap" id="shelf-cap" title="지금 보고 있는 쪽을 그림으로 내려받아요">⤓ 이미지 저장</button>\n'
         '      </div>\n'
         '    </div>\n'
         + (('    <p class="muted">' + str(shared_count) + '권은 다른 셀럽도 함께 추천한 책이에요. 목록 보기에서 함께 추천한 셀럽 이름을 볼 수 있어요.</p>\n')
@@ -1541,7 +1729,11 @@ for name, info in celebs.items():
         + book_cards_html +
         '    </ol>\n'
         '  </section>\n'
-        + SHELF_JS +
+        + SHELF_JS
+        + shelf_capture_js('저장 중…', '책장_' + safe_filename(sname) + '.png',
+                           '이미지를 만들지 못했어요. 잠시 뒤 다시 눌러 주세요.',
+                           sname + '의 독서 리스트 ' + str(n_books) + '권')
+        +
         '\n'
         + (('  <section>\n'
             '    <h2>📝 ' + esc(sname) + '의 책 취향</h2>\n'
@@ -1748,6 +1940,37 @@ os.makedirs('en/share/book', exist_ok=True)
 
 EN_BASE = BASE + 'en/'
 
+EN_GROUP_ROLES = {
+    'director', 'actor', 'actress', 'comedian', 'singer', 'producer',
+    'writer', 'model', 'mc', 'rapper', 'dj', 'author', 'host',
+}
+EN_GROUP_RE = re.compile(r'\(([^)]+)\)\s*$')
+
+
+def en_group_of(name_en):
+    """영문명 끝 괄호에서 소속을 꺼낸다. 소속이 아니면 None."""
+    m = EN_GROUP_RE.search(name_en or '')
+    if not m:
+        return None
+    # 'Myeong JAEHYUN((BOYNEXTDOOR)' 처럼 괄호가 더 붙은 오타를 흡수한다
+    g = m.group(1).strip().strip('()[]').strip()
+    if not g or g.lower() in EN_GROUP_ROLES:
+        return None
+    return g
+
+
+# 어떤 그룹이 '2명 이상 영문 페이지'를 갖게 되는지 미리 센다 —
+# 멤버 페이지에서 그룹 페이지로 이어 주려면 페이지를 만들기 전에 알아야 한다.
+_en_group_count = {}
+for _n, _i in celebs.items():
+    _ne = _i.get('name_en')
+    if not _ne or not any(b.get('title_en') for b in _i['books']):
+        continue
+    _g = en_group_of(_ne)
+    if _g:
+        _en_group_count[_g] = _en_group_count.get(_g, 0) + 1
+EN_GROUPS_WITH_PAGE = {g for g, c in _en_group_count.items() if c >= 2}
+
 en_celeb_pages = []   # [(slug, name_en, name_ko)]
 en_book_pages  = []   # [(slug, title_en, title_ko)]
 
@@ -1773,6 +1996,10 @@ for name, info in celebs.items():
         *[b.get('title_en') for b in en_books],
         *[b.get('author_en') for b in en_books],
     )
+
+    # 2명 이상 영문 페이지가 있는 그룹이면 그룹 모아보기로 이어 준다
+    _g = en_group_of(name_en)
+    _en_group = _g if _g in EN_GROUPS_WITH_PAGE else None
 
     page_url = make_en_celeb_url(name_en)
     ko_url   = make_celeb_url(name)
@@ -1828,13 +2055,14 @@ for name, info in celebs.items():
         # 없으면 제목에서 만든 색 책등을 쓴다. 제목은 영문으로 적는다.
         _sp_url = spine_image_url(b['title'], b['coverUrl'])
         _sp_inner = (
-            '<span class="sp-t"><i>' + esc(t_plain) + '</i></span>'
+            '<span class="sp-t"><i>' + esc(spine_title(t_plain)) + '</i></span>'
             + ('<img class="sp-i" src="' + esc(_sp_url) + '" alt="" loading="lazy" '
                'referrerpolicy="no-referrer"' + SPINE_IMG_GUARD + '>'
                if _sp_url else '')
         )
         _sp_style = ('--c:' + spine_tint(b['title'])
-                     + ';--w:' + str(spine_width(b['title'])) + 'px')
+                     + ';--w:' + str(spine_width(b['title'])) + 'px'
+                     + ';--fs:' + str(spine_font_size(spine_title(t_plain))) + 'px')
         _sp_cls = 'sp' if _sp_url else 'sp no-img'
         if aladin_url:
             en_spine_html += ('    <a class="' + _sp_cls + '" style="' + _sp_style + '" href="' + aladin_url
@@ -1983,6 +2211,7 @@ for name, info in celebs.items():
         '    h2 { font-size: 19px; margin: 32px 0 12px; padding-bottom: 4px; border-bottom: 2px solid #000; font-weight: 800; }\n'
         '    .intro { background: #fff; border: 2px solid #000; box-shadow: 4px 4px 0 0 #000; padding: 14px 16px; margin: 16px 0 24px; font-size: 15px; }\n'
         '    .celeb-bio { margin: 4px 0 8px; padding: 6px 10px; background: #fff8e7; border-left: 4px solid #000; font-size: 14px; line-height: 1.45; color: #222; }\n'
+        '    .grp-link { margin: 10px 0 0; padding: 8px 12px; background: #fff8e7; border: 2px solid #000; box-shadow: 3px 3px 0 0 #000; font-size: 14px; }\n'
         + SHELF_CSS +
         '    .reading-list { list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 14px; }\n'
         '    .rl-item { position: relative; background: #fff; border: 2px solid #000; box-shadow: 4px 4px 0 0 #000; padding: 14px 14px 14px 52px; transition: transform .12s, box-shadow .12s; }\n'
@@ -2026,12 +2255,18 @@ for name, info in celebs.items():
         + ' read or recommended by <strong>' + esc(name_en) + '</strong> (' + esc(name)
         + '), gathered from interviews, YouTube, and SNS sources.</p>\n'
         '  </section>\n'
-        '  <section id="shelf-sec">\n'
+        + ((
+            '  <p class="grp-link">Part of <strong>' + esc(_en_group) + '</strong> — '
+            '<a href="' + EN_BASE + 'group/' + safe_en_filename(_en_group) + '.html">'
+            'see what every ' + esc(_en_group) + ' member reads →</a></p>\n'
+          ) if _en_group else '')
+        + '  <section id="shelf-sec">\n'
         '    <div class="shelf-head">\n'
         '      <h2>Reading list</h2>\n'
         '      <div class="shelf-tabs" role="tablist">\n'
         '        <button type="button" class="sh-tab on" data-view="spine" aria-pressed="true">\u258a Spines</button>\n'
         '        <button type="button" class="sh-tab" data-view="list" aria-pressed="false">\u2630 List</button>\n'
+        '        <button type="button" class="sh-cap" id="shelf-cap" title="Download what you see as an image">\u2913 Save image</button>\n'
         '      </div>\n'
         '    </div>\n'
         '    <div class="shelf" id="shelf">\n' + en_spine_html +
@@ -2039,6 +2274,9 @@ for name, info in celebs.items():
         '    <ol class="reading-list" id="rlist" hidden>\n' + rows +
         '    </ol>\n'
         '  </section>\n'
+        + shelf_capture_js('Saving…', 'bookshelf_' + slug + '.png',
+                           'Could not create the image. Please try again.',
+                           name_en + ' — ' + str(n) + ' books')
         + SHELF_JS
         + (EN_TR_NOTE_HTML if en_show_tr_note else '')
         + '  <footer>\n'
@@ -2195,6 +2433,198 @@ for title, t_en in book_title_en.items():
 
 print(f"✅ /en/ 책 페이지: {len(en_book_pages)}개")
 
+# ── /en/group/*.html — 그룹별 모아보기 ───────────────────────────────
+#
+# 해외에서는 "what do kpop idols read", "bts members books" 처럼 사람 이름이
+# 아니라 그룹이나 주제로 찾는다. 사람 페이지만 있으면 그런 검색에 걸릴 페이지가
+# 없다. 영문명 끝의 괄호(예: "Karina (aespa)")가 곧 소속이므로 그걸로 묶는다.
+
+en_groups = {}
+for _slug, _name_en, _name_ko in en_celeb_pages:
+    _g = en_group_of(_name_en)
+    if _g:
+        en_groups.setdefault(_g, []).append((_slug, _name_en, _name_ko))
+
+# 혼자인 소속은 그룹이라고 보기 어렵다 (배우 이름 뒤 괄호 등)
+en_groups = {g: ms for g, ms in en_groups.items() if len(ms) >= 2}
+
+os.makedirs('en/group', exist_ok=True)
+en_group_pages = []          # [(slug, group, 멤버 수, 책 수)]
+
+# 영문 책 페이지가 있는 책은 제목에서 그리로 이어 준다 (안쪽 연결)
+en_book_slug_by_ko = {t_ko: bslug for bslug, _t_en, t_ko in en_book_pages}
+
+for _group in sorted(en_groups, key=lambda g: g.lower()):
+    members = sorted(en_groups[_group], key=lambda m: m[1].lower())
+    gslug = safe_en_filename(_group)
+    gurl = EN_BASE + 'group/' + gslug + '.html'
+
+    # 그룹이 읽은 책을 모은다 — 여러 멤버가 읽은 책이 앞으로
+    gbooks = {}
+    for _slug, _name_en, _name_ko in members:
+        for b in celebs[_name_ko]['books']:
+            if not b.get('title_en'):
+                continue
+            t = plain_en(b['title_en'])
+            if not t:
+                continue
+            hit = gbooks.setdefault(t, {'readers': [], 'ko': b['title'],
+                                        'cover': b.get('coverUrl', ''),
+                                        'author': plain_en(b.get('author_en') or b['author'])})
+            if _name_en not in hit['readers']:
+                hit['readers'].append(_name_en)
+            if not hit['cover'] and b.get('coverUrl'):
+                hit['cover'] = b['coverUrl']
+    ranked = sorted(gbooks.items(), key=lambda kv: (-len(kv[1]['readers']), kv[0].lower()))
+    shared = [x for x in ranked if len(x[1]['readers']) >= 2]
+
+    _slug_by_en = {m[1]: m[0] for m in members}
+    member_cards = ''
+    for _slug, _name_en, _name_ko in members:
+        n_b = sum(1 for b in celebs[_name_ko]['books'] if b.get('title_en'))
+        img = celebs[_name_ko]['img']
+        short = EN_GROUP_RE.sub('', _name_en).strip() or _name_en
+        member_cards += (
+            '    <li class="gm">\n'
+            '      <a href="' + EN_BASE + 'share/' + _slug + '.html">\n'
+            + (('        <img src="' + esc(img) + '" alt="' + esc(_name_en)
+                + ' profile photo" loading="lazy" referrerpolicy="no-referrer">\n')
+               if img.startswith('http') else '')
+            + '        <span class="gm-n">' + esc(short) + '</span>\n'
+            '        <span class="gm-c">' + str(n_b) + ' book' + ('s' if n_b != 1 else '') + '</span>\n'
+            '      </a>\n'
+            '    </li>\n'
+        )
+
+    book_rows = ''
+    for t, info in ranked[:40]:
+        who = ', '.join(
+            '<a href="' + EN_BASE + 'share/' + _slug_by_en[r] + '.html">'
+            + esc(EN_GROUP_RE.sub('', r).strip() or r) + '</a>'
+            for r in info['readers'])
+        _bslug = en_book_slug_by_ko.get(info['ko'])
+        _t_html = (('<a href="' + EN_BASE + 'share/book/' + _bslug + '.html">' + esc(t) + '</a>')
+                   if _bslug else esc(t))
+        book_rows += (
+            '    <li class="gb">\n'
+            '      <span class="gb-t">' + _t_html + '</span>\n'
+            + (('      <span class="gb-a">' + esc(info['author']) + '</span>\n') if info['author'] else '')
+            + '      <span class="gb-w">' + who + '</span>\n'
+            '    </li>\n'
+        )
+
+    n_members, n_books = len(members), len(gbooks)
+    # 이름을 두 번 넣으면 길어지고 구글이 제목을 갈아치운다. 짧을 때만 꼬리를 붙인다.
+    g_title = _group + ' Members’ Book Recommendations'
+    _with_tail = g_title + ' — What ' + _group + ' Reads'
+    if len(_with_tail) <= 62:
+        g_title = _with_tail
+    picks = [t for t, _ in ranked[:3]]
+    g_desc = (_group + ' members have read ' + str(n_books) + ' books'
+              + ((', including ' + ', '.join(picks[:-1]) + ' and ' + picks[-1])
+                 if len(picks) >= 2 else (', including ' + picks[0] if picks else ''))
+              + '. Reading lists for all ' + str(n_members)
+              + ' members, with the source for each book.')
+    if len(g_desc) > 165:
+        g_desc = (_group + ' members have read ' + str(n_books) + ' books. Reading lists for all '
+                  + str(n_members) + ' members, with the source for each book.')
+
+    g_ld = clean_none({
+        '@context': 'https://schema.org',
+        '@type': 'CollectionPage',
+        'name': g_title,
+        'url': gurl,
+        'inLanguage': 'en',
+        'description': g_desc,
+        'about': {'@type': 'MusicGroup', 'name': _group},
+        'isPartOf': {'@type': 'WebSite', 'name': 'Favorbook', 'url': EN_BASE},
+        'hasPart': {
+            '@type': 'ItemList',
+            'name': 'Members of ' + _group,
+            'numberOfItems': n_members,
+            'itemListElement': [
+                {'@type': 'ListItem', 'position': i + 1,
+                 'item': {'@type': 'Person', 'name': m[1],
+                          'url': EN_BASE + 'share/' + m[0] + '.html'}}
+                for i, m in enumerate(members)
+            ],
+        },
+    })
+
+    page = (
+        '<!DOCTYPE html>\n'
+        '<html lang="en">\n'
+        '<head>\n' + GA_TAG +
+        '  <meta charset="utf-8">\n'
+        '  <meta name="viewport" content="width=device-width, initial-scale=1">\n'
+        '  <title>' + esc(g_title) + ' | Favorbook</title>\n'
+        '  <meta name="description" content="' + esc(g_desc) + '">\n'
+        '  <meta name="robots" content="index, follow, max-image-preview:large">\n'
+        '  <meta property="og:title" content="' + esc(g_title) + '">\n'
+        '  <meta property="og:description" content="' + esc(g_desc) + '">\n'
+        '  <meta property="og:url" content="' + esc(gurl) + '">\n'
+        '  <meta property="og:type" content="website">\n'
+        '  <meta property="og:locale" content="en_US">\n'
+        '  <meta property="og:site_name" content="Favorbook">\n'
+        '  <meta name="twitter:card" content="summary_large_image">\n'
+        '  <link rel="canonical" href="' + esc(gurl) + '">\n'
+        '  <link rel="icon" href="' + BASE + 'favicon.svg" type="image/svg+xml">\n'
+        '  <script type="application/ld+json">\n  '
+        + json.dumps(g_ld, ensure_ascii=False, indent=2) + '\n  </script>\n'
+        '  <style>\n'
+        '    body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; max-width: 860px; margin: 0 auto; padding: 20px; color: #222; line-height: 1.6; background: #fcfaf5; }\n'
+        '    a { color: #2563eb; text-decoration: none; }\n'
+        '    a:hover { text-decoration: underline; }\n'
+        '    nav { margin: 8px 0 16px; font-size: 13px; }\n'
+        '    h1 { font-size: 27px; margin: 0 0 8px; font-weight: 900; line-height: 1.25; }\n'
+        '    h2 { font-size: 19px; margin: 32px 0 12px; padding-bottom: 4px; border-bottom: 2px solid #000; font-weight: 800; }\n'
+        '    .lead { background: #fff; border: 2px solid #000; box-shadow: 4px 4px 0 0 #000; padding: 14px 16px; margin: 14px 0 6px; font-size: 15px; }\n'
+        '    .members { list-style: none; padding: 0; margin: 0; display: grid; grid-template-columns: repeat(auto-fill, minmax(116px, 1fr)); gap: 12px; }\n'
+        '    .gm a { display: block; color: #000; text-align: center; }\n'
+        '    .gm a:hover { text-decoration: none; }\n'
+        '    .gm img { width: 100%; aspect-ratio: 1/1; object-fit: cover; border: 2px solid #000; box-shadow: 2px 2px 0 0 #000; display: block; background: #f4f4f0; }\n'
+        '    .gm-n { display: block; font-weight: 800; font-size: 13px; margin-top: 6px; line-height: 1.25; }\n'
+        '    .gm-c { display: block; font-size: 11px; color: #666; }\n'
+        '    .gb { background: #fff; border: 2px solid #000; box-shadow: 3px 3px 0 0 #000; padding: 10px 12px; margin-bottom: 10px; list-style: none; }\n'
+        '    .gb-t { display: block; font-weight: 800; font-size: 15px; line-height: 1.3; }\n'
+        '    .gb-a { display: block; font-size: 12px; color: #555; }\n'
+        '    .gb-w { display: block; font-size: 12px; color: #2563eb; margin-top: 3px; }\n'
+        '    .books { padding: 0; margin: 0; }\n'
+        '    footer { margin-top: 40px; padding-top: 16px; border-top: 2px solid #000; font-size: 12px; color: #666; }\n'
+        '  </style>\n'
+        '</head>\n'
+        '<body>\n'
+        '  <nav><a href="' + EN_BASE + '">← Favorbook</a></nav>\n'
+        '  <h1>' + esc(_group) + ' Members’ Book Recommendations</h1>\n'
+        '  <div class="lead">\n'
+        '    <p style="margin:0">Every book we could verify that <strong>' + esc(_group)
+        + '</strong> members have read or recommended — ' + str(n_books) + ' books across '
+        + str(n_members) + ' members'
+        + ((', ' + str(len(shared)) + ' of them read by more than one member') if shared else '')
+        + '. Each entry links to the interview, YouTube video or SNS post it came from.</p>\n'
+        '  </div>\n'
+        '  <h2>Members</h2>\n'
+        '  <ul class="members">\n' + member_cards +
+        '  </ul>\n'
+        '  <h2>Books ' + esc(_group) + ' has read</h2>\n'
+        '  <ul class="books">\n' + book_rows +
+        '  </ul>\n'
+        + (('  <p>Showing the ' + str(min(40, len(ranked))) + ' most shared of '
+            + str(n_books) + ' books. Open a member above for their full list.</p>\n')
+           if len(ranked) > 40 else '')
+        + '  <footer>\n'
+        '    <p>Curated from public Korean-language sources. '
+        '<a href="' + EN_BASE + '">Browse every K-pop idol and Korean celebrity →</a></p>\n'
+        '  </footer>\n'
+        '</body>\n'
+        '</html>'
+    )
+    write_if_changed('en/group/' + gslug + '.html', page)
+    en_group_pages.append((gslug, _group, n_members, n_books))
+
+print(f"✅ /en/group/ 그룹 페이지: {len(en_group_pages)}개")
+
+
 # /en/index.html — 영문 랜딩 페이지 (메인 한국어 사이트와 동일한 Tailwind/Neo 디자인)
 en_celeb_pages.sort(key=lambda x: x[1].lower())  # name_en 알파벳 정렬
 
@@ -2243,6 +2673,66 @@ for slug, t_en, t_ko in sorted(en_book_pages, key=lambda x: x[1].lower()):
     )
 en_book_grid = '\n'.join(en_book_cards)
 
+
+# /en/ 허브에 얹을 '그룹으로 찾기' 칸. 사람 이름을 모르는 해외 방문자는
+# 그룹부터 찾으므로 목록으로 들어가는 문을 하나 더 둔다.
+en_group_chips = '\n'.join(
+    '    <a href="group/' + gslug + '.html" class="flex flex-col justify-between border-2 border-ink '
+    'bg-white shadow-neo-sm hover:shadow-neo hover:-translate-y-0.5 transition-all px-3 py-2.5">\n'
+    '      <span class="font-black text-sm md:text-base leading-tight word-break-keep">' + esc(group) + '</span>\n'
+    '      <span class="font-sans text-[10px] md:text-xs text-muted">' + str(n_m) + ' members · '
+    + str(n_b) + ' books</span>\n'
+    '    </a>'
+    for gslug, group, n_m, n_b in sorted(en_group_pages, key=lambda g: (-g[2], g[1].lower()))
+)
+
+# 해외 방문자가 실제로 치는 문장들. 사람 이름을 모른 채 "what do kpop idols
+# read" 처럼 물어보는 검색이 많은데, 그 말에 답하는 문장이 사이트에 한 줄도
+# 없었다. 눈에 보이는 본문으로 넣고 FAQPage로도 표시해 둔다.
+EN_FAQ = [
+    ('What books do K-pop idols read?',
+     'Across ' + str(len(en_celeb_pages)) + ' idols and actors in this archive, the books that come up '
+     'most are Korean literary fiction and essays — Kim Ae-ran, Baek Se-hee, Kim Cho-yeop — '
+     'alongside translated classics like Demian and The Unbearable Lightness of Being. '
+     'Every reading list on this site is built from a source you can open and check yourself.'),
+    ('Where do these book recommendations come from?',
+     'From public Korean-language sources only: interviews, YouTube and V Live clips, variety shows, '
+     'fan-cafe posts and Instagram stories. A book is added only when the mention can be linked, '
+     'and each entry keeps that link. Nothing is inferred from rumours or fan speculation.'),
+    ('Can I see the books by group instead of by person?',
+     'Yes. The Browse by Group section above opens a page per group — '
+     + ', '.join(g for _, g, _, _ in sorted(en_group_pages, key=lambda g: -g[2])[:4])
+     + ' and more — showing every member side by side and which books more than one member has read.'),
+    ('Are the books available in English?',
+     'Many are. Korean titles are shown with the published English title when one exists. '
+     'Where no official English edition was confirmed, the title is machine-translated and marked '
+     'with an asterisk, with the Korean original shown next to it so you can search for it directly.'),
+    ('How often is the archive updated?',
+     'New entries are added as idols mention books, usually a few times a month. '
+     'The Korean site carries the full archive of ' + str(len(celebs)) + ' people; '
+     'English pages are published for the ones whose names and book titles have been checked.'),
+]
+
+en_faq_html = '\n'.join(
+    '      <details class="border-2 border-ink bg-white shadow-neo-sm px-4 py-3">\n'
+    '        <summary class="font-black text-sm md:text-base cursor-pointer word-break-keep">'
+    + esc(q) + '</summary>\n'
+    '        <p class="text-sm font-bold leading-relaxed text-muted mt-2 word-break-keep">'
+    + esc(a) + '</p>\n'
+    '      </details>'
+    for q, a in EN_FAQ
+)
+
+en_faq_jsonld = json.dumps({
+    '@context': 'https://schema.org',
+    '@type': 'FAQPage',
+    'mainEntity': [
+        {'@type': 'Question', 'name': q,
+         'acceptedAnswer': {'@type': 'Answer', 'text': a}}
+        for q, a in EN_FAQ
+    ],
+}, ensure_ascii=False, indent=2)
+
 en_index_show_tr_note = has_auto_translated(
     *[title_en for _, title_en, _ in en_book_pages],
 )
@@ -2264,9 +2754,9 @@ en_index = (
     '<head>\n' + GA_TAG +
     '  <meta charset="UTF-8">\n'
     '  <meta name="viewport" content="width=device-width, initial-scale=1.0">\n'
-    '  <title>What K-pop Idols Read · BTS, IVE, NewJeans Reading Lists | Favorbook</title>\n'
-    '  <meta name="description" content="Discover what K-pop idols and Korean celebrities are reading. BTS RM, IU, IVE, SEVENTEEN, NewJeans, K-drama actors — verified book recommendations and reading lists from interviews, YouTube, and SNS.">\n'
-    '  <meta name="keywords" content="kpop idol books, what bts reads, BTS reading list, RM book recommendations, IU books, what kpop idols read, kpop star reading, korean celebrity books, k-drama actor books, IVE books, NewJeans reading list, SEVENTEEN books, kpop idol favorite books, korean idol book recommendations, kpop reading list, books read by kpop idols, korean drama actor reading list, kdrama books, kpop fandom books">\n'
+    '  <title>K-pop Star Book Archive — What K-pop Idols Read | Favorbook</title>\n'
+    '  <meta name="description" content="A searchable archive of what K-pop stars read. Reading lists for BTS, aespa, SEVENTEEN, IVE, NewJeans and Korean actors, each book traced to the interview, video or post it came from.">\n'
+    '  <meta name="keywords" content="kpop idol books, what bts reads, BTS reading list, RM book recommendations, IU books, what kpop idols read, kpop star reading, korean celebrity books, k-drama actor books, IVE books, NewJeans reading list, SEVENTEEN books, kpop idol favorite books, korean idol book recommendations, kpop reading list, books read by kpop idols, korean drama actor reading list, kdrama books, kpop fandom books, kpop star book archive, kpop star reading, kpop idol reading list, korean celebrity reading archive, what do kpop idols read">\n'
     '  <meta name="referrer" content="no-referrer">\n'
     '\n'
     '  <link rel="icon" href="' + BASE + 'favicon.svg" type="image/svg+xml">\n'
@@ -2274,8 +2764,8 @@ en_index = (
     '  <link rel="apple-touch-icon" href="' + BASE + 'favicon.png">\n'
     '\n'
     '  <meta property="og:site_name" content="Favorbook">\n'
-    '  <meta property="og:title" content="What K-pop Idols Read · BTS, IVE, NewJeans Reading Lists | Favorbook">\n'
-    '  <meta property="og:description" content="Discover what K-pop idols and Korean celebrities are reading. BTS RM, IU, IVE, SEVENTEEN, NewJeans — verified book recommendations from interviews, YouTube, and SNS.">\n'
+    '  <meta property="og:title" content="K-pop Star Book Archive — What K-pop Idols Read | Favorbook">\n'
+    '  <meta property="og:description" content="A searchable archive of what K-pop stars read — BTS, aespa, SEVENTEEN, IVE, NewJeans and Korean actors, with a source for every book.">\n'
     '  <meta property="og:type" content="website">\n'
     '  <meta property="og:url" content="' + EN_BASE + '">\n'
     '  <meta property="og:image" content="' + BASE + 'og-image.jpg">\n'
@@ -2286,8 +2776,8 @@ en_index = (
     '  <meta property="og:locale:alternate" content="ko_KR">\n'
     '\n'
     '  <meta name="twitter:card" content="summary_large_image">\n'
-    '  <meta name="twitter:title" content="What K-pop Idols Read · BTS, IVE, NewJeans Reading Lists | Favorbook">\n'
-    '  <meta name="twitter:description" content="What are K-pop idols and Korean celebrities reading? BTS RM, IU, IVE, NewJeans, SEVENTEEN, K-drama actors and their book picks.">\n'
+    '  <meta name="twitter:title" content="K-pop Star Book Archive — What K-pop Idols Read | Favorbook">\n'
+    '  <meta name="twitter:description" content="The K-pop star book archive — reading lists for BTS, aespa, SEVENTEEN, IVE, NewJeans and Korean actors.">\n'
     '  <meta name="twitter:image" content="' + BASE + 'og-image.jpg">\n'
     '\n'
     '  <link rel="canonical" href="' + EN_BASE + '">\n'
@@ -2304,6 +2794,7 @@ en_index = (
     '  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>\n'
     '\n'
     '  <script type="application/ld+json">\n  ' + en_index_jsonld + '\n  </script>\n'
+    '  <script type="application/ld+json">\n  ' + en_faq_jsonld + '\n  </script>\n'
     '\n'
     '  <script src="https://cdn.tailwindcss.com"></script>\n'
     '  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;700&display=swap" rel="stylesheet">\n'
@@ -2407,8 +2898,16 @@ en_index = (
     '  <section id="about" class="text-center max-w-2xl mx-auto border-4 border-ink p-6 md:p-8 bg-white shadow-neo w-full">\n'
     '    <h2 class="text-xl md:text-2xl font-black mb-4 bg-neo-pink inline-block px-3 py-1 border-2 border-ink shadow-neo-sm">What is Favorbook?</h2>\n'
     '    <p class="text-sm md:text-base font-bold leading-relaxed text-ink word-break-keep mb-3">\n'
-    '      From K-POP idols like <strong>BTS, IVE, SEVENTEEN</strong> to Korean drama actors and musicians — '
-    '      a curated archive of <strong>books they read, recommend, and call life-changing</strong>.\n'
+    '      Favorbook is a <strong>book archive for K-pop stars</strong>. From idols like '
+    '<strong>BTS, aespa, SEVENTEEN, IVE and NewJeans</strong> to Korean drama actors and musicians, '
+    'it collects the books they have read, recommended, or called life-changing — and keeps the '
+    'receipt for each one.\n'
+    '    </p>\n'
+    '    <p class="text-sm md:text-base font-bold leading-relaxed text-ink word-break-keep mb-3">\n'
+    '      Korean idols talk about books constantly — in live streams, in fan letters, in variety shows — '
+    'but those mentions scatter across Korean-language clips and posts that never reach international fans. '
+    'Every entry here is traced back to the interview, YouTube video or SNS post where the book came up, '
+    'so you can read what they read instead of guessing.\n'
     '    </p>\n'
     '    <p class="text-sm md:text-base font-bold leading-relaxed text-ink word-break-keep">\n'
     '      Only entries with verified sources (YouTube, interviews, SNS) are listed.<br>\n'
@@ -2419,6 +2918,14 @@ en_index = (
        '    </p>\n' if en_index_show_tr_note else '')
     + '  </section>\n'
     '\n'
+    + (('  <section id="groups" class="w-full">\n'
+        '    <h2 class="text-2xl md:text-3xl font-black mb-2 word-break-keep">Browse by Group</h2>\n'
+        '    <p class="text-sm md:text-base font-bold text-muted mb-8 word-break-keep">'
+        'Reading lists for every member, side by side (' + str(len(en_group_pages)) + ' groups).</p>\n'
+        '    <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3 md:gap-4">\n'
+        + en_group_chips + '\n'
+        '    </div>\n'
+        '  </section>\n\n') if en_group_pages else '')
     + ('  <section id="celebs" class="w-full">\n'
        '    <h2 class="text-2xl md:text-3xl font-black mb-2 word-break-keep">Browse Celebrities (' + str(len(en_celeb_pages)) + ')</h2>\n'
        '    <p class="text-sm md:text-base font-bold text-muted mb-8 word-break-keep">Click a card to see their full reading list.</p>\n'
@@ -2436,6 +2943,12 @@ en_index = (
        + en_book_grid + '\n'
        '    </div>\n'
        '  </section>\n\n' if en_book_cards else '')
+    + '  <section id="faq" class="border-t-4 border-ink pt-12 md:pt-16 w-full">\n'
+    '    <h2 class="text-2xl md:text-3xl font-black mb-8 word-break-keep">Questions people ask</h2>\n'
+    '    <div class="flex flex-col gap-3 max-w-3xl">\n'
+    + en_faq_html + '\n'
+    '    </div>\n'
+    '  </section>\n\n'
     + '  <footer class="border-t-4 border-ink pt-8 text-center font-sans text-xs text-muted">\n'
     '    <p>An English gateway to <a href="' + BASE + '" hreflang="ko" class="underline decoration-2 hover:text-ink">최애의 독서</a> — full archive of <strong>' + str(len(celebs)) + ' Korean celebrities</strong> in Korean.</p>\n'
     '  </footer>\n'
@@ -2444,7 +2957,7 @@ en_index = (
     '\n'
     '<script>\n'
     '(function() {\n'
-    '  const ids = ["hero", "about", "celebs", "books"];\n'
+    '  const ids = ["hero", "about", "groups", "celebs", "books", "faq"];\n'
     '  const sections = ids.map(id => document.getElementById(id)).filter(Boolean);\n'
     '  const tabs = document.querySelectorAll(".spy-tab");\n'
     '  if (!sections.length || !tabs.length) return;\n'
@@ -2651,6 +3164,13 @@ for f in os.listdir('en/share/book'):
     if os.path.isfile(p) and f.endswith('.html') and p not in generated_en_book_paths:
         os.remove(p)
         removed += 1
+# 멤버가 빠져 1명이 된 그룹의 페이지도 같이 치운다
+generated_en_group_paths = {'en/group/' + gslug + '.html' for gslug, _, _, _ in en_group_pages}
+for f in os.listdir('en/group'):
+    p = 'en/group/' + f
+    if os.path.isfile(p) and f.endswith('.html') and p not in generated_en_group_paths:
+        os.remove(p)
+        removed += 1
 print(f"✅ 고아 share 파일 정리: {removed}개 삭제")
 
 # ── 6.6. 짧은 공유 링크 파일 (/s/*.html, /s/b/*.html) ───────────────
@@ -2847,6 +3367,15 @@ if en_celeb_pages or en_book_pages:
         '    <priority>0.7</priority>',
         '  </url>',
     ]
+    for gslug, _g, _nm, _nb in en_group_pages:
+        lines += [
+            '  <url>',
+            '    <loc>' + EN_BASE + 'group/' + gslug + '.html</loc>',
+            '    <lastmod>' + lastmod_for('en/group/' + gslug + '.html') + '</lastmod>',
+            '    <changefreq>weekly</changefreq>',
+            '    <priority>0.6</priority>',
+            '  </url>',
+        ]
     for slug, name_en, name_ko in en_celeb_pages:
         url = make_en_celeb_url(name_en)
         lines += [
