@@ -2054,12 +2054,10 @@ async function openCommentsDialog() {
         const j = JSON.parse(content);
         _cmtDoc = j;
         for (const [k, v] of Object.entries(j.comments || {})) {
-          Cmt.items.set(k, {
-            ko: v.ko || '', en: v.en || '',
-            source: v.source || '', grade: v.grade || '',
-            evidence: v.evidence || '', note: v.note || '',
-            status: v.status || 'pending',
-          });
+          // 수집기가 쓴 칸(context·score·outlet)까지 그대로 들고 있는다
+          Cmt.items.set(k, Object.assign({}, v, {
+            ko: v.ko || '', en: v.en || '', status: v.status || 'pending',
+          }));
         }
       }
       Cmt.sha = sha;
@@ -2083,10 +2081,15 @@ function cmtRows() {
   const q = $('#cmtSearch').value.trim().toLowerCase();
   const rows = [];
   for (const [k, v] of Cmt.items) {
-    if (f !== 'all' && (v.status || 'pending') !== f) continue;
+    const status = v.status || 'pending';
+    if (f === 'unwritten') {
+      if (status !== 'pending' || (v.ko || '').trim()) continue;
+    } else if (f !== 'all' && status !== f) continue;
     if (q && !k.toLowerCase().includes(q)) continue;
     rows.push([k, v]);
   }
+  // 수집기가 매긴 점수가 높을수록 추천 이유가 담겼을 확률이 높다. 위에서부터 보면 된다.
+  rows.sort((a, b) => (b[1].score || 0) - (a[1].score || 0));
   return rows;
 }
 
@@ -2114,6 +2117,8 @@ function renderCommentsList() {
         ${v.grade ? `<span class="cmt-grade g-${esc(v.grade.toLowerCase())}" title="${esc(gradeTip)}">${esc(v.grade)}</span>` : ''}
         <b>${esc(celeb)}</b><span class="muted"> · </span>${esc(title)}
         <span class="cmt-state s-${status}">${CMT_LABEL[status]}</span>
+        ${(v.ko || '').trim() ? '' : '<span class="cmt-state s-unwritten">문장 미작성</span>'}
+        ${v.score != null ? `<span class="muted small" title="추천 이유가 담겼을 법한 정도">점수 ${v.score}</span>` : ''}
         ${known ? '' : '<span class="badge">데이터에 없는 항목</span>'}
         <span class="cmt-spacer"></span>
         ${v.source
@@ -2121,6 +2126,8 @@ function renderCommentsList() {
           : '<span class="flag warn">출처 없음</span>'}
       </div>
       ${v.note ? `<p class="cmt-note">⚠ ${esc(v.note)}</p>` : ''}
+      ${v.quote ? `<blockquote class="cmt-quote">${esc(v.quote)}</blockquote>` : ''}
+      ${v.context ? `<details class="cmt-ctx"><summary>앞뒤 문단</summary><p>${esc(v.context)}</p></details>` : ''}
       <div class="cmt-body">
         <label class="small">한국어
           <textarea data-f="ko" rows="2" placeholder="비우면 승인할 수 없습니다">${esc(v.ko)}</textarea>
@@ -2186,15 +2193,11 @@ $('#cmtList').addEventListener('keydown', (e) => {
 async function saveComments() {
   const comments = {};
   for (const [k, v] of Cmt.items) {
-    comments[k] = {
+    comments[k] = Object.assign({}, v, {
       ko: (v.ko || '').trim(),
       en: (v.en || '').trim(),
-      source: v.source || '',
-      grade: v.grade || '',
-      evidence: v.evidence || '',
-      note: v.note || '',
       status: v.status || 'pending',
-    };
+    });
   }
   const payload = {
     ..._cmtDoc,                 // 편집기가 모르는 칸(misses 등)은 그대로 둔다
@@ -2225,6 +2228,44 @@ async function saveComments() {
     btn.disabled = false;
   }
 }
+
+/* 문장 한꺼번에 채우기 — 누락 영문 창과 같은 방식.
+ * 수집기는 인용까지만 모으고, 그걸 한국어·영어 한 줄로 옮기는 건 여기서 한다. */
+$('#cmtCopyBtn').addEventListener('click', async () => {
+  const rows = [];
+  for (const [k, v] of Cmt.items) {
+    if ((v.status || 'pending') !== 'pending' || (v.ko || '').trim()) continue;
+    const [celeb, title] = splitCmtKey(k);
+    rows.push([k, celeb, title, v.outlet || '', v.quote || '', v.context || '']
+      .map(x => String(x).replace(/[\t\n]+/g, ' ')).join('\t'));
+  }
+  if (!rows.length) { toast('문장을 채울 항목이 없습니다', 'err'); return; }
+  const tsv = ['키\t연예인\t도서명\t매체\t인용\t앞뒤문단', ...rows].join('\n');
+  try { await copyToClipboard(tsv); toast(`${rows.length}건 복사됨`, 'ok'); }
+  catch (e) { toast('복사 실패: ' + e.message, 'err'); }
+});
+
+$('#cmtApplyPasteBtn').addEventListener('click', () => {
+  // 키에 '|' 가 들어 있어서 parseTsvLines(파이프도 구분자로 봄)는 못 쓴다. 탭만 본다.
+  const lines = $('#cmtPaste').value.split(/\r?\n/)
+    .map(l => l.trim()).filter(Boolean)
+    .map(l => l.split('\t').map(c => c.trim()))
+    .filter(c => c[0] && c[0] !== '키');
+  let hit = 0, miss = 0;
+  for (const cols of lines) {
+    const [key, ko, en] = cols;
+    const it = Cmt.items.get((key || '').trim());
+    if (!it) { miss++; continue; }
+    if (ko) it.ko = ko.trim();
+    if (en) it.en = en.trim();
+    hit++;
+  }
+  if (!hit) { toast('맞는 키가 없습니다 (첫 칸이 "연예인|도서명" 이어야 합니다)', 'err'); return; }
+  markCmtDirty();
+  renderCommentsList();
+  $('#cmtPaste').value = '';
+  toast(`${hit}건 채움` + (miss ? ` · ${miss}건은 키를 못 찾음` : ''), 'ok');
+});
 
 $('#commentsBtn').addEventListener('click', openCommentsDialog);
 $('#cmtSaveBtn').addEventListener('click', saveComments);
