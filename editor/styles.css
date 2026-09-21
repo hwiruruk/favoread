@@ -342,3 +342,62 @@ dialog.modal::backdrop { background: rgba(0,0,0,0.5); }
 }
 .toast.ok { border-color: var(--ok); }
 .toast.err { border-color: var(--danger); }
+
+/* 코멘트 검수 */
+.book-card .flag.ok  { background: rgba(61,220,151,0.18); color: var(--ok); }
+.book-card .flag.off { background: rgba(255,255,255,0.06); color: var(--muted); }
+
+.cmt-toolbar {
+  display: flex; align-items: center; gap: 8px;
+  margin: 12px 0 10px;
+}
+.cmt-toolbar select { width: 130px; flex: none; }
+.cmt-toolbar input { flex: 1; }
+
+.cmt-list { display: flex; flex-direction: column; gap: 12px; }
+
+.cmt-card {
+  border: 1px solid var(--border); border-radius: 10px;
+  padding: 10px 12px; background: var(--panel-2);
+  border-left: 3px solid var(--warn);
+}
+.cmt-card.approved { border-left-color: var(--ok); }
+.cmt-card.rejected { border-left-color: var(--border); opacity: .65; }
+
+.cmt-head {
+  display: flex; align-items: center; gap: 8px;
+  flex-wrap: wrap; margin-bottom: 8px;
+}
+.cmt-spacer { flex: 1; }
+
+.cmt-grade {
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 20px; height: 20px; border-radius: 5px;
+  font-size: 11px; font-weight: 700; color: #000;
+  background: var(--muted);
+}
+.cmt-grade.g-a { background: var(--ok); }
+.cmt-grade.g-b { background: var(--warn); }
+
+.cmt-state {
+  font-size: 11px; padding: 2px 8px; border-radius: 999px;
+  border: 1px solid var(--border); color: var(--muted);
+}
+.cmt-state.s-approved { color: var(--ok); border-color: var(--ok); }
+.cmt-state.s-rejected { color: var(--danger); border-color: var(--danger); }
+
+.cmt-note {
+  margin: 0 0 8px; font-size: 12px; color: var(--warn);
+}
+
+/* 한/영을 나란히 둬야 대조하며 고치기 쉽다 (좁은 화면에서는 위아래로) */
+.cmt-body { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+@media (max-width: 760px) { .cmt-body { grid-template-columns: 1fr; } }
+.cmt-card label { display: block; margin: 0; color: var(--muted); }
+.cmt-card textarea {
+  width: 100%; margin-top: 3px; resize: vertical; min-height: 58px;
+  font-size: 13px; line-height: 1.5; color: var(--text);
+}
+
+.cmt-actions { display: flex; align-items: center; gap: 6px; margin-top: 4px; }
+.btn.small.ok { border-color: var(--ok); color: var(--ok); }
