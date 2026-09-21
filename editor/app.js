@@ -2010,7 +2010,9 @@ const CMT_NOTE_DEFAULT =
   "편집기의 '💬 코멘트 검수' 창에서 검수한다.";
 
 const commentsDlg = $('#commentsDialog');
-let _cmtNote = '';
+// 파일에는 수집기(tools/fetch_comments.py)가 쓰는 misses 같은 칸도 있다.
+// 편집기가 모르는 칸이라도 그대로 돌려놔야 수집기가 같은 출처를 또 받아오지 않는다.
+let _cmtDoc = {};
 
 const CMT_LABEL = { pending: '미검수', approved: '승인', rejected: '반려' };
 
@@ -2050,7 +2052,7 @@ async function openCommentsDialog() {
       const { content, sha } = await Gh.getFile(COMMENTS_PATH, { allowMissing: true });
       if (content) {
         const j = JSON.parse(content);
-        _cmtNote = j._comment || '';
+        _cmtDoc = j;
         for (const [k, v] of Object.entries(j.comments || {})) {
           Cmt.items.set(k, {
             ko: v.ko || '', en: v.en || '',
@@ -2195,7 +2197,8 @@ async function saveComments() {
     };
   }
   const payload = {
-    _comment: _cmtNote || CMT_NOTE_DEFAULT,
+    ..._cmtDoc,                 // 편집기가 모르는 칸(misses 등)은 그대로 둔다
+    _comment: _cmtDoc._comment || CMT_NOTE_DEFAULT,
     _updated: new Date().toISOString().slice(0, 10),
     comments,
   };
