@@ -2462,8 +2462,7 @@ for name, info in celebs.items():
 
     # 제목에 이름을 세 번 넣으면 구글이 키워드 반복으로 보고 제목을 갈아치운다.
     # 한 번만 쓰고, 검색어와 맞닿는 말(reading list · books)만 남긴다.
-    title_text = (_name_pl + ' Reading List — ' + str(n)
-                  + (' Books' if n != 1 else ' Book'))
+    title_text = _name_pl + ' Books — Full Reading List (' + str(n) + ')'
 
     # 설명도 이름 한 번. 대신 실제 책 제목 세 권을 넣는다 —
     # 구글이 meta description을 버리고 본문에서 목록을 긁어가던 자리를
@@ -2501,6 +2500,50 @@ for name, info in celebs.items():
     en_kw += ['korean celebrity books', 'korean celebrity reading list', 'books from korea']
     _seen_kw = set()
     en_kw = [k for k in en_kw if not (k.lower() in _seen_kw or _seen_kw.add(k.lower()))]
+
+    _picks_all = [plain_en(b['title_en']) for b in en_books if b.get('title_en')]
+    _picks_all = [t for t in _picks_all if t]
+    _picks = _picks_all[:5]
+    if len(_picks) >= 2:
+        _picks_txt = ', '.join(_picks[:-1]) + ' and ' + _picks[-1]
+    else:
+        _picks_txt = _picks[0] if _picks else ''
+    if len(_picks_all) > 5:
+        _picks_txt += ', and ' + str(len(_picks_all) - 5) + ' more'
+
+    en_faq_items = []
+    if _picks_txt:
+        en_faq_items.append((
+            'What books does ' + _name_pl + ' recommend?',
+            _name_pl + "'s book recommendations in this archive: " + _picks_txt
+            + '. Every book on this page is linked to the interview, YouTube video or SNS post '
+              'where ' + _name_pl + ' talked about it.'))
+    en_faq_items.append((
+        'How many books has ' + _name_pl + ' read?',
+        _name_pl + ' has ' + str(n) + ' book' + ('s' if n != 1 else '')
+        + ' recorded here so far, read or recommended in public Korean-language sources. '
+          'The list grows whenever a new book mention turns up.'))
+    en_faq_items.append((
+        'Where do these ' + _name_pl + ' book recommendations come from?',
+        'Public sources only — interviews, YouTube clips, variety shows, fan-cafe posts and SNS. '
+        'A book is added to this reading list only when the mention can be linked, and the link '
+        'stays on the entry so you can check it yourself.'))
+
+    en_faq_html = ''.join(
+        '    <div class="pfaq-q">\n'
+        '      <h3>' + esc(q) + '</h3>\n'
+        '      <p>' + esc(a) + '</p>\n'
+        '    </div>\n'
+        for q, a in en_faq_items)
+    en_faq_ld = {
+        '@context': 'https://schema.org',
+        '@type': 'FAQPage',
+        'mainEntity': [
+            {'@type': 'Question', 'name': q,
+             'acceptedAnswer': {'@type': 'Answer', 'text': a}}
+            for q, a in en_faq_items
+        ],
+    }
 
     # 읽은 책을 Book 항목으로 함께 내보낸다. 인물과 책이 이어져 있다는 걸
     # 검색엔진이 본문 파싱에 기대지 않고 바로 알 수 있다.
@@ -2589,6 +2632,8 @@ for name, info in celebs.items():
         + json.dumps(json_ld, ensure_ascii=False, indent=2) + '\n  </script>\n'
         '  <script type="application/ld+json">\n  '
         + json.dumps(breadcrumb_ld, ensure_ascii=False, indent=2) + '\n  </script>\n'
+        '  <script type="application/ld+json">\n  '
+        + json.dumps(en_faq_ld, ensure_ascii=False, indent=2) + '\n  </script>\n'
         # 책등 제목에 쓰는 바탕체. font-display:swap이라 글자는 바로 보이고
         # 실제로 쓰는 굵기 한 벌만 받는다.
         '  <link rel="stylesheet" href="' + BASE + 'assets/fonts/kopubworld.css">\n'
@@ -2607,6 +2652,10 @@ for name, info in celebs.items():
         '    .intro { background: #fff; border: 2px solid #000; box-shadow: 4px 4px 0 0 #000; padding: 14px 16px; margin: 16px 0 24px; font-size: 15px; }\n'
         '    .celeb-bio { margin: 4px 0 8px; padding: 6px 10px; background: #fff8e7; border-left: 4px solid #000; font-size: 14px; line-height: 1.45; color: #222; }\n'
         '    .celeb-alias { margin: 2px 0 0; font-size: 12px; color: #888; }\n'
+        '    .pfaq { margin-top: 40px; }\n'
+        '    .pfaq-q { background: #fff; border: 2px solid #000; box-shadow: 3px 3px 0 0 #000; padding: 12px 14px; margin-bottom: 12px; }\n'
+        '    .pfaq-q h3 { font-size: 15px; font-weight: 800; margin: 0 0 6px; }\n'
+        '    .pfaq-q p { font-size: 14px; margin: 0; color: #333; }\n'
         '    .grp-link { margin: 10px 0 0; padding: 8px 12px; background: #fff8e7; border: 2px solid #000; box-shadow: 3px 3px 0 0 #000; font-size: 14px; }\n'
         + SHELF_CSS +
         '    .reading-list { list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 14px; }\n'
@@ -2640,7 +2689,8 @@ for name, info in celebs.items():
         '  <header class="celeb-header">\n'
         '    <img class="celeb-img" src="' + esc(img) + '" alt="' + esc(_name_pl) + ' profile photo" width="120" height="120">\n'
         '    <div>\n'
-        '      <h1>' + esc(name_en) + ' <span style="font-weight:400;color:#666;font-size:18px">(' + esc(name) + ')</span></h1>\n'
+        '      <h1>' + esc(name_en) + ' Books<span style="font-weight:400;color:#666;font-size:18px"> · '
+        + esc(name) + ' 책</span></h1>\n'
         # 소개 한 줄이 없으면 직업이라도 적는다. 이 줄이 없으면 검색엔진이
         # 이 사람이 배우인지 아이돌인지 알 방법이 페이지 안에 하나도 없다.
         + (('      <p class="celeb-bio">' + esc(get_bio(name, 'en')) + '</p>\n')
@@ -2671,10 +2721,10 @@ for name, info in celebs.items():
           ) if _role_hub else '')
         + '  <section id="shelf-sec">\n'
         '    <div class="shelf-head">\n'
-        '      <h2>Reading list</h2>\n'
+        '      <h2>Books ' + esc(_name_pl) + ' has read (' + str(n) + ')</h2>\n'
         '      <div class="shelf-tabs" role="tablist">\n'
-        '        <button type="button" class="sh-tab on" data-view="spine" aria-pressed="true">\u258a Spines</button>\n'
-        '        <button type="button" class="sh-tab" data-view="list" aria-pressed="false">\u2630 List</button>\n'
+        '        <button type="button" class="sh-tab on" data-view="spine" aria-pressed="true">\u258a Book spines</button>\n'
+        '        <button type="button" class="sh-tab" data-view="list" aria-pressed="false">\u2630 Book list</button>\n'
         '        <button type="button" class="sh-cap" id="shelf-cap" title="Download what you see as an image">\u2913 Save image</button>\n'
         '      </div>\n'
         '    </div>\n'
@@ -2688,9 +2738,14 @@ for name, info in celebs.items():
                            _name_pl + ' — ' + str(n) + ' books')
         + SHELF_JS
         + (EN_TR_NOTE_HTML if en_show_tr_note else '')
+        + '  <section class="pfaq">\n'
+        '    <h2>' + esc(_name_pl) + ' book recommendations — FAQ</h2>\n'
+        + en_faq_html
+        + '  </section>\n'
         + '  <footer>\n'
         '    <p>Curated from public Korean-language sources. Korean original page: <a href="'
         + esc(ko_url) + '" hreflang="ko">' + esc(name) + '</a>.</p>\n'
+        '    <p><a href="' + EN_BASE + '">Browse more Korean celebrity book lists →</a></p>\n'
         '  </footer>\n'
         + COPY_BTN_JS +
         '</body>\n'
