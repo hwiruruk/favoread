@@ -1,0 +1,98 @@
+name: Fetch Book Comments
+
+# 출처를 읽고 책이 언급된 대목을 그대로 떠와 data/comments.json 에 채운다.
+# GitHub 웹에서 Actions → 이 워크플로 → "Run workflow" 버튼으로 돌린다.
+# 터미널도, 파이썬 설치도, API 키도 필요 없다. 결과는 PR로 올라온다.
+#
+# 이 워크플로는 원문 인용만 모은다. 그걸 읽고 한국어·영어 한 줄로 옮기는 일은
+# 편집기(/editor/)의 "💬 코멘트 검수" 창에서 한다.
+# 자세한 설명은 tools/COMMENTS.md 참고.
+
+on:
+  workflow_dispatch:
+    inputs:
+      limit:
+        description: '이번에 읽을 출처 수 (0 = 전부). 처음엔 10 정도로 시험해 보세요'
+        required: false
+        default: '10'
+      dry_run:
+        description: '연습 모드 — 결과만 보고 파일은 안 바꿈'
+        required: false
+        default: true
+        type: boolean
+      refresh:
+        description: '지난번에 못 읽은 출처도 다시 조회'
+        required: false
+        default: false
+        type: boolean
+      max_books:
+        description: '한 출처가 이 권수를 넘게 담고 있으면 건너뜀 (목록글에는 이유가 없음)'
+        required: false
+        default: '3'
+
+jobs:
+  comments:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pull-requests: write
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: 출처 읽고 언급된 대목 모으기
+        run: |
+          ARGS="--max-books ${{ github.event.inputs.max_books }}"
+          LIMIT="${{ github.event.inputs.limit }}"
+          if [ -n "$LIMIT" ] && [ "$LIMIT" != "0" ]; then ARGS="$ARGS --limit $LIMIT"; fi
+          if [ "${{ github.event.inputs.dry_run }}" = "true" ]; then ARGS="$ARGS --dry-run"; fi
+          if [ "${{ github.event.inputs.refresh }}" = "true" ]; then ARGS="$ARGS --refresh"; fi
+          echo "실행: python3 tools/fetch_comments.py $ARGS"
+          python3 tools/fetch_comments.py $ARGS
+
+      - name: 바뀐 게 있는지 확인
+        id: diff
+        run: |
+          if git diff --quiet -- data/comments.json; then
+            echo "changed=false" >> $GITHUB_OUTPUT
+            echo "바뀐 내용이 없습니다 (연습 모드였거나 새로 찾은 게 없음)."
+          else
+            echo "changed=true" >> $GITHUB_OUTPUT
+          fi
+
+      - name: PR 만들기
+        if: steps.diff.outputs.changed == 'true'
+        uses: peter-evans/create-pull-request@v6
+        with:
+          commit-message: "chore: 출처에서 언급된 대목 수집"
+          title: "chore: 출처에서 언급된 대목 수집 (문장 작성 필요)"
+          body: |
+            ## 출처에서 언급된 대목 수집
+
+            `tools/fetch_comments.py` 가 출처를 읽고 책이 언급된 대목을
+            그대로 떠온 것입니다. 바뀐 파일은 `data/comments.json` 하나뿐이에요.
+
+            ### 중요 — 이대로 머지해도 사이트에는 안 나갑니다
+            새 항목은 `ko`·`en` 이 비어 있고 `status: "pending"` 입니다.
+            편집기의 **💬 코멘트 검수** 창에서 문장을 채우고 승인해야 노출됩니다.
+            그러니 먼저 머지하고 문장은 천천히 쓰셔도 됩니다.
+
+            ### 보는 법
+            - `quote` — 근거가 될 만한 한 대목. 따옴표 안의 발언이 있으면 그것,
+              없으면 제목이 들어간 문장입니다
+            - `context` — 그 앞뒤까지 붙인 문단. 문장을 쓸 때 읽는 용도입니다
+            - `score` — 추천 이유가 담겼을 법한 정도. 높은 것부터 보면 됩니다.
+              0이면 제목만 스쳐 지나간 경우가 많습니다
+            - `misses` — 못 읽었거나 그 책 얘기가 없던 출처와 이유.
+              다음 실행 때 건너뜁니다 (`refresh` 를 켜면 다시 시도)
+
+            ### 쓸 만한 대목이 아니면
+            편집기에서 **반려**하세요. 항목은 남지만 노출되지 않고,
+            다음 실행 때 다시 올라오지 않습니다.
+          branch: chore/comments
+          delete-branch: true
+          base: ${{ github.ref_name }}

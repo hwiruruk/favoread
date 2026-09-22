@@ -34,6 +34,18 @@ const State = {
   bookEditing: null,    // { celebName, bookIndex|null }
 };
 
+/* 자동 생성 코멘트의 검수 상태 (data/comments.json).
+ * 책 카드에서도 상태를 표시해야 해서 State 옆에 둔다 — 실제 UI는
+ * 파일 아래쪽 "코멘트 검수" 절에 있다. */
+const Cmt = {
+  items: new Map(),     // "연예인|도서명" -> { ko, en, source, grade, evidence, note, status }
+  sha: null,
+  loaded: false,
+  dirty: false,
+  key: (celeb, title) => `${celeb}|${title}`,
+  get(celeb, title) { return this.loaded ? this.items.get(this.key(celeb, title)) : null; },
+};
+
 /* -------------------- Helpers -------------------- */
 const $ = (s, r=document) => r.querySelector(s);
 const $$ = (s, r=document) => Array.from(r.querySelectorAll(s));
@@ -868,13 +880,18 @@ function renderBooks() {
     const flagEn = (!b.title_en || !b.author_en) ? '<span class="flag warn">EN 누락</span>' : '';
     const flagCv = !b.cover ? '<span class="flag warn">표지 없음</span>' : '';
     const flagSrc = !b.source ? '<span class="flag warn">출처 없음</span>' : '';
+    const cs = Cmt.get(State.selected, b.title);
+    const flagCmt = !cs ? '' : (
+      cs.status === 'approved' ? '<span class="flag ok">💬 코멘트 승인</span>'
+      : cs.status === 'rejected' ? '<span class="flag off">💬 코멘트 반려</span>'
+      : '<span class="flag warn">💬 코멘트 검수 대기</span>');
     html += `<div class="book-card" data-idx="${i}">
       <div class="cv">${b.cover ? `<img src="${esc(b.cover)}" referrerpolicy="no-referrer" alt="">` : ''}</div>
       <div class="meta">
         <p class="b-title">${esc(b.title)}</p>
         <p class="b-author">${esc(b.author)} ${b.author_en ? `<span class="muted">/ ${esc(b.author_en)}</span>` : ''}</p>
         <p class="b-pub">${esc(b.publisher || '')}</p>
-        <div class="b-flags">${flagEn}${flagCv}${flagSrc}</div>
+        <div class="b-flags">${flagEn}${flagCv}${flagSrc}${flagCmt}</div>
         <div class="actions">
           <button class="btn small" data-act="edit">편집</button>
           ${b.link ? `<a class="btn small" href="${esc(b.link)}" target="_blank" rel="noopener">알라딘</a>` : ''}
@@ -1972,6 +1989,291 @@ async function saveFeatured() {
 $('#featuredBtn').addEventListener('click', openFeaturedDialog);
 $('#featuredSaveBtn').addEventListener('click', saveFeatured);
 $('#featuredSearch').addEventListener('input', (e) => renderFeaturedResults(e.target.value));
+
+/* -------------------- 코멘트 검수 (data/comments.json) --------------------
+ *
+ * 출처를 읽고 자동으로 뽑아낸 "왜 이 책을 추천했는지" 초안을 한 건씩 넘겨보며
+ * 승인하거나 반려하는 창. 승인한 것만 사이트에 나간다.
+ *
+ * data.csv에 섞지 않는 이유:
+ *   - 코멘트 칸은 사람이 직접 쓰는 자리로 남겨 둔다 (사람이 쓴 값이 늘 우선)
+ *   - 한/영 두 벌에 등급·근거·검수 상태까지 열로 붙이면 시트가 감당을 못 한다
+ *   - featured.json처럼 파일 하나만 따로 커밋하면 CSV 충돌과 무관해진다
+ */
+const COMMENTS_PATH = 'data/comments.json';
+const CMT_NOTE_DEFAULT =
+  'Auto-drafted book comments awaiting human review. ' +
+  'Key: "<연예인>|<도서명>" — both must match data.csv exactly. ' +
+  'grade A = 출처 원문에 추천 이유가 있음, B = 관계만 확인되고 이유는 원문에 없음. ' +
+  'status: pending | approved | rejected. 승인된 항목만 사이트에 노출한다. ' +
+  "data.csv의 코멘트 칸에 사람이 쓴 값이 있으면 그쪽이 우선. " +
+  "편집기의 '💬 코멘트 검수' 창에서 검수한다.";
+
+const commentsDlg = $('#commentsDialog');
+// 파일에는 수집기(tools/fetch_comments.py)가 쓰는 misses 같은 칸도 있다.
+// 편집기가 모르는 칸이라도 그대로 돌려놔야 수집기가 같은 출처를 또 받아오지 않는다.
+let _cmtDoc = {};
+
+const CMT_LABEL = { pending: '미검수', approved: '승인', rejected: '반려' };
+
+function setCmtStatus(msg) { $('#cmtStatus').textContent = msg || ''; }
+
+function markCmtDirty() {
+  Cmt.dirty = true;
+  $('#cmtSaveBtn').disabled = false;
+  setCmtStatus('미저장 변경 있음');
+  window.onbeforeunload = () => '저장되지 않은 변경이 있습니다.';
+}
+
+// 도서명에 '|'가 들어갈 수 있으니 첫 구분자만 자른다 (연예인 이름에는 안 쓴다)
+function splitCmtKey(k) {
+  const i = k.indexOf('|');
+  return i < 0 ? [k, ''] : [k.slice(0, i), k.slice(i + 1)];
+}
+
+function cmtCounts() {
+  let pending = 0, approved = 0, rejected = 0;
+  for (const v of Cmt.items.values()) {
+    if (v.status === 'approved') approved++;
+    else if (v.status === 'rejected') rejected++;
+    else pending++;
+  }
+  return { pending, approved, rejected, total: Cmt.items.size };
+}
+
+async function openCommentsDialog() {
+  if (!Config.token) { toast('GitHub Token을 먼저 설정하세요', 'err'); settingsDlg.showModal(); return; }
+  if (!State.celebs.size) { toast('먼저 ↻ 불러오기로 CSV를 가져오세요', 'err'); return; }
+
+  if (!Cmt.loaded) {
+    setCmtStatus('불러오는 중…');
+    commentsDlg.showModal();
+    try {
+      const { content, sha } = await Gh.getFile(COMMENTS_PATH, { allowMissing: true });
+      if (content) {
+        const j = JSON.parse(content);
+        _cmtDoc = j;
+        for (const [k, v] of Object.entries(j.comments || {})) {
+          // 수집기가 쓴 칸(context·score·outlet)까지 그대로 들고 있는다
+          Cmt.items.set(k, Object.assign({}, v, {
+            ko: v.ko || '', en: v.en || '', status: v.status || 'pending',
+          }));
+        }
+      }
+      Cmt.sha = sha;
+      Cmt.loaded = true;
+      setCmtStatus(sha ? `sha ${sha.slice(0, 7)}` : '아직 파일이 없습니다 (저장하면 새로 만듭니다)');
+      renderDetail();   // 책 카드에 검수 뱃지를 붙인다
+    } catch (err) {
+      setCmtStatus('');
+      toast('코멘트 불러오기 실패: ' + err.message, 'err');
+      return;
+    }
+  } else {
+    commentsDlg.showModal();
+  }
+  $('#cmtSaveBtn').disabled = !Cmt.dirty;
+  renderCommentsList();
+}
+
+function cmtRows() {
+  const f = $('#cmtFilter').value;
+  const q = $('#cmtSearch').value.trim().toLowerCase();
+  const rows = [];
+  for (const [k, v] of Cmt.items) {
+    const status = v.status || 'pending';
+    if (f === 'unwritten') {
+      if (status !== 'pending' || (v.ko || '').trim()) continue;
+    } else if (f !== 'all' && status !== f) continue;
+    if (q && !k.toLowerCase().includes(q)) continue;
+    rows.push([k, v]);
+  }
+  // 수집기가 매긴 점수가 높을수록 추천 이유가 담겼을 확률이 높다. 위에서부터 보면 된다.
+  rows.sort((a, b) => (b[1].score || 0) - (a[1].score || 0));
+  return rows;
+}
+
+function renderCommentsList() {
+  const n = cmtCounts();
+  $('#cmtCount').textContent =
+    `미검수 ${n.pending} · 승인 ${n.approved} · 반려 ${n.rejected} · 전체 ${n.total}`;
+
+  const box = $('#cmtList');
+  const rows = cmtRows();
+  if (!rows.length) {
+    box.innerHTML = '<p class="muted small" style="padding:18px 4px;">해당하는 항목이 없습니다.</p>';
+    return;
+  }
+
+  box.innerHTML = rows.map(([k, v]) => {
+    const [celeb, title] = splitCmtKey(k);
+    const c = State.celebs.get(celeb);
+    const known = !!(c && c.books.some(b => b.title === title));
+    const status = v.status || 'pending';
+    const gradeTip = v.grade === 'A' ? '출처 원문에 추천 이유가 적혀 있음'
+                   : v.grade === 'B' ? '관계만 확인 · 원문에 이유는 없음' : '';
+    return `<article class="cmt-card ${status}" data-key="${esc(k)}">
+      <div class="cmt-head">
+        ${v.grade ? `<span class="cmt-grade g-${esc(v.grade.toLowerCase())}" title="${esc(gradeTip)}">${esc(v.grade)}</span>` : ''}
+        <b>${esc(celeb)}</b><span class="muted"> · </span>${esc(title)}
+        <span class="cmt-state s-${status}">${CMT_LABEL[status]}</span>
+        ${(v.ko || '').trim() ? '' : '<span class="cmt-state s-unwritten">문장 미작성</span>'}
+        ${v.score != null ? `<span class="muted small" title="추천 이유가 담겼을 법한 정도">점수 ${v.score}</span>` : ''}
+        ${known ? '' : '<span class="badge">데이터에 없는 항목</span>'}
+        <span class="cmt-spacer"></span>
+        ${v.source
+          ? `<a class="btn small" href="${esc(v.source)}" target="_blank" rel="noopener">출처 열기 ↗</a>`
+          : '<span class="flag warn">출처 없음</span>'}
+      </div>
+      ${v.note ? `<p class="cmt-note">⚠ ${esc(v.note)}</p>` : ''}
+      ${v.quote ? `<blockquote class="cmt-quote">${esc(v.quote)}</blockquote>` : ''}
+      ${v.context ? `<details class="cmt-ctx"><summary>앞뒤 문단</summary><p>${esc(v.context)}</p></details>` : ''}
+      <div class="cmt-body">
+        <label class="small">한국어
+          <textarea data-f="ko" rows="2" placeholder="비우면 승인할 수 없습니다">${esc(v.ko)}</textarea>
+        </label>
+        <label class="small">English
+          <textarea data-f="en" rows="2"></textarea>
+        </label>
+      </div>
+      <div class="cmt-actions">
+        <button type="button" class="btn small ok" data-act="approved">승인</button>
+        <button type="button" class="btn small" data-act="pending">보류</button>
+        <button type="button" class="btn small danger" data-act="rejected">반려</button>
+        <span class="muted small">Ctrl+Enter = 승인</span>
+      </div>
+    </article>`;
+  }).join('');
+
+  // 영문 문장은 value로 직접 넣는다 — 문장 안의 따옴표가 HTML을 깨지 않도록
+  rows.forEach(([k, v], i) => {
+    const el = box.children[i];
+    if (el) el.querySelector('textarea[data-f="en"]').value = v.en || '';
+  });
+}
+
+function setCmtState(key, status) {
+  const it = Cmt.items.get(key);
+  if (!it) return;
+  if (status === 'approved' && !(it.ko || '').trim()) {
+    toast('한국어 문장이 비어 있어 승인할 수 없습니다', 'err');
+    return;
+  }
+  it.status = status;
+  markCmtDirty();
+  renderCommentsList();
+  renderDetail();
+}
+
+$('#cmtList').addEventListener('input', (e) => {
+  const f = e.target.dataset.f;
+  const card = e.target.closest('.cmt-card');
+  if (!f || !card) return;
+  const it = Cmt.items.get(card.dataset.key);
+  if (!it) return;
+  it[f] = e.target.value;
+  markCmtDirty();
+});
+
+$('#cmtList').addEventListener('click', (e) => {
+  const act = e.target.dataset.act;
+  const card = e.target.closest('.cmt-card');
+  if (!act || !card) return;
+  setCmtState(card.dataset.key, act);
+});
+
+$('#cmtList').addEventListener('keydown', (e) => {
+  if (e.key !== 'Enter' || !(e.ctrlKey || e.metaKey)) return;
+  const card = e.target.closest('.cmt-card');
+  if (!card) return;
+  e.preventDefault();
+  setCmtState(card.dataset.key, 'approved');
+});
+
+async function saveComments() {
+  const comments = {};
+  for (const [k, v] of Cmt.items) {
+    comments[k] = Object.assign({}, v, {
+      ko: (v.ko || '').trim(),
+      en: (v.en || '').trim(),
+      status: v.status || 'pending',
+    });
+  }
+  const payload = {
+    ..._cmtDoc,                 // 편집기가 모르는 칸(misses 등)은 그대로 둔다
+    _comment: _cmtDoc._comment || CMT_NOTE_DEFAULT,
+    _updated: new Date().toISOString().slice(0, 10),
+    comments,
+  };
+  const content = JSON.stringify(payload, null, 2) + '\n';
+
+  const n = cmtCounts();
+  const message = prompt('커밋 메시지',
+    `코멘트 검수 — 승인 ${n.approved} / 반려 ${n.rejected} / 미검수 ${n.pending}`);
+  if (!message) return;
+
+  const btn = $('#cmtSaveBtn');
+  btn.disabled = true;
+  setCmtStatus('저장 중…');
+  try {
+    const { sha } = await Gh.putFile({ content, sha: Cmt.sha, message, path: COMMENTS_PATH });
+    Cmt.sha = sha;
+    Cmt.dirty = false;
+    if (!State.dirty) window.onbeforeunload = null;
+    setCmtStatus(sha ? `저장 완료 · sha ${sha.slice(0, 7)}` : '저장 완료');
+    toast(`코멘트 저장됨 — 승인 ${n.approved}건`, 'ok');
+  } catch (err) {
+    setCmtStatus('');
+    toast(err.message, 'err');
+    btn.disabled = false;
+  }
+}
+
+/* 문장 한꺼번에 채우기 — 누락 영문 창과 같은 방식.
+ * 수집기는 인용까지만 모으고, 그걸 한국어·영어 한 줄로 옮기는 건 여기서 한다. */
+$('#cmtCopyBtn').addEventListener('click', async () => {
+  const rows = [];
+  for (const [k, v] of Cmt.items) {
+    if ((v.status || 'pending') !== 'pending' || (v.ko || '').trim()) continue;
+    const [celeb, title] = splitCmtKey(k);
+    rows.push([k, celeb, title, v.outlet || '', v.quote || '', v.context || '']
+      .map(x => String(x).replace(/[\t\n]+/g, ' ')).join('\t'));
+  }
+  if (!rows.length) { toast('문장을 채울 항목이 없습니다', 'err'); return; }
+  const tsv = ['키\t연예인\t도서명\t매체\t인용\t앞뒤문단', ...rows].join('\n');
+  try { await copyToClipboard(tsv); toast(`${rows.length}건 복사됨`, 'ok'); }
+  catch (e) { toast('복사 실패: ' + e.message, 'err'); }
+});
+
+$('#cmtApplyPasteBtn').addEventListener('click', () => {
+  // 키에 '|' 가 들어 있어서 parseTsvLines(파이프도 구분자로 봄)는 못 쓴다. 탭만 본다.
+  const lines = $('#cmtPaste').value.split(/\r?\n/)
+    .map(l => l.trim()).filter(Boolean)
+    .map(l => l.split('\t').map(c => c.trim()))
+    .filter(c => c[0] && c[0] !== '키');
+  let hit = 0, miss = 0;
+  for (const cols of lines) {
+    const [key, ko, en] = cols;
+    const it = Cmt.items.get((key || '').trim());
+    if (!it) { miss++; continue; }
+    if (ko) it.ko = ko.trim();
+    if (en) it.en = en.trim();
+    hit++;
+  }
+  if (!hit) { toast('맞는 키가 없습니다 (첫 칸이 "연예인|도서명" 이어야 합니다)', 'err'); return; }
+  markCmtDirty();
+  renderCommentsList();
+  $('#cmtPaste').value = '';
+  toast(`${hit}건 채움` + (miss ? ` · ${miss}건은 키를 못 찾음` : ''), 'ok');
+});
+
+$('#commentsBtn').addEventListener('click', openCommentsDialog);
+$('#cmtSaveBtn').addEventListener('click', saveComments);
+$('#cmtFilter').addEventListener('change', renderCommentsList);
+$('#cmtSearch').addEventListener('input', renderCommentsList);
+commentsDlg.addEventListener('close', () => {
+  if (Cmt.dirty) toast('검수 결과가 아직 저장되지 않았습니다', 'err');
+});
 
 (function init() {
   $('#branchTag').textContent = `${Config.repo} @ ${Config.branch}`;
