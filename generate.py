@@ -154,16 +154,23 @@ EN_TR_NOTE_HTML = '  <p class="tr-note">' + EN_TR_NOTE_TEXT + '</p>\n'
 # 예스24는 표지와 같은 상품 ID로 책등 이미지를 준다.
 #   표지  https://image.yes24.com/goods/91901136/L
 #   책등  https://image.yes24.com/goods/91901136/side
-# 표지를 예스24에서 가져온 책만 바로 유도된다. 알라딘 표지인 책은 예스24
-# 상품 ID를 모르니 아래 spine_tint()로 만든 색 책등으로 대신한다.
+# 그래서 표지 URL만 있으면 책등 URL이 나온다. 다만 상품이 있다고 책등
+# 사진까지 있는 건 아니다(아래 NO_SPINE). 없으면 spine_tint()로 만든
+# 색 책등으로 대신한다.
 
 YES24_ID_RE = re.compile(r'image\.yes24\.com/goods/(?:detail/)?(\d+)', re.I)
 
 
+def yes24_goods_id(url):
+    """예스24 이미지 URL에서 상품 ID를 뽑는다. 못 뽑으면 None."""
+    m = YES24_ID_RE.search(url or '')
+    return m.group(1) if m else None
+
+
 def yes24_spine_url(cover_url):
     """표지 URL에서 예스24 책등 이미지 URL을 유도. 못 하면 None."""
-    m = YES24_ID_RE.search(cover_url or '')
-    return 'https://image.yes24.com/goods/' + m.group(1) + '/side' if m else None
+    gid = yes24_goods_id(cover_url)
+    return 'https://image.yes24.com/goods/' + gid + '/side' if gid else None
 
 
 def normalize_spine_value(v):
@@ -185,33 +192,60 @@ def normalize_spine_value(v):
     return v if v.startswith('http') else None
 
 
+NO_SPINE_RE = re.compile(r'goods (\d+)')
+
+
 def load_spines():
-    """tools/fetch_spines.py 가 채운 제목 → 책등 URL 표. 없으면 빈 표."""
+    """tools/fetch_spines.py 가 채운 두 표. 없으면 빈 표 둘.
+
+    spines  제목 → 책등 URL
+    misses  제목 → 넘긴 이유. 그중 '책등 이미지 없음 (goods N)'은 상품은
+            찾았지만 책등 사진이 없더라는 기록이라, 제목 → 상품 ID로 읽어
+            둔다. 표지에서 책등을 유도하지 않을 근거가 된다.
+    """
     path = os.path.join('data', 'spines.json')
     if not os.path.exists(path):
-        return {}
+        return {}, {}
     try:
         with open(path, encoding='utf-8') as fp:
-            raw = (json.load(fp) or {}).get('spines') or {}
+            doc = json.load(fp) or {}
     except (json.JSONDecodeError, OSError) as e:
         print('⚠️ data/spines.json 읽기 실패 — 표지 URL에서만 유도합니다: %s' % e)
-        return {}
+        return {}, {}
     out = {}
-    for title, v in raw.items():
+    for title, v in (doc.get('spines') or {}).items():
         u = normalize_spine_value(v)
         if u:
             out[str(title).strip()] = u
         else:
             print('⚠️ data/spines.json 의 %r 값을 알아볼 수 없어 건너뜁니다: %r' % (title, v))
-    return out
+    no_spine = {}
+    for title, reason in (doc.get('misses') or {}).items():
+        if '책등 이미지 없음' not in str(reason):
+            continue
+        m = NO_SPINE_RE.search(str(reason))
+        if m:
+            no_spine[str(title).strip()] = m.group(1)
+    return out, no_spine
 
 
-SPINES = load_spines()
+SPINES, NO_SPINE = load_spines()
 
 
 def spine_image_url(title, cover_url):
-    """배치가 찾아둔 책등이 우선. 없으면 표지 URL에서 유도(표지가 예스24일 때만)."""
-    return SPINES.get((title or '').strip()) or yes24_spine_url(cover_url)
+    """배치가 찾아둔 책등이 우선. 없으면 표지 URL에서 유도.
+
+    표지가 예스24라고 책등 사진까지 있는 건 아니다. 없는 자리에는 예스24가
+    '이미지 준비중' 안내 그림을 404가 아니라 200으로 내려준다. 배치가
+    확인해 둔 상품이면 아예 부르지 않는다 — 브라우저에서 비율로 걸러내기는
+    하지만(SPINE_IMG_GUARD), 그 전에 잠깐 비치는 걸 막는다.
+    """
+    t = (title or '').strip()
+    if t in SPINES:
+        return SPINES[t]
+    if t in NO_SPINE and NO_SPINE[t] == yes24_goods_id(cover_url):
+        return None
+    return yes24_spine_url(cover_url)
 
 
 def spine_tint(title):
@@ -223,6 +257,23 @@ def spine_tint(title):
     sat = 32 + (h >> 9) % 26          # 32~57%
     lig = 26 + (h >> 17) % 22         # 26~47% — 흰 글자가 읽히는 범위
     return 'hsl(' + str(hue) + ',' + str(sat) + '%,' + str(lig) + '%)'
+
+
+# 미리 연결해 둘 이미지 호스트. 표지를 예스24로 옮긴 뒤로 알라딘 표지는
+# 몇 권뿐이라, 모든 페이지에 알라딘을 걸어두면 쓰지도 않을 연결을 연다.
+# 그래서 그 페이지가 실제로 부르는 호스트만 적는다.
+IMAGE_HOSTS = ('image.yes24.com', 'image.aladin.co.kr')
+
+
+def image_preconnect(*parts):
+    """페이지 마크업에 실제로 나온 이미지 호스트만 preconnect로 적는다."""
+    hay = ''.join(p or '' for p in parts)
+    out = ''
+    for host in IMAGE_HOSTS:
+        if host in hay:
+            out += ('  <link rel="preconnect" href="https://' + host + '">\n'
+                    '  <link rel="dns-prefetch" href="https://' + host + '">\n')
+    return out
 
 
 SPINE_H = 270                        # 책등 높이는 모두 같게
@@ -1683,10 +1734,7 @@ for name, info in celebs.items():
         '  <link rel="apple-touch-icon" href="' + BASE + 'favicon.png">\n'
         '  <link rel="alternate" type="application/rss+xml" title="최애의 독서 RSS" href="' + BASE + 'feed.xml">\n'
         '\n'
-        '  <link rel="preconnect" href="https://image.yes24.com">\n'
-        '  <link rel="dns-prefetch" href="https://image.yes24.com">\n'
-        '  <link rel="preconnect" href="https://image.aladin.co.kr">\n'
-        '  <link rel="dns-prefetch" href="https://image.aladin.co.kr">\n'
+        + image_preconnect(book_cards_html, spine_html, img) +
         '\n'
         '  <script type="application/ld+json">\n'
         '  ' + json.dumps(json_ld, ensure_ascii=False, indent=2) + '\n'
@@ -1964,10 +2012,7 @@ for title, binfo in book_celebs.items():
         '  <link rel="apple-touch-icon" href="' + BASE + 'favicon.png">\n'
         '  <link rel="alternate" type="application/rss+xml" title="최애의 독서 RSS" href="' + BASE + 'feed.xml">\n'
         '\n'
-        '  <link rel="preconnect" href="https://image.yes24.com">\n'
-        '  <link rel="dns-prefetch" href="https://image.yes24.com">\n'
-        '  <link rel="preconnect" href="https://image.aladin.co.kr">\n'
-        '  <link rel="dns-prefetch" href="https://image.aladin.co.kr">\n'
+        + image_preconnect(cover_html) +
         '\n'
         '  <script type="application/ld+json">\n'
         '  ' + json.dumps(json_ld, ensure_ascii=False, indent=2) + '\n'
