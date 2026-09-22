@@ -636,13 +636,19 @@ SHELF_CSS = (
     '            height: 100%; width: auto; max-width: 172px; object-fit: contain; }\n'
     # 책등 이미지가 없거나 못 불러오면 색 책등 폭으로 돌아간다
     '    .sp.no-img, .sp.sp-fail { width: var(--w, 38px); }\n'
+    # 최근 추가된 책 — 책등 위쪽을 띠로 두른다. 제목이 가리지 않게 여백을 준다.
+    '    .sp-new { position: absolute; top: 0; left: 0; right: 0; z-index: 3; text-align: center;\n'
+    '              font-size: 8px; line-height: 1; padding: 3px 0 2px;\n'
+    '              border-bottom: 1px solid rgba(0,0,0,.55); }\n'
+    '    .sp.is-new .sp-t { padding-top: 22px; }\n'
     # 좁은 화면에서는 한 줄에 너무 적게 들어가므로 조금 줄인다
     # 좁은 화면에서는 책등을 낮추므로 글자도 그 비율(205/270)만큼 줄인다
     '    @media (max-width: 480px) { .shelf .sp { height: 205px; }\n'
     '                                 .sp.no-img, .sp.sp-fail { width: calc(var(--w, 38px) * .88); }\n'
     '                                 .sp-i { max-width: 130px; }\n'
     '                                 .sp-t i { font-size: calc(var(--fs, 15px) * .76); }\n'
-    '                                 .sp-t { padding: 10px 2px; } }\n'
+    '                                 .sp-t { padding: 10px 2px; }\n'
+    '                                 .sp.is-new .sp-t { padding-top: 18px; } }\n'
 )
 
 def make_en_celeb_url(name_en):
@@ -1068,6 +1074,76 @@ else:
 # ── 3.5. 업데이트 내역 페이지 + 배너 ────────────────────────────────
 
 update_entries = build_updates_entries(limit=80)
+
+# ── 최근 추가된 책 NEW 배지 ─────────────────────────────────────────
+#
+# 어떤 책이 새로 들어왔는지 페이지에서 알 길이 없었다. data.csv 커밋 이력에서
+# (셀럽, 책) 짝이 처음 나타난 날을 꺼내, 최근 것에만 작은 스티커를 붙인다.
+# 며칠까지를 '최근'으로 볼지는 아래 숫자 하나로 정한다.
+NEW_BADGE_DAYS = 7
+
+_new_book_dates = {}
+for _e in update_entries:          # 최신순이라 먼저 본 날짜가 가장 최근
+    for _c, _ts in _e['celebs'].items():
+        for _t in _ts:
+            _k = (_c, (_t or '').strip())
+            if _k and _k[1] and _k not in _new_book_dates:
+                _new_book_dates[_k] = _e['date_iso']
+
+
+def new_book_date(celeb, title):
+    """최근 NEW_BADGE_DAYS일 안에 추가된 책이면 추가된 날짜, 아니면 ''."""
+    d = _new_book_dates.get((celeb, (title or '').strip()))
+    if not d:
+        return ''
+    try:
+        added = datetime.date.fromisoformat(d)
+    except ValueError:
+        return ''
+    return d if (datetime.date.today() - added).days <= NEW_BADGE_DAYS else ''
+
+
+def spine_new_badge(added):
+    """책등 위쪽에 걸치는 띠."""
+    return ('<span class="sp-new" data-added="' + added + '">NEW</span>') if added else ''
+
+
+def cover_new_badge(added):
+    """표지 왼쪽 위 모서리 스티커."""
+    return ('<span class="rl-new" data-added="' + added + '">NEW</span>') if added else ''
+
+
+# 배지는 빌드 시점 기준이라 다음 빌드까지 남는다. 날짜를 달고 보내서
+# 기한이 지난 배지는 페이지를 열 때 스스로 사라지게 한다.
+NEW_BADGE_JS = (
+    '<script>\n'
+    '(function () {\n'
+    '  var DAYS = ' + str(NEW_BADGE_DAYS) + ';\n'
+    # 빌드 때와 같은 기준으로 세야 한다 — 시각이 아니라 날짜 단위로 뺀다.
+    # 시각으로 재면 '7일 전 새벽에 추가'가 7.9일이 되어 하루 일찍 사라진다.
+    '  var today = new Date(); today.setHours(0, 0, 0, 0);\n'
+    '  document.querySelectorAll(".sp-new[data-added], .rl-new[data-added]").forEach(function (el) {\n'
+    '    var t = Date.parse(el.getAttribute("data-added") + "T00:00:00");\n'
+    '    if (isNaN(t)) return;\n'
+    '    if (Math.round((today - t) / 86400000) <= DAYS) return;\n'
+    '    var p = el.parentNode;\n'
+    '    el.remove();\n'
+    '    if (p && p.classList) p.classList.remove("is-new");\n'
+    '  });\n'
+    '})();\n'
+    '</script>\n'
+)
+
+# 표지(목록 보기) 스티커 — 한국어·영문 페이지가 함께 쓴다
+NEW_BADGE_CSS = (
+    '    .rl-cover { position: relative; }\n'
+    '    .rl-new, .sp-new { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;\n'
+    '             font-weight: 800; letter-spacing: .06em; background: #fde047; color: #000;\n'
+    '             pointer-events: none; }\n'
+    '    .rl-new { position: absolute; top: 0; left: 0; z-index: 2; font-size: 9px; line-height: 1;\n'
+    '             padding: 3px 5px; border-right: 1.5px solid #000; border-bottom: 1.5px solid #000; }\n'
+)
+
 
 def _write_updates_page(entries):
     """updates.html 생성."""
@@ -1504,18 +1580,23 @@ for name, info in celebs.items():
         ):
             aladin_url = esc(html.unescape(raw_link))
 
+        # 최근에 들어온 책이면 표지·책등에 붙일 날짜
+        _added = new_book_date(name, b['title'])
+
         # 표지
         if b['coverUrl'] and b['coverUrl'].startswith('http'):
             cover_inner = ('<img src="' + esc(b['coverUrl']) + '" alt="' + esc(b['title'])
                            + ' 표지" loading="lazy">')
         else:
             cover_inner = '<div class="rl-no-cover">📕</div>'
+        _cover_badge = cover_new_badge(_added)
         if aladin_url:
             cover_html = ('<a class="rl-cover" href="' + aladin_url
                           + '" rel="nofollow noopener noreferrer" target="_blank" '
-                          'aria-label="' + esc(b['title']) + ' 알라딘에서 보기">' + cover_inner + '</a>')
+                          'aria-label="' + esc(b['title']) + ' 알라딘에서 보기">'
+                          + _cover_badge + cover_inner + '</a>')
         else:
-            cover_html = '<div class="rl-cover">' + cover_inner + '</div>'
+            cover_html = '<div class="rl-cover">' + _cover_badge + cover_inner + '</div>'
 
         # 제목
         if aladin_url:
@@ -1566,11 +1647,12 @@ for name, info in celebs.items():
             + ('<img class="sp-i" src="' + esc(_spine_url) + '" alt="" loading="lazy" '
                'referrerpolicy="no-referrer"' + SPINE_IMG_GUARD + '>'
                if _spine_url else '')
+            + spine_new_badge(_added)
         )
         _spine_style = ('--c:' + spine_tint(b['title'])
                         + ';--w:' + str(spine_width(b['title'])) + 'px'
                         + ';--fs:' + str(spine_font_size(spine_title(b['title']))) + 'px')
-        _sp_cls = 'sp' if _spine_url else 'sp no-img'
+        _sp_cls = ('sp' if _spine_url else 'sp no-img') + (' is-new' if _added else '')
         if aladin_url:
             spine_html += ('    <a class="' + _sp_cls + '" style="' + _spine_style + '" href="' + aladin_url
                            + '" rel="nofollow noopener noreferrer" target="_blank" title="'
@@ -1789,6 +1871,7 @@ for name, info in celebs.items():
         '    .rl-num { position: absolute; left: -2px; top: -2px; width: 38px; height: 30px; display: flex; align-items: center; justify-content: center; background: #fde047; border: 2px solid #000; font-weight: 900; font-size: 14px; font-family: "Space Grotesk", sans-serif; }\n'
         '    .rl-item .rl-cover, .rl-item > .rl-cover { float: left; margin-right: 14px; width: 74px; height: 105px; display: block; flex-shrink: 0; border: 1.5px solid #000; box-shadow: 2px 2px 0 0 #000; background: #f4f4f0; overflow: hidden; }\n'
         '    .rl-cover img { width: 100%; height: 100%; object-fit: cover; display: block; }\n'
+        + NEW_BADGE_CSS +
         '    .rl-no-cover { width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; font-size: 32px; }\n'
         '    .rl-meta { overflow: hidden; min-height: 105px; }\n'
         '    .rl-title { font-weight: 800; font-size: 16px; line-height: 1.3; margin-bottom: 4px; }\n'
@@ -1895,6 +1978,7 @@ for name, info in celebs.items():
         '    <p>이 페이지의 독서 기록은 유튜브·인터뷰·SNS 등 공개된 출처를 기반으로 정리됐어요.</p>\n'
         '  </footer>\n'
         '\n'
+        + NEW_BADGE_JS
         + COPY_BTN_JS +
         '</body>\n'
         '</html>'
@@ -2394,6 +2478,8 @@ for name, info in celebs.items():
         ):
             aladin_url = esc(html.unescape(raw_link))
 
+        _added = new_book_date(name, b['title'])
+
         # 검색 결과 요약에 그대로 실리는 자리라 직역 표시(*)는 떼고 저자까지 넣는다
         t_plain = plain_en(b['title_en'])
         a_plain = plain_en(b.get('author_en') or b['author'])
@@ -2403,13 +2489,14 @@ for name, info in celebs.items():
                            + '" loading="lazy">')
         else:
             cover_inner = '<div class="rl-no-cover">📕</div>'
+        _cover_badge = cover_new_badge(_added)
         if aladin_url:
             cover_html = ('<a class="rl-cover" href="' + aladin_url
                           + '" rel="nofollow noopener noreferrer" target="_blank" '
                           'aria-label="' + esc(t_plain) + ' — buy or read more">'
-                          + cover_inner + '</a>')
+                          + _cover_badge + cover_inner + '</a>')
         else:
-            cover_html = '<div class="rl-cover">' + cover_inner + '</div>'
+            cover_html = '<div class="rl-cover">' + _cover_badge + cover_inner + '</div>'
 
         if aladin_url:
             t_html = ('<a href="' + aladin_url
@@ -2435,11 +2522,12 @@ for name, info in celebs.items():
             + ('<img class="sp-i" src="' + esc(_sp_url) + '" alt="" loading="lazy" '
                'referrerpolicy="no-referrer"' + SPINE_IMG_GUARD + '>'
                if _sp_url else '')
+            + spine_new_badge(_added)
         )
         _sp_style = ('--c:' + spine_tint(b['title'])
                      + ';--w:' + str(spine_width(b['title'])) + 'px'
                      + ';--fs:' + str(spine_font_size(spine_title(t_plain))) + 'px')
-        _sp_cls = 'sp' if _sp_url else 'sp no-img'
+        _sp_cls = ('sp' if _sp_url else 'sp no-img') + (' is-new' if _added else '')
         if aladin_url:
             en_spine_html += ('    <a class="' + _sp_cls + '" style="' + _sp_style + '" href="' + aladin_url
                               + '" rel="nofollow noopener noreferrer" target="_blank" title="'
@@ -2462,8 +2550,7 @@ for name, info in celebs.items():
 
     # 제목에 이름을 세 번 넣으면 구글이 키워드 반복으로 보고 제목을 갈아치운다.
     # 한 번만 쓰고, 검색어와 맞닿는 말(reading list · books)만 남긴다.
-    title_text = (_name_pl + ' Reading List — ' + str(n)
-                  + (' Books' if n != 1 else ' Book'))
+    title_text = _name_pl + ' Books — Full Reading List (' + str(n) + ')'
 
     # 설명도 이름 한 번. 대신 실제 책 제목 세 권을 넣는다 —
     # 구글이 meta description을 버리고 본문에서 목록을 긁어가던 자리를
@@ -2501,6 +2588,50 @@ for name, info in celebs.items():
     en_kw += ['korean celebrity books', 'korean celebrity reading list', 'books from korea']
     _seen_kw = set()
     en_kw = [k for k in en_kw if not (k.lower() in _seen_kw or _seen_kw.add(k.lower()))]
+
+    _picks_all = [plain_en(b['title_en']) for b in en_books if b.get('title_en')]
+    _picks_all = [t for t in _picks_all if t]
+    _picks = _picks_all[:5]
+    if len(_picks) >= 2:
+        _picks_txt = ', '.join(_picks[:-1]) + ' and ' + _picks[-1]
+    else:
+        _picks_txt = _picks[0] if _picks else ''
+    if len(_picks_all) > 5:
+        _picks_txt += ', and ' + str(len(_picks_all) - 5) + ' more'
+
+    en_faq_items = []
+    if _picks_txt:
+        en_faq_items.append((
+            'What books does ' + _name_pl + ' recommend?',
+            _name_pl + "'s book recommendations in this archive: " + _picks_txt
+            + '. Every book on this page is linked to the interview, YouTube video or SNS post '
+              'where ' + _name_pl + ' talked about it.'))
+    en_faq_items.append((
+        'How many books has ' + _name_pl + ' read?',
+        _name_pl + ' has ' + str(n) + ' book' + ('s' if n != 1 else '')
+        + ' recorded here so far, read or recommended in public Korean-language sources. '
+          'The list grows whenever a new book mention turns up.'))
+    en_faq_items.append((
+        'Where do these ' + _name_pl + ' book recommendations come from?',
+        'Public sources only — interviews, YouTube clips, variety shows, fan-cafe posts and SNS. '
+        'A book is added to this reading list only when the mention can be linked, and the link '
+        'stays on the entry so you can check it yourself.'))
+
+    en_faq_html = ''.join(
+        '    <div class="pfaq-q">\n'
+        '      <h3>' + esc(q) + '</h3>\n'
+        '      <p>' + esc(a) + '</p>\n'
+        '    </div>\n'
+        for q, a in en_faq_items)
+    en_faq_ld = {
+        '@context': 'https://schema.org',
+        '@type': 'FAQPage',
+        'mainEntity': [
+            {'@type': 'Question', 'name': q,
+             'acceptedAnswer': {'@type': 'Answer', 'text': a}}
+            for q, a in en_faq_items
+        ],
+    }
 
     # 읽은 책을 Book 항목으로 함께 내보낸다. 인물과 책이 이어져 있다는 걸
     # 검색엔진이 본문 파싱에 기대지 않고 바로 알 수 있다.
@@ -2589,6 +2720,8 @@ for name, info in celebs.items():
         + json.dumps(json_ld, ensure_ascii=False, indent=2) + '\n  </script>\n'
         '  <script type="application/ld+json">\n  '
         + json.dumps(breadcrumb_ld, ensure_ascii=False, indent=2) + '\n  </script>\n'
+        '  <script type="application/ld+json">\n  '
+        + json.dumps(en_faq_ld, ensure_ascii=False, indent=2) + '\n  </script>\n'
         # 책등 제목에 쓰는 바탕체. font-display:swap이라 글자는 바로 보이고
         # 실제로 쓰는 굵기 한 벌만 받는다.
         '  <link rel="stylesheet" href="' + BASE + 'assets/fonts/kopubworld.css">\n'
@@ -2607,6 +2740,10 @@ for name, info in celebs.items():
         '    .intro { background: #fff; border: 2px solid #000; box-shadow: 4px 4px 0 0 #000; padding: 14px 16px; margin: 16px 0 24px; font-size: 15px; }\n'
         '    .celeb-bio { margin: 4px 0 8px; padding: 6px 10px; background: #fff8e7; border-left: 4px solid #000; font-size: 14px; line-height: 1.45; color: #222; }\n'
         '    .celeb-alias { margin: 2px 0 0; font-size: 12px; color: #888; }\n'
+        '    .pfaq { margin-top: 40px; }\n'
+        '    .pfaq-q { background: #fff; border: 2px solid #000; box-shadow: 3px 3px 0 0 #000; padding: 12px 14px; margin-bottom: 12px; }\n'
+        '    .pfaq-q h3 { font-size: 15px; font-weight: 800; margin: 0 0 6px; }\n'
+        '    .pfaq-q p { font-size: 14px; margin: 0; color: #333; }\n'
         '    .grp-link { margin: 10px 0 0; padding: 8px 12px; background: #fff8e7; border: 2px solid #000; box-shadow: 3px 3px 0 0 #000; font-size: 14px; }\n'
         + SHELF_CSS +
         '    .reading-list { list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 14px; }\n'
@@ -2615,6 +2752,7 @@ for name, info in celebs.items():
         '    .rl-num { position: absolute; left: -2px; top: -2px; width: 38px; height: 30px; display: flex; align-items: center; justify-content: center; background: #fde047; border: 2px solid #000; font-weight: 900; font-size: 14px; }\n'
         '    .rl-cover { float: left; margin-right: 14px; width: 74px; height: 105px; display: block; border: 1.5px solid #000; box-shadow: 2px 2px 0 0 #000; background: #f4f4f0; overflow: hidden; }\n'
         '    .rl-cover img { width: 100%; height: 100%; object-fit: cover; display: block; }\n'
+        + NEW_BADGE_CSS +
         '    .rl-no-cover { width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; font-size: 32px; }\n'
         '    .rl-meta { overflow: hidden; min-height: 105px; }\n'
         '    .rl-title { font-weight: 800; font-size: 16px; line-height: 1.3; margin-bottom: 4px; }\n'
@@ -2640,7 +2778,8 @@ for name, info in celebs.items():
         '  <header class="celeb-header">\n'
         '    <img class="celeb-img" src="' + esc(img) + '" alt="' + esc(_name_pl) + ' profile photo" width="120" height="120">\n'
         '    <div>\n'
-        '      <h1>' + esc(name_en) + ' <span style="font-weight:400;color:#666;font-size:18px">(' + esc(name) + ')</span></h1>\n'
+        '      <h1>' + esc(name_en) + ' Books<span style="font-weight:400;color:#666;font-size:18px"> · '
+        + esc(name) + ' 책</span></h1>\n'
         # 소개 한 줄이 없으면 직업이라도 적는다. 이 줄이 없으면 검색엔진이
         # 이 사람이 배우인지 아이돌인지 알 방법이 페이지 안에 하나도 없다.
         + (('      <p class="celeb-bio">' + esc(get_bio(name, 'en')) + '</p>\n')
@@ -2671,10 +2810,10 @@ for name, info in celebs.items():
           ) if _role_hub else '')
         + '  <section id="shelf-sec">\n'
         '    <div class="shelf-head">\n'
-        '      <h2>Reading list</h2>\n'
+        '      <h2>Books ' + esc(_name_pl) + ' has read (' + str(n) + ')</h2>\n'
         '      <div class="shelf-tabs" role="tablist">\n'
-        '        <button type="button" class="sh-tab on" data-view="spine" aria-pressed="true">\u258a Spines</button>\n'
-        '        <button type="button" class="sh-tab" data-view="list" aria-pressed="false">\u2630 List</button>\n'
+        '        <button type="button" class="sh-tab on" data-view="spine" aria-pressed="true">\u258a Book spines</button>\n'
+        '        <button type="button" class="sh-tab" data-view="list" aria-pressed="false">\u2630 Book list</button>\n'
         '        <button type="button" class="sh-cap" id="shelf-cap" title="Download what you see as an image">\u2913 Save image</button>\n'
         '      </div>\n'
         '    </div>\n'
@@ -2688,10 +2827,16 @@ for name, info in celebs.items():
                            _name_pl + ' — ' + str(n) + ' books')
         + SHELF_JS
         + (EN_TR_NOTE_HTML if en_show_tr_note else '')
+        + '  <section class="pfaq">\n'
+        '    <h2>' + esc(_name_pl) + ' book recommendations — FAQ</h2>\n'
+        + en_faq_html
+        + '  </section>\n'
         + '  <footer>\n'
         '    <p>Curated from public Korean-language sources. Korean original page: <a href="'
         + esc(ko_url) + '" hreflang="ko">' + esc(name) + '</a>.</p>\n'
+        '    <p><a href="' + EN_BASE + '">Browse more Korean celebrity book lists →</a></p>\n'
         '  </footer>\n'
+        + NEW_BADGE_JS
         + COPY_BTN_JS +
         '</body>\n'
         '</html>'
