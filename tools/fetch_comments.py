@@ -304,6 +304,8 @@ def main():
             comments['%s|%s' % (t['celeb'], title)] = {
                 'ko': '',                 # 2단계에서 채운다
                 'en': '',
+                'memo': '',               # 사람이 출처를 보고 적어두는 칸
+
                 'quote': trim(ev['quote']),
                 'context': trim(ev['context'], 700),
                 'source': t['source'],

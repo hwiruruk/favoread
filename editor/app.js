@@ -2084,6 +2084,9 @@ function cmtRows() {
     const status = v.status || 'pending';
     if (f === 'unwritten') {
       if (status !== 'pending' || (v.ko || '').trim()) continue;
+    } else if (f === 'memo') {
+      // 내가 메모는 해뒀고 아직 문장이 안 된 것 — Claude 에게 넘길 줄
+      if (status !== 'pending' || (v.ko || '').trim() || !(v.memo || '').trim()) continue;
     } else if (f !== 'all' && status !== f) continue;
     if (q && !k.toLowerCase().includes(q)) continue;
     rows.push([k, v]);
@@ -2118,6 +2121,7 @@ function renderCommentsList() {
         <b>${esc(celeb)}</b><span class="muted"> · </span>${esc(title)}
         <span class="cmt-state s-${status}">${CMT_LABEL[status]}</span>
         ${(v.ko || '').trim() ? '' : '<span class="cmt-state s-unwritten">문장 미작성</span>'}
+        ${(v.memo || '').trim() && !(v.ko || '').trim() ? '<span class="cmt-state s-memo">메모 있음</span>' : ''}
         ${v.score != null ? `<span class="muted small" title="추천 이유가 담겼을 법한 정도">점수 ${v.score}</span>` : ''}
         ${known ? '' : '<span class="badge">데이터에 없는 항목</span>'}
         <span class="cmt-spacer"></span>
@@ -2128,6 +2132,9 @@ function renderCommentsList() {
       ${v.note ? `<p class="cmt-note">⚠ ${esc(v.note)}</p>` : ''}
       ${v.quote ? `<blockquote class="cmt-quote">${esc(v.quote)}</blockquote>` : ''}
       ${v.context ? `<details class="cmt-ctx"><summary>앞뒤 문단</summary><p>${esc(v.context)}</p></details>` : ''}
+      <label class="small cmt-memo">내 메모 — 출처를 보고 편한 말투로 적어두면 됩니다
+        <textarea data-f="memo" rows="2" placeholder="예: 헌책방에서 우연히 샀는데 그때 찾던 주제라 방향을 잡아줬다고 함"></textarea>
+      </label>
       <div class="cmt-body">
         <label class="small">한국어
           <textarea data-f="ko" rows="2" placeholder="비우면 승인할 수 없습니다">${esc(v.ko)}</textarea>
@@ -2145,10 +2152,12 @@ function renderCommentsList() {
     </article>`;
   }).join('');
 
-  // 영문 문장은 value로 직접 넣는다 — 문장 안의 따옴표가 HTML을 깨지 않도록
+  // 영문·메모는 value로 직접 넣는다 — 문장 안의 따옴표가 HTML을 깨지 않도록
   rows.forEach(([k, v], i) => {
     const el = box.children[i];
-    if (el) el.querySelector('textarea[data-f="en"]').value = v.en || '';
+    if (!el) return;
+    el.querySelector('textarea[data-f="en"]').value = v.en || '';
+    el.querySelector('textarea[data-f="memo"]').value = v.memo || '';
   });
 }
 
@@ -2232,15 +2241,15 @@ async function saveComments() {
 /* 문장 한꺼번에 채우기 — 누락 영문 창과 같은 방식.
  * 수집기는 인용까지만 모으고, 그걸 한국어·영어 한 줄로 옮기는 건 여기서 한다. */
 $('#cmtCopyBtn').addEventListener('click', async () => {
-  const rows = [];
-  for (const [k, v] of Cmt.items) {
-    if ((v.status || 'pending') !== 'pending' || (v.ko || '').trim()) continue;
+  // 지금 목록에 보이는 것만 복사한다 — 필터를 '메모만 있음'에 두면 넘길 줄만 담긴다
+  const rows = cmtRows().map(([k, v]) => {
     const [celeb, title] = splitCmtKey(k);
-    rows.push([k, celeb, title, v.outlet || '', v.quote || '', v.context || '']
-      .map(x => String(x).replace(/[\t\n]+/g, ' ')).join('\t'));
-  }
-  if (!rows.length) { toast('문장을 채울 항목이 없습니다', 'err'); return; }
-  const tsv = ['키\t연예인\t도서명\t매체\t인용\t앞뒤문단', ...rows].join('\n');
+    return [k, celeb, title, v.outlet || '', v.source || '',
+            v.memo || '', v.quote || '', v.context || '']
+      .map(x => String(x).replace(/[\t\n]+/g, ' ')).join('\t');
+  });
+  if (!rows.length) { toast('목록이 비어 있습니다', 'err'); return; }
+  const tsv = ['키\t연예인\t도서명\t매체\t출처\t내메모\t인용\t앞뒤문단', ...rows].join('\n');
   try { await copyToClipboard(tsv); toast(`${rows.length}건 복사됨`, 'ok'); }
   catch (e) { toast('복사 실패: ' + e.message, 'err'); }
 });
