@@ -21,7 +21,8 @@ const WIDE = [1200, 675];     // 16:9
 const TALL = [1080, 1215];    // 8:9
 const SQUARE = [1200, 1200];
 
-const BGS = { white: '#ffffff', ivory: '#fbf8f1' };
+const CLEAR = 'transparent';
+const BGS = { white: '#ffffff', ivory: '#fbf8f1', clear: CLEAR };
 const INK = '#161616', MUTE = '#6e6e6e', LINE = '#e6e3dc';
 const ACCENT = { celeb: '#2f5d8a', new: '#c8453a', book: '#2f7a5b' };
 
@@ -218,8 +219,26 @@ function newCanvas([W, H], bg) {
   const c = document.createElement('canvas');
   c.width = W; c.height = H;
   const ctx = c.getContext('2d');
-  ctx.fillStyle = bg;
-  ctx.fillRect(0, 0, W, H);
+  if (bg === CLEAR) {
+    // 투명 배경: X 어두운 화면에서도 글자가 보이도록, 바탕 위에 바로 쓰는 어두운 글자에
+    // 흰 테두리를 얇게 두른다(말풍선·카드 안의 흰 글자는 그대로).
+    const fill = ctx.fillText.bind(ctx);
+    ctx.fillText = (t, x, y, mw) => {
+      const f = String(ctx.fillStyle).toLowerCase();
+      if (f !== '#ffffff' && !f.startsWith('rgba(255')) {
+        ctx.save();
+        ctx.strokeStyle = 'rgba(255,255,255,.92)';
+        ctx.lineJoin = 'round';
+        ctx.lineWidth = Math.max(2, parseFloat(ctx.font.split(' ')[1]) * 0.13);
+        ctx.strokeText(t, x, y, mw);
+        ctx.restore();
+      }
+      fill(t, x, y, mw);
+    };
+  } else {
+    ctx.fillStyle = bg;
+    ctx.fillRect(0, 0, W, H);
+  }
   return { c, ctx, W, H };
 }
 
@@ -829,7 +848,8 @@ function showPreview(el, canvases) {
   const thumbs = $('.thumbs', el);
   thumbs.innerHTML = '';
   canvases.forEach((cv, i) => {
-    const url = cv.toDataURL('image/jpeg', 0.85);
+    // 투명 배경은 JPEG로 줄이면 까맣게 되니 PNG 그대로 보여 준다
+    const url = state.bg === 'clear' ? cv.toDataURL('image/png') : cv.toDataURL('image/jpeg', 0.85);
     const cell = document.createElement('div');
     cell.className = 'cell c' + i;
     cell.innerHTML = '<img alt="">';

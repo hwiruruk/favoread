@@ -358,8 +358,9 @@ SPINE_IMG_GUARD = (
 SHELF_CAPTURE_JS_TEMPLATE = (
     '  <script>\n'
     '  (function () {\n'
-    '    var btn = document.getElementById("shelf-cap");\n'
-    '    if (!btn) return;\n'
+    '    var btns = [document.getElementById("shelf-cap"), document.getElementById("shelf-cap-clear")]\n'
+    '      .filter(Boolean);\n'
+    '    if (!btns.length) return;\n'
     '    var H2C = "https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js";\n'
     '    var PROXY = "https://images.weserv.nl/?url=";\n'
     '    var PAPER = "#fcfaf5";\n'
@@ -467,7 +468,7 @@ SHELF_CAPTURE_JS_TEMPLATE = (
     '    }\n'
     '\n'
     '    /* 찍은 그림 둘레에 여백을 두고 제목과 출처를 얹는다 */\n'
-    '    function compose(inner) {\n'
+    '    function compose(inner, clear) {\n'
     '      var pad = Math.round(inner.width * 0.035) + 16;\n'
     '      var fs = Math.max(26, Math.round(inner.width / 24));\n'
     '      var head = Math.round(fs * 2.2), foot = Math.round(fs * 1.9);\n'
@@ -475,7 +476,8 @@ SHELF_CAPTURE_JS_TEMPLATE = (
     '      c.width = inner.width + pad * 2;\n'
     '      c.height = inner.height + head + foot;\n'
     '      var g = c.getContext("2d");\n'
-    '      g.fillStyle = PAPER; g.fillRect(0, 0, c.width, c.height);\n'
+    '      // 투명 배경으로 받을 때는 종이색을 깔지 않는다\n'
+    '      if (!clear) { g.fillStyle = PAPER; g.fillRect(0, 0, c.width, c.height); }\n'
     '      g.fillStyle = "#111";\n'
     '      g.font = "800 " + fs + "px " + FONT;\n'
     '      g.textBaseline = "middle"; g.textAlign = "left";\n'
@@ -502,23 +504,26 @@ SHELF_CAPTURE_JS_TEMPLATE = (
     '      });\n'
     '    }\n'
     '\n'
-    '    function download(blob) {\n'
+    '    function download(blob, clear) {\n'
     '      var url = URL.createObjectURL(blob);\n'
     '      var a = document.createElement("a");\n'
-    '      a.href = url; a.download = __FILE__; a.rel = "noopener";\n'
+    '      a.href = url; a.rel = "noopener";\n'
+    '      a.download = clear ? __FILE__.replace(/\\.png$/, __CLEAR__ + ".png") : __FILE__;\n'
     '      document.body.appendChild(a);\n'
     '      a.click();\n'
     '      a.remove();\n'
     '      setTimeout(function () { URL.revokeObjectURL(url); }, 6000);\n'
     '    }\n'
     '\n'
-    '    btn.addEventListener("click", function () {\n'
+    '    function capture(btn) {\n'
+    '      var clear = btn.id === "shelf-cap-clear";\n'
     '      // 숨어 있는 쪽까지 그려지지 않도록, 지금 보이는 상자 하나만 넘긴다\n'
     '      var shelf = document.getElementById("shelf");\n'
     '      var view = (shelf && !shelf.hidden) ? shelf : document.getElementById("rlist");\n'
     '      if (!view) return;\n'
     '      var was = btn.textContent;\n'
-    '      btn.disabled = true; btn.textContent = __BUSY__;\n'
+    '      btns.forEach(function (b) { b.disabled = true; });\n'
+    '      btn.textContent = __BUSY__;\n'
     '      var swap = null, muted = null;\n'
     '      guard(loadH2C(), 15000, "html2canvas").then(function () {\n'
     '        swap = swapImages(view);\n'
@@ -535,33 +540,38 @@ SHELF_CAPTURE_JS_TEMPLATE = (
     '        var w = right > left ? Math.ceil(right - left) + 4 : view.offsetWidth;\n'
     '        w = Math.min(w, view.offsetWidth);\n'
     '        return guard(html2canvas(view, {\n'
-    '          backgroundColor: PAPER, scale: fitScale(w, view.offsetHeight),\n'
+    '          backgroundColor: clear ? null : PAPER, scale: fitScale(w, view.offsetHeight),\n'
     '          useCORS: true, logging: false, imageTimeout: 8000,\n'
     '          width: w, windowWidth: document.documentElement.clientWidth,\n'
     '        }), 40000, "그리기");\n'
     '      }).then(function (inner) {\n'
     '        // data: 주소는 길어지면 브라우저가 파일 이름을 무시한다. Blob으로 넘긴다.\n'
-    '        return guard(toBlob(compose(inner)), 25000, "내보내기");\n'
+    '        return guard(toBlob(compose(inner, clear)), 25000, "내보내기");\n'
     '      }).then(function (blob) {\n'
-    '        download(blob);\n'
+    '        download(blob, clear);\n'
     '      }).catch(function (e) {\n'
     '        console.error(e);\n'
     '        alert(__FAIL__);\n'
     '      }).then(function () {\n'
     '        if (swap) swap.undo.forEach(function (f) { f(); });\n'
     '        if (muted) unmute(muted);\n'
-    '        btn.disabled = false; btn.textContent = was;\n'
+    '        btns.forEach(function (b) { b.disabled = false; });\n'
+    '        btn.textContent = was;\n'
     '      });\n'
+    '    }\n'
+    '    btns.forEach(function (b) {\n'
+    '      b.addEventListener("click", function () { capture(b); });\n'
     '    });\n'
     '  })();\n'
     '  </script>\n'
 )
 
 
-def shelf_capture_js(busy, filename, fail, headline):
-    """언어별 문구만 갈아 끼운다."""
+def shelf_capture_js(busy, filename, fail, headline, clear_suffix='_투명'):
+    """언어별 문구만 갈아 끼운다. clear_suffix 는 투명 배경 파일 이름 끝에 붙는다."""
     j = lambda v: json.dumps(v, ensure_ascii=False)
     return (SHELF_CAPTURE_JS_TEMPLATE
+            .replace('__CLEAR__', j(clear_suffix))
             .replace('__BUSY__', j(busy))
             .replace('__FILE__', j(filename))
             .replace('__FAIL__', j(fail))
@@ -603,7 +613,7 @@ SHELF_JS = (
 SHELF_CSS = (
     '    .shelf-head { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; flex-wrap: wrap; }\n'
     '    .shelf-head h2 { margin-bottom: 0; border-bottom: none; padding-bottom: 0; }\n'
-    '    .shelf-tabs { display: flex; gap: 6px; flex: none; }\n'
+    '    .shelf-tabs { display: flex; gap: 6px; flex-wrap: wrap; }\n'
     '    .sh-tab, .sh-cap { font: inherit; font-size: 12px; font-weight: 700; cursor: pointer; padding: 5px 12px;\n'
     '              background: #fff; color: #000; border: 2px solid #000; box-shadow: 2px 2px 0 0 #000; }\n'
     '    .sh-tab:hover, .sh-cap:hover { background: #fde047; }\n'
@@ -1936,6 +1946,7 @@ for name, info in celebs.items():
         '        <button type="button" class="sh-tab on" data-view="spine" aria-pressed="true">▊ 책등</button>\n'
         '        <button type="button" class="sh-tab" data-view="list" aria-pressed="false">☰ 목록</button>\n'
         '        <button type="button" class="sh-cap" id="shelf-cap" title="지금 보고 있는 쪽을 그림으로 내려받아요">⤓ 이미지 저장</button>\n'
+        '        <button type="button" class="sh-cap" id="shelf-cap-clear" title="배경 없이 투명한 PNG로 내려받아요">⤓ 투명 배경</button>\n'
         '      </div>\n'
         '    </div>\n'
         + (('    <p class="muted">' + str(shared_count) + '권은 다른 셀럽도 함께 추천한 책이에요. 목록 보기에서 함께 추천한 셀럽 이름을 볼 수 있어요.</p>\n')
@@ -2815,6 +2826,7 @@ for name, info in celebs.items():
         '        <button type="button" class="sh-tab on" data-view="spine" aria-pressed="true">\u258a Book spines</button>\n'
         '        <button type="button" class="sh-tab" data-view="list" aria-pressed="false">\u2630 Book list</button>\n'
         '        <button type="button" class="sh-cap" id="shelf-cap" title="Download what you see as an image">\u2913 Save image</button>\n'
+        '        <button type="button" class="sh-cap" id="shelf-cap-clear" title="Download as a PNG with a transparent background">\u2913 Transparent</button>\n'
         '      </div>\n'
         '    </div>\n'
         '    <div class="shelf" id="shelf">\n' + en_spine_html +
@@ -2824,7 +2836,7 @@ for name, info in celebs.items():
         '  </section>\n'
         + shelf_capture_js('Saving…', 'bookshelf_' + slug + '.png',
                            'Could not create the image. Please try again.',
-                           _name_pl + ' — ' + str(n) + ' books')
+                           _name_pl + ' — ' + str(n) + ' books', '_transparent')
         + SHELF_JS
         + (EN_TR_NOTE_HTML if en_show_tr_note else '')
         + '  <section class="pfaq">\n'

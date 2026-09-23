@@ -448,7 +448,7 @@
     .grp-link { margin: 10px 0 0; padding: 8px 12px; background: #fff8e7; border: 2px solid #000; box-shadow: 3px 3px 0 0 #000; font-size: 14px; }
     .shelf-head { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
     .shelf-head h2 { margin-bottom: 0; border-bottom: none; padding-bottom: 0; }
-    .shelf-tabs { display: flex; gap: 6px; flex: none; }
+    .shelf-tabs { display: flex; gap: 6px; flex-wrap: wrap; }
     .sh-tab, .sh-cap { font: inherit; font-size: 12px; font-weight: 700; cursor: pointer; padding: 5px 12px;
               background: #fff; color: #000; border: 2px solid #000; box-shadow: 2px 2px 0 0 #000; }
     .sh-tab:hover, .sh-cap:hover { background: #fde047; }
@@ -534,6 +534,7 @@
         <button type="button" class="sh-tab on" data-view="spine" aria-pressed="true">▊ Book spines</button>
         <button type="button" class="sh-tab" data-view="list" aria-pressed="false">☰ Book list</button>
         <button type="button" class="sh-cap" id="shelf-cap" title="Download what you see as an image">⤓ Save image</button>
+        <button type="button" class="sh-cap" id="shelf-cap-clear" title="Download as a PNG with a transparent background">⤓ Transparent</button>
       </div>
     </div>
     <div class="shelf" id="shelf">
@@ -712,8 +713,9 @@
   </section>
   <script>
   (function () {
-    var btn = document.getElementById("shelf-cap");
-    if (!btn) return;
+    var btns = [document.getElementById("shelf-cap"), document.getElementById("shelf-cap-clear")]
+      .filter(Boolean);
+    if (!btns.length) return;
     var H2C = "https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js";
     var PROXY = "https://images.weserv.nl/?url=";
     var PAPER = "#fcfaf5";
@@ -821,7 +823,7 @@
     }
 
     /* 찍은 그림 둘레에 여백을 두고 제목과 출처를 얹는다 */
-    function compose(inner) {
+    function compose(inner, clear) {
       var pad = Math.round(inner.width * 0.035) + 16;
       var fs = Math.max(26, Math.round(inner.width / 24));
       var head = Math.round(fs * 2.2), foot = Math.round(fs * 1.9);
@@ -829,7 +831,8 @@
       c.width = inner.width + pad * 2;
       c.height = inner.height + head + foot;
       var g = c.getContext("2d");
-      g.fillStyle = PAPER; g.fillRect(0, 0, c.width, c.height);
+      // 투명 배경으로 받을 때는 종이색을 깔지 않는다
+      if (!clear) { g.fillStyle = PAPER; g.fillRect(0, 0, c.width, c.height); }
       g.fillStyle = "#111";
       g.font = "800 " + fs + "px " + FONT;
       g.textBaseline = "middle"; g.textAlign = "left";
@@ -856,23 +859,26 @@
       });
     }
 
-    function download(blob) {
+    function download(blob, clear) {
       var url = URL.createObjectURL(blob);
       var a = document.createElement("a");
-      a.href = url; a.download = "bookshelf_charles-enter.png"; a.rel = "noopener";
+      a.href = url; a.rel = "noopener";
+      a.download = clear ? "bookshelf_charles-enter.png".replace(/\.png$/, "_transparent" + ".png") : "bookshelf_charles-enter.png";
       document.body.appendChild(a);
       a.click();
       a.remove();
       setTimeout(function () { URL.revokeObjectURL(url); }, 6000);
     }
 
-    btn.addEventListener("click", function () {
+    function capture(btn) {
+      var clear = btn.id === "shelf-cap-clear";
       // 숨어 있는 쪽까지 그려지지 않도록, 지금 보이는 상자 하나만 넘긴다
       var shelf = document.getElementById("shelf");
       var view = (shelf && !shelf.hidden) ? shelf : document.getElementById("rlist");
       if (!view) return;
       var was = btn.textContent;
-      btn.disabled = true; btn.textContent = "Saving…";
+      btns.forEach(function (b) { b.disabled = true; });
+      btn.textContent = "Saving…";
       var swap = null, muted = null;
       guard(loadH2C(), 15000, "html2canvas").then(function () {
         swap = swapImages(view);
@@ -889,23 +895,27 @@
         var w = right > left ? Math.ceil(right - left) + 4 : view.offsetWidth;
         w = Math.min(w, view.offsetWidth);
         return guard(html2canvas(view, {
-          backgroundColor: PAPER, scale: fitScale(w, view.offsetHeight),
+          backgroundColor: clear ? null : PAPER, scale: fitScale(w, view.offsetHeight),
           useCORS: true, logging: false, imageTimeout: 8000,
           width: w, windowWidth: document.documentElement.clientWidth,
         }), 40000, "그리기");
       }).then(function (inner) {
         // data: 주소는 길어지면 브라우저가 파일 이름을 무시한다. Blob으로 넘긴다.
-        return guard(toBlob(compose(inner)), 25000, "내보내기");
+        return guard(toBlob(compose(inner, clear)), 25000, "내보내기");
       }).then(function (blob) {
-        download(blob);
+        download(blob, clear);
       }).catch(function (e) {
         console.error(e);
         alert("Could not create the image. Please try again.");
       }).then(function () {
         if (swap) swap.undo.forEach(function (f) { f(); });
         if (muted) unmute(muted);
-        btn.disabled = false; btn.textContent = was;
+        btns.forEach(function (b) { b.disabled = false; });
+        btn.textContent = was;
       });
+    }
+    btns.forEach(function (b) {
+      b.addEventListener("click", function () { capture(b); });
     });
   })();
   </script>
