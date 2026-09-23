@@ -69,7 +69,8 @@ BROWSER_UA = ('Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 '
 #   2: 예스24 부제 오인 제거, 알라딘 항상 조회, 위키백과 저자 확인, Open Library 추가
 #   3: 위키데이터 추가 (한국 문학: 흰 → The White Book)
 #   4: 한국문학번역원 디지털 도서관 추가 (English Title(Printed))
-LOOKUP_VERSION = 4
+#   5: 번역원 검색을 GET 으로 먼저, 한국어 화면·괄호 없는 '영문 제목' 칸도 읽기 (4는 거의 못 잡았다)
+LOOKUP_VERSION = 5
 
 NOTE = (
     'Official English edition titles, one entry per book. '
@@ -455,39 +456,31 @@ def wikidata_en(title, author):
 # 검색은 CSRF 토큰이 든 POST 폼이라 세션(쿠키)을 유지한다.
 LTI_BASE = 'https://library.ltikorea.or.kr'
 LTI = {'opener': None, 'csrf': None}
-LTI_ITEM_RE = re.compile(
-    r'<a href="(?:https://library\.ltikorea\.or\.kr)?/originalworks/(\d+)" class="title">(.*?)</a>'
-    r'.*?<p class="author">(.*?)</p>', re.S)
-LTI_EN_RE = re.compile(r'<dt>\s*English Title\s*\(([^)]*)\)\s*</dt>\s*<dd>(.*?)</dd>', re.S)
-
-
-def _lti_open(url, data=None):
-    import http.cookiejar
-    if LTI['opener'] is None:
-        LTI['opener'] = urllib.request.build_opener(
-            urllib.request.HTTPCookieProcessor(http.cookiejar.CookieJar()))
-    body = urllib.parse.urlencode(data).encode() if data is not None else None
-    req = urllib.request.Request(url, data=body, headers={
-        'User-Agent': BROWSER_UA, 'Accept-Language': 'en,ko;q=0.8',
-        'Referer': LTI_BASE + '/originalworks'})
-    try:
-        with LTI['opener'].open(req, timeout=20) as r:
-            return r.read().decode('utf-8', 'replace')
-    except urllib.error.HTTPError as e:
-        raise Transient('%s %s' % (e.code, url))
-    except Exception as e:
-        raise Transient('%s %s' % (e, url))
+# 목록의 책 링크. 화면 언어·검색 방식에 따라 마크업이 조금씩 달라서 링크만 느슨하게 잡는다.
+LTI_LINK_RE = re.compile(
+    r'<a[^>]*href="(?:https?://library\.ltikorea\.or\.kr)?/originalworks/(\d+)"[^>]*>(.*?)</a>', re.S)
+# 상세 페이지의 영어 제목 칸. 영어 화면은 'English Title(Printed)', 한국어 화면은 '영문 제목'.
+# 괄호가 없는 칸도 있다(불편한 편의점: 영문 제목 The Inconvenient Convenience Store).
+LTI_EN_RE = re.compile(
+    r'<dt[^>]*>\s*(?:English\s*Title|영문\s*제목)\s*(?:\(([^)]*)\))?\s*</dt>\s*<dd[^>]*>(.*?)</dd>',
+    re.S | re.I)
 
 
 def lti_search(title, retried=False):
+    """원작 목록 검색 결과 HTML. GET 으로 먼저 해 보고, 안 되면 CSRF 토큰을 받아 POST."""
+    q = urllib.parse.urlencode({'search_word': title, 'pageSize': '30', 'rowPerPage': '30'})
+    page = _lti_open(LTI_BASE + '/originalworks?' + q)
+    if LTI_LINK_RE.search(page or ''):
+        return page
     if not LTI['csrf']:
-        page = _lti_open(LTI_BASE + '/originalworks')
-        m = re.search(r'name="_csrf" value="([^"]+)"', page)
+        m = re.search(r'name="_csrf" value="([^"]+)"', page or '')
+        if not m:
+            m = re.search(r'name="_csrf" value="([^"]+)"', _lti_open(LTI_BASE + '/originalworks'))
         if not m:
             raise Transient('번역원: 검색 토큰(_csrf)을 못 찾음')
         LTI['csrf'] = m.group(1)
     form = {'_csrf': LTI['csrf'], 'search_word': title, 'num_current_page': '1',
-            'pageSize': '10', 'rowPerPage': '10', 'listType': 'list', 'sortTarget': 'CRDT'}
+            'pageSize': '30', 'rowPerPage': '30', 'listType': 'list', 'sortTarget': 'CRDT'}
     try:
         return _lti_open(LTI_BASE + '/originalworks', form)
     except Transient as e:
@@ -498,24 +491,40 @@ def lti_search(title, retried=False):
 
 
 def ltikorea_en(title, author):
-    """(영어판 제목, 상세 URL, 메모) — 제목과 저자 한국어 이름이 맞는 원작만 본다."""
+    """(영어 제목, 출간본인가, 상세 URL, 메모)
+
+    목록에서 한국어 제목이 같은 원작을 고르고, 상세 페이지에 저자 한국어 이름이 있을 때만 받는다.
+    'English Title(Printed)' 는 실제 출간된 번역서 제목이라 출간본(True),
+    괄호 없는 '영문 제목'은 번역원이 붙인 영어 제목이라 출간 여부를 모른다(False).
+    """
     marks = [w for w in re.split(r'[\s,·/]+', re.sub(r'\([^)]*\)', ' ', author or '')) if len(w) >= 2]
     page = lti_search(title)
     want = norm_ko(title)
-    for wid, t, auth in LTI_ITEM_RE.findall(page or ''):
-        if norm_ko(html.unescape(re.sub(r'<[^>]+>', '', t))) != want:
-            continue
-        if marks and not any(m in auth for m in marks):
-            continue
+    links = LTI_LINK_RE.findall(page or '')
+    ids = []
+    for wid, t in links:
+        if wid not in ids and norm_ko(html.unescape(re.sub(r'<[^>]+>', '', t))) == want:
+            ids.append(wid)
+    if not ids:
+        return None, False, None, '번역원: 검색 결과 %d건 중 제목 일치 없음' % len({w for w, _ in links})
+    for wid in ids[:3]:
         url = '%s/originalworks/%s' % (LTI_BASE, wid)
         detail = _lti_open(url)
-        found = [(kind.strip(), tidy(v)) for kind, v in LTI_EN_RE.findall(detail)]
-        for kind, v in found:
-            if kind.lower() == 'printed' and v and v != '-':
-                return v, url, None
-        other = ['%s(%s)' % (v, k) for k, v in found if v and v != '-']
-        return None, url, ('번역원 영어 제목(출간 아님): ' + ', '.join(other)) if other else None
-    return None, None, None
+        if marks and not any(m in detail for m in marks):
+            continue
+        best = None
+        for kind, v in LTI_EN_RE.findall(detail):
+            v = tidy(v)
+            if not v or v == '-':
+                continue
+            printed = bool(re.search(r'print|출판|출간', kind or '', re.I))
+            if printed:
+                return v, True, url, None
+            best = best or v
+        if best:
+            return best, False, url, None
+        return None, False, url, '번역원: 원작은 있으나 영어 제목 칸이 비어 있음'
+    return None, False, None, '번역원: 제목은 맞으나 저자가 다름'
 
 
 # ── 6. 영어판이 실제로 있는지 확인 ───────────────────────────────────
@@ -647,14 +656,14 @@ def lookup(book, ttb_key, sleep):
     # 번역원은 한국 책의 번역서 목록이라, 알라딘이 영어 원제를 준 번역서(외국 책)는 건너뛴다
     if not looks_english(orig):
         try:
-            lti, lti_url, lti_note = ltikorea_en(book['title'], book['author'])
+            lti, lti_printed, lti_url, lti_note = ltikorea_en(book['title'], book['author'])
             reached += 1
         except Transient as e:
-            lti, lti_url, lti_note = None, None, None
+            lti, lti_printed, lti_url, lti_note = None, False, None, None
             notes.append('번역원 못 읽음: %s' % e)
         time.sleep(sleep)
         if lti:
-            found.append((lti, 'ltikorea', lti_url))
+            found.append((lti, 'ltikorea' if lti_printed else 'ltikorea_title', lti_url))
         if lti_note:
             notes.append(lti_note)
     if not reached:
@@ -906,7 +915,8 @@ def main():
         print('  %s %s / %s → %s%s' % (
             mark, b['title'], b['author'] or '-',
             ' | '.join('%s (%s%s)' % (c['title'], '+'.join(c['sources']),
-                                      ', 확인' if c['verified'] else '') for c in cands) or '(후보 없음)',
+                                      ', 확인' if c['verified'] else '') for c in cands)
+            or '(후보 없음%s)' % ''.join(' · ' + n for n in notes if n.startswith('번역원')),
             '  [자동 승인]' if new.get('auto') else ''))
 
     n = collections.Counter(v.get('status', 'pending') for v in titles.values())
