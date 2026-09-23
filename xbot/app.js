@@ -244,60 +244,51 @@ function newCanvas([W, H], bg) {
 
 /* ---------- 책장: 표지 장 ---------- */
 async function drawShelfCover(size, img, type, opts) {
+  // 첫 장은 글 없이 책 표지만 모아 둔다. '인물 사진'을 켜면 사진을 한쪽에 곁들인다.
   const { c, ctx, W, H } = newCanvas(size, opts.bg);
-  const accent = ACCENT[type];
   const s = W / 1200;
-  const pad = Math.round(64 * s);
+  const pad = Math.round(56 * s);
   const wide = W > H;
   const photo = !opts.portrait ? null : opts.photo || (img.portrait ? await loadImage(img.portrait, 1200) : null);
-
-  // 사진(또는 표지 모음) 자리
-  const media = wide
-    ? { x: 0, y: 0, w: Math.round(W * 0.42), h: H }
-    : { x: 0, y: 0, w: W, h: Math.round(H * 0.5) };
+  let area = { x: pad, y: pad, w: W - pad * 2, h: H - pad * 2.2 };
   if (photo) {
-    drawPhoto(ctx, photo, media);
-  } else {
-    const covers = await Promise.all(img.books.map((b) => loadImage(b.cover, 400)));
-    const n = covers.length, cols = n <= 2 ? n : 3, rows = Math.ceil(n / cols);
-    const inner = { x: media.x + pad, y: media.y + pad, w: media.w - pad * (wide ? 1.2 : 2), h: media.h - pad * 1.6 };
-    const gap = 18 * s;
-    const cw = (inner.w - gap * (cols - 1)) / cols;
-    const ch = Math.min((inner.h - gap * (rows - 1)) / rows, cw / 0.68);   // 칸이 표지보다 길면 줄 사이가 벌어지니 맞춘다
-    const y0 = inner.y + (inner.h - (ch * rows + gap * (rows - 1))) / 2;
-    covers.forEach((im, i) => {
-      const r = Math.floor(i / cols), k = i % cols;
-      drawCover(ctx, im, { x: inner.x + k * (cw + gap), y: y0 + r * (ch + gap), w: cw, h: ch }, 'center', img.books[i].emoji);
-    });
+    const ph = wide ? { x: 0, y: 0, w: Math.round(W * 0.4), h: H } : { x: 0, y: 0, w: W, h: Math.round(H * 0.45) };
+    drawPhoto(ctx, photo, ph);
+    area = wide
+      ? { x: ph.w + pad, y: pad, w: W - ph.w - pad * 2, h: H - pad * 2.2 }
+      : { x: pad, y: ph.h + pad * 0.8, w: W - pad * 2, h: H - ph.h - pad * 2 };
   }
-
-  // 글
-  const tx = wide ? media.w + pad : pad;
-  const tw = W - tx - pad;
-  let y = wide ? pad + 70 * s : media.h + pad + 40 * s;
-
-  ctx.fillStyle = accent;
-  ctx.font = DOTUM(Math.round(28 * s), 700);
-  ctx.fillText(type === 'new' ? 'NEW · 새로 들어온 책' : '최애의 독서', tx, y);
-
-  ctx.fillStyle = INK;
-  ctx.font = DOTUM(Math.round(76 * s), 700);
-  y = drawLines(ctx, wrap(ctx, img.name, tw, 2), tx, y + 96 * s, 90 * s);
-  ctx.font = DOTUM(Math.round(56 * s), 700);
-  drawLines(ctx, ['의 책장'], tx, y - 10 * s, 70 * s);
-
-  // 아주 작게 시리즈 번호
+  await drawCoverGrid(ctx, img.books, area, s);
   ctx.font = DOTUM(Math.round(22 * s), 700);
   ctx.fillStyle = MUTE;
   ctx.textAlign = 'right';
-  ctx.fillText('#' + img.series, W - pad * 0.6, pad * 0.6 + 16 * s);
+  ctx.fillText('#' + img.series, W - pad * 0.5, pad * 0.5 + 12 * s);
   ctx.textAlign = 'left';
-
-  // 주소는 사진과 겹치지 않게 글 쪽 아래에
-  ctx.fillStyle = MUTE;
-  ctx.font = DOTUM(Math.round(22 * s), 700);
-  ctx.fillText('favorbook.co.kr', tx, H - pad * 0.7);
+  drawFooter(ctx, W, H, photo && wide ? area.x : pad, '');
   return c;
+}
+
+// 표지들을 상자 안에 가능한 한 크게 격자로 놓는다(칸 수는 상자 모양에 맞춰 고른다)
+async function drawCoverGrid(ctx, books, area, s) {
+  const covers = await Promise.all(books.map((b) => loadImage(b.cover, 500)));
+  const n = covers.length;
+  if (!n) return;
+  const gap = 22 * s;
+  let best = null;
+  for (let cols = 1; cols <= n; cols++) {
+    const rows = Math.ceil(n / cols);
+    const cw = Math.min((area.w - gap * (cols - 1)) / cols, ((area.h - gap * (rows - 1)) / rows) * 0.68);
+    if (!best || cw > best.cw) best = { cols, rows, cw };
+  }
+  const { cols, rows, cw } = best;
+  const ch = cw / 0.68;
+  const y0 = area.y + (area.h - (ch * rows + gap * (rows - 1))) / 2;
+  covers.forEach((im, i) => {
+    const r = Math.floor(i / cols), k = i % cols;
+    const inRow = Math.min(cols, n - r * cols);
+    const x0 = area.x + (area.w - (cw * inRow + gap * (inRow - 1))) / 2;
+    drawCover(ctx, im, { x: x0 + k * (cw + gap), y: y0 + r * (ch + gap), w: cw, h: ch }, 'center', books[i].emoji);
+  });
 }
 
 /* ---------- 책장: 책 장 ---------- */
@@ -487,33 +478,26 @@ function bookBubble(ctx, x, y, w, h, book, im, accent, s) {
 }
 
 async function drawChatCover(size, img, type, opts) {
+  // 첫 장은 '최애의 독서' 머리줄 아래에 책 표지만 모아 둔다(말풍선 안)
   const { c, ctx, W, H } = newCanvas(size, opts.bg);
   const accent = ACCENT[type];
   const s = W / 1200, pad = Math.round(56 * s), wide = W > H;
   const photo = !opts.portrait ? null : opts.photo || (img.portrait ? await loadImage(img.portrait, 1000) : null);
-  let y = chatHeader(ctx, pad, pad * 0.8, s, accent);
-  const maxW = wide ? W * 0.56 : W - pad * 2;
-  const n = img.books.length;
-  y = textBubble(ctx, pad, y, maxW,
-    type === 'new' ? img.name + ' 책장에 새 책이 들어왔어요 🆕' : img.name + '의 책장을 열어 볼게요 📚', s, { px: 34, weight: 700 });
-  // 사진(또는 표지 모음) 말풍선: 넓은 판은 오른쪽, 좁은 판은 아래
-  const box = wide
-    ? { x: W * 0.62, y: pad * 0.8, w: W * 0.38 - pad, h: H - pad * 2.2 }
-    : { x: pad, y: y + 20 * s, w: W - pad * 2, h: H - (y + 20 * s) - pad * 1.6 };
+  const top = chatHeader(ctx, pad, pad * 0.8, s, accent);
+  const box = { x: pad, y: top, w: W - pad * 2, h: H - top - pad * 1.6 };
+  let grid = box;
   if (photo) {
-    drawPhoto(ctx, photo, box, 26 * s);
-  } else {
-    ctx.fillStyle = BUBBLE;
-    roundRectPath(ctx, box.x, box.y, box.w, box.h, 26 * s);
-    ctx.fill();
-    const covers = await Promise.all(img.books.map((b) => loadImage(b.cover, 400)));
-    const cols = n <= 2 ? n : (wide ? 2 : 3), rows = Math.ceil(n / cols), gap = 14 * s, ip = 24 * s;
-    const cw = (box.w - ip * 2 - gap * (cols - 1)) / cols;
-    const ch = Math.min((box.h - ip * 2 - gap * (rows - 1)) / rows, cw / 0.68);
-    const y0 = box.y + (box.h - (ch * rows + gap * (rows - 1))) / 2;
-    covers.forEach((im, i) => drawCover(ctx, im,
-      { x: box.x + ip + (i % cols) * (cw + gap), y: y0 + Math.floor(i / cols) * (ch + gap), w: cw, h: ch }, 'center', img.books[i].emoji));
+    const ph = wide ? { x: box.x, y: box.y, w: box.w * 0.38, h: box.h } : { x: box.x, y: box.y, w: box.w, h: box.h * 0.45 };
+    drawPhoto(ctx, photo, ph, 26 * s);
+    grid = wide
+      ? { x: ph.x + ph.w + 18 * s, y: box.y, w: box.w - ph.w - 18 * s, h: box.h }
+      : { x: box.x, y: ph.y + ph.h + 18 * s, w: box.w, h: box.h - ph.h - 18 * s };
   }
+  ctx.fillStyle = BUBBLE;
+  roundRectPath(ctx, grid.x, grid.y, grid.w, grid.h, 26 * s);
+  ctx.fill();
+  const ip = 26 * s;
+  await drawCoverGrid(ctx, img.books, { x: grid.x + ip, y: grid.y + ip, w: grid.w - ip * 2, h: grid.h - ip * 2 }, s);
   ctx.font = DOTUM(Math.round(22 * s), 700);
   ctx.fillStyle = MUTE;
   ctx.textAlign = 'right';
@@ -748,7 +732,7 @@ function cardEl(it, isDone) {
   updateDone();
 
   // 인물 사진: 있으면 기본으로 넣고, 체크를 풀면 뺀다
-  portraitBox.checked = hasPortrait(it);
+  portraitBox.checked = it.type === 'book' && hasPortrait(it);
   portraitBox.disabled = !hasPortrait(it);
   if (!hasPortrait(it)) portraitBox.parentElement.title = '저장된 인물 사진이 없어요';
 
@@ -834,7 +818,7 @@ function cardEl(it, isDone) {
         if (upUrl) URL.revokeObjectURL(upUrl);
         upPhoto = null; upUrl = '';
         unBtn.hidden = true;
-        portraitBox.checked = hasPortrait(it);
+        portraitBox.checked = it.type === 'book' && hasPortrait(it);
         portraitBox.disabled = !hasPortrait(it);
         render();
       } else if (act === 'copytext') {
