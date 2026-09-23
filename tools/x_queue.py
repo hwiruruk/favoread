@@ -5,13 +5,13 @@ API를 쓰지 않는 반자동 봇이다. 이 스크립트는 글과 이미지 �
 data/x_queue.json 에 넣고, 실제 게시는 /xbot/ 페이지에서 사람이 버튼으로 한다.
 그래서 X API 비용이 0원이다.
 
-하루 3칸:
-  1. 새로 추가된 책이 있으면 '새로 추가', 없으면 '셀럽 책장'
-  2. '이 책을 읽은 셀럽들' (3명 이상이 읽은 책)
-  3. '셀럽 책장'
+하루치(개수 제한 없음 — 모자라면 게시 도우미에서 더 만든다):
+  1. '새로 추가' — 새 책이 들어온 인물 모두
+  2. '이 책을 읽은 셀럽들' (3명 이상이 읽은 책) — 기본 1개(--books)
+  3. '셀럽 책장' — 기본 3개(--shelves)
 
-셀럽 책장은 시리즈다. 한 번에 최대 6권씩, 이미 나간 책은 빼고 #1, #2 … 로
-이어 간다. 한 편은 타래로 만든다: 첫 글에 들어가는 만큼 책을 쓰고 나머지는 답글로. 인물은 한 바퀴를 다 돌 때까지 다시 나오지 않는다(가장 오래전에
+셀럽 책장은 시리즈다. 글 하나에 최대 3권씩, 이미 나간 책은 빼고 이어 간다.
+280자를 넘으면 못 넣은 책은 답글(타래)로 잇는다. 인물은 한 바퀴를 다 돌 때까지 다시 나오지 않는다(가장 오래전에
 나간 인물부터). 무엇을 언제 냈는지는 data/x_state.json 에 남는다.
 
 책 줄에 붙는 출처(날짜 + 매체)는 URL에서 뽑고, URL에 날짜가 없으면 원문을
@@ -52,7 +52,9 @@ KST = datetime.timezone(datetime.timedelta(hours=9))
 KEEP_DAYS = 7            # 큐에 남겨 둘 날짜 수 (놓친 날을 나중에 올릴 수 있게)
 MIN_CELEB_BOOKS = 2      # 책장 시리즈를 시작할 최소 권수
 MIN_BOOK_CELEBS = 3      # '이 책을 읽은 셀럽들'에 쓸 최소 인원
-SERIES_SIZE = 6          # 책장 한 편에 담는 최대 권수 (이미지 4장 = 표지 1 + 책 2권씩 3장)
+SERIES_SIZE = 3          # 책장 글 하나에 담는 최대 권수 (이미지: 3권 모아 1장 + 한 권씩 3장)
+SHELVES = 3              # 하루에 미리 만들어 둘 셀럽 책장 수(--shelves). 모자라면 페이지에서 더 만든다
+BOOK_POSTS = 1           # 하루에 미리 만들어 둘 '읽은 사람 모여라' 수(--books)
 TWEET_LIMIT = 280
 URL_WEIGHT = 23          # X는 링크를 길이와 상관없이 23으로 센다
 HASHTAG = '#최애의독서'
@@ -581,32 +583,30 @@ def build_day(date_str, ctx, state, rng):
 
     items = []
 
-    # 1칸: 새로 추가 (가장 많이 들어온 인물부터) / 없으면 책장
-    if pending:
-        name = max(pending, key=lambda n: (len(pending[n]), n))
-        fresh = set(pending.pop(name))
+    # 새로 추가: 새 책이 들어온 인물은 모두(한 글에 최대 3권씩 나눠서)
+    for name in sorted(pending, key=lambda n: (-len(pending[n]), n)):
+        fresh = set(pending[name])
         books = [b for b in order_books(celebs[name]['books'], book_idx, rng) if b['title'].strip() in fresh]
-        books = with_emoji([dict(b) for b in books[:SERIES_SIZE]])
-        if len(fresh) > SERIES_SIZE:          # 남은 새 책은 다음 날로
-            pending[name] = sorted(fresh - {b['title'].strip() for b in books})
-        n = take(name, books)
-        items.append(make_shelf_item('new', name, celebs[name], books, n, ctx))
-    else:
-        items.append(next_shelf())
+        for i in range(0, len(books), SERIES_SIZE):
+            part = with_emoji([dict(b) for b in books[i:i + SERIES_SIZE]])
+            n = take(name, part)
+            items.append(make_shelf_item('new', name, celebs[name], part, n, ctx))
+    pending.clear()
 
-    # 2칸: 이 책을 읽은 셀럽들 (처음 한 바퀴는 많이 읽힌 책부터)
+    # 이 책을 읽은 셀럽들 (처음 한 바퀴는 많이 읽힌 책부터)
     by_count = sorted(book_pool, key=lambda t: -len(book_idx[t]['celebs']))
-    title = pick_least_recent(book_pool, book_last, rng, by_count)
-    if title:
+    for _ in range(ctx.get('book_posts', BOOK_POSTS)):
+        title = pick_least_recent([t for t in book_pool if book_last.get(t) != date_str], book_last, rng, by_count)
+        if not title:
+            break
         book_last[title] = date_str
         entry = dict(book_idx[title])
         entry['book'] = with_emoji([dict(entry['book'])])[0]
         items.append(make_book_item(title, entry, ctx['shortlinks'], ctx))
-    else:
-        items.append(next_shelf())
 
-    # 3칸: 책장
-    items.append(next_shelf())
+    # 셀럽 책장
+    for _ in range(ctx.get('shelves', SHELVES)):
+        items.append(next_shelf())
 
     items = [it for it in items if it]
     for i, it in enumerate(items, 1):
@@ -680,6 +680,8 @@ def main():
     ap.add_argument('--force', action='store_true', help='그날 치가 이미 있어도 다시 만든다')
     ap.add_argument('--dry-run', action='store_true', help='파일은 안 바꾸고 출력만')
     ap.add_argument('--offline', action='store_true', help='출처 원문을 읽지 않는다')
+    ap.add_argument('--shelves', type=int, default=SHELVES, help='만들 셀럽 책장 수 (기본 %(default)s)')
+    ap.add_argument('--books', type=int, default=BOOK_POSTS, help="만들 '읽은 사람 모여라' 수 (기본 %(default)s)")
     args = ap.parse_args()
 
     date_str = args.date or datetime.datetime.now(KST).date().isoformat()
@@ -692,6 +694,8 @@ def main():
         'emoji': {k: v for k, v in load_json(EMOJI_JSON, {}).items() if not k.startswith('_')},
         'offline': args.offline,
         'notes': load_notes(),
+        'shelves': max(0, args.shelves),
+        'book_posts': max(0, args.books),
     }
     state = load_json(STATE_JSON, {})
     queue = load_json(QUEUE_JSON, {'days': []})
