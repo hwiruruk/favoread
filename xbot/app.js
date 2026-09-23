@@ -467,48 +467,93 @@ function cardEl(it, isDone) {
   el.className = 'card' + (isDone ? ' done' : '');
   el.innerHTML =
     '<div>' +
-      '<div class="card-head"><span class="tag ' + it.type + '"></span><span class="len"></span></div>' +
-      '<textarea spellcheck="false"></textarea>' +
-      '<div class="actions">' +
-        '<button class="btn primary" data-act="post">𝕏 X에 쓰기</button>' +
-        '<button class="btn" data-act="copytext">글 복사</button>' +
-        '<button class="btn" data-act="done"></button>' +
-      '</div>' +
+      '<div class="card-head"><span class="tag ' + it.type + '"></span><span class="muted thread-n"></span></div>' +
+      '<div class="posts"></div>' +
+      '<details class="sources" hidden><summary></summary><ul></ul></details>' +
+      '<div class="actions"><button class="btn" data-act="done"></button></div>' +
     '</div>' +
     '<div>' +
       '<div class="preview-head">' +
-        '<span class="muted">X 모바일 미리보기</span>' +
+        '<span class="muted">X 모바일 미리보기 (첫 글 이미지)</span>' +
         '<label class="toggle"><input type="checkbox" data-opt="portrait"> 인물 사진</label>' +
       '</div>' +
       '<div class="xgrid"></div>' +
       '<div class="thumbs"></div>' +
       '<div class="actions">' +
         '<button class="btn" data-act="saveall">이미지 모두 저장</button>' +
-        '<button class="btn" data-act="share" hidden>공유 (글+이미지)</button>' +
+        '<button class="btn" data-act="share" hidden>공유 (첫 글+이미지)</button>' +
       '</div>' +
     '</div>';
 
   $('.tag', el).textContent = it.label + (it.series ? ' #' + it.series : '');
-  const ta = $('textarea', el);
-  const len = $('.len', el);
   const doneBtn = $('[data-act="done"]', el);
   const portraitBox = $('[data-opt="portrait"]', el);
-  ta.value = it.text;
 
-  const updateLen = () => {
-    const n = tweetLength(ta.value);
-    len.textContent = n + ' / 280';
-    len.classList.toggle('over', n > 280);
-  };
+  // 타래: 첫 글 + 답글들. 답글은 앞 글 주소를 붙여넣으면 그 글에 이어서 쓴다
+  const posts = (it.thread && it.thread.length ? it.thread : [it.text]);
+  if (posts.length > 1) $('.thread-n', el).textContent = '🧵 타래 ' + posts.length + '개';
+  const postsEl = $('.posts', el);
+  const areas = [], urls = [];
+  posts.forEach((text, k) => {
+    const p = document.createElement('div');
+    p.className = 'post' + (k ? ' reply' : '');
+    p.innerHTML =
+      '<div class="post-head"><span></span><span class="len"></span></div>' +
+      '<textarea spellcheck="false"></textarea>' +
+      '<div class="actions">' +
+        '<button class="btn' + (k ? '' : ' primary') + '" data-act="post" data-k="' + k + '">' + (k ? '↳ 답글 쓰기' : '𝕏 X에 쓰기') + '</button>' +
+        '<button class="btn" data-act="copytext" data-k="' + k + '">글 복사</button>' +
+      '</div>' +
+      (k < posts.length - 1
+        ? '<input class="posted-url" type="url" inputmode="url" placeholder="올린 글 주소 붙여넣기 → 다음 답글이 여기에 이어져요">'
+        : '');
+    $('.post-head span', p).textContent = posts.length > 1 ? (k ? '답글 ' + k : '첫 글') + ' · ' + (k + 1) + '/' + posts.length : '';
+    const ta = $('textarea', p);
+    const len = $('.len', p);
+    ta.value = text;
+    const updateLen = () => {
+      const n = tweetLength(ta.value);
+      len.textContent = n + ' / 280';
+      len.classList.toggle('over', n > 280);
+    };
+    const grow = () => { ta.style.height = 'auto'; ta.style.height = ta.scrollHeight + 2 + 'px'; };
+    ta.addEventListener('input', () => { updateLen(); grow(); });
+    updateLen();
+    requestAnimationFrame(grow);
+    areas.push(ta);
+    const u = $('.posted-url', p);
+    if (u) {
+      const key = 'xbot-url-' + it.id + '-' + k;
+      u.value = store(key) || '';
+      u.addEventListener('change', () => store(key, u.value.trim()));
+      urls.push(u);
+    }
+    postsEl.appendChild(p);
+  });
+  const ta = areas[0];
+
+  // 출처 확인: 올리기 전에 원문을 열어 볼 수 있게
+  const srcBooks = ((it.image || {}).books || []).filter((bk) => /^https?:\/\//i.test(bk.source || ''));
+  if (srcBooks.length) {
+    const det = $('.sources', el);
+    det.hidden = false;
+    $('summary', det).textContent = '출처 확인 (' + srcBooks.length + ')';
+    const ul = $('ul', det);
+    srcBooks.forEach((bk) => {
+      const li = document.createElement('li');
+      li.innerHTML = '<span></span> <a target="_blank" rel="noopener"></a>';
+      li.firstChild.textContent = bk.emoji + ' ' + bk.title + (bk.src ? ' · ' + bk.src : '');
+      li.lastChild.href = bk.source;
+      li.lastChild.textContent = '열기 ↗';
+      ul.appendChild(li);
+    });
+  }
+
   const updateDone = () => {
     const on = el.classList.contains('done');
     doneBtn.textContent = on ? '✓ 올렸어요' : '올렸어요';
     doneBtn.classList.toggle('ok', on);
   };
-  const grow = () => { ta.style.height = 'auto'; ta.style.height = ta.scrollHeight + 2 + 'px'; };
-  ta.addEventListener('input', () => { updateLen(); grow(); });
-  updateLen();
-  requestAnimationFrame(grow);
   updateDone();
 
   // 인물 사진: 있으면 기본으로 넣고, 체크를 풀면 뺀다
@@ -542,9 +587,20 @@ function cardEl(it, isDone) {
     const act = t.dataset.act;
     try {
       if (act === 'post') {
-        window.open(INTENT + encodeURIComponent(ta.value), '_blank', 'noopener');
+        const k = +t.dataset.k;
+        let url = INTENT + encodeURIComponent(areas[k].value);
+        if (k > 0) {
+          const id = statusId(urls[k - 1].value);
+          if (!id) {
+            status('앞 글을 올린 뒤 그 주소를 붙여넣어야 답글로 이어져요');
+            urls[k - 1].focus();
+            return;
+          }
+          url += '&in_reply_to=' + id;
+        }
+        window.open(url, '_blank', 'noopener');
       } else if (act === 'copytext') {
-        await navigator.clipboard.writeText(ta.value);
+        await navigator.clipboard.writeText(areas[+t.dataset.k].value);
         status('글을 복사했어요');
       } else if (act === 'done') {
         const on = !el.classList.contains('done');
@@ -583,6 +639,12 @@ function cardEl(it, isDone) {
     }
   });
   return el;
+}
+
+// 'https://x.com/계정/status/123…' → '123…'
+function statusId(u) {
+  const m = String(u || '').match(/status(?:es)?\/(\d{5,})/);
+  return m ? m[1] : '';
 }
 
 // X 모바일 타임라인처럼 잘라서 보여 주고, 아래에 원본 크기 썸네일을 둔다

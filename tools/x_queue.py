@@ -11,7 +11,7 @@ data/x_queue.json 에 넣고, 실제 게시는 /xbot/ 페이지에서 사람이 
   3. '셀럽 책장'
 
 셀럽 책장은 시리즈다. 한 번에 최대 6권씩, 이미 나간 책은 빼고 #1, #2 … 로
-이어 간다. 인물은 한 바퀴를 다 돌 때까지 다시 나오지 않는다(가장 오래전에
+이어 간다. 한 편은 타래로 만든다: 첫 글에 들어가는 만큼 책을 쓰고 나머지는 답글로. 인물은 한 바퀴를 다 돌 때까지 다시 나오지 않는다(가장 오래전에
 나간 인물부터). 무엇을 언제 냈는지는 data/x_state.json 에 남는다.
 
 책 줄에 붙는 출처(날짜 + 매체)는 URL에서 뽑고, URL에 날짜가 없으면 원문을
@@ -317,14 +317,27 @@ def book_line(b, src):
 
 
 def fit_lines(head, lines, tail):
-    """넣을 수 있는 만큼 앞에서부터 책 줄을 넣는다(최소 1줄)."""
+    """넣을 수 있는 만큼 앞에서부터 책 줄을 넣는다. (글, 넣은 줄 수)"""
     for keep in range(len(lines), 0, -1):
         text = head + '\n'.join(lines[:keep]) + tail
         if tweet_length(text) <= TWEET_LIMIT:
-            return text
+            return text, keep
     # 한 줄도 안 들어가면 출처를 떼고 다시
     first = lines[0].split(' ' + SRC_MARK)[0] if SRC_MARK else lines[0]
-    return head + first + tail
+    return head + first + tail, 1
+
+
+def thread_replies(lines):
+    """첫 글에 못 넣은 책 줄을 답글들로 나눈다(글마다 280 안)."""
+    replies, cur = [], []
+    for line in lines:
+        if cur and tweet_length('\n'.join(cur + [line])) > TWEET_LIMIT:
+            replies.append('\n'.join(cur))
+            cur = []
+        cur.append(line)
+    if cur:
+        replies.append('\n'.join(cur))
+    return replies
 
 
 # ── 트윗 만들기 ─────────────────────────────────────────────────────
@@ -353,6 +366,7 @@ def image_book(b, src):
         'src': src,
         'emoji': b['emoji'],
         'cover': b.get('coverUrl') or '',
+        'source': (b.get('source') or '').replace('&amp;', '&').strip(),
     }
 
 
@@ -367,7 +381,10 @@ def make_shelf_item(kind, name, celeb, books, series, ctx):
     url = celeb_url(name, celeb)
     tags = ' '.join([HASHTAG] + hashtags_for(name)[:2])
     tail = '\n\n전체 목록(' + str(total) + '권)\n' + url + '\n\n' + tags
-    text = fit_lines(head, [book_line(b, s) for b, s in zip(books, srcs)], tail)
+    # 타래: 첫 글은 위 모양 그대로, 못 넣은 책은 답글로 이어 쓴다
+    lines = [book_line(b, s) for b, s in zip(books, srcs)]
+    text, used = fit_lines(head, lines, tail)
+    thread = [text] + thread_replies(lines[used:])
     return {
         'type': kind,
         'key': name,
@@ -375,6 +392,7 @@ def make_shelf_item(kind, name, celeb, books, series, ctx):
         'series': series,
         'titles': [b['title'].strip() for b in books],
         'text': text,
+        'thread': thread,
         'url': url,
         'image': {
             'name': name,
@@ -596,8 +614,11 @@ def main():
 
     for it in day['items']:
         print('─' * 40)
-        print('[' + it['label'] + '] ' + str(it['length']) + '/280')
-        print(it['text'])
+        posts = it.get('thread') or [it['text']]
+        for k, t in enumerate(posts, 1):
+            tag = ' (타래 ' + str(k) + '/' + str(len(posts)) + ')' if len(posts) > 1 else ''
+            print('[' + it['label'] + '] ' + str(tweet_length(t)) + '/280' + tag)
+            print(t)
     print('─' * 40)
 
     if args.dry_run:

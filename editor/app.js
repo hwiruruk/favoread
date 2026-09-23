@@ -868,6 +868,9 @@ function renderDetail() {
   renderBooks();
 }
 
+// 출처 칸에는 URL 대신 글이 적힌 경우도 있어서, 링크로 열 수 있는 것만 버튼을 단다
+function isHttp(u) { return /^https?:\/\//i.test(String(u || '').trim()); }
+
 function renderBooks() {
   const c = State.celebs.get(State.selected);
   const list = $('#booksList');
@@ -894,6 +897,7 @@ function renderBooks() {
         <div class="b-flags">${flagEn}${flagCv}${flagSrc}${flagCmt}</div>
         <div class="actions">
           <button class="btn small" data-act="edit">편집</button>
+          ${isHttp(b.source) ? `<a class="btn small" href="${esc(b.source)}" target="_blank" rel="noopener" title="${esc(b.source)}">출처 열기 ↗</a>` : ''}
           ${b.link ? `<a class="btn small" href="${esc(b.link)}" target="_blank" rel="noopener">알라딘</a>` : ''}
           <button class="btn small danger" data-act="del">삭제</button>
         </div>
@@ -1366,6 +1370,13 @@ $('#openYes24Btn').addEventListener('click', () => {
   u.searchParams.set('domain', 'BOOK');
   u.searchParams.set('query', q);
   window.open(u.toString(), '_blank', 'noopener');
+});
+
+/* '↗ 열기' 버튼 — 출처 칸의 URL을 새 탭으로 열어 원문을 바로 확인한다 */
+$('#openSourceBtn').addEventListener('click', () => {
+  const u = $('#bookSource').value.trim();
+  if (!isHttp(u)) { toast('출처 칸에 http로 시작하는 URL이 없어요', 'err'); return; }
+  window.open(u, '_blank', 'noopener');
 });
 
 /* -------------------- ⚡ 빠른 검색: Google Books --------------------
