@@ -4,9 +4,8 @@
  * 날짜별 트윗 3개를 카드로 보여 준다. 게시는 X의 공유 링크(intent)로 하므로
  * API 키도 비용도 필요 없다. 이미지는 여기서 캔버스로 그려 복사·저장한다.
  *
- * 이미지는 X 모바일 타임라인에서 잘리지 않는 비율로 만든다.
- *   책장 3권 이상 → 4장(표지 + 책 2권씩), 각 16:9 — 2×2 격자 칸이 16:9
- *   책장 2권 이하 → 2장(표지 + 책), 각 8:9 — 나란히 두 칸이 8:9
+ * 이미지는 X 모바일 타임라인에서 잘리지 않는 비율로 만든다(책 정보 장만, 쪽 번호 없음).
+ *   책장 1~2권 → 1장 16:9 / 3~4권 → 2장 8:9(나란히 두 칸) / 5~6권 → 4장 16:9(2×2 격자)
  *   이 책을 읽은 셀럽들 → 1장, 1:1
  */
 
@@ -242,57 +241,8 @@ function newCanvas([W, H], bg) {
   return { c, ctx, W, H };
 }
 
-/* ---------- 책장: 표지 장 ---------- */
-async function drawShelfCover(size, img, type, opts) {
-  // 첫 장은 글 없이 책 표지만 모아 둔다. '인물 사진'을 켜면 사진을 한쪽에 곁들인다.
-  const { c, ctx, W, H } = newCanvas(size, opts.bg);
-  const s = W / 1200;
-  const pad = Math.round(56 * s);
-  const wide = W > H;
-  const photo = !opts.portrait ? null : opts.photo || (img.portrait ? await loadImage(img.portrait, 1200) : null);
-  let area = { x: pad, y: pad, w: W - pad * 2, h: H - pad * 2.2 };
-  if (photo) {
-    const ph = wide ? { x: 0, y: 0, w: Math.round(W * 0.4), h: H } : { x: 0, y: 0, w: W, h: Math.round(H * 0.45) };
-    drawPhoto(ctx, photo, ph);
-    area = wide
-      ? { x: ph.w + pad, y: pad, w: W - ph.w - pad * 2, h: H - pad * 2.2 }
-      : { x: pad, y: ph.h + pad * 0.8, w: W - pad * 2, h: H - ph.h - pad * 2 };
-  }
-  await drawCoverGrid(ctx, img.books, area, s);
-  ctx.font = DOTUM(Math.round(22 * s), 700);
-  ctx.fillStyle = MUTE;
-  ctx.textAlign = 'right';
-  ctx.fillText('#' + img.series, W - pad * 0.5, pad * 0.5 + 12 * s);
-  ctx.textAlign = 'left';
-  drawFooter(ctx, W, H, photo && wide ? area.x : pad, '');
-  return c;
-}
-
-// 표지들을 상자 안에 가능한 한 크게 격자로 놓는다(칸 수는 상자 모양에 맞춰 고른다)
-async function drawCoverGrid(ctx, books, area, s) {
-  const covers = await Promise.all(books.map((b) => loadImage(b.cover, 500)));
-  const n = covers.length;
-  if (!n) return;
-  const gap = 22 * s;
-  let best = null;
-  for (let cols = 1; cols <= n; cols++) {
-    const rows = Math.ceil(n / cols);
-    const cw = Math.min((area.w - gap * (cols - 1)) / cols, ((area.h - gap * (rows - 1)) / rows) * 0.68);
-    if (!best || cw > best.cw) best = { cols, rows, cw };
-  }
-  const { cols, rows, cw } = best;
-  const ch = cw / 0.68;
-  const y0 = area.y + (area.h - (ch * rows + gap * (rows - 1))) / 2;
-  covers.forEach((im, i) => {
-    const r = Math.floor(i / cols), k = i % cols;
-    const inRow = Math.min(cols, n - r * cols);
-    const x0 = area.x + (area.w - (cw * inRow + gap * (inRow - 1))) / 2;
-    drawCover(ctx, im, { x: x0 + k * (cw + gap), y: y0 + r * (ch + gap), w: cw, h: ch }, 'center', books[i].emoji);
-  });
-}
-
 /* ---------- 책장: 책 장 ---------- */
-async function drawShelfBooks(size, books, type, opts, pageLabel) {
+async function drawShelfBooks(size, books, type, opts) {
   const { c, ctx, W, H } = newCanvas(size, opts.bg);
   const accent = ACCENT[type];
   const s = W / 1200;
@@ -349,7 +299,7 @@ async function drawShelfBooks(size, books, type, opts, pageLabel) {
       }
     });
   }
-  drawFooter(ctx, W, H, pad, pageLabel);
+  drawFooter(ctx, W, H, pad, '');
   return c;
 }
 
@@ -477,37 +427,7 @@ function bookBubble(ctx, x, y, w, h, book, im, accent, s) {
   }
 }
 
-async function drawChatCover(size, img, type, opts) {
-  // 첫 장은 '최애의 독서' 머리줄 아래에 책 표지만 모아 둔다(말풍선 안)
-  const { c, ctx, W, H } = newCanvas(size, opts.bg);
-  const accent = ACCENT[type];
-  const s = W / 1200, pad = Math.round(56 * s), wide = W > H;
-  const photo = !opts.portrait ? null : opts.photo || (img.portrait ? await loadImage(img.portrait, 1000) : null);
-  const top = chatHeader(ctx, pad, pad * 0.8, s, accent);
-  const box = { x: pad, y: top, w: W - pad * 2, h: H - top - pad * 1.6 };
-  let grid = box;
-  if (photo) {
-    const ph = wide ? { x: box.x, y: box.y, w: box.w * 0.38, h: box.h } : { x: box.x, y: box.y, w: box.w, h: box.h * 0.45 };
-    drawPhoto(ctx, photo, ph, 26 * s);
-    grid = wide
-      ? { x: ph.x + ph.w + 18 * s, y: box.y, w: box.w - ph.w - 18 * s, h: box.h }
-      : { x: box.x, y: ph.y + ph.h + 18 * s, w: box.w, h: box.h - ph.h - 18 * s };
-  }
-  ctx.fillStyle = BUBBLE;
-  roundRectPath(ctx, grid.x, grid.y, grid.w, grid.h, 26 * s);
-  ctx.fill();
-  const ip = 26 * s;
-  await drawCoverGrid(ctx, img.books, { x: grid.x + ip, y: grid.y + ip, w: grid.w - ip * 2, h: grid.h - ip * 2 }, s);
-  ctx.font = DOTUM(Math.round(22 * s), 700);
-  ctx.fillStyle = MUTE;
-  ctx.textAlign = 'right';
-  ctx.fillText('#' + img.series, W - pad * 0.5, pad * 0.5 + 12 * s);
-  ctx.textAlign = 'left';
-  drawFooter(ctx, W, H, pad, '');
-  return c;
-}
-
-async function drawChatBooks(size, books, type, opts, pageLabel) {
+async function drawChatBooks(size, books, type, opts) {
   const { c, ctx, W, H } = newCanvas(size, opts.bg);
   const accent = ACCENT[type];
   const s = W / 1200, pad = Math.round(56 * s), wide = W > H;
@@ -529,7 +449,7 @@ async function drawChatBooks(size, books, type, opts, pageLabel) {
         { px: 26, maxLines: lines, caption: b.noteSrc ? '출처 · ' + b.noteSrc : '' });
     }
   });
-  drawFooter(ctx, W, H, pad, pageLabel);
+  drawFooter(ctx, W, H, pad, '');
   return c;
 }
 
@@ -584,15 +504,12 @@ async function buildImages(it, opts) {
   const chat = opts.style === 'chat';
   if (it.type === 'book') return [await (chat ? drawChatBookCard : drawBookCard)(img, opts)];
   const books = img.books || [];
-  // 3권 이상 → 표지 + 책 3장(16:9 네 장), 2권 이하 → 표지 + 책 1장(8:9 두 장)
-  const wide = books.length >= 3;
-  const size = wide ? WIDE : TALL;
-  const groups = wide ? chunk(books, 3) : [books];
-  const total = groups.length + 1;
-  const pages = [await (chat ? drawChatCover : drawShelfCover)(size, img, it.type, opts)];
-  for (let i = 0; i < groups.length; i++) {
-    pages.push(await (chat ? drawChatBooks : drawShelfBooks)(size, groups[i], it.type, opts, img.name + ' #' + img.series + ' · ' + (i + 2) + '/' + total));
-  }
+  // 표지만 모은 장 없이 책 정보 장만. X 격자가 깔끔한 1·2·4장으로 나눈다.
+  //   1~2권 → 16:9 한 장 / 3~4권 → 8:9 두 장(2권씩) / 5~6권 → 16:9 네 장
+  const n = books.length;
+  const [size, groups] = n <= 2 ? [WIDE, [books]] : n <= 4 ? [TALL, chunk(books, 2)] : [WIDE, chunk(books, 4)];
+  const pages = [];
+  for (const g of groups) pages.push(await (chat ? drawChatBooks : drawShelfBooks)(size, g, it.type, opts));
   return pages;
 }
 
@@ -663,6 +580,8 @@ function cardEl(it, isDone) {
   $('.tag', el).textContent = it.label + (it.series ? ' #' + it.series : '');
   const doneBtn = $('[data-act="done"]', el);
   const portraitBox = $('[data-opt="portrait"]', el);
+  // 책장 카드는 책 정보 장만 있어 사진이 들어갈 자리가 없다. '읽은 사람 모여라'에서만 쓴다.
+  if (it.type !== 'book') $('.photo-tools', el).hidden = true;
 
   // 타래: 첫 글 + 답글들. 답글은 앞 글 주소를 붙여넣으면 그 글에 이어서 쓴다
   const posts = (it.thread && it.thread.length ? it.thread : [it.text]);
