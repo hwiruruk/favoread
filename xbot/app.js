@@ -791,7 +791,24 @@ function cardEl(it, isDone) {
           }
           url += '&in_reply_to=' + id;
         }
-        window.open(url, '_blank', 'noopener');
+        // PC에서 첫 글을 쓸 때는 첫 번째 이미지를 클립보드에 미리 넣어 둔다.
+        // 작성창이 열리면 Ctrl+V 한 번으로 붙는다. 창이 열리면 이 페이지가 포커스를
+        // 잃어 복사가 막히므로, 복사를 먼저 끝내고(길어야 2초) 창을 연다.
+        let copied = false;
+        if (k === 0 && window.matchMedia('(pointer: fine)').matches && window.ClipboardItem && navigator.clipboard) {
+          try {
+            const blob = ready.then((cs) => canvasBlob(cs[0]));
+            await Promise.race([
+              navigator.clipboard.write([new ClipboardItem({ 'image/png': blob })]),
+              new Promise((_, no) => setTimeout(() => no(new Error('timeout')), 2000)),
+            ]);
+            copied = true;
+          } catch (e) { /* 복사가 안 돼도 글쓰기 창은 연다 */ }
+        }
+        const w = window.open(url, '_blank');
+        if (w) w.opener = null;
+        if (!w) status('브라우저가 새 창을 막았어요. 한 번 더 눌러 주세요');
+        else if (copied) status('1번 이미지를 복사해 뒀어요. 작성창에서 Ctrl+V (나머지는 썸네일의 복사로)');
       } else if (act === 'copytext') {
         await navigator.clipboard.writeText(areas[+t.dataset.k].value);
         status('글을 복사했어요');
