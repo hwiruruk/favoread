@@ -2390,7 +2390,7 @@ const TTL_FLAG = {
   csv_star: ['직역*', ''], csv_problem: ['문제 있는 값', 'bad'], csv_empty: ['빈 칸', ''],
   conflict: ['CSV와 다름', 'bad'], no_candidate: ['후보 없음', ''], unchecked: ['미조회', ''],
 };
-const TTL_SRC = { yes24: '예스24 원서명', aladin: '알라딘 원제', wikipedia: '위키백과', openlibrary: 'Open Library' };
+const TTL_SRC = { yes24: '예스24 원서명', aladin: '알라딘 원제', wikipedia: '위키백과', wikidata: '위키데이터', openlibrary: 'Open Library' };
 const stripStar = (v) => String(v || '').replace(/\s*\*\s*$/, '').trim();
 
 // generate.py 의 en_title_problem() 과 같은 규칙 — 여기서 막아야 승인해 놓고 사이트에서 빠지는 일이 없다

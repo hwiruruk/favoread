@@ -14,6 +14,7 @@
     알라딘 API          subInfo.originalTitle 번역서의 원제 (키 필요, 첫 실행에서 가장 잘 맞음)
     예스24 상품 페이지  품목정보의 원서명      알라딘 키가 없을 때 대비
     한국어 위키백과     영어 문서 링크         한국 문학·고전 (소년이 온다 → Human Acts)
+    위키데이터          작품의 영어 이름표     위키백과 문서가 없는 한국 문학 (흰 → The White Book)
     Open Library        한국어판이 속한 작품   Goodreads처럼 여러 언어판을 한 작품으로 묶는다
     Google Books        위 후보가 실제 영어판으로 나왔는지 확인만 한다
 
@@ -65,7 +66,8 @@ BROWSER_UA = ('Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 '
 
 # 조회 방식이 바뀌면 올린다. 이보다 낮은 버전으로 조회한 미검수 책은 다시 조회한다.
 #   2: 예스24 부제 오인 제거, 알라딘 항상 조회, 위키백과 저자 확인, Open Library 추가
-LOOKUP_VERSION = 2
+#   3: 위키데이터 추가 (한국 문학: 흰 → The White Book)
+LOOKUP_VERSION = 3
 
 NOTE = (
     'Official English edition titles, one entry per book. '
@@ -290,7 +292,8 @@ def open_library_work(title, author, author_en):
 
     같은 제목의 다른 책이 걸리지 않게, 저자가 맞을 때만 받는다.
     """
-    p = urllib.parse.urlencode({'q': title, 'fields': 'key,title,author_name,language',
+    # q= 에 한 글자 제목('흰')을 넣으면 422 를 준다. title= 은 받는다
+    p = urllib.parse.urlencode({'title': title, 'fields': 'key,title,author_name,language',
                                 'limit': '8'})
     d = http_json('https://openlibrary.org/search.json?' + p)
     ko_marks = [w for w in re.split(r'[\s,·/]+', re.sub(r'\([^)]*\)', ' ', author or '')) if len(w) >= 2]
@@ -308,8 +311,76 @@ def open_library_work(title, author, author_en):
     return None, None
 
 
-# ── 5. Google Books 로 영어판이 실제로 있는지 확인 ─────────────────────
+# ── 5. 위키데이터: 한국어 이름표가 붙은 작품의 영어 이름표 ────────────────
+WIKIDATA_API = 'https://www.wikidata.org/w/api.php'
+# 작품·책·소설 등. 이 가운데 하나여야 받는다 (같은 이름의 영화·노래를 거른다)
+WD_WORK_TYPES = {'Q7725634', 'Q47461344', 'Q571', 'Q8261', 'Q1667921', 'Q49084', 'Q5185279',
+                 'Q7725310', 'Q12308638', 'Q35760', 'Q25379', 'Q1279564', 'Q3331189', 'Q14406742',
+                 'Q21198342', 'Q208628', 'Q182357', 'Q112983'}
+
+
+def _wd_claim_ids(ent, prop):
+    out = []
+    for c in (ent.get('claims') or {}).get(prop) or []:
+        v = ((c.get('mainsnak') or {}).get('datavalue') or {}).get('value') or {}
+        if isinstance(v, dict) and v.get('id'):
+            out.append(v['id'])
+    return out
+
+
+def wikidata_en(title, author):
+    """위키백과 문서가 없는 한국 문학도 위키데이터에는 항목이 있는 경우가 많다.
+    한국어 이름표가 책 제목과 같고, 저자(P50)의 한국어 이름이 맞을 때만 영어 이름표를 받는다.
+    """
+    marks = [w for w in re.split(r'[\s,·/]+', re.sub(r'\([^)]*\)', ' ', author or '')) if len(w) >= 2]
+    if not marks:
+        return None, None
+    p = urllib.parse.urlencode({'action': 'wbsearchentities', 'format': 'json', 'type': 'item',
+                                'search': title, 'language': 'ko', 'uselang': 'ko', 'limit': '7'})
+    hits = (http_json(WIKIDATA_API + '?' + p) or {}).get('search') or []
+    want = norm_ko(title)
+    ids = [h['id'] for h in hits if norm_ko(h.get('label') or (h.get('match') or {}).get('text')) == want]
+    if not ids:
+        return None, None
+    p = urllib.parse.urlencode({'action': 'wbgetentities', 'format': 'json', 'ids': '|'.join(ids),
+                                'props': 'labels|claims', 'languages': 'ko|en'})
+    ents = (http_json(WIKIDATA_API + '?' + p) or {}).get('entities') or {}
+    books = []
+    for qid in ids:
+        e = ents.get(qid) or {}
+        en = ((e.get('labels') or {}).get('en') or {}).get('value')
+        authors = _wd_claim_ids(e, 'P50')
+        types = set(_wd_claim_ids(e, 'P31'))
+        if en and authors and (types & WD_WORK_TYPES or not types):
+            books.append((qid, en, authors))
+    if not books:
+        return None, None
+    aids = sorted({a for _, _, al in books for a in al})[:40]
+    p = urllib.parse.urlencode({'action': 'wbgetentities', 'format': 'json', 'ids': '|'.join(aids),
+                                'props': 'labels|aliases', 'languages': 'ko'})
+    aents = (http_json(WIKIDATA_API + '?' + p) or {}).get('entities') or {}
+
+    def ko_names(aid):
+        a = aents.get(aid) or {}
+        names = [((a.get('labels') or {}).get('ko') or {}).get('value') or '']
+        names += [x.get('value') or '' for x in (a.get('aliases') or {}).get('ko') or []]
+        return ' '.join(names)
+
+    for qid, en, al in books:
+        if any(m in ko_names(a) for a in al for m in marks):
+            return en, 'https://www.wikidata.org/wiki/' + qid
+    return None, None
+
+
+# ── 6. Google Books 로 영어판이 실제로 있는지 확인 ─────────────────────
+# 키 없이 부르면 GitHub Actions 에서는 거의 늘 429다(두 번째 실행 11번 중 11번).
+# 한 번 막히면 이번 실행에서는 더 부르지 않는다 — 재시도 대기만으로 한 권에 10초 넘게 썼다.
+GOOGLE_BLOCKED = {'on': False}
+
+
 def google_books_verify(cand, author_en):
+    if GOOGLE_BLOCKED['on']:
+        return None
     q = 'intitle:"%s"' % cand
     surname = plain(author_en or '').split(',')[0].split()[-1:] if author_en else []
     if surname:
@@ -319,7 +390,14 @@ def google_books_verify(cand, author_en):
     if os.environ.get('GOOGLE_BOOKS_API_KEY'):
         params['key'] = os.environ['GOOGLE_BOOKS_API_KEY']
     p = urllib.parse.urlencode(params)
-    d = http_json('https://www.googleapis.com/books/v1/volumes?' + p)
+    try:
+        d = http_json('https://www.googleapis.com/books/v1/volumes?' + p, tries=1)
+    except Transient as e:
+        if str(e).startswith('429') or str(e).startswith('403'):
+            GOOGLE_BLOCKED['on'] = True
+            print('  ⚠ Google Books 가 막혀서(%s) 이번 실행에서는 확인을 건너뜁니다. '
+                  'GOOGLE_BOOKS_API_KEY Secret 을 넣으면 풀립니다.' % str(e).split()[0])
+        raise
     want = norm_en(cand)
     for it in (d or {}).get('items') or []:
         info = it.get('volumeInfo') or {}
@@ -377,10 +455,19 @@ def lookup(book, ttb_key, sleep):
         wen, wurl = None, None
         notes.append('위키백과 못 읽음: %s' % e)
     time.sleep(sleep)
+    try:
+        wd, wd_url = wikidata_en(book['title'], book['author'])
+        reached += 1
+    except Transient as e:
+        wd, wd_url = None, None
+        notes.append('위키데이터 못 읽음: %s' % e)
+    time.sleep(sleep)
     if not reached:
         raise Transient('; '.join(notes) or '조회할 곳이 없음')
     if wen:
         found.append((wen, 'wikipedia', wurl))
+    if wd:
+        found.append((wd, 'wikidata', wd_url))
 
     if orig and not looks_english(orig):
         notes.append('원제가 영어가 아님: %s' % orig)
@@ -416,7 +503,7 @@ def lookup(book, ttb_key, sleep):
             c['urls'].append(v)
 
     cands.sort(key=lambda c: (-(len(c['sources']) + (2 if c['verified'] else 0)
-                                + (1 if 'wikipedia' in c['sources'] else 0))))
+                                + (1 if {'wikipedia', 'wikidata'} & set(c['sources']) else 0))))
     return cands, notes, orig
 
 
@@ -529,8 +616,8 @@ def main():
         # data.csv 쪽 값이 바뀌었으면 기록만 갱신한다 (조회는 안 함)
         ent['csv'] = b['csv']
         if ent.get('auto') and (norm_en(plain(b['csv'])) != norm_en(ent.get('value'))
-                                or ent.get('v', 1) < LOOKUP_VERSION):
-            # 예전 방식으로 한 자동 승인은 믿지 않는다 ('모순' → Contradiction 이 이렇게 승인됐다)
+                                or ent.get('v', 1) < 2):
+            # 버전 1(첫 실행)의 자동 승인은 믿지 않는다 ('모순' → Contradiction 이 이렇게 승인됐다)
             # 또는 자동 승인의 근거(CSV 값 = 후보)가 사라졌다 → 다시 사람 몫
             ent['status'] = 'pending'
             ent['value'] = (ent.get('candidates') or [{}])[0].get('title', '')
