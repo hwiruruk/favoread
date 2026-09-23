@@ -43,6 +43,7 @@ QUEUE_JSON = os.path.join(ROOT, 'data', 'x_queue.json')
 STATE_JSON = os.path.join(ROOT, 'data', 'x_state.json')
 SOURCES_JSON = os.path.join(ROOT, 'data', 'x_sources.json')
 EMOJI_JSON = os.path.join(ROOT, 'data', 'x_emoji.json')
+BOOKS_JSON = os.path.join(ROOT, 'data', 'x_books.json')
 
 BASE = 'https://favorbook.co.kr/'
 KST = datetime.timezone(datetime.timedelta(hours=9))
@@ -55,6 +56,7 @@ TWEET_LIMIT = 280
 URL_WEIGHT = 23          # X는 링크를 길이와 상관없이 23으로 센다
 HASHTAG = '#최애의독서'
 SRC_MARK = '*'           # 책 줄에서 출처 앞에 붙는 기호. 빼려면 ''
+PREFETCH = 120           # 한 번 돌 때 미리 읽어 둘 출처 원문 수(직접 고르기용 날짜 채우기)
 
 
 # ── 파일 ───────────────────────────────────────────────────────────
@@ -303,6 +305,24 @@ def hashtags_for(name):
     return tags
 
 
+# 받침 있는 글자로 끝나면 '이', 아니면 '가'. 괄호 속 그룹명은 빼고 이름 끝 글자로 본다.
+# 영문·숫자는 읽는 소리로 (RM → 알엠 → '이', V → 브이 → '가')
+_BATCHIM_LATIN = set('LMNRlmnr')
+_BATCHIM_DIGIT = set('013678')
+
+
+def josa_iga(name):
+    base = re.sub(r'\(.*?\)\s*$', '', name).strip() or name
+    ch = base[-1]
+    if '가' <= ch <= '힣':
+        has = (ord(ch) - 0xAC00) % 28 != 0
+    elif ch.isdigit():
+        has = ch in _BATCHIM_DIGIT
+    else:
+        has = ch in _BATCHIM_LATIN
+    return '이' if has else '가'
+
+
 def byline(b):
     """'양귀자 | 쓰다' — 저자나 출판사가 비면 있는 것만."""
     return ' | '.join(x for x in ((b.get('author') or '').strip(), (b.get('publisher') or '').strip()) if x)
@@ -375,7 +395,7 @@ def make_shelf_item(kind, name, celeb, books, series, ctx):
     total = len(dedupe_books(celeb['books']))
     srcs = [source_info(b.get('source'), ctx['sources'], ctx['offline']) for b in books]
     if kind == 'new':
-        head = '🆕 ' + name + '의 책장에 새 책이 들어왔어요\n\n'
+        head = '🆕 ' + name + josa_iga(name) + ' 읽은 책\n\n'
     else:
         head = '📚 ' + name + '의 책장\n\n'
     url = celeb_url(name, celeb)
@@ -408,9 +428,9 @@ def make_book_item(title, entry, shortlinks, ctx):
     names = entry['celebs']
     book = entry['book']
     by = byline(book)
-    head = book['emoji'] + ' ' + title + ('(' + by + ')' if by else '') + '\n셀럽 ' + str(len(names)) + '명이 읽은 책\n\n'
+    head = book['emoji'] + ' ' + title + ('(' + by + ')' if by else '') + '\n' + title + ' 읽은 사람 모여라~\n\n'
     url = book_url(title, shortlinks)
-    tail = '\n\n누가 어떤 이유로 읽었는지\n' + url + '\n\n' + HASHTAG
+    tail = '\n\n전체 목록:\n' + url + '\n\n' + HASHTAG
     text = None
     for keep in range(len(names), 0, -1):
         shown = ', '.join(names[:keep])
@@ -561,6 +581,44 @@ def build_day(date_str, ctx, state, rng):
     return {'date': date_str, 'items': items}
 
 
+def export_books(ctx, date_str):
+    """게시 도우미의 '직접 고르기'용 재료: 인물별 책 줄(이모지·저자|출판사·출처)을 미리 만들어 둔다.
+
+    페이지가 출처 규칙·이모지 규칙을 따로 갖지 않도록, 여기서 만든 그대로 쓴다.
+    아직 날짜를 못 찾은 출처는 PREFETCH 개까지 원문을 읽어 채운다(나머지는 다음 날).
+    """
+    celebs = ctx['celebs']
+    book_idx = build_book_index(celebs)
+    budget = [0 if ctx['offline'] else PREFETCH]
+
+    def src_of(url):
+        offline = budget[0] <= 0
+        before = len(ctx['sources'])
+        out = source_info(url, ctx['sources'], offline)
+        if len(ctx['sources']) > before:
+            budget[0] -= 1
+        return out
+
+    out = {}
+    for name, c in celebs.items():
+        books = dedupe_books(c['books'])
+        books.sort(key=lambda b: -len(book_idx.get(b['title'].strip(), {}).get('celebs', [])))
+        out[name] = {
+            'url': celeb_url(name, c),
+            'portrait': c.get('imageUrl') or '',
+            'josa': josa_iga(name),
+            'tags': ' '.join([HASHTAG] + hashtags_for(name)[:2]),
+            'books': [dict(image_book(dict(b, emoji=book_emoji(b['title'], ctx['emoji'])),
+                                      src_of(b.get('source'))),
+                           n=len(book_idx.get(b['title'].strip(), {}).get('celebs', [])))
+                      for b in books],
+        }
+    # 페이지가 통째로 내려받는 파일이라 들여쓰기 없이 작게 쓴다
+    with open(BOOKS_JSON, 'w', encoding='utf-8') as f:
+        json.dump({'updated': date_str, 'mark': SRC_MARK, 'celebs': out}, f, ensure_ascii=False, separators=(',', ':'))
+        f.write('\n')
+
+
 def release_day(day, date_str, state):
     """--force 로 다시 만들 때, 그날 뽑혔던 것을 '안 나간 것'으로 되돌린다."""
     for it in day['items']:
@@ -629,8 +687,9 @@ def main():
     days.sort(key=lambda d: d['date'], reverse=True)
     save_json(QUEUE_JSON, {'updated': date_str, 'days': days[:KEEP_DAYS]})
     save_json(STATE_JSON, state)
+    export_books(ctx, date_str)
     save_json(SOURCES_JSON, dict(sorted(ctx['sources'].items())))
-    print('저장: data/x_queue.json, data/x_state.json, data/x_sources.json')
+    print('저장: data/x_queue.json, data/x_state.json, data/x_sources.json, data/x_books.json')
     return 0
 
 

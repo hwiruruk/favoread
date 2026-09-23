@@ -699,4 +699,127 @@ async function init() {
   renderCards();
 }
 
+/* ---------- 인물 골라서 만들기 ----------
+ * tools/x_queue.py 가 만들어 둔 data/x_books.json(인물별 책 줄 재료)과
+ * data/x_state.json(이미 나간 책·시리즈 번호)을 읽어, 고른 인물·책으로
+ * 매일 트윗과 같은 모양의 카드를 그 자리에서 만든다. */
+const BOOKS_URL = '../data/x_books.json';
+const STATE_URL = '../data/x_state.json';
+const PICK_MAX = 6;
+const picker = { books: null, state: null };
+
+function fitLines(head, lines, tail) {
+  for (let keep = lines.length; keep > 0; keep--) {
+    const text = head + lines.slice(0, keep).join('\n') + tail;
+    if (tweetLength(text) <= 280) return [text, keep];
+  }
+  return [head + lines[0] + tail, 1];
+}
+function threadReplies(lines) {
+  const out = [];
+  let cur = [];
+  for (const l of lines) {
+    if (cur.length && tweetLength(cur.concat(l).join('\n')) > 280) { out.push(cur.join('\n')); cur = []; }
+    cur.push(l);
+  }
+  if (cur.length) out.push(cur.join('\n'));
+  return out;
+}
+
+function makePickedItem(name, books) {
+  const c = picker.books.celebs[name];
+  const mark = picker.books.mark || '';
+  const series = ((picker.state.series || {})[name] || 0) + 1;
+  const lines = books.map((b) => b.emoji + ' ' + b.title + (b.by ? '(' + b.by + ')' : '') + (b.src ? ' ' + mark + b.src : ''));
+  const head = '📚 ' + name + '의 책장\n\n';
+  const tail = '\n\n전체 목록(' + c.books.length + '권)\n' + c.url + '\n\n' + c.tags;
+  const [text, used] = fitLines(head, lines, tail);
+  return {
+    id: 'pick-' + Date.now(),
+    type: 'celeb',
+    key: name,
+    label: '직접 고른 책장',
+    series,
+    text,
+    thread: [text].concat(threadReplies(lines.slice(used))),
+    url: c.url,
+    image: { name, series, total: c.books.length, portrait: c.portrait, books },
+  };
+}
+
+async function openPicker() {
+  if (picker.books) return;
+  $('#pickInfo').textContent = '불러오는 중…';
+  try {
+    const [b, st] = await Promise.all([BOOKS_URL, STATE_URL].map((u) =>
+      fetch(u + '?t=' + Date.now(), { cache: 'no-store' }).then((r) => { if (!r.ok) throw new Error(r.status); return r.json(); })));
+    picker.books = b;
+    picker.state = st;
+  } catch (e) {
+    $('#pickInfo').textContent = 'x_books.json 을 못 읽었어요. X Queue 워크플로가 한 번 돈 뒤에 쓸 수 있어요.';
+    return;
+  }
+  const dl = $('#celebList');
+  Object.keys(picker.books.celebs).sort((a, b) => a.localeCompare(b, 'ko')).forEach((n) => {
+    const o = document.createElement('option');
+    o.value = n;
+    dl.appendChild(o);
+  });
+  $('#pickInfo').textContent = '인물 ' + dl.children.length + '명 중에서 고르세요.';
+}
+
+function showPickBooks() {
+  const name = $('#pickName').value.trim();
+  const ul = $('#pickBooks');
+  const btn = $('#pickMake');
+  ul.innerHTML = '';
+  btn.disabled = true;
+  const c = picker.books && picker.books.celebs[name];
+  if (!c) return;
+  const posted = new Set(((picker.state.posted || {})[name]) || []);
+  const fresh = c.books.filter((b) => !posted.has(b.title));
+  const preset = new Set((fresh.length ? fresh : c.books).slice(0, PICK_MAX).map((b) => b.title));
+  const series = ((picker.state.series || {})[name] || 0) + 1;
+  $('#pickInfo').textContent = '전체 ' + c.books.length + '권 · 나간 책 ' + posted.size + '권 · 이번이 #' + series +
+    ' · 최대 ' + PICK_MAX + '권까지 고를 수 있어요';
+  // 안 나간 책을 먼저, 그 안에서는 여러 셀럽이 함께 읽은 책부터
+  const order = fresh.concat(c.books.filter((b) => posted.has(b.title)));
+  order.forEach((b) => {
+    const li = document.createElement('li');
+    li.innerHTML = '<label><input type="checkbox"><span></span></label>';
+    const box = $('input', li);
+    box.checked = preset.has(b.title);
+    box._book = b;
+    $('span', li).textContent = b.emoji + ' ' + b.title + (b.src ? ' · ' + b.src : '');
+    if (posted.has(b.title)) {
+      const tag = document.createElement('em');
+      tag.className = 'posted';
+      tag.textContent = '나감';
+      $('label', li).appendChild(tag);
+    }
+    ul.appendChild(li);
+  });
+  syncPickLimit();
+}
+
+function syncPickLimit() {
+  const boxes = [...document.querySelectorAll('#pickBooks input')];
+  const n = boxes.filter((b) => b.checked).length;
+  boxes.forEach((b) => { b.disabled = !b.checked && n >= PICK_MAX; });
+  $('#pickMake').disabled = n === 0;
+  $('#pickMake').textContent = n ? n + '권으로 트윗 만들기' : '트윗 만들기';
+}
+
+$('#picker').addEventListener('toggle', (e) => { if (e.target.open) openPicker(); });
+$('#pickName').addEventListener('input', showPickBooks);
+$('#pickBooks').addEventListener('change', syncPickLimit);
+$('#pickMake').addEventListener('click', () => {
+  const name = $('#pickName').value.trim();
+  const books = [...document.querySelectorAll('#pickBooks input')].filter((b) => b.checked).map((b) => b._book);
+  if (!books.length) return;
+  $('#picked').prepend(cardEl(makePickedItem(name, books), false));
+  status(name + ' 트윗을 만들었어요');
+  $('#picked').scrollIntoView({ behavior: 'smooth', block: 'start' });
+});
+
 init();
