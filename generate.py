@@ -600,7 +600,11 @@ SHELF_CSS = (
     '             background-image: linear-gradient(to bottom, transparent var(--sh-h), #000 var(--sh-h),\n'
     '               #000 calc(var(--sh-h) + var(--plank)), transparent calc(var(--sh-h) + var(--plank)));\n'
     '             background-size: 100% var(--row); background-repeat: repeat-y; }\n'
-    '    .shelf-new-note { display: flex; align-items: center; gap: 6px; margin: 10px 0 0; color: #666; font-size: 13px; }\n'
+    # 최근 추가된 책 칸 — 본 목록 위에 따로 모은다
+    '    .new-sec { margin: 16px 0 6px; padding: 12px 12px 2px; background: #fffbe6; border: 2px dashed #000; }\n'
+    '    .new-sec-h { display: flex; align-items: center; gap: 8px; margin: 0 0 10px; font-size: 15px; font-weight: 800; }\n'
+    '    .new-sec .reading-list { margin: 0; }\n'
+    '    .rl-num.rl-num-new { font-size: 11px; letter-spacing: .04em; }\n'
     '    .rl-new-tag { font-size: 9px; font-weight: 800; letter-spacing: .06em; line-height: 1; padding: 3px 5px;\n'
     '                  background: #fde047; color: #000; border: 1.5px solid #000; }\n'
     '    .sp { position: relative; flex: none; width: auto; height: var(--sh-h);\n'
@@ -1074,7 +1078,7 @@ update_entries = build_updates_entries(limit=80)
 # 어떤 책이 새로 들어왔는지 페이지에서 알 길이 없었다. data.csv 커밋 이력에서
 # (셀럽, 책) 짝이 처음 나타난 날을 꺼내, 최근 것에만 작은 스티커를 붙인다.
 # 며칠까지를 '최근'으로 볼지는 아래 숫자 하나로 정한다.
-# 이 기간 안에 들어온 책은 독서 리스트(책등·목록) 맨 앞에 모은다.
+# 이 기간 안에 들어온 책은 독서 리스트 위쪽 NEW 칸에 따로 모은다.
 NEW_BADGE_DAYS = 10
 
 _new_book_dates = {}
@@ -1098,27 +1102,36 @@ def new_book_date(celeb, title):
     return d if (datetime.date.today() - added).days <= NEW_BADGE_DAYS else ''
 
 
-def recent_first(celeb, books):
-    """최근 NEW_BADGE_DAYS일 안에 추가된 책을 맨 앞으로(최신순), 나머지는 원래 순서.
-    반환: (정렬된 책 리스트, 최근 책 권수)."""
-    recent, rest = [], []
-    for i, b in enumerate(books):
-        d = new_book_date(celeb, b['title'])
-        (recent if d else rest).append((d, i, b))
-    recent.sort(key=lambda x: (x[0], -x[1]), reverse=True)
-    return [b for _, _, b in recent] + [b for _, _, b in rest], len(recent)
+def title_sort_key(title):
+    """가나다 순 정렬 키. 공백·대소문자 차이는 무시한다."""
+    return re.sub(r'\s+', '', title or '').lower()
 
 
-def recent_note(n, lang='ko'):
-    """리스트 머리에 다는 한 줄 안내."""
-    if not n:
+def new_block(items, lang='ko'):
+    """최근 NEW_BADGE_DAYS일 안에 추가된 책을 본 목록과 따로 모아 보여 주는 칸.
+    items: [(추가된 날짜, 목록 카드 html)]. 최신순으로 늘어놓는다.
+    본 목록(가나다 순)에도 같은 책이 그대로 있다."""
+    if not items:
         return ''
+    items = sorted(items, key=lambda x: x[0], reverse=True)
+    n = len(items)
     if lang == 'en':
-        return ('    <p class="muted shelf-new-note"><span class="rl-new-tag">NEW</span> '
-                + str(n) + (' book' if n == 1 else ' books') + ' added in the last '
-                + str(NEW_BADGE_DAYS) + ' days ' + ('is' if n == 1 else 'are') + ' shown first.</p>\n')
-    return ('    <p class="muted shelf-new-note"><span class="rl-new-tag">NEW</span> '
-            '최근 ' + str(NEW_BADGE_DAYS) + '일 안에 추가된 ' + str(n) + '권을 맨 앞에 모았어요.</p>\n')
+        head = ('New in the last ' + str(NEW_BADGE_DAYS) + ' days (' + str(n)
+                + (' book' if n == 1 else ' books') + ')')
+    else:
+        head = '최근 ' + str(NEW_BADGE_DAYS) + '일 새로 추가된 책 (' + str(n) + '권)'
+    return ('    <div class="new-sec">\n'
+            '      <h3 class="new-sec-h"><span class="rl-new-tag">NEW</span> ' + esc(head) + '</h3>\n'
+            '      <ol class="reading-list">\n'
+            + ''.join(card for _, card in items) +
+            '      </ol>\n'
+            '    </div>\n')
+
+
+def new_card(card, num):
+    """본 목록 카드를 NEW 칸용으로 — 번호 자리에 NEW를 단다."""
+    return card.replace('<span class="rl-num">' + str(num) + '</span>',
+                        '<span class="rl-num rl-num-new">NEW</span>', 1)
 
 
 def spine_new_badge(added):
@@ -1586,8 +1599,9 @@ for name, info in celebs.items():
     book_cards_html = ''   # 카드 그리드 (표 대체)
     spine_html = ''        # 책등 보기
     shared_count = 0       # 다른 셀럽과 공유된 책 권수 (섹션 헤더용)
-    # 최근 추가된 책을 맨 앞으로 — 책등·목록 모두 이 순서를 쓴다
-    list_books, n_recent = recent_first(name, books)
+    # 책장·목록은 가나다 순. 최근 추가된 책은 위쪽 NEW 칸에 따로 모은다.
+    list_books = sorted(books, key=lambda x: title_sort_key(x['title']))
+    new_items = []
     for i, b in enumerate(list_books):
         has_book_page = b['title'] in books_with_pages
 
@@ -1681,7 +1695,7 @@ for name, info in celebs.items():
             spine_html += ('    <span class="' + _sp_cls + '" style="' + _spine_style + '" title="'
                            + esc(b['title']) + '">' + _spine_inner + '</span>\n')
 
-        book_cards_html += (
+        _card = (
             '    <li class="rl-item">\n'
             '      <span class="rl-num">' + str(i+1) + '</span>\n'
             '      ' + cover_html + '\n'
@@ -1693,6 +1707,9 @@ for name, info in celebs.items():
             + shared_html
             + '\n    </li>\n'
         )
+        book_cards_html += _card
+        if _added:
+            new_items.append((_added, new_card(_card, i + 1)))
 
     sname = short_name(name)  # 본문 반복용 짧은 이름
 
@@ -1957,7 +1974,7 @@ for name, info in celebs.items():
         '        <button type="button" class="sh-cap" id="shelf-cap-clear" title="배경 없이 투명한 PNG로 내려받아요">⤓ 투명 배경</button>\n'
         '      </div>\n'
         '    </div>\n'
-        + recent_note(n_recent)
+        + new_block(new_items)
         + (('    <p class="muted">' + str(shared_count) + '권은 다른 셀럽도 함께 추천한 책이에요. 아래 목록에서 함께 추천한 셀럽 이름을 볼 수 있어요.</p>\n')
            if shared_count else '')
         + '    <div id="shelf-area">\n'
@@ -2490,7 +2507,9 @@ for name, info in celebs.items():
     # 책 행 (영문 제목 + 한국어 원제 부기)
     rows = ''
     en_spine_html = ''
-    en_list_books, en_n_recent = recent_first(name, en_books)
+    # 영문 페이지는 영문 제목 알파벳 순
+    en_list_books = sorted(en_books, key=lambda x: title_sort_key(plain_en(x['title_en'])))
+    en_new_items = []
     for i, b in enumerate(en_list_books):
         # 알라딘 상품 URL (CSV의 &amp; 디코드)
         aladin_url = ''
@@ -2558,7 +2577,7 @@ for name, info in celebs.items():
             en_spine_html += ('    <span class="' + _sp_cls + '" style="' + _sp_style + '" title="'
                               + esc(t_plain) + '">' + _sp_inner + '</span>\n')
 
-        rows += (
+        _card = (
             '    <li class="rl-item">\n'
             '      <span class="rl-num">' + str(i+1) + '</span>\n'
             '      ' + cover_html + '\n'
@@ -2569,6 +2588,9 @@ for name, info in celebs.items():
             + '      </div>\n'
             '    </li>\n'
         )
+        rows += _card
+        if _added:
+            en_new_items.append((_added, new_card(_card, i + 1)))
 
     # 제목에 이름을 세 번 넣으면 구글이 키워드 반복으로 보고 제목을 갈아치운다.
     # 한 번만 쓰고, 검색어와 맞닿는 말(reading list · books)만 남긴다.
@@ -2838,7 +2860,7 @@ for name, info in celebs.items():
         '        <button type="button" class="sh-cap" id="shelf-cap-clear" title="Download as a PNG with a transparent background">\u2913 Transparent</button>\n'
         '      </div>\n'
         '    </div>\n'
-        + recent_note(en_n_recent, 'en')
+        + new_block(en_new_items, 'en')
         + '    <div id="shelf-area">\n'
         '    <div class="shelf" id="shelf">\n' + en_spine_html +
         '    </div>\n'
