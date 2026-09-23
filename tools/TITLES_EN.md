@@ -35,6 +35,38 @@
 | 위키데이터 | 작품의 영어 이름표 (저자 한국어 이름이 맞을 때만) | 세 번째에 추가. 위키백과 문서가 없는 한국 문학용 (흰 → The White Book) |
 | Open Library (확인) | 후보 제목·저자로 영어판이 실제 있는지 확인. 무료, 키 없음 | Google Books 대신. 키 없는 Google Books 는 Actions 에서 매번 429 였다. `GOOGLE_BOOKS_API_KEY` 가 있으면 보조로만 쓴다 |
 
+### 전체 실행 결과 (2026-09-23, 1,456권)
+
+- 후보를 찾은 책 520권 (확실 344 · 후보 176), 나머지 약 930권은 후보 없음 — 대부분 영문판이 없는 국내 도서
+- 자동 승인 246권 (data.csv 값이 근거 있는 후보와 같은 경우)
+- 출처별: 알라딘 444 · 위키데이터 250 · 위키백과 188 · Open Library 2
+- 한국 문학도 잡힘: 흰 → The White Book, 위저드 베이커리 → Wizard Bakery, 달러구트 꿈 백화점 → The Dallergut Dream Department Store
+- 영어가 아닌 원제(La lenteur, Onze Minutos 일부, Kūchū Buranko 등)는 후보에서 뺀다. 영어 위키백과 문서 이름이 원제 그대로인 책(Les Fleurs du mal)만 남긴다
+
+### 한국문학번역원 디지털 도서관 (4번째 출처)
+
+[library.ltikorea.or.kr](https://library.ltikorea.or.kr/) 원작 상세 페이지의 `English Title(Printed)` 는
+실제로 출간된 영어 번역서 제목이다. 그래서 이 출처 하나만으로도 '확실'로 본다.
+검색은 CSRF 토큰이 든 POST 폼이라 세션을 유지하며 부른다. 한국어 제목이 같고 저자 한국어 이름이
+목록에 있을 때만 상세 페이지를 연다. 알라딘이 영어 원제를 준 책(외국 책의 번역서)은 부르지 않는다.
+`English Title(Printed)` 가 아닌 다른 영어 제목만 있으면 후보로 넣지 않고 메모로만 남긴다.
+
+## 영문 제목 표기 원칙 — 단어 첫 글자만 대문자
+
+출처마다 표기가 다르다(번역원 THE DALLERGUT DREAM DEPARTMENT STORE, 위키데이터 The black deer).
+사이트에는 영어 제목 관례(Title Case)로 통일해서 내보낸다.
+
+- 단어 첫 글자는 대문자: The Dallergut Dream Department Store
+- a, an, the, and, but, or, for, of, in, on, at, to, by, with, from 같은 짧은 말은 소문자.
+  단 첫 단어·끝 단어·콜론 뒤에서는 대문자: The Vegetarian: A Novel
+- 원래 섞여 있는 표기는 그대로: iPhone, BTS, 1Q84, McDonald
+- 로마 숫자는 대문자: King Henry VIII
+- 영어가 아닌 제목(La lenteur)은 그 언어의 관례가 달라서 손대지 않는다
+
+같은 규칙이 세 곳에 있다. 후보를 모을 때(`tools/fetch_titles_en.py`), 편집기에서 승인할 때
+(`editor/app.js` 의 `enTitleCase`), 사이트를 만들 때(`generate.py` 의 `en_title_case`).
+data.csv 에 이미 있는 값도 사이트에 나갈 때 이 규칙으로 맞춰진다. 고칠 때는 세 곳을 같이 고친다.
+
 ### Goodreads 는?
 
 Goodreads 도 Open Library 처럼 한국어판과 영어판을 한 작품으로 묶어 두어서 가장 풍부합니다.

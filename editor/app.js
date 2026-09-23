@@ -2390,7 +2390,7 @@ const TTL_FLAG = {
   csv_star: ['직역*', ''], csv_problem: ['문제 있는 값', 'bad'], csv_empty: ['빈 칸', ''],
   conflict: ['CSV와 다름', 'bad'], no_candidate: ['후보 없음', ''], unchecked: ['미조회', ''],
 };
-const TTL_SRC = { yes24: '예스24 원서명', aladin: '알라딘 원제', wikipedia: '위키백과', wikidata: '위키데이터', openlibrary: 'Open Library' };
+const TTL_SRC = { yes24: '예스24 원서명', aladin: '알라딘 원제', wikipedia: '위키백과', wikidata: '위키데이터', openlibrary: 'Open Library', ltikorea: '한국문학번역원' };
 const stripStar = (v) => String(v || '').replace(/\s*\*\s*$/, '').trim();
 
 // generate.py 의 en_title_problem() 과 같은 규칙 — 여기서 막아야 승인해 놓고 사이트에서 빠지는 일이 없다
@@ -2400,6 +2400,43 @@ function ttlProblem(titleKo, v) {
   if (/[가-힣ㄱ-ㅎㅏ-ㅣ]/.test(v)) return '한글';
   if (v.includes(' / ') && !String(titleKo).includes('/')) return '"A / B" 후보 나열';
   return null;
+}
+
+/* 영문 제목 표기 원칙: 단어 첫 글자만 대문자 (Title Case).
+ * generate.py·tools/fetch_titles_en.py 의 en_title_case() 와 같은 규칙.
+ * 전부 대문자(THE WHITE BOOK)는 풀어서 맞추고, iPhone·BTS·1Q84 는 그대로,
+ * a·the·of 같은 짧은 말은 첫·끝 단어와 콜론 뒤가 아니면 소문자, 외국어 제목은 손대지 않는다. */
+const TITLE_SMALL = new Set(['a','an','the','and','but','or','nor','for','so','yet','as','at','by','in','of','on','to','up','via','with','from','into','onto','over','per','than','vs']);
+const ROMAN_RE = /^(?=[ivxlcdm]+$)m{0,3}(cm|cd|d?c{0,3})(xc|xl|l?x{0,3})(ix|iv|v?i{0,3})$/i;
+const FOREIGN_RE = /[àâäçéèêëîïôöùûüÿñãõáíóúōūāēīåøæœß]|\b(?:le|la|les|des|du|l'|d'|et|der|das|und|ein|eine|um|uma|os|il|della|och|jag|het|een)\b/i;
+function enTitleCase(value) {
+  let v = String(value || '').trim();
+  let star = '';
+  const m = v.match(/\s*\*\s*$/);
+  if (m) { star = ' *'; v = v.slice(0, m.index); }
+  if (!v || FOREIGN_RE.test(v)) return v + star;
+  const letters = [...v].filter(c => /\p{L}/u.test(c));
+  const shouting = letters.length > 3 &&
+    letters.filter(c => c === c.toUpperCase() && c !== c.toLowerCase()).length / letters.length > 0.8;
+  const tokens = v.split(/(\s+)/);
+  const words = tokens.map((t, i) => t.trim() ? i : -1).filter(i => i >= 0);
+  words.forEach((i, n) => {
+    const w = tokens[i];
+    const core = w.replace(/^[^\p{L}\p{N}_]+|[^\p{L}\p{N}_]+$/gu, '');
+    if (!core) return;
+    const edge = n === 0 || n === words.length - 1 || /[:.?!—–]$/.test(tokens[words[n - 1]]);
+    const low = core.toLowerCase();
+    const isLower = core === low && core !== core.toUpperCase();
+    let nw;
+    if (ROMAN_RE.test(core) && (shouting || core === core.toUpperCase())) nw = core.toUpperCase();
+    else if (shouting || isLower) {
+      const base = shouting ? low : core;
+      nw = (TITLE_SMALL.has(low) && !edge) ? base : base[0].toUpperCase() + base.slice(1);
+    } else if (TITLE_SMALL.has(low) && !edge && core[0] === core[0].toUpperCase() && core.slice(1) === core.slice(1).toLowerCase()) nw = low;
+    else nw = core;
+    tokens[i] = w.replace(core, nw);
+  });
+  return tokens.join('') + star;
 }
 
 function setTtlStatus(msg) { $('#ttlStatus').textContent = msg || ''; }
@@ -2584,7 +2621,7 @@ function setTtlState(card, act) {
   const bad = (act === 'approved' || act === 'none') && ttlProblem(it.title, val);
   if (bad) { toast(`제목에 ${bad}이(가) 섞여 있습니다. 하나로 고쳐 주세요`, 'err'); return; }
   if (act === 'hide') { it.status = 'none'; it.value = ''; }
-  else { it.status = act; it.value = val; }
+  else { it.status = act; it.value = enTitleCase(val); }
   delete it.auto;
   it.reviewed = new Date().toISOString().slice(0, 10);
   markTtlDirty(key);

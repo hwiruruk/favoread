@@ -14,6 +14,7 @@
     알라딘 API          subInfo.originalTitle 번역서의 원제 (키 필요, 첫 실행에서 가장 잘 맞음)
     예스24 상품 페이지  품목정보의 원서명      알라딘 키가 없을 때 대비
     한국어 위키백과     영어 문서 링크         한국 문학·고전 (소년이 온다 → Human Acts)
+    한국문학번역원      English Title(Printed) 한국 문학 번역서 (library.ltikorea.or.kr)
     위키데이터          작품의 영어 이름표     위키백과 문서가 없는 한국 문학 (흰 → The White Book)
     Open Library        한국어판이 속한 작품   Goodreads처럼 여러 언어판을 한 작품으로 묶는다
     Open Library        후보 제목·저자의 영어판이 실제로 있는지 확인 (무료)
@@ -67,7 +68,8 @@ BROWSER_UA = ('Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 '
 # 조회 방식이 바뀌면 올린다. 이보다 낮은 버전으로 조회한 미검수 책은 다시 조회한다.
 #   2: 예스24 부제 오인 제거, 알라딘 항상 조회, 위키백과 저자 확인, Open Library 추가
 #   3: 위키데이터 추가 (한국 문학: 흰 → The White Book)
-LOOKUP_VERSION = 3
+#   4: 한국문학번역원 디지털 도서관 추가 (English Title(Printed))
+LOOKUP_VERSION = 4
 
 NOTE = (
     'Official English edition titles, one entry per book. '
@@ -136,6 +138,80 @@ def looks_english(s):
         return False
     latin = sum(1 for c in letters if ord(c) < 0x250)
     return latin / len(letters) > 0.9
+
+
+# 라틴 문자지만 영어가 아닌 원제 — 알라딘 원제·위키데이터 이름표에 섞여 온다.
+# 세 번째 실행에서 후보 첫 줄 566건 중 53건이 이랬다 ('11분' → Onze Minutos,
+# '느림' → La lenteur, '공중그네' → Kūchū Buranko). 영문판 제목이 아니니 후보에서 뺀다.
+# 다만 영어판도 원제를 그대로 쓰는 책(Les Misérables)이 있어서, 영어 위키백과 문서
+# 이름이 그 제목이면 남기고 순서만 뒤로 보낸다. Open Library 확인은 근거로 치지 않는다 —
+# 언어 표시가 엉성해서 La lenteur 도 '영어판'으로 걸렸다.
+# 'die'·'el' 처럼 영어 제목에도 흔한 말은 넣지 않는다 (Before I Die).
+FOREIGN_RE = re.compile(
+    r"[àâäçéèêëîïôöùûüÿñãõáíóúōūāēīåøæœß]"
+    r"|\b(?:le|la|les|des|du|l'|d'|et|der|das|und|ein|eine|um|uma|os|il|della|och|jag|het|een)\b",
+    re.I)
+
+
+def looks_foreign(s):
+    return bool(FOREIGN_RE.search(s or ''))
+
+
+def is_english_title(s):
+    return looks_english(s) and not looks_foreign(s)
+
+
+def clean_candidates(cands):
+    """영어가 아닌 후보를 빼고(영어판 확인된 것은 뒤로), 이미 저장된 후보에도 쓴다."""
+    keep = [c for c in (cands or []) if looks_english(c.get('title'))
+            and (not looks_foreign(c.get('title')) or 'wikipedia' in (c.get('sources') or []))]
+    return sorted(keep, key=lambda c: looks_foreign(c.get('title')))   # 안정 정렬
+
+
+# ── 영문 제목 표기 원칙: 단어 첫 글자만 대문자 (Title Case) ────────────────
+# 출처마다 표기가 제각각이다 — 번역원은 THE DALLERGUT DREAM DEPARTMENT STORE,
+# 위키데이터는 The black deer. 영어 제목 관례대로 맞춘다.
+#   · 단어 첫 글자는 대문자, 나머지는 원래대로 (iPhone, McDonald, BTS, 1Q84 는 건드리지 않음)
+#   · 전부 대문자로 온 제목만 소문자로 풀어서 다시 맞춘다
+#   · 관사·짧은 전치사·접속사(a, the, of, and …)는 첫 단어·끝 단어·콜론 뒤가 아니면 소문자
+#   · 로마 숫자(VIII)는 대문자, 영어가 아닌 제목(La lenteur)은 그 언어 관례가 달라 손대지 않음
+# generate.py 의 en_title_case(), editor/app.js 의 enTitleCase() 와 같은 규칙. 셋을 같이 고친다.
+TITLE_SMALL = {'a', 'an', 'the', 'and', 'but', 'or', 'nor', 'for', 'so', 'yet', 'as', 'at',
+               'by', 'in', 'of', 'on', 'to', 'up', 'via', 'with', 'from', 'into', 'onto',
+               'over', 'per', 'than', 'vs'}
+ROMAN_RE = re.compile(r'^(?=[ivxlcdm]+$)m{0,3}(cm|cd|d?c{0,3})(xc|xl|l?x{0,3})(ix|iv|v?i{0,3})$', re.I)
+
+
+def en_title_case(value):
+    v = (value or '').strip()
+    star = ''
+    m = re.search(r'\s*\*\s*$', v)
+    if m:
+        star, v = ' *', v[:m.start()]
+    if not v or looks_foreign(v):
+        return v + star
+    letters = [c for c in v if c.isalpha()]
+    shouting = len(letters) > 3 and sum(c.isupper() for c in letters) / len(letters) > 0.8
+    tokens = re.split(r'(\s+)', v)
+    words = [i for i, t in enumerate(tokens) if t.strip()]
+    for n, i in enumerate(words):
+        w = tokens[i]
+        core = re.sub(r"^\W+|\W+$", '', w)
+        if not core:
+            continue
+        edge = n == 0 or n == len(words) - 1 or re.search(r'[:.?!—–]$', tokens[words[n - 1]])
+        low = core.lower()
+        if ROMAN_RE.match(core) and (shouting or core.isupper()):
+            new = core.upper()
+        elif shouting or core.islower():
+            base = low if shouting else core
+            new = base if (low in TITLE_SMALL and not edge) else base[:1].upper() + base[1:]
+        elif low in TITLE_SMALL and not edge and core[:1].isupper() and core[1:].islower():
+            new = low
+        else:
+            new = core
+        tokens[i] = w.replace(core, new, 1)
+    return ''.join(tokens) + star
 
 
 def tidy(s):
@@ -280,7 +356,7 @@ def wikipedia_en(title, author):
             en = ll.get('title') or ''
             en = re.sub(r'\s*\((?:[^)]*(?:novel|book|novella|memoir|poetry|collection|play|essay|series)[^)]*)\)\s*$',
                         '', en, flags=re.I)
-            if en:
+            if en and not re.search(r'\(disambiguation\)\s*$', en, re.I):   # 동음이의 문서
                 return en, 'https://ko.wikipedia.org/wiki/' + urllib.parse.quote(ko_title.replace(' ', '_'))
     return None, None
 
@@ -370,6 +446,76 @@ def wikidata_en(title, author):
         if any(m in ko_names(a) for a in al for m in marks):
             return en, 'https://www.wikidata.org/wiki/' + qid
     return None, None
+
+
+# ── 5-1. 한국문학번역원 디지털 도서관 ─────────────────────────────────
+# library.ltikorea.or.kr 원작(Original Works) 상세 페이지의 'English Title(Printed)' 는
+# 실제로 나온 영어 번역서의 제목이다.
+#   <dt>English Title(Printed)</dt><dd>THE DALLERGUT DREAM DEPARTMENT STORE</dd>
+# 검색은 CSRF 토큰이 든 POST 폼이라 세션(쿠키)을 유지한다.
+LTI_BASE = 'https://library.ltikorea.or.kr'
+LTI = {'opener': None, 'csrf': None}
+LTI_ITEM_RE = re.compile(
+    r'<a href="(?:https://library\.ltikorea\.or\.kr)?/originalworks/(\d+)" class="title">(.*?)</a>'
+    r'.*?<p class="author">(.*?)</p>', re.S)
+LTI_EN_RE = re.compile(r'<dt>\s*English Title\s*\(([^)]*)\)\s*</dt>\s*<dd>(.*?)</dd>', re.S)
+
+
+def _lti_open(url, data=None):
+    import http.cookiejar
+    if LTI['opener'] is None:
+        LTI['opener'] = urllib.request.build_opener(
+            urllib.request.HTTPCookieProcessor(http.cookiejar.CookieJar()))
+    body = urllib.parse.urlencode(data).encode() if data is not None else None
+    req = urllib.request.Request(url, data=body, headers={
+        'User-Agent': BROWSER_UA, 'Accept-Language': 'en,ko;q=0.8',
+        'Referer': LTI_BASE + '/originalworks'})
+    try:
+        with LTI['opener'].open(req, timeout=20) as r:
+            return r.read().decode('utf-8', 'replace')
+    except urllib.error.HTTPError as e:
+        raise Transient('%s %s' % (e.code, url))
+    except Exception as e:
+        raise Transient('%s %s' % (e, url))
+
+
+def lti_search(title, retried=False):
+    if not LTI['csrf']:
+        page = _lti_open(LTI_BASE + '/originalworks')
+        m = re.search(r'name="_csrf" value="([^"]+)"', page)
+        if not m:
+            raise Transient('번역원: 검색 토큰(_csrf)을 못 찾음')
+        LTI['csrf'] = m.group(1)
+    form = {'_csrf': LTI['csrf'], 'search_word': title, 'num_current_page': '1',
+            'pageSize': '10', 'rowPerPage': '10', 'listType': 'list', 'sortTarget': 'CRDT'}
+    try:
+        return _lti_open(LTI_BASE + '/originalworks', form)
+    except Transient as e:
+        if str(e).startswith('403') and not retried:   # 세션이 끊겨 토큰이 바뀜 → 한 번만 다시
+            LTI['csrf'] = None
+            return lti_search(title, retried=True)
+        raise
+
+
+def ltikorea_en(title, author):
+    """(영어판 제목, 상세 URL, 메모) — 제목과 저자 한국어 이름이 맞는 원작만 본다."""
+    marks = [w for w in re.split(r'[\s,·/]+', re.sub(r'\([^)]*\)', ' ', author or '')) if len(w) >= 2]
+    page = lti_search(title)
+    want = norm_ko(title)
+    for wid, t, auth in LTI_ITEM_RE.findall(page or ''):
+        if norm_ko(html.unescape(re.sub(r'<[^>]+>', '', t))) != want:
+            continue
+        if marks and not any(m in auth for m in marks):
+            continue
+        url = '%s/originalworks/%s' % (LTI_BASE, wid)
+        detail = _lti_open(url)
+        found = [(kind.strip(), tidy(v)) for kind, v in LTI_EN_RE.findall(detail)]
+        for kind, v in found:
+            if kind.lower() == 'printed' and v and v != '-':
+                return v, url, None
+        other = ['%s(%s)' % (v, k) for k, v in found if v and v != '-']
+        return None, url, ('번역원 영어 제목(출간 아님): ' + ', '.join(other)) if other else None
+    return None, None, None
 
 
 # ── 6. 영어판이 실제로 있는지 확인 ───────────────────────────────────
@@ -498,6 +644,19 @@ def lookup(book, ttb_key, sleep):
         wd, wd_url = None, None
         notes.append('위키데이터 못 읽음: %s' % e)
     time.sleep(sleep)
+    # 번역원은 한국 책의 번역서 목록이라, 알라딘이 영어 원제를 준 번역서(외국 책)는 건너뛴다
+    if not looks_english(orig):
+        try:
+            lti, lti_url, lti_note = ltikorea_en(book['title'], book['author'])
+            reached += 1
+        except Transient as e:
+            lti, lti_url, lti_note = None, None, None
+            notes.append('번역원 못 읽음: %s' % e)
+        time.sleep(sleep)
+        if lti:
+            found.append((lti, 'ltikorea', lti_url))
+        if lti_note:
+            notes.append(lti_note)
     if not reached:
         raise Transient('; '.join(notes) or '조회할 곳이 없음')
     if wen:
@@ -516,6 +675,7 @@ def lookup(book, ttb_key, sleep):
         k = norm_en(t)
         if not k:
             continue
+        t = en_title_case(t)
         g = groups.setdefault(k, {'title': t, 'sources': [], 'urls': []})
         if src not in g['sources']:
             g['sources'].append(src)
@@ -535,7 +695,11 @@ def lookup(book, ttb_key, sleep):
         if isinstance(v, str) and v not in c['urls']:
             c['urls'].append(v)
 
-    cands.sort(key=lambda c: (-(len(c['sources']) + (2 if c['verified'] else 0)
+    for c in cands:
+        if looks_foreign(c['title']) and 'wikipedia' not in c['sources']:
+            notes.append('원제(외국어): %s' % c['title'])
+    cands = clean_candidates(cands)
+    cands.sort(key=lambda c: (looks_foreign(c['title']), -(len(c['sources']) + (2 if c['verified'] else 0)
                                 + (1 if {'wikipedia', 'wikidata'} & set(c['sources']) else 0))))
     return cands, notes, orig
 
@@ -544,7 +708,8 @@ def confidence(cands):
     if not cands:
         return 'none'
     top = cands[0]
-    if top['verified'] or len(top['sources']) >= 2:
+    # 번역원 'English Title(Printed)' 는 실제 출간된 번역서라 그 자체로 확인된 것으로 본다
+    if top['verified'] or len(top['sources']) >= 2 or 'ltikorea' in top['sources']:
         return 'high'
     return 'mid'
 
@@ -655,6 +820,20 @@ def main():
             ent['status'] = 'pending'
             ent['value'] = (ent.get('candidates') or [{}])[0].get('title', '')
             ent.pop('auto', None)
+        for c in ent.get('candidates') or []:
+            c['title'] = en_title_case(c['title'])
+        if ent.get('status') == 'pending' and ent.get('value'):
+            ent['value'] = en_title_case(ent['value'])
+        if ent.get('candidates'):
+            kept = clean_candidates(ent['candidates'])
+            if kept != ent['candidates']:
+                gone = [c['title'] for c in ent['candidates'] if c not in kept]
+                ent['candidates'] = kept
+                ent['confidence'] = confidence(kept)
+                ent.setdefault('notes', []).extend('원제(외국어): %s' % t for t in gone
+                                                   if '원제(외국어): %s' % t not in ent['notes'])
+                if ent.get('status') == 'pending' and ent.get('value') in gone:
+                    ent['value'] = kept[0]['title'] if kept else ''
         if ent.get('status') == 'pending' or ent.get('auto'):
             ent['flags'] = flags_for(b, ent.get('candidates') or [], bool(ent.get('checked')))
         human = ent.get('status') in ('approved', 'none') and not ent.get('auto')
