@@ -249,7 +249,7 @@ async function drawShelfCover(size, img, type, opts) {
   const s = W / 1200;
   const pad = Math.round(64 * s);
   const wide = W > H;
-  const photo = opts.portrait && img.portrait ? await loadImage(img.portrait, 1200) : null;
+  const photo = !opts.portrait ? null : opts.photo || (img.portrait ? await loadImage(img.portrait, 1200) : null);
 
   // 사진(또는 표지 모음) 자리
   const media = wide
@@ -396,8 +396,10 @@ async function drawBookCard(img, opts) {
   // 아래: 인물 사진 줄(선택) + 이름
   y = r.y + r.h + pad * 0.9;
   if (opts.portrait) {
-    const photos = (await Promise.all(img.portraits.slice(0, 6).map((u) => loadImage(u, 300))));
-    const shown = photos.map((im, i) => [im, img.names[i]]).filter(([im]) => im);
+    // 올린 사진이 있으면 맨 앞 동그라미로
+    const photos = (opts.photo ? [opts.photo] : [])
+      .concat(await Promise.all(img.portraits.slice(0, opts.photo ? 5 : 6).map((u) => loadImage(u, 300))));
+    const shown = photos.map((im) => [im]).filter(([im]) => im);
     if (shown.length) {
       const rad = 62 * s, step = rad * 2 + 30 * s;
       shown.forEach(([im], i) => drawCircle(ctx, im, pad + rad + i * step, y + rad, rad));
@@ -496,7 +498,7 @@ async function drawChatCover(size, img, type, opts) {
   const { c, ctx, W, H } = newCanvas(size, opts.bg);
   const accent = ACCENT[type];
   const s = W / 1200, pad = Math.round(56 * s), wide = W > H;
-  const photo = opts.portrait && img.portrait ? await loadImage(img.portrait, 1000) : null;
+  const photo = !opts.portrait ? null : opts.photo || (img.portrait ? await loadImage(img.portrait, 1000) : null);
   let y = chatHeader(ctx, pad, pad * 0.8, s, accent);
   const maxW = wide ? W * 0.56 : W - pad * 2;
   const n = img.books.length;
@@ -568,7 +570,9 @@ async function drawChatBookCard(img, opts) {
   bookBubble(ctx, pad, y + 16 * s, W * 0.72, 330 * s, b, cover, accent, s);
   y += 16 * s + 330 * s + 16 * s;
   if (opts.portrait) {
-    const photos = (await Promise.all(img.portraits.slice(0, 7).map((u) => loadImage(u, 300)))).filter(Boolean);
+    const photos = (opts.photo ? [opts.photo] : [])
+      .concat(await Promise.all(img.portraits.slice(0, opts.photo ? 6 : 7).map((u) => loadImage(u, 300))))
+      .filter(Boolean);
     if (photos.length) {
       const rad = 50 * s, step = rad * 2 + 18 * s;
       const w = Math.min(W - pad * 2, photos.length * step + 36 * s);
@@ -668,7 +672,11 @@ function cardEl(it, isDone) {
     '<div>' +
       '<div class="preview-head">' +
         '<span class="muted">X 모바일 미리보기 (첫 글 이미지)</span>' +
-        '<label class="toggle"><input type="checkbox" data-opt="portrait"> 인물 사진</label>' +
+        '<span class="photo-tools">' +
+          '<label class="toggle"><input type="checkbox" data-opt="portrait"> 인물 사진</label>' +
+          '<label class="btn tiny" title="내 컴퓨터·휴대폰의 사진으로 바꿔요">📷 사진 올리기<input type="file" accept="image/*" data-opt="upload" hidden></label>' +
+          '<button class="btn tiny" data-act="unphoto" hidden title="올린 사진 빼기">✕</button>' +
+        '</span>' +
       '</div>' +
       '<div class="xgrid"></div>' +
       '<div class="thumbs"></div>' +
@@ -756,8 +764,9 @@ function cardEl(it, isDone) {
 
   let pages = [];
   let ready = null;
+  let upPhoto = null, upUrl = '';   // '사진 올리기'로 고른 사진(아래에서 채움)
   const render = () => {
-    ready = buildImages(it, { bg: BGS[state.bg], style: state.style, portrait: portraitBox.checked }).then((cs) => {
+    ready = buildImages(it, { bg: BGS[state.bg], style: state.style, portrait: portraitBox.checked, photo: upPhoto }).then((cs) => {
       pages = cs;
       showPreview(el, cs);
       return cs;
@@ -767,6 +776,28 @@ function cardEl(it, isDone) {
   el._render = render;
   render();
   portraitBox.addEventListener('change', render);
+
+  // 사진 올리기: 고른 파일은 이 브라우저 안에서만 쓰고 어디에도 올라가지 않는다.
+  // 같은 출처(blob:)라 캔버스가 막히지 않는다.
+  const unBtn = $('[data-act="unphoto"]', el);
+  $('[data-opt="upload"]', el).addEventListener('change', (e) => {
+    const f = e.target.files && e.target.files[0];
+    e.target.value = '';
+    if (!f) return;
+    const im = new Image();
+    const u = URL.createObjectURL(f);
+    im.onload = () => {
+      if (upUrl) URL.revokeObjectURL(upUrl);
+      upPhoto = im; upUrl = u;
+      portraitBox.disabled = false;
+      portraitBox.checked = true;
+      unBtn.hidden = false;
+      status('올린 사진으로 바꿨어요');
+      render();
+    };
+    im.onerror = () => { URL.revokeObjectURL(u); status('이 파일은 사진으로 읽을 수 없어요'); };
+    im.src = u;
+  });
 
   const shareBtn = $('[data-act="share"]', el);
   if (navigator.canShare && navigator.canShare({ files: [new File([''], 'x.png', { type: 'image/png' })] })) {
@@ -809,6 +840,13 @@ function cardEl(it, isDone) {
         if (w) w.opener = null;
         if (!w) status('브라우저가 새 창을 막았어요. 한 번 더 눌러 주세요');
         else if (copied) status('1번 이미지를 복사해 뒀어요. 작성창에서 Ctrl+V (나머지는 썸네일의 복사로)');
+      } else if (act === 'unphoto') {
+        if (upUrl) URL.revokeObjectURL(upUrl);
+        upPhoto = null; upUrl = '';
+        unBtn.hidden = true;
+        portraitBox.checked = hasPortrait(it);
+        portraitBox.disabled = !hasPortrait(it);
+        render();
       } else if (act === 'copytext') {
         await navigator.clipboard.writeText(areas[+t.dataset.k].value);
         status('글을 복사했어요');
