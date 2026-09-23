@@ -2390,7 +2390,7 @@ const TTL_FLAG = {
   csv_star: ['직역*', ''], csv_problem: ['문제 있는 값', 'bad'], csv_empty: ['빈 칸', ''],
   conflict: ['CSV와 다름', 'bad'], no_candidate: ['후보 없음', ''], unchecked: ['미조회', ''],
 };
-const TTL_SRC = { yes24: '예스24 원서명', aladin: '알라딘 원제', wikipedia: '위키백과' };
+const TTL_SRC = { yes24: '예스24 원서명', aladin: '알라딘 원제', wikipedia: '위키백과', openlibrary: 'Open Library' };
 const stripStar = (v) => String(v || '').replace(/\s*\*\s*$/, '').trim();
 
 // generate.py 의 en_title_problem() 과 같은 규칙 — 여기서 막아야 승인해 놓고 사이트에서 빠지는 일이 없다
@@ -2543,7 +2543,8 @@ function renderTitlesList() {
       <div class="ttl-links">
         ${link ? `<a href="${esc(link)}" target="_blank" rel="noopener">예스24 상품 ↗</a>` : ''}
         <a href="https://www.google.com/search?q=${q}" target="_blank" rel="noopener">Google 검색 ↗</a>
-        <a href="https://www.goodreads.com/search?q=${encodeURIComponent(author_en || v.title)}" target="_blank" rel="noopener">Goodreads ↗</a>
+        <a href="https://www.goodreads.com/search?q=${encodeURIComponent(v.title + ' ' + (v.author || ''))}" target="_blank" rel="noopener" title="한국어판을 찾아 들어가면 '다른 판(Other editions)'에 영어판 제목이 있습니다">Goodreads (한국어판) ↗</a>
+        ${author_en ? `<a href="https://www.goodreads.com/search?q=${encodeURIComponent(author_en)}" target="_blank" rel="noopener">Goodreads (저자) ↗</a>` : ''}
       </div>
       <div class="cmt-actions">
         <button type="button" class="btn small ok" data-act="approved" title="공식 영문판 제목으로 확정">승인</button>
