@@ -2366,6 +2366,312 @@ commentsDlg.addEventListener('close', () => {
   if (Cmt.dirty) toast('검수 결과가 아직 저장되지 않았습니다', 'err');
 });
 
+/* -------------------- 영문 제목 검수 (data/titles_en.json) --------------------
+ *
+ * 책의 공식 영문판 제목을 한 권씩 확인하는 창. 후보는 번역한 값이 아니라
+ * tools/fetch_titles_en.py 가 예스24 원서명·위키백과 영어 문서·알라딘 원제에서
+ * 모아 둔 것이다. 사람은 후보를 누르고 승인만 하면 된다.
+ *
+ * data.csv 에 쓰지 않는 이유는 코멘트 검수와 같다. 파일 하나만 커밋하면
+ * CSV 저장과 부딪히지 않고, 배치가 다시 돌아도 사람이 정한 값이 남는다.
+ * generate.py 는 approved/none 이면 이 값을, pending 이면 data.csv 값을 쓴다.
+ */
+const TITLES_PATH = 'data/titles_en.json';
+const Ttl = {
+  items: new Map(),     // "도서명|저자" -> entry
+  touched: new Set(),   // 이번에 손댄 키 — 저장할 때 최신 파일 위에 이것만 덮는다
+  loaded: false,
+  dirty: false,
+  shown: 60,
+};
+const titlesDlg = $('#titlesDialog');
+const TTL_LABEL = { pending: '미검수', approved: '승인', none: '공식판 없음' };
+const TTL_FLAG = {
+  csv_star: ['직역*', ''], csv_problem: ['문제 있는 값', 'bad'], csv_empty: ['빈 칸', ''],
+  conflict: ['CSV와 다름', 'bad'], no_candidate: ['후보 없음', ''], unchecked: ['미조회', ''],
+};
+const TTL_SRC = { yes24: '예스24 원서명', aladin: '알라딘 원제', wikipedia: '위키백과' };
+const stripStar = (v) => String(v || '').replace(/\s*\*\s*$/, '').trim();
+
+// generate.py 의 en_title_problem() 과 같은 규칙 — 여기서 막아야 승인해 놓고 사이트에서 빠지는 일이 없다
+function ttlProblem(titleKo, v) {
+  if (/\(\s*or\b/i.test(v)) return '"(or ...)" 같은 대안 문구';
+  if (/\bor similar\b|\bno (?:widely )?confirmed\b|\bofficial english\b|\bunofficial\b|\bnot (?:officially )?translated\b/i.test(v)) return 'AI 설명 문구';
+  if (/[가-힣ㄱ-ㅎㅏ-ㅣ]/.test(v)) return '한글';
+  if (v.includes(' / ') && !String(titleKo).includes('/')) return '"A / B" 후보 나열';
+  return null;
+}
+
+function setTtlStatus(msg) { $('#ttlStatus').textContent = msg || ''; }
+
+function markTtlDirty(key) {
+  Ttl.touched.add(key);
+  Ttl.dirty = true;
+  $('#ttlSaveBtn').disabled = false;
+  setTtlStatus(`미저장 변경 ${Ttl.touched.size}건`);
+  window.onbeforeunload = () => '저장되지 않은 변경이 있습니다.';
+}
+
+async function fetchTitlesDoc() {
+  const { content } = await Gh.getFile(TITLES_PATH, { allowMissing: true });
+  return content ? JSON.parse(content) : null;
+}
+
+async function openTitlesDialog() {
+  if (!Config.token) { toast('GitHub Token을 먼저 설정하세요', 'err'); settingsDlg.showModal(); return; }
+  titlesDlg.showModal();
+  if (!Ttl.loaded) {
+    setTtlStatus('불러오는 중…');
+    try {
+      const doc = await fetchTitlesDoc();
+      if (!doc) {
+        setTtlStatus('');
+        $('#ttlList').innerHTML = '<p class="muted small" style="padding:18px 4px;">' +
+          '아직 data/titles_en.json 이 없습니다. Actions → Fetch English Titles 를 먼저 돌려 주세요.</p>';
+        return;
+      }
+      for (const [k, v] of Object.entries(doc.titles || {})) Ttl.items.set(k, v);
+      Ttl.loaded = true;
+      setTtlStatus(doc._updated ? `후보 갱신 ${doc._updated}` : '');
+    } catch (err) {
+      setTtlStatus('');
+      toast('영문 제목 불러오기 실패: ' + err.message, 'err');
+      return;
+    }
+  }
+  $('#ttlSaveBtn').disabled = !Ttl.dirty;
+  Ttl.shown = 60;
+  renderTitlesList();
+}
+
+function ttlCounts() {
+  const n = { pending: 0, approved: 0, none: 0 };
+  for (const v of Ttl.items.values()) n[v.status in n ? v.status : 'pending']++;
+  return n;
+}
+
+function ttlRows() {
+  const f = $('#ttlFilter').value;
+  const q = $('#ttlSearch').value.trim().toLowerCase();
+  const rows = [];
+  for (const [k, v] of Ttl.items) {
+    const st = v.status || 'pending';
+    const fl = v.flags || [];
+    const cands = v.candidates || [];
+    const pend = st === 'pending';
+    const ok = {
+      focus: pend && cands.length > 0,
+      conflict: pend && fl.includes('conflict'),
+      problem: pend && fl.includes('csv_problem'),
+      star: pend && fl.includes('csv_star'),
+      empty: pend && fl.includes('csv_empty'),
+      nocand: pend && !cands.length,
+      pending: pend, approved: st === 'approved', none: st === 'none', all: true,
+    }[f];
+    if (!ok) continue;
+    if (q) {
+      const hay = [k, v.csv, v.value, ...cands.map(c => c.title)].join(' ').toLowerCase();
+      if (!hay.includes(q)) continue;
+    }
+    rows.push([k, v]);
+  }
+  // 확실한 것부터 — 눌러서 승인만 하면 되는 카드가 위로 온다
+  const rank = (v) => {
+    const c = { high: 0, mid: 1 }[v.confidence] ?? 2;
+    const fl = v.flags || [];
+    return c * 10 - (fl.includes('csv_problem') ? 3 : 0) - (fl.includes('conflict') ? 2 : 0)
+      - (fl.includes('csv_star') ? 1 : 0);
+  };
+  rows.sort((a, b) => rank(a[1]) - rank(b[1]) || a[1].title.localeCompare(b[1].title, 'ko'));
+  return rows;
+}
+
+function bookLinkFor(title) {
+  for (const c of State.celebs.values()) {
+    const b = c.books.find(x => x.title === title);
+    if (b) return { link: b.link || '', author_en: stripStar(b.author_en) };
+  }
+  return { link: '', author_en: '' };
+}
+
+function renderTitlesList() {
+  const n = ttlCounts();
+  const rows = ttlRows();
+  $('#ttlCount').textContent =
+    `이 목록 ${rows.length} · 미검수 ${n.pending} · 승인 ${n.approved} · 공식판 없음 ${n.none}`;
+
+  const box = $('#ttlList');
+  if (!rows.length) {
+    const hint = $('#ttlFilter').value === 'focus'
+      ? ' 후보가 아직 없다면 GitHub Actions → Fetch English Titles 를 돌려 주세요. ' +
+        '그동안은 필터를 "문제 있는 값"이나 "직역* 인 것"으로 바꿔 직접 고칠 수 있습니다.' : '';
+    box.innerHTML = `<p class="muted small" style="padding:18px 4px;">해당하는 항목이 없습니다.${hint}</p>`;
+    $('#ttlMoreBtn').classList.add('hidden');
+    return;
+  }
+  const page = rows.slice(0, Ttl.shown);
+  box.innerHTML = page.map(([k, v]) => {
+    const st = v.status || 'pending';
+    const cands = v.candidates || [];
+    const { link, author_en } = bookLinkFor(v.title);
+    const q = encodeURIComponent(`${author_en || v.author} "${v.title}" English translation`);
+    const flags = st !== 'pending' ? '' : (v.flags || []).map(f => TTL_FLAG[f]
+      ? `<span class="ttl-flag ${TTL_FLAG[f][1]}">${TTL_FLAG[f][0]}</span>` : '').join('');
+    const conf = v.confidence && v.confidence !== 'none'
+      ? `<span class="ttl-conf c-${esc(v.confidence)}" title="high = Google Books 확인 또는 두 곳 이상 일치">${v.confidence === 'high' ? '확실' : '후보'}</span>` : '';
+    return `<article class="cmt-card ${st}" data-key="${esc(k)}">
+      <div class="cmt-head">
+        ${conf}
+        <b>${esc(v.title)}</b><span class="muted"> · ${esc(v.author || '')}</span>
+        <span class="cmt-state s-${st}">${TTL_LABEL[st] || st}${v.auto ? ' (자동)' : ''}</span>
+        ${flags}
+        <span class="cmt-spacer"></span>
+      </div>
+      <p class="ttl-csv">지금 data.csv: <b>${v.csv ? esc(v.csv) : '(비어 있음)'}</b>
+        ${v.original && !cands.some(c => c.title === v.original) ? ` · 원제 <b>${esc(v.original)}</b>` : ''}</p>
+      ${cands.length ? `<div class="ttl-cands">${cands.map((c, i) => `
+        <button type="button" class="ttl-cand" data-pick="${i}">
+          <span>${esc(c.title)}</span>
+          <span class="src">${c.sources.map(s => TTL_SRC[s] || s).join(' + ')}</span>
+          ${c.verified ? '<span class="ok" title="Google Books에 같은 제목의 영어판이 있음">✓ 확인</span>' : ''}
+          ${(c.urls || []).map(u => `<a href="${esc(u)}" target="_blank" rel="noopener">근거 ↗</a>`).join('')}
+        </button>`).join('')}</div>` : ''}
+      ${(v.notes || []).length ? `<p class="cmt-note">⚠ ${esc(v.notes.join(' · '))}</p>` : ''}
+      <div class="ttl-value">
+        <input type="text" data-f="value" placeholder="영문 제목 (공식판이 없으면 직역)">
+      </div>
+      <div class="ttl-links">
+        ${link ? `<a href="${esc(link)}" target="_blank" rel="noopener">예스24 상품 ↗</a>` : ''}
+        <a href="https://www.google.com/search?q=${q}" target="_blank" rel="noopener">Google 검색 ↗</a>
+        <a href="https://www.goodreads.com/search?q=${encodeURIComponent(author_en || v.title)}" target="_blank" rel="noopener">Goodreads ↗</a>
+      </div>
+      <div class="cmt-actions">
+        <button type="button" class="btn small ok" data-act="approved" title="공식 영문판 제목으로 확정">승인</button>
+        <button type="button" class="btn small" data-act="none" title="공식 영문판이 없음 — 입력한 직역에 * 을 붙여 노출">공식판 없음 (직역*)</button>
+        <button type="button" class="btn small" data-act="hide" title="영문 페이지에서 이 책을 뺌">영문 숨김</button>
+        <button type="button" class="btn small" data-act="pending">보류</button>
+        <span class="muted small">Ctrl+Enter = 승인</span>
+      </div>
+    </article>`;
+  }).join('');
+
+  // 입력칸은 value 로 넣는다 — 제목 속 따옴표가 HTML을 깨지 않도록
+  page.forEach(([k, v], i) => {
+    const inp = box.children[i].querySelector('input[data-f="value"]');
+    inp.value = v.value || (v.candidates?.[0]?.title) || stripStar(v.csv);
+    markPicked(box.children[i], inp.value);
+  });
+  $('#ttlMoreBtn').classList.toggle('hidden', rows.length <= Ttl.shown);
+  $('#ttlMoreBtn').textContent = `더 보기 (${rows.length - Ttl.shown}건 남음)`;
+}
+
+function markPicked(card, value) {
+  const it = Ttl.items.get(card.dataset.key);
+  card.querySelectorAll('.ttl-cand').forEach(btn => {
+    const c = it?.candidates?.[+btn.dataset.pick];
+    btn.classList.toggle('picked', !!c && c.title === value);
+  });
+}
+
+function setTtlState(card, act) {
+  const key = card.dataset.key;
+  const it = Ttl.items.get(key);
+  if (!it) return;
+  const val = stripStar(card.querySelector('input[data-f="value"]').value);
+  if (act === 'approved' && !val) { toast('영문 제목이 비어 있어 승인할 수 없습니다', 'err'); return; }
+  if (act === 'none' && !val) { toast('직역을 적거나, 영문 페이지에서 빼려면 "영문 숨김"을 누르세요', 'err'); return; }
+  const bad = (act === 'approved' || act === 'none') && ttlProblem(it.title, val);
+  if (bad) { toast(`제목에 ${bad}이(가) 섞여 있습니다. 하나로 고쳐 주세요`, 'err'); return; }
+  if (act === 'hide') { it.status = 'none'; it.value = ''; }
+  else { it.status = act; it.value = val; }
+  delete it.auto;
+  it.reviewed = new Date().toISOString().slice(0, 10);
+  markTtlDirty(key);
+  renderTitlesList();
+}
+
+$('#ttlList').addEventListener('click', (e) => {
+  const card = e.target.closest('.cmt-card');
+  if (!card || e.target.closest('a')) return;
+  const pick = e.target.closest('[data-pick]');
+  if (pick) {
+    const it = Ttl.items.get(card.dataset.key);
+    const c = it?.candidates?.[+pick.dataset.pick];
+    if (c) {
+      const inp = card.querySelector('input[data-f="value"]');
+      inp.value = c.title;
+      markPicked(card, c.title);
+      inp.focus();
+    }
+    return;
+  }
+  const act = e.target.dataset.act;
+  if (act) setTtlState(card, act);
+});
+
+$('#ttlList').addEventListener('input', (e) => {
+  const card = e.target.closest('.cmt-card');
+  if (card && e.target.dataset.f === 'value') markPicked(card, e.target.value.trim());
+});
+
+$('#ttlList').addEventListener('keydown', (e) => {
+  if (e.key !== 'Enter' || !(e.ctrlKey || e.metaKey)) return;
+  const card = e.target.closest('.cmt-card');
+  if (!card) return;
+  e.preventDefault();
+  setTtlState(card, 'approved');
+});
+
+async function saveTitles() {
+  if (!Ttl.touched.size) return;
+  const n = { approved: 0, none: 0, pending: 0 };
+  for (const k of Ttl.touched) n[Ttl.items.get(k)?.status in n ? Ttl.items.get(k).status : 'pending']++;
+  const message = prompt('커밋 메시지',
+    `영문 제목 검수 — 승인 ${n.approved} / 공식판 없음 ${n.none} / 보류 ${n.pending}`);
+  if (!message) return;
+
+  const btn = $('#ttlSaveBtn');
+  btn.disabled = true;
+  setTtlStatus('저장 중…');
+  try {
+    // 워크플로가 그새 후보를 갱신했을 수 있다. 최신 파일을 받아 내가 정한 칸만 덮는다.
+    const { content, sha } = await Gh.getFile(TITLES_PATH, { allowMissing: true });
+    const doc = content ? JSON.parse(content) : { titles: {} };
+    doc.titles = doc.titles || {};
+    for (const k of Ttl.touched) {
+      const mine = Ttl.items.get(k);
+      const base = doc.titles[k] || mine;
+      base.status = mine.status;
+      base.value = mine.value;
+      base.reviewed = mine.reviewed;
+      delete base.auto;
+      doc.titles[k] = base;
+    }
+    doc._updated = new Date().toISOString().slice(0, 10);
+    await Gh.putFile({ content: JSON.stringify(doc, null, 2) + '\n', sha, message, path: TITLES_PATH });
+    for (const [k, v] of Object.entries(doc.titles)) Ttl.items.set(k, v);
+    Ttl.touched.clear();
+    Ttl.dirty = false;
+    if (!State.dirty && !Cmt.dirty) window.onbeforeunload = null;
+    setTtlStatus('저장 완료 — 사이트는 몇 분 뒤 다시 빌드됩니다');
+    toast(`영문 제목 저장됨 — 승인 ${n.approved}건`, 'ok');
+    renderTitlesList();
+  } catch (err) {
+    setTtlStatus('');
+    toast(err.message, 'err');
+    btn.disabled = false;
+  }
+}
+
+$('#titlesBtn').addEventListener('click', openTitlesDialog);
+$('#ttlSaveBtn').addEventListener('click', saveTitles);
+$('#ttlFilter').addEventListener('change', () => { Ttl.shown = 60; renderTitlesList(); });
+$('#ttlSearch').addEventListener('input', () => { Ttl.shown = 60; renderTitlesList(); });
+$('#ttlMoreBtn').addEventListener('click', () => { Ttl.shown += 60; renderTitlesList(); });
+titlesDlg.addEventListener('close', () => {
+  if (Ttl.dirty) toast('영문 제목 검수 결과가 아직 저장되지 않았습니다', 'err');
+});
+
 (function init() {
   $('#branchTag').textContent = `${Config.repo} @ ${Config.branch}`;
   if (!Config.token || !Config.ttb) {

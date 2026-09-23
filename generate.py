@@ -137,6 +137,67 @@ def plain_en(value):
     return re.sub(r'\s*\*\s*$', '', (value or '').strip())
 
 
+# ── 영문 책 제목 검수 (data/titles_en.json) ─────────────────────────
+# tools/fetch_titles_en.py 가 원제·위키백과에서 모은 후보를 편집기의
+# '🔤 영문 제목 검수' 창에서 사람이 고른 결과. data.csv 의 도서명_en 보다 우선한다.
+#   approved  공식 영문판 제목 → value 그대로
+#   none      공식 영문판 없음 → value 에 직역 표시(*)를 붙여서, 비었으면 영문 페이지에서 뺌
+#   pending   아직 안 봄 → data.csv 값을 그대로 쓴다
+
+# 사이트에 나가면 안 되는 흔적. tools/fetch_titles_en.py 의 PROBLEM_RULES 와 같이 고친다.
+EN_TITLE_PROBLEMS = [
+    (re.compile(r'\(\s*or\b', re.I), '"(or ...)" 대안 문구'),
+    (re.compile(r'\bor similar\b|\bno (?:widely )?confirmed\b|\bofficial english\b'
+                r'|\bunofficial\b|\bnot (?:officially )?translated\b', re.I), 'AI 설명 문구'),
+    (re.compile(r'[가-힣ㄱ-ㅎㅏ-ㅣ]'), '한글이 섞임'),
+]
+
+
+def en_title_problem(title_ko, value):
+    """영문 제목에 AI 답변 문구나 후보 나열이 섞였는지. 문제 없으면 None."""
+    v = (value or '').strip()
+    if not v:
+        return None
+    for rx, why in EN_TITLE_PROBLEMS:
+        if rx.search(v):
+            return why
+    if ' / ' in v and '/' not in (title_ko or ''):
+        return '"A / B" 후보 나열'
+    return None
+
+
+def load_titles_en():
+    path = os.path.join('data', 'titles_en.json')
+    if not os.path.exists(path):
+        return {}
+    try:
+        with open(path, encoding='utf-8') as fp:
+            return (json.load(fp) or {}).get('titles') or {}
+    except (json.JSONDecodeError, OSError) as e:
+        print('⚠️ data/titles_en.json 읽기 실패 — data.csv 값만 씁니다: %s' % e)
+        return {}
+
+
+TITLES_EN = load_titles_en()
+EN_TITLE_SKIPPED = {}   # 도서명 → 뺀 이유 (빌드 끝에 한 번에 알린다)
+
+
+def resolve_title_en(title_ko, author_ko, csv_value):
+    """검수 결과 > data.csv 순으로 영문 제목을 정하고, 문제 있는 값은 뺀다."""
+    ent = TITLES_EN.get(title_ko + '|' + (author_ko or ''))
+    value = csv_value
+    if ent and ent.get('status') == 'approved' and (ent.get('value') or '').strip():
+        value = ent['value'].strip()
+    elif ent and ent.get('status') == 'none':
+        v = re.sub(r'\s*\*\s*$', '', (ent.get('value') or '').strip())
+        value = (v + ' *') if v else None
+    why = en_title_problem(title_ko, value)
+    if why:
+        EN_TITLE_SKIPPED[title_ko] = '%s — %s' % (why, value)
+        return None
+    return value
+
+
 # 영문 셀럽/책 페이지(자체 <style> 사용)용 각주
 EN_TR_NOTE_CSS = (
     '    .tr-note { margin: 24px 0 0; padding: 10px 12px; background: #fff8e7; '
@@ -892,6 +953,7 @@ with open("data.csv", encoding="utf-8") as f:
 
         name_en   = clean_en(get(C['name_en']))   if C['name_en']   is not None else None
         title_en  = clean_en(get(C['title_en']))  if C['title_en']  is not None else None
+        title_en  = resolve_title_en(title, get(C['author']), title_en)
         author_en = clean_en(get(C['author_en'])) if C['author_en'] is not None else None
 
         if name not in celebs:
@@ -913,6 +975,13 @@ with open("data.csv", encoding="utf-8") as f:
         })
 
 print(f"CSV 파싱 완료: {len(celebs)}명")
+if EN_TITLE_SKIPPED:
+    print(f"⚠️ 영문 제목 {len(EN_TITLE_SKIPPED)}건은 AI 답변 문구·후보 나열이 섞여 영문 페이지에서 뺐습니다"
+          " (편집기 '🔤 영문 제목 검수'에서 고치세요):")
+    for _t, _why in list(EN_TITLE_SKIPPED.items())[:15]:
+        print(f"   · {_t}: {_why}")
+    if len(EN_TITLE_SKIPPED) > 15:
+        print(f"   · … 외 {len(EN_TITLE_SKIPPED) - 15}건")
 
 # ── 1.5. 짧은 공유 링크 (/s/) ────────────────────────────────────────
 #
