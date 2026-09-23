@@ -780,6 +780,36 @@ const EnEnrich = {
   },
 };
 
+/* -------------------- 중복 도서 --------------------
+   책 제목만 본다. 띄어쓰기·문장부호·대소문자 차이는 같은 책으로 친다.
+   ("우리는 언젠가 만난다" = "우리는언젠가 만난다") */
+function normTitle(t) {
+  return String(t || '').toLowerCase().replace(/[\s\p{P}\p{S}]+/gu, '');
+}
+/* 같은 셀럽 안에서 제목이 겹치는 책의 인덱스 집합 */
+function dupBookIdx(c) {
+  const seen = new Map(), dup = new Set();
+  c.books.forEach((b, i) => {
+    const k = normTitle(b.title); if (!k) return;
+    if (seen.has(k)) { dup.add(seen.get(k)); dup.add(i); } else seen.set(k, i);
+  });
+  return dup;
+}
+/* title과 같은 책: 이 셀럽 안(skipIdx 제외)의 책, 그리고 이 책을 가진 다른 셀럽 */
+function findDupTitle(celebName, title, skipIdx) {
+  const k = normTitle(title);
+  const out = { same: null, others: [] };
+  if (!k) return out;
+  for (const [name, c] of State.celebs) {
+    c.books.forEach((b, i) => {
+      if (normTitle(b.title) !== k) return;
+      if (name === celebName) { if (i !== skipIdx && !out.same) out.same = b; }
+      else if (!out.others.includes(name)) out.others.push(name);
+    });
+  }
+  return out;
+}
+
 /* -------------------- Render: Sidebar -------------------- */
 function applyFilter(name) {
   const c = State.celebs.get(name);
@@ -788,6 +818,7 @@ function applyFilter(name) {
   if (f === 'missing-en')    return !c.name_en || c.books.some(b => !b.title_en || !b.author_en);
   if (f === 'missing-cover') return c.books.some(b => !b.cover);
   if (f === 'missing-img')   return !c.img;
+  if (f === 'dup-book')      return dupBookIdx(c).size > 0;
   return true;
 }
 function renderSidebar() {
@@ -804,7 +835,7 @@ function renderSidebar() {
       (b.author || '').toLowerCase().includes(q));
   };
   let html = '';
-  let nCelebs = 0, nBooks = 0, nEn = 0, nEnTotal = 0;
+  let nCelebs = 0, nBooks = 0, nEn = 0, nEnTotal = 0, nDup = 0;
   for (const name of State.order) {
     const c = State.celebs.get(name);
     nCelebs++;
@@ -814,12 +845,15 @@ function renderSidebar() {
       if (b.title_en) nEn++;
       if (b.author_en) nEn++;
     }
+    const hasDup = dupBookIdx(c).size > 0;
+    if (hasDup) nDup++;
     if (!matches(name) || !applyFilter(name)) continue;
     const warnEn = !c.name_en || c.books.some(b => !b.title_en || !b.author_en);
     const warnImg = !c.img;
     html += `<li data-name="${esc(name)}" class="${name === State.selected ? 'active' : ''}">
       <div class="ci-name">
         ${esc(name)}
+        ${hasDup ? '<span class="ci-warn dup" title="중복 도서 있음">중복</span>' : ''}
         ${warnImg ? '<span class="ci-warn" title="이미지 누락">📷</span>' : ''}
         ${warnEn ? '<span class="ci-warn" title="영문명 누락">EN</span>' : ''}
         <div class="ci-en">${esc(c.name_en || '')}</div>
@@ -832,6 +866,8 @@ function renderSidebar() {
   $('#countCelebs').textContent = nCelebs;
   $('#countBooks').textContent = nBooks;
   $('#countEn').textContent = nEnTotal ? Math.round(nEn / nEnTotal * 100) + '%' : '-';
+  const dupOpt = $('#filterSelect option[value="dup-book"]');
+  if (dupOpt) dupOpt.textContent = `중복 도서 (${nDup}명)`;
 }
 
 $('#celebList').addEventListener('click', (e) => {
@@ -879,7 +915,12 @@ function renderBooks() {
     return;
   }
   let html = '';
+  const dups = dupBookIdx(c);
+  if (dups.size) {
+    html += `<p class="dup-note">⚠️ 제목이 같은 책이 ${dups.size}권 있어요. 하나만 남기고 삭제하세요.</p>`;
+  }
   c.books.forEach((b, i) => {
+    const flagDup = dups.has(i) ? '<span class="flag dup">중복</span>' : '';
     const flagEn = (!b.title_en || !b.author_en) ? '<span class="flag warn">EN 누락</span>' : '';
     const flagCv = !b.cover ? '<span class="flag warn">표지 없음</span>' : '';
     const flagSrc = !b.source ? '<span class="flag warn">출처 없음</span>' : '';
@@ -894,7 +935,7 @@ function renderBooks() {
         <p class="b-title">${esc(b.title)}</p>
         <p class="b-author">${esc(b.author)} ${b.author_en ? `<span class="muted">/ ${esc(b.author_en)}</span>` : ''}</p>
         <p class="b-pub">${esc(b.publisher || '')}</p>
-        <div class="b-flags">${flagEn}${flagCv}${flagSrc}${flagCmt}</div>
+        <div class="b-flags">${flagDup}${flagEn}${flagCv}${flagSrc}${flagCmt}</div>
         <div class="actions">
           <button class="btn small" data-act="edit">편집</button>
           ${isHttp(b.source) ? `<a class="btn small" href="${esc(b.source)}" target="_blank" rel="noopener" title="${esc(b.source)}">출처 열기 ↗</a>` : ''}
@@ -1046,8 +1087,28 @@ function openBookDialog(book, index) {
   $('#yes24Results').innerHTML = '';
   $('#yes24Query').value = book?.title || '';
   $('#yes24ItemId').value = book?.link || '';
+  updateDupHint();
   bookDlg.showModal();
 }
+
+/* 도서명을 입력하는 동안 중복 여부를 바로 알려 준다 */
+function updateDupHint() {
+  const box = $('#bookDupHint'); if (!box) return;
+  const ed = State.bookEditing || {};
+  const r = findDupTitle(ed.celebName, $('#bookTitle').value, ed.bookIndex);
+  if (r.same) {
+    box.className = 'dup-hint err';
+    box.textContent = `⚠️ "${r.same.title}" — 이 셀럽에게 이미 등록된 책이에요.`;
+  } else if (r.others.length) {
+    const names = r.others.slice(0, 5).join(', ') + (r.others.length > 5 ? ` 외 ${r.others.length - 5}명` : '');
+    box.className = 'dup-hint info';
+    box.textContent = `ℹ️ 다른 셀럽도 등록한 책이에요: ${names}`;
+  } else {
+    box.className = 'dup-hint hidden';
+    box.textContent = '';
+  }
+}
+$('#bookTitle').addEventListener('input', updateDupHint);
 
 $$('[data-close]').forEach(b => b.addEventListener('click', (e) => {
   e.target.closest('dialog').close();
@@ -1075,6 +1136,13 @@ $('#bookForm').addEventListener('submit', (e) => {
   };
   const ed = State.bookEditing;
   const c = State.celebs.get(ed.celebName);
+  const dup = findDupTitle(ed.celebName, title, ed.bookIndex);
+  if (dup.same && !confirm(
+    `"${dup.same.title}" 책은 ${ed.celebName}에게 이미 등록되어 있어요.\n` +
+    `(저자: ${dup.same.author || '-'})\n\n그래도 중복으로 등록할까요?`)) {
+    toast('중복 도서라 등록하지 않았어요', 'err');
+    return;
+  }
   if (ed.bookIndex == null) c.books.push(data);
   else c.books[ed.bookIndex] = data;
   sortBooks(c.books); // 추가/수정 후 자동 정렬
@@ -1209,6 +1277,7 @@ function cleanAuthorName(raw) {
 function applyAladinItem(it) {
   const cover = Aladin.bigCover(it);
   $('#bookTitle').value = it.title || $('#bookTitle').value;
+  updateDupHint();
   $('#bookAuthor').value = cleanAuthorName(it.author) || $('#bookAuthor').value;
   $('#bookPublisher').value = it.publisher || $('#bookPublisher').value;
   $('#bookLink').value = it.link || $('#bookLink').value;
@@ -1320,6 +1389,7 @@ async function runYes24Search(query, page = 1, append = false) {
 function applyYes24Item(it) {
   const cover = Yes24.cover(it);
   $('#bookTitle').value = it.title || $('#bookTitle').value;
+  updateDupHint();
   $('#bookAuthor').value = cleanAuthorName(it.author) || $('#bookAuthor').value;
   $('#bookPublisher').value = it.publisher || $('#bookPublisher').value;
   $('#bookLink').value = it.link || $('#bookLink').value;
@@ -1464,6 +1534,7 @@ $('#gbResults').addEventListener('click', (e) => {
   if (!it) return;
   // 제목·저자·표지만 채움 (알라딘 링크는 별도 워크플로우로 처리)
   $('#bookTitle').value = it.title;
+  updateDupHint();
   $('#bookAuthor').value = cleanAuthorName(it.author) || $('#bookAuthor').value;
   if (it.cover) {
     $('#bookCover').value = it.cover;
