@@ -81,13 +81,12 @@ function loadImage(u, w) {
 
 // 캔버스에만 쓰는 글꼴은 저절로 내려받지 않으니 미리 불러 둔다
 const fontsReady = Promise.all([
-  '700 62px "KoPubWorld Batang"',
   '700 26px "KoPubWorld Dotum"',
   '500 26px "KoPubWorld Dotum"',
 ].map((f) => document.fonts.load(f, '가A'))).catch(() => {});
 
-/* ---------- 글자 ---------- */
-const BATANG = (px, w = 700) => w + ' ' + px + 'px "KoPubWorld Batang", serif';
+/* ---------- 글자 ----------
+ * 이미지 글자는 전부 코펍월드 돋움. 제목은 굵게(700), 나머지는 보통(500). */
 const DOTUM = (px, w = 500) => w + ' ' + px + 'px "KoPubWorld Dotum", sans-serif';
 
 // 한글은 띄어쓰기 없이도 줄을 바꿀 수 있어서 글자 단위로 자른다
@@ -262,9 +261,9 @@ async function drawShelfCover(size, img, type, opts) {
   ctx.fillText(type === 'new' ? 'NEW · 새로 들어온 책' : '최애의 독서', tx, y);
 
   ctx.fillStyle = INK;
-  ctx.font = BATANG(Math.round(76 * s));
+  ctx.font = DOTUM(Math.round(76 * s), 700);
   y = drawLines(ctx, wrap(ctx, img.name, tw, 2), tx, y + 96 * s, 90 * s);
-  ctx.font = BATANG(Math.round(56 * s));
+  ctx.font = DOTUM(Math.round(56 * s), 700);
   y = drawLines(ctx, ['의 책장'], tx, y - 10 * s, 70 * s);
 
   ctx.fillStyle = MUTE;
@@ -306,7 +305,7 @@ async function drawShelfBooks(size, books, type, opts, pageLabel) {
     const tx = r.x + r.w + pad, tw = W - tx - pad;
     let y = H * 0.36;
     ctx.fillStyle = INK;
-    ctx.font = BATANG(Math.round(54 * s));
+    ctx.font = DOTUM(Math.round(54 * s), 700);
     y = drawLines(ctx, wrap(ctx, b.emoji + ' ' + b.title, tw, 3), tx, y, 70 * s);
     ctx.fillStyle = MUTE;
     ctx.font = DOTUM(Math.round(30 * s));
@@ -335,7 +334,7 @@ async function drawShelfBooks(size, books, type, opts, pageLabel) {
       const cx = pad + i * (colW + gap) + colW / 2;
       let y = box.y + box.h + 30 * s + titlePx;
       ctx.fillStyle = INK;
-      ctx.font = BATANG(titlePx);
+      ctx.font = DOTUM(titlePx, 700);
       y = drawLines(ctx, wrap(ctx, b.emoji + ' ' + b.title, colW, 2), cx, y, titlePx * 1.3, 'center');
       ctx.fillStyle = MUTE;
       ctx.font = DOTUM(Math.round((wide ? 23 : 28) * s));
@@ -368,7 +367,7 @@ async function drawBookCard(img, opts) {
   ctx.font = DOTUM(Math.round(30 * s), 700);
   ctx.fillText('셀럽 ' + img.names.length + '명이 읽은 책', tx, y);
   ctx.fillStyle = INK;
-  ctx.font = BATANG(Math.round(64 * s));
+  ctx.font = DOTUM(Math.round(64 * s), 700);
   y = drawLines(ctx, wrap(ctx, b.title, tw, 3), tx, y + 100 * s, 80 * s);
   ctx.fillStyle = MUTE;
   ctx.font = DOTUM(Math.round(30 * s));
