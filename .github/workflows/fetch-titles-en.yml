@@ -1,0 +1,92 @@
+name: Fetch English Titles
+
+# 책의 공식 영문판 제목 후보를 찾아 data/titles_en.json 에 채운다.
+# GitHub 웹에서 Actions → 이 워크플로 → "Run workflow" 버튼으로 돌린다.
+#
+# 번역하지 않는다. 예스24의 '원서명/원제', 한국어 위키백과의 영어 문서 링크처럼
+# 이미 누가 적어 둔 영어 제목을 모으고, Google Books로 그 영어판이 실제 있는지 확인한다.
+# 고르는 건 사람이 편집기(/editor/)의 "🔤 영문 제목 검수" 창에서 한다.
+# 결과 파일은 승인 전까지 사이트에 영향이 없어서 PR 없이 바로 커밋한다.
+#
+# Secret (없어도 돈다):
+#   ALADIN_TTB_KEY  예스24에서 원제를 못 찾으면 알라딘에서 한 번 더 찾는다
+# 자세한 설명은 tools/TITLES_EN.md 참고.
+
+on:
+  workflow_dispatch:
+    inputs:
+      limit:
+        description: '이번에 조회할 책 수 (0 = 전부). 처음엔 30 정도로 결과를 먼저 보세요'
+        required: false
+        default: '30'
+      dry_run:
+        description: '연습 모드 — 결과만 보고 파일은 안 바꿈'
+        required: false
+        default: false
+        type: boolean
+      refresh:
+        description: '이미 조회한 미검수 책도 다시 조회'
+        required: false
+        default: false
+        type: boolean
+      only:
+        description: '이 책만 다시 조회 (한국어 제목, 쉼표로 여러 개)'
+        required: false
+        default: ''
+  # 새 책이 들어오면 그 책만 조회한다 (이미 조회한 책은 건너뜀)
+  push:
+    branches: [main]
+    paths:
+      - 'data.csv'
+
+concurrency:
+  group: fetch-titles-en
+  cancel-in-progress: false
+
+jobs:
+  titles:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: actions/setup-python@v6
+        with:
+          python-version: '3.12'
+
+      - name: 영문판 제목 후보 찾기
+        env:
+          ALADIN_TTB_KEY: ${{ secrets.ALADIN_TTB_KEY }}
+          IN_LIMIT: ${{ github.event.inputs.limit }}
+          IN_DRY: ${{ github.event.inputs.dry_run }}
+          IN_REFRESH: ${{ github.event.inputs.refresh }}
+          IN_ONLY: ${{ github.event.inputs.only }}
+        run: |
+          ARGS=()
+          # push 로 돌 때는 새 책만 — 한 번에 너무 많이 부르지 않게 100권까지
+          LIMIT="${IN_LIMIT:-100}"
+          if [ -n "$LIMIT" ] && [ "$LIMIT" != "0" ]; then ARGS+=(--limit "$LIMIT"); fi
+          if [ "$IN_DRY" = "true" ]; then ARGS+=(--dry-run); fi
+          if [ "$IN_REFRESH" = "true" ]; then ARGS+=(--refresh); fi
+          if [ -n "$IN_ONLY" ]; then ARGS+=(--only "$IN_ONLY"); fi
+          echo "실행: python3 tools/fetch_titles_en.py ${ARGS[*]}"
+          python3 tools/fetch_titles_en.py "${ARGS[@]}"
+
+      - name: 커밋
+        run: |
+          if git diff --quiet -- data/titles_en.json && [ -z "$(git ls-files --others -- data/titles_en.json)" ]; then
+            echo "바뀐 내용이 없습니다 (연습 모드였거나 새로 조회한 책이 없음)."
+            exit 0
+          fi
+          git config user.name  "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add data/titles_en.json
+          git commit -m "chore: 영문판 제목 후보 갱신 [$(date +%Y-%m-%d)]"
+          # 사이트 빌드 워크플로가 같은 때 push 할 수 있다 — 겹치면 받아서 다시 올린다
+          for i in 1 2 3 4; do
+            git pull --rebase origin "${GITHUB_REF_NAME}" && git push origin "HEAD:${GITHUB_REF_NAME}" && exit 0
+            sleep $((i * 5))
+          done
+          exit 1
