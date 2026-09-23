@@ -144,18 +144,31 @@ class Transient(Exception):
     """네트워크가 잠깐 흔들린 것. 이런 실패는 기록하지 않고 다음에 다시 본다."""
 
 
-def http_get(url, ua=UA, timeout=15):
+def http_get(url, ua=UA, timeout=15, tries=3):
+    """429(너무 잦은 요청)는 Retry-After 만큼 쉬었다가 다시 시도한다.
+
+    위키백과는 요청이 조금만 몰려도 429를 준다 — 예전 enrich_en.py 가 0.3초 간격으로
+    부르다 스무 번 넘게 막혔다. 쉬었다 다시 하면 대개 풀린다.
+    """
     req = urllib.request.Request(url, headers={'User-Agent': ua,
                                                'Accept-Language': 'ko,en;q=0.8'})
-    try:
-        with urllib.request.urlopen(req, timeout=timeout) as r:
-            return r.read().decode('utf-8', 'replace')
-    except urllib.error.HTTPError as e:
-        if e.code in (404, 410):
-            return ''
-        raise Transient('%s %s' % (e.code, url.split('?')[0]))
-    except Exception as e:
-        raise Transient('%s %s' % (e, url.split('?')[0]))
+    for attempt in range(tries):
+        try:
+            with urllib.request.urlopen(req, timeout=timeout) as r:
+                return r.read().decode('utf-8', 'replace')
+        except urllib.error.HTTPError as e:
+            if e.code in (404, 410):
+                return ''
+            if e.code in (429, 503) and attempt + 1 < tries:
+                try:
+                    wait = float(e.headers.get('Retry-After') or 0)
+                except ValueError:
+                    wait = 0
+                time.sleep(min(max(wait, 5 * (attempt + 1)), 60))
+                continue
+            raise Transient('%s %s' % (e.code, url.split('?')[0]))
+        except Exception as e:
+            raise Transient('%s %s' % (e, url.split('?')[0]))
 
 
 def http_json(url, **kw):
