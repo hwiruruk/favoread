@@ -466,6 +466,24 @@ LTI_EN_RE = re.compile(
     re.S | re.I)
 
 
+def _lti_open(url, data=None):
+    import http.cookiejar
+    if LTI['opener'] is None:
+        LTI['opener'] = urllib.request.build_opener(
+            urllib.request.HTTPCookieProcessor(http.cookiejar.CookieJar()))
+    body = urllib.parse.urlencode(data).encode() if data is not None else None
+    req = urllib.request.Request(url, data=body, headers={
+        'User-Agent': BROWSER_UA, 'Accept-Language': 'en,ko;q=0.8',
+        'Referer': LTI_BASE + '/originalworks'})
+    try:
+        with LTI['opener'].open(req, timeout=20) as r:
+            return r.read().decode('utf-8', 'replace')
+    except urllib.error.HTTPError as e:
+        raise Transient('%s %s' % (e.code, url))
+    except Exception as e:
+        raise Transient('%s %s' % (e, url))
+
+
 def lti_search(title, retried=False):
     """원작 목록 검색 결과 HTML. GET 으로 먼저 해 보고, 안 되면 CSRF 토큰을 받아 POST."""
     q = urllib.parse.urlencode({'search_word': title, 'pageSize': '30', 'rowPerPage': '30'})
