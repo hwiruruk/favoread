@@ -284,15 +284,7 @@ async function drawShelfCover(size, img, type, opts) {
   ctx.font = DOTUM(Math.round(76 * s), 700);
   y = drawLines(ctx, wrap(ctx, img.name, tw, 2), tx, y + 96 * s, 90 * s);
   ctx.font = DOTUM(Math.round(56 * s), 700);
-  y = drawLines(ctx, ['의 책장'], tx, y - 10 * s, 70 * s);
-
-  ctx.fillStyle = MUTE;
-  ctx.font = DOTUM(Math.round(28 * s));
-  const n = img.books.length;
-  const sub = type === 'new'
-    ? n + '권 추가 · 전체 ' + img.total + '권'
-    : '전체 ' + img.total + '권 중 ' + n + '권';
-  drawLines(ctx, [sub], tx, y + 24 * s, 40 * s);
+  drawLines(ctx, ['의 책장'], tx, y - 10 * s, 70 * s);
 
   // 아주 작게 시리즈 번호
   ctx.font = DOTUM(Math.round(22 * s), 700);
@@ -504,8 +496,6 @@ async function drawChatCover(size, img, type, opts) {
   const n = img.books.length;
   y = textBubble(ctx, pad, y, maxW,
     type === 'new' ? img.name + ' 책장에 새 책이 들어왔어요 🆕' : img.name + '의 책장을 열어 볼게요 📚', s, { px: 34, weight: 700 });
-  y = textBubble(ctx, pad, y + 14 * s, maxW,
-    type === 'new' ? n + '권 추가 · 전체 ' + img.total + '권' : '전체 ' + img.total + '권 중 ' + n + '권 골라 왔어요', s);
   // 사진(또는 표지 모음) 말풍선: 넓은 판은 오른쪽, 좁은 판은 아래
   const box = wide
     ? { x: W * 0.62, y: pad * 0.8, w: W * 0.38 - pad, h: H - pad * 2.2 }
