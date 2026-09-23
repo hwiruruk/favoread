@@ -2518,7 +2518,7 @@ function renderTitlesList() {
     const flags = st !== 'pending' ? '' : (v.flags || []).map(f => TTL_FLAG[f]
       ? `<span class="ttl-flag ${TTL_FLAG[f][1]}">${TTL_FLAG[f][0]}</span>` : '').join('');
     const conf = v.confidence && v.confidence !== 'none'
-      ? `<span class="ttl-conf c-${esc(v.confidence)}" title="high = Google Books 확인 또는 두 곳 이상 일치">${v.confidence === 'high' ? '확실' : '후보'}</span>` : '';
+      ? `<span class="ttl-conf c-${esc(v.confidence)}" title="high = 영어판 확인 또는 두 곳 이상 일치">${v.confidence === 'high' ? '확실' : '후보'}</span>` : '';
     return `<article class="cmt-card ${st}" data-key="${esc(k)}">
       <div class="cmt-head">
         ${conf}
@@ -2533,7 +2533,7 @@ function renderTitlesList() {
         <button type="button" class="ttl-cand" data-pick="${i}">
           <span>${esc(c.title)}</span>
           <span class="src">${c.sources.map(s => TTL_SRC[s] || s).join(' + ')}</span>
-          ${c.verified ? '<span class="ok" title="Google Books에 같은 제목의 영어판이 있음">✓ 확인</span>' : ''}
+          ${c.verified ? '<span class="ok" title="Open Library에 같은 제목·저자의 영어판이 있음">✓ 확인</span>' : ''}
           ${(c.urls || []).map(u => `<a href="${esc(u)}" target="_blank" rel="noopener">근거 ↗</a>`).join('')}
         </button>`).join('')}</div>` : ''}
       ${(v.notes || []).length ? `<p class="cmt-note">⚠ ${esc(v.notes.join(' · '))}</p>` : ''}

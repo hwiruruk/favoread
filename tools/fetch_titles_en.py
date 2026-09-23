@@ -16,7 +16,7 @@
     한국어 위키백과     영어 문서 링크         한국 문학·고전 (소년이 온다 → Human Acts)
     위키데이터          작품의 영어 이름표     위키백과 문서가 없는 한국 문학 (흰 → The White Book)
     Open Library        한국어판이 속한 작품   Goodreads처럼 여러 언어판을 한 작품으로 묶는다
-    Google Books        위 후보가 실제 영어판으로 나왔는지 확인만 한다
+    Open Library        후보 제목·저자의 영어판이 실제로 있는지 확인 (무료)
 
 모은 후보는 사람이 편집기(/editor/)의 '🔤 영문 제목 검수' 창에서 고른다.
 여기서 정하지 않는다. 다만 data.csv 에 이미 적힌 값이 후보와 똑같으면
@@ -39,7 +39,7 @@
 
 환경변수 (없어도 돈다)
     ALADIN_TTB_KEY        있으면 알라딘에서 원제를 찾는다 (강력 추천)
-    GOOGLE_BOOKS_API_KEY  있으면 Google Books 확인이 한도에 덜 걸린다
+    GOOGLE_BOOKS_API_KEY  (선택) 있으면 Google Books 로도 확인한다. 없어도 된다
 """
 import argparse
 import collections
@@ -372,9 +372,45 @@ def wikidata_en(title, author):
     return None, None
 
 
-# ── 6. Google Books 로 영어판이 실제로 있는지 확인 ─────────────────────
-# 키 없이 부르면 GitHub Actions 에서는 거의 늘 429다(두 번째 실행 11번 중 11번).
-# 한 번 막히면 이번 실행에서는 더 부르지 않는다 — 재시도 대기만으로 한 권에 10초 넘게 썼다.
+# ── 6. 영어판이 실제로 있는지 확인 ───────────────────────────────────
+# Open Library(무료, 키 없음)에 같은 제목·같은 저자의 영어판이 있으면 '확인'.
+# Google Books 는 GOOGLE_BOOKS_API_KEY 가 있을 때만 보조로 쓴다 — 키 없이는
+# GitHub Actions 에서 늘 429 였다(두 번째 실행 11번 중 11번).
+def open_library_verify(cand, author_en):
+    surname = [w for w in re.split(r'[\s,.]+', plain(author_en or '')) if len(w) >= 3]
+    if not surname:
+        return None   # 저자 없이 제목만 맞추면 흔한 제목('White')에서 엉뚱한 책이 걸린다
+    p = urllib.parse.urlencode({'title': cand, 'author': surname[-1], 'language': 'eng',
+                                'fields': 'key,title', 'limit': '10'})
+    d = http_json('https://openlibrary.org/search.json?' + p)
+    want = norm_en(cand)
+    for doc in (d or {}).get('docs') or []:
+        if norm_en(doc.get('title')) == want:
+            return 'https://openlibrary.org' + (doc.get('key') or '')
+    return None
+
+
+def verify_english(cand, author_en):
+    """(확인 URL|None, 실패 메모|None)"""
+    err = None
+    try:
+        v = open_library_verify(cand, author_en)
+        if v:
+            return v, None
+    except Transient as e:
+        err = 'Open Library 확인 못 함: %s' % e
+    if os.environ.get('GOOGLE_BOOKS_API_KEY'):
+        try:
+            v = google_books_verify(cand, author_en)
+            if v:
+                return v, None
+        except Transient as e:
+            err = err or 'Google Books 확인 못 함: %s' % e
+    return None, err
+
+
+# ── 6-1. Google Books (키가 있을 때만) ───────────────────────────────
+# 키가 있어도 막히면(429/403) 이번 실행에서는 더 부르지 않는다.
 GOOGLE_BLOCKED = {'on': False}
 
 
@@ -396,7 +432,7 @@ def google_books_verify(cand, author_en):
         if str(e).startswith('429') or str(e).startswith('403'):
             GOOGLE_BLOCKED['on'] = True
             print('  ⚠ Google Books 가 막혀서(%s) 이번 실행에서는 확인을 건너뜁니다. '
-                  'GOOGLE_BOOKS_API_KEY Secret 을 넣으면 풀립니다.' % str(e).split()[0])
+                  'Open Library 확인만 씁니다.' % str(e).split()[0])
         raise
     want = norm_en(cand)
     for it in (d or {}).get('items') or []:
@@ -491,12 +527,9 @@ def lookup(book, ttb_key, sleep):
 
     cands = list(groups.values())
     for c in cands:
-        try:
-            v = google_books_verify(c['title'], book.get('author_en'))
-        except Transient as e:
-            v = None
-            if not any(n.startswith('Google Books') for n in notes):
-                notes.append('Google Books 확인 못 함: %s' % e)
+        v, err = verify_english(c['title'], book.get('author_en'))
+        if err and not any(n.split(':')[0] == err.split(':')[0] for n in notes):
+            notes.append(err)
         time.sleep(sleep)
         c['verified'] = bool(v)
         if isinstance(v, str) and v not in c['urls']:
