@@ -9,7 +9,8 @@ name: Fetch English Titles
 # 결과 파일은 승인 전까지 사이트에 영향이 없어서 PR 없이 바로 커밋한다.
 #
 # Secret (없어도 돈다):
-#   ALADIN_TTB_KEY  예스24에서 원제를 못 찾으면 알라딘에서 한 번 더 찾는다
+#   ALADIN_TTB_KEY        알라딘에서 번역서의 원제를 찾는다 (가장 잘 맞는 출처)
+#   GOOGLE_BOOKS_API_KEY  Google Books 확인이 공용 한도에 걸리지 않게
 # 자세한 설명은 tools/TITLES_EN.md 참고.
 
 on:
@@ -59,6 +60,7 @@ jobs:
       - name: 영문판 제목 후보 찾기
         env:
           ALADIN_TTB_KEY: ${{ secrets.ALADIN_TTB_KEY }}
+          GOOGLE_BOOKS_API_KEY: ${{ secrets.GOOGLE_BOOKS_API_KEY }}
           IN_LIMIT: ${{ github.event.inputs.limit }}
           IN_DRY: ${{ github.event.inputs.dry_run }}
           IN_REFRESH: ${{ github.event.inputs.refresh }}

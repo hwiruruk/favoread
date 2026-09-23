@@ -11,9 +11,10 @@
 이 스크립트는 번역하지 않는다. 이미 누군가 적어 둔 '원제'와 '영어 문서 이름'을
 찾아 온다.
 
-    예스24 상품 페이지  원서명/원제          번역서라면 거의 다 적혀 있다
-    알라딘 API          subInfo.originalTitle 예스24가 막혔을 때 대신 (키 필요)
+    알라딘 API          subInfo.originalTitle 번역서의 원제 (키 필요, 첫 실행에서 가장 잘 맞음)
+    예스24 상품 페이지  품목정보의 원서명      알라딘 키가 없을 때 대비
     한국어 위키백과     영어 문서 링크         한국 문학·고전 (소년이 온다 → Human Acts)
+    Open Library        한국어판이 속한 작품   Goodreads처럼 여러 언어판을 한 작품으로 묶는다
     Google Books        위 후보가 실제 영어판으로 나왔는지 확인만 한다
 
 모은 후보는 사람이 편집기(/editor/)의 '🔤 영문 제목 검수' 창에서 고른다.
@@ -36,7 +37,8 @@
     --sleep SEC    요청 사이 대기 (기본 0.5초)
 
 환경변수 (없어도 돈다)
-    ALADIN_TTB_KEY  있으면 예스24에서 원제를 못 찾은 책을 알라딘에서 한 번 더 찾는다
+    ALADIN_TTB_KEY        있으면 알라딘에서 원제를 찾는다 (강력 추천)
+    GOOGLE_BOOKS_API_KEY  있으면 Google Books 확인이 한도에 덜 걸린다
 """
 import argparse
 import collections
@@ -60,6 +62,10 @@ OUT_PATH = os.path.join(ROOT, 'data', 'titles_en.json')
 UA = 'favorbook-titles/1.0 (+https://favorbook.co.kr)'
 BROWSER_UA = ('Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 '
               '(KHTML, like Gecko) Chrome/124.0 Safari/537.36')
+
+# 조회 방식이 바뀌면 올린다. 이보다 낮은 버전으로 조회한 미검수 책은 다시 조회한다.
+#   2: 예스24 부제 오인 제거, 알라딘 항상 조회, 위키백과 저자 확인, Open Library 추가
+LOOKUP_VERSION = 2
 
 NOTE = (
     'Official English edition titles, one entry per book. '
@@ -179,14 +185,13 @@ def http_json(url, **kw):
 # ── 1. 예스24 상품 페이지의 원제 ──────────────────────────────────────
 YES24_GOODS_RE = re.compile(r'yes24\.com/(?:product/)?goods/(?:detail/)?(\d+)', re.I)
 
-# 예스24는 번역서의 원제를 두 군데에 적는다.
-#   품목정보 표   <th>원서명/저자명</th><td>The Moon and Sixpence/Maugham, W. Somerset</td>
-#   제목 아래     <h3 class="gd_nameE">The Moon and Sixpence</h3>
+# 예스24 품목정보 표의 원서명만 믿는다.
+#   <th>원서명/저자명</th><td>The Moon and Sixpence/Maugham, W. Somerset</td>
+# 제목 아래 gd_nameE 는 원제가 아니라 부제('양귀자 장편소설', '리커버 에디션')였고,
+# 본문의 '원제:' 는 책 소개 문장까지 끌려왔다(2026-09-23 첫 실행). 둘 다 뺐다.
 YES24_PATTERNS = [
     (re.compile(r'원서명\s*/\s*저자명\s*</th>\s*<td[^>]*>(.*?)</td>', re.S), True),
     (re.compile(r'원서명\s*</th>\s*<td[^>]*>(.*?)</td>', re.S), False),
-    (re.compile(r'class="gd_nameE"[^>]*>(.*?)</', re.S), False),
-    (re.compile(r'원제\s*[:：]\s*([^<\n]{2,200})'), False),
 ]
 
 
@@ -247,10 +252,13 @@ def wikipedia_en(title, author):
     p = urllib.parse.urlencode({
         'action': 'query', 'format': 'json', 'formatversion': '2',
         'generator': 'search', 'gsrsearch': (title + ' ' + (author or '')).strip(),
-        'gsrlimit': '5', 'prop': 'langlinks', 'lllang': 'en', 'redirects': '1',
+        'gsrlimit': '5', 'prop': 'langlinks|extracts', 'lllang': 'en', 'redirects': '1',
+        'exintro': '1', 'explaintext': '1', 'exlimit': 'max',
     })
     d = http_json('https://ko.wikipedia.org/w/api.php?' + p)
     want = norm_ko(title)
+    # 저자 이름 조각('무라카미 하루키' → 무라카미, 하루키). 한 글자 이름은 오탐이 많아 뺀다
+    marks = [w for w in re.split(r'[\s,·/]+', re.sub(r'\([^)]*\)', ' ', author or '')) if len(w) >= 2]
     pages = sorted(((d or {}).get('query') or {}).get('pages') or [],
                    key=lambda x: x.get('index', 99))
     for pg in pages:
@@ -262,6 +270,10 @@ def wikipedia_en(title, author):
         qual = re.search(r'\(([^)]*)\)\s*$', ko_title)
         if qual and not re.search(r'소설|책|도서|시집|수필|에세이|만화|동화|희곡|작품|문학|연작', qual.group(1)):
             continue
+        # 제목만 같은 일반 문서('모순' → Contradiction)를 거른다. 첫 문단에 저자가 나와야 한다
+        intro = pg.get('extract') or ''
+        if marks and not any(m in intro for m in marks):
+            continue
         for ll in pg.get('langlinks') or []:
             en = ll.get('title') or ''
             en = re.sub(r'\s*\((?:[^)]*(?:novel|book|novella|memoir|poetry|collection|play|essay|series)[^)]*)\)\s*$',
@@ -271,14 +283,42 @@ def wikipedia_en(title, author):
     return None, None
 
 
-# ── 4. Google Books 로 영어판이 실제로 있는지 확인 ─────────────────────
+# ── 4. Open Library: 한국어판이 걸린 작품(work)의 이름 ──────────────────
+def open_library_work(title, author, author_en):
+    """Open Library는 한 작품의 여러 언어판을 한 work 로 묶는다(Goodreads와 같은 구조).
+    한국어 제목으로 찾으면 그 한국어판이 속한 work 의 대표 제목(대개 원서·영어판)이 나온다.
+
+    같은 제목의 다른 책이 걸리지 않게, 저자가 맞을 때만 받는다.
+    """
+    p = urllib.parse.urlencode({'q': title, 'fields': 'key,title,author_name,language',
+                                'limit': '8'})
+    d = http_json('https://openlibrary.org/search.json?' + p)
+    ko_marks = [w for w in re.split(r'[\s,·/]+', re.sub(r'\([^)]*\)', ' ', author or '')) if len(w) >= 2]
+    en_marks = [w.lower() for w in re.split(r'[\s,.]+', plain(author_en or '')) if len(w) >= 3]
+    for doc in (d or {}).get('docs') or []:
+        t = doc.get('title') or ''
+        if not looks_english(t):
+            continue
+        names = ' '.join(doc.get('author_name') or [])
+        low = names.lower()
+        if not ((en_marks and any(m in low for m in en_marks))
+                or (ko_marks and any(m in names for m in ko_marks))):
+            continue
+        return t, 'https://openlibrary.org' + (doc.get('key') or '')
+    return None, None
+
+
+# ── 5. Google Books 로 영어판이 실제로 있는지 확인 ─────────────────────
 def google_books_verify(cand, author_en):
     q = 'intitle:"%s"' % cand
     surname = plain(author_en or '').split(',')[0].split()[-1:] if author_en else []
     if surname:
         q += ' inauthor:' + surname[0]
-    p = urllib.parse.urlencode({'q': q, 'langRestrict': 'en', 'maxResults': '10',
-                                'printType': 'books'})
+    params = {'q': q, 'langRestrict': 'en', 'maxResults': '10', 'printType': 'books'}
+    # 키 없이 부르면 GitHub Actions 서버들이 나눠 쓰는 한도에 걸린다 (첫 실행에서 0건 확인)
+    if os.environ.get('GOOGLE_BOOKS_API_KEY'):
+        params['key'] = os.environ['GOOGLE_BOOKS_API_KEY']
+    p = urllib.parse.urlencode(params)
     d = http_json('https://www.googleapis.com/books/v1/volumes?' + p)
     want = norm_en(cand)
     for it in (d or {}).get('items') or []:
@@ -307,15 +347,28 @@ def lookup(book, ttb_key, sleep):
     if orig:
         found.append((orig, 'yes24', url))
 
-    if not orig and ttb_key:
+    if not looks_english(orig) and ttb_key:
         try:
-            orig, url = aladin_original(book['title'], book['author'], ttb_key)
+            a_orig, a_url = aladin_original(book['title'], book['author'], ttb_key)
             reached += 1
         except Transient as e:
+            a_orig, a_url = None, None
             notes.append('알라딘 못 읽음: %s' % e)
         time.sleep(sleep)
-        if orig:
-            found.append((orig, 'aladin', url))
+        if a_orig:
+            found.append((a_orig, 'aladin', a_url))
+            if not orig or looks_english(a_orig):
+                orig = a_orig
+
+    try:
+        ol, ol_url = open_library_work(book['title'], book['author'], book.get('author_en'))
+        reached += 1
+    except Transient as e:
+        ol, ol_url = None, None
+        notes.append('Open Library 못 읽음: %s' % e)
+    time.sleep(sleep)
+    if ol:
+        found.append((ol, 'openlibrary', ol_url))
 
     try:
         wen, wurl = wikipedia_en(book['title'], book['author'])
@@ -353,8 +406,10 @@ def lookup(book, ttb_key, sleep):
     for c in cands:
         try:
             v = google_books_verify(c['title'], book.get('author_en'))
-        except Transient:
+        except Transient as e:
             v = None
+            if not any(n.startswith('Google Books') for n in notes):
+                notes.append('Google Books 확인 못 함: %s' % e)
         time.sleep(sleep)
         c['verified'] = bool(v)
         if isinstance(v, str) and v not in c['urls']:
@@ -473,8 +528,10 @@ def main():
                                  'value': ''}
         # data.csv 쪽 값이 바뀌었으면 기록만 갱신한다 (조회는 안 함)
         ent['csv'] = b['csv']
-        if ent.get('auto') and norm_en(plain(b['csv'])) != norm_en(ent.get('value')):
-            # 자동 승인의 근거(CSV 값 = 후보)가 사라졌다 → 다시 사람 몫
+        if ent.get('auto') and (norm_en(plain(b['csv'])) != norm_en(ent.get('value'))
+                                or ent.get('v', 1) < LOOKUP_VERSION):
+            # 예전 방식으로 한 자동 승인은 믿지 않는다 ('모순' → Contradiction 이 이렇게 승인됐다)
+            # 또는 자동 승인의 근거(CSV 값 = 후보)가 사라졌다 → 다시 사람 몫
             ent['status'] = 'pending'
             ent['value'] = (ent.get('candidates') or [{}])[0].get('title', '')
             ent.pop('auto', None)
@@ -491,7 +548,8 @@ def main():
         else:
             if human:
                 continue
-            if ent.get('checked') and not args.refresh:
+            if (ent.get('checked') and ent.get('v', 1) >= LOOKUP_VERSION
+                    and not args.refresh):
                 continue
         if stop or (args.limit and done + errors >= args.limit):
             continue   # 조회는 멈추되 나머지 책의 CSV 값 동기화는 계속한다
@@ -515,6 +573,7 @@ def main():
             'confidence': confidence(cands),
             'flags': flags_for(b, cands),
             'checked': today,
+            'v': LOOKUP_VERSION,
         }
         if orig:
             new['original'] = orig
@@ -527,7 +586,9 @@ def main():
                 if k in ent:
                     new[k] = ent[k]
         elif (cands and b['csv'] and not title_problem(b['title'], b['csv'])
-              and norm_en(plain(b['csv'])) == norm_en(cands[0]['title'])):
+              and norm_en(plain(b['csv'])) == norm_en(cands[0]['title'])
+              # 직역(*)이 한 출처와 우연히 같은 건 근거가 약하다 ('모순' → Contradiction)
+              and (new['confidence'] == 'high' or not is_starred(b['csv']))):
             # data.csv 에 이미 적힌 값이 근거 있는 후보와 같다 → 확인된 것으로 본다
             new['status'] = 'approved'
             new['value'] = plain(b['csv'])
