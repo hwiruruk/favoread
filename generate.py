@@ -166,6 +166,53 @@ def en_title_problem(title_ko, value):
     return None
 
 
+# 영문 제목 표기 원칙: 단어 첫 글자만 대문자 (Title Case).
+# tools/fetch_titles_en.py 의 en_title_case(), editor/app.js 의 enTitleCase() 와 같은 규칙.
+#   · 전부 대문자로 온 제목(THE WHITE BOOK)은 풀어서 맞추고, iPhone·BTS·1Q84 같은 표기는 그대로
+#   · a, the, of, and 같은 짧은 말은 첫 단어·끝 단어·콜론 뒤가 아니면 소문자
+#   · 영어가 아닌 제목(La lenteur)은 그 언어 관례가 달라 손대지 않는다
+EN_TITLE_SMALL = {'a', 'an', 'the', 'and', 'but', 'or', 'nor', 'for', 'so', 'yet', 'as', 'at',
+                  'by', 'in', 'of', 'on', 'to', 'up', 'via', 'with', 'from', 'into', 'onto',
+                  'over', 'per', 'than', 'vs'}
+EN_ROMAN_RE = re.compile(r'^(?=[ivxlcdm]+$)m{0,3}(cm|cd|d?c{0,3})(xc|xl|l?x{0,3})(ix|iv|v?i{0,3})$', re.I)
+EN_FOREIGN_RE = re.compile(
+    r"[àâäçéèêëîïôöùûüÿñãõáíóúōūāēīåøæœß]"
+    r"|\b(?:le|la|les|des|du|l'|d'|et|der|das|und|ein|eine|um|uma|os|il|della|och|jag|het|een)\b",
+    re.I)
+
+
+def en_title_case(value):
+    v = (value or '').strip()
+    star = ''
+    m = re.search(r'\s*\*\s*$', v)
+    if m:
+        star, v = ' *', v[:m.start()]
+    if not v or EN_FOREIGN_RE.search(v):
+        return v + star
+    letters = [c for c in v if c.isalpha()]
+    shouting = len(letters) > 3 and sum(c.isupper() for c in letters) / len(letters) > 0.8
+    tokens = re.split(r'(\s+)', v)
+    words = [i for i, t in enumerate(tokens) if t.strip()]
+    for n, i in enumerate(words):
+        w = tokens[i]
+        core = re.sub(r"^\W+|\W+$", '', w)
+        if not core:
+            continue
+        edge = n == 0 or n == len(words) - 1 or re.search(r'[:.?!—–]$', tokens[words[n - 1]])
+        low = core.lower()
+        if EN_ROMAN_RE.match(core) and (shouting or core.isupper()):
+            new = core.upper()
+        elif shouting or core.islower():
+            base = low if shouting else core
+            new = base if (low in EN_TITLE_SMALL and not edge) else base[:1].upper() + base[1:]
+        elif low in EN_TITLE_SMALL and not edge and core[:1].isupper() and core[1:].islower():
+            new = low
+        else:
+            new = core
+        tokens[i] = w.replace(core, new, 1)
+    return ''.join(tokens) + star
+
+
 def load_titles_en():
     path = os.path.join('data', 'titles_en.json')
     if not os.path.exists(path):
@@ -195,7 +242,7 @@ def resolve_title_en(title_ko, author_ko, csv_value):
     if why:
         EN_TITLE_SKIPPED[title_ko] = '%s — %s' % (why, value)
         return None
-    return value
+    return en_title_case(value) if value else value
 
 
 # 영문 셀럽/책 페이지(자체 <style> 사용)용 각주
