@@ -578,52 +578,29 @@ def shelf_capture_js(busy, filename, fail, headline, clear_suffix='_투명'):
             .replace('__TITLE__', j(headline)))
 
 
-# 책등 보기 · 목록 보기 전환 — 한국어 share 페이지와 /en/ 페이지가 함께 쓴다.
-# 고른 보기는 localStorage에 남겨 다음 페이지에서도 이어진다.
-SHELF_JS = (
-    '  <script>\n'
-    '  (function () {\n'
-    '    var sec = document.getElementById("shelf-sec");\n'
-    '    if (!sec) return;\n'
-    '    var shelf = document.getElementById("shelf"), list = document.getElementById("rlist");\n'
-    # data-view가 없는 버튼(이미지 저장)까지 잡으면 누르는 순간 보기가 바뀐다
-    '    sec.querySelectorAll(".sh-tab[data-view]").forEach(function (b) {\n'
-    '      b.addEventListener("click", function () {\n'
-    '        var spine = b.dataset.view === "spine";\n'
-    '        shelf.hidden = !spine; list.hidden = spine;\n'
-    '        sec.querySelectorAll(".sh-tab[data-view]").forEach(function (o) {\n'
-    '          var on = o === b;\n'
-    '          o.classList.toggle("on", on);\n'
-    '          o.setAttribute("aria-pressed", on ? "true" : "false");\n'
-    '        });\n'
-    '        try { localStorage.setItem("fb.shelfView", b.dataset.view); } catch (e) {}\n'
-    '      });\n'
-    '    });\n'
-    '    try {\n'
-    '      if (localStorage.getItem("fb.shelfView") === "list") {\n'
-    '        sec.querySelector(\'.sh-tab[data-view="list"]\').click();\n'
-    '      }\n'
-    '    } catch (e) {}\n'
-    '  })();\n'
-    '  </script>\n'
-)
-
-
-# 책장(책등 보기) CSS — 한국어 share 페이지와 /en/ 페이지가 함께 쓴다
+# 책장 CSS — 한국어 share 페이지와 /en/ 페이지가 함께 쓴다.
+# 책장(책등)은 독서 리스트 맨 위에 늘 보이고, 그 아래로 표지 목록이 이어진다.
 SHELF_CSS = (
     '    .shelf-head { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; flex-wrap: wrap; }\n'
     '    .shelf-head h2 { margin-bottom: 0; border-bottom: none; padding-bottom: 0; }\n'
     '    .shelf-tabs { display: flex; gap: 6px; flex-wrap: wrap; }\n'
-    '    .sh-tab, .sh-cap { font: inherit; font-size: 12px; font-weight: 700; cursor: pointer; padding: 5px 12px;\n'
+    '    .sh-cap { font: inherit; font-size: 12px; font-weight: 700; cursor: pointer; padding: 5px 12px;\n'
     '              background: #fff; color: #000; border: 2px solid #000; box-shadow: 2px 2px 0 0 #000; }\n'
-    '    .sh-tab:hover, .sh-cap:hover { background: #fde047; }\n'
-    '    .sh-tab.on { background: #000; color: #fff; }\n'
+    '    .sh-cap:hover { background: #fde047; }\n'
     '    .sh-cap[disabled] { opacity: .55; cursor: default; }\n'
-    # 책장 — 책등을 세워 늘어놓는다. 아래 선이 선반이다.
-    '    .shelf { display: flex; flex-wrap: wrap; align-items: flex-end; gap: 5px 3px;\n'
-    '             margin-top: 18px; padding: 0 6px 10px; border-bottom: 5px solid #000; }\n'
-    '    .shelf[hidden], .reading-list[hidden] { display: none; }\n'
-    '    .sp { position: relative; flex: none; width: auto; height: ' + str(SPINE_H) + 'px;\n'
+    # 책장 — 책등을 같은 높이로 세워 바닥에 붙여 늘어놓는다.
+    # 줄이 넘어가도 줄마다 선반 판이 받치도록, 선반 판을 줄 간격(--row)마다
+    # 되풀이되는 배경으로 그린다. 판은 책등 바로 아래(--sh-h)에 온다.
+    '    .shelf { --sh-h: ' + str(SPINE_H) + 'px; --plank: 7px; --row: calc(var(--sh-h) + 18px);\n'
+    '             display: flex; flex-wrap: wrap; align-items: flex-end; gap: 11px 2px;\n'
+    '             margin: 14px 0 22px; padding: 0 8px 7px;\n'
+    '             background-image: linear-gradient(to bottom, transparent var(--sh-h), #000 var(--sh-h),\n'
+    '               #000 calc(var(--sh-h) + var(--plank)), transparent calc(var(--sh-h) + var(--plank)));\n'
+    '             background-size: 100% var(--row); background-repeat: repeat-y; }\n'
+    '    .shelf-new-note { display: flex; align-items: center; gap: 6px; margin: 10px 0 0; color: #666; font-size: 13px; }\n'
+    '    .rl-new-tag { font-size: 9px; font-weight: 800; letter-spacing: .06em; line-height: 1; padding: 3px 5px;\n'
+    '                  background: #fde047; color: #000; border: 1.5px solid #000; }\n'
+    '    .sp { position: relative; flex: none; width: auto; height: var(--sh-h);\n'
     '          background: var(--c, #555); border: 1px solid rgba(0,0,0,.45); border-radius: 2px 2px 0 0;\n'
     '          box-shadow: inset -3px 0 6px rgba(0,0,0,.28), inset 3px 0 5px rgba(255,255,255,.14);\n'
     '          overflow: hidden; text-decoration: none; transition: transform .12s; }\n'
@@ -643,7 +620,7 @@ SHELF_CSS = (
     '              font-size: var(--fs, 15px); font-weight: 500; letter-spacing: .01em; color: #fff;\n'
     '              text-shadow: 0 1px 2px rgba(0,0,0,.55); }\n'
     '    .sp-i { position: relative; z-index: 1; display: block;\n'
-    '            height: 100%; width: auto; max-width: 172px; object-fit: contain; }\n'
+    '            height: 100%; width: auto; max-width: 80px; object-fit: fill; }\n'
     # 책등 이미지가 없거나 못 불러오면 색 책등 폭으로 돌아간다
     '    .sp.no-img, .sp.sp-fail { width: var(--w, 38px); }\n'
     # 최근 추가된 책 — 책등 위쪽을 띠로 두른다. 제목이 가리지 않게 여백을 준다.
@@ -653,9 +630,9 @@ SHELF_CSS = (
     '    .sp.is-new .sp-t { padding-top: 22px; }\n'
     # 좁은 화면에서는 한 줄에 너무 적게 들어가므로 조금 줄인다
     # 좁은 화면에서는 책등을 낮추므로 글자도 그 비율(205/270)만큼 줄인다
-    '    @media (max-width: 480px) { .shelf .sp { height: 205px; }\n'
+    '    @media (max-width: 480px) { .shelf { --sh-h: 205px; }\n'
     '                                 .sp.no-img, .sp.sp-fail { width: calc(var(--w, 38px) * .88); }\n'
-    '                                 .sp-i { max-width: 130px; }\n'
+    '                                 .sp-i { max-width: 61px; }\n'
     '                                 .sp-t i { font-size: calc(var(--fs, 15px) * .76); }\n'
     '                                 .sp-t { padding: 10px 2px; }\n'
     '                                 .sp.is-new .sp-t { padding-top: 18px; } }\n'
@@ -1090,7 +1067,8 @@ update_entries = build_updates_entries(limit=80)
 # 어떤 책이 새로 들어왔는지 페이지에서 알 길이 없었다. data.csv 커밋 이력에서
 # (셀럽, 책) 짝이 처음 나타난 날을 꺼내, 최근 것에만 작은 스티커를 붙인다.
 # 며칠까지를 '최근'으로 볼지는 아래 숫자 하나로 정한다.
-NEW_BADGE_DAYS = 7
+# 이 기간 안에 들어온 책은 독서 리스트(책등·목록) 맨 앞에 모은다.
+NEW_BADGE_DAYS = 10
 
 _new_book_dates = {}
 for _e in update_entries:          # 최신순이라 먼저 본 날짜가 가장 최근
@@ -1111,6 +1089,29 @@ def new_book_date(celeb, title):
     except ValueError:
         return ''
     return d if (datetime.date.today() - added).days <= NEW_BADGE_DAYS else ''
+
+
+def recent_first(celeb, books):
+    """최근 NEW_BADGE_DAYS일 안에 추가된 책을 맨 앞으로(최신순), 나머지는 원래 순서.
+    반환: (정렬된 책 리스트, 최근 책 권수)."""
+    recent, rest = [], []
+    for i, b in enumerate(books):
+        d = new_book_date(celeb, b['title'])
+        (recent if d else rest).append((d, i, b))
+    recent.sort(key=lambda x: (x[0], -x[1]), reverse=True)
+    return [b for _, _, b in recent] + [b for _, _, b in rest], len(recent)
+
+
+def recent_note(n, lang='ko'):
+    """리스트 머리에 다는 한 줄 안내."""
+    if not n:
+        return ''
+    if lang == 'en':
+        return ('    <p class="muted shelf-new-note"><span class="rl-new-tag">NEW</span> '
+                + str(n) + (' book' if n == 1 else ' books') + ' added in the last '
+                + str(NEW_BADGE_DAYS) + ' days ' + ('is' if n == 1 else 'are') + ' shown first.</p>\n')
+    return ('    <p class="muted shelf-new-note"><span class="rl-new-tag">NEW</span> '
+            '최근 ' + str(NEW_BADGE_DAYS) + '일 안에 추가된 ' + str(n) + '권을 맨 앞에 모았어요.</p>\n')
 
 
 def spine_new_badge(added):
@@ -1578,7 +1579,9 @@ for name, info in celebs.items():
     book_cards_html = ''   # 카드 그리드 (표 대체)
     spine_html = ''        # 책등 보기
     shared_count = 0       # 다른 셀럽과 공유된 책 권수 (섹션 헤더용)
-    for i, b in enumerate(books):
+    # 최근 추가된 책을 맨 앞으로 — 책등·목록 모두 이 순서를 쓴다
+    list_books, n_recent = recent_first(name, books)
+    for i, b in enumerate(list_books):
         has_book_page = b['title'] in books_with_pages
 
         # 알라딘 상품 URL (CSV의 '&amp;'는 디코드 후 esc로 재이스케이프)
@@ -1942,23 +1945,21 @@ for name, info in celebs.items():
         '  <section id="shelf-sec">\n'
         '    <div class="shelf-head">\n'
         '      <h2>📚 ' + esc(sname) + '의 독서 리스트 (' + str(n_books) + '권)</h2>\n'
-        '      <div class="shelf-tabs" role="tablist">\n'
-        '        <button type="button" class="sh-tab on" data-view="spine" aria-pressed="true">▊ 책등</button>\n'
-        '        <button type="button" class="sh-tab" data-view="list" aria-pressed="false">☰ 목록</button>\n'
-        '        <button type="button" class="sh-cap" id="shelf-cap" title="지금 보고 있는 쪽을 그림으로 내려받아요">⤓ 이미지 저장</button>\n'
+        '      <div class="shelf-tabs">\n'
+        '        <button type="button" class="sh-cap" id="shelf-cap" title="책장을 그림으로 내려받아요">⤓ 이미지 저장</button>\n'
         '        <button type="button" class="sh-cap" id="shelf-cap-clear" title="배경 없이 투명한 PNG로 내려받아요">⤓ 투명 배경</button>\n'
         '      </div>\n'
         '    </div>\n'
-        + (('    <p class="muted">' + str(shared_count) + '권은 다른 셀럽도 함께 추천한 책이에요. 목록 보기에서 함께 추천한 셀럽 이름을 볼 수 있어요.</p>\n')
-           if shared_count else '')
+        + recent_note(n_recent)
         + '    <div class="shelf" id="shelf">\n'
         + spine_html +
         '    </div>\n'
-        '    <ol class="reading-list" id="rlist" hidden>\n'
+        + (('    <p class="muted">' + str(shared_count) + '권은 다른 셀럽도 함께 추천한 책이에요. 아래 목록에서 함께 추천한 셀럽 이름을 볼 수 있어요.</p>\n')
+           if shared_count else '')
+        + '    <ol class="reading-list" id="rlist">\n'
         + book_cards_html +
         '    </ol>\n'
         '  </section>\n'
-        + SHELF_JS
         + shelf_capture_js('저장 중…', '책장_' + safe_filename(sname) + '.png',
                            '이미지를 만들지 못했어요. 잠시 뒤 다시 눌러 주세요.',
                            sname + '의 독서 리스트 ' + str(n_books) + '권')
@@ -2480,7 +2481,8 @@ for name, info in celebs.items():
     # 책 행 (영문 제목 + 한국어 원제 부기)
     rows = ''
     en_spine_html = ''
-    for i, b in enumerate(en_books):
+    en_list_books, en_n_recent = recent_first(name, en_books)
+    for i, b in enumerate(en_list_books):
         # 알라딘 상품 URL (CSV의 &amp; 디코드)
         aladin_url = ''
         raw_link = b.get('link') or ''
@@ -2822,22 +2824,20 @@ for name, info in celebs.items():
         + '  <section id="shelf-sec">\n'
         '    <div class="shelf-head">\n'
         '      <h2>Books ' + esc(_name_pl) + ' has read (' + str(n) + ')</h2>\n'
-        '      <div class="shelf-tabs" role="tablist">\n'
-        '        <button type="button" class="sh-tab on" data-view="spine" aria-pressed="true">\u258a Book spines</button>\n'
-        '        <button type="button" class="sh-tab" data-view="list" aria-pressed="false">\u2630 Book list</button>\n'
-        '        <button type="button" class="sh-cap" id="shelf-cap" title="Download what you see as an image">\u2913 Save image</button>\n'
+        '      <div class="shelf-tabs">\n'
+        '        <button type="button" class="sh-cap" id="shelf-cap" title="Download the bookshelf as an image">\u2913 Save image</button>\n'
         '        <button type="button" class="sh-cap" id="shelf-cap-clear" title="Download as a PNG with a transparent background">\u2913 Transparent</button>\n'
         '      </div>\n'
         '    </div>\n'
-        '    <div class="shelf" id="shelf">\n' + en_spine_html +
+        + recent_note(en_n_recent, 'en')
+        + '    <div class="shelf" id="shelf">\n' + en_spine_html +
         '    </div>\n'
-        '    <ol class="reading-list" id="rlist" hidden>\n' + rows +
+        '    <ol class="reading-list" id="rlist">\n' + rows +
         '    </ol>\n'
         '  </section>\n'
         + shelf_capture_js('Saving…', 'bookshelf_' + slug + '.png',
                            'Could not create the image. Please try again.',
                            _name_pl + ' — ' + str(n) + ' books', '_transparent')
-        + SHELF_JS
         + (EN_TR_NOTE_HTML if en_show_tr_note else '')
         + '  <section class="pfaq">\n'
         '    <h2>' + esc(_name_pl) + ' book recommendations — FAQ</h2>\n'
