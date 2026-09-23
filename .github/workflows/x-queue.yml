@@ -1,6 +1,6 @@
 name: X Queue
 
-# 매일 아침 X(트위터)에 올릴 트윗 3개를 만들어 data/x_queue.json 에 넣는다.
+# 매일 아침 X(트위터)에 올릴 트윗 후보를 만들어 data/x_queue.json 에 넣는다(개수 제한 없음).
 # 게시는 /xbot/ 페이지에서 사람이 버튼으로 한다 (X API를 안 써서 비용 0원).
 # 자세한 설명은 tools/XBOT.md 참고.
 
@@ -14,6 +14,14 @@ on:
         required: false
         default: false
         type: boolean
+      shelves:
+        description: '셀럽 책장 몇 개 만들지'
+        required: false
+        default: '3'
+      books:
+        description: "'읽은 사람 모여라' 몇 개 만들지"
+        required: false
+        default: '1'
 
 concurrency:
   group: x-queue
@@ -36,6 +44,8 @@ jobs:
         run: |
           ARGS=""
           if [ "${{ github.event.inputs.force }}" = "true" ]; then ARGS="--force"; fi
+          if [ -n "${{ github.event.inputs.shelves }}" ]; then ARGS="$ARGS --shelves ${{ github.event.inputs.shelves }}"; fi
+          if [ -n "${{ github.event.inputs.books }}" ]; then ARGS="$ARGS --books ${{ github.event.inputs.books }}"; fi
           python3 tools/x_queue.py $ARGS
 
       - name: Commit & push

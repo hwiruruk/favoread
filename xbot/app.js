@@ -4,8 +4,8 @@
  * 날짜별 트윗 3개를 카드로 보여 준다. 게시는 X의 공유 링크(intent)로 하므로
  * API 키도 비용도 필요 없다. 이미지는 여기서 캔버스로 그려 복사·저장한다.
  *
- * 이미지는 X 모바일 타임라인에서 잘리지 않는 비율로 만든다(책 정보 장만, 쪽 번호 없음).
- *   책장 1~2권 → 1장 16:9 / 3~4권 → 2장 8:9(나란히 두 칸) / 5~6권 → 4장 16:9(2×2 격자)
+ * 이미지는 16:9, 책 정보 장만(쪽 번호 없음).
+ *   책장(글 하나에 최대 3권) → 1번째: 모두 모아 1장, 2번째부터: 한 권씩 1장 (3권이면 4장)
  *   이 책을 읽은 셀럽들 → 1장, 1:1
  */
 
@@ -17,7 +17,6 @@ const BG_KEY = 'xbot-bg';
 const STYLE_KEY = 'xbot-style';
 
 const WIDE = [1200, 675];     // 16:9
-const TALL = [1080, 1215];    // 8:9
 const SQUARE = [1200, 1200];
 
 const CLEAR = 'transparent';
@@ -410,6 +409,25 @@ function bookBubble(ctx, x, y, w, h, book, im, accent, s) {
   roundRectPath(ctx, x, y, w, h, 26 * s);
   ctx.fill();
   const pad = 22 * s;
+  if (w < 460 * s) {
+    // 좁은 칸(3권 나란히): 표지를 위에, 글을 아래 가운데에
+    const tw = w - pad * 2, cx = x + w / 2;
+    const textH = 150 * s;
+    drawCover(ctx, im, { x: x + pad, y: y + pad, w: tw, h: h - pad * 2 - textH }, 'center', book.emoji);
+    let ty = y + h - pad - textH + 42 * s;
+    ctx.fillStyle = '#ffffff';
+    ctx.font = DOTUM(Math.round(30 * s), 700);
+    ty = drawLines(ctx, wrap(ctx, book.emoji + ' ' + book.title, tw, 2), cx, ty, 38 * s, 'center');
+    ctx.fillStyle = 'rgba(255,255,255,.82)';
+    ctx.font = DOTUM(Math.round(21 * s));
+    ty = drawLines(ctx, wrap(ctx, book.by, tw, 1), cx, ty + 2 * s, 28 * s, 'center');
+    if (book.src) {
+      ctx.fillStyle = 'rgba(255,255,255,.7)';
+      ctx.font = DOTUM(Math.round(19 * s), 700);
+      drawLines(ctx, wrap(ctx, book.src, tw, 1), cx, ty + 2 * s, 26 * s, 'center');
+    }
+    return;
+  }
   const r = drawCover(ctx, im, { x: x + pad, y: y + pad, w: (h - pad * 2) * 0.7, h: h - pad * 2 }, 'center', book.emoji);
   const tx = r.x + r.w + pad, tw = x + w - tx - pad;
   const px = Math.round(34 * s);
@@ -441,7 +459,8 @@ async function drawChatBooks(size, books, type, opts) {
   books.forEach((b, i) => {
     const x = wide ? pad + i * (colW + gap) : pad;
     const y = wide ? top : top + i * (rowH + gap);
-    const cardH = b.note ? Math.min(rowH * 0.5, 300 * s) : Math.min(rowH, 340 * s);
+    const narrow = colW < 460 * s;
+    const cardH = narrow ? (b.note ? rowH * 0.66 : rowH) : b.note ? Math.min(rowH * 0.5, 300 * s) : Math.min(rowH, 340 * s);
     bookBubble(ctx, x, y, colW, cardH, b, covers[i], accent, s);
     if (b.note) {
       const lines = Math.max(2, Math.floor((rowH - cardH - 14 * s - 80 * s) / (26 * s * 1.45)));
@@ -486,30 +505,17 @@ async function drawChatBookCard(img, opts) {
 
 /* ---------- 한 트윗의 이미지 묶음 ---------- */
 
-// 책을 n 장에 앞에서부터 고르게 나눈다(6권 → 2,2,2 / 5권 → 2,2,1 / 4권 → 2,1,1)
-function chunk(books, n) {
-  const out = [];
-  let k = 0;
-  for (let i = 0; i < n; i++) {
-    const sz = Math.floor(books.length / n) + (i < books.length % n ? 1 : 0);
-    out.push(books.slice(k, k + sz));
-    k += sz;
-  }
-  return out;
-}
-
 async function buildImages(it, opts) {
   await fontsReady;
   const img = it.image || {};
   const chat = opts.style === 'chat';
   if (it.type === 'book') return [await (chat ? drawChatBookCard : drawBookCard)(img, opts)];
   const books = img.books || [];
-  // 표지만 모은 장 없이 책 정보 장만. X 격자가 깔끔한 1·2·4장으로 나눈다.
-  //   1~2권 → 16:9 한 장 / 3~4권 → 8:9 두 장(2권씩) / 5~6권 → 16:9 네 장
-  const n = books.length;
-  const [size, groups] = n <= 2 ? [WIDE, [books]] : n <= 4 ? [TALL, chunk(books, 2)] : [WIDE, chunk(books, 4)];
-  const pages = [];
-  for (const g of groups) pages.push(await (chat ? drawChatBooks : drawShelfBooks)(size, g, it.type, opts));
+  // 1번째: 이번 글의 책(최대 3권)을 한 장에 모아서, 2번째부터: 한 권씩 한 장.
+  // 책이 1권이면 모아 보기와 같으니 한 장만.
+  const draw = chat ? drawChatBooks : drawShelfBooks;
+  const pages = [await draw(WIDE, books, it.type, opts)];
+  if (books.length > 1) for (const b of books) pages.push(await draw(WIDE, [b], it.type, opts));
   return pages;
 }
 
@@ -860,7 +866,7 @@ async function init() {
  * 매일 트윗과 같은 모양의 카드를 그 자리에서 만든다. */
 const BOOKS_URL = '../data/x_books.json';
 const STATE_URL = '../data/x_state.json';
-const PICK_MAX = 6;
+const PICK_MAX = 3;   // 셀럽 책장 글 하나에 최대 3권
 const picker = { books: null, state: null };
 
 function fitLines(head, lines, tail) {
@@ -969,10 +975,32 @@ function syncPickLimit() {
 $('#picker').addEventListener('toggle', (e) => { if (e.target.open) openPicker(); });
 $('#pickName').addEventListener('input', showPickBooks);
 $('#pickBooks').addEventListener('change', syncPickLimit);
+// '책장 하나 더': 아직 안 나간 책이 남은 인물 중 가장 오래전에 나간(또는 한 번도 안 나간)
+// 인물을 골라, 안 나간 책 3권으로 바로 카드를 만든다. 하루에 몇 개든 만들 수 있다.
+const madeHere = new Set();
+$('#moreShelf').addEventListener('click', async () => {
+  await openPicker();
+  if (!picker.books) return;
+  const last = picker.state.celeb_last || {}, posted = picker.state.posted || {};
+  const today = new Date(Date.now() + 9 * 3600e3).toISOString().slice(0, 10);   // KST
+  const cands = Object.entries(picker.books.celebs)
+    .filter(([n, c]) => c.books.length >= 2 && !madeHere.has(n) && last[n] !== today)
+    .map(([n, c]) => [n, c.books.filter((b) => !(posted[n] || []).includes(b.title))])
+    .filter(([, fresh]) => fresh.length);
+  if (!cands.length) { status('더 만들 인물이 없어요'); return; }
+  cands.sort((x, y) => (last[x[0]] || '').localeCompare(last[y[0]] || '') || Math.random() - 0.5);
+  const [name, fresh] = cands[0];
+  madeHere.add(name);
+  $('#picked').prepend(cardEl(makePickedItem(name, fresh.slice(0, PICK_MAX)), false));
+  status((picker.books.celebs[name].display || name) + ' 책장을 하나 더 만들었어요');
+  $('#picked').scrollIntoView({ behavior: 'smooth', block: 'start' });
+});
+
 $('#pickMake').addEventListener('click', () => {
   const name = $('#pickName').value.trim();
   const books = [...document.querySelectorAll('#pickBooks input')].filter((b) => b.checked).map((b) => b._book);
   if (!books.length) return;
+  madeHere.add(name);
   $('#picked').prepend(cardEl(makePickedItem(name, books), false));
   status(name + ' 트윗을 만들었어요');
   $('#picked').scrollIntoView({ behavior: 'smooth', block: 'start' });
