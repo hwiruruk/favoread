@@ -44,6 +44,7 @@ STATE_JSON = os.path.join(ROOT, 'data', 'x_state.json')
 SOURCES_JSON = os.path.join(ROOT, 'data', 'x_sources.json')
 EMOJI_JSON = os.path.join(ROOT, 'data', 'x_emoji.json')
 BOOKS_JSON = os.path.join(ROOT, 'data', 'x_books.json')
+COMMENTS_JSON = os.path.join(ROOT, 'data', 'comments.json')
 
 BASE = 'https://favorbook.co.kr/'
 KST = datetime.timezone(datetime.timedelta(hours=9))
@@ -390,7 +391,27 @@ def order_books(books, book_idx, rng):
     return sorted(books, key=lambda b: -len(book_idx.get(b['title'].strip(), {}).get('celebs', [])))
 
 
-def image_book(b, src):
+def load_notes():
+    """편집기 '코멘트 검수'에서 승인된 코멘트 → {(인물, 제목): (글, 매체)}.
+
+    코멘트는 '~라고 했어요. (출처: 채널예스)' 처럼 3인칭으로 정리된 글이다.
+    채팅 디자인에서 '최애의 독서'가 전하는 말풍선으로만 쓴다(본인 말처럼 꾸미지 않음).
+    """
+    notes = {}
+    for key, v in load_json(COMMENTS_JSON, {}).get('comments', {}).items():
+        if v.get('status') != 'approved' or not (v.get('ko') or '').strip() or '|' not in key:
+            continue
+        celeb, title = key.split('|', 1)
+        text = v['ko'].strip()
+        m = re.search(r'\s*\(출처:\s*(.+?)\)\s*$', text)
+        outlet = m.group(1).strip() if m else (v.get('outlet') or '')
+        if m:
+            text = text[:m.start()].rstrip()
+        notes[(celeb, title.strip())] = (text, outlet)
+    return notes
+
+
+def image_book(b, src, note=None):
     return {
         'title': b['title'].strip(),
         'by': byline(b),
@@ -398,6 +419,8 @@ def image_book(b, src):
         'emoji': b['emoji'],
         'cover': b.get('coverUrl') or '',
         'source': (b.get('source') or '').replace('&amp;', '&').strip(),
+        'note': note[0] if note else '',
+        'noteSrc': note[1] if note else '',
     }
 
 
@@ -430,7 +453,7 @@ def make_shelf_item(kind, name, celeb, books, series, ctx):
             'series': series,
             'total': total,
             'portrait': celeb.get('imageUrl') or '',
-            'books': [image_book(b, s) for b, s in zip(books, srcs)],
+            'books': [image_book(b, s, ctx['notes'].get((name, b['title'].strip()))) for b, s in zip(books, srcs)],
         },
     }
 
@@ -621,7 +644,7 @@ def export_books(ctx, date_str):
             'josa': josa_iga(name),
             'tags': ' '.join([HASHTAG] + hashtags_for(name)[:2]),
             'books': [dict(image_book(dict(b, emoji=book_emoji(b['title'], ctx['emoji'])),
-                                      src_of(b.get('source'))),
+                                      src_of(b.get('source')), ctx['notes'].get((name, b['title'].strip()))),
                            n=len(book_idx.get(b['title'].strip(), {}).get('celebs', [])))
                       for b in books],
         }
@@ -668,6 +691,7 @@ def main():
         'sources': load_json(SOURCES_JSON, {}),
         'emoji': {k: v for k, v in load_json(EMOJI_JSON, {}).items() if not k.startswith('_')},
         'offline': args.offline,
+        'notes': load_notes(),
     }
     state = load_json(STATE_JSON, {})
     queue = load_json(QUEUE_JSON, {'days': []})
