@@ -283,15 +283,20 @@
     .shelf-head { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
     .shelf-head h2 { margin-bottom: 0; border-bottom: none; padding-bottom: 0; }
     .shelf-tabs { display: flex; gap: 6px; flex-wrap: wrap; }
-    .sh-tab, .sh-cap { font: inherit; font-size: 12px; font-weight: 700; cursor: pointer; padding: 5px 12px;
+    .sh-cap { font: inherit; font-size: 12px; font-weight: 700; cursor: pointer; padding: 5px 12px;
               background: #fff; color: #000; border: 2px solid #000; box-shadow: 2px 2px 0 0 #000; }
-    .sh-tab:hover, .sh-cap:hover { background: #fde047; }
-    .sh-tab.on { background: #000; color: #fff; }
+    .sh-cap:hover { background: #fde047; }
     .sh-cap[disabled] { opacity: .55; cursor: default; }
-    .shelf { display: flex; flex-wrap: wrap; align-items: flex-end; gap: 5px 3px;
-             margin-top: 18px; padding: 0 6px 10px; border-bottom: 5px solid #000; }
-    .shelf[hidden], .reading-list[hidden] { display: none; }
-    .sp { position: relative; flex: none; width: auto; height: 270px;
+    .shelf { --sh-h: 270px; --plank: 7px; --row: calc(var(--sh-h) + 18px);
+             display: flex; flex-wrap: wrap; align-items: flex-end; gap: 11px 2px;
+             margin: 14px 0 22px; padding: 0 8px 7px;
+             background-image: linear-gradient(to bottom, transparent var(--sh-h), #000 var(--sh-h),
+               #000 calc(var(--sh-h) + var(--plank)), transparent calc(var(--sh-h) + var(--plank)));
+             background-size: 100% var(--row); background-repeat: repeat-y; }
+    .shelf-new-note { display: flex; align-items: center; gap: 6px; margin: 10px 0 0; color: #666; font-size: 13px; }
+    .rl-new-tag { font-size: 9px; font-weight: 800; letter-spacing: .06em; line-height: 1; padding: 3px 5px;
+                  background: #fde047; color: #000; border: 1.5px solid #000; }
+    .sp { position: relative; flex: none; width: auto; height: var(--sh-h);
           background: var(--c, #555); border: 1px solid rgba(0,0,0,.45); border-radius: 2px 2px 0 0;
           box-shadow: inset -3px 0 6px rgba(0,0,0,.28), inset 3px 0 5px rgba(255,255,255,.14);
           overflow: hidden; text-decoration: none; transition: transform .12s; }
@@ -304,18 +309,21 @@
               font-size: var(--fs, 15px); font-weight: 500; letter-spacing: .01em; color: #fff;
               text-shadow: 0 1px 2px rgba(0,0,0,.55); }
     .sp-i { position: relative; z-index: 1; display: block;
-            height: 100%; width: auto; max-width: 172px; object-fit: contain; }
+            height: 100%; width: auto; max-width: 80px; object-fit: fill; }
     .sp.no-img, .sp.sp-fail { width: var(--w, 38px); }
     .sp-new { position: absolute; top: 0; left: 0; right: 0; z-index: 3; text-align: center;
               font-size: 8px; line-height: 1; padding: 3px 0 2px;
               border-bottom: 1px solid rgba(0,0,0,.55); }
     .sp.is-new .sp-t { padding-top: 22px; }
-    @media (max-width: 480px) { .shelf .sp { height: 205px; }
+    .is-capturing .sp-new, .is-capturing .rl-new, .is-capturing .rl-shared { display: none !important; }
+    .is-capturing .sp.is-new .sp-t { padding-top: 14px; }
+    @media (max-width: 480px) { .shelf { --sh-h: 205px; }
                                  .sp.no-img, .sp.sp-fail { width: calc(var(--w, 38px) * .88); }
-                                 .sp-i { max-width: 130px; }
+                                 .sp-i { max-width: 61px; }
                                  .sp-t i { font-size: calc(var(--fs, 15px) * .76); }
                                  .sp-t { padding: 10px 2px; }
-                                 .sp.is-new .sp-t { padding-top: 18px; } }
+                                 .sp.is-new .sp-t { padding-top: 18px; }
+                                 .is-capturing .sp.is-new .sp-t { padding-top: 10px; } }
     .reading-list { list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 14px; counter-reset: rl; }
     .rl-item { position: relative; background: #fff; border: 2px solid #000; box-shadow: 4px 4px 0 0 #000; padding: 14px 14px 14px 52px; transition: transform .12s, box-shadow .12s; }
     .rl-item:hover { transform: translate(-1px,-1px); box-shadow: 6px 6px 0 0 #000; }
@@ -386,14 +394,13 @@
   <section id="shelf-sec">
     <div class="shelf-head">
       <h2>📚 박지훈의 독서 리스트 (9권)</h2>
-      <div class="shelf-tabs" role="tablist">
-        <button type="button" class="sh-tab on" data-view="spine" aria-pressed="true">▊ 책등</button>
-        <button type="button" class="sh-tab" data-view="list" aria-pressed="false">☰ 목록</button>
-        <button type="button" class="sh-cap" id="shelf-cap" title="지금 보고 있는 쪽을 그림으로 내려받아요">⤓ 이미지 저장</button>
+      <div class="shelf-tabs">
+        <button type="button" class="sh-cap" id="shelf-cap" title="책장을 그림으로 내려받아요">⤓ 이미지 저장</button>
         <button type="button" class="sh-cap" id="shelf-cap-clear" title="배경 없이 투명한 PNG로 내려받아요">⤓ 투명 배경</button>
       </div>
     </div>
-    <p class="muted">5권은 다른 셀럽도 함께 추천한 책이에요. 목록 보기에서 함께 추천한 셀럽 이름을 볼 수 있어요.</p>
+    <p class="muted">5권은 다른 셀럽도 함께 추천한 책이에요. 아래 목록에서 함께 추천한 셀럽 이름을 볼 수 있어요.</p>
+    <div id="shelf-area">
     <div class="shelf" id="shelf">
     <a class="sp" style="--c:hsl(338,42%,47%);--w:39px;--fs:15px" href="https://www.yes24.com/product/goods/116586056" rel="nofollow noopener noreferrer" target="_blank" title="나미야 잡화점의 기적"><span class="sp-t"><i>나미야 잡화점의 기적</i></span><img class="sp-i" src="https://image.yes24.com/goods/116586056/side" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.parentNode.classList.add('sp-fail');this.remove()" onload="if(this.naturalWidth/this.naturalHeight>0.4){this.parentNode.classList.add('sp-fail');this.remove()}"></a>
     <a class="sp no-img" style="--c:hsl(220,39%,37%);--w:34px;--fs:15px" href="https://www.aladin.co.kr/shop/wproduct.aspx?ItemId=6417128" rel="nofollow noopener noreferrer" target="_blank" title="레몬"><span class="sp-t"><i>레몬</i></span></a>
@@ -405,7 +412,7 @@
     <a class="sp" style="--c:hsl(4,46%,47%);--w:40px;--fs:15px" href="https://www.yes24.com/product/goods/142972546" rel="nofollow noopener noreferrer" target="_blank" title="위버멘쉬"><span class="sp-t"><i>위버멘쉬</i></span><img class="sp-i" src="https://image.yes24.com/goods/142972546/side" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.parentNode.classList.add('sp-fail');this.remove()" onload="if(this.naturalWidth/this.naturalHeight>0.4){this.parentNode.classList.add('sp-fail');this.remove()}"></a>
     <a class="sp" style="--c:hsl(236,37%,36%);--w:44px;--fs:15px" href="https://www.yes24.com/product/goods/2312211" rel="nofollow noopener noreferrer" target="_blank" title="코스모스"><span class="sp-t"><i>코스모스</i></span><img class="sp-i" src="https://image.yes24.com/goods/2312211/side" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.parentNode.classList.add('sp-fail');this.remove()" onload="if(this.naturalWidth/this.naturalHeight>0.4){this.parentNode.classList.add('sp-fail');this.remove()}"></a>
     </div>
-    <ol class="reading-list" id="rlist" hidden>
+    <ol class="reading-list" id="rlist">
     <li class="rl-item">
       <span class="rl-num">1</span>
       <a class="rl-cover" href="https://www.yes24.com/product/goods/116586056" rel="nofollow noopener noreferrer" target="_blank" aria-label="나미야 잡화점의 기적 알라딘에서 보기"><img src="https://image.yes24.com/goods/116586056/L" alt="나미야 잡화점의 기적 표지" loading="lazy"></a>
@@ -493,31 +500,8 @@
       <div class="rl-shared"><span class="rl-shared-label">👥 함께 추천한 셀럽 2명:</span> <a class="rl-celeb-chip" href="https://favorbook.co.kr/share/%EB%85%B8%EC%A0%9C.html">노제</a><a class="rl-celeb-chip" href="https://favorbook.co.kr/share/%ED%8E%98%EC%9D%B4%EC%BB%A4.html">페이커</a></div>
     </li>
     </ol>
+    </div>
   </section>
-  <script>
-  (function () {
-    var sec = document.getElementById("shelf-sec");
-    if (!sec) return;
-    var shelf = document.getElementById("shelf"), list = document.getElementById("rlist");
-    sec.querySelectorAll(".sh-tab[data-view]").forEach(function (b) {
-      b.addEventListener("click", function () {
-        var spine = b.dataset.view === "spine";
-        shelf.hidden = !spine; list.hidden = spine;
-        sec.querySelectorAll(".sh-tab[data-view]").forEach(function (o) {
-          var on = o === b;
-          o.classList.toggle("on", on);
-          o.setAttribute("aria-pressed", on ? "true" : "false");
-        });
-        try { localStorage.setItem("fb.shelfView", b.dataset.view); } catch (e) {}
-      });
-    });
-    try {
-      if (localStorage.getItem("fb.shelfView") === "list") {
-        sec.querySelector('.sh-tab[data-view="list"]').click();
-      }
-    } catch (e) {}
-  })();
-  </script>
   <script>
   (function () {
     var btns = [document.getElementById("shelf-cap"), document.getElementById("shelf-cap-clear")]
@@ -679,14 +663,16 @@
 
     function capture(btn) {
       var clear = btn.id === "shelf-cap-clear";
-      // 숨어 있는 쪽까지 그려지지 않도록, 지금 보이는 상자 하나만 넘긴다
-      var shelf = document.getElementById("shelf");
-      var view = (shelf && !shelf.hidden) ? shelf : document.getElementById("rlist");
+      // 책장과 표지 목록을 함께 담은 상자 하나만 넘긴다
+      var view = document.getElementById("shelf-area") || document.getElementById("shelf");
       if (!view) return;
       var was = btn.textContent;
       btns.forEach(function (b) { b.disabled = true; });
       btn.textContent = "저장 중…";
       var swap = null, muted = null;
+      // 저장하는 그림에는 NEW 표시와 함께 추천한 셀럽 목록을 넣지 않는다.
+      // html2canvas가 문서를 복사할 때 이 클래스도 따라가서 복사본에서만 빠진 채 그려진다.
+      view.classList.add("is-capturing");
       guard(loadH2C(), 15000, "html2canvas").then(function () {
         swap = swapImages(view);
         return swap.ready;
@@ -717,6 +703,7 @@
       }).then(function () {
         if (swap) swap.undo.forEach(function (f) { f(); });
         if (muted) unmute(muted);
+        view.classList.remove("is-capturing");
         btns.forEach(function (b) { b.disabled = false; });
         btn.textContent = was;
       });
@@ -772,7 +759,7 @@
 
 <script>
 (function () {
-  var DAYS = 7;
+  var DAYS = 10;
   var today = new Date(); today.setHours(0, 0, 0, 0);
   document.querySelectorAll(".sp-new[data-added], .rl-new[data-added]").forEach(function (el) {
     var t = Date.parse(el.getAttribute("data-added") + "T00:00:00");

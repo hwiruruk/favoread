@@ -329,15 +329,20 @@
     .shelf-head { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
     .shelf-head h2 { margin-bottom: 0; border-bottom: none; padding-bottom: 0; }
     .shelf-tabs { display: flex; gap: 6px; flex-wrap: wrap; }
-    .sh-tab, .sh-cap { font: inherit; font-size: 12px; font-weight: 700; cursor: pointer; padding: 5px 12px;
+    .sh-cap { font: inherit; font-size: 12px; font-weight: 700; cursor: pointer; padding: 5px 12px;
               background: #fff; color: #000; border: 2px solid #000; box-shadow: 2px 2px 0 0 #000; }
-    .sh-tab:hover, .sh-cap:hover { background: #fde047; }
-    .sh-tab.on { background: #000; color: #fff; }
+    .sh-cap:hover { background: #fde047; }
     .sh-cap[disabled] { opacity: .55; cursor: default; }
-    .shelf { display: flex; flex-wrap: wrap; align-items: flex-end; gap: 5px 3px;
-             margin-top: 18px; padding: 0 6px 10px; border-bottom: 5px solid #000; }
-    .shelf[hidden], .reading-list[hidden] { display: none; }
-    .sp { position: relative; flex: none; width: auto; height: 270px;
+    .shelf { --sh-h: 270px; --plank: 7px; --row: calc(var(--sh-h) + 18px);
+             display: flex; flex-wrap: wrap; align-items: flex-end; gap: 11px 2px;
+             margin: 14px 0 22px; padding: 0 8px 7px;
+             background-image: linear-gradient(to bottom, transparent var(--sh-h), #000 var(--sh-h),
+               #000 calc(var(--sh-h) + var(--plank)), transparent calc(var(--sh-h) + var(--plank)));
+             background-size: 100% var(--row); background-repeat: repeat-y; }
+    .shelf-new-note { display: flex; align-items: center; gap: 6px; margin: 10px 0 0; color: #666; font-size: 13px; }
+    .rl-new-tag { font-size: 9px; font-weight: 800; letter-spacing: .06em; line-height: 1; padding: 3px 5px;
+                  background: #fde047; color: #000; border: 1.5px solid #000; }
+    .sp { position: relative; flex: none; width: auto; height: var(--sh-h);
           background: var(--c, #555); border: 1px solid rgba(0,0,0,.45); border-radius: 2px 2px 0 0;
           box-shadow: inset -3px 0 6px rgba(0,0,0,.28), inset 3px 0 5px rgba(255,255,255,.14);
           overflow: hidden; text-decoration: none; transition: transform .12s; }
@@ -350,18 +355,21 @@
               font-size: var(--fs, 15px); font-weight: 500; letter-spacing: .01em; color: #fff;
               text-shadow: 0 1px 2px rgba(0,0,0,.55); }
     .sp-i { position: relative; z-index: 1; display: block;
-            height: 100%; width: auto; max-width: 172px; object-fit: contain; }
+            height: 100%; width: auto; max-width: 80px; object-fit: fill; }
     .sp.no-img, .sp.sp-fail { width: var(--w, 38px); }
     .sp-new { position: absolute; top: 0; left: 0; right: 0; z-index: 3; text-align: center;
               font-size: 8px; line-height: 1; padding: 3px 0 2px;
               border-bottom: 1px solid rgba(0,0,0,.55); }
     .sp.is-new .sp-t { padding-top: 22px; }
-    @media (max-width: 480px) { .shelf .sp { height: 205px; }
+    .is-capturing .sp-new, .is-capturing .rl-new, .is-capturing .rl-shared { display: none !important; }
+    .is-capturing .sp.is-new .sp-t { padding-top: 14px; }
+    @media (max-width: 480px) { .shelf { --sh-h: 205px; }
                                  .sp.no-img, .sp.sp-fail { width: calc(var(--w, 38px) * .88); }
-                                 .sp-i { max-width: 130px; }
+                                 .sp-i { max-width: 61px; }
                                  .sp-t i { font-size: calc(var(--fs, 15px) * .76); }
                                  .sp-t { padding: 10px 2px; }
-                                 .sp.is-new .sp-t { padding-top: 18px; } }
+                                 .sp.is-new .sp-t { padding-top: 18px; }
+                                 .is-capturing .sp.is-new .sp-t { padding-top: 10px; } }
     .reading-list { list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 14px; counter-reset: rl; }
     .rl-item { position: relative; background: #fff; border: 2px solid #000; box-shadow: 4px 4px 0 0 #000; padding: 14px 14px 14px 52px; transition: transform .12s, box-shadow .12s; }
     .rl-item:hover { transform: translate(-1px,-1px); box-shadow: 6px 6px 0 0 #000; }
@@ -432,31 +440,96 @@
   <section id="shelf-sec">
     <div class="shelf-head">
       <h2>📚 임윤찬의 독서 리스트 (12권)</h2>
-      <div class="shelf-tabs" role="tablist">
-        <button type="button" class="sh-tab on" data-view="spine" aria-pressed="true">▊ 책등</button>
-        <button type="button" class="sh-tab" data-view="list" aria-pressed="false">☰ 목록</button>
-        <button type="button" class="sh-cap" id="shelf-cap" title="지금 보고 있는 쪽을 그림으로 내려받아요">⤓ 이미지 저장</button>
+      <div class="shelf-tabs">
+        <button type="button" class="sh-cap" id="shelf-cap" title="책장을 그림으로 내려받아요">⤓ 이미지 저장</button>
         <button type="button" class="sh-cap" id="shelf-cap-clear" title="배경 없이 투명한 PNG로 내려받아요">⤓ 투명 배경</button>
       </div>
     </div>
-    <p class="muted">6권은 다른 셀럽도 함께 추천한 책이에요. 목록 보기에서 함께 추천한 셀럽 이름을 볼 수 있어요.</p>
+    <p class="muted shelf-new-note"><span class="rl-new-tag">NEW</span> 최근 10일 안에 추가된 7권을 맨 앞에 모았어요.</p>
+    <p class="muted">6권은 다른 셀럽도 함께 추천한 책이에요. 아래 목록에서 함께 추천한 셀럽 이름을 볼 수 있어요.</p>
+    <div id="shelf-area">
     <div class="shelf" id="shelf">
+    <a class="sp is-new" style="--c:hsl(113,53%,27%);--w:39px;--fs:15px" href="https://www.yes24.com/product/goods/12779398" rel="nofollow noopener noreferrer" target="_blank" title="릴케 시집"><span class="sp-t"><i>릴케 시집</i></span><img class="sp-i" src="https://image.yes24.com/goods/12779398/side" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.parentNode.classList.add('sp-fail');this.remove()" onload="if(this.naturalWidth/this.naturalHeight>0.4){this.parentNode.classList.add('sp-fail');this.remove()}"><span class="sp-new" data-added="2026-09-14">NEW</span></a>
+    <a class="sp no-img is-new" style="--c:hsl(203,32%,28%);--w:35px;--fs:15px" href="https://www.yes24.com/product/goods/166" rel="nofollow noopener noreferrer" target="_blank" title="산에는 꽃이 피네"><span class="sp-t"><i>산에는 꽃이 피네</i></span><span class="sp-new" data-added="2026-09-14">NEW</span></a>
+    <a class="sp is-new" style="--c:hsl(335,39%,28%);--w:34px;--fs:15px" href="https://www.yes24.com/product/goods/22431294" rel="nofollow noopener noreferrer" target="_blank" title="어린 왕자"><span class="sp-t"><i>어린 왕자</i></span><img class="sp-i" src="https://image.yes24.com/goods/22431294/side" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.parentNode.classList.add('sp-fail');this.remove()" onload="if(this.naturalWidth/this.naturalHeight>0.4){this.parentNode.classList.add('sp-fail');this.remove()}"><span class="sp-new" data-added="2026-09-14">NEW</span></a>
+    <a class="sp is-new" style="--c:hsl(197,55%,47%);--w:33px;--fs:15px" href="https://www.yes24.com/product/goods/1405848" rel="nofollow noopener noreferrer" target="_blank" title="이탈리아 기행"><span class="sp-t"><i>이탈리아 기행</i></span><img class="sp-i" src="https://image.yes24.com/goods/1405848/side" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.parentNode.classList.add('sp-fail');this.remove()" onload="if(this.naturalWidth/this.naturalHeight>0.4){this.parentNode.classList.add('sp-fail');this.remove()}"><span class="sp-new" data-added="2026-09-14">NEW</span></a>
+    <a class="sp is-new" style="--c:hsl(34,35%,29%);--w:31px;--fs:12px" href="https://www.yes24.com/product/goods/92323121" rel="nofollow noopener noreferrer" target="_blank" title="젊은 시인에게 보내는 편지"><span class="sp-t"><i>젊은 시인에게 보내는 편지</i></span><img class="sp-i" src="https://image.yes24.com/goods/60648038/side" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.parentNode.classList.add('sp-fail');this.remove()" onload="if(this.naturalWidth/this.naturalHeight>0.4){this.parentNode.classList.add('sp-fail');this.remove()}"><span class="sp-new" data-added="2026-09-14">NEW</span></a>
+    <a class="sp is-new" style="--c:hsl(264,48%,32%);--w:44px;--fs:15px" href="https://www.yes24.com/product/goods/245524" rel="nofollow noopener noreferrer" target="_blank" title="창백한 푸른 점"><span class="sp-t"><i>창백한 푸른 점</i></span><img class="sp-i" src="https://image.yes24.com/goods/245524/side" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.parentNode.classList.add('sp-fail');this.remove()" onload="if(this.naturalWidth/this.naturalHeight>0.4){this.parentNode.classList.add('sp-fail');this.remove()}"><span class="sp-new" data-added="2026-09-14">NEW</span></a>
+    <a class="sp no-img is-new" style="--c:hsl(224,42%,44%);--w:42px;--fs:15px" href="https://www.yes24.com/product/goods/95377075" rel="nofollow noopener noreferrer" target="_blank" title="피아노 이야기"><span class="sp-t"><i>피아노 이야기</i></span><span class="sp-new" data-added="2026-09-14">NEW</span></a>
     <a class="sp" style="--c:hsl(200,57%,44%);--w:38px;--fs:15px" href="https://www.yes24.com/product/goods/176787" rel="nofollow noopener noreferrer" target="_blank" title="데미안"><span class="sp-t"><i>데미안</i></span><img class="sp-i" src="https://image.yes24.com/goods/176787/side" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.parentNode.classList.add('sp-fail');this.remove()" onload="if(this.naturalWidth/this.naturalHeight>0.4){this.parentNode.classList.add('sp-fail');this.remove()}"></a>
-    <a class="sp" style="--c:hsl(113,53%,27%);--w:39px;--fs:15px" href="https://www.yes24.com/product/goods/12779398" rel="nofollow noopener noreferrer" target="_blank" title="릴케 시집"><span class="sp-t"><i>릴케 시집</i></span><img class="sp-i" src="https://image.yes24.com/goods/12779398/side" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.parentNode.classList.add('sp-fail');this.remove()" onload="if(this.naturalWidth/this.naturalHeight>0.4){this.parentNode.classList.add('sp-fail');this.remove()}"></a>
-    <a class="sp no-img" style="--c:hsl(203,32%,28%);--w:35px;--fs:15px" href="https://www.yes24.com/product/goods/166" rel="nofollow noopener noreferrer" target="_blank" title="산에는 꽃이 피네"><span class="sp-t"><i>산에는 꽃이 피네</i></span></a>
     <a class="sp no-img" style="--c:hsl(105,35%,35%);--w:37px;--fs:15px" href="https://www.yes24.com/product/goods/75213659" rel="nofollow noopener noreferrer" target="_blank" title="쇼팽을 찾아서"><span class="sp-t"><i>쇼팽을 찾아서</i></span></a>
     <a class="sp" style="--c:hsl(305,45%,38%);--w:41px;--fs:15px" href="https://www.yes24.com/product/goods/108569727" rel="nofollow noopener noreferrer" target="_blank" title="신곡"><span class="sp-t"><i>신곡</i></span><img class="sp-i" src="https://image.yes24.com/goods/108569727/side" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.parentNode.classList.add('sp-fail');this.remove()" onload="if(this.naturalWidth/this.naturalHeight>0.4){this.parentNode.classList.add('sp-fail');this.remove()}"></a>
     <a class="sp" style="--c:hsl(145,53%,33%);--w:43px;--fs:15px" href="https://www.yes24.com/product/goods/257435" rel="nofollow noopener noreferrer" target="_blank" title="싯다르타"><span class="sp-t"><i>싯다르타</i></span><img class="sp-i" src="https://image.yes24.com/goods/257435/side" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.parentNode.classList.add('sp-fail');this.remove()" onload="if(this.naturalWidth/this.naturalHeight>0.4){this.parentNode.classList.add('sp-fail');this.remove()}"></a>
-    <a class="sp" style="--c:hsl(335,39%,28%);--w:34px;--fs:15px" href="https://www.yes24.com/product/goods/22431294" rel="nofollow noopener noreferrer" target="_blank" title="어린 왕자"><span class="sp-t"><i>어린 왕자</i></span><img class="sp-i" src="https://image.yes24.com/goods/22431294/side" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.parentNode.classList.add('sp-fail');this.remove()" onload="if(this.naturalWidth/this.naturalHeight>0.4){this.parentNode.classList.add('sp-fail');this.remove()}"></a>
-    <a class="sp" style="--c:hsl(197,55%,47%);--w:33px;--fs:15px" href="https://www.yes24.com/product/goods/1405848" rel="nofollow noopener noreferrer" target="_blank" title="이탈리아 기행"><span class="sp-t"><i>이탈리아 기행</i></span><img class="sp-i" src="https://image.yes24.com/goods/1405848/side" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.parentNode.classList.add('sp-fail');this.remove()" onload="if(this.naturalWidth/this.naturalHeight>0.4){this.parentNode.classList.add('sp-fail');this.remove()}"></a>
-    <a class="sp" style="--c:hsl(34,35%,29%);--w:31px;--fs:12px" href="https://www.yes24.com/product/goods/92323121" rel="nofollow noopener noreferrer" target="_blank" title="젊은 시인에게 보내는 편지"><span class="sp-t"><i>젊은 시인에게 보내는 편지</i></span><img class="sp-i" src="https://image.yes24.com/goods/60648038/side" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.parentNode.classList.add('sp-fail');this.remove()" onload="if(this.naturalWidth/this.naturalHeight>0.4){this.parentNode.classList.add('sp-fail');this.remove()}"></a>
-    <a class="sp" style="--c:hsl(264,48%,32%);--w:44px;--fs:15px" href="https://www.yes24.com/product/goods/245524" rel="nofollow noopener noreferrer" target="_blank" title="창백한 푸른 점"><span class="sp-t"><i>창백한 푸른 점</i></span><img class="sp-i" src="https://image.yes24.com/goods/245524/side" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.parentNode.classList.add('sp-fail');this.remove()" onload="if(this.naturalWidth/this.naturalHeight>0.4){this.parentNode.classList.add('sp-fail');this.remove()}"></a>
-    <a class="sp no-img" style="--c:hsl(224,42%,44%);--w:42px;--fs:15px" href="https://www.yes24.com/product/goods/95377075" rel="nofollow noopener noreferrer" target="_blank" title="피아노 이야기"><span class="sp-t"><i>피아노 이야기</i></span></a>
     <a class="sp" style="--c:hsl(156,44%,41%);--w:30px;--fs:15px" href="https://www.yes24.com/product/goods/23599602" rel="nofollow noopener noreferrer" target="_blank" title="하늘과 바람과 별과 시"><span class="sp-t"><i>하늘과 바람과 별과 시</i></span><img class="sp-i" src="https://image.yes24.com/goods/23599602/side" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.parentNode.classList.add('sp-fail');this.remove()" onload="if(this.naturalWidth/this.naturalHeight>0.4){this.parentNode.classList.add('sp-fail');this.remove()}"></a>
     </div>
-    <ol class="reading-list" id="rlist" hidden>
+    <ol class="reading-list" id="rlist">
     <li class="rl-item">
       <span class="rl-num">1</span>
+      <a class="rl-cover" href="https://www.yes24.com/product/goods/12779398" rel="nofollow noopener noreferrer" target="_blank" aria-label="릴케 시집 알라딘에서 보기"><span class="rl-new" data-added="2026-09-14">NEW</span><img src="https://image.yes24.com/goods/12779398/L" alt="릴케 시집 표지" loading="lazy"></a>
+      <div class="rl-meta">
+        <div class="rl-title"><a href="https://www.yes24.com/product/goods/12779398" rel="nofollow noopener noreferrer" target="_blank">릴케 시집</a></div>
+        <div class="rl-byline">라이너 마리아 릴케 · 문예출판사</div>
+        <a class="rl-source" href="https://gall.dcinside.com/mgallery/board/view/?id=yunchan&amp;no=3596" rel="nofollow noopener noreferrer" target="_blank">📺 출처 보기</a>
+      </div>
+    </li>
+    <li class="rl-item">
+      <span class="rl-num">2</span>
+      <a class="rl-cover" href="https://www.yes24.com/product/goods/166" rel="nofollow noopener noreferrer" target="_blank" aria-label="산에는 꽃이 피네 알라딘에서 보기"><span class="rl-new" data-added="2026-09-14">NEW</span><img src="https://image.yes24.com/goods/166/L" alt="산에는 꽃이 피네 표지" loading="lazy"></a>
+      <div class="rl-meta">
+        <div class="rl-title"><a href="https://www.yes24.com/product/goods/166" rel="nofollow noopener noreferrer" target="_blank">산에는 꽃이 피네</a></div>
+        <div class="rl-byline">법정 · 동쪽나라</div>
+        <a class="rl-source" href="https://gall.dcinside.com/mgallery/board/view/?id=yunchan&amp;no=3596" rel="nofollow noopener noreferrer" target="_blank">📺 출처 보기</a>
+      </div>
+    </li>
+    <li class="rl-item">
+      <span class="rl-num">3</span>
+      <a class="rl-cover" href="https://www.yes24.com/product/goods/22431294" rel="nofollow noopener noreferrer" target="_blank" aria-label="어린 왕자 알라딘에서 보기"><span class="rl-new" data-added="2026-09-14">NEW</span><img src="https://image.yes24.com/goods/22431294/L" alt="어린 왕자 표지" loading="lazy"></a>
+      <div class="rl-meta">
+        <div class="rl-title"><a href="https://www.yes24.com/product/goods/22431294" rel="nofollow noopener noreferrer" target="_blank">어린 왕자</a></div>
+        <div class="rl-byline">앙투안 드 생텍쥐페리 · 열린책들</div>
+        <a class="rl-source" href="https://gall.dcinside.com/mgallery/board/view/?id=yunchan&amp;no=3596" rel="nofollow noopener noreferrer" target="_blank">📺 출처 보기</a>
+      </div>
+      <div class="rl-shared"><span class="rl-shared-label">👥 함께 추천한 셀럽 6명:</span> <a class="rl-celeb-chip" href="https://favorbook.co.kr/share/%EC%98%88%EB%A6%AC%28%EB%A0%88%EB%93%9C%EB%B2%A8%EB%B2%B3%29.html">예리(레드벨벳)</a><a class="rl-celeb-chip" href="https://favorbook.co.kr/share/%EC%A0%95%EC%9D%80%EC%A7%80%28%EC%97%90%EC%9D%B4%ED%95%91%ED%81%AC%29.html">정은지(에이핑크)</a><a class="rl-celeb-chip" href="https://favorbook.co.kr/share/%EC%A7%84%EC%98%81%28%EA%B0%93%EC%84%B8%EB%B8%90%29.html">진영(갓세븐)</a><a class="rl-celeb-chip" href="https://favorbook.co.kr/share/%EC%9A%B0%EC%98%81%28%EC%97%90%EC%9D%B4%ED%8B%B0%EC%A6%88%29.html">우영(에이티즈)</a><a class="rl-celeb-chip" href="https://favorbook.co.kr/share/%EC%9A%B4%ED%95%99%28%EB%B3%B4%EC%9D%B4%EB%84%A5%EC%8A%A4%ED%8A%B8%EB%8F%84%EC%96%B4%29.html">운학(보이넥스트도어)</a><a class="rl-celeb-chip" href="https://favorbook.co.kr/share/%EA%B6%8C%EC%9D%80%EB%B9%84.html">권은비</a></div>
+    </li>
+    <li class="rl-item">
+      <span class="rl-num">4</span>
+      <a class="rl-cover" href="https://www.yes24.com/product/goods/1405848" rel="nofollow noopener noreferrer" target="_blank" aria-label="이탈리아 기행 알라딘에서 보기"><span class="rl-new" data-added="2026-09-14">NEW</span><img src="https://image.yes24.com/goods/1405848/L" alt="이탈리아 기행 표지" loading="lazy"></a>
+      <div class="rl-meta">
+        <div class="rl-title"><a href="https://www.yes24.com/product/goods/1405848" rel="nofollow noopener noreferrer" target="_blank">이탈리아 기행</a></div>
+        <div class="rl-byline">요한 볼프강 폰 괴테 · 민음사</div>
+        <a class="rl-source" href="https://gall.dcinside.com/mgallery/board/view/?id=yunchan&amp;no=3596" rel="nofollow noopener noreferrer" target="_blank">📺 출처 보기</a>
+      </div>
+    </li>
+    <li class="rl-item">
+      <span class="rl-num">5</span>
+      <a class="rl-cover" href="https://www.yes24.com/product/goods/92323121" rel="nofollow noopener noreferrer" target="_blank" aria-label="젊은 시인에게 보내는 편지 알라딘에서 보기"><span class="rl-new" data-added="2026-09-14">NEW</span><img src="https://image.yes24.com/goods/92323121/L" alt="젊은 시인에게 보내는 편지 표지" loading="lazy"></a>
+      <div class="rl-meta">
+        <div class="rl-title"><a href="https://www.yes24.com/product/goods/92323121" rel="nofollow noopener noreferrer" target="_blank">젊은 시인에게 보내는 편지</a></div>
+        <div class="rl-byline">라이너 마리아 릴케 · 디자인이음</div>
+        <a class="rl-source" href="https://gall.dcinside.com/mgallery/board/view/?id=yunchan&amp;no=3596" rel="nofollow noopener noreferrer" target="_blank">📺 출처 보기</a>
+      </div>
+      <div class="rl-shared"><span class="rl-shared-label">👥 함께 추천한 셀럽 3명:</span> <a class="rl-celeb-chip" href="https://favorbook.co.kr/share/%EC%9E%A5%EC%9E%AC%EC%9D%B8.html">장재인</a><a class="rl-celeb-chip" href="https://favorbook.co.kr/share/%ED%97%88%EC%9C%A4%EC%A7%84%28%EB%A5%B4%EC%84%B8%EB%9D%BC%ED%95%8C%29.html">허윤진(르세라핌)</a><a class="rl-celeb-chip" href="https://favorbook.co.kr/share/%ED%95%98%EC%98%88%EB%A6%B0.html">하예린</a></div>
+    </li>
+    <li class="rl-item">
+      <span class="rl-num">6</span>
+      <a class="rl-cover" href="https://www.yes24.com/product/goods/245524" rel="nofollow noopener noreferrer" target="_blank" aria-label="창백한 푸른 점 알라딘에서 보기"><span class="rl-new" data-added="2026-09-14">NEW</span><img src="https://image.yes24.com/goods/245524/L" alt="창백한 푸른 점 표지" loading="lazy"></a>
+      <div class="rl-meta">
+        <div class="rl-title"><a href="https://www.yes24.com/product/goods/245524" rel="nofollow noopener noreferrer" target="_blank">창백한 푸른 점</a></div>
+        <div class="rl-byline">칼 세이건 · 사이언스북스</div>
+        <a class="rl-source" href="https://gall.dcinside.com/mgallery/board/view/?id=yunchan&amp;no=3596" rel="nofollow noopener noreferrer" target="_blank">📺 출처 보기</a>
+      </div>
+    </li>
+    <li class="rl-item">
+      <span class="rl-num">7</span>
+      <a class="rl-cover" href="https://www.yes24.com/product/goods/95377075" rel="nofollow noopener noreferrer" target="_blank" aria-label="피아노 이야기 알라딘에서 보기"><span class="rl-new" data-added="2026-09-14">NEW</span><img src="https://image.yes24.com/goods/95377075/L" alt="피아노 이야기 표지" loading="lazy"></a>
+      <div class="rl-meta">
+        <div class="rl-title"><a href="https://www.yes24.com/product/goods/95377075" rel="nofollow noopener noreferrer" target="_blank">피아노 이야기</a></div>
+        <div class="rl-byline">러셀 셔먼 · 은행나무</div>
+        <a class="rl-source" href="https://gall.dcinside.com/mgallery/board/view/?id=yunchan&amp;no=3596" rel="nofollow noopener noreferrer" target="_blank">📺 출처 보기</a>
+      </div>
+    </li>
+    <li class="rl-item">
+      <span class="rl-num">8</span>
       <a class="rl-cover" href="https://www.yes24.com/product/goods/176787" rel="nofollow noopener noreferrer" target="_blank" aria-label="데미안 알라딘에서 보기"><img src="https://image.yes24.com/goods/176787/L" alt="데미안 표지" loading="lazy"></a>
       <div class="rl-meta">
         <div class="rl-title"><a href="https://www.yes24.com/product/goods/176787" rel="nofollow noopener noreferrer" target="_blank">데미안</a></div>
@@ -466,25 +539,7 @@
       <div class="rl-shared"><span class="rl-shared-label">👥 함께 추천한 셀럽 13명:</span> <a class="rl-celeb-chip" href="https://favorbook.co.kr/share/%EA%B1%B4%ED%98%B8%28%EC%BD%94%EB%A5%B4%ED%8B%B0%EC%8A%A4%29.html">건호(코르티스)</a><a class="rl-celeb-chip" href="https://favorbook.co.kr/share/%EB%82%98%EB%A6%B0%28%EB%AF%B8%EC%95%BC%EC%98%A4%29.html">나린(미야오)</a><a class="rl-celeb-chip" href="https://favorbook.co.kr/share/%EB%82%A8%EC%A7%80%ED%98%84.html">남지현</a><a class="rl-celeb-chip" href="https://favorbook.co.kr/share/%EC%95%84%EC%9D%B4%EC%9C%A0.html">아이유</a><a class="rl-celeb-chip" href="https://favorbook.co.kr/share/%EC%95%88%ED%98%95%EC%84%AD.html">안형섭</a><a class="rl-celeb-chip" href="https://favorbook.co.kr/share/%EC%98%A5%EC%83%81%EB%8B%AC%EB%B9%9B.html">옥상달빛</a><a class="rl-celeb-chip" href="https://favorbook.co.kr/share/%EC%9A%B0%EC%9B%90%EC%9E%AC.html">우원재</a><a class="rl-celeb-chip" href="https://favorbook.co.kr/share/%EC%A2%85%ED%98%84%28%EC%83%A4%EC%9D%B4%EB%8B%88%29.html">종현(샤이니)</a><a class="rl-celeb-chip" href="https://favorbook.co.kr/share/%EC%A3%BC%ED%9B%88%28%EC%BD%94%EB%A5%B4%ED%8B%B0%EC%8A%A4%29.html">주훈(코르티스)</a><a class="rl-celeb-chip" href="https://favorbook.co.kr/share/RM%28BTS%29.html">RM(BTS)</a><a class="rl-celeb-chip" href="https://favorbook.co.kr/share/%EB%B0%95%ED%98%9C%EC%88%98.html">박혜수</a><a class="rl-celeb-chip" href="https://favorbook.co.kr/share/%EB%94%94%EC%97%90%EC%9E%87%28%EC%84%B8%EB%B8%90%ED%8B%B4%29.html">디에잇(세븐틴)</a><a class="rl-celeb-chip" href="https://favorbook.co.kr/share/%EC%9C%A0%EC%95%84%28%EC%98%A4%EB%A7%88%EC%9D%B4%EA%B1%B8%29.html">유아(오마이걸)</a></div>
     </li>
     <li class="rl-item">
-      <span class="rl-num">2</span>
-      <a class="rl-cover" href="https://www.yes24.com/product/goods/12779398" rel="nofollow noopener noreferrer" target="_blank" aria-label="릴케 시집 알라딘에서 보기"><img src="https://image.yes24.com/goods/12779398/L" alt="릴케 시집 표지" loading="lazy"></a>
-      <div class="rl-meta">
-        <div class="rl-title"><a href="https://www.yes24.com/product/goods/12779398" rel="nofollow noopener noreferrer" target="_blank">릴케 시집</a></div>
-        <div class="rl-byline">라이너 마리아 릴케 · 문예출판사</div>
-        <a class="rl-source" href="https://gall.dcinside.com/mgallery/board/view/?id=yunchan&amp;no=3596" rel="nofollow noopener noreferrer" target="_blank">📺 출처 보기</a>
-      </div>
-    </li>
-    <li class="rl-item">
-      <span class="rl-num">3</span>
-      <a class="rl-cover" href="https://www.yes24.com/product/goods/166" rel="nofollow noopener noreferrer" target="_blank" aria-label="산에는 꽃이 피네 알라딘에서 보기"><img src="https://image.yes24.com/goods/166/L" alt="산에는 꽃이 피네 표지" loading="lazy"></a>
-      <div class="rl-meta">
-        <div class="rl-title"><a href="https://www.yes24.com/product/goods/166" rel="nofollow noopener noreferrer" target="_blank">산에는 꽃이 피네</a></div>
-        <div class="rl-byline">법정 · 동쪽나라</div>
-        <a class="rl-source" href="https://gall.dcinside.com/mgallery/board/view/?id=yunchan&amp;no=3596" rel="nofollow noopener noreferrer" target="_blank">📺 출처 보기</a>
-      </div>
-    </li>
-    <li class="rl-item">
-      <span class="rl-num">4</span>
+      <span class="rl-num">9</span>
       <a class="rl-cover" href="https://www.yes24.com/product/goods/75213659" rel="nofollow noopener noreferrer" target="_blank" aria-label="쇼팽을 찾아서 알라딘에서 보기"><img src="https://image.yes24.com/goods/75213659/L" alt="쇼팽을 찾아서 표지" loading="lazy"></a>
       <div class="rl-meta">
         <div class="rl-title"><a href="https://www.yes24.com/product/goods/75213659" rel="nofollow noopener noreferrer" target="_blank">쇼팽을 찾아서</a></div>
@@ -493,7 +548,7 @@
       </div>
     </li>
     <li class="rl-item">
-      <span class="rl-num">5</span>
+      <span class="rl-num">10</span>
       <a class="rl-cover" href="https://www.yes24.com/product/goods/108569727" rel="nofollow noopener noreferrer" target="_blank" aria-label="신곡 알라딘에서 보기"><img src="https://image.yes24.com/goods/108569727/L" alt="신곡 표지" loading="lazy"></a>
       <div class="rl-meta">
         <div class="rl-title"><a href="https://www.yes24.com/product/goods/108569727" rel="nofollow noopener noreferrer" target="_blank">신곡</a></div>
@@ -503,7 +558,7 @@
       <div class="rl-shared"><span class="rl-shared-label">👥 함께 추천한 셀럽 3명:</span> <a class="rl-celeb-chip" href="https://favorbook.co.kr/share/%EB%AC%B8%EA%B0%80%EC%98%81.html">문가영</a><a class="rl-celeb-chip" href="https://favorbook.co.kr/share/%EC%97%90%EB%93%9C%EC%9B%8C%EB%93%9C%20%EB%A6%AC.html">에드워드 리</a><a class="rl-celeb-chip" href="https://favorbook.co.kr/share/%EC%A7%80%EB%93%9C%EB%9E%98%EA%B3%A4%28%EB%B9%85%EB%B1%85%29.html">지드래곤(빅뱅)</a></div>
     </li>
     <li class="rl-item">
-      <span class="rl-num">6</span>
+      <span class="rl-num">11</span>
       <a class="rl-cover" href="https://www.yes24.com/product/goods/257435" rel="nofollow noopener noreferrer" target="_blank" aria-label="싯다르타 알라딘에서 보기"><img src="https://image.yes24.com/goods/257435/L" alt="싯다르타 표지" loading="lazy"></a>
       <div class="rl-meta">
         <div class="rl-title"><a href="https://www.yes24.com/product/goods/257435" rel="nofollow noopener noreferrer" target="_blank">싯다르타</a></div>
@@ -511,53 +566,6 @@
         <a class="rl-source" href="https://auditorium.kr/2023/05/%ED%94%BC%EC%95%84%EB%8B%88%EC%8A%A4%ED%8A%B8-%EC%9E%84%EC%9C%A4%EC%B0%AC-%EC%8B%A0%EB%93%9C%EB%A1%AC%EC%9D%98-%EB%82%B4%EB%A9%B4-%EA%B7%B8%EC%9D%98-%EC%8A%A4%EB%AC%BC%EC%97%90-%EB%8C%80/" rel="nofollow noopener noreferrer" target="_blank">📺 출처 보기</a>
       </div>
       <div class="rl-shared"><span class="rl-shared-label">👥 함께 추천한 셀럽 3명:</span> <a class="rl-celeb-chip" href="https://favorbook.co.kr/share/%EB%82%98%EB%A6%B0%28%EB%AF%B8%EC%95%BC%EC%98%A4%29.html">나린(미야오)</a><a class="rl-celeb-chip" href="https://favorbook.co.kr/share/%ED%97%88%EC%84%B1%EB%B2%94.html">허성범</a><a class="rl-celeb-chip" href="https://favorbook.co.kr/share/%ED%97%88%EC%9C%A4%EC%A7%84%28%EB%A5%B4%EC%84%B8%EB%9D%BC%ED%95%8C%29.html">허윤진(르세라핌)</a></div>
-    </li>
-    <li class="rl-item">
-      <span class="rl-num">7</span>
-      <a class="rl-cover" href="https://www.yes24.com/product/goods/22431294" rel="nofollow noopener noreferrer" target="_blank" aria-label="어린 왕자 알라딘에서 보기"><img src="https://image.yes24.com/goods/22431294/L" alt="어린 왕자 표지" loading="lazy"></a>
-      <div class="rl-meta">
-        <div class="rl-title"><a href="https://www.yes24.com/product/goods/22431294" rel="nofollow noopener noreferrer" target="_blank">어린 왕자</a></div>
-        <div class="rl-byline">앙투안 드 생텍쥐페리 · 열린책들</div>
-        <a class="rl-source" href="https://gall.dcinside.com/mgallery/board/view/?id=yunchan&amp;no=3596" rel="nofollow noopener noreferrer" target="_blank">📺 출처 보기</a>
-      </div>
-      <div class="rl-shared"><span class="rl-shared-label">👥 함께 추천한 셀럽 6명:</span> <a class="rl-celeb-chip" href="https://favorbook.co.kr/share/%EC%98%88%EB%A6%AC%28%EB%A0%88%EB%93%9C%EB%B2%A8%EB%B2%B3%29.html">예리(레드벨벳)</a><a class="rl-celeb-chip" href="https://favorbook.co.kr/share/%EC%A0%95%EC%9D%80%EC%A7%80%28%EC%97%90%EC%9D%B4%ED%95%91%ED%81%AC%29.html">정은지(에이핑크)</a><a class="rl-celeb-chip" href="https://favorbook.co.kr/share/%EC%A7%84%EC%98%81%28%EA%B0%93%EC%84%B8%EB%B8%90%29.html">진영(갓세븐)</a><a class="rl-celeb-chip" href="https://favorbook.co.kr/share/%EC%9A%B0%EC%98%81%28%EC%97%90%EC%9D%B4%ED%8B%B0%EC%A6%88%29.html">우영(에이티즈)</a><a class="rl-celeb-chip" href="https://favorbook.co.kr/share/%EC%9A%B4%ED%95%99%28%EB%B3%B4%EC%9D%B4%EB%84%A5%EC%8A%A4%ED%8A%B8%EB%8F%84%EC%96%B4%29.html">운학(보이넥스트도어)</a><a class="rl-celeb-chip" href="https://favorbook.co.kr/share/%EA%B6%8C%EC%9D%80%EB%B9%84.html">권은비</a></div>
-    </li>
-    <li class="rl-item">
-      <span class="rl-num">8</span>
-      <a class="rl-cover" href="https://www.yes24.com/product/goods/1405848" rel="nofollow noopener noreferrer" target="_blank" aria-label="이탈리아 기행 알라딘에서 보기"><img src="https://image.yes24.com/goods/1405848/L" alt="이탈리아 기행 표지" loading="lazy"></a>
-      <div class="rl-meta">
-        <div class="rl-title"><a href="https://www.yes24.com/product/goods/1405848" rel="nofollow noopener noreferrer" target="_blank">이탈리아 기행</a></div>
-        <div class="rl-byline">요한 볼프강 폰 괴테 · 민음사</div>
-        <a class="rl-source" href="https://gall.dcinside.com/mgallery/board/view/?id=yunchan&amp;no=3596" rel="nofollow noopener noreferrer" target="_blank">📺 출처 보기</a>
-      </div>
-    </li>
-    <li class="rl-item">
-      <span class="rl-num">9</span>
-      <a class="rl-cover" href="https://www.yes24.com/product/goods/92323121" rel="nofollow noopener noreferrer" target="_blank" aria-label="젊은 시인에게 보내는 편지 알라딘에서 보기"><img src="https://image.yes24.com/goods/92323121/L" alt="젊은 시인에게 보내는 편지 표지" loading="lazy"></a>
-      <div class="rl-meta">
-        <div class="rl-title"><a href="https://www.yes24.com/product/goods/92323121" rel="nofollow noopener noreferrer" target="_blank">젊은 시인에게 보내는 편지</a></div>
-        <div class="rl-byline">라이너 마리아 릴케 · 디자인이음</div>
-        <a class="rl-source" href="https://gall.dcinside.com/mgallery/board/view/?id=yunchan&amp;no=3596" rel="nofollow noopener noreferrer" target="_blank">📺 출처 보기</a>
-      </div>
-      <div class="rl-shared"><span class="rl-shared-label">👥 함께 추천한 셀럽 3명:</span> <a class="rl-celeb-chip" href="https://favorbook.co.kr/share/%EC%9E%A5%EC%9E%AC%EC%9D%B8.html">장재인</a><a class="rl-celeb-chip" href="https://favorbook.co.kr/share/%ED%97%88%EC%9C%A4%EC%A7%84%28%EB%A5%B4%EC%84%B8%EB%9D%BC%ED%95%8C%29.html">허윤진(르세라핌)</a><a class="rl-celeb-chip" href="https://favorbook.co.kr/share/%ED%95%98%EC%98%88%EB%A6%B0.html">하예린</a></div>
-    </li>
-    <li class="rl-item">
-      <span class="rl-num">10</span>
-      <a class="rl-cover" href="https://www.yes24.com/product/goods/245524" rel="nofollow noopener noreferrer" target="_blank" aria-label="창백한 푸른 점 알라딘에서 보기"><img src="https://image.yes24.com/goods/245524/L" alt="창백한 푸른 점 표지" loading="lazy"></a>
-      <div class="rl-meta">
-        <div class="rl-title"><a href="https://www.yes24.com/product/goods/245524" rel="nofollow noopener noreferrer" target="_blank">창백한 푸른 점</a></div>
-        <div class="rl-byline">칼 세이건 · 사이언스북스</div>
-        <a class="rl-source" href="https://gall.dcinside.com/mgallery/board/view/?id=yunchan&amp;no=3596" rel="nofollow noopener noreferrer" target="_blank">📺 출처 보기</a>
-      </div>
-    </li>
-    <li class="rl-item">
-      <span class="rl-num">11</span>
-      <a class="rl-cover" href="https://www.yes24.com/product/goods/95377075" rel="nofollow noopener noreferrer" target="_blank" aria-label="피아노 이야기 알라딘에서 보기"><img src="https://image.yes24.com/goods/95377075/L" alt="피아노 이야기 표지" loading="lazy"></a>
-      <div class="rl-meta">
-        <div class="rl-title"><a href="https://www.yes24.com/product/goods/95377075" rel="nofollow noopener noreferrer" target="_blank">피아노 이야기</a></div>
-        <div class="rl-byline">러셀 셔먼 · 은행나무</div>
-        <a class="rl-source" href="https://gall.dcinside.com/mgallery/board/view/?id=yunchan&amp;no=3596" rel="nofollow noopener noreferrer" target="_blank">📺 출처 보기</a>
-      </div>
     </li>
     <li class="rl-item">
       <span class="rl-num">12</span>
@@ -570,31 +578,8 @@
       <div class="rl-shared"><span class="rl-shared-label">👥 함께 추천한 셀럽 3명:</span> <a class="rl-celeb-chip" href="https://favorbook.co.kr/share/%EA%B3%B5%EB%AF%BC%EC%A7%80.html">공민지</a><a class="rl-celeb-chip" href="https://favorbook.co.kr/share/%EA%B9%80%EB%AF%BC%EC%A3%BC.html">김민주</a><a class="rl-celeb-chip" href="https://favorbook.co.kr/share/%ED%95%98%ED%98%84%EC%83%81.html">하현상</a></div>
     </li>
     </ol>
+    </div>
   </section>
-  <script>
-  (function () {
-    var sec = document.getElementById("shelf-sec");
-    if (!sec) return;
-    var shelf = document.getElementById("shelf"), list = document.getElementById("rlist");
-    sec.querySelectorAll(".sh-tab[data-view]").forEach(function (b) {
-      b.addEventListener("click", function () {
-        var spine = b.dataset.view === "spine";
-        shelf.hidden = !spine; list.hidden = spine;
-        sec.querySelectorAll(".sh-tab[data-view]").forEach(function (o) {
-          var on = o === b;
-          o.classList.toggle("on", on);
-          o.setAttribute("aria-pressed", on ? "true" : "false");
-        });
-        try { localStorage.setItem("fb.shelfView", b.dataset.view); } catch (e) {}
-      });
-    });
-    try {
-      if (localStorage.getItem("fb.shelfView") === "list") {
-        sec.querySelector('.sh-tab[data-view="list"]').click();
-      }
-    } catch (e) {}
-  })();
-  </script>
   <script>
   (function () {
     var btns = [document.getElementById("shelf-cap"), document.getElementById("shelf-cap-clear")]
@@ -756,14 +741,16 @@
 
     function capture(btn) {
       var clear = btn.id === "shelf-cap-clear";
-      // 숨어 있는 쪽까지 그려지지 않도록, 지금 보이는 상자 하나만 넘긴다
-      var shelf = document.getElementById("shelf");
-      var view = (shelf && !shelf.hidden) ? shelf : document.getElementById("rlist");
+      // 책장과 표지 목록을 함께 담은 상자 하나만 넘긴다
+      var view = document.getElementById("shelf-area") || document.getElementById("shelf");
       if (!view) return;
       var was = btn.textContent;
       btns.forEach(function (b) { b.disabled = true; });
       btn.textContent = "저장 중…";
       var swap = null, muted = null;
+      // 저장하는 그림에는 NEW 표시와 함께 추천한 셀럽 목록을 넣지 않는다.
+      // html2canvas가 문서를 복사할 때 이 클래스도 따라가서 복사본에서만 빠진 채 그려진다.
+      view.classList.add("is-capturing");
       guard(loadH2C(), 15000, "html2canvas").then(function () {
         swap = swapImages(view);
         return swap.ready;
@@ -794,6 +781,7 @@
       }).then(function () {
         if (swap) swap.undo.forEach(function (f) { f(); });
         if (muted) unmute(muted);
+        view.classList.remove("is-capturing");
         btns.forEach(function (b) { b.disabled = false; });
         btn.textContent = was;
       });
@@ -849,7 +837,7 @@
 
 <script>
 (function () {
-  var DAYS = 7;
+  var DAYS = 10;
   var today = new Date(); today.setHours(0, 0, 0, 0);
   document.querySelectorAll(".sp-new[data-added], .rl-new[data-added]").forEach(function (el) {
     var t = Date.parse(el.getAttribute("data-added") + "T00:00:00");

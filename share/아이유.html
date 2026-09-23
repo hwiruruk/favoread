@@ -297,15 +297,20 @@
     .shelf-head { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
     .shelf-head h2 { margin-bottom: 0; border-bottom: none; padding-bottom: 0; }
     .shelf-tabs { display: flex; gap: 6px; flex-wrap: wrap; }
-    .sh-tab, .sh-cap { font: inherit; font-size: 12px; font-weight: 700; cursor: pointer; padding: 5px 12px;
+    .sh-cap { font: inherit; font-size: 12px; font-weight: 700; cursor: pointer; padding: 5px 12px;
               background: #fff; color: #000; border: 2px solid #000; box-shadow: 2px 2px 0 0 #000; }
-    .sh-tab:hover, .sh-cap:hover { background: #fde047; }
-    .sh-tab.on { background: #000; color: #fff; }
+    .sh-cap:hover { background: #fde047; }
     .sh-cap[disabled] { opacity: .55; cursor: default; }
-    .shelf { display: flex; flex-wrap: wrap; align-items: flex-end; gap: 5px 3px;
-             margin-top: 18px; padding: 0 6px 10px; border-bottom: 5px solid #000; }
-    .shelf[hidden], .reading-list[hidden] { display: none; }
-    .sp { position: relative; flex: none; width: auto; height: 270px;
+    .shelf { --sh-h: 270px; --plank: 7px; --row: calc(var(--sh-h) + 18px);
+             display: flex; flex-wrap: wrap; align-items: flex-end; gap: 11px 2px;
+             margin: 14px 0 22px; padding: 0 8px 7px;
+             background-image: linear-gradient(to bottom, transparent var(--sh-h), #000 var(--sh-h),
+               #000 calc(var(--sh-h) + var(--plank)), transparent calc(var(--sh-h) + var(--plank)));
+             background-size: 100% var(--row); background-repeat: repeat-y; }
+    .shelf-new-note { display: flex; align-items: center; gap: 6px; margin: 10px 0 0; color: #666; font-size: 13px; }
+    .rl-new-tag { font-size: 9px; font-weight: 800; letter-spacing: .06em; line-height: 1; padding: 3px 5px;
+                  background: #fde047; color: #000; border: 1.5px solid #000; }
+    .sp { position: relative; flex: none; width: auto; height: var(--sh-h);
           background: var(--c, #555); border: 1px solid rgba(0,0,0,.45); border-radius: 2px 2px 0 0;
           box-shadow: inset -3px 0 6px rgba(0,0,0,.28), inset 3px 0 5px rgba(255,255,255,.14);
           overflow: hidden; text-decoration: none; transition: transform .12s; }
@@ -318,18 +323,21 @@
               font-size: var(--fs, 15px); font-weight: 500; letter-spacing: .01em; color: #fff;
               text-shadow: 0 1px 2px rgba(0,0,0,.55); }
     .sp-i { position: relative; z-index: 1; display: block;
-            height: 100%; width: auto; max-width: 172px; object-fit: contain; }
+            height: 100%; width: auto; max-width: 80px; object-fit: fill; }
     .sp.no-img, .sp.sp-fail { width: var(--w, 38px); }
     .sp-new { position: absolute; top: 0; left: 0; right: 0; z-index: 3; text-align: center;
               font-size: 8px; line-height: 1; padding: 3px 0 2px;
               border-bottom: 1px solid rgba(0,0,0,.55); }
     .sp.is-new .sp-t { padding-top: 22px; }
-    @media (max-width: 480px) { .shelf .sp { height: 205px; }
+    .is-capturing .sp-new, .is-capturing .rl-new, .is-capturing .rl-shared { display: none !important; }
+    .is-capturing .sp.is-new .sp-t { padding-top: 14px; }
+    @media (max-width: 480px) { .shelf { --sh-h: 205px; }
                                  .sp.no-img, .sp.sp-fail { width: calc(var(--w, 38px) * .88); }
-                                 .sp-i { max-width: 130px; }
+                                 .sp-i { max-width: 61px; }
                                  .sp-t i { font-size: calc(var(--fs, 15px) * .76); }
                                  .sp-t { padding: 10px 2px; }
-                                 .sp.is-new .sp-t { padding-top: 18px; } }
+                                 .sp.is-new .sp-t { padding-top: 18px; }
+                                 .is-capturing .sp.is-new .sp-t { padding-top: 10px; } }
     .reading-list { list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 14px; counter-reset: rl; }
     .rl-item { position: relative; background: #fff; border: 2px solid #000; box-shadow: 4px 4px 0 0 #000; padding: 14px 14px 14px 52px; transition: transform .12s, box-shadow .12s; }
     .rl-item:hover { transform: translate(-1px,-1px); box-shadow: 6px 6px 0 0 #000; }
@@ -400,29 +408,39 @@
   <section id="shelf-sec">
     <div class="shelf-head">
       <h2>📚 아이유의 독서 리스트 (10권)</h2>
-      <div class="shelf-tabs" role="tablist">
-        <button type="button" class="sh-tab on" data-view="spine" aria-pressed="true">▊ 책등</button>
-        <button type="button" class="sh-tab" data-view="list" aria-pressed="false">☰ 목록</button>
-        <button type="button" class="sh-cap" id="shelf-cap" title="지금 보고 있는 쪽을 그림으로 내려받아요">⤓ 이미지 저장</button>
+      <div class="shelf-tabs">
+        <button type="button" class="sh-cap" id="shelf-cap" title="책장을 그림으로 내려받아요">⤓ 이미지 저장</button>
         <button type="button" class="sh-cap" id="shelf-cap-clear" title="배경 없이 투명한 PNG로 내려받아요">⤓ 투명 배경</button>
       </div>
     </div>
-    <p class="muted">6권은 다른 셀럽도 함께 추천한 책이에요. 목록 보기에서 함께 추천한 셀럽 이름을 볼 수 있어요.</p>
+    <p class="muted shelf-new-note"><span class="rl-new-tag">NEW</span> 최근 10일 안에 추가된 1권을 맨 앞에 모았어요.</p>
+    <p class="muted">6권은 다른 셀럽도 함께 추천한 책이에요. 아래 목록에서 함께 추천한 셀럽 이름을 볼 수 있어요.</p>
+    <div id="shelf-area">
     <div class="shelf" id="shelf">
+    <a class="sp is-new" style="--c:hsl(176,56%,32%);--w:33px;--fs:13px" href="https://www.yes24.com/product/goods/166577463" rel="nofollow noopener noreferrer" target="_blank" title="죽은 왕녀를 위한 파반느 (양장 특별판)"><span class="sp-t"><i>죽은 왕녀를 위한 파반느</i></span><img class="sp-i" src="https://image.yes24.com/goods/166577463/side" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.parentNode.classList.add('sp-fail');this.remove()" onload="if(this.naturalWidth/this.naturalHeight>0.4){this.parentNode.classList.add('sp-fail');this.remove()}"><span class="sp-new" data-added="2026-09-19">NEW</span></a>
     <a class="sp no-img" style="--c:hsl(278,57%,40%);--w:32px;--fs:15px" href="https://www.yes24.com/product/goods/113752067" rel="nofollow noopener noreferrer" target="_blank" title="낙하하는 저녁"><span class="sp-t"><i>낙하하는 저녁</i></span></a>
     <a class="sp" style="--c:hsl(200,57%,44%);--w:38px;--fs:15px" href="https://www.yes24.com/product/goods/176787" rel="nofollow noopener noreferrer" target="_blank" title="데미안"><span class="sp-t"><i>데미안</i></span><img class="sp-i" src="https://image.yes24.com/goods/176787/side" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.parentNode.classList.add('sp-fail');this.remove()" onload="if(this.naturalWidth/this.naturalHeight>0.4){this.parentNode.classList.add('sp-fail');this.remove()}"></a>
     <a class="sp" style="--c:hsl(27,43%,33%);--w:41px;--fs:14px" href="https://www.yes24.com/product/goods/2950700" rel="nofollow noopener noreferrer" target="_blank" title="브람스를 좋아하세요..."><span class="sp-t"><i>브람스를 좋아하세요...</i></span><img class="sp-i" src="https://image.yes24.com/goods/2950700/side" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.parentNode.classList.add('sp-fail');this.remove()" onload="if(this.naturalWidth/this.naturalHeight>0.4){this.parentNode.classList.add('sp-fail');this.remove()}"></a>
     <a class="sp" style="--c:hsl(125,34%,41%);--w:30px;--fs:15px" href="https://www.yes24.com/product/goods/147560984" rel="nofollow noopener noreferrer" target="_blank" title="안녕이라 그랬어"><span class="sp-t"><i>안녕이라 그랬어</i></span><img class="sp-i" src="https://image.yes24.com/goods/147560984/side" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.parentNode.classList.add('sp-fail');this.remove()" onload="if(this.naturalWidth/this.naturalHeight>0.4){this.parentNode.classList.add('sp-fail');this.remove()}"></a>
     <a class="sp" style="--c:hsl(49,47%,41%);--w:36px;--fs:15px" href="https://www.yes24.com/product/goods/1387488" rel="nofollow noopener noreferrer" target="_blank" title="인간 실격"><span class="sp-t"><i>인간 실격</i></span><img class="sp-i" src="https://image.yes24.com/goods/1387488/side" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.parentNode.classList.add('sp-fail');this.remove()" onload="if(this.naturalWidth/this.naturalHeight>0.4){this.parentNode.classList.add('sp-fail');this.remove()}"></a>
-    <a class="sp is-new" style="--c:hsl(176,56%,32%);--w:33px;--fs:13px" href="https://www.yes24.com/product/goods/166577463" rel="nofollow noopener noreferrer" target="_blank" title="죽은 왕녀를 위한 파반느 (양장 특별판)"><span class="sp-t"><i>죽은 왕녀를 위한 파반느</i></span><img class="sp-i" src="https://image.yes24.com/goods/166577463/side" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.parentNode.classList.add('sp-fail');this.remove()" onload="if(this.naturalWidth/this.naturalHeight>0.4){this.parentNode.classList.add('sp-fail');this.remove()}"><span class="sp-new" data-added="2026-09-19">NEW</span></a>
     <a class="sp" style="--c:hsl(110,37%,47%);--w:35px;--fs:12px" href="https://www.yes24.com/product/goods/61933303" rel="nofollow noopener noreferrer" target="_blank" title="참을 수 없는 존재의 가벼움"><span class="sp-t"><i>참을 수 없는 존재의 가벼움</i></span><img class="sp-i" src="https://image.yes24.com/goods/61933303/side" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.parentNode.classList.add('sp-fail');this.remove()" onload="if(this.naturalWidth/this.naturalHeight>0.4){this.parentNode.classList.add('sp-fail');this.remove()}"></a>
     <a class="sp" style="--c:hsl(154,54%,47%);--w:30px;--fs:15px" href="https://www.yes24.com/product/goods/127160398" rel="nofollow noopener noreferrer" target="_blank" title="최선의 삶"><span class="sp-t"><i>최선의 삶</i></span><img class="sp-i" src="https://image.yes24.com/goods/127160398/side" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.parentNode.classList.add('sp-fail');this.remove()" onload="if(this.naturalWidth/this.naturalHeight>0.4){this.parentNode.classList.add('sp-fail');this.remove()}"></a>
     <a class="sp" style="--c:hsl(154,54%,47%);--w:30px;--fs:15px" href="https://www.yes24.com/product/goods/127160398" rel="nofollow noopener noreferrer" target="_blank" title="최선의 삶"><span class="sp-t"><i>최선의 삶</i></span><img class="sp-i" src="https://image.yes24.com/goods/127160398/side" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.parentNode.classList.add('sp-fail');this.remove()" onload="if(this.naturalWidth/this.naturalHeight>0.4){this.parentNode.classList.add('sp-fail');this.remove()}"></a>
     <a class="sp" style="--c:hsl(169,47%,30%);--w:34px;--fs:14px" href="https://www.yes24.com/product/goods/2710341" rel="nofollow noopener noreferrer" target="_blank" title="카라마조프가의 형제들"><span class="sp-t"><i>카라마조프가의 형제들</i></span><img class="sp-i" src="https://image.yes24.com/goods/2710341/side" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.parentNode.classList.add('sp-fail');this.remove()" onload="if(this.naturalWidth/this.naturalHeight>0.4){this.parentNode.classList.add('sp-fail');this.remove()}"></a>
     </div>
-    <ol class="reading-list" id="rlist" hidden>
+    <ol class="reading-list" id="rlist">
     <li class="rl-item">
       <span class="rl-num">1</span>
+      <a class="rl-cover" href="https://www.yes24.com/product/goods/166577463" rel="nofollow noopener noreferrer" target="_blank" aria-label="죽은 왕녀를 위한 파반느 (양장 특별판) 알라딘에서 보기"><span class="rl-new" data-added="2026-09-19">NEW</span><img src="https://image.yes24.com/goods/166577463/L" alt="죽은 왕녀를 위한 파반느 (양장 특별판) 표지" loading="lazy"></a>
+      <div class="rl-meta">
+        <div class="rl-title"><a href="https://www.yes24.com/product/goods/166577463" rel="nofollow noopener noreferrer" target="_blank">죽은 왕녀를 위한 파반느 (양장 특별판)</a></div>
+        <div class="rl-byline">박민규 · 위즈덤하우스</div>
+        <a class="rl-source" href="https://x.com/wlrmaeun/status/2026205536157565086?s=20" rel="nofollow noopener noreferrer" target="_blank">📺 출처 보기</a>
+      </div>
+      <div class="rl-shared"><span class="rl-shared-label">👥 함께 추천한 셀럽 1명:</span> <a class="rl-celeb-chip" href="https://favorbook.co.kr/share/%EC%B9%B4%EB%A6%AC%EB%82%98%28%EC%97%90%EC%8A%A4%ED%8C%8C%29.html">카리나(에스파)</a></div>
+    </li>
+    <li class="rl-item">
+      <span class="rl-num">2</span>
       <a class="rl-cover" href="https://www.yes24.com/product/goods/113752067" rel="nofollow noopener noreferrer" target="_blank" aria-label="낙하하는 저녁 알라딘에서 보기"><img src="https://image.yes24.com/goods/113752067/L" alt="낙하하는 저녁 표지" loading="lazy"></a>
       <div class="rl-meta">
         <div class="rl-title"><a href="https://www.yes24.com/product/goods/113752067" rel="nofollow noopener noreferrer" target="_blank">낙하하는 저녁</a></div>
@@ -430,7 +448,7 @@
       </div>
     </li>
     <li class="rl-item">
-      <span class="rl-num">2</span>
+      <span class="rl-num">3</span>
       <a class="rl-cover" href="https://www.yes24.com/product/goods/176787" rel="nofollow noopener noreferrer" target="_blank" aria-label="데미안 알라딘에서 보기"><img src="https://image.yes24.com/goods/176787/L" alt="데미안 표지" loading="lazy"></a>
       <div class="rl-meta">
         <div class="rl-title"><a href="https://www.yes24.com/product/goods/176787" rel="nofollow noopener noreferrer" target="_blank">데미안</a></div>
@@ -439,7 +457,7 @@
       <div class="rl-shared"><span class="rl-shared-label">👥 함께 추천한 셀럽 13명:</span> <a class="rl-celeb-chip" href="https://favorbook.co.kr/share/%EA%B1%B4%ED%98%B8%28%EC%BD%94%EB%A5%B4%ED%8B%B0%EC%8A%A4%29.html">건호(코르티스)</a><a class="rl-celeb-chip" href="https://favorbook.co.kr/share/%EB%82%98%EB%A6%B0%28%EB%AF%B8%EC%95%BC%EC%98%A4%29.html">나린(미야오)</a><a class="rl-celeb-chip" href="https://favorbook.co.kr/share/%EB%82%A8%EC%A7%80%ED%98%84.html">남지현</a><a class="rl-celeb-chip" href="https://favorbook.co.kr/share/%EC%95%88%ED%98%95%EC%84%AD.html">안형섭</a><a class="rl-celeb-chip" href="https://favorbook.co.kr/share/%EC%98%A5%EC%83%81%EB%8B%AC%EB%B9%9B.html">옥상달빛</a><a class="rl-celeb-chip" href="https://favorbook.co.kr/share/%EC%9A%B0%EC%9B%90%EC%9E%AC.html">우원재</a><a class="rl-celeb-chip" href="https://favorbook.co.kr/share/%EC%A2%85%ED%98%84%28%EC%83%A4%EC%9D%B4%EB%8B%88%29.html">종현(샤이니)</a><a class="rl-celeb-chip" href="https://favorbook.co.kr/share/%EC%A3%BC%ED%9B%88%28%EC%BD%94%EB%A5%B4%ED%8B%B0%EC%8A%A4%29.html">주훈(코르티스)</a><a class="rl-celeb-chip" href="https://favorbook.co.kr/share/RM%28BTS%29.html">RM(BTS)</a><a class="rl-celeb-chip" href="https://favorbook.co.kr/share/%EC%9E%84%EC%9C%A4%EC%B0%AC.html">임윤찬</a><a class="rl-celeb-chip" href="https://favorbook.co.kr/share/%EB%B0%95%ED%98%9C%EC%88%98.html">박혜수</a><a class="rl-celeb-chip" href="https://favorbook.co.kr/share/%EB%94%94%EC%97%90%EC%9E%87%28%EC%84%B8%EB%B8%90%ED%8B%B4%29.html">디에잇(세븐틴)</a><a class="rl-celeb-chip" href="https://favorbook.co.kr/share/%EC%9C%A0%EC%95%84%28%EC%98%A4%EB%A7%88%EC%9D%B4%EA%B1%B8%29.html">유아(오마이걸)</a></div>
     </li>
     <li class="rl-item">
-      <span class="rl-num">3</span>
+      <span class="rl-num">4</span>
       <a class="rl-cover" href="https://www.yes24.com/product/goods/2950700" rel="nofollow noopener noreferrer" target="_blank" aria-label="브람스를 좋아하세요... 알라딘에서 보기"><img src="https://image.yes24.com/goods/2950700/L" alt="브람스를 좋아하세요... 표지" loading="lazy"></a>
       <div class="rl-meta">
         <div class="rl-title"><a href="https://www.yes24.com/product/goods/2950700" rel="nofollow noopener noreferrer" target="_blank">브람스를 좋아하세요...</a></div>
@@ -449,7 +467,7 @@
       <div class="rl-shared"><span class="rl-shared-label">👥 함께 추천한 셀럽 2명:</span> <a class="rl-celeb-chip" href="https://favorbook.co.kr/share/%EC%A3%BC%EC%97%B0%28%EB%8D%94%EB%B3%B4%EC%9D%B4%EC%A6%88%29.html">주연(더보이즈)</a><a class="rl-celeb-chip" href="https://favorbook.co.kr/share/%EC%B9%B4%EB%A6%AC%EB%82%98%28%EC%97%90%EC%8A%A4%ED%8C%8C%29.html">카리나(에스파)</a></div>
     </li>
     <li class="rl-item">
-      <span class="rl-num">4</span>
+      <span class="rl-num">5</span>
       <a class="rl-cover" href="https://www.yes24.com/product/goods/147560984" rel="nofollow noopener noreferrer" target="_blank" aria-label="안녕이라 그랬어 알라딘에서 보기"><img src="https://image.yes24.com/goods/147560984/L" alt="안녕이라 그랬어 표지" loading="lazy"></a>
       <div class="rl-meta">
         <div class="rl-title"><a href="https://www.yes24.com/product/goods/147560984" rel="nofollow noopener noreferrer" target="_blank">안녕이라 그랬어</a></div>
@@ -459,23 +477,13 @@
       <div class="rl-shared"><span class="rl-shared-label">👥 함께 추천한 셀럽 7명:</span> <a class="rl-celeb-chip" href="https://favorbook.co.kr/share/%EB%85%B8%EC%A0%9C.html">노제</a><a class="rl-celeb-chip" href="https://favorbook.co.kr/share/%EA%B9%80%EC%84%A4%ED%98%84.html">김설현</a><a class="rl-celeb-chip" href="https://favorbook.co.kr/share/%EC%A3%BC%ED%9B%88%28%EC%BD%94%EB%A5%B4%ED%8B%B0%EC%8A%A4%29.html">주훈(코르티스)</a><a class="rl-celeb-chip" href="https://favorbook.co.kr/share/%EC%B9%B4%EB%A6%AC%EB%82%98%28%EC%97%90%EC%8A%A4%ED%8C%8C%29.html">카리나(에스파)</a><a class="rl-celeb-chip" href="https://favorbook.co.kr/share/%ED%85%8C%EC%98%A4%28P%EC%9B%90%ED%95%98%EB%AA%A8%EB%8B%88%29.html">테오(P원하모니)</a><a class="rl-celeb-chip" href="https://favorbook.co.kr/share/%EB%B0%B1%EC%A7%84%ED%9D%AC.html">백진희</a><a class="rl-celeb-chip" href="https://favorbook.co.kr/share/%EC%A7%80%EC%9B%85%28P%EC%9B%90%ED%95%98%EB%AA%A8%EB%8B%88%29.html">지웅(P원하모니)</a></div>
     </li>
     <li class="rl-item">
-      <span class="rl-num">5</span>
+      <span class="rl-num">6</span>
       <a class="rl-cover" href="https://www.yes24.com/product/goods/1387488" rel="nofollow noopener noreferrer" target="_blank" aria-label="인간 실격 알라딘에서 보기"><img src="https://image.yes24.com/goods/1387488/L" alt="인간 실격 표지" loading="lazy"></a>
       <div class="rl-meta">
         <div class="rl-title"><a href="https://www.yes24.com/product/goods/1387488" rel="nofollow noopener noreferrer" target="_blank">인간 실격</a></div>
         <div class="rl-byline">다자이 오사무 · 민음사</div>
       </div>
       <div class="rl-shared"><span class="rl-shared-label">👥 함께 추천한 셀럽 10명:</span> <a class="rl-celeb-chip" href="https://favorbook.co.kr/share/%EA%B3%B5%EB%AF%BC%EC%A7%80.html">공민지</a><a class="rl-celeb-chip" href="https://favorbook.co.kr/share/%EB%82%98%EB%A6%B0%28%EB%AF%B8%EC%95%BC%EC%98%A4%29.html">나린(미야오)</a><a class="rl-celeb-chip" href="https://favorbook.co.kr/share/%EB%8B%9D%EB%8B%9D%28%EC%97%90%EC%8A%A4%ED%8C%8C%29.html">닝닝(에스파)</a><a class="rl-celeb-chip" href="https://favorbook.co.kr/share/%EC%84%B1%ED%98%84%28%EC%BD%94%EB%A5%B4%ED%8B%B0%EC%8A%A4%29.html">성현(코르티스)</a><a class="rl-celeb-chip" href="https://favorbook.co.kr/share/%EC%8B%A0%EC%8B%9C%EC%95%84.html">신시아</a><a class="rl-celeb-chip" href="https://favorbook.co.kr/share/%EC%A7%84%EC%98%81%28%EA%B0%93%EC%84%B8%EB%B8%90%29.html">진영(갓세븐)</a><a class="rl-celeb-chip" href="https://favorbook.co.kr/share/%ED%85%8C%EC%98%A4%28P%EC%9B%90%ED%95%98%EB%AA%A8%EB%8B%88%29.html">테오(P원하모니)</a><a class="rl-celeb-chip" href="https://favorbook.co.kr/share/%ED%97%88%EC%9C%A4%EC%A7%84%28%EB%A5%B4%EC%84%B8%EB%9D%BC%ED%95%8C%29.html">허윤진(르세라핌)</a><a class="rl-celeb-chip" href="https://favorbook.co.kr/share/%ED%99%8D%EA%B2%BD.html">홍경</a><a class="rl-celeb-chip" href="https://favorbook.co.kr/share/%EA%B9%80%EB%AF%BC%EC%A3%BC.html">김민주</a></div>
-    </li>
-    <li class="rl-item">
-      <span class="rl-num">6</span>
-      <a class="rl-cover" href="https://www.yes24.com/product/goods/166577463" rel="nofollow noopener noreferrer" target="_blank" aria-label="죽은 왕녀를 위한 파반느 (양장 특별판) 알라딘에서 보기"><span class="rl-new" data-added="2026-09-19">NEW</span><img src="https://image.yes24.com/goods/166577463/L" alt="죽은 왕녀를 위한 파반느 (양장 특별판) 표지" loading="lazy"></a>
-      <div class="rl-meta">
-        <div class="rl-title"><a href="https://www.yes24.com/product/goods/166577463" rel="nofollow noopener noreferrer" target="_blank">죽은 왕녀를 위한 파반느 (양장 특별판)</a></div>
-        <div class="rl-byline">박민규 · 위즈덤하우스</div>
-        <a class="rl-source" href="https://x.com/wlrmaeun/status/2026205536157565086?s=20" rel="nofollow noopener noreferrer" target="_blank">📺 출처 보기</a>
-      </div>
-      <div class="rl-shared"><span class="rl-shared-label">👥 함께 추천한 셀럽 1명:</span> <a class="rl-celeb-chip" href="https://favorbook.co.kr/share/%EC%B9%B4%EB%A6%AC%EB%82%98%28%EC%97%90%EC%8A%A4%ED%8C%8C%29.html">카리나(에스파)</a></div>
     </li>
     <li class="rl-item">
       <span class="rl-num">7</span>
@@ -515,31 +523,8 @@
       </div>
     </li>
     </ol>
+    </div>
   </section>
-  <script>
-  (function () {
-    var sec = document.getElementById("shelf-sec");
-    if (!sec) return;
-    var shelf = document.getElementById("shelf"), list = document.getElementById("rlist");
-    sec.querySelectorAll(".sh-tab[data-view]").forEach(function (b) {
-      b.addEventListener("click", function () {
-        var spine = b.dataset.view === "spine";
-        shelf.hidden = !spine; list.hidden = spine;
-        sec.querySelectorAll(".sh-tab[data-view]").forEach(function (o) {
-          var on = o === b;
-          o.classList.toggle("on", on);
-          o.setAttribute("aria-pressed", on ? "true" : "false");
-        });
-        try { localStorage.setItem("fb.shelfView", b.dataset.view); } catch (e) {}
-      });
-    });
-    try {
-      if (localStorage.getItem("fb.shelfView") === "list") {
-        sec.querySelector('.sh-tab[data-view="list"]').click();
-      }
-    } catch (e) {}
-  })();
-  </script>
   <script>
   (function () {
     var btns = [document.getElementById("shelf-cap"), document.getElementById("shelf-cap-clear")]
@@ -701,14 +686,16 @@
 
     function capture(btn) {
       var clear = btn.id === "shelf-cap-clear";
-      // 숨어 있는 쪽까지 그려지지 않도록, 지금 보이는 상자 하나만 넘긴다
-      var shelf = document.getElementById("shelf");
-      var view = (shelf && !shelf.hidden) ? shelf : document.getElementById("rlist");
+      // 책장과 표지 목록을 함께 담은 상자 하나만 넘긴다
+      var view = document.getElementById("shelf-area") || document.getElementById("shelf");
       if (!view) return;
       var was = btn.textContent;
       btns.forEach(function (b) { b.disabled = true; });
       btn.textContent = "저장 중…";
       var swap = null, muted = null;
+      // 저장하는 그림에는 NEW 표시와 함께 추천한 셀럽 목록을 넣지 않는다.
+      // html2canvas가 문서를 복사할 때 이 클래스도 따라가서 복사본에서만 빠진 채 그려진다.
+      view.classList.add("is-capturing");
       guard(loadH2C(), 15000, "html2canvas").then(function () {
         swap = swapImages(view);
         return swap.ready;
@@ -739,6 +726,7 @@
       }).then(function () {
         if (swap) swap.undo.forEach(function (f) { f(); });
         if (muted) unmute(muted);
+        view.classList.remove("is-capturing");
         btns.forEach(function (b) { b.disabled = false; });
         btn.textContent = was;
       });
@@ -794,7 +782,7 @@
 
 <script>
 (function () {
-  var DAYS = 7;
+  var DAYS = 10;
   var today = new Date(); today.setHours(0, 0, 0, 0);
   document.querySelectorAll(".sp-new[data-added], .rl-new[data-added]").forEach(function (el) {
     var t = Date.parse(el.getAttribute("data-added") + "T00:00:00");
