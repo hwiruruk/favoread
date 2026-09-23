@@ -323,6 +323,17 @@ def josa_iga(name):
     return '이' if has else '가'
 
 
+def display_name(name):
+    """글·이미지에 쓰는 이름: '주훈(코르티스)' → '코르티스 주훈'.
+
+    괄호 안이 숫자뿐이면(동명이인 구분용 '유라(1993)') 그대로 둔다.
+    """
+    m = re.match(r'^(.*?)\s*\((.+?)\)$', name)
+    if not m or m.group(2).strip().isdigit():
+        return name
+    return m.group(2).strip() + ' ' + m.group(1).strip()
+
+
 def byline(b):
     """'양귀자 | 쓰다' — 저자나 출판사가 비면 있는 것만."""
     return ' | '.join(x for x in ((b.get('author') or '').strip(), (b.get('publisher') or '').strip()) if x)
@@ -395,9 +406,9 @@ def make_shelf_item(kind, name, celeb, books, series, ctx):
     total = len(dedupe_books(celeb['books']))
     srcs = [source_info(b.get('source'), ctx['sources'], ctx['offline']) for b in books]
     if kind == 'new':
-        head = '🆕 ' + name + josa_iga(name) + ' 읽은 책\n\n'
+        head = '🆕 ' + display_name(name) + josa_iga(name) + ' 읽은 책\n\n'
     else:
-        head = '📚 ' + name + '의 책장\n\n'
+        head = '📚 ' + display_name(name) + '의 책장\n\n'
     url = celeb_url(name, celeb)
     tags = ' '.join([HASHTAG] + hashtags_for(name)[:2])
     tail = '\n\n전체 목록(' + str(total) + '권)\n' + url + '\n\n' + tags
@@ -415,7 +426,7 @@ def make_shelf_item(kind, name, celeb, books, series, ctx):
         'thread': thread,
         'url': url,
         'image': {
-            'name': name,
+            'name': display_name(name),
             'series': series,
             'total': total,
             'portrait': celeb.get('imageUrl') or '',
@@ -433,7 +444,7 @@ def make_book_item(title, entry, shortlinks, ctx):
     tail = '\n\n전체 목록:\n' + url + '\n\n' + HASHTAG
     text = None
     for keep in range(len(names), 0, -1):
-        shown = ', '.join(names[:keep])
+        shown = ', '.join(display_name(n) for n in names[:keep])
         rest = len(names) - keep
         if rest:
             shown += ' 외 ' + str(rest) + '명'
@@ -451,7 +462,7 @@ def make_book_item(title, entry, shortlinks, ctx):
         'url': url,
         'image': {
             'book': image_book(book, ''),
-            'names': names,
+            'names': [display_name(n) for n in names],
             'portraits': [ctx['celebs'][n].get('imageUrl') or '' for n in names],
         },
     }
@@ -606,6 +617,7 @@ def export_books(ctx, date_str):
         out[name] = {
             'url': celeb_url(name, c),
             'portrait': c.get('imageUrl') or '',
+            'display': display_name(name),
             'josa': josa_iga(name),
             'tags': ' '.join([HASHTAG] + hashtags_for(name)[:2]),
             'books': [dict(image_book(dict(b, emoji=book_emoji(b['title'], ctx['emoji'])),

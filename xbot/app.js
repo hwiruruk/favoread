@@ -731,7 +731,7 @@ function makePickedItem(name, books) {
   const mark = picker.books.mark || '';
   const series = ((picker.state.series || {})[name] || 0) + 1;
   const lines = books.map((b) => b.emoji + ' ' + b.title + (b.by ? '(' + b.by + ')' : '') + (b.src ? ' ' + mark + b.src : ''));
-  const head = '📚 ' + name + '의 책장\n\n';
+  const head = '📚 ' + (c.display || name) + '의 책장\n\n';
   const tail = '\n\n전체 목록(' + c.books.length + '권)\n' + c.url + '\n\n' + c.tags;
   const [text, used] = fitLines(head, lines, tail);
   return {
@@ -743,7 +743,7 @@ function makePickedItem(name, books) {
     text,
     thread: [text].concat(threadReplies(lines.slice(used))),
     url: c.url,
-    image: { name, series, total: c.books.length, portrait: c.portrait, books },
+    image: { name: c.display || name, series, total: c.books.length, portrait: c.portrait, books },
   };
 }
 
@@ -763,6 +763,7 @@ async function openPicker() {
   Object.keys(picker.books.celebs).sort((a, b) => a.localeCompare(b, 'ko')).forEach((n) => {
     const o = document.createElement('option');
     o.value = n;
+    if (picker.books.celebs[n].display !== n) o.label = picker.books.celebs[n].display;
     dl.appendChild(o);
   });
   $('#pickInfo').textContent = '인물 ' + dl.children.length + '명 중에서 고르세요.';
