@@ -15,6 +15,7 @@ const PROXY = 'https://images.weserv.nl/?url=';
 const INTENT = 'https://x.com/intent/post?text=';
 const DONE_KEY = 'xbot-done';
 const BG_KEY = 'xbot-bg';
+const STYLE_KEY = 'xbot-style';
 
 const WIDE = [1200, 675];     // 16:9
 const TALL = [1080, 1215];    // 8:9
@@ -25,7 +26,7 @@ const INK = '#161616', MUTE = '#6e6e6e', LINE = '#e6e3dc';
 const ACCENT = { celeb: '#2f5d8a', new: '#c8453a', book: '#2f7a5b' };
 
 const $ = (s, el = document) => el.querySelector(s);
-const state = { days: [], day: null, bg: 'white' };
+const state = { days: [], day: null, bg: 'white', style: 'card' };
 
 /* ---------- 브라우저 저장 (이 브라우저에만) ---------- */
 function store(key, val) {
@@ -81,13 +82,12 @@ function loadImage(u, w) {
 
 // 캔버스에만 쓰는 글꼴은 저절로 내려받지 않으니 미리 불러 둔다
 const fontsReady = Promise.all([
-  '700 62px "KoPubWorld Batang"',
   '700 26px "KoPubWorld Dotum"',
   '500 26px "KoPubWorld Dotum"',
 ].map((f) => document.fonts.load(f, '가A'))).catch(() => {});
 
-/* ---------- 글자 ---------- */
-const BATANG = (px, w = 700) => w + ' ' + px + 'px "KoPubWorld Batang", serif';
+/* ---------- 글자 ----------
+ * 이미지 글자는 전부 코펍월드 돋움. 제목은 굵게(700), 나머지는 보통(500). */
 const DOTUM = (px, w = 500) => w + ' ' + px + 'px "KoPubWorld Dotum", sans-serif';
 
 // 한글은 띄어쓰기 없이도 줄을 바꿀 수 있어서 글자 단위로 자른다
@@ -262,9 +262,9 @@ async function drawShelfCover(size, img, type, opts) {
   ctx.fillText(type === 'new' ? 'NEW · 새로 들어온 책' : '최애의 독서', tx, y);
 
   ctx.fillStyle = INK;
-  ctx.font = BATANG(Math.round(76 * s));
+  ctx.font = DOTUM(Math.round(76 * s), 700);
   y = drawLines(ctx, wrap(ctx, img.name, tw, 2), tx, y + 96 * s, 90 * s);
-  ctx.font = BATANG(Math.round(56 * s));
+  ctx.font = DOTUM(Math.round(56 * s), 700);
   y = drawLines(ctx, ['의 책장'], tx, y - 10 * s, 70 * s);
 
   ctx.fillStyle = MUTE;
@@ -306,7 +306,7 @@ async function drawShelfBooks(size, books, type, opts, pageLabel) {
     const tx = r.x + r.w + pad, tw = W - tx - pad;
     let y = H * 0.36;
     ctx.fillStyle = INK;
-    ctx.font = BATANG(Math.round(54 * s));
+    ctx.font = DOTUM(Math.round(54 * s), 700);
     y = drawLines(ctx, wrap(ctx, b.emoji + ' ' + b.title, tw, 3), tx, y, 70 * s);
     ctx.fillStyle = MUTE;
     ctx.font = DOTUM(Math.round(30 * s));
@@ -335,7 +335,7 @@ async function drawShelfBooks(size, books, type, opts, pageLabel) {
       const cx = pad + i * (colW + gap) + colW / 2;
       let y = box.y + box.h + 30 * s + titlePx;
       ctx.fillStyle = INK;
-      ctx.font = BATANG(titlePx);
+      ctx.font = DOTUM(titlePx, 700);
       y = drawLines(ctx, wrap(ctx, b.emoji + ' ' + b.title, colW, 2), cx, y, titlePx * 1.3, 'center');
       ctx.fillStyle = MUTE;
       ctx.font = DOTUM(Math.round((wide ? 23 : 28) * s));
@@ -368,7 +368,7 @@ async function drawBookCard(img, opts) {
   ctx.font = DOTUM(Math.round(30 * s), 700);
   ctx.fillText('셀럽 ' + img.names.length + '명이 읽은 책', tx, y);
   ctx.fillStyle = INK;
-  ctx.font = BATANG(Math.round(64 * s));
+  ctx.font = DOTUM(Math.round(64 * s), 700);
   y = drawLines(ctx, wrap(ctx, b.title, tw, 3), tx, y + 100 * s, 80 * s);
   ctx.fillStyle = MUTE;
   ctx.font = DOTUM(Math.round(30 * s));
@@ -394,6 +394,179 @@ async function drawBookCard(img, opts) {
   return c;
 }
 
+/* ---------- 채팅 디자인 ----------
+ * '최애의 독서'가 채팅방에서 책을 소개하는 모양. 말하는 사람은 언제나
+ * '최애의 독서'이고, 인물 본인이 보낸 메시지처럼 꾸미지 않는다(인증 마크·1인칭 없음).
+ * 편집기에서 승인된 코멘트(3인칭 정리글)가 있는 책은 출처와 함께 말풍선으로 덧붙인다. */
+const BUBBLE = '#eef0f4';
+
+function roundRectPath(ctx, x, y, w, h, r) {
+  ctx.beginPath();
+  if (ctx.roundRect) ctx.roundRect(x, y, w, h, r);
+  else ctx.rect(x, y, w, h);
+}
+
+// 대화방 윗줄: 동그란 로고 + '최애의 독서'
+function chatHeader(ctx, x, y, s, accent) {
+  const r = 30 * s;
+  ctx.fillStyle = accent;
+  ctx.beginPath();
+  ctx.arc(x + r, y + r, r, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.font = Math.round(30 * s) + 'px sans-serif';
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+  ctx.fillText('📚', x + r, y + r + 2 * s);
+  ctx.textAlign = 'left';
+  ctx.textBaseline = 'alphabetic';
+  ctx.fillStyle = INK;
+  ctx.font = DOTUM(Math.round(28 * s), 700);
+  ctx.fillText('최애의 독서', x + r * 2 + 16 * s, y + r + 10 * s);
+  return y + r * 2 + 18 * s;
+}
+
+// 글 말풍선. 글 길이에 맞춰 폭을 줄인다. 아래 끝 y 를 돌려준다
+function textBubble(ctx, x, y, maxW, text, s, o = {}) {
+  const px = Math.round((o.px || 30) * s), lh = px * 1.45, padX = 26 * s, padY = 20 * s;
+  ctx.font = DOTUM(px, o.weight || 500);
+  // o.names 가 있으면 이름 단위로 줄을 바꾼다(이름 중간에서 안 끊김)
+  const lines = o.names
+    ? wrapNames(ctx, o.names, maxW - padX * 2, o.maxLines || 4)
+    : wrap(ctx, text, maxW - padX * 2, o.maxLines || 4);
+  const w = Math.min(maxW, Math.max(...lines.map((l) => ctx.measureText(l).width)) + padX * 2);
+  const capPx = Math.round(20 * s);
+  const h = padY * 2 + lh * lines.length - (lh - px) + (o.caption ? capPx * 1.8 : 0);
+  ctx.fillStyle = o.bg || BUBBLE;
+  roundRectPath(ctx, x, y, w, h, 26 * s);
+  ctx.fill();
+  ctx.fillStyle = o.color || INK;
+  ctx.font = DOTUM(px, o.weight || 500);
+  drawLines(ctx, lines, x + padX, y + padY + px * 0.85, lh);
+  if (o.caption) {
+    ctx.fillStyle = MUTE;
+    ctx.font = DOTUM(capPx, 500);
+    ctx.fillText(o.caption, x + padX, y + h - padY * 0.9);
+  }
+  return y + h;
+}
+
+// 책 카드 말풍선: 진한 바탕에 표지 + 제목·저자·출처
+function bookBubble(ctx, x, y, w, h, book, im, accent, s) {
+  ctx.fillStyle = accent;
+  roundRectPath(ctx, x, y, w, h, 26 * s);
+  ctx.fill();
+  const pad = 22 * s;
+  const r = drawCover(ctx, im, { x: x + pad, y: y + pad, w: (h - pad * 2) * 0.7, h: h - pad * 2 }, 'center', book.emoji);
+  const tx = r.x + r.w + pad, tw = x + w - tx - pad;
+  const px = Math.round(34 * s);
+  ctx.fillStyle = '#ffffff';
+  ctx.font = DOTUM(px, 700);
+  let ty = y + pad + px;
+  ty = drawLines(ctx, wrap(ctx, book.emoji + ' ' + book.title, tw, 3), tx, ty, px * 1.3);
+  ctx.fillStyle = 'rgba(255,255,255,.82)';
+  ctx.font = DOTUM(Math.round(24 * s));
+  ty = drawLines(ctx, wrap(ctx, book.by, tw, 2), tx, ty + 4 * s, 32 * s);
+  if (book.src) {
+    ctx.fillStyle = 'rgba(255,255,255,.7)';
+    ctx.font = DOTUM(Math.round(21 * s), 700);
+    drawLines(ctx, wrap(ctx, book.src, tw, 1), tx, ty + 6 * s, 28 * s);
+  }
+}
+
+async function drawChatCover(size, img, type, opts) {
+  const { c, ctx, W, H } = newCanvas(size, opts.bg);
+  const accent = ACCENT[type];
+  const s = W / 1200, pad = Math.round(56 * s), wide = W > H;
+  const photo = opts.portrait && img.portrait ? await loadImage(img.portrait, 1000) : null;
+  let y = chatHeader(ctx, pad, pad * 0.8, s, accent);
+  const maxW = wide ? W * 0.56 : W - pad * 2;
+  const n = img.books.length;
+  y = textBubble(ctx, pad, y, maxW,
+    type === 'new' ? img.name + ' 책장에 새 책이 들어왔어요 🆕' : img.name + '의 책장을 열어 볼게요 📚', s, { px: 34, weight: 700 });
+  y = textBubble(ctx, pad, y + 14 * s, maxW,
+    type === 'new' ? n + '권 추가 · 전체 ' + img.total + '권' : '전체 ' + img.total + '권 중 ' + n + '권 골라 왔어요', s);
+  // 사진(또는 표지 모음) 말풍선: 넓은 판은 오른쪽, 좁은 판은 아래
+  const box = wide
+    ? { x: W * 0.62, y: pad * 0.8, w: W * 0.38 - pad, h: H - pad * 2.2 }
+    : { x: pad, y: y + 20 * s, w: W - pad * 2, h: H - (y + 20 * s) - pad * 1.6 };
+  if (photo) {
+    drawPhoto(ctx, photo, box, 26 * s);
+  } else {
+    ctx.fillStyle = BUBBLE;
+    roundRectPath(ctx, box.x, box.y, box.w, box.h, 26 * s);
+    ctx.fill();
+    const covers = await Promise.all(img.books.map((b) => loadImage(b.cover, 400)));
+    const cols = n <= 2 ? n : (wide ? 2 : 3), rows = Math.ceil(n / cols), gap = 14 * s, ip = 24 * s;
+    const cw = (box.w - ip * 2 - gap * (cols - 1)) / cols;
+    const ch = Math.min((box.h - ip * 2 - gap * (rows - 1)) / rows, cw / 0.68);
+    const y0 = box.y + (box.h - (ch * rows + gap * (rows - 1))) / 2;
+    covers.forEach((im, i) => drawCover(ctx, im,
+      { x: box.x + ip + (i % cols) * (cw + gap), y: y0 + Math.floor(i / cols) * (ch + gap), w: cw, h: ch }, 'center', img.books[i].emoji));
+  }
+  ctx.font = DOTUM(Math.round(22 * s), 700);
+  ctx.fillStyle = MUTE;
+  ctx.textAlign = 'right';
+  ctx.fillText('#' + img.series, W - pad * 0.5, pad * 0.5 + 12 * s);
+  ctx.textAlign = 'left';
+  drawFooter(ctx, W, H, pad, '');
+  return c;
+}
+
+async function drawChatBooks(size, books, type, opts, pageLabel) {
+  const { c, ctx, W, H } = newCanvas(size, opts.bg);
+  const accent = ACCENT[type];
+  const s = W / 1200, pad = Math.round(56 * s), wide = W > H;
+  const covers = await Promise.all(books.map((b) => loadImage(b.cover, 500)));
+  const top = chatHeader(ctx, pad, pad * 0.8, s, accent);
+  // 넓은 판은 책을 나란히, 좁은 판은 위아래로
+  const n = books.length, gap = 28 * s;
+  const colW = wide ? (W - pad * 2 - gap * (n - 1)) / n : W - pad * 2;
+  const areaH = H - top - pad * 1.6;
+  const rowH = wide ? areaH : (areaH - gap * (n - 1)) / n;
+  books.forEach((b, i) => {
+    const x = wide ? pad + i * (colW + gap) : pad;
+    const y = wide ? top : top + i * (rowH + gap);
+    const cardH = b.note ? Math.min(rowH * 0.5, 300 * s) : Math.min(rowH, 340 * s);
+    bookBubble(ctx, x, y, colW, cardH, b, covers[i], accent, s);
+    if (b.note) {
+      const lines = Math.max(2, Math.floor((rowH - cardH - 14 * s - 80 * s) / (26 * s * 1.45)));
+      textBubble(ctx, x, y + cardH + 14 * s, colW, '💬 ' + b.note, s,
+        { px: 26, maxLines: lines, caption: b.noteSrc ? '출처 · ' + b.noteSrc : '' });
+    }
+  });
+  drawFooter(ctx, W, H, pad, pageLabel);
+  return c;
+}
+
+async function drawChatBookCard(img, opts) {
+  const { c, ctx, W, H } = newCanvas(SQUARE, opts.bg);
+  const accent = ACCENT.book;
+  const s = W / 1200, pad = Math.round(64 * s);
+  const b = img.book;
+  let y = chatHeader(ctx, pad, pad * 0.8, s, accent);
+  y = textBubble(ctx, pad, y, W - pad * 2, b.title + ' 읽은 사람 모여라~', s, { px: 38, weight: 700 });
+  const cover = await loadImage(b.cover, 600);
+  bookBubble(ctx, pad, y + 16 * s, W * 0.72, 330 * s, b, cover, accent, s);
+  y += 16 * s + 330 * s + 16 * s;
+  if (opts.portrait) {
+    const photos = (await Promise.all(img.portraits.slice(0, 7).map((u) => loadImage(u, 300)))).filter(Boolean);
+    if (photos.length) {
+      const rad = 50 * s, step = rad * 2 + 18 * s;
+      const w = Math.min(W - pad * 2, photos.length * step + 36 * s);
+      ctx.fillStyle = BUBBLE;
+      roundRectPath(ctx, pad, y, w, rad * 2 + 36 * s, 26 * s);
+      ctx.fill();
+      photos.forEach((im, i) => drawCircle(ctx, im, pad + 18 * s + rad + i * step, y + 18 * s + rad, rad));
+      y += rad * 2 + 36 * s + 16 * s;
+    }
+  }
+  y = textBubble(ctx, pad, y, W - pad * 2, img.names.length + '명이 읽었어요 👀', s, { px: 32, weight: 700 }) + 14 * s;
+  const maxLines = Math.max(1, Math.floor((H - pad * 1.8 - y - 50 * s) / (32 * s * 1.45)));
+  textBubble(ctx, pad, y, W - pad * 2, '', s, { px: 32, names: img.names, maxLines });
+  drawFooter(ctx, W, H, pad, '');
+  return c;
+}
+
 /* ---------- 한 트윗의 이미지 묶음 ---------- */
 
 // 책을 n 장에 앞에서부터 고르게 나눈다(6권 → 2,2,2 / 5권 → 2,2,1 / 4권 → 2,1,1)
@@ -411,16 +584,17 @@ function chunk(books, n) {
 async function buildImages(it, opts) {
   await fontsReady;
   const img = it.image || {};
-  if (it.type === 'book') return [await drawBookCard(img, opts)];
+  const chat = opts.style === 'chat';
+  if (it.type === 'book') return [await (chat ? drawChatBookCard : drawBookCard)(img, opts)];
   const books = img.books || [];
   // 3권 이상 → 표지 + 책 3장(16:9 네 장), 2권 이하 → 표지 + 책 1장(8:9 두 장)
   const wide = books.length >= 3;
   const size = wide ? WIDE : TALL;
   const groups = wide ? chunk(books, 3) : [books];
   const total = groups.length + 1;
-  const pages = [await drawShelfCover(size, img, it.type, opts)];
+  const pages = [await (chat ? drawChatCover : drawShelfCover)(size, img, it.type, opts)];
   for (let i = 0; i < groups.length; i++) {
-    pages.push(await drawShelfBooks(size, groups[i], it.type, opts, img.name + ' #' + img.series + ' · ' + (i + 2) + '/' + total));
+    pages.push(await (chat ? drawChatBooks : drawShelfBooks)(size, groups[i], it.type, opts, img.name + ' #' + img.series + ' · ' + (i + 2) + '/' + total));
   }
   return pages;
 }
@@ -564,7 +738,7 @@ function cardEl(it, isDone) {
   let pages = [];
   let ready = null;
   const render = () => {
-    ready = buildImages(it, { bg: BGS[state.bg], portrait: portraitBox.checked }).then((cs) => {
+    ready = buildImages(it, { bg: BGS[state.bg], style: state.style, portrait: portraitBox.checked }).then((cs) => {
       pages = cs;
       showPreview(el, cs);
       return cs;
@@ -672,6 +846,13 @@ function showPreview(el, canvases) {
   });
 }
 
+function setStyle(st) {
+  state.style = st === 'chat' ? 'chat' : 'card';
+  store(STYLE_KEY, state.style);
+  document.querySelectorAll('[data-style]').forEach((b) => b.classList.toggle('on', b.dataset.style === state.style));
+  document.querySelectorAll('.card').forEach((c) => c._render && c._render());
+}
+
 function setBg(bg) {
   state.bg = BGS[bg] ? bg : 'white';
   store(BG_KEY, state.bg);
@@ -681,6 +862,11 @@ function setBg(bg) {
 
 async function init() {
   state.bg = BGS[store(BG_KEY)] ? store(BG_KEY) : 'white';
+  state.style = store(STYLE_KEY) === 'chat' ? 'chat' : 'card';
+  document.querySelectorAll('[data-style]').forEach((b) => {
+    b.classList.toggle('on', b.dataset.style === state.style);
+    b.onclick = () => setStyle(b.dataset.style);
+  });
   document.querySelectorAll('[data-bg]').forEach((b) => {
     b.classList.toggle('on', b.dataset.bg === state.bg);
     b.onclick = () => setBg(b.dataset.bg);
@@ -699,5 +885,129 @@ async function init() {
   renderDays();
   renderCards();
 }
+
+/* ---------- 인물 골라서 만들기 ----------
+ * tools/x_queue.py 가 만들어 둔 data/x_books.json(인물별 책 줄 재료)과
+ * data/x_state.json(이미 나간 책·시리즈 번호)을 읽어, 고른 인물·책으로
+ * 매일 트윗과 같은 모양의 카드를 그 자리에서 만든다. */
+const BOOKS_URL = '../data/x_books.json';
+const STATE_URL = '../data/x_state.json';
+const PICK_MAX = 6;
+const picker = { books: null, state: null };
+
+function fitLines(head, lines, tail) {
+  for (let keep = lines.length; keep > 0; keep--) {
+    const text = head + lines.slice(0, keep).join('\n') + tail;
+    if (tweetLength(text) <= 280) return [text, keep];
+  }
+  return [head + lines[0] + tail, 1];
+}
+function threadReplies(lines) {
+  const out = [];
+  let cur = [];
+  for (const l of lines) {
+    if (cur.length && tweetLength(cur.concat(l).join('\n')) > 280) { out.push(cur.join('\n')); cur = []; }
+    cur.push(l);
+  }
+  if (cur.length) out.push(cur.join('\n'));
+  return out;
+}
+
+function makePickedItem(name, books) {
+  const c = picker.books.celebs[name];
+  const mark = picker.books.mark || '';
+  const series = ((picker.state.series || {})[name] || 0) + 1;
+  const lines = books.map((b) => b.emoji + ' ' + b.title + (b.by ? '(' + b.by + ')' : '') + (b.src ? ' ' + mark + b.src : ''));
+  const head = '📚 ' + (c.display || name) + '의 책장\n\n';
+  const tail = '\n\n전체 목록(' + c.books.length + '권)\n' + c.url + '\n\n' + c.tags;
+  const [text, used] = fitLines(head, lines, tail);
+  return {
+    id: 'pick-' + Date.now(),
+    type: 'celeb',
+    key: name,
+    label: '직접 고른 책장',
+    series,
+    text,
+    thread: [text].concat(threadReplies(lines.slice(used))),
+    url: c.url,
+    image: { name: c.display || name, series, total: c.books.length, portrait: c.portrait, books },
+  };
+}
+
+async function openPicker() {
+  if (picker.books) return;
+  $('#pickInfo').textContent = '불러오는 중…';
+  try {
+    const [b, st] = await Promise.all([BOOKS_URL, STATE_URL].map((u) =>
+      fetch(u + '?t=' + Date.now(), { cache: 'no-store' }).then((r) => { if (!r.ok) throw new Error(r.status); return r.json(); })));
+    picker.books = b;
+    picker.state = st;
+  } catch (e) {
+    $('#pickInfo').textContent = 'x_books.json 을 못 읽었어요. X Queue 워크플로가 한 번 돈 뒤에 쓸 수 있어요.';
+    return;
+  }
+  const dl = $('#celebList');
+  Object.keys(picker.books.celebs).sort((a, b) => a.localeCompare(b, 'ko')).forEach((n) => {
+    const o = document.createElement('option');
+    o.value = n;
+    if (picker.books.celebs[n].display !== n) o.label = picker.books.celebs[n].display;
+    dl.appendChild(o);
+  });
+  $('#pickInfo').textContent = '인물 ' + dl.children.length + '명 중에서 고르세요.';
+}
+
+function showPickBooks() {
+  const name = $('#pickName').value.trim();
+  const ul = $('#pickBooks');
+  const btn = $('#pickMake');
+  ul.innerHTML = '';
+  btn.disabled = true;
+  const c = picker.books && picker.books.celebs[name];
+  if (!c) return;
+  const posted = new Set(((picker.state.posted || {})[name]) || []);
+  const fresh = c.books.filter((b) => !posted.has(b.title));
+  const preset = new Set((fresh.length ? fresh : c.books).slice(0, PICK_MAX).map((b) => b.title));
+  const series = ((picker.state.series || {})[name] || 0) + 1;
+  $('#pickInfo').textContent = '전체 ' + c.books.length + '권 · 나간 책 ' + posted.size + '권 · 이번이 #' + series +
+    ' · 최대 ' + PICK_MAX + '권까지 고를 수 있어요';
+  // 안 나간 책을 먼저, 그 안에서는 여러 셀럽이 함께 읽은 책부터
+  const order = fresh.concat(c.books.filter((b) => posted.has(b.title)));
+  order.forEach((b) => {
+    const li = document.createElement('li');
+    li.innerHTML = '<label><input type="checkbox"><span></span></label>';
+    const box = $('input', li);
+    box.checked = preset.has(b.title);
+    box._book = b;
+    $('span', li).textContent = b.emoji + ' ' + b.title + (b.src ? ' · ' + b.src : '');
+    if (posted.has(b.title)) {
+      const tag = document.createElement('em');
+      tag.className = 'posted';
+      tag.textContent = '나감';
+      $('label', li).appendChild(tag);
+    }
+    ul.appendChild(li);
+  });
+  syncPickLimit();
+}
+
+function syncPickLimit() {
+  const boxes = [...document.querySelectorAll('#pickBooks input')];
+  const n = boxes.filter((b) => b.checked).length;
+  boxes.forEach((b) => { b.disabled = !b.checked && n >= PICK_MAX; });
+  $('#pickMake').disabled = n === 0;
+  $('#pickMake').textContent = n ? n + '권으로 트윗 만들기' : '트윗 만들기';
+}
+
+$('#picker').addEventListener('toggle', (e) => { if (e.target.open) openPicker(); });
+$('#pickName').addEventListener('input', showPickBooks);
+$('#pickBooks').addEventListener('change', syncPickLimit);
+$('#pickMake').addEventListener('click', () => {
+  const name = $('#pickName').value.trim();
+  const books = [...document.querySelectorAll('#pickBooks input')].filter((b) => b.checked).map((b) => b._book);
+  if (!books.length) return;
+  $('#picked').prepend(cardEl(makePickedItem(name, books), false));
+  status(name + ' 트윗을 만들었어요');
+  $('#picked').scrollIntoView({ behavior: 'smooth', block: 'start' });
+});
 
 init();
