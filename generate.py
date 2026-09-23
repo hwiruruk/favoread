@@ -343,8 +343,8 @@ SPINE_IMG_GUARD = (
 
 # 책장 이미지로 저장 — 한국어 share 페이지와 /en/ 페이지가 함께 쓴다.
 #
-# 지금 보고 있는 쪽(책등 또는 목록)을 통째로 PNG로 내려받는다. 인물 사진은
-# 넣지 않는다 — 책장만 오려 공유하는 용도다.
+# 책장(책등)과 그 아래 표지 목록을 함께 PNG로 내려받는다. NEW 표시와 함께 추천한
+# 셀럽 목록은 빼고, 인물 사진도 넣지 않는다 — 독서 리스트만 오려 공유하는 용도다.
 #
 # html2canvas는 처음 누를 때만 받아 온다. 이 페이지는 평소엔 자바스크립트가
 # 거의 없는 정적 페이지라 미리 받아 둘 이유가 없다.
@@ -517,14 +517,16 @@ SHELF_CAPTURE_JS_TEMPLATE = (
     '\n'
     '    function capture(btn) {\n'
     '      var clear = btn.id === "shelf-cap-clear";\n'
-    '      // 숨어 있는 쪽까지 그려지지 않도록, 지금 보이는 상자 하나만 넘긴다\n'
-    '      var shelf = document.getElementById("shelf");\n'
-    '      var view = (shelf && !shelf.hidden) ? shelf : document.getElementById("rlist");\n'
+    '      // 책장과 표지 목록을 함께 담은 상자 하나만 넘긴다\n'
+    '      var view = document.getElementById("shelf-area") || document.getElementById("shelf");\n'
     '      if (!view) return;\n'
     '      var was = btn.textContent;\n'
     '      btns.forEach(function (b) { b.disabled = true; });\n'
     '      btn.textContent = __BUSY__;\n'
     '      var swap = null, muted = null;\n'
+    '      // 저장하는 그림에는 NEW 표시와 함께 추천한 셀럽 목록을 넣지 않는다.\n'
+    '      // html2canvas가 문서를 복사할 때 이 클래스도 따라가서 복사본에서만 빠진 채 그려진다.\n'
+    '      view.classList.add("is-capturing");\n'
     '      guard(loadH2C(), 15000, "html2canvas").then(function () {\n'
     '        swap = swapImages(view);\n'
     '        return swap.ready;\n'
@@ -555,6 +557,7 @@ SHELF_CAPTURE_JS_TEMPLATE = (
     '      }).then(function () {\n'
     '        if (swap) swap.undo.forEach(function (f) { f(); });\n'
     '        if (muted) unmute(muted);\n'
+    '        view.classList.remove("is-capturing");\n'
     '        btns.forEach(function (b) { b.disabled = false; });\n'
     '        btn.textContent = was;\n'
     '      });\n'
@@ -628,6 +631,9 @@ SHELF_CSS = (
     '              font-size: 8px; line-height: 1; padding: 3px 0 2px;\n'
     '              border-bottom: 1px solid rgba(0,0,0,.55); }\n'
     '    .sp.is-new .sp-t { padding-top: 22px; }\n'
+    # 이미지로 저장하는 동안에는 NEW 표시와 함께 추천한 셀럽 목록을 뺀다
+    '    .is-capturing .sp-new, .is-capturing .rl-new, .is-capturing .rl-shared { display: none !important; }\n'
+    '    .is-capturing .sp.is-new .sp-t { padding-top: 14px; }\n'
     # 좁은 화면에서는 한 줄에 너무 적게 들어가므로 조금 줄인다
     # 좁은 화면에서는 책등을 낮추므로 글자도 그 비율(205/270)만큼 줄인다
     '    @media (max-width: 480px) { .shelf { --sh-h: 205px; }\n'
@@ -635,7 +641,8 @@ SHELF_CSS = (
     '                                 .sp-i { max-width: 61px; }\n'
     '                                 .sp-t i { font-size: calc(var(--fs, 15px) * .76); }\n'
     '                                 .sp-t { padding: 10px 2px; }\n'
-    '                                 .sp.is-new .sp-t { padding-top: 18px; } }\n'
+    '                                 .sp.is-new .sp-t { padding-top: 18px; }\n'
+    '                                 .is-capturing .sp.is-new .sp-t { padding-top: 10px; } }\n'
 )
 
 def make_en_celeb_url(name_en):
@@ -1951,14 +1958,16 @@ for name, info in celebs.items():
         '      </div>\n'
         '    </div>\n'
         + recent_note(n_recent)
-        + '    <div class="shelf" id="shelf">\n'
-        + spine_html +
-        '    </div>\n'
         + (('    <p class="muted">' + str(shared_count) + '권은 다른 셀럽도 함께 추천한 책이에요. 아래 목록에서 함께 추천한 셀럽 이름을 볼 수 있어요.</p>\n')
            if shared_count else '')
-        + '    <ol class="reading-list" id="rlist">\n'
+        + '    <div id="shelf-area">\n'
+        '    <div class="shelf" id="shelf">\n'
+        + spine_html +
+        '    </div>\n'
+        '    <ol class="reading-list" id="rlist">\n'
         + book_cards_html +
         '    </ol>\n'
+        '    </div>\n'
         '  </section>\n'
         + shelf_capture_js('저장 중…', '책장_' + safe_filename(sname) + '.png',
                            '이미지를 만들지 못했어요. 잠시 뒤 다시 눌러 주세요.',
@@ -2830,10 +2839,12 @@ for name, info in celebs.items():
         '      </div>\n'
         '    </div>\n'
         + recent_note(en_n_recent, 'en')
-        + '    <div class="shelf" id="shelf">\n' + en_spine_html +
+        + '    <div id="shelf-area">\n'
+        '    <div class="shelf" id="shelf">\n' + en_spine_html +
         '    </div>\n'
         '    <ol class="reading-list" id="rlist">\n' + rows +
         '    </ol>\n'
+        '    </div>\n'
         '  </section>\n'
         + shelf_capture_js('Saving…', 'bookshelf_' + slug + '.png',
                            'Could not create the image. Please try again.',
