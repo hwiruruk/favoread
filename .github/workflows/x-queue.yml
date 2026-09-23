@@ -1,0 +1,53 @@
+name: X Queue
+
+# 매일 아침 X(트위터)에 올릴 트윗 3개를 만들어 data/x_queue.json 에 넣는다.
+# 게시는 /xbot/ 페이지에서 사람이 버튼으로 한다 (X API를 안 써서 비용 0원).
+# 자세한 설명은 tools/XBOT.md 참고.
+
+on:
+  schedule:
+    - cron: '0 22 * * *'   # 매일 07:00 KST
+  workflow_dispatch:
+    inputs:
+      force:
+        description: '오늘 치가 이미 있어도 다시 만들기'
+        required: false
+        default: false
+        type: boolean
+
+concurrency:
+  group: x-queue
+  cancel-in-progress: false
+
+jobs:
+  queue:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: actions/setup-python@v6
+        with:
+          python-version: '3.12'
+
+      - name: 오늘의 트윗 만들기
+        run: |
+          ARGS=""
+          if [ "${{ github.event.inputs.force }}" = "true" ]; then ARGS="--force"; fi
+          python3 tools/x_queue.py $ARGS
+
+      - name: Commit & push
+        run: |
+          git config user.name  "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add data/x_queue.json data/x_state.json
+          git diff --cached --quiet && exit 0
+          git commit -m "chore: X 트윗 후보 생성 [$(TZ=Asia/Seoul date +%Y-%m-%d)]"
+          # 다른 자동 갱신 워크플로와 동시에 돌 수 있어 몇 번 다시 시도한다
+          for i in 1 2 3 4; do
+            git pull --rebase origin "${GITHUB_REF_NAME}" && git push && exit 0
+            sleep $((i * 5))
+          done
+          exit 1
