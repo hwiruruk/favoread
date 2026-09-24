@@ -2389,7 +2389,8 @@ EN_ROLE_INFO = {
         'hub_name': 'K-Pop Idols',
         'hub_lower': 'K-pop idols',
         'kw': ['kpop idol books', 'what kpop idols read', 'korean idol reading list',
-               'kpop star books', 'kpop idol book recommendations'],
+               'kpop star books', 'kpop idol book recommendations', 'bias reading list',
+               'kpop bias book rec', 'kpop idol TBR'],
     },
     'musician': {
         'label': 'Korean musician',
@@ -2737,7 +2738,8 @@ for name, info in celebs.items():
     en_kw = [
         _name_pl + ' books', _name_pl + ' reading list',
         _name_pl + ' book recommendations', 'what does ' + _name_pl + ' read',
-        _name_pl + ' favorite books',
+        _name_pl + ' favorite books', _name_pl + ' book rec', _name_pl + ' TBR',
+        'is ' + _name_pl + ' a reader',
     ]
     for _v in _variants:
         en_kw += [_v + ' books', _v + ' reading list', _v + ' book recommendations']
@@ -3522,7 +3524,9 @@ for _role in sorted(en_role_members, key=lambda r: -len(en_role_members[r])):
         '  <h1>What ' + esc(hub_name) + ' Read</h1>\n'
         '  <div class="lead">\n'
         '    <p>Book recommendations and full reading lists from <strong>' + str(n_people)
-        + ' ' + esc(hub_lower) + '</strong> — ' + str(n_books)
+        + ' ' + esc(hub_lower) + '</strong>'
+        + (' — find out what your bias is reading' if _role == 'idol' else '')
+        + ' — ' + str(n_books)
         + ' books in all'
         + ((', ' + str(len(shared)) + ' of them read by more than one person') if shared else '')
         + '. Each entry links to the interview, YouTube video or SNS post it came from.</p>\n'
@@ -3632,6 +3636,10 @@ en_category_chips = '\n'.join(
 # read" 처럼 물어보는 검색이 많은데, 그 말에 답하는 문장이 사이트에 한 줄도
 # 없었다. 눈에 보이는 본문으로 넣고 FAQPage로도 표시해 둔다.
 EN_FAQ = [
+    ("How do I find my bias's reading list?",
+     "Search or browse by name — every K-pop idol and K-drama actor here has their own page with a "
+     "full book rec / TBR list, each title linked to the interview, YouTube video or SNS post where "
+     "they talked about it. If your bias has mentioned a book anywhere in Korean media, it's tracked here."),
     ('What books do K-pop idols read?',
      'Across ' + str(len(en_celeb_pages)) + ' idols and actors in this archive, the books that come up '
      'most are Korean literary fiction and essays — Kim Ae-ran, Baek Se-hee, Kim Cho-yeop — '
@@ -3704,7 +3712,7 @@ en_index = (
     '  <meta charset="UTF-8">\n'
     '  <meta name="viewport" content="width=device-width, initial-scale=1.0">\n'
     '  <title>What K-pop Idols &amp; K-Drama Actors Read — Korean Star Book Archive | Favorbook</title>\n'
-    '  <meta name="description" content="A searchable archive of what Korean stars read — K-pop idols (BTS, aespa, IVE, NewJeans), K-drama and K-movie actors, directors and musicians. Every book traced to its source.">\n'
+    '  <meta name="description" content="Find out what book your bias is reading — a searchable archive of K-pop idols (BTS, aespa, IVE, NewJeans), K-drama and K-movie actors, directors and musicians. Every book traced to its source.">\n'
     '  <meta name="keywords" content="korean celebrity books, korean actor books, k-drama actor books, k-movie actor books, what korean actors read, korean drama star reading list, kdrama books, korean actress books, korean film director books, korean star book recommendations, books from korea, kpop idol books, what bts reads, BTS reading list, RM book recommendations, IU books, what kpop idols read, kpop star reading, korean celebrity books, k-drama actor books, IVE books, NewJeans reading list, SEVENTEEN books, kpop idol favorite books, korean idol book recommendations, kpop reading list, books read by kpop idols, korean drama actor reading list, kdrama books, kpop fandom books, kpop star book archive, kpop star reading, kpop idol reading list, korean celebrity reading archive, what do kpop idols read">\n'
     '  <meta name="referrer" content="no-referrer">\n'
     '\n'
@@ -3829,7 +3837,7 @@ en_index = (
     '\n'
     '  <header id="hero" class="flex flex-col items-center pt-6 md:pt-0 text-center">\n'
     '    <h1 class="text-4xl sm:text-5xl md:text-6xl font-black tracking-tight mb-3 text-ink">Favorbook</h1>\n'
-    '    <p class="text-ink font-sans font-bold text-sm sm:text-base tracking-wide mb-3">What your fave K-pop idol or K-drama actor is reading📕</p>\n'
+    '    <p class="text-ink font-sans font-bold text-sm sm:text-base tracking-wide mb-3">What your bias (K-pop idol or K-drama actor) is reading📕</p>\n'
     '    <p class="text-muted text-xs sm:text-sm mb-6 max-w-xl mx-auto px-4 word-break-keep">Verified reading lists from Korean stars — K-pop idols (BTS, IVE, NewJeans, SEVENTEEN), K-drama and K-movie actors, film directors and musicians — sourced from interviews, YouTube, and SNS.</p>\n'
     '    <p class="text-ink font-sans font-bold text-xs sm:text-sm tracking-[.15em] mb-6 uppercase bg-neo-yellow border-2 border-ink px-4 py-1 shadow-neo-sm">Archive of their reads</p>\n'
     '    <div class="flex items-center gap-2 text-[10px] sm:text-xs font-sans font-bold tracking-wider text-ink border-2 border-ink bg-white px-3 py-1.5 shadow-neo-sm">\n'
