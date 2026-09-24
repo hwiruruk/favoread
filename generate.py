@@ -1132,6 +1132,8 @@ for _info in celebs.values():
 
 data_json = {
     'generated': TODAY,
+    'source': 'favorbook.co.kr',
+    'notice': '본 데이터는 favorbook.co.kr 운영자가 직접 수집·선별·정리한 자료입니다. 전체 또는 상당 부분의 무단 복제·재배포를 금지하며, 인용 시 출처(favorbook.co.kr)를 표기해 주시기 바랍니다.',
     'celebs': {
         name: {
             'imageUrl': info['img'],
@@ -4482,6 +4484,13 @@ print(f"✅ sitemap.xml 생성: {total_urls}개 URL (이미지 사이트맵 포�
 robots_txt = (
     'User-agent: *\n'
     'Allow: /\n'
+    # 원본 데이터 파일(data.json/data.csv)은 검색 노출용 콘텐츠가 아니라
+    # 직접 수집·정리한 원자료이므로 대량 수집 방지 차원에서 색인/크롤링만 막는다.
+    # 실제 콘텐츠 페이지(share/*.html 등)는 그대로 색인되므로 검색 결과에는 영향 없음.
+    'Disallow: /data.json\n'
+    'Disallow: /data.csv\n'
+    'Disallow: /data/\n'
+    'Disallow: /lookup_csv/\n'
     '\n'
     'Sitemap: ' + BASE + 'sitemap.xml\n'
     'Sitemap: ' + BASE + 'feed.xml\n'
