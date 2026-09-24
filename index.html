@@ -1540,7 +1540,27 @@
     }
   }
 
-  function openModal(name, isHistoryNav = false) {
+  /* comment/source/link는 data.json에 없고 data/detail/*.json에 셀럽별로
+     따로 있다. 그 사람 모달을 열 때만 받아와서 books에 채워 넣는다. */
+  const detailLoaded = new Set();
+  async function loadDetail(name) {
+    if (detailLoaded.has(name)) return;
+    detailLoaded.add(name);
+    try {
+      const safeFn = name.replace(/\//g, '_').replace(/\\/g, '_');
+      const r = await fetch(`data/detail/${encodeURIComponent(safeFn)}.json`);
+      if (!r.ok) return;
+      const detail = await r.json();
+      const data = celebMap[name];
+      if (!data) return;
+      data.books.forEach((b) => {
+        const d = detail[b.title];
+        if (d) Object.assign(b, d);
+      });
+    } catch (e) { /* 상세 정보 없이 기본 정보만 보여준다 */ }
+  }
+
+  async function openModal(name, isHistoryNav = false) {
     if (!celebMap[name]) return;
     const data = celebMap[name];
     modal = { open: true, name, books: data.books, idx: 0, view: 'slide' };
@@ -1565,10 +1585,13 @@
 
     buildSlides();
     D.overlay.classList.add('active');
-    D.floatMenus.classList.add('opacity-0', 'pointer-events-none'); 
+    D.floatMenus.classList.add('opacity-0', 'pointer-events-none');
     document.body.style.overflow = 'hidden';
-    
-    updateSEO(name); 
+
+    updateSEO(name);
+
+    await loadDetail(name);
+    if (modal.open && modal.name === name) buildSlides();
   }
 
   function closeModal(isHistoryNav = false) {
