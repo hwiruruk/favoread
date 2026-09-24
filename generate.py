@@ -3564,7 +3564,8 @@ for slug, name_en, name_ko in en_celeb_pages:
     en_book_count = sum(1 for b in info['books'] if b.get('title_en'))
     img = info['img']
     en_celeb_cards.append(
-        '    <a href="share/' + slug + '.html" class="group flex flex-col">\n'
+        '    <a href="share/' + slug + '.html" id="celeb-card-' + slug + '" data-celeb-card '
+        'data-q="' + esc((name_en + ' ' + name_ko).lower()) + '" class="group flex flex-col">\n'
         '      <div class="aspect-square overflow-hidden border-2 border-ink shadow-neo-sm bg-white group-hover:shadow-neo group-hover:-translate-y-0.5 transition-all">\n'
         '        <img src="' + esc(img) + '" alt="' + esc(name_en) + ' profile" loading="lazy" '
         'class="w-full h-full object-cover" referrerpolicy="no-referrer">\n'
@@ -3578,8 +3579,12 @@ for slug, name_en, name_ko in en_celeb_pages:
     )
 en_celeb_grid = '\n'.join(en_celeb_cards)
 
-# 책 카드 (커버 + 제목 + 셀럽 수)
+# 셀럽 검색용: 영문명 → (slug, 영문명) 매핑. 책 검색 결과에서 '누가 읽었는지' 보여줄 때 쓴다.
+en_celeb_by_ko = {name_ko: (slug, name_en) for slug, name_en, name_ko in en_celeb_pages}
+
+# 책 카드 (커버 + 제목 + 셀럽 수) + 책 검색용 데이터 (제목으로 검색하면 읽은 사람을 보여준다)
 en_book_cards = []
+en_search_books = []
 for slug, t_en, t_ko in sorted(en_book_pages, key=lambda x: x[1].lower()):
     binfo = book_celebs[t_ko]
     cover = binfo.get('coverUrl', '')
@@ -3588,8 +3593,18 @@ for slug, t_en, t_ko in sorted(en_book_pages, key=lambda x: x[1].lower()):
         cover_img = ('<img src="' + esc(cover) + '" alt="' + esc(t_en) + ' cover" loading="lazy" '
                      'class="w-full h-full object-cover">')
     n_celebs = len(binfo['celebs'])
+    book_readers_en = [
+        {'name': en_celeb_by_ko[c][1], 'slug': en_celeb_by_ko[c][0]}
+        for c in binfo['celebs'] if c in en_celeb_by_ko
+    ]
+    en_search_books.append({
+        'title': t_en, 'title_ko': t_ko, 'slug': slug,
+        'cover': cover if cover.startswith('http') else '',
+        'readers': book_readers_en,
+    })
     en_book_cards.append(
-        '    <a href="share/book/' + slug + '.html" class="group flex flex-col">\n'
+        '    <a href="share/book/' + slug + '.html" data-q="'
+        + esc((t_en + ' ' + t_ko).lower()) + '" class="group flex flex-col">\n'
         '      <div class="aspect-[3/4] overflow-hidden border-2 border-ink shadow-neo-sm bg-paper-dark group-hover:shadow-neo group-hover:-translate-y-0.5 transition-all">\n'
         '        ' + cover_img + '\n'
         '      </div>\n'
@@ -3811,6 +3826,7 @@ en_index = (
     '<nav id="side-tabs" class="hidden md:flex fixed left-4 lg:left-6 top-1/2 -translate-y-1/2 z-30 flex-col gap-2 pointer-events-auto">\n'
     '  <a href="#hero" data-spy="hero" class="spy-tab active">Home</a>\n'
     '  <a href="#about" data-spy="about" class="spy-tab">About</a>\n'
+    '  <a href="#search" data-spy="search" class="spy-tab">Search</a>\n'
     '  <a href="#celebs" data-spy="celebs" class="spy-tab">Celebs</a>\n'
     '  <a href="#books" data-spy="books" class="spy-tab">Books</a>\n'
     '</nav>\n'
@@ -3820,6 +3836,7 @@ en_index = (
     '  <div class="flex overflow-x-auto gap-2 px-3 py-2 scrollbar-hide">\n'
     '    <a href="#hero" data-spy="hero" class="spy-tab active">Home</a>\n'
     '    <a href="#about" data-spy="about" class="spy-tab">About</a>\n'
+    '    <a href="#search" data-spy="search" class="spy-tab">Search</a>\n'
     '    <a href="#celebs" data-spy="celebs" class="spy-tab">Celebs</a>\n'
     '    <a href="#books" data-spy="books" class="spy-tab">Books</a>\n'
     '  </div>\n'
@@ -3865,6 +3882,22 @@ en_index = (
        '      ' + EN_TR_NOTE_TEXT + '\n'
        '    </p>\n' if en_index_show_tr_note else '')
     + '  </section>\n'
+    '\n'
+    + '  <section id="search" class="max-w-xl mx-auto w-full flex flex-col gap-4">\n'
+    '    <h2 class="text-2xl md:text-3xl font-black text-center word-break-keep">Search</h2>\n'
+    '    <input id="en-search-input" type="text" autocomplete="off" placeholder="Search a name or book title…" '
+    'class="w-full border-2 border-ink bg-white shadow-neo-sm px-4 py-3 font-bold text-sm md:text-base '
+    'focus:outline-none focus:shadow-neo focus:-translate-y-0.5 transition-all">\n'
+    '    <div id="en-search-bar" class="hidden flex items-center justify-center gap-3 flex-wrap">\n'
+    '      <span id="en-search-summary" class="font-sans font-bold text-[11px] sm:text-xs tracking-wide text-muted"></span>\n'
+    '      <button type="button" id="en-search-clear" class="font-sans font-bold text-[10px] sm:text-xs '
+    'tracking-widest uppercase border-2 border-ink bg-white hover:bg-neo-pink shadow-neo-sm px-4 py-1.5 '
+    'hover:-translate-y-0.5 transition-all">✕ Show all</button>\n'
+    '    </div>\n'
+    '    <div id="en-book-hits" class="hidden flex flex-col gap-3"></div>\n'
+    '  </section>\n'
+    '\n'
+    '  <script type="application/json" id="en-search-books-data">' + json.dumps(en_search_books, ensure_ascii=False) + '</script>\n'
     '\n'
     + (('  <section id="categories" class="w-full">\n'
         '    <h2 class="text-2xl md:text-3xl font-black mb-2 word-break-keep">Browse by Type</h2>\n'
@@ -3913,7 +3946,69 @@ en_index = (
     '\n'
     '<script>\n'
     '(function() {\n'
-    '  const ids = ["hero", "about", "categories", "groups", "celebs", "books", "faq"];\n'
+    '  const searchInput = document.getElementById("en-search-input");\n'
+    '  if (!searchInput) return;\n'
+    '  const celebCards = Array.from(document.querySelectorAll("[data-celeb-card]"));\n'
+    '  const searchBar = document.getElementById("en-search-bar");\n'
+    '  const searchSummary = document.getElementById("en-search-summary");\n'
+    '  const clearBtn = document.getElementById("en-search-clear");\n'
+    '  const bookHits = document.getElementById("en-book-hits");\n'
+    '  const celebSection = document.getElementById("celebs");\n'
+    '  const booksData = JSON.parse(document.getElementById("en-search-books-data").textContent);\n'
+    '\n'
+    '  function renderBookHits(query) {\n'
+    '    const matches = booksData.filter(b =>\n'
+    '      (b.title + " " + b.title_ko).toLowerCase().includes(query)\n'
+    '    );\n'
+    '    if (!matches.length) { bookHits.classList.add("hidden"); bookHits.innerHTML = ""; return; }\n'
+    '    bookHits.innerHTML = matches.map(b => {\n'
+    '      const readers = b.readers.length\n'
+    '        ? b.readers.map(r => `<a href="share/${r.slug}.html" class="underline decoration-2 hover:text-ink">${r.name}</a>`).join(", ")\n'
+    '        : "";\n'
+    '      const cover = b.cover ? `<img src="${b.cover}" alt="${b.title} cover" loading="lazy" class="w-12 h-16 object-cover border-2 border-ink flex-shrink-0">` : "";\n'
+    '      const titleHtml = `<p class="font-black text-sm word-break-keep">${b.title}</p>`;\n'
+    '      const readersHtml = readers ? `<p class="font-sans text-xs text-muted mt-1">Read by: ${readers}</p>` : "";\n'
+    '      return `<div class="flex gap-3 items-start border-2 border-ink bg-white shadow-neo-sm p-3">${cover}<div>${titleHtml}${readersHtml}</div></div>`;\n'
+    '    }).join("");\n'
+    '    bookHits.classList.remove("hidden");\n'
+    '  }\n'
+    '\n'
+    '  function filterCelebs(query) {\n'
+    '    let shown = 0;\n'
+    '    celebCards.forEach(card => {\n'
+    '      const match = !query || card.dataset.q.includes(query);\n'
+    '      card.classList.toggle("hidden", !match);\n'
+    '      if (match) shown++;\n'
+    '    });\n'
+    '    return shown;\n'
+    '  }\n'
+    '\n'
+    '  function onSearch() {\n'
+    '    const query = searchInput.value.trim().toLowerCase();\n'
+    '    if (!query) {\n'
+    '      searchBar.classList.add("hidden");\n'
+    '      bookHits.classList.add("hidden");\n'
+    '      filterCelebs("");\n'
+    '      return;\n'
+    '    }\n'
+    '    const shown = filterCelebs(query);\n'
+    '    renderBookHits(query);\n'
+    '    searchBar.classList.remove("hidden");\n'
+    '    searchSummary.textContent = shown + " celeb" + (shown === 1 ? "" : "s") + " match";\n'
+    '    celebSection.scrollIntoView({ behavior: "smooth", block: "start" });\n'
+    '  }\n'
+    '\n'
+    '  searchInput.addEventListener("input", onSearch);\n'
+    '  clearBtn.addEventListener("click", () => {\n'
+    '    searchInput.value = "";\n'
+    '    onSearch();\n'
+    '  });\n'
+    '})();\n'
+    '</script>\n'
+    '\n'
+    '<script>\n'
+    '(function() {\n'
+    '  const ids = ["hero", "about", "search", "categories", "groups", "celebs", "books", "faq"];\n'
     '  const sections = ids.map(id => document.getElementById(id)).filter(Boolean);\n'
     '  const tabs = document.querySelectorAll(".spy-tab");\n'
     '  if (!sections.length || !tabs.length) return;\n'
