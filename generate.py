@@ -4481,6 +4481,11 @@ print(f"✅ sitemap.xml 생성: {total_urls}개 URL (이미지 사이트맵 포�
 # 주의: 과거 `Disallow: /*?celeb=`는 index.html이 ?celeb= 파라미터를 실제로
 # 사용(셀럽 필터)하기 때문에 자기 사이트의 정상 트래픽을 차단하는 모순이었음.
 # rel="nofollow" 처리되어 있고 정적 share/*.html이 정식 색인 대상이므로 제거.
+SCRAPER_BOTS = [
+    'AhrefsBot', 'SemrushBot', 'MJ12bot', 'DotBot', 'DataForSeoBot',
+    'PetalBot', 'Bytespider', 'CCBot', 'GPTBot', 'ClaudeBot',
+]
+
 robots_txt = (
     'User-agent: *\n'
     'Allow: /\n'
@@ -4492,7 +4497,12 @@ robots_txt = (
     'Disallow: /data/\n'
     'Disallow: /lookup_csv/\n'
     '\n'
-    'Sitemap: ' + BASE + 'sitemap.xml\n'
+    # 사이트 전체 반복 수집(스크래핑) 목적의 자동화 봇은 접근을 허용하지 않는다.
+    # 무단 크롤링 확인 시 data-policy.html에 안내된 절차에 따라 조치한다.
+    + ''.join(
+        'User-agent: ' + bot + '\nDisallow: /\n\n' for bot in SCRAPER_BOTS
+    )
+    + 'Sitemap: ' + BASE + 'sitemap.xml\n'
     'Sitemap: ' + BASE + 'feed.xml\n'
 )
 
