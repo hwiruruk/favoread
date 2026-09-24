@@ -1021,26 +1021,6 @@ with open("data.csv", encoding="utf-8") as f:
             'author_en': author_en,
         })
 
-# 편집기 '💬 코멘트 검수'에서 사람이 승인한 자동 코멘트를 반영한다.
-# data.csv의 코멘트 칸에 사람이 직접 쓴 값이 있으면 그쪽이 항상 우선.
-COMMENTS_FILE = 'data/comments.json'
-try:
-    with open(COMMENTS_FILE, encoding='utf-8') as f:
-        _comments_db = json.load(f).get('comments', {})
-except (FileNotFoundError, json.JSONDecodeError):
-    _comments_db = {}
-
-_auto_comment_count = 0
-for _name, _info in celebs.items():
-    for _b in _info['books']:
-        if _b['comment']:
-            continue
-        _entry = _comments_db.get(_name + '|' + _b['title'])
-        if _entry and _entry.get('status') == 'approved' and (_entry.get('ko') or '').strip():
-            _b['comment'] = _entry['ko'].strip()
-            _auto_comment_count += 1
-print(f"💬 검수 승인된 자동 코멘트 {_auto_comment_count}건 반영")
-
 print(f"CSV 파싱 완료: {len(celebs)}명")
 if EN_TITLE_SKIPPED:
     print(f"⚠️ 영문 제목 {len(EN_TITLE_SKIPPED)}건은 AI 답변 문구·후보 나열이 섞여 영문 페이지에서 뺐습니다"
