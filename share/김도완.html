@@ -1,14 +1,25 @@
 <!DOCTYPE html>
 <html lang="ko">
 <head>
-  <!-- Google tag (gtag.js) -->
-  <script async src="https://www.googletagmanager.com/gtag/js?id=G-42YXZRRS25"></script>
+  <!-- Google tag (gtag.js) — Consent Mode: 동의 전에는 analytics_storage를 기본 거부 -->
   <script>
     window.dataLayer = window.dataLayer || [];
     function gtag(){dataLayer.push(arguments);}
+    gtag('consent', 'default', {
+      'analytics_storage': 'denied',
+      'ad_storage': 'denied',
+      'ad_user_data': 'denied',
+      'ad_personalization': 'denied'
+    });
     gtag('js', new Date());
     gtag('config', 'G-42YXZRRS25');
+    try {
+      if (localStorage.getItem('ga-consent') === 'granted') {
+        gtag('consent', 'update', { analytics_storage: 'granted' });
+      }
+    } catch (e) {}
   </script>
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-42YXZRRS25"></script>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>김도완 독서 기록 · 읽은 책·추천 책 3권 | 최애의 독서</title>
