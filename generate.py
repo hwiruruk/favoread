@@ -8,14 +8,25 @@ BASE = "https://favorbook.co.kr/"
 # 내부 관리 도구(editor/, cardnews/)는 noindex이며 통계를 왜곡하므로 제외한다.
 GA_MEASUREMENT_ID = "G-42YXZRRS25"
 GA_TAG = (
-    '  <!-- Google tag (gtag.js) -->\n'
-    '  <script async src="https://www.googletagmanager.com/gtag/js?id=' + GA_MEASUREMENT_ID + '"></script>\n'
+    '  <!-- Google tag (gtag.js) — Consent Mode: 동의 전에는 analytics_storage를 기본 거부 -->\n'
     '  <script>\n'
     '    window.dataLayer = window.dataLayer || [];\n'
     '    function gtag(){dataLayer.push(arguments);}\n'
+    "    gtag('consent', 'default', {\n"
+    "      'analytics_storage': 'denied',\n"
+    "      'ad_storage': 'denied',\n"
+    "      'ad_user_data': 'denied',\n"
+    "      'ad_personalization': 'denied'\n"
+    '    });\n'
     "    gtag('js', new Date());\n"
     "    gtag('config', '" + GA_MEASUREMENT_ID + "');\n"
+    '    try {\n'
+    "      if (localStorage.getItem('ga-consent') === 'granted') {\n"
+    "        gtag('consent', 'update', { analytics_storage: 'granted' });\n"
+    '      }\n'
+    '    } catch (e) {}\n'
     '  </script>\n'
+    '  <script async src="https://www.googletagmanager.com/gtag/js?id=' + GA_MEASUREMENT_ID + '"></script>\n'
 )
 TODAY = datetime.date.today().isoformat()
 
@@ -1130,6 +1141,42 @@ for _info in celebs.values():
         if _sp:
             _b['spineUrl'] = _sp
 
+# comment/source/link은 직접 검증하고 고른 핵심 자료라 data.json 한 방에
+# 통째로 내려주지 않는다. 검색/추천/랭킹 등 화면 대부분에 필요한 나머지
+# 필드(제목/저자/출판사/표지)만 담아 가볍게 배포하고, 위 세 필드는 셀럽별로
+# 쪼개 data/detail/*.json에 따로 두어 실제로 그 사람 모달을 열 때만
+# 그때그때 받아가게 한다. share/*.html(SEO용 정적 페이지)은 그대로 전체
+# 내용을 담아 생성하므로 검색 노출에는 영향이 없다.
+DETAIL_DIR = 'data/detail'
+os.makedirs(DETAIL_DIR, exist_ok=True)
+
+LITE_BOOK_KEYS = ('title', 'author', 'publisher', 'coverUrl', 'spineUrl', 'title_en', 'author_en')
+
+_kept_detail_files = set()
+for name, info in celebs.items():
+    detail = {}
+    for b in info['books']:
+        d = {k: b[k] for k in ('comment', 'source', 'link') if b.get(k)}
+        if d:
+            detail[b['title']] = d
+    # share/*.html과 동일하게, 디스크에는 원문 그대로 저장하고 URL만
+    # encodeURIComponent로 인코딩해서 받는다(클라이언트 fetch 쪽과 대응).
+    fname = safe_filename(name) + '.json'
+    _kept_detail_files.add(fname)
+    fpath = os.path.join(DETAIL_DIR, fname)
+    if detail:
+        payload = json.dumps(detail, ensure_ascii=False, separators=(',', ':'))
+        if not os.path.exists(fpath) or open(fpath, encoding='utf-8').read() != payload:
+            with open(fpath, 'w', encoding='utf-8') as f:
+                f.write(payload)
+    elif os.path.exists(fpath):
+        os.remove(fpath)
+
+# 삭제되거나 이름이 바뀐 셀럽의 남은 detail 파일 정리
+for _fn in os.listdir(DETAIL_DIR):
+    if _fn.endswith('.json') and _fn not in _kept_detail_files:
+        os.remove(os.path.join(DETAIL_DIR, _fn))
+
 data_json = {
     'generated': TODAY,
     'source': 'favorbook.co.kr',
@@ -1138,7 +1185,7 @@ data_json = {
         name: {
             'imageUrl': info['img'],
             'shortUrl': make_celeb_short_url(name),
-            'books':    info['books'],
+            'books':    [{k: b.get(k, '') for k in LITE_BOOK_KEYS} for b in info['books']],
         }
         for name, info in celebs.items()
     }
@@ -1146,7 +1193,7 @@ data_json = {
 
 with open('data.json', 'w', encoding='utf-8') as f:
     json.dump(data_json, f, ensure_ascii=False, separators=(',', ':'))
-print(f"✅ data.json 생성: {os.path.getsize('data.json') // 1024}KB")
+print(f"✅ data.json 생성: {os.path.getsize('data.json') // 1024}KB (comment/source/link는 data/detail/*.json으로 분리)")
 
 # ── 3. index.html 정적 셀럽 목록 갱신 ───────────────────────────────
 
