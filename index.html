@@ -544,7 +544,7 @@
   <!-- 책 제목으로 검색하면 그 책과 읽은 셀럽을 먼저 보여준다 -->
   <section id="book-hits" class="hidden w-full">
     <div class="flex items-end justify-between gap-3 mb-4">
-      <h2 class="text-xl md:text-2xl font-black word-break-keep">📚 검색한 책</h2>
+      <h2 id="book-hits-title" class="text-xl md:text-2xl font-black word-break-keep">📚 검색한 책</h2>
       <span id="book-hits-count" class="font-sans font-bold text-[10px] sm:text-xs tracking-widest text-muted"></span>
     </div>
     <div id="book-hits-list" class="flex flex-col gap-3"></div>
@@ -1299,6 +1299,7 @@
     bookHits:      document.getElementById('book-hits'),
     bookHitsList:  document.getElementById('book-hits-list'),
     bookHitsCount: document.getElementById('book-hits-count'),
+    bookHitsTitle: document.getElementById('book-hits-title'),
     searchBar:     document.getElementById('search-bar'),
     searchSummary: document.getElementById('search-summary'),
     btnClearSearch: document.getElementById('btn-clear-search'),
@@ -1510,9 +1511,12 @@
         let hit = map.get(key);
         if (!hit) {
           hit = { title: key, author: b.author || '', publisher: b.publisher || '',
-                  coverUrl: b.coverUrl || '', celebs: [] };
+                  coverUrl: b.coverUrl || '', celebs: [], publishers: [] };
           map.set(key, hit);
         }
+        // 같은 책이라도 셀럽마다 판본(출판사)이 다르게 적힐 수 있어 모두 모아 둔다
+        const pub = (b.publisher || '').trim();
+        if (pub && !hit.publishers.includes(pub)) hit.publishers.push(pub);
         // 표지가 비어 있던 항목이라면 뒤에 나온 값으로 채운다
         if (!hit.coverUrl && b.coverUrl) hit.coverUrl = b.coverUrl;
         if (!hit.author && b.author) hit.author = b.author;
@@ -1526,21 +1530,113 @@
     return bookIndex._cache;
   }
 
+  /* 출판사로 검색했을 때 — 궁금한 건 '이 출판사의 어떤 책이 읽혔나'라서
+     책을 주인공으로, 읽은 셀럽은 아래에 작은 태그로 곁들인다.
+     문학동네·민음사처럼 100권이 넘는 곳도 있어 책은 작은 표지 타일로
+     몇 줄만 보여 주고 '더보기'로 늘리며, 셀럽 태그도 처음엔 한두 줄만 편다. */
+  const PUB_BOOK_STEP  = 12;
+  const PUB_CELEB_STEP = 16;
+  const pubView = { kw: '', books: PUB_BOOK_STEP, celebsOpen: false };
+
+  function renderPublisherHits(kw, hits) {
+    if (pubView.kw !== kw) Object.assign(pubView, { kw, books: PUB_BOOK_STEP, celebsOpen: false });
+
+    // 출판사 이름은 검색어가 아니라 실제 이름으로 적는다 (많이 나온 순)
+    const pubCount = new Map();
+    hits.forEach((b) => pubCount.set(b.pubMatch, (pubCount.get(b.pubMatch) || 0) + 1));
+    const pubs = [...pubCount.entries()].sort((a, b) => b[1] - a[1]).map(([p]) => p);
+    const pubLabel = pubs.length > 1 ? `${pubs[0]} 외 ${pubs.length - 1}곳` : pubs[0];
+
+    // 셀럽은 이 출판사 책을 많이 읽은 순
+    const celebCount = new Map();
+    hits.forEach((b) => b.celebs.forEach((n) => celebCount.set(n, (celebCount.get(n) || 0) + 1)));
+    const celebs = [...celebCount.entries()]
+      .sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0], 'ko'));
+
+    D.bookHitsTitle.textContent = `🏷️ ${pubLabel}`;
+    D.bookHitsCount.textContent = `책 ${hits.length}권 · 셀럽 ${celebs.length}명`;
+
+    const shownBooks = hits.slice(0, pubView.books);
+    const tiles = shownBooks.map((b) => {
+      const cover = b.coverUrl
+        ? `<img src="${escHtml(b.coverUrl)}" alt="${escHtml(b.title)} 표지" loading="lazy" referrerpolicy="no-referrer"
+             class="w-full h-full object-cover">`
+        : `<div class="w-full h-full bg-paper-dark flex items-center justify-center text-xl">📕</div>`;
+      const who = b.celebs.length > 1 ? `${b.celebs[0]} 외 ${b.celebs.length - 1}명` : b.celebs[0];
+      return `
+        <button type="button" data-book="${escHtml(b.title)}" title="${escHtml(b.title)} — 읽은 셀럽 보기"
+          class="text-left flex flex-col bg-white border-2 border-ink shadow-neo-sm hover:shadow-neo hover:-translate-y-0.5 transition-all overflow-hidden">
+          <div class="w-full aspect-[2/3] border-b-2 border-ink overflow-hidden bg-paper-dark">${cover}</div>
+          <div class="p-1.5 sm:p-2 min-w-0">
+            <p class="text-[11px] sm:text-xs font-black leading-snug line-clamp-2 word-break-keep">${escHtml(b.title)}</p>
+            <p class="text-[9px] sm:text-[10px] font-sans font-bold text-muted mt-0.5 line-clamp-1">👤 ${escHtml(who)}</p>
+          </div>
+        </button>`;
+    }).join('');
+    const restBooks = hits.length - shownBooks.length;
+    const moreBooks = restBooks > 0
+      ? `<div class="flex justify-center mt-3">
+           <button type="button" data-pub-more="books"
+             class="font-sans font-bold text-[10px] sm:text-xs tracking-widest border-2 border-ink bg-white hover:bg-neo-yellow shadow-neo-sm px-4 py-1.5 hover:-translate-y-0.5 transition-all">
+             ▼ 책 더보기 (+${Math.min(restBooks, PUB_BOOK_STEP)} / 남은 ${restBooks}권)</button>
+         </div>`
+      : '';
+
+    const shownCelebs = pubView.celebsOpen ? celebs : celebs.slice(0, PUB_CELEB_STEP);
+    const chips = shownCelebs.map(([n, c]) => `
+        <button type="button" data-celeb="${escHtml(n)}"
+          class="font-sans font-bold text-[10px] sm:text-xs border-2 border-ink bg-white shadow-neo-sm px-2 py-0.5 hover:bg-neo-mint hover:-translate-y-0.5 transition-all">
+          ${escHtml(n)}${c > 1 ? ` <span class="text-muted">${c}</span>` : ''}</button>`).join('');
+    const restCelebs = celebs.length - shownCelebs.length;
+    const celebToggle = restCelebs > 0
+      ? `<button type="button" data-pub-more="celebs"
+           class="font-sans font-bold text-[10px] sm:text-xs border-2 border-dashed border-ink bg-paper px-2 py-0.5 hover:bg-neo-yellow transition-all">
+           + ${restCelebs}명 더</button>`
+      : (pubView.celebsOpen && celebs.length > PUB_CELEB_STEP
+          ? `<button type="button" data-pub-more="celebs"
+               class="font-sans font-bold text-[10px] sm:text-xs border-2 border-dashed border-ink bg-paper px-2 py-0.5 hover:bg-neo-yellow transition-all">
+               접기</button>`
+          : '');
+
+    D.bookHitsList.innerHTML = `
+      <div class="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 gap-2 sm:gap-3">${tiles}</div>
+      ${moreBooks}
+      <div class="bg-white border-2 border-ink shadow-neo-sm p-3 mt-1">
+        <p class="text-[10px] sm:text-[11px] font-sans font-bold tracking-widest text-muted mb-2">이 출판사 책을 읽은 셀럽 ${celebs.length}명 <span class="font-normal">· 숫자는 읽은 권수</span></p>
+        <div class="flex flex-wrap gap-1.5">${chips}${celebToggle}</div>
+      </div>`;
+  }
+
   function renderBookHits(q) {
     const kw = q.trim().toLowerCase();
     // 두 글자는 돼야 쓸모 있는 결과가 나온다
-    if (kw.length < 2) { D.bookHits.classList.add('hidden'); return 0; }
+    if (kw.length < 2) { D.bookHits.classList.add('hidden'); return { count: 0 }; }
 
-    const hits = bookIndex()
+    const byCelebs = (a, b) => b.celebs.length - a.celebs.length || a.title.localeCompare(b.title, 'ko');
+    const all = bookIndex();
+    const hits = all
       .filter((b) => b.title.toLowerCase().includes(kw)
                   || (b.author || '').toLowerCase().includes(kw))
       // 여러 셀럽이 읽은 책을 먼저, 그다음 제목 순
-      .sort((a, b) => b.celebs.length - a.celebs.length || a.title.localeCompare(b.title, 'ko'))
+      .sort(byCelebs)
       .slice(0, 12);
 
-    if (!hits.length) { D.bookHits.classList.add('hidden'); return 0; }
+    // 제목·저자로는 안 걸리고 출판사로만 걸리면 출판사 모드
+    if (!hits.length) {
+      const pubOf = (b) => b.publishers.find((p) => p.toLowerCase().includes(kw));
+      const pubHits = all.filter(pubOf).sort(byCelebs);
+      pubHits.forEach((b) => { b.pubMatch = pubOf(b); });
+      if (pubHits.length) {
+        D.bookHits.classList.remove('hidden');
+        renderPublisherHits(kw, pubHits);
+        return { count: pubHits.length, publisher: true };
+      }
+    }
+
+    if (!hits.length) { D.bookHits.classList.add('hidden'); return { count: 0 }; }
 
     D.bookHits.classList.remove('hidden');
+    D.bookHitsTitle.textContent = '📚 검색한 책';
     D.bookHitsCount.textContent = `${hits.length}권`;
     D.bookHitsList.innerHTML = hits.map((b) => {
       const chips = b.celebs.map((n) => `
@@ -1563,7 +1659,7 @@
           </div>
         </div>`;
     }).join('');
-    return hits.length;
+    return { count: hits.length };
   }
 
   /* 검색하는 동안에는 결과만 남긴다.
@@ -1602,11 +1698,12 @@
       return str.includes(q);
     });
     
-    const bookCount = renderBookHits(kw);
+    const { count: bookCount, publisher: pubMode } = renderBookHits(kw);
     // 책 제목으로 찾았는데 사람 이름은 안 걸렸다면, 아래 셀럽 목록은 위 태그와
     // 같은 사람들이라 중복이다. 그럴 때는 목록을 접는다.
+    // 출판사로 찾았을 때도 셀럽은 책 아래 태그로 이미 나오므로 큰 카드 목록은 접는다.
     const nameHit = !!q && currentEntries.some(([name]) => name.toLowerCase().includes(q));
-    const hideGrid = bookCount > 0 && !nameHit;
+    const hideGrid = bookCount > 0 && (!nameHit || pubMode);
     document.getElementById('grid').classList.toggle('hidden', hideGrid);
     setSearchMode(!!q, { bookCount, celebCount: filteredEntries.length, hideGrid });
 
@@ -2156,7 +2253,16 @@
     });
     D.bookHitsList.addEventListener('click', (e) => {
       const b = e.target.closest('button[data-celeb]');
-      if (b) openModal(b.dataset.celeb);
+      if (b) { openModal(b.dataset.celeb); return; }
+      // 출판사 모드: 표지를 누르면 그 책 제목으로 다시 검색해 읽은 셀럽을 전부 보여 준다
+      const book = e.target.closest('button[data-book]');
+      if (book) { searchBook(book.dataset.book); return; }
+      const more = e.target.closest('button[data-pub-more]');
+      if (more) {
+        if (more.dataset.pubMore === 'books') pubView.books += PUB_BOOK_STEP;
+        else pubView.celebsOpen = !pubView.celebsOpen;
+        filterEntries(D.search.value);
+      }
     });
     D.closeBtn.addEventListener('click', () => closeModal(false));
     D.overlay.addEventListener('click', e => { if (e.target === D.overlay) closeModal(false); });
