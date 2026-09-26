@@ -623,8 +623,15 @@
              background-size: 100% var(--row); background-repeat: repeat-y; }
     .new-sec { margin: 16px 0 6px; padding: 12px 12px 2px; background: #fffbe6; border: 2px dashed #000; }
     .new-sec-h { display: flex; align-items: center; gap: 8px; margin: 0 0 10px; font-size: 15px; font-weight: 800; }
-    .new-sec .reading-list { margin: 0; }
-    .rl-num.rl-num-new { font-size: 11px; letter-spacing: .04em; }
+    .rl-item { scroll-margin-top: 16px; }
+    .rl-item:target { outline: 3px solid #fde047; outline-offset: 2px; }
+    .new-tiles { display: flex; flex-wrap: wrap; gap: 12px; padding-bottom: 10px; }
+    .new-tile { width: 84px; color: #000; text-decoration: none; display: flex; flex-direction: column; gap: 5px; }
+    .new-tile:hover { text-decoration: none; transform: translateY(-2px); }
+    .nt-cover { display: block; width: 84px; aspect-ratio: 2/3; border: 1.5px solid #000; box-shadow: 2px 2px 0 0 #000; background: #f4f4f0; overflow: hidden; }
+    .nt-cover img { width: 100%; height: 100%; object-fit: cover; display: block; }
+    .nt-no-cover { display: flex; width: 100%; height: 100%; align-items: center; justify-content: center; font-size: 22px; }
+    .nt-title { font-size: 12px; font-weight: 700; line-height: 1.3; word-break: keep-all; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
     .rl-new-tag { font-size: 9px; font-weight: 800; letter-spacing: .06em; line-height: 1; padding: 3px 5px;
                   background: #fde047; color: #000; border: 1.5px solid #000; }
     .sp { position: relative; flex: none; width: auto; height: var(--sh-h);
@@ -739,7 +746,7 @@
     <a class="sp" style="--c:hsl(104,38%,28%);--w:31px;--fs:12px" href="https://www.yes24.com/product/goods/90225942" rel="nofollow noopener noreferrer" target="_blank" title="When Einstein Walked with Gödel"><span class="sp-t"><i>When Einstein Walked with Gödel</i></span><img class="sp-i" src="https://image.yes24.com/goods/90225942/side" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.parentNode.classList.add('sp-fail');this.remove()" onload="if(this.naturalWidth/this.naturalHeight>0.4){this.parentNode.classList.add('sp-fail');this.remove()}"></a>
     </div>
     <ol class="reading-list" id="rlist">
-    <li class="rl-item">
+    <li class="rl-item" id="b1">
       <span class="rl-num">1</span>
       <a class="rl-cover" href="https://www.yes24.com/product/goods/3489078" rel="nofollow noopener noreferrer" target="_blank" aria-label="1Q84 — buy or read more"><img src="https://image.yes24.com/goods/3489078/L" alt="1Q84 by Haruki Murakami — book cover" loading="lazy"></a>
       <div class="rl-meta">
@@ -747,7 +754,7 @@
         <div class="rl-byline">Haruki Murakami</div>
       </div>
     </li>
-    <li class="rl-item">
+    <li class="rl-item" id="b2">
       <span class="rl-num">2</span>
       <a class="rl-cover" href="https://www.yes24.com/product/goods/82936937" rel="nofollow noopener noreferrer" target="_blank" aria-label="Apologia Sokratous, Kriton, Phaidon, Symposion — buy or read more"><img src="https://image.yes24.com/goods/82936937/L" alt="Apologia Sokratous, Kriton, Phaidon, Symposion by 플라톤 — book cover" loading="lazy"></a>
       <div class="rl-meta">
@@ -756,7 +763,7 @@
         <a class="rl-source" href="https://theqoo.net/square/2116866085" rel="nofollow noopener noreferrer" target="_blank">📺 Source</a>
       </div>
     </li>
-    <li class="rl-item">
+    <li class="rl-item" id="b3">
       <span class="rl-num">3</span>
       <a class="rl-cover" href="https://www.yes24.com/product/goods/59006530" rel="nofollow noopener noreferrer" target="_blank" aria-label="Astrophysics for People in a Hurry — buy or read more"><img src="https://image.yes24.com/goods/59006530/L" alt="Astrophysics for People in a Hurry by 닐 디그래스 타이슨 — book cover" loading="lazy"></a>
       <div class="rl-meta">
@@ -766,7 +773,7 @@
         <a class="rl-source" href="https://theqoo.net/square/2116866085" rel="nofollow noopener noreferrer" target="_blank">📺 Source</a>
       </div>
     </li>
-    <li class="rl-item">
+    <li class="rl-item" id="b4">
       <span class="rl-num">4</span>
       <a class="rl-cover" href="https://www.yes24.com/product/goods/37335066" rel="nofollow noopener noreferrer" target="_blank" aria-label="A Theory of Fun for Game Design — buy or read more"><img src="https://image.yes24.com/goods/37335066/L" alt="A Theory of Fun for Game Design by 라프 코스터 — book cover" loading="lazy"></a>
       <div class="rl-meta">
@@ -776,7 +783,7 @@
         <a class="rl-source" href="https://theqoo.net/square/2116866085" rel="nofollow noopener noreferrer" target="_blank">📺 Source</a>
       </div>
     </li>
-    <li class="rl-item">
+    <li class="rl-item" id="b5">
       <span class="rl-num">5</span>
       <a class="rl-cover" href="https://www.yes24.com/product/goods/2312211" rel="nofollow noopener noreferrer" target="_blank" aria-label="Cosmos — buy or read more"><img src="https://image.yes24.com/goods/2312211/L" alt="Cosmos by 칼 세이건 — book cover" loading="lazy"></a>
       <div class="rl-meta">
@@ -786,7 +793,7 @@
         <a class="rl-source" href="https://theqoo.net/square/2116866085" rel="nofollow noopener noreferrer" target="_blank">📺 Source</a>
       </div>
     </li>
-    <li class="rl-item">
+    <li class="rl-item" id="b6">
       <span class="rl-num">6</span>
       <a class="rl-cover" href="https://www.yes24.com/product/goods/3315954" rel="nofollow noopener noreferrer" target="_blank" aria-label="Fahrenheit 451 — buy or read more"><img src="https://image.yes24.com/goods/3315954/L" alt="Fahrenheit 451 by 레이 브래드버리 — book cover" loading="lazy"></a>
       <div class="rl-meta">
@@ -796,7 +803,7 @@
         <a class="rl-source" href="https://theqoo.net/square/2116866085" rel="nofollow noopener noreferrer" target="_blank">📺 Source</a>
       </div>
     </li>
-    <li class="rl-item">
+    <li class="rl-item" id="b7">
       <span class="rl-num">7</span>
       <a class="rl-cover" href="https://www.yes24.com/product/goods/26035944" rel="nofollow noopener noreferrer" target="_blank" aria-label="How Not to Be Wrong: The Power of Mathematical Thinking — buy or read more"><img src="https://image.yes24.com/goods/26035944/L" alt="How Not to Be Wrong: The Power of Mathematical Thinking by 조던 엘렌버그 — book cover" loading="lazy"></a>
       <div class="rl-meta">
@@ -806,7 +813,7 @@
         <a class="rl-source" href="https://theqoo.net/square/2116866085" rel="nofollow noopener noreferrer" target="_blank">📺 Source</a>
       </div>
     </li>
-    <li class="rl-item">
+    <li class="rl-item" id="b8">
       <span class="rl-num">8</span>
       <a class="rl-cover" href="https://www.yes24.com/product/goods/117643865" rel="nofollow noopener noreferrer" target="_blank" aria-label="Inner Communication — buy or read more"><img src="https://image.yes24.com/goods/117643865/L" alt="Inner Communication by Kim Ju-hwan — book cover" loading="lazy"></a>
       <div class="rl-meta">
@@ -816,7 +823,7 @@
         <a class="rl-source" href="https://www.chosun.com/topclass/topclass_issue/2025/11/08/B7G3BLQY4ZEGFHI5YV7UVF2NYQ/" rel="nofollow noopener noreferrer" target="_blank">📺 Source</a>
       </div>
     </li>
-    <li class="rl-item">
+    <li class="rl-item" id="b9">
       <span class="rl-num">9</span>
       <a class="rl-cover" href="https://www.yes24.com/product/goods/108850617" rel="nofollow noopener noreferrer" target="_blank" aria-label="Jag kan ha fel och andra visdomar fran mitt liv som buddhistmunk — buy or read more"><img src="https://image.yes24.com/goods/108850617/L" alt="Jag kan ha fel och andra visdomar fran mitt liv som buddhistmunk by Björn Natthiko Lindeblad — book cover" loading="lazy"></a>
       <div class="rl-meta">
@@ -826,7 +833,7 @@
         <a class="rl-source" href="https://www.chosun.com/politics/politics_general/2025/12/20/D6PIVQAP6ZAUVLIWADLS3MV4XE/?utm_source=naver&amp;utm_medium=referral&amp;utm_campaign=naver-news" rel="nofollow noopener noreferrer" target="_blank">📺 Source</a>
       </div>
     </li>
-    <li class="rl-item">
+    <li class="rl-item" id="b10">
       <span class="rl-num">10</span>
       <a class="rl-cover" href="https://www.yes24.com/product/goods/15156691" rel="nofollow noopener noreferrer" target="_blank" aria-label="Justice: What&#x27;s the Right Thing to Do? — buy or read more"><img src="https://image.yes24.com/goods/15156691/L" alt="Justice: What&#x27;s the Right Thing to Do? by Michael Sandel — book cover" loading="lazy"></a>
       <div class="rl-meta">
@@ -836,7 +843,7 @@
         <a class="rl-source" href="https://www.chosun.com/topclass/topclass_issue/2025/11/08/B7G3BLQY4ZEGFHI5YV7UVF2NYQ/" rel="nofollow noopener noreferrer" target="_blank">📺 Source</a>
       </div>
     </li>
-    <li class="rl-item">
+    <li class="rl-item" id="b11">
       <span class="rl-num">11</span>
       <a class="rl-cover" href="https://www.yes24.com/product/goods/23630397" rel="nofollow noopener noreferrer" target="_blank" aria-label="Laplace&#x27;s Witch — buy or read more"><img src="https://image.yes24.com/goods/23630397/L" alt="Laplace&#x27;s Witch by 히가시노 게이고 — book cover" loading="lazy"></a>
       <div class="rl-meta">
@@ -846,7 +853,7 @@
         <a class="rl-source" href="https://theqoo.net/square/2116866085" rel="nofollow noopener noreferrer" target="_blank">📺 Source</a>
       </div>
     </li>
-    <li class="rl-item">
+    <li class="rl-item" id="b12">
       <span class="rl-num">12</span>
       <a class="rl-cover" href="https://www.yes24.com/product/goods/129367072" rel="nofollow noopener noreferrer" target="_blank" aria-label="Le sixième sommeil — buy or read more"><img src="https://image.yes24.com/goods/129367072/L" alt="Le sixième sommeil by 베르나르 베르베르 — book cover" loading="lazy"></a>
       <div class="rl-meta">
@@ -855,7 +862,7 @@
         <a class="rl-source" href="https://theqoo.net/square/2116866085" rel="nofollow noopener noreferrer" target="_blank">📺 Source</a>
       </div>
     </li>
-    <li class="rl-item">
+    <li class="rl-item" id="b13">
       <span class="rl-num">13</span>
       <a class="rl-cover" href="https://www.yes24.com/product/goods/101375809" rel="nofollow noopener noreferrer" target="_blank" aria-label="Martian — buy or read more"><img src="https://image.yes24.com/goods/101375809/L" alt="Martian by 앤디 위어 — book cover" loading="lazy"></a>
       <div class="rl-meta">
@@ -865,7 +872,7 @@
         <a class="rl-source" href="https://theqoo.net/square/2116866085" rel="nofollow noopener noreferrer" target="_blank">📺 Source</a>
       </div>
     </li>
-    <li class="rl-item">
+    <li class="rl-item" id="b14">
       <span class="rl-num">14</span>
       <a class="rl-cover" href="https://www.yes24.com/product/goods/32400671" rel="nofollow noopener noreferrer" target="_blank" aria-label="Memory Man — buy or read more"><img src="https://image.yes24.com/goods/32400671/L" alt="Memory Man by 데이비드 발다치 — book cover" loading="lazy"></a>
       <div class="rl-meta">
@@ -875,7 +882,7 @@
         <a class="rl-source" href="https://theqoo.net/square/2116866085" rel="nofollow noopener noreferrer" target="_blank">📺 Source</a>
       </div>
     </li>
-    <li class="rl-item">
+    <li class="rl-item" id="b15">
       <span class="rl-num">15</span>
       <a class="rl-cover" href="https://www.yes24.com/product/goods/44499829" rel="nofollow noopener noreferrer" target="_blank" aria-label="Norwegian Wood — buy or read more"><img src="https://image.yes24.com/goods/44499829/L" alt="Norwegian Wood by 무라카미 하루키 — book cover" loading="lazy"></a>
       <div class="rl-meta">
@@ -884,7 +891,7 @@
         <a class="rl-source" href="https://theqoo.net/square/2116866085" rel="nofollow noopener noreferrer" target="_blank">📺 Source</a>
       </div>
     </li>
-    <li class="rl-item">
+    <li class="rl-item" id="b16">
       <span class="rl-num">16</span>
       <a class="rl-cover" href="https://www.yes24.com/product/goods/126181478" rel="nofollow noopener noreferrer" target="_blank" aria-label="Silent Spring — buy or read more"><img src="https://image.yes24.com/goods/126181478/L" alt="Silent Spring by Rachel Carson — book cover" loading="lazy"></a>
       <div class="rl-meta">
@@ -892,7 +899,7 @@
         <div class="rl-byline">Rachel Carson</div>
       </div>
     </li>
-    <li class="rl-item">
+    <li class="rl-item" id="b17">
       <span class="rl-num">17</span>
       <a class="rl-cover" href="https://www.yes24.com/product/goods/1511432" rel="nofollow noopener noreferrer" target="_blank" aria-label="The Fabric of the Cosmos — buy or read more"><img src="https://image.yes24.com/goods/1511432/L" alt="The Fabric of the Cosmos by 브라이언 그린 — book cover" loading="lazy"></a>
       <div class="rl-meta">
@@ -902,7 +909,7 @@
         <a class="rl-source" href="https://theqoo.net/square/2116866085" rel="nofollow noopener noreferrer" target="_blank">📺 Source</a>
       </div>
     </li>
-    <li class="rl-item">
+    <li class="rl-item" id="b18">
       <span class="rl-num">18</span>
       <a class="rl-cover" href="https://www.yes24.com/product/goods/124574978" rel="nofollow noopener noreferrer" target="_blank" aria-label="The Miracle Morning — buy or read more"><img src="https://image.yes24.com/goods/124574978/L" alt="The Miracle Morning by 할 엘로드 — book cover" loading="lazy"></a>
       <div class="rl-meta">
@@ -911,7 +918,7 @@
         <a class="rl-source" href="https://theqoo.net/square/2116866085" rel="nofollow noopener noreferrer" target="_blank">📺 Source</a>
       </div>
     </li>
-    <li class="rl-item">
+    <li class="rl-item" id="b19">
       <span class="rl-num">19</span>
       <a class="rl-cover" href="https://www.yes24.com/product/goods/116586056" rel="nofollow noopener noreferrer" target="_blank" aria-label="The Miracles of the Namiya General Store — buy or read more"><img src="https://image.yes24.com/goods/116586056/L" alt="The Miracles of the Namiya General Store by 히가시노 게이고 — book cover" loading="lazy"></a>
       <div class="rl-meta">
@@ -921,7 +928,7 @@
         <a class="rl-source" href="https://theqoo.net/square/2116866085" rel="nofollow noopener noreferrer" target="_blank">📺 Source</a>
       </div>
     </li>
-    <li class="rl-item">
+    <li class="rl-item" id="b20">
       <span class="rl-num">20</span>
       <a class="rl-cover" href="https://www.yes24.com/product/goods/195804435" rel="nofollow noopener noreferrer" target="_blank" aria-label="The Selfish Gene — buy or read more"><img src="https://image.yes24.com/goods/195804435/L" alt="The Selfish Gene by Richard Dawkins — book cover" loading="lazy"></a>
       <div class="rl-meta">
@@ -931,7 +938,7 @@
         <a class="rl-source" href="https://www.chosun.com/topclass/topclass_issue/2025/11/08/B7G3BLQY4ZEGFHI5YV7UVF2NYQ/" rel="nofollow noopener noreferrer" target="_blank">📺 Source</a>
       </div>
     </li>
-    <li class="rl-item">
+    <li class="rl-item" id="b21">
       <span class="rl-num">21</span>
       <a class="rl-cover" href="https://www.yes24.com/product/goods/54233937" rel="nofollow noopener noreferrer" target="_blank" aria-label="The Subtle Art of Not Giving a F*ck — buy or read more"><img src="https://image.yes24.com/goods/54233937/L" alt="The Subtle Art of Not Giving a F*ck by 마크 맨슨 — book cover" loading="lazy"></a>
       <div class="rl-meta">
@@ -941,7 +948,7 @@
         <a class="rl-source" href="https://theqoo.net/square/2116866085" rel="nofollow noopener noreferrer" target="_blank">📺 Source</a>
       </div>
     </li>
-    <li class="rl-item">
+    <li class="rl-item" id="b22">
       <span class="rl-num">22</span>
       <a class="rl-cover" href="https://www.yes24.com/product/goods/58787793" rel="nofollow noopener noreferrer" target="_blank" aria-label="The Upward Spiral — buy or read more"><img src="https://image.yes24.com/goods/58787793/L" alt="The Upward Spiral by 앨릭스 코브 — book cover" loading="lazy"></a>
       <div class="rl-meta">
@@ -949,7 +956,7 @@
         <div class="rl-byline">앨릭스 코브</div>
       </div>
     </li>
-    <li class="rl-item">
+    <li class="rl-item" id="b23">
       <span class="rl-num">23</span>
       <a class="rl-cover" href="https://www.yes24.com/product/goods/58816202" rel="nofollow noopener noreferrer" target="_blank" aria-label="Voice of Sin — buy or read more"><img src="https://image.yes24.com/goods/58816202/L" alt="Voice of Sin by Takeshi Shiota — book cover" loading="lazy"></a>
       <div class="rl-meta">
@@ -958,7 +965,7 @@
         <a class="rl-source" href="https://x.com/T1LoL/status/1065927392135278593" rel="nofollow noopener noreferrer" target="_blank">📺 Source</a>
       </div>
     </li>
-    <li class="rl-item">
+    <li class="rl-item" id="b24">
       <span class="rl-num">24</span>
       <a class="rl-cover" href="https://www.yes24.com/product/goods/5531156" rel="nofollow noopener noreferrer" target="_blank" aria-label="Walden — buy or read more"><img src="https://image.yes24.com/goods/5531156/L" alt="Walden by Henry David Thoreau — book cover" loading="lazy"></a>
       <div class="rl-meta">
@@ -966,7 +973,7 @@
         <div class="rl-byline">Henry David Thoreau</div>
       </div>
     </li>
-    <li class="rl-item">
+    <li class="rl-item" id="b25">
       <span class="rl-num">25</span>
       <a class="rl-cover" href="https://www.yes24.com/product/goods/44302269" rel="nofollow noopener noreferrer" target="_blank" aria-label="We Have the Technology: How Biohackers, Foodies, Physicians, and Scientists Are Transforming Human Perception, One Sense at a Time — buy or read more"><img src="https://image.yes24.com/goods/44302269/L" alt="We Have the Technology: How Biohackers, Foodies, Physicians, and Scientists Are Transforming Human Perception, One Sense at a Time by 카라 플라토니 — book cover" loading="lazy"></a>
       <div class="rl-meta">
@@ -976,7 +983,7 @@
         <a class="rl-source" href="https://theqoo.net/square/2116866085" rel="nofollow noopener noreferrer" target="_blank">📺 Source</a>
       </div>
     </li>
-    <li class="rl-item">
+    <li class="rl-item" id="b26">
       <span class="rl-num">26</span>
       <a class="rl-cover" href="https://www.yes24.com/product/goods/90225942" rel="nofollow noopener noreferrer" target="_blank" aria-label="When Einstein Walked with Gödel — buy or read more"><img src="https://image.yes24.com/goods/90225942/L" alt="When Einstein Walked with Gödel by 짐 홀트 — book cover" loading="lazy"></a>
       <div class="rl-meta">
