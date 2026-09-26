@@ -1,0 +1,76 @@
+name: Archive Source Pages
+
+# 출처 웹페이지를 PDF로 떠서 모아둔다 (tools/archive_sources.py).
+# GitHub 웹에서 Actions → 이 워크플로 → "Run workflow" 버튼으로 돌린다.
+# 넣어둘 Secret은 없다.
+#
+# 결과는 저장소에 커밋하지 않고, 실행 화면 맨 아래 Artifacts 에 zip으로 올라온다 (90일 보관).
+#   source-pdfs    웹페이지 PDF + index.csv (URL ↔ PDF ↔ 셀럽·책 대응표)
+#   youtube-list   유튜브 출처 목록 youtube.csv (영상 제목·채널·시작 시각 포함)
+
+on:
+  workflow_dispatch:
+    inputs:
+      limit:
+        description: '이번에 PDF로 뜰 웹페이지 수 (0 = 전부). 처음엔 20 정도로 시험해 보세요'
+        required: false
+        default: '20'
+      host:
+        description: '이 도메인만 (비우면 전부, 예: cine21.com)'
+        required: false
+        default: ''
+      skip_social:
+        description: 'X·인스타그램·페이스북 등 로그인 벽 출처 건너뛰기'
+        required: false
+        default: false
+        type: boolean
+
+jobs:
+  archive:
+    runs-on: ubuntu-latest
+    timeout-minutes: 240
+    permissions:
+      contents: read
+
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: actions/setup-python@v6
+        with:
+          python-version: '3.12'
+
+      - name: 브라우저와 한글 글꼴 설치
+        run: |
+          sudo apt-get update -q
+          sudo apt-get install -y -q fonts-noto-cjk fonts-noto-color-emoji
+          pip install -q playwright
+          python3 -m playwright install --with-deps chromium
+
+      - name: 출처 PDF 뜨기
+        env:
+          LIMIT: ${{ github.event.inputs.limit }}
+          HOST: ${{ github.event.inputs.host }}
+          SKIP_SOCIAL: ${{ github.event.inputs.skip_social }}
+        run: |
+          set -- 
+          if [ -n "$LIMIT" ] && [ "$LIMIT" != "0" ]; then set -- "$@" --limit "$LIMIT"; fi
+          if [ -n "$HOST" ]; then set -- "$@" --host "$HOST"; fi
+          if [ "$SKIP_SOCIAL" = "true" ]; then set -- "$@" --skip-social; fi
+          echo "실행: python3 tools/archive_sources.py $*"
+          python3 tools/archive_sources.py "$@"
+
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: source-pdfs
+          path: archive/web/
+          retention-days: 90
+          if-no-files-found: warn
+
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: youtube-list
+          path: archive/youtube/
+          retention-days: 90
+          if-no-files-found: warn
