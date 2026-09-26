@@ -804,6 +804,33 @@ COPY_BTN_JS = (
     '  </script>\n'
 )
 
+
+# ── 하트 버튼 ────────────────────────────────────────────────────────
+#
+# 방문자가 셀럽·책에 하트를 누르고 모두가 같은 하트 수를 본다.
+# 동작과 모양은 assets/hearts.js가, 하트 수는 tools/hearts-worker/가 맡는다.
+# hearts.js에 서버 주소가 없으면 버튼은 hidden 그대로 남아 보이지 않는다.
+#
+# 키는 한국어 이름·제목이라 한국어와 영문 페이지의 하트 수가 합쳐진다.
+
+def heart_btn_html(key, label, small=False):
+    return ('<button type="button" class="heart-btn' + (' sm' if small else '') + '"'
+            ' data-heart="' + esc(key) + '" aria-pressed="false"'
+            ' aria-label="' + esc(label) + '" title="' + esc(label) + '" hidden>'
+            '<span class="heart-ico" aria-hidden="true">♡</span>'
+            '<span class="heart-n"></span></button>')
+
+
+def celeb_heart_key(name):
+    return 'c:' + name
+
+
+def book_heart_key(title):
+    return 'b:' + title.strip()
+
+
+HEART_JS = '  <script src="' + BASE + 'assets/hearts.js" defer></script>\n'
+
 # ── 업데이트 내역 (git log of data.csv) ─────────────────────────────
 
 def _parse_csv_pairs(text):
@@ -1876,6 +1903,7 @@ for name, info in celebs.items():
             '        <div class="rl-title">' + title_html + '</div>\n'
             + (('        <div class="rl-byline">' + byline_html + '</div>\n') if byline_html else '')
             + (('        ' + source_html + '\n') if source_html else '')
+            + '        ' + heart_btn_html(book_heart_key(b['title']), '이 책에 하트', small=True) + '\n'
             + '      </div>'
             + shared_html
             + '\n    </li>\n'
@@ -2132,6 +2160,7 @@ for name, info in celebs.items():
         + (('      <p class="celeb-bio">' + esc(get_bio(name, 'ko')) + '</p>\n')
            if get_bio(name, 'ko') else '')
         + '      <p style="margin:0;color:#666;font-size:14px">총 <strong>' + str(n_books) + '권</strong>의 도서</p>\n'
+        '      <p class="heart-row">' + heart_btn_html(celeb_heart_key(name), sname + '에게 하트') + '</p>\n'
         '    </div>\n'
         '  </header>\n'
         '\n'
@@ -2190,7 +2219,7 @@ for name, info in celebs.items():
         '  </footer>\n'
         '\n'
         + NEW_BADGE_JS
-        + COPY_BTN_JS +
+        + COPY_BTN_JS + HEART_JS +
         '</body>\n'
         '</html>'
     )
@@ -2341,13 +2370,14 @@ for title, binfo in book_celebs.items():
         '\n'
         '  <h1>' + esc(title) + '</h1>\n'
         '  <p>' + esc(binfo['author']) + ((' · ' + esc(binfo['publisher'])) if binfo['publisher'] else '') + '</p>\n'
+        '  <p class="heart-row">' + heart_btn_html(book_heart_key(title), '이 책에 하트') + '</p>\n'
         + cover_html +
         '  <h2>이 책을 읽은 셀럽 (' + str(celeb_count) + '명)</h2>\n'
         '  <ul>\n' + celeb_rows + '\n  </ul>\n'
         '\n'
         '  <p><a href="' + BASE + '">최애의 독서 홈으로 →</a></p>\n'
         '\n'
-        + COPY_BTN_JS +
+        + COPY_BTN_JS + HEART_JS +
         '</body>\n'
         '</html>'
     )
@@ -2758,6 +2788,7 @@ for name, info in celebs.items():
             '        <div class="rl-title">' + t_html + '</div>\n'
             + (('        <div class="rl-byline">' + author_text + '</div>\n') if author_text else '')
             + (('        ' + src_html + '\n') if src_html else '')
+            + '        ' + heart_btn_html(book_heart_key(b['title']), 'Heart this book', small=True) + '\n'
             + '      </div>\n'
             '    </li>\n'
         )
@@ -3012,6 +3043,7 @@ for name, info in celebs.items():
         + (('      <p class="celeb-alias">Also written ' + esc(' · '.join(_variants))
             + '</p>\n') if _variants else '')
         + '      <p style="margin:0;color:#666;font-size:14px">' + str(n) + ' book' + ('s' if n != 1 else '') + ' read &amp; recommended</p>\n'
+        '      <p class="heart-row">' + heart_btn_html(celeb_heart_key(name), 'Send ' + _name_pl + ' a heart') + '</p>\n'
         '    </div>\n'
         '  </header>\n'
         '  <section class="intro">\n'
@@ -3060,7 +3092,7 @@ for name, info in celebs.items():
         '    <p><a href="' + EN_BASE + '">Browse more Korean celebrity book lists →</a></p>\n'
         '  </footer>\n'
         + NEW_BADGE_JS
-        + COPY_BTN_JS +
+        + COPY_BTN_JS + HEART_JS +
         '</body>\n'
         '</html>'
     )
@@ -3196,12 +3228,13 @@ for title, t_en in book_title_en.items():
         + ((' · ' + esc(author_display)) if author_display.strip() else '')
         + ((' · ' + esc(binfo['publisher'])) if binfo['publisher'].strip() else '')
         + '</p>\n'
+        '  <p class="heart-row">' + heart_btn_html(book_heart_key(title), 'Heart this book') + '</p>\n'
         + cover_html
         + '  <h2>Read by ' + str(n_celebs) + ' Korean celebrities</h2>\n'
         '  <ul>\n' + celeb_list + '\n  </ul>\n'
         + (EN_TR_NOTE_HTML if en_show_tr_note else '')
         + '  <p style="margin-top:32px"><a href="' + EN_BASE + '">← Back to Favorbook</a></p>\n'
-        + COPY_BTN_JS +
+        + COPY_BTN_JS + HEART_JS +
         '</body>\n'
         '</html>'
     )
