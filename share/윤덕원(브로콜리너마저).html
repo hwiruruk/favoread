@@ -469,8 +469,15 @@
              background-size: 100% var(--row); background-repeat: repeat-y; }
     .new-sec { margin: 16px 0 6px; padding: 12px 12px 2px; background: #fffbe6; border: 2px dashed #000; }
     .new-sec-h { display: flex; align-items: center; gap: 8px; margin: 0 0 10px; font-size: 15px; font-weight: 800; }
-    .new-sec .reading-list { margin: 0; }
-    .rl-num.rl-num-new { font-size: 11px; letter-spacing: .04em; }
+    .rl-item { scroll-margin-top: 16px; }
+    .rl-item:target { outline: 3px solid #fde047; outline-offset: 2px; }
+    .new-tiles { display: flex; flex-wrap: wrap; gap: 12px; padding-bottom: 10px; }
+    .new-tile { width: 84px; color: #000; text-decoration: none; display: flex; flex-direction: column; gap: 5px; }
+    .new-tile:hover { text-decoration: none; transform: translateY(-2px); }
+    .nt-cover { display: block; width: 84px; aspect-ratio: 2/3; border: 1.5px solid #000; box-shadow: 2px 2px 0 0 #000; background: #f4f4f0; overflow: hidden; }
+    .nt-cover img { width: 100%; height: 100%; object-fit: cover; display: block; }
+    .nt-no-cover { display: flex; width: 100%; height: 100%; align-items: center; justify-content: center; font-size: 22px; }
+    .nt-title { font-size: 12px; font-weight: 700; line-height: 1.3; word-break: keep-all; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
     .rl-new-tag { font-size: 9px; font-weight: 800; letter-spacing: .06em; line-height: 1; padding: 3px 5px;
                   background: #fde047; color: #000; border: 1.5px solid #000; }
     .sp { position: relative; flex: none; width: auto; height: var(--sh-h);
@@ -492,7 +499,7 @@
               font-size: 8px; line-height: 1; padding: 3px 0 2px;
               border-bottom: 1px solid rgba(0,0,0,.55); }
     .sp.is-new .sp-t { padding-top: 22px; }
-    .is-capturing .sp-new, .is-capturing .rl-new, .is-capturing .rl-shared { display: none !important; }
+    .is-capturing .sp-new, .is-capturing .rl-new, .is-capturing .rl-shared, .is-capturing .rl-comment { display: none !important; }
     .is-capturing .sp.is-new .sp-t { padding-top: 14px; }
     @media (max-width: 480px) { .shelf { --sh-h: 205px; }
                                  .sp.no-img, .sp.sp-fail { width: calc(var(--w, 38px) * .88); }
@@ -519,6 +526,7 @@
     .rl-title a { color: #000; }
     .rl-title a:hover { color: #2563eb; }
     .rl-byline { font-size: 13px; color: #555; margin-bottom: 8px; line-height: 1.4; }
+    .rl-comment { font-size: 13px; line-height: 1.55; color: #222; background: #FFF7C2; border: 1.5px solid #000; padding: 6px 9px; margin: 0 0 8px; word-break: keep-all; }
     .rl-source { display: inline-block; font-size: 12px; padding: 3px 8px; background: #fff; border: 1.5px solid #000; box-shadow: 1px 1px 0 0 #000; text-decoration: none; color: #000; transition: transform .1s, box-shadow .1s, background .1s; }
     .rl-source:hover { transform: translate(-1px,-1px); box-shadow: 2px 2px 0 0 #000; background: #a7f3d0; text-decoration: none; }
     .rl-shared { clear: both; margin-top: 12px; padding-top: 10px; border-top: 1.5px dashed #ccc; display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
@@ -579,19 +587,9 @@
     </div>
     <div class="new-sec">
       <h3 class="new-sec-h"><span class="rl-new-tag">NEW</span> 최근 10일 새로 추가된 책 (1권)</h3>
-      <ol class="reading-list">
-    <li class="rl-item">
-      <span class="rl-num rl-num-new">NEW</span>
-      <a class="rl-cover" href="https://www.yes24.com/product/goods/117012879" rel="nofollow noopener noreferrer" target="_blank" aria-label="시간이 조금 걸리더라도 알라딘에서 보기"><span class="rl-new" data-added="2026-09-26">NEW</span><img src="https://image.yes24.com/goods/117012879/L" alt="시간이 조금 걸리더라도 표지" loading="lazy"></a>
-      <div class="rl-meta">
-        <div class="rl-title"><a href="https://www.yes24.com/product/goods/117012879" rel="nofollow noopener noreferrer" target="_blank">시간이 조금 걸리더라도</a></div>
-        <div class="rl-byline">이윤엽 · 서유재</div>
-        <a class="rl-source" href="https://x.com/yes24_official/status/1616284387426930691?s=20" rel="nofollow noopener noreferrer" target="_blank">📺 출처 보기</a>
-        <button type="button" class="heart-btn sm" data-heart="b:시간이 조금 걸리더라도" aria-pressed="false" aria-label="이 책에 하트" title="이 책에 하트" hidden><span class="heart-ico" aria-hidden="true">♡</span><span class="heart-n"></span></button>
+      <div class="new-tiles">
+        <a class="new-tile" href="#b9"><span class="nt-cover"><img src="https://image.yes24.com/goods/117012879/L" alt="시간이 조금 걸리더라도 표지" loading="lazy"></span><span class="nt-title">시간이 조금 걸리더라도</span></a>
       </div>
-      <div class="rl-shared"><span class="rl-shared-label">👥 함께 추천한 셀럽 1명:</span> <a class="rl-celeb-chip" href="https://favorbook.co.kr/share/%EB%AC%B8%EC%86%8C%EB%A6%AC.html">문소리</a></div>
-    </li>
-      </ol>
     </div>
     <p class="muted">3권은 다른 셀럽도 함께 추천한 책이에요. 아래 목록에서 함께 추천한 셀럽 이름을 볼 수 있어요.</p>
     <div id="shelf-area">
@@ -618,27 +616,29 @@
     <a class="sp" style="--c:hsl(22,48%,40%);--w:33px;--fs:15px" href="https://www.yes24.com/product/goods/73615347" rel="nofollow noopener noreferrer" target="_blank" title="해피 아포칼립스!"><span class="sp-t"><i>해피 아포칼립스!</i></span><img class="sp-i" src="https://image.yes24.com/goods/73615347/side" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.parentNode.classList.add('sp-fail');this.remove()" onload="if(this.naturalWidth/this.naturalHeight>0.4){this.parentNode.classList.add('sp-fail');this.remove()}"></a>
     </div>
     <ol class="reading-list" id="rlist">
-    <li class="rl-item">
+    <li class="rl-item" id="b1">
       <span class="rl-num">1</span>
       <a class="rl-cover" href="https://www.yes24.com/product/goods/87005254" rel="nofollow noopener noreferrer" target="_blank" aria-label="땡스 갓, 잇츠 프라이데이 알라딘에서 보기"><img src="https://image.yes24.com/goods/87005254/L" alt="땡스 갓, 잇츠 프라이데이 표지" loading="lazy"></a>
       <div class="rl-meta">
         <div class="rl-title"><a href="https://www.yes24.com/product/goods/87005254" rel="nofollow noopener noreferrer" target="_blank">땡스 갓, 잇츠 프라이데이</a></div>
         <div class="rl-byline">심너울 · 안전가옥</div>
+        <p class="rl-comment">자신이 연재하던 &#x27;읽은 만큼 들린다&#x27; 칼럼에서 다룬 책이에요. 금요일 밤에 잠들어 다음 주 금요일에 깨어나는 공무원 이야기를 담은 SF 단편집입니다. (출처: 채널예스 연재)</p>
         <a class="rl-source" href="https://ch.yes24.com/article/details/42594" rel="nofollow noopener noreferrer" target="_blank">📺 출처 보기</a>
         <button type="button" class="heart-btn sm" data-heart="b:땡스 갓, 잇츠 프라이데이" aria-pressed="false" aria-label="이 책에 하트" title="이 책에 하트" hidden><span class="heart-ico" aria-hidden="true">♡</span><span class="heart-n"></span></button>
       </div>
     </li>
-    <li class="rl-item">
+    <li class="rl-item" id="b2">
       <span class="rl-num">2</span>
       <a class="rl-cover" href="https://www.yes24.com/product/goods/86899775" rel="nofollow noopener noreferrer" target="_blank" aria-label="목성에게 고리는 알라딘에서 보기"><img src="https://image.yes24.com/goods/86899775/L" alt="목성에게 고리는 표지" loading="lazy"></a>
       <div class="rl-meta">
         <div class="rl-title"><a href="https://www.yes24.com/product/goods/86899775" rel="nofollow noopener noreferrer" target="_blank">목성에게 고리는</a></div>
         <div class="rl-byline">김은우 · 재승출판</div>
+        <p class="rl-comment">목성을 직접 관측한 경험이 이 소설집을 집어 든 계기였다고 했어요. 목성의 고리처럼, 한쪽은 알아채지도 못할 작은 일이 다른 쪽에게는 엄청나게 큰 일일 수 있다는 이야기로 읽었습니다. (출처: 채널예스 &#x27;윤덕원의 읽은 만큼 들린다&#x27;)</p>
         <a class="rl-source" href="https://ch.yes24.com/article/details/42817" rel="nofollow noopener noreferrer" target="_blank">📺 출처 보기</a>
         <button type="button" class="heart-btn sm" data-heart="b:목성에게 고리는" aria-pressed="false" aria-label="이 책에 하트" title="이 책에 하트" hidden><span class="heart-ico" aria-hidden="true">♡</span><span class="heart-n"></span></button>
       </div>
     </li>
-    <li class="rl-item">
+    <li class="rl-item" id="b3">
       <span class="rl-num">3</span>
       <a class="rl-cover" href="https://www.yes24.com/product/goods/78234055" rel="nofollow noopener noreferrer" target="_blank" aria-label="미생물 전쟁 알라딘에서 보기"><img src="https://image.yes24.com/goods/78234055/L" alt="미생물 전쟁 표지" loading="lazy"></a>
       <div class="rl-meta">
@@ -648,38 +648,41 @@
         <button type="button" class="heart-btn sm" data-heart="b:미생물 전쟁" aria-pressed="false" aria-label="이 책에 하트" title="이 책에 하트" hidden><span class="heart-ico" aria-hidden="true">♡</span><span class="heart-n"></span></button>
       </div>
     </li>
-    <li class="rl-item">
+    <li class="rl-item" id="b4">
       <span class="rl-num">4</span>
       <a class="rl-cover" href="https://www.yes24.com/product/goods/85743647" rel="nofollow noopener noreferrer" target="_blank" aria-label="붕대 감기 알라딘에서 보기"><img src="https://image.yes24.com/goods/85743647/L" alt="붕대 감기 표지" loading="lazy"></a>
       <div class="rl-meta">
         <div class="rl-title"><a href="https://www.yes24.com/product/goods/85743647" rel="nofollow noopener noreferrer" target="_blank">붕대 감기</a></div>
         <div class="rl-byline">윤이형 · 작가정신</div>
+        <p class="rl-comment">읽고 나면 답답한 마음이 든다고 했어요. 쉽게 씻어낼 수 없는 문제를 다루기 때문이라고요. 여성을 둘러싼 차별을 넘어서려 애쓰면서도 처지가 달라 멀어지는 사람들의 이야기입니다. (출처: 채널예스 &#x27;윤덕원의 읽은 만큼 들린다&#x27;)</p>
         <a class="rl-source" href="https://ch.yes24.com/article/details/41981" rel="nofollow noopener noreferrer" target="_blank">📺 출처 보기</a>
         <button type="button" class="heart-btn sm" data-heart="b:붕대 감기" aria-pressed="false" aria-label="이 책에 하트" title="이 책에 하트" hidden><span class="heart-ico" aria-hidden="true">♡</span><span class="heart-n"></span></button>
       </div>
     </li>
-    <li class="rl-item">
+    <li class="rl-item" id="b5">
       <span class="rl-num">5</span>
       <a class="rl-cover" href="https://www.yes24.com/product/goods/79411194" rel="nofollow noopener noreferrer" target="_blank" aria-label="세계의 호수 알라딘에서 보기"><img src="https://image.yes24.com/goods/79411194/L" alt="세계의 호수 표지" loading="lazy"></a>
       <div class="rl-meta">
         <div class="rl-title"><a href="https://www.yes24.com/product/goods/79411194" rel="nofollow noopener noreferrer" target="_blank">세계의 호수</a></div>
         <div class="rl-byline">정용준 · 아르테</div>
+        <p class="rl-comment">&#x27;좋은 사람&#x27;이 되고 싶었던 이가 자기 문제를 마주하게 되는 이야기로 소개했어요. (출처: 채널예스 &#x27;윤덕원의 읽은 만큼 들린다&#x27;)</p>
         <a class="rl-source" href="https://ch.yes24.com/article/details/41834" rel="nofollow noopener noreferrer" target="_blank">📺 출처 보기</a>
         <button type="button" class="heart-btn sm" data-heart="b:세계의 호수" aria-pressed="false" aria-label="이 책에 하트" title="이 책에 하트" hidden><span class="heart-ico" aria-hidden="true">♡</span><span class="heart-n"></span></button>
       </div>
       <div class="rl-shared"><span class="rl-shared-label">👥 함께 추천한 셀럽 1명:</span> <a class="rl-celeb-chip" href="https://favorbook.co.kr/share/%EA%B9%80%EB%8C%80%EB%AA%85.html">김대명</a></div>
     </li>
-    <li class="rl-item">
+    <li class="rl-item" id="b6">
       <span class="rl-num">6</span>
       <a class="rl-cover" href="https://www.yes24.com/product/goods/64496500" rel="nofollow noopener noreferrer" target="_blank" aria-label="세상을 뒤흔든 전투의 역사 알라딘에서 보기"><img src="https://image.yes24.com/goods/64496500/L" alt="세상을 뒤흔든 전투의 역사 표지" loading="lazy"></a>
       <div class="rl-meta">
         <div class="rl-title"><a href="https://www.yes24.com/product/goods/64496500" rel="nofollow noopener noreferrer" target="_blank">세상을 뒤흔든 전투의 역사</a></div>
         <div class="rl-byline">유필하 · 들녘</div>
+        <p class="rl-comment">역사 속 전투를 궁금해하는 아이에게 읽어준 책이에요. 결과적으로 좋은 선택이었대요. (출처: 채널예스)</p>
         <a class="rl-source" href="https://ch.yes24.com/article/details/42680" rel="nofollow noopener noreferrer" target="_blank">📺 출처 보기</a>
         <button type="button" class="heart-btn sm" data-heart="b:세상을 뒤흔든 전투의 역사" aria-pressed="false" aria-label="이 책에 하트" title="이 책에 하트" hidden><span class="heart-ico" aria-hidden="true">♡</span><span class="heart-n"></span></button>
       </div>
     </li>
-    <li class="rl-item">
+    <li class="rl-item" id="b7">
       <span class="rl-num">7</span>
       <a class="rl-cover" href="https://www.yes24.com/product/goods/35049446" rel="nofollow noopener noreferrer" target="_blank" aria-label="소설의 첫 문장 알라딘에서 보기"><img src="https://image.yes24.com/goods/35049446/L" alt="소설의 첫 문장 표지" loading="lazy"></a>
       <div class="rl-meta">
@@ -689,17 +692,18 @@
         <button type="button" class="heart-btn sm" data-heart="b:소설의 첫 문장" aria-pressed="false" aria-label="이 책에 하트" title="이 책에 하트" hidden><span class="heart-ico" aria-hidden="true">♡</span><span class="heart-n"></span></button>
       </div>
     </li>
-    <li class="rl-item">
+    <li class="rl-item" id="b8">
       <span class="rl-num">8</span>
       <a class="rl-cover" href="https://www.yes24.com/product/goods/77251711" rel="nofollow noopener noreferrer" target="_blank" aria-label="수치심 권하는 사회 알라딘에서 보기"><img src="https://image.yes24.com/goods/77251711/L" alt="수치심 권하는 사회 표지" loading="lazy"></a>
       <div class="rl-meta">
         <div class="rl-title"><a href="https://www.yes24.com/product/goods/77251711" rel="nofollow noopener noreferrer" target="_blank">수치심 권하는 사회</a></div>
         <div class="rl-byline">브레네 브라운 · 가나출판사</div>
+        <p class="rl-comment">수치심이 무엇이고 어떻게 삶을 어렵게 만드는지, 어떻게 넘어설 수 있는지를 짚어주는 책으로 소개했어요. 자기 밴드의 &#x27;울지마&#x27;를 함께 걸었습니다. (출처: 채널예스 &#x27;윤덕원의 읽은 만큼 들린다&#x27;)</p>
         <a class="rl-source" href="https://ch.yes24.com/article/details/42478" rel="nofollow noopener noreferrer" target="_blank">📺 출처 보기</a>
         <button type="button" class="heart-btn sm" data-heart="b:수치심 권하는 사회" aria-pressed="false" aria-label="이 책에 하트" title="이 책에 하트" hidden><span class="heart-ico" aria-hidden="true">♡</span><span class="heart-n"></span></button>
       </div>
     </li>
-    <li class="rl-item">
+    <li class="rl-item" id="b9">
       <span class="rl-num">9</span>
       <a class="rl-cover" href="https://www.yes24.com/product/goods/117012879" rel="nofollow noopener noreferrer" target="_blank" aria-label="시간이 조금 걸리더라도 알라딘에서 보기"><span class="rl-new" data-added="2026-09-26">NEW</span><img src="https://image.yes24.com/goods/117012879/L" alt="시간이 조금 걸리더라도 표지" loading="lazy"></a>
       <div class="rl-meta">
@@ -710,17 +714,18 @@
       </div>
       <div class="rl-shared"><span class="rl-shared-label">👥 함께 추천한 셀럽 1명:</span> <a class="rl-celeb-chip" href="https://favorbook.co.kr/share/%EB%AC%B8%EC%86%8C%EB%A6%AC.html">문소리</a></div>
     </li>
-    <li class="rl-item">
+    <li class="rl-item" id="b10">
       <span class="rl-num">10</span>
       <a class="rl-cover" href="https://www.yes24.com/product/goods/89574522" rel="nofollow noopener noreferrer" target="_blank" aria-label="심장에 수놓은 이야기 알라딘에서 보기"><img src="https://image.yes24.com/goods/89574522/L" alt="심장에 수놓은 이야기 표지" loading="lazy"></a>
       <div class="rl-meta">
         <div class="rl-title"><a href="https://www.yes24.com/product/goods/89574522" rel="nofollow noopener noreferrer" target="_blank">심장에 수놓은 이야기</a></div>
         <div class="rl-byline">구병모 · 아르테</div>
+        <p class="rl-comment">칼럼에서 다룬 구병모의 중편이에요. 타투를 받으러 간 중년 여성 주변에서 이상한 일이 벌어지는 이야기입니다. (출처: 채널예스 &#x27;윤덕원의 읽은 만큼 들린다&#x27;)</p>
         <a class="rl-source" href="https://ch.yes24.com/article/details/42915" rel="nofollow noopener noreferrer" target="_blank">📺 출처 보기</a>
         <button type="button" class="heart-btn sm" data-heart="b:심장에 수놓은 이야기" aria-pressed="false" aria-label="이 책에 하트" title="이 책에 하트" hidden><span class="heart-ico" aria-hidden="true">♡</span><span class="heart-n"></span></button>
       </div>
     </li>
-    <li class="rl-item">
+    <li class="rl-item" id="b11">
       <span class="rl-num">11</span>
       <a class="rl-cover" href="https://www.yes24.com/product/goods/57602704" rel="nofollow noopener noreferrer" target="_blank" aria-label="악마의 문장 알라딘에서 보기"><img src="https://image.yes24.com/goods/57602704/L" alt="악마의 문장 표지" loading="lazy"></a>
       <div class="rl-meta">
@@ -730,28 +735,30 @@
         <button type="button" class="heart-btn sm" data-heart="b:악마의 문장" aria-pressed="false" aria-label="이 책에 하트" title="이 책에 하트" hidden><span class="heart-ico" aria-hidden="true">♡</span><span class="heart-n"></span></button>
       </div>
     </li>
-    <li class="rl-item">
+    <li class="rl-item" id="b12">
       <span class="rl-num">12</span>
       <a class="rl-cover" href="https://www.yes24.com/product/goods/88915152" rel="nofollow noopener noreferrer" target="_blank" aria-label="여름의 겨울 알라딘에서 보기"><img src="https://image.yes24.com/goods/88915152/L" alt="여름의 겨울 표지" loading="lazy"></a>
       <div class="rl-meta">
         <div class="rl-title"><a href="https://www.yes24.com/product/goods/88915152" rel="nofollow noopener noreferrer" target="_blank">여름의 겨울</a></div>
         <div class="rl-byline">아들린 디외도네 · 아르테</div>
+        <p class="rl-comment">성장담의 씁쓸한 맛을 외면하지 않으려 하는데, 이 책은 온통 쓴맛으로 가득한 성장담이었다고 칼럼에 썼어요. (출처: 채널예스)</p>
         <a class="rl-source" href="https://ch.yes24.com/article/details/43678" rel="nofollow noopener noreferrer" target="_blank">📺 출처 보기</a>
         <button type="button" class="heart-btn sm" data-heart="b:여름의 겨울" aria-pressed="false" aria-label="이 책에 하트" title="이 책에 하트" hidden><span class="heart-ico" aria-hidden="true">♡</span><span class="heart-n"></span></button>
       </div>
     </li>
-    <li class="rl-item">
+    <li class="rl-item" id="b13">
       <span class="rl-num">13</span>
       <a class="rl-cover" href="https://www.yes24.com/product/goods/74261416" rel="nofollow noopener noreferrer" target="_blank" aria-label="우리가 빛의 속도로 갈 수 없다면 알라딘에서 보기"><img src="https://image.yes24.com/goods/74261416/L" alt="우리가 빛의 속도로 갈 수 없다면 표지" loading="lazy"></a>
       <div class="rl-meta">
         <div class="rl-title"><a href="https://www.yes24.com/product/goods/74261416" rel="nofollow noopener noreferrer" target="_blank">우리가 빛의 속도로 갈 수 없다면</a></div>
         <div class="rl-byline">김초엽 · 허블</div>
+        <p class="rl-comment">처음으로 읽은 전자책이 바로 이 SF 소설집이었다고 했어요. (출처: 채널예스 &#x27;윤덕원의 읽은 만큼 들린다&#x27;)</p>
         <a class="rl-source" href="https://ch.yes24.com/article/details/41626" rel="nofollow noopener noreferrer" target="_blank">📺 출처 보기</a>
         <button type="button" class="heart-btn sm" data-heart="b:우리가 빛의 속도로 갈 수 없다면" aria-pressed="false" aria-label="이 책에 하트" title="이 책에 하트" hidden><span class="heart-ico" aria-hidden="true">♡</span><span class="heart-n"></span></button>
       </div>
       <div class="rl-shared"><span class="rl-shared-label">👥 함께 추천한 셀럽 5명:</span> <a class="rl-celeb-chip" href="https://favorbook.co.kr/share/%EA%B9%80%EC%84%B8%EC%A0%95.html">김세정</a><a class="rl-celeb-chip" href="https://favorbook.co.kr/share/%EC%98%88%EB%A6%AC%28%EB%A0%88%EB%93%9C%EB%B2%A8%EB%B2%B3%29.html">예리(레드벨벳)</a><a class="rl-celeb-chip" href="https://favorbook.co.kr/share/%ED%97%88%EC%9C%A4%EC%A7%84%28%EB%A5%B4%EC%84%B8%EB%9D%BC%ED%95%8C%29.html">허윤진(르세라핌)</a><a class="rl-celeb-chip" href="https://favorbook.co.kr/share/%EC%95%88%ED%98%84%EB%AA%A8.html">안현모</a><a class="rl-celeb-chip" href="https://favorbook.co.kr/share/%EA%B9%80%EC%A4%80%EC%84%9C%28%EC%95%8C%ED%8C%8C%EB%93%9C%EB%9D%BC%EC%9D%B4%EB%B8%8C%EC%9B%90%29.html">김준서(알파드라이브원)</a></div>
     </li>
-    <li class="rl-item">
+    <li class="rl-item" id="b14">
       <span class="rl-num">14</span>
       <a class="rl-cover" href="https://www.yes24.com/product/goods/90405058" rel="nofollow noopener noreferrer" target="_blank" aria-label="위기의 지구, 물러설 곳 없는 인간 알라딘에서 보기"><img src="https://image.yes24.com/goods/90405058/L" alt="위기의 지구, 물러설 곳 없는 인간 표지" loading="lazy"></a>
       <div class="rl-meta">
@@ -761,17 +768,18 @@
         <button type="button" class="heart-btn sm" data-heart="b:위기의 지구, 물러설 곳 없는 인간" aria-pressed="false" aria-label="이 책에 하트" title="이 책에 하트" hidden><span class="heart-ico" aria-hidden="true">♡</span><span class="heart-n"></span></button>
       </div>
     </li>
-    <li class="rl-item">
+    <li class="rl-item" id="b15">
       <span class="rl-num">15</span>
       <a class="rl-cover" href="https://www.yes24.com/product/goods/84639666" rel="nofollow noopener noreferrer" target="_blank" aria-label="인간답게 산다는 것 알라딘에서 보기"><img src="https://image.yes24.com/goods/84639666/L" alt="인간답게 산다는 것 표지" loading="lazy"></a>
       <div class="rl-meta">
         <div class="rl-title"><a href="https://www.yes24.com/product/goods/84639666" rel="nofollow noopener noreferrer" target="_blank">인간답게 산다는 것</a></div>
         <div class="rl-byline">정약용 · 홍익출판사</div>
+        <p class="rl-comment">&#x27;흠흠신서&#x27;를 읽기 쉽게 옮긴 책으로, 법 없이도 살 사람이라는 말을 실마리 삼아 칼럼에서 다뤘어요. (출처: 채널예스 &#x27;윤덕원의 읽은 만큼 들린다&#x27;)</p>
         <a class="rl-source" href="https://ch.yes24.com/article/details/41720" rel="nofollow noopener noreferrer" target="_blank">📺 출처 보기</a>
         <button type="button" class="heart-btn sm" data-heart="b:인간답게 산다는 것" aria-pressed="false" aria-label="이 책에 하트" title="이 책에 하트" hidden><span class="heart-ico" aria-hidden="true">♡</span><span class="heart-n"></span></button>
       </div>
     </li>
-    <li class="rl-item">
+    <li class="rl-item" id="b16">
       <span class="rl-num">16</span>
       <a class="rl-cover" href="https://www.yes24.com/product/goods/29190285" rel="nofollow noopener noreferrer" target="_blank" aria-label="죽어 마땅한 사람들 알라딘에서 보기"><img src="https://image.yes24.com/goods/29190285/L" alt="죽어 마땅한 사람들 표지" loading="lazy"></a>
       <div class="rl-meta">
@@ -781,7 +789,7 @@
         <button type="button" class="heart-btn sm" data-heart="b:죽어 마땅한 사람들" aria-pressed="false" aria-label="이 책에 하트" title="이 책에 하트" hidden><span class="heart-ico" aria-hidden="true">♡</span><span class="heart-n"></span></button>
       </div>
     </li>
-    <li class="rl-item">
+    <li class="rl-item" id="b17">
       <span class="rl-num">17</span>
       <a class="rl-cover" href="https://www.yes24.com/product/goods/92455793" rel="nofollow noopener noreferrer" target="_blank" aria-label="책, 이게 뭐라고 알라딘에서 보기"><img src="https://image.yes24.com/goods/92455793/L" alt="책, 이게 뭐라고 표지" loading="lazy"></a>
       <div class="rl-meta">
@@ -791,17 +799,18 @@
         <button type="button" class="heart-btn sm" data-heart="b:책, 이게 뭐라고" aria-pressed="false" aria-label="이 책에 하트" title="이 책에 하트" hidden><span class="heart-ico" aria-hidden="true">♡</span><span class="heart-n"></span></button>
       </div>
     </li>
-    <li class="rl-item">
+    <li class="rl-item" id="b18">
       <span class="rl-num">18</span>
       <a class="rl-cover" href="https://www.yes24.com/product/goods/85011474" rel="nofollow noopener noreferrer" target="_blank" aria-label="처벌 뒤에 남는 것들 알라딘에서 보기"><img src="https://image.yes24.com/goods/85011474/L" alt="처벌 뒤에 남는 것들 표지" loading="lazy"></a>
       <div class="rl-meta">
         <div class="rl-title"><a href="https://www.yes24.com/product/goods/85011474" rel="nofollow noopener noreferrer" target="_blank">처벌 뒤에 남는 것들</a></div>
         <div class="rl-byline">임수희 · 오월의봄</div>
+        <p class="rl-comment">처벌만으로는 해결되지 않는 일을 어떻게 할지 고민하며 읽은 책이에요. 피해자의 회복을 중심에 두는 &#x27;회복적 사법&#x27; 이야기를 칼럼에서 소개했어요. (출처: 채널예스)</p>
         <a class="rl-source" href="https://ch.yes24.com/article/details/42231" rel="nofollow noopener noreferrer" target="_blank">📺 출처 보기</a>
         <button type="button" class="heart-btn sm" data-heart="b:처벌 뒤에 남는 것들" aria-pressed="false" aria-label="이 책에 하트" title="이 책에 하트" hidden><span class="heart-ico" aria-hidden="true">♡</span><span class="heart-n"></span></button>
       </div>
     </li>
-    <li class="rl-item">
+    <li class="rl-item" id="b19">
       <span class="rl-num">19</span>
       <a class="rl-cover" href="https://www.yes24.com/product/goods/68811285" rel="nofollow noopener noreferrer" target="_blank" aria-label="피구왕 서영 알라딘에서 보기"><img src="https://image.yes24.com/goods/68811285/L" alt="피구왕 서영 표지" loading="lazy"></a>
       <div class="rl-meta">
@@ -810,7 +819,7 @@
         <button type="button" class="heart-btn sm" data-heart="b:피구왕 서영" aria-pressed="false" aria-label="이 책에 하트" title="이 책에 하트" hidden><span class="heart-ico" aria-hidden="true">♡</span><span class="heart-n"></span></button>
       </div>
     </li>
-    <li class="rl-item">
+    <li class="rl-item" id="b20">
       <span class="rl-num">20</span>
       <a class="rl-cover" href="https://www.yes24.com/product/goods/73615347" rel="nofollow noopener noreferrer" target="_blank" aria-label="해피 아포칼립스! 알라딘에서 보기"><img src="https://image.yes24.com/goods/73615347/L" alt="해피 아포칼립스! 표지" loading="lazy"></a>
       <div class="rl-meta">

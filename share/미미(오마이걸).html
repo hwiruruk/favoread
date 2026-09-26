@@ -309,8 +309,15 @@
              background-size: 100% var(--row); background-repeat: repeat-y; }
     .new-sec { margin: 16px 0 6px; padding: 12px 12px 2px; background: #fffbe6; border: 2px dashed #000; }
     .new-sec-h { display: flex; align-items: center; gap: 8px; margin: 0 0 10px; font-size: 15px; font-weight: 800; }
-    .new-sec .reading-list { margin: 0; }
-    .rl-num.rl-num-new { font-size: 11px; letter-spacing: .04em; }
+    .rl-item { scroll-margin-top: 16px; }
+    .rl-item:target { outline: 3px solid #fde047; outline-offset: 2px; }
+    .new-tiles { display: flex; flex-wrap: wrap; gap: 12px; padding-bottom: 10px; }
+    .new-tile { width: 84px; color: #000; text-decoration: none; display: flex; flex-direction: column; gap: 5px; }
+    .new-tile:hover { text-decoration: none; transform: translateY(-2px); }
+    .nt-cover { display: block; width: 84px; aspect-ratio: 2/3; border: 1.5px solid #000; box-shadow: 2px 2px 0 0 #000; background: #f4f4f0; overflow: hidden; }
+    .nt-cover img { width: 100%; height: 100%; object-fit: cover; display: block; }
+    .nt-no-cover { display: flex; width: 100%; height: 100%; align-items: center; justify-content: center; font-size: 22px; }
+    .nt-title { font-size: 12px; font-weight: 700; line-height: 1.3; word-break: keep-all; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
     .rl-new-tag { font-size: 9px; font-weight: 800; letter-spacing: .06em; line-height: 1; padding: 3px 5px;
                   background: #fde047; color: #000; border: 1.5px solid #000; }
     .sp { position: relative; flex: none; width: auto; height: var(--sh-h);
@@ -332,7 +339,7 @@
               font-size: 8px; line-height: 1; padding: 3px 0 2px;
               border-bottom: 1px solid rgba(0,0,0,.55); }
     .sp.is-new .sp-t { padding-top: 22px; }
-    .is-capturing .sp-new, .is-capturing .rl-new, .is-capturing .rl-shared { display: none !important; }
+    .is-capturing .sp-new, .is-capturing .rl-new, .is-capturing .rl-shared, .is-capturing .rl-comment { display: none !important; }
     .is-capturing .sp.is-new .sp-t { padding-top: 14px; }
     @media (max-width: 480px) { .shelf { --sh-h: 205px; }
                                  .sp.no-img, .sp.sp-fail { width: calc(var(--w, 38px) * .88); }
@@ -359,6 +366,7 @@
     .rl-title a { color: #000; }
     .rl-title a:hover { color: #2563eb; }
     .rl-byline { font-size: 13px; color: #555; margin-bottom: 8px; line-height: 1.4; }
+    .rl-comment { font-size: 13px; line-height: 1.55; color: #222; background: #FFF7C2; border: 1.5px solid #000; padding: 6px 9px; margin: 0 0 8px; word-break: keep-all; }
     .rl-source { display: inline-block; font-size: 12px; padding: 3px 8px; background: #fff; border: 1.5px solid #000; box-shadow: 1px 1px 0 0 #000; text-decoration: none; color: #000; transition: transform .1s, box-shadow .1s, background .1s; }
     .rl-source:hover { transform: translate(-1px,-1px); box-shadow: 2px 2px 0 0 #000; background: #a7f3d0; text-decoration: none; }
     .rl-shared { clear: both; margin-top: 12px; padding-top: 10px; border-top: 1.5px dashed #ccc; display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
@@ -406,7 +414,7 @@
   </header>
 
   <section class="intro">
-    <p style="margin:0">미미(오마이걸)의 독서 기록을 한곳에 모았어요. 유튜브·인터뷰·SNS 등 공개 출처에서 확인된 인생책·추천 도서 <strong>10권</strong>을 한 페이지에 정리한 독서 리스트입니다. 아래 목록에서 책 제목·저자·출처 링크를 한눈에 확인할 수 있어요.</p>
+    <p style="margin:0">미미(오마이걸)의 독서 기록을 한곳에 모았어요. 유튜브·인터뷰·SNS 등 공개 출처에서 확인된 인생책·추천 도서 <strong>10권</strong>을 한 페이지에 정리한 독서 리스트입니다. 아래 목록에서 책 제목·저자·출처 링크를 한눈에 확인할 수 있어요. <a href="https://favorbook.co.kr/group/oh-my-girl.html">오마이걸 멤버들이 읽은 책 모아 보기 →</a></p>
   </section>
 
   <section id="shelf-sec">
@@ -432,79 +440,86 @@
     <a class="sp" style="--c:hsl(4,49%,27%);--w:38px;--fs:15px" href="https://www.yes24.com/product/goods/108233519" rel="nofollow noopener noreferrer" target="_blank" title="위저드 베이커리"><span class="sp-t"><i>위저드 베이커리</i></span><img class="sp-i" src="https://image.yes24.com/goods/108233519/side" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.parentNode.classList.add('sp-fail');this.remove()" onload="if(this.naturalWidth/this.naturalHeight>0.4){this.parentNode.classList.add('sp-fail');this.remove()}"></a>
     </div>
     <ol class="reading-list" id="rlist">
-    <li class="rl-item">
+    <li class="rl-item" id="b1">
       <span class="rl-num">1</span>
       <a class="rl-cover" href="https://www.yes24.com/product/goods/122544607" rel="nofollow noopener noreferrer" target="_blank" aria-label="AI 미제사건 전담반 알라딘에서 보기"><img src="https://image.yes24.com/goods/122544607/L" alt="AI 미제사건 전담반 표지" loading="lazy"></a>
       <div class="rl-meta">
         <div class="rl-title"><a href="https://www.yes24.com/product/goods/122544607" rel="nofollow noopener noreferrer" target="_blank">AI 미제사건 전담반</a></div>
         <div class="rl-byline">조 캘러헌 · 북플라자</div>
+        <p class="rl-comment">팬들이 모은 미미의 추천 책 목록에 올라 있어요. &#x27;세상에 나쁜 책은 없어요, 내가 안 읽은 거지&#x27;라고 말할 만큼 책을 좋아한대요. (출처: 더쿠)</p>
         <a class="rl-source" href="https://theqoo.net/square/3779951555" rel="nofollow noopener noreferrer" target="_blank">📺 출처 보기</a>
         <button type="button" class="heart-btn sm" data-heart="b:AI 미제사건 전담반" aria-pressed="false" aria-label="이 책에 하트" title="이 책에 하트" hidden><span class="heart-ico" aria-hidden="true">♡</span><span class="heart-n"></span></button>
       </div>
     </li>
-    <li class="rl-item">
+    <li class="rl-item" id="b2">
       <span class="rl-num">2</span>
       <a class="rl-cover" href="https://www.yes24.com/product/goods/115309296" rel="nofollow noopener noreferrer" target="_blank" aria-label="너를 빛나게 할 일들이 기다리고 있어 알라딘에서 보기"><img src="https://image.yes24.com/goods/115309296/L" alt="너를 빛나게 할 일들이 기다리고 있어 표지" loading="lazy"></a>
       <div class="rl-meta">
         <div class="rl-title"><a href="https://www.yes24.com/product/goods/115309296" rel="nofollow noopener noreferrer" target="_blank">너를 빛나게 할 일들이 기다리고 있어</a></div>
         <div class="rl-byline">황현 · 웅진지식하우스</div>
+        <p class="rl-comment">작곡가 황현의 에세이로, 김이나·적재와 함께 강력 추천했어요. (출처: 네이버 시리즈)</p>
         <a class="rl-source" href="https://m.series.naver.com/ebook/detail.series?productNo=9086470" rel="nofollow noopener noreferrer" target="_blank">📺 출처 보기</a>
         <button type="button" class="heart-btn sm" data-heart="b:너를 빛나게 할 일들이 기다리고 있어" aria-pressed="false" aria-label="이 책에 하트" title="이 책에 하트" hidden><span class="heart-ico" aria-hidden="true">♡</span><span class="heart-n"></span></button>
       </div>
       <div class="rl-shared"><span class="rl-shared-label">👥 함께 추천한 셀럽 1명:</span> <a class="rl-celeb-chip" href="https://favorbook.co.kr/share/%EC%A0%81%EC%9E%AC.html">적재</a></div>
     </li>
-    <li class="rl-item">
+    <li class="rl-item" id="b3">
       <span class="rl-num">3</span>
       <a class="rl-cover" href="https://www.yes24.com/product/goods/118326453" rel="nofollow noopener noreferrer" target="_blank" aria-label="디 아더 유 알라딘에서 보기"><img src="https://image.yes24.com/goods/118326453/L" alt="디 아더 유 표지" loading="lazy"></a>
       <div class="rl-meta">
         <div class="rl-title"><a href="https://www.yes24.com/product/goods/118326453" rel="nofollow noopener noreferrer" target="_blank">디 아더 유</a></div>
         <div class="rl-byline">J.S. 먼로 · 소미미디어</div>
+        <p class="rl-comment">팬들이 모은 미미의 추천 책 목록에 올라 있어요. &#x27;세상에 나쁜 책은 없어요, 내가 안 읽은 거지&#x27;라고 말할 만큼 책을 좋아한대요. (출처: 더쿠)</p>
         <a class="rl-source" href="https://theqoo.net/square/3779951555" rel="nofollow noopener noreferrer" target="_blank">📺 출처 보기</a>
         <button type="button" class="heart-btn sm" data-heart="b:디 아더 유" aria-pressed="false" aria-label="이 책에 하트" title="이 책에 하트" hidden><span class="heart-ico" aria-hidden="true">♡</span><span class="heart-n"></span></button>
       </div>
     </li>
-    <li class="rl-item">
+    <li class="rl-item" id="b4">
       <span class="rl-num">4</span>
       <a class="rl-cover" href="https://www.yes24.com/product/goods/122879837" rel="nofollow noopener noreferrer" target="_blank" aria-label="레슨 인 케미스트리 알라딘에서 보기"><img src="https://image.yes24.com/goods/122879837/L" alt="레슨 인 케미스트리 표지" loading="lazy"></a>
       <div class="rl-meta">
         <div class="rl-title"><a href="https://www.yes24.com/product/goods/122879837" rel="nofollow noopener noreferrer" target="_blank">레슨 인 케미스트리</a></div>
         <div class="rl-byline">보니 가머스 · 다산책방</div>
+        <p class="rl-comment">팬들이 모은 미미의 추천 책 목록에 올라 있어요. &#x27;세상에 나쁜 책은 없어요, 내가 안 읽은 거지&#x27;라고 말할 만큼 책을 좋아한대요. (출처: 더쿠)</p>
         <a class="rl-source" href="https://theqoo.net/square/3779951555" rel="nofollow noopener noreferrer" target="_blank">📺 출처 보기</a>
         <button type="button" class="heart-btn sm" data-heart="b:레슨 인 케미스트리" aria-pressed="false" aria-label="이 책에 하트" title="이 책에 하트" hidden><span class="heart-ico" aria-hidden="true">♡</span><span class="heart-n"></span></button>
       </div>
     </li>
-    <li class="rl-item">
+    <li class="rl-item" id="b5">
       <span class="rl-num">5</span>
       <a class="rl-cover" href="https://www.yes24.com/product/goods/140199769" rel="nofollow noopener noreferrer" target="_blank" aria-label="사랑 후에 오는 것들 알라딘에서 보기"><img src="https://image.yes24.com/goods/140199769/L" alt="사랑 후에 오는 것들 표지" loading="lazy"></a>
       <div class="rl-meta">
         <div class="rl-title"><a href="https://www.yes24.com/product/goods/140199769" rel="nofollow noopener noreferrer" target="_blank">사랑 후에 오는 것들</a></div>
         <div class="rl-byline">공지영, 츠지 히토나리 · 소담출판사</div>
+        <p class="rl-comment">팬들이 모은 미미의 추천 책 목록에 올라 있어요. &#x27;세상에 나쁜 책은 없어요, 내가 안 읽은 거지&#x27;라고 말할 만큼 책을 좋아한대요. (출처: 더쿠)</p>
         <a class="rl-source" href="https://theqoo.net/square/3779951555" rel="nofollow noopener noreferrer" target="_blank">📺 출처 보기</a>
         <button type="button" class="heart-btn sm" data-heart="b:사랑 후에 오는 것들" aria-pressed="false" aria-label="이 책에 하트" title="이 책에 하트" hidden><span class="heart-ico" aria-hidden="true">♡</span><span class="heart-n"></span></button>
       </div>
       <div class="rl-shared"><span class="rl-shared-label">👥 함께 추천한 셀럽 1명:</span> <a class="rl-celeb-chip" href="https://favorbook.co.kr/share/%EA%B9%80%EC%84%A4%ED%98%84.html">김설현</a></div>
     </li>
-    <li class="rl-item">
+    <li class="rl-item" id="b6">
       <span class="rl-num">6</span>
       <a class="rl-cover" href="https://www.yes24.com/product/goods/119709958" rel="nofollow noopener noreferrer" target="_blank" aria-label="삼국평화고등학교 테러 사건 알라딘에서 보기"><img src="https://image.yes24.com/goods/119709958/L" alt="삼국평화고등학교 테러 사건 표지" loading="lazy"></a>
       <div class="rl-meta">
         <div class="rl-title"><a href="https://www.yes24.com/product/goods/119709958" rel="nofollow noopener noreferrer" target="_blank">삼국평화고등학교 테러 사건</a></div>
         <div class="rl-byline">서귤 · 위즈덤하우스</div>
+        <p class="rl-comment">팬들이 모은 미미의 추천 책 목록에 올라 있어요. &#x27;세상에 나쁜 책은 없어요, 내가 안 읽은 거지&#x27;라고 말할 만큼 책을 좋아한대요. (출처: 더쿠)</p>
         <a class="rl-source" href="https://theqoo.net/square/3779951555" rel="nofollow noopener noreferrer" target="_blank">📺 출처 보기</a>
         <button type="button" class="heart-btn sm" data-heart="b:삼국평화고등학교 테러 사건" aria-pressed="false" aria-label="이 책에 하트" title="이 책에 하트" hidden><span class="heart-ico" aria-hidden="true">♡</span><span class="heart-n"></span></button>
       </div>
     </li>
-    <li class="rl-item">
+    <li class="rl-item" id="b7">
       <span class="rl-num">7</span>
       <a class="rl-cover" href="https://www.yes24.com/product/goods/36118718" rel="nofollow noopener noreferrer" target="_blank" aria-label="센서티브 알라딘에서 보기"><img src="https://image.yes24.com/goods/36118718/L" alt="센서티브 표지" loading="lazy"></a>
       <div class="rl-meta">
         <div class="rl-title"><a href="https://www.yes24.com/product/goods/36118718" rel="nofollow noopener noreferrer" target="_blank">센서티브</a></div>
         <div class="rl-byline">일자 샌드 · 다산지식하우스</div>
+        <p class="rl-comment">인생책이라고 언급한 책이에요. 민감하고 예민한 사람들을 위한 책이래요. (출처: 더쿠)</p>
         <a class="rl-source" href="https://theqoo.net/square/3779951555" rel="nofollow noopener noreferrer" target="_blank">📺 출처 보기</a>
         <button type="button" class="heart-btn sm" data-heart="b:센서티브" aria-pressed="false" aria-label="이 책에 하트" title="이 책에 하트" hidden><span class="heart-ico" aria-hidden="true">♡</span><span class="heart-n"></span></button>
       </div>
     </li>
-    <li class="rl-item">
+    <li class="rl-item" id="b8">
       <span class="rl-num">8</span>
       <a class="rl-cover" href="https://www.yes24.com/product/goods/96513402" rel="nofollow noopener noreferrer" target="_blank" aria-label="손끝과 연연 알라딘에서 보기"><img src="https://image.yes24.com/goods/96513402/L" alt="손끝과 연연 표지" loading="lazy"></a>
       <div class="rl-meta">
@@ -514,7 +529,7 @@
         <button type="button" class="heart-btn sm" data-heart="b:손끝과 연연" aria-pressed="false" aria-label="이 책에 하트" title="이 책에 하트" hidden><span class="heart-ico" aria-hidden="true">♡</span><span class="heart-n"></span></button>
       </div>
     </li>
-    <li class="rl-item">
+    <li class="rl-item" id="b9">
       <span class="rl-num">9</span>
       <a class="rl-cover" href="https://www.yes24.com/product/goods/106385033" rel="nofollow noopener noreferrer" target="_blank" aria-label="아름다운 초저녁달 알라딘에서 보기"><img src="https://image.yes24.com/goods/106385033/L" alt="아름다운 초저녁달 표지" loading="lazy"></a>
       <div class="rl-meta">
@@ -524,12 +539,13 @@
         <button type="button" class="heart-btn sm" data-heart="b:아름다운 초저녁달" aria-pressed="false" aria-label="이 책에 하트" title="이 책에 하트" hidden><span class="heart-ico" aria-hidden="true">♡</span><span class="heart-n"></span></button>
       </div>
     </li>
-    <li class="rl-item">
+    <li class="rl-item" id="b10">
       <span class="rl-num">10</span>
       <a class="rl-cover" href="https://www.yes24.com/product/goods/108233519" rel="nofollow noopener noreferrer" target="_blank" aria-label="위저드 베이커리 알라딘에서 보기"><img src="https://image.yes24.com/goods/108233519/L" alt="위저드 베이커리 표지" loading="lazy"></a>
       <div class="rl-meta">
         <div class="rl-title"><a href="https://www.yes24.com/product/goods/108233519" rel="nofollow noopener noreferrer" target="_blank">위저드 베이커리</a></div>
         <div class="rl-byline">구병모 · 창비</div>
+        <p class="rl-comment">팬들이 모은 미미의 추천 책 목록에 올라 있어요. &#x27;세상에 나쁜 책은 없어요, 내가 안 읽은 거지&#x27;라고 말할 만큼 책을 좋아한대요. (출처: 더쿠)</p>
         <a class="rl-source" href="https://theqoo.net/square/3779951555" rel="nofollow noopener noreferrer" target="_blank">📺 출처 보기</a>
         <button type="button" class="heart-btn sm" data-heart="b:위저드 베이커리" aria-pressed="false" aria-label="이 책에 하트" title="이 책에 하트" hidden><span class="heart-ico" aria-hidden="true">♡</span><span class="heart-n"></span></button>
       </div>

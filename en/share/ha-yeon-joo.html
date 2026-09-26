@@ -319,8 +319,15 @@
              background-size: 100% var(--row); background-repeat: repeat-y; }
     .new-sec { margin: 16px 0 6px; padding: 12px 12px 2px; background: #fffbe6; border: 2px dashed #000; }
     .new-sec-h { display: flex; align-items: center; gap: 8px; margin: 0 0 10px; font-size: 15px; font-weight: 800; }
-    .new-sec .reading-list { margin: 0; }
-    .rl-num.rl-num-new { font-size: 11px; letter-spacing: .04em; }
+    .rl-item { scroll-margin-top: 16px; }
+    .rl-item:target { outline: 3px solid #fde047; outline-offset: 2px; }
+    .new-tiles { display: flex; flex-wrap: wrap; gap: 12px; padding-bottom: 10px; }
+    .new-tile { width: 84px; color: #000; text-decoration: none; display: flex; flex-direction: column; gap: 5px; }
+    .new-tile:hover { text-decoration: none; transform: translateY(-2px); }
+    .nt-cover { display: block; width: 84px; aspect-ratio: 2/3; border: 1.5px solid #000; box-shadow: 2px 2px 0 0 #000; background: #f4f4f0; overflow: hidden; }
+    .nt-cover img { width: 100%; height: 100%; object-fit: cover; display: block; }
+    .nt-no-cover { display: flex; width: 100%; height: 100%; align-items: center; justify-content: center; font-size: 22px; }
+    .nt-title { font-size: 12px; font-weight: 700; line-height: 1.3; word-break: keep-all; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
     .rl-new-tag { font-size: 9px; font-weight: 800; letter-spacing: .06em; line-height: 1; padding: 3px 5px;
                   background: #fde047; color: #000; border: 1.5px solid #000; }
     .sp { position: relative; flex: none; width: auto; height: var(--sh-h);
@@ -342,7 +349,7 @@
               font-size: 8px; line-height: 1; padding: 3px 0 2px;
               border-bottom: 1px solid rgba(0,0,0,.55); }
     .sp.is-new .sp-t { padding-top: 22px; }
-    .is-capturing .sp-new, .is-capturing .rl-new, .is-capturing .rl-shared { display: none !important; }
+    .is-capturing .sp-new, .is-capturing .rl-new, .is-capturing .rl-shared, .is-capturing .rl-comment { display: none !important; }
     .is-capturing .sp.is-new .sp-t { padding-top: 14px; }
     @media (max-width: 480px) { .shelf { --sh-h: 205px; }
                                  .sp.no-img, .sp.sp-fail { width: calc(var(--w, 38px) * .88); }
@@ -369,6 +376,7 @@
     .rl-title a { color: #000; }
     .rl-title a:hover { color: #2563eb; }
     .rl-byline { font-size: 13px; color: #555; margin-bottom: 8px; line-height: 1.4; }
+    .rl-comment { font-size: 13px; line-height: 1.55; color: #222; background: #FFF7C2; border: 1.5px solid #000; padding: 6px 9px; margin: 0 0 8px; word-break: keep-all; }
     .rl-source { display: inline-block; font-size: 12px; padding: 3px 8px; background: #fff; border: 1.5px solid #000; box-shadow: 1px 1px 0 0 #000; text-decoration: none; color: #000; transition: transform .1s, box-shadow .1s, background .1s; }
     .rl-source:hover { transform: translate(-1px,-1px); box-shadow: 2px 2px 0 0 #000; background: #a7f3d0; text-decoration: none; }
     @media (max-width: 480px) { .rl-item { padding: 14px 12px 14px 46px; } .rl-num { width: 32px; height: 26px; font-size: 12px; } .rl-cover { width: 60px; height: 88px; margin-right: 10px; } .rl-meta { min-height: 88px; } .rl-title { font-size: 15px; } }
@@ -421,95 +429,104 @@
     <a class="sp no-img" style="--c:hsl(87,44%,42%);--w:36px;--fs:15px" href="https://www.yes24.com/product/goods/3198188" rel="nofollow noopener noreferrer" target="_blank" title="Van Gogh&#x27;s Letters"><span class="sp-t"><i>Van Gogh&#x27;s Letters</i></span></a>
     </div>
     <ol class="reading-list" id="rlist">
-    <li class="rl-item">
+    <li class="rl-item" id="b1">
       <span class="rl-num">1</span>
       <a class="rl-cover" href="https://www.yes24.com/product/goods/9437871" rel="nofollow noopener noreferrer" target="_blank" aria-label="A New Earth: Awakening to Your Life&#x27;s Purpose — buy or read more"><img src="https://image.yes24.com/goods/9437871/L" alt="A New Earth: Awakening to Your Life&#x27;s Purpose — book cover" loading="lazy"></a>
       <div class="rl-meta">
         <div class="rl-title"><a href="https://www.yes24.com/product/goods/9437871" rel="nofollow noopener noreferrer" target="_blank">A New Earth: Awakening to Your Life&#x27;s Purpose</a> <span style="color:#888;font-size:12px;font-weight:400">(삶으로 다시 떠오르기)</span></div>
+        <p class="rl-comment">Recommended for anxious, busy minds as a book that brings the focus back to the present moment. (Source: Seoul Economic Daily)</p>
         <a class="rl-source" href="https://www.sedaily.com/NewsView/1VFEVAEMHP" rel="nofollow noopener noreferrer" target="_blank">📺 Source</a>
         <button type="button" class="heart-btn sm" data-heart="b:삶으로 다시 떠오르기" aria-pressed="false" aria-label="Heart this book" title="Heart this book" hidden><span class="heart-ico" aria-hidden="true">♡</span><span class="heart-n"></span></button>
       </div>
     </li>
-    <li class="rl-item">
+    <li class="rl-item" id="b2">
       <span class="rl-num">2</span>
       <a class="rl-cover" href="https://www.yes24.com/product/goods/11467936" rel="nofollow noopener noreferrer" target="_blank" aria-label="Evening in the Drawer — buy or read more"><img src="https://image.yes24.com/goods/11467936/L" alt="Evening in the Drawer by Han Kang — book cover" loading="lazy"></a>
       <div class="rl-meta">
         <div class="rl-title"><a href="https://www.yes24.com/product/goods/11467936" rel="nofollow noopener noreferrer" target="_blank">Evening in the Drawer</a> <span style="color:#888;font-size:12px;font-weight:400">(서랍에 저녁을 넣어두었다)</span></div>
         <div class="rl-byline">Han Kang</div>
+        <p class="rl-comment">A poetry collection named alongside other Han Kang works that the actor found moving. (Source: Seoul Economic Daily)</p>
         <a class="rl-source" href="https://www.sedaily.com/NewsView/1VFEVAEMHP" rel="nofollow noopener noreferrer" target="_blank">📺 Source</a>
         <button type="button" class="heart-btn sm" data-heart="b:서랍에 저녁을 넣어두었다" aria-pressed="false" aria-label="Heart this book" title="Heart this book" hidden><span class="heart-ico" aria-hidden="true">♡</span><span class="heart-n"></span></button>
       </div>
     </li>
-    <li class="rl-item">
+    <li class="rl-item" id="b3">
       <span class="rl-num">3</span>
       <a class="rl-cover" href="https://www.yes24.com/product/goods/67448918" rel="nofollow noopener noreferrer" target="_blank" aria-label="Fly Room — buy or read more"><img src="https://image.yes24.com/goods/67448918/L" alt="Fly Room by Kim Woo-jae — book cover" loading="lazy"></a>
       <div class="rl-meta">
         <div class="rl-title"><a href="https://www.yes24.com/product/goods/67448918" rel="nofollow noopener noreferrer" target="_blank">Fly Room</a> <span style="color:#888;font-size:12px;font-weight:400">(플라이룸)</span></div>
         <div class="rl-byline">Kim Woo-jae</div>
+        <p class="rl-comment">A gift from author Kim Woo-jae, now on the to-read list: science told by a scientist still working in the lab. (Source: Seoul Economic Daily)</p>
         <a class="rl-source" href="https://www.sedaily.com/NewsView/1VFEVAEMHP" rel="nofollow noopener noreferrer" target="_blank">📺 Source</a>
         <button type="button" class="heart-btn sm" data-heart="b:플라이룸" aria-pressed="false" aria-label="Heart this book" title="Heart this book" hidden><span class="heart-ico" aria-hidden="true">♡</span><span class="heart-n"></span></button>
       </div>
     </li>
-    <li class="rl-item">
+    <li class="rl-item" id="b4">
       <span class="rl-num">4</span>
       <a class="rl-cover" href="https://www.yes24.com/product/goods/5926713" rel="nofollow noopener noreferrer" target="_blank" aria-label="Greek Lessons — buy or read more"><img src="https://image.yes24.com/goods/5926713/L" alt="Greek Lessons by Han Kang — book cover" loading="lazy"></a>
       <div class="rl-meta">
         <div class="rl-title"><a href="https://www.yes24.com/product/goods/5926713" rel="nofollow noopener noreferrer" target="_blank">Greek Lessons</a> <span style="color:#888;font-size:12px;font-weight:400">(희랍어 시간)</span></div>
         <div class="rl-byline">Han Kang</div>
+        <p class="rl-comment">Ha Yeon-joo was learning Greek at the time and read the Greek passages in the book firsthand. (Source: Seoul Economic Daily)</p>
         <a class="rl-source" href="https://www.sedaily.com/NewsView/1VFEVAEMHP" rel="nofollow noopener noreferrer" target="_blank">📺 Source</a>
         <button type="button" class="heart-btn sm" data-heart="b:희랍어 시간" aria-pressed="false" aria-label="Heart this book" title="Heart this book" hidden><span class="heart-ico" aria-hidden="true">♡</span><span class="heart-n"></span></button>
       </div>
     </li>
-    <li class="rl-item">
+    <li class="rl-item" id="b5">
       <span class="rl-num">5</span>
       <a class="rl-cover" href="https://www.yes24.com/product/goods/46546539" rel="nofollow noopener noreferrer" target="_blank" aria-label="If Pain Becomes a Path — buy or read more"><img src="https://image.yes24.com/goods/46546539/L" alt="If Pain Becomes a Path by Kim Seung-seop — book cover" loading="lazy"></a>
       <div class="rl-meta">
         <div class="rl-title"><a href="https://www.yes24.com/product/goods/46546539" rel="nofollow noopener noreferrer" target="_blank">If Pain Becomes a Path</a> <span style="color:#888;font-size:12px;font-weight:400">(아픔이 길이 되려면)</span></div>
         <div class="rl-byline">Kim Seung-seop</div>
+        <p class="rl-comment">A book Ha Yeon-joo chose to introduce, struck by how it traces the health effects of discrimination. (Source: Seoul Economic Daily)</p>
         <a class="rl-source" href="https://www.sedaily.com/NewsView/1VFEVAEMHP" rel="nofollow noopener noreferrer" target="_blank">📺 Source</a>
         <button type="button" class="heart-btn sm" data-heart="b:아픔이 길이 되려면" aria-pressed="false" aria-label="Heart this book" title="Heart this book" hidden><span class="heart-ico" aria-hidden="true">♡</span><span class="heart-n"></span></button>
       </div>
     </li>
-    <li class="rl-item">
+    <li class="rl-item" id="b6">
       <span class="rl-num">6</span>
       <a class="rl-cover" href="https://www.yes24.com/product/goods/64614692" rel="nofollow noopener noreferrer" target="_blank" aria-label="It&#x27;s Normal to Tremble — buy or read more"><img src="https://image.yes24.com/goods/64614692/L" alt="It&#x27;s Normal to Tremble by Yoon Tae-woong — book cover" loading="lazy"></a>
       <div class="rl-meta">
         <div class="rl-title"><a href="https://www.yes24.com/product/goods/64614692" rel="nofollow noopener noreferrer" target="_blank">It&#x27;s Normal to Tremble</a> <span style="color:#888;font-size:12px;font-weight:400">(떨리는 게 정상이야)</span></div>
         <div class="rl-byline">Yoon Tae-woong</div>
+        <p class="rl-comment">Ha Yeon-joo joined this book&#x27;s book concert as a panelist, which is also where the actor came across another favorite. (Source: Seoul Economic Daily)</p>
         <a class="rl-source" href="https://www.sedaily.com/NewsView/1VFEVAEMHP" rel="nofollow noopener noreferrer" target="_blank">📺 Source</a>
         <button type="button" class="heart-btn sm" data-heart="b:떨리는 게 정상이야" aria-pressed="false" aria-label="Heart this book" title="Heart this book" hidden><span class="heart-ico" aria-hidden="true">♡</span><span class="heart-n"></span></button>
       </div>
     </li>
-    <li class="rl-item">
+    <li class="rl-item" id="b7">
       <span class="rl-num">7</span>
       <a class="rl-cover" href="https://www.yes24.com/product/goods/39404092" rel="nofollow noopener noreferrer" target="_blank" aria-label="Sapiens — buy or read more"><img src="https://image.yes24.com/goods/39404092/L" alt="Sapiens by Yuval Noah Harari — book cover" loading="lazy"></a>
       <div class="rl-meta">
         <div class="rl-title"><a href="https://www.yes24.com/product/goods/39404092" rel="nofollow noopener noreferrer" target="_blank">Sapiens</a> <span style="color:#888;font-size:12px;font-weight:400">(호모 사피엔스)</span></div>
         <div class="rl-byline">Yuval Noah Harari</div>
+        <p class="rl-comment">Read as part of a habit of reading for 30 minutes before bed, sometimes together with fans on a YouTube live stream. (Source: Seoul Economic Daily)</p>
         <a class="rl-source" href="https://www.sedaily.com/NewsView/1VFEVAEMHP" rel="nofollow noopener noreferrer" target="_blank">📺 Source</a>
         <button type="button" class="heart-btn sm" data-heart="b:호모 사피엔스" aria-pressed="false" aria-label="Heart this book" title="Heart this book" hidden><span class="heart-ico" aria-hidden="true">♡</span><span class="heart-n"></span></button>
       </div>
     </li>
-    <li class="rl-item">
+    <li class="rl-item" id="b8">
       <span class="rl-num">8</span>
       <a class="rl-cover" href="https://www.yes24.com/product/goods/32613288" rel="nofollow noopener noreferrer" target="_blank" aria-label="The Beauty Myth: How Images of Beauty Are Used Against Women — buy or read more"><img src="https://image.yes24.com/goods/32613288/L" alt="The Beauty Myth: How Images of Beauty Are Used Against Women — book cover" loading="lazy"></a>
       <div class="rl-meta">
         <div class="rl-title"><a href="https://www.yes24.com/product/goods/32613288" rel="nofollow noopener noreferrer" target="_blank">The Beauty Myth: How Images of Beauty Are Used Against Women</a> <span style="color:#888;font-size:12px;font-weight:400">(무엇이 아름다움을 강요하는가)</span></div>
+        <p class="rl-comment">Picked as a book worth gifting; it resonated all the more in a profession that imposes beauty standards. (Source: Seoul Economic Daily)</p>
         <a class="rl-source" href="https://www.sedaily.com/NewsView/1VFEVAEMHP" rel="nofollow noopener noreferrer" target="_blank">📺 Source</a>
         <button type="button" class="heart-btn sm" data-heart="b:무엇이 아름다움을 강요하는가" aria-pressed="false" aria-label="Heart this book" title="Heart this book" hidden><span class="heart-ico" aria-hidden="true">♡</span><span class="heart-n"></span></button>
       </div>
     </li>
-    <li class="rl-item">
+    <li class="rl-item" id="b9">
       <span class="rl-num">9</span>
       <a class="rl-cover" href="https://www.yes24.com/product/goods/116586056" rel="nofollow noopener noreferrer" target="_blank" aria-label="The Miracles of the Namiya General Store — buy or read more"><img src="https://image.yes24.com/goods/116586056/L" alt="The Miracles of the Namiya General Store by Keigo Higashino — book cover" loading="lazy"></a>
       <div class="rl-meta">
         <div class="rl-title"><a href="https://www.yes24.com/product/goods/116586056" rel="nofollow noopener noreferrer" target="_blank">The Miracles of the Namiya General Store</a> <span style="color:#888;font-size:12px;font-weight:400">(나미야 잡화점의 기적)</span></div>
         <div class="rl-byline">Keigo Higashino</div>
+        <p class="rl-comment">Read as part of a habit of reading for 30 minutes before bed, sometimes together with fans on a YouTube live stream. (Source: Seoul Economic Daily)</p>
         <a class="rl-source" href="https://www.sedaily.com/NewsView/1VFEVAEMHP" rel="nofollow noopener noreferrer" target="_blank">📺 Source</a>
         <button type="button" class="heart-btn sm" data-heart="b:나미야 잡화점의 기적" aria-pressed="false" aria-label="Heart this book" title="Heart this book" hidden><span class="heart-ico" aria-hidden="true">♡</span><span class="heart-n"></span></button>
       </div>
     </li>
-    <li class="rl-item">
+    <li class="rl-item" id="b10">
       <span class="rl-num">10</span>
       <a class="rl-cover" href="https://www.yes24.com/product/goods/143896198" rel="nofollow noopener noreferrer" target="_blank" aria-label="The White Book — buy or read more"><img src="https://image.yes24.com/goods/143896198/L" alt="The White Book by Han Kang — book cover" loading="lazy"></a>
       <div class="rl-meta">
@@ -519,12 +536,13 @@
         <button type="button" class="heart-btn sm" data-heart="b:흰" aria-pressed="false" aria-label="Heart this book" title="Heart this book" hidden><span class="heart-ico" aria-hidden="true">♡</span><span class="heart-n"></span></button>
       </div>
     </li>
-    <li class="rl-item">
+    <li class="rl-item" id="b11">
       <span class="rl-num">11</span>
       <a class="rl-cover" href="https://www.yes24.com/product/goods/3198188" rel="nofollow noopener noreferrer" target="_blank" aria-label="Van Gogh&#x27;s Letters — buy or read more"><img src="https://image.yes24.com/goods/3198188/L" alt="Van Gogh&#x27;s Letters by Vincent van Gogh — book cover" loading="lazy"></a>
       <div class="rl-meta">
         <div class="rl-title"><a href="https://www.yes24.com/product/goods/3198188" rel="nofollow noopener noreferrer" target="_blank">Van Gogh&#x27;s Letters</a> <span style="color:#888;font-size:12px;font-weight:400">(반고흐, 영혼의 편지)</span></div>
         <div class="rl-byline">Vincent van Gogh</div>
+        <p class="rl-comment">The line &quot;when spring comes, the lark cannot help but sing&quot; read like hope during a stretch of waiting for work. (Source: Seoul Economic Daily)</p>
         <a class="rl-source" href="https://www.sedaily.com/NewsView/1VFEVAEMHP" rel="nofollow noopener noreferrer" target="_blank">📺 Source</a>
         <button type="button" class="heart-btn sm" data-heart="b:반고흐, 영혼의 편지" aria-pressed="false" aria-label="Heart this book" title="Heart this book" hidden><span class="heart-ico" aria-hidden="true">♡</span><span class="heart-n"></span></button>
       </div>

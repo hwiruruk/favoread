@@ -389,8 +389,15 @@
              background-size: 100% var(--row); background-repeat: repeat-y; }
     .new-sec { margin: 16px 0 6px; padding: 12px 12px 2px; background: #fffbe6; border: 2px dashed #000; }
     .new-sec-h { display: flex; align-items: center; gap: 8px; margin: 0 0 10px; font-size: 15px; font-weight: 800; }
-    .new-sec .reading-list { margin: 0; }
-    .rl-num.rl-num-new { font-size: 11px; letter-spacing: .04em; }
+    .rl-item { scroll-margin-top: 16px; }
+    .rl-item:target { outline: 3px solid #fde047; outline-offset: 2px; }
+    .new-tiles { display: flex; flex-wrap: wrap; gap: 12px; padding-bottom: 10px; }
+    .new-tile { width: 84px; color: #000; text-decoration: none; display: flex; flex-direction: column; gap: 5px; }
+    .new-tile:hover { text-decoration: none; transform: translateY(-2px); }
+    .nt-cover { display: block; width: 84px; aspect-ratio: 2/3; border: 1.5px solid #000; box-shadow: 2px 2px 0 0 #000; background: #f4f4f0; overflow: hidden; }
+    .nt-cover img { width: 100%; height: 100%; object-fit: cover; display: block; }
+    .nt-no-cover { display: flex; width: 100%; height: 100%; align-items: center; justify-content: center; font-size: 22px; }
+    .nt-title { font-size: 12px; font-weight: 700; line-height: 1.3; word-break: keep-all; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
     .rl-new-tag { font-size: 9px; font-weight: 800; letter-spacing: .06em; line-height: 1; padding: 3px 5px;
                   background: #fde047; color: #000; border: 1.5px solid #000; }
     .sp { position: relative; flex: none; width: auto; height: var(--sh-h);
@@ -412,7 +419,7 @@
               font-size: 8px; line-height: 1; padding: 3px 0 2px;
               border-bottom: 1px solid rgba(0,0,0,.55); }
     .sp.is-new .sp-t { padding-top: 22px; }
-    .is-capturing .sp-new, .is-capturing .rl-new, .is-capturing .rl-shared { display: none !important; }
+    .is-capturing .sp-new, .is-capturing .rl-new, .is-capturing .rl-shared, .is-capturing .rl-comment { display: none !important; }
     .is-capturing .sp.is-new .sp-t { padding-top: 14px; }
     @media (max-width: 480px) { .shelf { --sh-h: 205px; }
                                  .sp.no-img, .sp.sp-fail { width: calc(var(--w, 38px) * .88); }
@@ -439,6 +446,7 @@
     .rl-title a { color: #000; }
     .rl-title a:hover { color: #2563eb; }
     .rl-byline { font-size: 13px; color: #555; margin-bottom: 8px; line-height: 1.4; }
+    .rl-comment { font-size: 13px; line-height: 1.55; color: #222; background: #FFF7C2; border: 1.5px solid #000; padding: 6px 9px; margin: 0 0 8px; word-break: keep-all; }
     .rl-source { display: inline-block; font-size: 12px; padding: 3px 8px; background: #fff; border: 1.5px solid #000; box-shadow: 1px 1px 0 0 #000; text-decoration: none; color: #000; transition: transform .1s, box-shadow .1s, background .1s; }
     .rl-source:hover { transform: translate(-1px,-1px); box-shadow: 2px 2px 0 0 #000; background: #a7f3d0; text-decoration: none; }
     @media (max-width: 480px) { .rl-item { padding: 14px 12px 14px 46px; } .rl-num { width: 32px; height: 26px; font-size: 12px; } .rl-cover { width: 60px; height: 88px; margin-right: 10px; } .rl-meta { min-height: 88px; } .rl-title { font-size: 15px; } }
@@ -493,132 +501,145 @@
     <a class="sp" style="--c:hsl(3,50%,29%);--w:41px;--fs:15px" href="https://www.yes24.com/product/goods/123746663" rel="nofollow noopener noreferrer" target="_blank" title="When the Weather Is Fine"><span class="sp-t"><i>When the Weather Is Fine</i></span><img class="sp-i" src="https://image.yes24.com/goods/123746663/side" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.parentNode.classList.add('sp-fail');this.remove()" onload="if(this.naturalWidth/this.naturalHeight>0.4){this.parentNode.classList.add('sp-fail');this.remove()}"></a>
     </div>
     <ol class="reading-list" id="rlist">
-    <li class="rl-item">
+    <li class="rl-item" id="b1">
       <span class="rl-num">1</span>
       <a class="rl-cover" href="https://www.yes24.com/product/goods/119697570" rel="nofollow noopener noreferrer" target="_blank" aria-label="Almond — buy or read more"><img src="https://image.yes24.com/goods/119697570/L" alt="Almond by 손원평 — book cover" loading="lazy"></a>
       <div class="rl-meta">
         <div class="rl-title"><a href="https://www.yes24.com/product/goods/119697570" rel="nofollow noopener noreferrer" target="_blank">Almond</a> <span style="color:#888;font-size:12px;font-weight:400">(아몬드)</span></div>
         <div class="rl-byline">손원평</div>
+        <p class="rl-comment">On a fan-compiled list of works Kim Min-ju has watched and read. (Source: theqoo)</p>
         <a class="rl-source" href="https://theqoo.net/kimminju/1855516421" rel="nofollow noopener noreferrer" target="_blank">📺 Source</a>
         <button type="button" class="heart-btn sm" data-heart="b:아몬드" aria-pressed="false" aria-label="Heart this book" title="Heart this book" hidden><span class="heart-ico" aria-hidden="true">♡</span><span class="heart-n"></span></button>
       </div>
     </li>
-    <li class="rl-item">
+    <li class="rl-item" id="b2">
       <span class="rl-num">2</span>
       <a class="rl-cover" href="https://www.yes24.com/product/goods/101676803" rel="nofollow noopener noreferrer" target="_blank" aria-label="Anxious People — buy or read more"><img src="https://image.yes24.com/goods/101676803/L" alt="Anxious People by 프레드릭 배크만 — book cover" loading="lazy"></a>
       <div class="rl-meta">
         <div class="rl-title"><a href="https://www.yes24.com/product/goods/101676803" rel="nofollow noopener noreferrer" target="_blank">Anxious People</a> <span style="color:#888;font-size:12px;font-weight:400">(불안한 사람들)</span></div>
         <div class="rl-byline">프레드릭 배크만</div>
+        <p class="rl-comment">On a fan-compiled list of works Kim Min-ju has watched and read. (Source: theqoo)</p>
         <a class="rl-source" href="https://theqoo.net/kimminju/1855516421" rel="nofollow noopener noreferrer" target="_blank">📺 Source</a>
         <button type="button" class="heart-btn sm" data-heart="b:불안한 사람들" aria-pressed="false" aria-label="Heart this book" title="Heart this book" hidden><span class="heart-ico" aria-hidden="true">♡</span><span class="heart-n"></span></button>
       </div>
     </li>
-    <li class="rl-item">
+    <li class="rl-item" id="b3">
       <span class="rl-num">3</span>
       <a class="rl-cover" href="https://www.yes24.com/product/goods/67108537" rel="nofollow noopener noreferrer" target="_blank" aria-label="Because You Are so Precious — buy or read more"><img src="https://image.yes24.com/goods/67108537/L" alt="Because You Are so Precious by 김지훈 — book cover" loading="lazy"></a>
       <div class="rl-meta">
         <div class="rl-title"><a href="https://www.yes24.com/product/goods/67108537" rel="nofollow noopener noreferrer" target="_blank">Because You Are so Precious *</a> <span style="color:#888;font-size:12px;font-weight:400">(참 소중한 너라서)</span></div>
         <div class="rl-byline">김지훈</div>
+        <p class="rl-comment">On a fan-compiled list of works Kim Min-ju has watched and read. (Source: theqoo)</p>
         <a class="rl-source" href="https://theqoo.net/kimminju/1855516421" rel="nofollow noopener noreferrer" target="_blank">📺 Source</a>
         <button type="button" class="heart-btn sm" data-heart="b:참 소중한 너라서" aria-pressed="false" aria-label="Heart this book" title="Heart this book" hidden><span class="heart-ico" aria-hidden="true">♡</span><span class="heart-n"></span></button>
       </div>
     </li>
-    <li class="rl-item">
+    <li class="rl-item" id="b4">
       <span class="rl-num">4</span>
       <a class="rl-cover" href="https://www.yes24.com/product/goods/108887930" rel="nofollow noopener noreferrer" target="_blank" aria-label="Farewell Greetings — buy or read more"><img src="https://image.yes24.com/goods/108887930/L" alt="Farewell Greetings by 김영하 — book cover" loading="lazy"></a>
       <div class="rl-meta">
         <div class="rl-title"><a href="https://www.yes24.com/product/goods/108887930" rel="nofollow noopener noreferrer" target="_blank">Farewell Greetings</a> <span style="color:#888;font-size:12px;font-weight:400">(작별인사)</span></div>
         <div class="rl-byline">김영하</div>
+        <p class="rl-comment">On a fan-compiled list of works Kim Min-ju has watched and read. (Source: theqoo)</p>
         <a class="rl-source" href="https://theqoo.net/kimminju/1855516421" rel="nofollow noopener noreferrer" target="_blank">📺 Source</a>
         <button type="button" class="heart-btn sm" data-heart="b:작별인사" aria-pressed="false" aria-label="Heart this book" title="Heart this book" hidden><span class="heart-ico" aria-hidden="true">♡</span><span class="heart-n"></span></button>
       </div>
     </li>
-    <li class="rl-item">
+    <li class="rl-item" id="b5">
       <span class="rl-num">5</span>
       <a class="rl-cover" href="https://www.yes24.com/product/goods/101758671" rel="nofollow noopener noreferrer" target="_blank" aria-label="Her Majesty, the Cat — buy or read more"><img src="https://image.yes24.com/goods/101758671/L" alt="Her Majesty, the Cat by 베르나르 베르베르 — book cover" loading="lazy"></a>
       <div class="rl-meta">
         <div class="rl-title"><a href="https://www.yes24.com/product/goods/101758671" rel="nofollow noopener noreferrer" target="_blank">Her Majesty, the Cat</a> <span style="color:#888;font-size:12px;font-weight:400">(문명)</span></div>
         <div class="rl-byline">베르나르 베르베르</div>
+        <p class="rl-comment">On a fan-compiled list of works Kim Min-ju has watched and read. (Source: theqoo)</p>
         <a class="rl-source" href="https://theqoo.net/kimminju/1855516421" rel="nofollow noopener noreferrer" target="_blank">📺 Source</a>
         <button type="button" class="heart-btn sm" data-heart="b:문명" aria-pressed="false" aria-label="Heart this book" title="Heart this book" hidden><span class="heart-ico" aria-hidden="true">♡</span><span class="heart-n"></span></button>
       </div>
     </li>
-    <li class="rl-item">
+    <li class="rl-item" id="b6">
       <span class="rl-num">6</span>
       <a class="rl-cover" href="https://www.yes24.com/product/goods/118578901" rel="nofollow noopener noreferrer" target="_blank" aria-label="Hunger — buy or read more"><img src="https://image.yes24.com/goods/118578901/L" alt="Hunger by 최진영 — book cover" loading="lazy"></a>
       <div class="rl-meta">
         <div class="rl-title"><a href="https://www.yes24.com/product/goods/118578901" rel="nofollow noopener noreferrer" target="_blank">Hunger</a> <span style="color:#888;font-size:12px;font-weight:400">(구의 증명)</span></div>
         <div class="rl-byline">최진영</div>
+        <p class="rl-comment">On a fan-compiled list of works Kim Min-ju has watched and read. (Source: theqoo)</p>
         <a class="rl-source" href="https://theqoo.net/kimminju/1855516421" rel="nofollow noopener noreferrer" target="_blank">📺 Source</a>
         <button type="button" class="heart-btn sm" data-heart="b:구의 증명" aria-pressed="false" aria-label="Heart this book" title="Heart this book" hidden><span class="heart-ico" aria-hidden="true">♡</span><span class="heart-n"></span></button>
       </div>
     </li>
-    <li class="rl-item">
+    <li class="rl-item" id="b7">
       <span class="rl-num">7</span>
       <a class="rl-cover" href="https://www.yes24.com/product/goods/1387488" rel="nofollow noopener noreferrer" target="_blank" aria-label="No Longer Human — buy or read more"><img src="https://image.yes24.com/goods/1387488/L" alt="No Longer Human by 다자이 오사무 — book cover" loading="lazy"></a>
       <div class="rl-meta">
         <div class="rl-title"><a href="https://www.yes24.com/product/goods/1387488" rel="nofollow noopener noreferrer" target="_blank">No Longer Human</a> <span style="color:#888;font-size:12px;font-weight:400">(인간 실격)</span></div>
         <div class="rl-byline">다자이 오사무</div>
+        <p class="rl-comment">On a fan-compiled list of works Kim Min-ju has watched and read. (Source: theqoo)</p>
         <a class="rl-source" href="https://theqoo.net/kimminju/1855516421" rel="nofollow noopener noreferrer" target="_blank">📺 Source</a>
         <button type="button" class="heart-btn sm" data-heart="b:인간 실격" aria-pressed="false" aria-label="Heart this book" title="Heart this book" hidden><span class="heart-ico" aria-hidden="true">♡</span><span class="heart-n"></span></button>
       </div>
     </li>
-    <li class="rl-item">
+    <li class="rl-item" id="b8">
       <span class="rl-num">8</span>
       <a class="rl-cover" href="https://www.yes24.com/product/goods/23599602" rel="nofollow noopener noreferrer" target="_blank" aria-label="Sky, Wind, Star and Poem — buy or read more"><img src="https://image.yes24.com/goods/23599602/L" alt="Sky, Wind, Star and Poem by 윤동주 — book cover" loading="lazy"></a>
       <div class="rl-meta">
         <div class="rl-title"><a href="https://www.yes24.com/product/goods/23599602" rel="nofollow noopener noreferrer" target="_blank">Sky, Wind, Star and Poem</a> <span style="color:#888;font-size:12px;font-weight:400">(하늘과 바람과 별과 시)</span></div>
         <div class="rl-byline">윤동주</div>
+        <p class="rl-comment">On a fan-compiled list of works Kim Min-ju has watched and read. (Source: theqoo)</p>
         <a class="rl-source" href="https://theqoo.net/kimminju/1855516421" rel="nofollow noopener noreferrer" target="_blank">📺 Source</a>
         <button type="button" class="heart-btn sm" data-heart="b:하늘과 바람과 별과 시" aria-pressed="false" aria-label="Heart this book" title="Heart this book" hidden><span class="heart-ico" aria-hidden="true">♡</span><span class="heart-n"></span></button>
       </div>
     </li>
-    <li class="rl-item">
+    <li class="rl-item" id="b9">
       <span class="rl-num">9</span>
       <a class="rl-cover" href="https://www.yes24.com/product/goods/42798224" rel="nofollow noopener noreferrer" target="_blank" aria-label="Summer Outside — buy or read more"><img src="https://image.yes24.com/goods/42798224/L" alt="Summer Outside by 김애란 — book cover" loading="lazy"></a>
       <div class="rl-meta">
         <div class="rl-title"><a href="https://www.yes24.com/product/goods/42798224" rel="nofollow noopener noreferrer" target="_blank">Summer Outside</a> <span style="color:#888;font-size:12px;font-weight:400">(바깥은 여름)</span></div>
         <div class="rl-byline">김애란</div>
+        <p class="rl-comment">On a fan-compiled list of works Kim Min-ju has watched and read. (Source: theqoo)</p>
         <a class="rl-source" href="https://theqoo.net/kimminju/1855516421" rel="nofollow noopener noreferrer" target="_blank">📺 Source</a>
         <button type="button" class="heart-btn sm" data-heart="b:바깥은 여름" aria-pressed="false" aria-label="Heart this book" title="Heart this book" hidden><span class="heart-ico" aria-hidden="true">♡</span><span class="heart-n"></span></button>
       </div>
     </li>
-    <li class="rl-item">
+    <li class="rl-item" id="b10">
       <span class="rl-num">10</span>
       <a class="rl-cover" href="https://www.yes24.com/product/goods/240525" rel="nofollow noopener noreferrer" target="_blank" aria-label="The Alchemist — buy or read more"><img src="https://image.yes24.com/goods/240525/L" alt="The Alchemist by 파울로 코엘료 — book cover" loading="lazy"></a>
       <div class="rl-meta">
         <div class="rl-title"><a href="https://www.yes24.com/product/goods/240525" rel="nofollow noopener noreferrer" target="_blank">The Alchemist</a> <span style="color:#888;font-size:12px;font-weight:400">(연금술사)</span></div>
         <div class="rl-byline">파울로 코엘료</div>
+        <p class="rl-comment">On a fan-compiled list of works Kim Min-ju has watched and read. (Source: theqoo)</p>
         <a class="rl-source" href="https://theqoo.net/kimminju/1855516421" rel="nofollow noopener noreferrer" target="_blank">📺 Source</a>
         <button type="button" class="heart-btn sm" data-heart="b:연금술사" aria-pressed="false" aria-label="Heart this book" title="Heart this book" hidden><span class="heart-ico" aria-hidden="true">♡</span><span class="heart-n"></span></button>
       </div>
     </li>
-    <li class="rl-item">
+    <li class="rl-item" id="b11">
       <span class="rl-num">11</span>
       <a class="rl-cover" href="https://www.yes24.com/product/goods/112072385" rel="nofollow noopener noreferrer" target="_blank" aria-label="The Kite Runner — buy or read more"><img src="https://image.yes24.com/goods/112072385/L" alt="The Kite Runner by 할레드 호세이니 — book cover" loading="lazy"></a>
       <div class="rl-meta">
         <div class="rl-title"><a href="https://www.yes24.com/product/goods/112072385" rel="nofollow noopener noreferrer" target="_blank">The Kite Runner</a> <span style="color:#888;font-size:12px;font-weight:400">(연을 쫓는 아이)</span></div>
         <div class="rl-byline">할레드 호세이니</div>
+        <p class="rl-comment">On a fan-compiled list of works Kim Min-ju has watched and read. (Source: theqoo)</p>
         <a class="rl-source" href="https://theqoo.net/kimminju/1855516421" rel="nofollow noopener noreferrer" target="_blank">📺 Source</a>
         <button type="button" class="heart-btn sm" data-heart="b:연을 쫓는 아이" aria-pressed="false" aria-label="Heart this book" title="Heart this book" hidden><span class="heart-ico" aria-hidden="true">♡</span><span class="heart-n"></span></button>
       </div>
     </li>
-    <li class="rl-item">
+    <li class="rl-item" id="b12">
       <span class="rl-num">12</span>
       <a class="rl-cover" href="https://www.yes24.com/product/goods/110832417" rel="nofollow noopener noreferrer" target="_blank" aria-label="The Mail in Post Office Box 110 — buy or read more"><img src="https://image.yes24.com/goods/110832417/L" alt="The Mail in Post Office Box 110 by 이도우 — book cover" loading="lazy"></a>
       <div class="rl-meta">
         <div class="rl-title"><a href="https://www.yes24.com/product/goods/110832417" rel="nofollow noopener noreferrer" target="_blank">The Mail in Post Office Box 110</a> <span style="color:#888;font-size:12px;font-weight:400">(사서함 110호의 우편물)</span></div>
         <div class="rl-byline">이도우</div>
+        <p class="rl-comment">On a fan-compiled list of works Kim Min-ju has watched and read. (Source: theqoo)</p>
         <a class="rl-source" href="https://theqoo.net/kimminju/1855516421" rel="nofollow noopener noreferrer" target="_blank">📺 Source</a>
         <button type="button" class="heart-btn sm" data-heart="b:사서함 110호의 우편물" aria-pressed="false" aria-label="Heart this book" title="Heart this book" hidden><span class="heart-ico" aria-hidden="true">♡</span><span class="heart-n"></span></button>
       </div>
     </li>
-    <li class="rl-item">
+    <li class="rl-item" id="b13">
       <span class="rl-num">13</span>
       <a class="rl-cover" href="https://www.yes24.com/product/goods/123746663" rel="nofollow noopener noreferrer" target="_blank" aria-label="When the Weather Is Fine — buy or read more"><img src="https://image.yes24.com/goods/123746663/L" alt="When the Weather Is Fine by 이도우 — book cover" loading="lazy"></a>
       <div class="rl-meta">
         <div class="rl-title"><a href="https://www.yes24.com/product/goods/123746663" rel="nofollow noopener noreferrer" target="_blank">When the Weather Is Fine</a> <span style="color:#888;font-size:12px;font-weight:400">(날씨가 좋으면 찾아가겠어요)</span></div>
         <div class="rl-byline">이도우</div>
+        <p class="rl-comment">On a fan-compiled list of works Kim Min-ju has watched and read. (Source: theqoo)</p>
         <a class="rl-source" href="https://theqoo.net/kimminju/1855516421" rel="nofollow noopener noreferrer" target="_blank">📺 Source</a>
         <button type="button" class="heart-btn sm" data-heart="b:날씨가 좋으면 찾아가겠어요" aria-pressed="false" aria-label="Heart this book" title="Heart this book" hidden><span class="heart-ico" aria-hidden="true">♡</span><span class="heart-n"></span></button>
       </div>

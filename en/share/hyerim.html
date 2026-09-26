@@ -205,8 +205,15 @@
              background-size: 100% var(--row); background-repeat: repeat-y; }
     .new-sec { margin: 16px 0 6px; padding: 12px 12px 2px; background: #fffbe6; border: 2px dashed #000; }
     .new-sec-h { display: flex; align-items: center; gap: 8px; margin: 0 0 10px; font-size: 15px; font-weight: 800; }
-    .new-sec .reading-list { margin: 0; }
-    .rl-num.rl-num-new { font-size: 11px; letter-spacing: .04em; }
+    .rl-item { scroll-margin-top: 16px; }
+    .rl-item:target { outline: 3px solid #fde047; outline-offset: 2px; }
+    .new-tiles { display: flex; flex-wrap: wrap; gap: 12px; padding-bottom: 10px; }
+    .new-tile { width: 84px; color: #000; text-decoration: none; display: flex; flex-direction: column; gap: 5px; }
+    .new-tile:hover { text-decoration: none; transform: translateY(-2px); }
+    .nt-cover { display: block; width: 84px; aspect-ratio: 2/3; border: 1.5px solid #000; box-shadow: 2px 2px 0 0 #000; background: #f4f4f0; overflow: hidden; }
+    .nt-cover img { width: 100%; height: 100%; object-fit: cover; display: block; }
+    .nt-no-cover { display: flex; width: 100%; height: 100%; align-items: center; justify-content: center; font-size: 22px; }
+    .nt-title { font-size: 12px; font-weight: 700; line-height: 1.3; word-break: keep-all; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
     .rl-new-tag { font-size: 9px; font-weight: 800; letter-spacing: .06em; line-height: 1; padding: 3px 5px;
                   background: #fde047; color: #000; border: 1.5px solid #000; }
     .sp { position: relative; flex: none; width: auto; height: var(--sh-h);
@@ -228,7 +235,7 @@
               font-size: 8px; line-height: 1; padding: 3px 0 2px;
               border-bottom: 1px solid rgba(0,0,0,.55); }
     .sp.is-new .sp-t { padding-top: 22px; }
-    .is-capturing .sp-new, .is-capturing .rl-new, .is-capturing .rl-shared { display: none !important; }
+    .is-capturing .sp-new, .is-capturing .rl-new, .is-capturing .rl-shared, .is-capturing .rl-comment { display: none !important; }
     .is-capturing .sp.is-new .sp-t { padding-top: 14px; }
     @media (max-width: 480px) { .shelf { --sh-h: 205px; }
                                  .sp.no-img, .sp.sp-fail { width: calc(var(--w, 38px) * .88); }
@@ -255,6 +262,7 @@
     .rl-title a { color: #000; }
     .rl-title a:hover { color: #2563eb; }
     .rl-byline { font-size: 13px; color: #555; margin-bottom: 8px; line-height: 1.4; }
+    .rl-comment { font-size: 13px; line-height: 1.55; color: #222; background: #FFF7C2; border: 1.5px solid #000; padding: 6px 9px; margin: 0 0 8px; word-break: keep-all; }
     .rl-source { display: inline-block; font-size: 12px; padding: 3px 8px; background: #fff; border: 1.5px solid #000; box-shadow: 1px 1px 0 0 #000; text-decoration: none; color: #000; transition: transform .1s, box-shadow .1s, background .1s; }
     .rl-source:hover { transform: translate(-1px,-1px); box-shadow: 2px 2px 0 0 #000; background: #a7f3d0; text-decoration: none; }
     @media (max-width: 480px) { .rl-item { padding: 14px 12px 14px 46px; } .rl-num { width: 32px; height: 26px; font-size: 12px; } .rl-cover { width: 60px; height: 88px; margin-right: 10px; } .rl-meta { min-height: 88px; } .rl-title { font-size: 15px; } }
@@ -298,32 +306,35 @@
     <a class="sp" style="--c:hsl(294,43%,32%);--w:44px;--fs:15px" href="https://www.yes24.com/product/goods/169462200" rel="nofollow noopener noreferrer" target="_blank" title="The Purpose Driven Life"><span class="sp-t"><i>The Purpose Driven Life</i></span><img class="sp-i" src="https://image.yes24.com/goods/169462200/side" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.parentNode.classList.add('sp-fail');this.remove()" onload="if(this.naturalWidth/this.naturalHeight>0.4){this.parentNode.classList.add('sp-fail');this.remove()}"></a>
     </div>
     <ol class="reading-list" id="rlist">
-    <li class="rl-item">
+    <li class="rl-item" id="b1">
       <span class="rl-num">1</span>
       <a class="rl-cover" href="https://www.yes24.com/product/goods/60637228" rel="nofollow noopener noreferrer" target="_blank" aria-label="French Women Don&#x27;t Get Fat (Adapted; or French Women Love at 80) — buy or read more"><img src="https://image.yes24.com/goods/60637228/L" alt="French Women Don&#x27;t Get Fat (Adapted; or French Women Love at 80) by Masako Noguchi — book cover" loading="lazy"></a>
       <div class="rl-meta">
         <div class="rl-title"><a href="https://www.yes24.com/product/goods/60637228" rel="nofollow noopener noreferrer" target="_blank">French Women Don&#x27;t Get Fat (Adapted; or French Women Love at 80)</a> <span style="color:#888;font-size:12px;font-weight:400">(프랑스 여자는 80세에도 사랑을 한다)</span></div>
         <div class="rl-byline">Masako Noguchi</div>
+        <p class="rl-comment">Taught Hyelim that confidence and elegance come from inner beauty. (Source: Seoul Economic Daily)</p>
         <a class="rl-source" href="http://www.sedaily.com/NewsView/1S8GOHLKID" rel="nofollow noopener noreferrer" target="_blank">📺 Source</a>
         <button type="button" class="heart-btn sm" data-heart="b:프랑스 여자는 80세에도 사랑을 한다" aria-pressed="false" aria-label="Heart this book" title="Heart this book" hidden><span class="heart-ico" aria-hidden="true">♡</span><span class="heart-n"></span></button>
       </div>
     </li>
-    <li class="rl-item">
+    <li class="rl-item" id="b2">
       <span class="rl-num">2</span>
       <a class="rl-cover" href="https://www.yes24.com/product/goods/63797637" rel="nofollow noopener noreferrer" target="_blank" aria-label="My Private Painting — buy or read more"><img src="https://image.yes24.com/goods/63797637/L" alt="My Private Painting by Woo Ji-hyun — book cover" loading="lazy"></a>
       <div class="rl-meta">
         <div class="rl-title"><a href="https://www.yes24.com/product/goods/63797637" rel="nofollow noopener noreferrer" target="_blank">My Private Painting</a> <span style="color:#888;font-size:12px;font-weight:400">(나의 사적인 그림)</span></div>
         <div class="rl-byline">Woo Ji-hyun</div>
+        <p class="rl-comment">Reading it felt like traveling in the heart, like chatting with a close friend over a latte. (Source: Readers News)</p>
         <a class="rl-source" href="https://www.readersnews.com/news/articleView.html?idxno=100596" rel="nofollow noopener noreferrer" target="_blank">📺 Source</a>
         <button type="button" class="heart-btn sm" data-heart="b:나의 사적인 그림" aria-pressed="false" aria-label="Heart this book" title="Heart this book" hidden><span class="heart-ico" aria-hidden="true">♡</span><span class="heart-n"></span></button>
       </div>
     </li>
-    <li class="rl-item">
+    <li class="rl-item" id="b3">
       <span class="rl-num">3</span>
       <a class="rl-cover" href="https://www.yes24.com/product/goods/169462200" rel="nofollow noopener noreferrer" target="_blank" aria-label="The Purpose Driven Life — buy or read more"><img src="https://image.yes24.com/goods/169462200/L" alt="The Purpose Driven Life by Rick Warren — book cover" loading="lazy"></a>
       <div class="rl-meta">
         <div class="rl-title"><a href="https://www.yes24.com/product/goods/169462200" rel="nofollow noopener noreferrer" target="_blank">The Purpose Driven Life</a> <span style="color:#888;font-size:12px;font-weight:400">(목적이 이끄는 삶)</span></div>
         <div class="rl-byline">Rick Warren</div>
+        <p class="rl-comment">Named as a life book; its 40-day format makes every reread feel new. (Source: Readers News)</p>
         <a class="rl-source" href="https://www.readersnews.com/news/articleView.html?idxno=100596" rel="nofollow noopener noreferrer" target="_blank">📺 Source</a>
         <button type="button" class="heart-btn sm" data-heart="b:목적이 이끄는 삶" aria-pressed="false" aria-label="Heart this book" title="Heart this book" hidden><span class="heart-ico" aria-hidden="true">♡</span><span class="heart-n"></span></button>
       </div>

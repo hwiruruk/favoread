@@ -213,8 +213,15 @@
              background-size: 100% var(--row); background-repeat: repeat-y; }
     .new-sec { margin: 16px 0 6px; padding: 12px 12px 2px; background: #fffbe6; border: 2px dashed #000; }
     .new-sec-h { display: flex; align-items: center; gap: 8px; margin: 0 0 10px; font-size: 15px; font-weight: 800; }
-    .new-sec .reading-list { margin: 0; }
-    .rl-num.rl-num-new { font-size: 11px; letter-spacing: .04em; }
+    .rl-item { scroll-margin-top: 16px; }
+    .rl-item:target { outline: 3px solid #fde047; outline-offset: 2px; }
+    .new-tiles { display: flex; flex-wrap: wrap; gap: 12px; padding-bottom: 10px; }
+    .new-tile { width: 84px; color: #000; text-decoration: none; display: flex; flex-direction: column; gap: 5px; }
+    .new-tile:hover { text-decoration: none; transform: translateY(-2px); }
+    .nt-cover { display: block; width: 84px; aspect-ratio: 2/3; border: 1.5px solid #000; box-shadow: 2px 2px 0 0 #000; background: #f4f4f0; overflow: hidden; }
+    .nt-cover img { width: 100%; height: 100%; object-fit: cover; display: block; }
+    .nt-no-cover { display: flex; width: 100%; height: 100%; align-items: center; justify-content: center; font-size: 22px; }
+    .nt-title { font-size: 12px; font-weight: 700; line-height: 1.3; word-break: keep-all; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
     .rl-new-tag { font-size: 9px; font-weight: 800; letter-spacing: .06em; line-height: 1; padding: 3px 5px;
                   background: #fde047; color: #000; border: 1.5px solid #000; }
     .sp { position: relative; flex: none; width: auto; height: var(--sh-h);
@@ -236,7 +243,7 @@
               font-size: 8px; line-height: 1; padding: 3px 0 2px;
               border-bottom: 1px solid rgba(0,0,0,.55); }
     .sp.is-new .sp-t { padding-top: 22px; }
-    .is-capturing .sp-new, .is-capturing .rl-new, .is-capturing .rl-shared { display: none !important; }
+    .is-capturing .sp-new, .is-capturing .rl-new, .is-capturing .rl-shared, .is-capturing .rl-comment { display: none !important; }
     .is-capturing .sp.is-new .sp-t { padding-top: 14px; }
     @media (max-width: 480px) { .shelf { --sh-h: 205px; }
                                  .sp.no-img, .sp.sp-fail { width: calc(var(--w, 38px) * .88); }
@@ -263,6 +270,7 @@
     .rl-title a { color: #000; }
     .rl-title a:hover { color: #2563eb; }
     .rl-byline { font-size: 13px; color: #555; margin-bottom: 8px; line-height: 1.4; }
+    .rl-comment { font-size: 13px; line-height: 1.55; color: #222; background: #FFF7C2; border: 1.5px solid #000; padding: 6px 9px; margin: 0 0 8px; word-break: keep-all; }
     .rl-source { display: inline-block; font-size: 12px; padding: 3px 8px; background: #fff; border: 1.5px solid #000; box-shadow: 1px 1px 0 0 #000; text-decoration: none; color: #000; transition: transform .1s, box-shadow .1s, background .1s; }
     .rl-source:hover { transform: translate(-1px,-1px); box-shadow: 2px 2px 0 0 #000; background: #a7f3d0; text-decoration: none; }
     .rl-shared { clear: both; margin-top: 12px; padding-top: 10px; border-top: 1.5px dashed #ccc; display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
@@ -330,7 +338,7 @@
     <a class="sp" style="--c:hsl(304,35%,30%);--w:40px;--fs:15px" href="https://www.yes24.com/product/goods/76106687" rel="nofollow noopener noreferrer" target="_blank" title="지구에서 한아뿐"><span class="sp-t"><i>지구에서 한아뿐</i></span><img class="sp-i" src="https://image.yes24.com/goods/76106687/side" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.parentNode.classList.add('sp-fail');this.remove()" onload="if(this.naturalWidth/this.naturalHeight>0.4){this.parentNode.classList.add('sp-fail');this.remove()}"></a>
     </div>
     <ol class="reading-list" id="rlist">
-    <li class="rl-item">
+    <li class="rl-item" id="b1">
       <span class="rl-num">1</span>
       <a class="rl-cover" href="https://www.yes24.com/product/goods/43306988" rel="nofollow noopener noreferrer" target="_blank" aria-label="기사단장 죽이기 알라딘에서 보기"><img src="https://image.yes24.com/goods/43306988/L" alt="기사단장 죽이기 표지" loading="lazy"></a>
       <div class="rl-meta">
@@ -341,27 +349,29 @@
       </div>
       <div class="rl-shared"><span class="rl-shared-label">👥 함께 추천한 셀럽 1명:</span> <a class="rl-celeb-chip" href="https://favorbook.co.kr/share/%EA%B9%80%EC%A7%80%ED%9B%88.html">김지훈</a></div>
     </li>
-    <li class="rl-item">
+    <li class="rl-item" id="b2">
       <span class="rl-num">2</span>
       <a class="rl-cover" href="https://www.yes24.com/product/goods/182635661" rel="nofollow noopener noreferrer" target="_blank" aria-label="정체성 알라딘에서 보기"><img src="https://image.yes24.com/goods/182635661/L" alt="정체성 표지" loading="lazy"></a>
       <div class="rl-meta">
         <div class="rl-title"><a href="https://www.yes24.com/product/goods/182635661" rel="nofollow noopener noreferrer" target="_blank">정체성</a></div>
         <div class="rl-byline">밀란 쿤데라 · 민음사</div>
+        <p class="rl-comment">드라마 &#x27;어쩌다 발견한 하루&#x27; 주연으로서 추천한 책이에요. 예스24가 이 책으로 북퀴즈 이벤트를 열었어요. (출처: 뉴시스)</p>
         <a class="rl-source" href="https://www.newsis.com/view/NISX20191016_0000800426" rel="nofollow noopener noreferrer" target="_blank">📺 출처 보기</a>
         <button type="button" class="heart-btn sm" data-heart="b:정체성" aria-pressed="false" aria-label="이 책에 하트" title="이 책에 하트" hidden><span class="heart-ico" aria-hidden="true">♡</span><span class="heart-n"></span></button>
       </div>
     </li>
-    <li class="rl-item">
+    <li class="rl-item" id="b3">
       <span class="rl-num">3</span>
       <a class="rl-cover" href="https://www.yes24.com/product/goods/90367653" rel="nofollow noopener noreferrer" target="_blank" aria-label="죽은 자의 집 청소 알라딘에서 보기"><img src="https://image.yes24.com/goods/90367653/L" alt="죽은 자의 집 청소 표지" loading="lazy"></a>
       <div class="rl-meta">
         <div class="rl-title"><a href="https://www.yes24.com/product/goods/90367653" rel="nofollow noopener noreferrer" target="_blank">죽은 자의 집 청소</a></div>
         <div class="rl-byline">김완 · 김영사</div>
+        <p class="rl-comment">최근 읽고 생각이 많아졌다고 한 책이에요. 좋았던 감정이 사라지지 않게 짧게라도 감상을 메모해 둔대요. (출처: 오마이스타)</p>
         <a class="rl-source" href="https://star.ohmynews.com/NWS_Web/OhmyStar/at_pg.aspx?CNTN_CD=A0003221353&amp;CMPT_CD=P0010&amp;utm_source=naver&amp;utm_medium=newsearch&amp;utm_campaign=naver_news" rel="nofollow noopener noreferrer" target="_blank">📺 출처 보기</a>
         <button type="button" class="heart-btn sm" data-heart="b:죽은 자의 집 청소" aria-pressed="false" aria-label="이 책에 하트" title="이 책에 하트" hidden><span class="heart-ico" aria-hidden="true">♡</span><span class="heart-n"></span></button>
       </div>
     </li>
-    <li class="rl-item">
+    <li class="rl-item" id="b4">
       <span class="rl-num">4</span>
       <a class="rl-cover" href="https://www.yes24.com/product/goods/76106687" rel="nofollow noopener noreferrer" target="_blank" aria-label="지구에서 한아뿐 알라딘에서 보기"><img src="https://image.yes24.com/goods/76106687/L" alt="지구에서 한아뿐 표지" loading="lazy"></a>
       <div class="rl-meta">

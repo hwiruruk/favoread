@@ -517,8 +517,15 @@
              background-size: 100% var(--row); background-repeat: repeat-y; }
     .new-sec { margin: 16px 0 6px; padding: 12px 12px 2px; background: #fffbe6; border: 2px dashed #000; }
     .new-sec-h { display: flex; align-items: center; gap: 8px; margin: 0 0 10px; font-size: 15px; font-weight: 800; }
-    .new-sec .reading-list { margin: 0; }
-    .rl-num.rl-num-new { font-size: 11px; letter-spacing: .04em; }
+    .rl-item { scroll-margin-top: 16px; }
+    .rl-item:target { outline: 3px solid #fde047; outline-offset: 2px; }
+    .new-tiles { display: flex; flex-wrap: wrap; gap: 12px; padding-bottom: 10px; }
+    .new-tile { width: 84px; color: #000; text-decoration: none; display: flex; flex-direction: column; gap: 5px; }
+    .new-tile:hover { text-decoration: none; transform: translateY(-2px); }
+    .nt-cover { display: block; width: 84px; aspect-ratio: 2/3; border: 1.5px solid #000; box-shadow: 2px 2px 0 0 #000; background: #f4f4f0; overflow: hidden; }
+    .nt-cover img { width: 100%; height: 100%; object-fit: cover; display: block; }
+    .nt-no-cover { display: flex; width: 100%; height: 100%; align-items: center; justify-content: center; font-size: 22px; }
+    .nt-title { font-size: 12px; font-weight: 700; line-height: 1.3; word-break: keep-all; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
     .rl-new-tag { font-size: 9px; font-weight: 800; letter-spacing: .06em; line-height: 1; padding: 3px 5px;
                   background: #fde047; color: #000; border: 1.5px solid #000; }
     .sp { position: relative; flex: none; width: auto; height: var(--sh-h);
@@ -540,7 +547,7 @@
               font-size: 8px; line-height: 1; padding: 3px 0 2px;
               border-bottom: 1px solid rgba(0,0,0,.55); }
     .sp.is-new .sp-t { padding-top: 22px; }
-    .is-capturing .sp-new, .is-capturing .rl-new, .is-capturing .rl-shared { display: none !important; }
+    .is-capturing .sp-new, .is-capturing .rl-new, .is-capturing .rl-shared, .is-capturing .rl-comment { display: none !important; }
     .is-capturing .sp.is-new .sp-t { padding-top: 14px; }
     @media (max-width: 480px) { .shelf { --sh-h: 205px; }
                                  .sp.no-img, .sp.sp-fail { width: calc(var(--w, 38px) * .88); }
@@ -567,6 +574,7 @@
     .rl-title a { color: #000; }
     .rl-title a:hover { color: #2563eb; }
     .rl-byline { font-size: 13px; color: #555; margin-bottom: 8px; line-height: 1.4; }
+    .rl-comment { font-size: 13px; line-height: 1.55; color: #222; background: #FFF7C2; border: 1.5px solid #000; padding: 6px 9px; margin: 0 0 8px; word-break: keep-all; }
     .rl-source { display: inline-block; font-size: 12px; padding: 3px 8px; background: #fff; border: 1.5px solid #000; box-shadow: 1px 1px 0 0 #000; text-decoration: none; color: #000; transition: transform .1s, box-shadow .1s, background .1s; }
     .rl-source:hover { transform: translate(-1px,-1px); box-shadow: 2px 2px 0 0 #000; background: #a7f3d0; text-decoration: none; }
     @media (max-width: 480px) { .rl-item { padding: 14px 12px 14px 46px; } .rl-num { width: 32px; height: 26px; font-size: 12px; } .rl-cover { width: 60px; height: 88px; margin-right: 10px; } .rl-meta { min-height: 88px; } .rl-title { font-size: 15px; } }
@@ -629,47 +637,51 @@
     <a class="sp" style="--c:hsl(9,37%,26%);--w:36px;--fs:15px" href="https://www.yes24.com/product/goods/74207752" rel="nofollow noopener noreferrer" target="_blank" title="You Shouldn&#x27;t Have a Dog"><span class="sp-t"><i>You Shouldn&#x27;t Have a Dog</i></span><img class="sp-i" src="https://image.yes24.com/goods/74207752/side" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.parentNode.classList.add('sp-fail');this.remove()" onload="if(this.naturalWidth/this.naturalHeight>0.4){this.parentNode.classList.add('sp-fail');this.remove()}"></a>
     </div>
     <ol class="reading-list" id="rlist">
-    <li class="rl-item">
+    <li class="rl-item" id="b1">
       <span class="rl-num">1</span>
       <a class="rl-cover" href="https://www.yes24.com/product/goods/134636122" rel="nofollow noopener noreferrer" target="_blank" aria-label="84, Charing Cross Road — buy or read more"><img src="https://image.yes24.com/goods/134636122/L" alt="84, Charing Cross Road by Helene Hanff — book cover" loading="lazy"></a>
       <div class="rl-meta">
         <div class="rl-title"><a href="https://www.yes24.com/product/goods/134636122" rel="nofollow noopener noreferrer" target="_blank">84, Charing Cross Road</a> <span style="color:#888;font-size:12px;font-weight:400">(채링크로스 84번지)</span></div>
         <div class="rl-byline">Helene Hanff</div>
+        <p class="rl-comment">One of seven books Kim Hyo-jin personally chose, and brought to set, for a &#x27;woman who reads&#x27; photo shoot. (Source: Chosun Ilbo)</p>
         <a class="rl-source" href="https://www.chosun.com/site/data/html_dir/2011/03/25/2011032500527.html" rel="nofollow noopener noreferrer" target="_blank">📺 Source</a>
         <button type="button" class="heart-btn sm" data-heart="b:채링크로스 84번지" aria-pressed="false" aria-label="Heart this book" title="Heart this book" hidden><span class="heart-ico" aria-hidden="true">♡</span><span class="heart-n"></span></button>
       </div>
     </li>
-    <li class="rl-item">
+    <li class="rl-item" id="b2">
       <span class="rl-num">2</span>
       <a class="rl-cover" href="https://www.yes24.com/product/goods/6322199" rel="nofollow noopener noreferrer" target="_blank" aria-label="All She Was Worth — buy or read more"><img src="https://image.yes24.com/goods/6322199/L" alt="All She Was Worth by Miyuki Miyabe — book cover" loading="lazy"></a>
       <div class="rl-meta">
         <div class="rl-title"><a href="https://www.yes24.com/product/goods/6322199" rel="nofollow noopener noreferrer" target="_blank">All She Was Worth</a> <span style="color:#888;font-size:12px;font-weight:400">(화차)</span></div>
         <div class="rl-byline">Miyuki Miyabe</div>
+        <p class="rl-comment">A crime-fiction fan&#x27;s pick: Miyabe Miyuki&#x27;s novel about a debtor, with psychology that mirrors reality closely. (Source: Vogue Korea)</p>
         <a class="rl-source" href="https://www.vogue.co.kr/2011/08/04/15%EC%A3%BC%EB%85%84-%EC%97%AC%EB%B0%B0%EC%9A%B0-%ED%8A%B9%EC%A7%91-%EA%B9%80%ED%9A%A8%EC%A7%84-%EC%A7%80%EC%A0%81%EC%9D%B8-%ED%9A%A8%EC%A7%84%EC%94%A8/" rel="nofollow noopener noreferrer" target="_blank">📺 Source</a>
         <button type="button" class="heart-btn sm" data-heart="b:화차" aria-pressed="false" aria-label="Heart this book" title="Heart this book" hidden><span class="heart-ico" aria-hidden="true">♡</span><span class="heart-n"></span></button>
       </div>
     </li>
-    <li class="rl-item">
+    <li class="rl-item" id="b3">
       <span class="rl-num">3</span>
       <a class="rl-cover" href="https://www.yes24.com/product/goods/1979099" rel="nofollow noopener noreferrer" target="_blank" aria-label="Birthday — buy or read more"><img src="https://image.yes24.com/goods/1979099/L" alt="Birthday by Chang Young-hee — book cover" loading="lazy"></a>
       <div class="rl-meta">
         <div class="rl-title"><a href="https://www.yes24.com/product/goods/1979099" rel="nofollow noopener noreferrer" target="_blank">Birthday</a> <span style="color:#888;font-size:12px;font-weight:400">(생일)</span></div>
         <div class="rl-byline">Chang Young-hee</div>
+        <p class="rl-comment">Jang Young-hee&#x27;s tour of English poems, made even better by Kim Jeom-seon&#x27;s innocent illustrations. (Source: Vogue Korea)</p>
         <a class="rl-source" href="https://www.vogue.co.kr/2011/08/04/15%EC%A3%BC%EB%85%84-%EC%97%AC%EB%B0%B0%EC%9A%B0-%ED%8A%B9%EC%A7%91-%EA%B9%80%ED%9A%A8%EC%A7%84-%EC%A7%80%EC%A0%81%EC%9D%B8-%ED%9A%A8%EC%A7%84%EC%94%A8/" rel="nofollow noopener noreferrer" target="_blank">📺 Source</a>
         <button type="button" class="heart-btn sm" data-heart="b:생일" aria-pressed="false" aria-label="Heart this book" title="Heart this book" hidden><span class="heart-ico" aria-hidden="true">♡</span><span class="heart-n"></span></button>
       </div>
     </li>
-    <li class="rl-item">
+    <li class="rl-item" id="b4">
       <span class="rl-num">4</span>
       <a class="rl-cover" href="https://www.yes24.com/product/goods/27832932" rel="nofollow noopener noreferrer" target="_blank" aria-label="Die Glut — buy or read more"><img src="https://image.yes24.com/goods/27832932/L" alt="Die Glut by Sándor Márai — book cover" loading="lazy"></a>
       <div class="rl-meta">
         <div class="rl-title"><a href="https://www.yes24.com/product/goods/27832932" rel="nofollow noopener noreferrer" target="_blank">Die Glut</a> <span style="color:#888;font-size:12px;font-weight:400">(열정)</span></div>
         <div class="rl-byline">Sándor Márai</div>
+        <p class="rl-comment">Kim Hyo-jin&#x27;s book of a lifetime: beautifully written, carried along on backpacking trips, and a guide for life&#x27;s direction. (Source: Vogue Korea)</p>
         <a class="rl-source" href="https://www.vogue.co.kr/2011/08/04/15%EC%A3%BC%EB%85%84-%EC%97%AC%EB%B0%B0%EC%9A%B0-%ED%8A%B9%EC%A7%91-%EA%B9%80%ED%9A%A8%EC%A7%84-%EC%A7%80%EC%A0%81%EC%9D%B8-%ED%9A%A8%EC%A7%84%EC%94%A8/" rel="nofollow noopener noreferrer" target="_blank">📺 Source</a>
         <button type="button" class="heart-btn sm" data-heart="b:열정" aria-pressed="false" aria-label="Heart this book" title="Heart this book" hidden><span class="heart-ico" aria-hidden="true">♡</span><span class="heart-n"></span></button>
       </div>
     </li>
-    <li class="rl-item">
+    <li class="rl-item" id="b5">
       <span class="rl-num">5</span>
       <a class="rl-cover" href="https://www.yes24.com/product/goods/1373199" rel="nofollow noopener noreferrer" target="_blank" aria-label="Don&#x27;t Hit with Flowers — buy or read more"><img src="https://image.yes24.com/goods/1373199/L" alt="Don&#x27;t Hit with Flowers by Kim Hye-ja — book cover" loading="lazy"></a>
       <div class="rl-meta">
@@ -679,27 +691,29 @@
         <button type="button" class="heart-btn sm" data-heart="b:꽃으로 때리지 말라" aria-pressed="false" aria-label="Heart this book" title="Heart this book" hidden><span class="heart-ico" aria-hidden="true">♡</span><span class="heart-n"></span></button>
       </div>
     </li>
-    <li class="rl-item">
+    <li class="rl-item" id="b6">
       <span class="rl-num">6</span>
       <a class="rl-cover" href="https://www.yes24.com/product/goods/1482917" rel="nofollow noopener noreferrer" target="_blank" aria-label="Excuses for Dogs — buy or read more"><img src="https://image.yes24.com/goods/1482917/L" alt="Excuses for Dogs by Nam Yu-Cheol — book cover" loading="lazy"></a>
       <div class="rl-meta">
         <div class="rl-title"><a href="https://www.yes24.com/product/goods/1482917" rel="nofollow noopener noreferrer" target="_blank">Excuses for Dogs</a> <span style="color:#888;font-size:12px;font-weight:400">(개를 위한 변명)</span></div>
         <div class="rl-byline">Nam Yu-Cheol *</div>
+        <p class="rl-comment">Named as a book that inspired Kim Hyo-jin&#x27;s thinking about the environment and animal life. (Source: Allure Korea)</p>
         <a class="rl-source" href="https://www.allurekorea.com/2018/03/21/i-am-kim-hyo-jin/" rel="nofollow noopener noreferrer" target="_blank">📺 Source</a>
         <button type="button" class="heart-btn sm" data-heart="b:개를 위한 변명" aria-pressed="false" aria-label="Heart this book" title="Heart this book" hidden><span class="heart-ico" aria-hidden="true">♡</span><span class="heart-n"></span></button>
       </div>
     </li>
-    <li class="rl-item">
+    <li class="rl-item" id="b7">
       <span class="rl-num">7</span>
       <a class="rl-cover" href="https://www.yes24.com/product/goods/8091413" rel="nofollow noopener noreferrer" target="_blank" aria-label="Green Boy — buy or read more"><img src="https://image.yes24.com/goods/8091413/L" alt="Green Boy by Hyunseong Kim — book cover" loading="lazy"></a>
       <div class="rl-meta">
         <div class="rl-title"><a href="https://www.yes24.com/product/goods/8091413" rel="nofollow noopener noreferrer" target="_blank">Green Boy</a> <span style="color:#888;font-size:12px;font-weight:400">(그린보이)</span></div>
         <div class="rl-byline">Hyunseong Kim *</div>
+        <p class="rl-comment">Named as a book that inspired Kim Hyo-jin&#x27;s thinking about the environment and animal life. (Source: Allure Korea)</p>
         <a class="rl-source" href="https://www.allurekorea.com/2018/03/21/i-am-kim-hyo-jin/" rel="nofollow noopener noreferrer" target="_blank">📺 Source</a>
         <button type="button" class="heart-btn sm" data-heart="b:그린보이" aria-pressed="false" aria-label="Heart this book" title="Heart this book" hidden><span class="heart-ico" aria-hidden="true">♡</span><span class="heart-n"></span></button>
       </div>
     </li>
-    <li class="rl-item">
+    <li class="rl-item" id="b8">
       <span class="rl-num">8</span>
       <a class="rl-cover" href="https://www.yes24.com/product/goods/177155069" rel="nofollow noopener noreferrer" target="_blank" aria-label="L&#x27;art de la Simplicite — buy or read more"><img src="https://image.yes24.com/goods/177155069/L" alt="L&#x27;art de la Simplicite by Dominique Loreau — book cover" loading="lazy"></a>
       <div class="rl-meta">
@@ -709,17 +723,18 @@
         <button type="button" class="heart-btn sm" data-heart="b:심플하게 산다" aria-pressed="false" aria-label="Heart this book" title="Heart this book" hidden><span class="heart-ico" aria-hidden="true">♡</span><span class="heart-n"></span></button>
       </div>
     </li>
-    <li class="rl-item">
+    <li class="rl-item" id="b9">
       <span class="rl-num">9</span>
       <a class="rl-cover" href="https://www.yes24.com/product/goods/24937700" rel="nofollow noopener noreferrer" target="_blank" aria-label="La Faim Dans le Monde Expliquee a Mon Fils — buy or read more"><img src="https://image.yes24.com/goods/24937700/L" alt="La Faim Dans le Monde Expliquee a Mon Fils by Jean Ziegler — book cover" loading="lazy"></a>
       <div class="rl-meta">
         <div class="rl-title"><a href="https://www.yes24.com/product/goods/24937700" rel="nofollow noopener noreferrer" target="_blank">La Faim Dans le Monde Expliquee a Mon Fils</a> <span style="color:#888;font-size:12px;font-weight:400">(왜 세계의 절반은 굶주리는가)</span></div>
         <div class="rl-byline">Jean Ziegler</div>
+        <p class="rl-comment">One of the year-end reads Kim Hyo-jin picked. A heavy subject in an easy style; it sparked a wish to be of some small help. (Source: Metro Seoul)</p>
         <a class="rl-source" href="https://www.metroseoul.co.kr/article/2010112200045" rel="nofollow noopener noreferrer" target="_blank">📺 Source</a>
         <button type="button" class="heart-btn sm" data-heart="b:왜 세계의 절반은 굶주리는가" aria-pressed="false" aria-label="Heart this book" title="Heart this book" hidden><span class="heart-ico" aria-hidden="true">♡</span><span class="heart-n"></span></button>
       </div>
     </li>
-    <li class="rl-item">
+    <li class="rl-item" id="b10">
       <span class="rl-num">10</span>
       <a class="rl-cover" href="https://www.yes24.com/product/goods/92901787" rel="nofollow noopener noreferrer" target="_blank" aria-label="Le Petit Prince — buy or read more"><img src="https://image.yes24.com/goods/92901787/L" alt="Le Petit Prince by Antoine de Saint-Exupéry — book cover" loading="lazy"></a>
       <div class="rl-meta">
@@ -729,17 +744,18 @@
         <button type="button" class="heart-btn sm" data-heart="b:어린왕자" aria-pressed="false" aria-label="Heart this book" title="Heart this book" hidden><span class="heart-ico" aria-hidden="true">♡</span><span class="heart-n"></span></button>
       </div>
     </li>
-    <li class="rl-item">
+    <li class="rl-item" id="b11">
       <span class="rl-num">11</span>
       <a class="rl-cover" href="https://www.yes24.com/product/goods/106722" rel="nofollow noopener noreferrer" target="_blank" aria-label="Moon Palace — buy or read more"><img src="https://image.yes24.com/goods/106722/L" alt="Moon Palace by Paul Auster — book cover" loading="lazy"></a>
       <div class="rl-meta">
         <div class="rl-title"><a href="https://www.yes24.com/product/goods/106722" rel="nofollow noopener noreferrer" target="_blank">Moon Palace</a> <span style="color:#888;font-size:12px;font-weight:400">(달의 궁전)</span></div>
         <div class="rl-byline">Paul Auster</div>
+        <p class="rl-comment">One of seven books Kim Hyo-jin personally chose, and brought to set, for a &#x27;woman who reads&#x27; photo shoot. (Source: Chosun Ilbo)</p>
         <a class="rl-source" href="https://www.chosun.com/site/data/html_dir/2011/03/25/2011032500527.html" rel="nofollow noopener noreferrer" target="_blank">📺 Source</a>
         <button type="button" class="heart-btn sm" data-heart="b:달의 궁전" aria-pressed="false" aria-label="Heart this book" title="Heart this book" hidden><span class="heart-ico" aria-hidden="true">♡</span><span class="heart-n"></span></button>
       </div>
     </li>
-    <li class="rl-item">
+    <li class="rl-item" id="b12">
       <span class="rl-num">12</span>
       <a class="rl-cover" href="https://www.yes24.com/product/goods/86154834" rel="nofollow noopener noreferrer" target="_blank" aria-label="My Veganism Comic — buy or read more"><img src="https://image.yes24.com/goods/86154834/L" alt="My Veganism Comic by Bo-seon — book cover" loading="lazy"></a>
       <div class="rl-meta">
@@ -749,7 +765,7 @@
         <button type="button" class="heart-btn sm" data-heart="b:나의 비거니즘 만화" aria-pressed="false" aria-label="Heart this book" title="Heart this book" hidden><span class="heart-ico" aria-hidden="true">♡</span><span class="heart-n"></span></button>
       </div>
     </li>
-    <li class="rl-item">
+    <li class="rl-item" id="b13">
       <span class="rl-num">13</span>
       <a class="rl-cover" href="https://www.yes24.com/product/goods/1789" rel="nofollow noopener noreferrer" target="_blank" aria-label="Non-Possession — buy or read more"><img src="https://image.yes24.com/goods/1789/L" alt="Non-Possession by Beopjeong — book cover" loading="lazy"></a>
       <div class="rl-meta">
@@ -759,7 +775,7 @@
         <button type="button" class="heart-btn sm" data-heart="b:무소유" aria-pressed="false" aria-label="Heart this book" title="Heart this book" hidden><span class="heart-ico" aria-hidden="true">♡</span><span class="heart-n"></span></button>
       </div>
     </li>
-    <li class="rl-item">
+    <li class="rl-item" id="b14">
       <span class="rl-num">14</span>
       <a class="rl-cover" href="https://www.yes24.com/product/goods/64197033" rel="nofollow noopener noreferrer" target="_blank" aria-label="Simple Food for the Good Life — buy or read more"><img src="https://image.yes24.com/goods/64197033/L" alt="Simple Food for the Good Life by Helen Nearing — book cover" loading="lazy"></a>
       <div class="rl-meta">
@@ -769,62 +785,68 @@
         <button type="button" class="heart-btn sm" data-heart="b:헬렌 니어링의 소박한 밥상" aria-pressed="false" aria-label="Heart this book" title="Heart this book" hidden><span class="heart-ico" aria-hidden="true">♡</span><span class="heart-n"></span></button>
       </div>
     </li>
-    <li class="rl-item">
+    <li class="rl-item" id="b15">
       <span class="rl-num">15</span>
       <a class="rl-cover" href="https://www.yes24.com/product/goods/110545378" rel="nofollow noopener noreferrer" target="_blank" aria-label="Strolling in the Forest of Literature — buy or read more"><img src="https://image.yes24.com/goods/110545378/L" alt="Strolling in the Forest of Literature by Chang Young-hee — book cover" loading="lazy"></a>
       <div class="rl-meta">
         <div class="rl-title"><a href="https://www.yes24.com/product/goods/110545378" rel="nofollow noopener noreferrer" target="_blank">Strolling in the Forest of Literature</a> <span style="color:#888;font-size:12px;font-weight:400">(문학의 숲을 거닐다)</span></div>
         <div class="rl-byline">Chang Young-hee</div>
+        <p class="rl-comment">Along with Jang Young-hee&#x27;s poetry anthology, Kim Hyo-jin enjoyed this essay collection too. (Source: Vogue Korea)</p>
         <a class="rl-source" href="https://www.vogue.co.kr/2011/08/04/15%EC%A3%BC%EB%85%84-%EC%97%AC%EB%B0%B0%EC%9A%B0-%ED%8A%B9%EC%A7%91-%EA%B9%80%ED%9A%A8%EC%A7%84-%EC%A7%80%EC%A0%81%EC%9D%B8-%ED%9A%A8%EC%A7%84%EC%94%A8/" rel="nofollow noopener noreferrer" target="_blank">📺 Source</a>
         <button type="button" class="heart-btn sm" data-heart="b:문학의 숲을 거닐다" aria-pressed="false" aria-label="Heart this book" title="Heart this book" hidden><span class="heart-ico" aria-hidden="true">♡</span><span class="heart-n"></span></button>
       </div>
     </li>
-    <li class="rl-item">
+    <li class="rl-item" id="b16">
       <span class="rl-num">16</span>
       <a class="rl-cover" href="https://www.yes24.com/product/goods/204300" rel="nofollow noopener noreferrer" target="_blank" aria-label="The Catcher in the Rye — buy or read more"><img src="https://image.yes24.com/goods/204300/L" alt="The Catcher in the Rye by J. D. Salinger — book cover" loading="lazy"></a>
       <div class="rl-meta">
         <div class="rl-title"><a href="https://www.yes24.com/product/goods/204300" rel="nofollow noopener noreferrer" target="_blank">The Catcher in the Rye</a> <span style="color:#888;font-size:12px;font-weight:400">(호밀밭의 파수꾼)</span></div>
         <div class="rl-byline">J. D. Salinger</div>
+        <p class="rl-comment">One of seven books Kim Hyo-jin personally chose, and brought to set, for a &#x27;woman who reads&#x27; photo shoot. (Source: Chosun Ilbo)</p>
         <a class="rl-source" href="https://www.chosun.com/site/data/html_dir/2011/03/25/2011032500527.html" rel="nofollow noopener noreferrer" target="_blank">📺 Source</a>
         <button type="button" class="heart-btn sm" data-heart="b:호밀밭의 파수꾼" aria-pressed="false" aria-label="Heart this book" title="Heart this book" hidden><span class="heart-ico" aria-hidden="true">♡</span><span class="heart-n"></span></button>
       </div>
     </li>
-    <li class="rl-item">
+    <li class="rl-item" id="b17">
       <span class="rl-num">17</span>
       <a class="rl-cover" href="https://www.yes24.com/product/goods/249882" rel="nofollow noopener noreferrer" target="_blank" aria-label="The End of Meat — buy or read more"><img src="https://image.yes24.com/goods/249882/L" alt="The End of Meat by Jeremy Rifkin — book cover" loading="lazy"></a>
       <div class="rl-meta">
         <div class="rl-title"><a href="https://www.yes24.com/product/goods/249882" rel="nofollow noopener noreferrer" target="_blank">The End of Meat</a> <span style="color:#888;font-size:12px;font-weight:400">(육식의 종말)</span></div>
         <div class="rl-byline">Jeremy Rifkin</div>
+        <p class="rl-comment">Reading this by chance in 2006 led Kim Hyo-jin to go vegetarian, questioning whether it is right to make animals suffer for human appetite. (Source: Woman Donga)</p>
         <a class="rl-source" href="https://woman.donga.com/people/article/all/12/2463658/1" rel="nofollow noopener noreferrer" target="_blank">📺 Source</a>
         <button type="button" class="heart-btn sm" data-heart="b:육식의 종말" aria-pressed="false" aria-label="Heart this book" title="Heart this book" hidden><span class="heart-ico" aria-hidden="true">♡</span><span class="heart-n"></span></button>
       </div>
     </li>
-    <li class="rl-item">
+    <li class="rl-item" id="b18">
       <span class="rl-num">18</span>
       <a class="rl-cover" href="https://www.yes24.com/product/goods/74466" rel="nofollow noopener noreferrer" target="_blank" aria-label="The Girl Who Wrote Loneliness — buy or read more"><img src="https://image.yes24.com/goods/74466/L" alt="The Girl Who Wrote Loneliness by Kyung-Sook Shin — book cover" loading="lazy"></a>
       <div class="rl-meta">
         <div class="rl-title"><a href="https://www.yes24.com/product/goods/74466" rel="nofollow noopener noreferrer" target="_blank">The Girl Who Wrote Loneliness</a> <span style="color:#888;font-size:12px;font-weight:400">(외딴 방)</span></div>
         <div class="rl-byline">Kyung-Sook Shin</div>
+        <p class="rl-comment">One of seven books Kim Hyo-jin personally chose, and brought to set, for a &#x27;woman who reads&#x27; photo shoot. (Source: Chosun Ilbo)</p>
         <a class="rl-source" href="https://www.chosun.com/site/data/html_dir/2011/03/25/2011032500527.html" rel="nofollow noopener noreferrer" target="_blank">📺 Source</a>
         <button type="button" class="heart-btn sm" data-heart="b:외딴 방" aria-pressed="false" aria-label="Heart this book" title="Heart this book" hidden><span class="heart-ico" aria-hidden="true">♡</span><span class="heart-n"></span></button>
       </div>
     </li>
-    <li class="rl-item">
+    <li class="rl-item" id="b19">
       <span class="rl-num">19</span>
       <a class="rl-cover" href="https://www.yes24.com/product/goods/167892656" rel="nofollow noopener noreferrer" target="_blank" aria-label="Venus in Furs — buy or read more"><img src="https://image.yes24.com/goods/167892656/L" alt="Venus in Furs by Leopold von Sacher-Masoch — book cover" loading="lazy"></a>
       <div class="rl-meta">
         <div class="rl-title"><a href="https://www.yes24.com/product/goods/167892656" rel="nofollow noopener noreferrer" target="_blank">Venus in Furs</a> <span style="color:#888;font-size:12px;font-weight:400">(모피를 입은 비너스)</span></div>
         <div class="rl-byline">Leopold von Sacher-Masoch</div>
+        <p class="rl-comment">One of seven books Kim Hyo-jin personally chose, and brought to set, for a &#x27;woman who reads&#x27; photo shoot. (Source: Chosun Ilbo)</p>
         <a class="rl-source" href="https://www.chosun.com/site/data/html_dir/2011/03/25/2011032500527.html" rel="nofollow noopener noreferrer" target="_blank">📺 Source</a>
         <button type="button" class="heart-btn sm" data-heart="b:모피를 입은 비너스" aria-pressed="false" aria-label="Heart this book" title="Heart this book" hidden><span class="heart-ico" aria-hidden="true">♡</span><span class="heart-n"></span></button>
       </div>
     </li>
-    <li class="rl-item">
+    <li class="rl-item" id="b20">
       <span class="rl-num">20</span>
       <a class="rl-cover" href="https://www.yes24.com/product/goods/74207752" rel="nofollow noopener noreferrer" target="_blank" aria-label="You Shouldn&#x27;t Have a Dog — buy or read more"><img src="https://image.yes24.com/goods/74207752/L" alt="You Shouldn&#x27;t Have a Dog by Kang Hyeong-Wook — book cover" loading="lazy"></a>
       <div class="rl-meta">
         <div class="rl-title"><a href="https://www.yes24.com/product/goods/74207752" rel="nofollow noopener noreferrer" target="_blank">You Shouldn&#x27;t Have a Dog</a> <span style="color:#888;font-size:12px;font-weight:400">(당신은 개를 키우면 안 된다)</span></div>
         <div class="rl-byline">Kang Hyeong-Wook *</div>
+        <p class="rl-comment">Dog trainer Kang Hyung-wook&#x27;s book, bought and waiting to be read. (Source: Allure Korea)</p>
         <a class="rl-source" href="https://www.allurekorea.com/2018/03/21/i-am-kim-hyo-jin/" rel="nofollow noopener noreferrer" target="_blank">📺 Source</a>
         <button type="button" class="heart-btn sm" data-heart="b:당신은 개를 키우면 안 된다" aria-pressed="false" aria-label="Heart this book" title="Heart this book" hidden><span class="heart-ico" aria-hidden="true">♡</span><span class="heart-n"></span></button>
       </div>

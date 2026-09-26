@@ -517,8 +517,15 @@
              background-size: 100% var(--row); background-repeat: repeat-y; }
     .new-sec { margin: 16px 0 6px; padding: 12px 12px 2px; background: #fffbe6; border: 2px dashed #000; }
     .new-sec-h { display: flex; align-items: center; gap: 8px; margin: 0 0 10px; font-size: 15px; font-weight: 800; }
-    .new-sec .reading-list { margin: 0; }
-    .rl-num.rl-num-new { font-size: 11px; letter-spacing: .04em; }
+    .rl-item { scroll-margin-top: 16px; }
+    .rl-item:target { outline: 3px solid #fde047; outline-offset: 2px; }
+    .new-tiles { display: flex; flex-wrap: wrap; gap: 12px; padding-bottom: 10px; }
+    .new-tile { width: 84px; color: #000; text-decoration: none; display: flex; flex-direction: column; gap: 5px; }
+    .new-tile:hover { text-decoration: none; transform: translateY(-2px); }
+    .nt-cover { display: block; width: 84px; aspect-ratio: 2/3; border: 1.5px solid #000; box-shadow: 2px 2px 0 0 #000; background: #f4f4f0; overflow: hidden; }
+    .nt-cover img { width: 100%; height: 100%; object-fit: cover; display: block; }
+    .nt-no-cover { display: flex; width: 100%; height: 100%; align-items: center; justify-content: center; font-size: 22px; }
+    .nt-title { font-size: 12px; font-weight: 700; line-height: 1.3; word-break: keep-all; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
     .rl-new-tag { font-size: 9px; font-weight: 800; letter-spacing: .06em; line-height: 1; padding: 3px 5px;
                   background: #fde047; color: #000; border: 1.5px solid #000; }
     .sp { position: relative; flex: none; width: auto; height: var(--sh-h);
@@ -540,7 +547,7 @@
               font-size: 8px; line-height: 1; padding: 3px 0 2px;
               border-bottom: 1px solid rgba(0,0,0,.55); }
     .sp.is-new .sp-t { padding-top: 22px; }
-    .is-capturing .sp-new, .is-capturing .rl-new, .is-capturing .rl-shared { display: none !important; }
+    .is-capturing .sp-new, .is-capturing .rl-new, .is-capturing .rl-shared, .is-capturing .rl-comment { display: none !important; }
     .is-capturing .sp.is-new .sp-t { padding-top: 14px; }
     @media (max-width: 480px) { .shelf { --sh-h: 205px; }
                                  .sp.no-img, .sp.sp-fail { width: calc(var(--w, 38px) * .88); }
@@ -567,6 +574,7 @@
     .rl-title a { color: #000; }
     .rl-title a:hover { color: #2563eb; }
     .rl-byline { font-size: 13px; color: #555; margin-bottom: 8px; line-height: 1.4; }
+    .rl-comment { font-size: 13px; line-height: 1.55; color: #222; background: #FFF7C2; border: 1.5px solid #000; padding: 6px 9px; margin: 0 0 8px; word-break: keep-all; }
     .rl-source { display: inline-block; font-size: 12px; padding: 3px 8px; background: #fff; border: 1.5px solid #000; box-shadow: 1px 1px 0 0 #000; text-decoration: none; color: #000; transition: transform .1s, box-shadow .1s, background .1s; }
     .rl-source:hover { transform: translate(-1px,-1px); box-shadow: 2px 2px 0 0 #000; background: #a7f3d0; text-decoration: none; }
     @media (max-width: 480px) { .rl-item { padding: 14px 12px 14px 46px; } .rl-num { width: 32px; height: 26px; font-size: 12px; } .rl-cover { width: 60px; height: 88px; margin-right: 10px; } .rl-meta { min-height: 88px; } .rl-title { font-size: 15px; } }
@@ -607,18 +615,9 @@
     </div>
     <div class="new-sec">
       <h3 class="new-sec-h"><span class="rl-new-tag">NEW</span> New in the last 10 days (1 book)</h3>
-      <ol class="reading-list">
-    <li class="rl-item">
-      <span class="rl-num rl-num-new">NEW</span>
-      <a class="rl-cover" href="https://www.yes24.com/product/goods/117012879" rel="nofollow noopener noreferrer" target="_blank" aria-label="Even If It Takes A Little Time — buy or read more"><span class="rl-new" data-added="2026-09-26">NEW</span><img src="https://image.yes24.com/goods/117012879/L" alt="Even If It Takes A Little Time by Lee Yunyeop — book cover" loading="lazy"></a>
-      <div class="rl-meta">
-        <div class="rl-title"><a href="https://www.yes24.com/product/goods/117012879" rel="nofollow noopener noreferrer" target="_blank">Even If It Takes A Little Time *</a> <span style="color:#888;font-size:12px;font-weight:400">(시간이 조금 걸리더라도)</span></div>
-        <div class="rl-byline">Lee Yunyeop *</div>
-        <a class="rl-source" href="https://x.com/yes24_official/status/1616284387426930691?s=20" rel="nofollow noopener noreferrer" target="_blank">📺 Source</a>
-        <button type="button" class="heart-btn sm" data-heart="b:시간이 조금 걸리더라도" aria-pressed="false" aria-label="Heart this book" title="Heart this book" hidden><span class="heart-ico" aria-hidden="true">♡</span><span class="heart-n"></span></button>
+      <div class="new-tiles">
+        <a class="new-tile" href="#b4"><span class="nt-cover"><img src="https://image.yes24.com/goods/117012879/L" alt="Even If It Takes A Little Time by Lee Yunyeop — book cover" loading="lazy"></span><span class="nt-title">Even If It Takes A Little Time</span></a>
       </div>
-    </li>
-      </ol>
     </div>
     <div id="shelf-area">
     <div class="shelf" id="shelf">
@@ -644,17 +643,18 @@
     <a class="sp no-img" style="--c:hsl(357,43%,35%);--w:32px;--fs:12px" href="https://www.yes24.com/product/goods/85011474" rel="nofollow noopener noreferrer" target="_blank" title="What Remains After Punishment"><span class="sp-t"><i>What Remains After Punishment</i></span></a>
     </div>
     <ol class="reading-list" id="rlist">
-    <li class="rl-item">
+    <li class="rl-item" id="b1">
       <span class="rl-num">1</span>
       <a class="rl-cover" href="https://www.yes24.com/product/goods/85743647" rel="nofollow noopener noreferrer" target="_blank" aria-label="Bandage — buy or read more"><img src="https://image.yes24.com/goods/85743647/L" alt="Bandage by Yoon I-hyeong — book cover" loading="lazy"></a>
       <div class="rl-meta">
         <div class="rl-title"><a href="https://www.yes24.com/product/goods/85743647" rel="nofollow noopener noreferrer" target="_blank">Bandage</a> <span style="color:#888;font-size:12px;font-weight:400">(붕대 감기)</span></div>
         <div class="rl-byline">Yoon I-hyeong</div>
+        <p class="rl-comment">He said the novel leaves you uneasy, because it deals with something that cannot simply be washed away — people trying to push past the discrimination around women, and drifting apart because their circumstances differ. (Source: Channel Yes column)</p>
         <a class="rl-source" href="https://ch.yes24.com/article/details/41981" rel="nofollow noopener noreferrer" target="_blank">📺 Source</a>
         <button type="button" class="heart-btn sm" data-heart="b:붕대 감기" aria-pressed="false" aria-label="Heart this book" title="Heart this book" hidden><span class="heart-ico" aria-hidden="true">♡</span><span class="heart-n"></span></button>
       </div>
     </li>
-    <li class="rl-item">
+    <li class="rl-item" id="b2">
       <span class="rl-num">2</span>
       <a class="rl-cover" href="https://www.yes24.com/product/goods/92455793" rel="nofollow noopener noreferrer" target="_blank" aria-label="Book, What Is It — buy or read more"><img src="https://image.yes24.com/goods/92455793/L" alt="Book, What Is It by Chang Kang-myoung — book cover" loading="lazy"></a>
       <div class="rl-meta">
@@ -664,7 +664,7 @@
         <button type="button" class="heart-btn sm" data-heart="b:책, 이게 뭐라고" aria-pressed="false" aria-label="Heart this book" title="Heart this book" hidden><span class="heart-ico" aria-hidden="true">♡</span><span class="heart-n"></span></button>
       </div>
     </li>
-    <li class="rl-item">
+    <li class="rl-item" id="b3">
       <span class="rl-num">3</span>
       <a class="rl-cover" href="https://www.yes24.com/product/goods/90405058" rel="nofollow noopener noreferrer" target="_blank" aria-label="Earth in Crisis, No Place to Retreat — buy or read more"><img src="https://image.yes24.com/goods/90405058/L" alt="Earth in Crisis, No Place to Retreat by Nam Sung-hyun — book cover" loading="lazy"></a>
       <div class="rl-meta">
@@ -674,7 +674,7 @@
         <button type="button" class="heart-btn sm" data-heart="b:위기의 지구, 물러설 곳 없는 인간" aria-pressed="false" aria-label="Heart this book" title="Heart this book" hidden><span class="heart-ico" aria-hidden="true">♡</span><span class="heart-n"></span></button>
       </div>
     </li>
-    <li class="rl-item">
+    <li class="rl-item" id="b4">
       <span class="rl-num">4</span>
       <a class="rl-cover" href="https://www.yes24.com/product/goods/117012879" rel="nofollow noopener noreferrer" target="_blank" aria-label="Even If It Takes A Little Time — buy or read more"><span class="rl-new" data-added="2026-09-26">NEW</span><img src="https://image.yes24.com/goods/117012879/L" alt="Even If It Takes A Little Time by Lee Yunyeop — book cover" loading="lazy"></a>
       <div class="rl-meta">
@@ -684,7 +684,7 @@
         <button type="button" class="heart-btn sm" data-heart="b:시간이 조금 걸리더라도" aria-pressed="false" aria-label="Heart this book" title="Heart this book" hidden><span class="heart-ico" aria-hidden="true">♡</span><span class="heart-n"></span></button>
       </div>
     </li>
-    <li class="rl-item">
+    <li class="rl-item" id="b5">
       <span class="rl-num">5</span>
       <a class="rl-cover" href="https://www.yes24.com/product/goods/73615347" rel="nofollow noopener noreferrer" target="_blank" aria-label="Happy Apocalypse! — buy or read more"><img src="https://image.yes24.com/goods/73615347/L" alt="Happy Apocalypse! by Baek Min-seok — book cover" loading="lazy"></a>
       <div class="rl-meta">
@@ -694,77 +694,84 @@
         <button type="button" class="heart-btn sm" data-heart="b:해피 아포칼립스!" aria-pressed="false" aria-label="Heart this book" title="Heart this book" hidden><span class="heart-ico" aria-hidden="true">♡</span><span class="heart-n"></span></button>
       </div>
     </li>
-    <li class="rl-item">
+    <li class="rl-item" id="b6">
       <span class="rl-num">6</span>
       <a class="rl-cover" href="https://www.yes24.com/product/goods/64496500" rel="nofollow noopener noreferrer" target="_blank" aria-label="History of Battles That Shook the World — buy or read more"><img src="https://image.yes24.com/goods/64496500/L" alt="History of Battles That Shook the World by Yu Pil-ha — book cover" loading="lazy"></a>
       <div class="rl-meta">
         <div class="rl-title"><a href="https://www.yes24.com/product/goods/64496500" rel="nofollow noopener noreferrer" target="_blank">History of Battles That Shook the World</a> <span style="color:#888;font-size:12px;font-weight:400">(세상을 뒤흔든 전투의 역사)</span></div>
         <div class="rl-byline">Yu Pil-ha</div>
+        <p class="rl-comment">Yoon Deok-won read this aloud to a child fascinated by historic battles, and it turned out to be a great call. (Source: Channel Yes)</p>
         <a class="rl-source" href="https://ch.yes24.com/article/details/42680" rel="nofollow noopener noreferrer" target="_blank">📺 Source</a>
         <button type="button" class="heart-btn sm" data-heart="b:세상을 뒤흔든 전투의 역사" aria-pressed="false" aria-label="Heart this book" title="Heart this book" hidden><span class="heart-ico" aria-hidden="true">♡</span><span class="heart-n"></span></button>
       </div>
     </li>
-    <li class="rl-item">
+    <li class="rl-item" id="b7">
       <span class="rl-num">7</span>
       <a class="rl-cover" href="https://www.yes24.com/product/goods/74261416" rel="nofollow noopener noreferrer" target="_blank" aria-label="If We Can&#x27;t Go at the Speed of Light — buy or read more"><img src="https://image.yes24.com/goods/74261416/L" alt="If We Can&#x27;t Go at the Speed of Light by Kim Choyeop — book cover" loading="lazy"></a>
       <div class="rl-meta">
         <div class="rl-title"><a href="https://www.yes24.com/product/goods/74261416" rel="nofollow noopener noreferrer" target="_blank">If We Can&#x27;t Go at the Speed of Light</a> <span style="color:#888;font-size:12px;font-weight:400">(우리가 빛의 속도로 갈 수 없다면)</span></div>
         <div class="rl-byline">Kim Choyeop</div>
+        <p class="rl-comment">He said this SF collection was the very first e-book he ever read. (Source: Channel Yes column)</p>
         <a class="rl-source" href="https://ch.yes24.com/article/details/41626" rel="nofollow noopener noreferrer" target="_blank">📺 Source</a>
         <button type="button" class="heart-btn sm" data-heart="b:우리가 빛의 속도로 갈 수 없다면" aria-pressed="false" aria-label="Heart this book" title="Heart this book" hidden><span class="heart-ico" aria-hidden="true">♡</span><span class="heart-n"></span></button>
       </div>
     </li>
-    <li class="rl-item">
+    <li class="rl-item" id="b8">
       <span class="rl-num">8</span>
       <a class="rl-cover" href="https://www.yes24.com/product/goods/77251711" rel="nofollow noopener noreferrer" target="_blank" aria-label="I Thought It Was Just Me (but It Isn&#x27;t): Making the Journey from &quot;What Will People Think?&quot; to &quot;I Am Enough&quot; — buy or read more"><img src="https://image.yes24.com/goods/77251711/L" alt="I Thought It Was Just Me (but It Isn&#x27;t): Making the Journey from &quot;What Will People Think?&quot; to &quot;I Am Enough&quot; by Brené Brown — book cover" loading="lazy"></a>
       <div class="rl-meta">
         <div class="rl-title"><a href="https://www.yes24.com/product/goods/77251711" rel="nofollow noopener noreferrer" target="_blank">I Thought It Was Just Me (but It Isn&#x27;t): Making the Journey from &quot;What Will People Think?&quot; to &quot;I Am Enough&quot;</a> <span style="color:#888;font-size:12px;font-weight:400">(수치심 권하는 사회)</span></div>
         <div class="rl-byline">Brené Brown</div>
+        <p class="rl-comment">He introduced it as a book that lays out what shame is, how it makes life harder, and how to get past it, pairing it with his own band&#x27;s song Don&#x27;t Cry. (Source: Channel Yes column)</p>
         <a class="rl-source" href="https://ch.yes24.com/article/details/42478" rel="nofollow noopener noreferrer" target="_blank">📺 Source</a>
         <button type="button" class="heart-btn sm" data-heart="b:수치심 권하는 사회" aria-pressed="false" aria-label="Heart this book" title="Heart this book" hidden><span class="heart-ico" aria-hidden="true">♡</span><span class="heart-n"></span></button>
       </div>
     </li>
-    <li class="rl-item">
+    <li class="rl-item" id="b9">
       <span class="rl-num">9</span>
       <a class="rl-cover" href="https://www.yes24.com/product/goods/86899775" rel="nofollow noopener noreferrer" target="_blank" aria-label="Jupiter Has Rings — buy or read more"><img src="https://image.yes24.com/goods/86899775/L" alt="Jupiter Has Rings by Kim Eun-woo — book cover" loading="lazy"></a>
       <div class="rl-meta">
         <div class="rl-title"><a href="https://www.yes24.com/product/goods/86899775" rel="nofollow noopener noreferrer" target="_blank">Jupiter Has Rings</a> <span style="color:#888;font-size:12px;font-weight:400">(목성에게 고리는)</span></div>
         <div class="rl-byline">Kim Eun-woo</div>
+        <p class="rl-comment">He said observing Jupiter himself was what led him to this collection. He read it as being about how something one side barely notices can be enormous to the other — like Jupiter&#x27;s rings. (Source: Channel Yes column)</p>
         <a class="rl-source" href="https://ch.yes24.com/article/details/42817" rel="nofollow noopener noreferrer" target="_blank">📺 Source</a>
         <button type="button" class="heart-btn sm" data-heart="b:목성에게 고리는" aria-pressed="false" aria-label="Heart this book" title="Heart this book" hidden><span class="heart-ico" aria-hidden="true">♡</span><span class="heart-n"></span></button>
       </div>
     </li>
-    <li class="rl-item">
+    <li class="rl-item" id="b10">
       <span class="rl-num">10</span>
       <a class="rl-cover" href="https://www.yes24.com/product/goods/79411194" rel="nofollow noopener noreferrer" target="_blank" aria-label="Lakes of the World — buy or read more"><img src="https://image.yes24.com/goods/79411194/L" alt="Lakes of the World by Chung Yong-jun — book cover" loading="lazy"></a>
       <div class="rl-meta">
         <div class="rl-title"><a href="https://www.yes24.com/product/goods/79411194" rel="nofollow noopener noreferrer" target="_blank">Lakes of the World</a> <span style="color:#888;font-size:12px;font-weight:400">(세계의 호수)</span></div>
         <div class="rl-byline">Chung Yong-jun</div>
+        <p class="rl-comment">He introduced it as the story of someone who wanted to be a good person and ends up facing their own problems. (Source: Channel Yes column)</p>
         <a class="rl-source" href="https://ch.yes24.com/article/details/41834" rel="nofollow noopener noreferrer" target="_blank">📺 Source</a>
         <button type="button" class="heart-btn sm" data-heart="b:세계의 호수" aria-pressed="false" aria-label="Heart this book" title="Heart this book" hidden><span class="heart-ico" aria-hidden="true">♡</span><span class="heart-n"></span></button>
       </div>
     </li>
-    <li class="rl-item">
+    <li class="rl-item" id="b11">
       <span class="rl-num">11</span>
       <a class="rl-cover" href="https://www.yes24.com/product/goods/88915152" rel="nofollow noopener noreferrer" target="_blank" aria-label="La vraie vie — buy or read more"><img src="https://image.yes24.com/goods/88915152/L" alt="La vraie vie by Adeline Dieudonné — book cover" loading="lazy"></a>
       <div class="rl-meta">
         <div class="rl-title"><a href="https://www.yes24.com/product/goods/88915152" rel="nofollow noopener noreferrer" target="_blank">La vraie vie</a> <span style="color:#888;font-size:12px;font-weight:400">(여름의 겨울)</span></div>
         <div class="rl-byline">Adeline Dieudonné</div>
+        <p class="rl-comment">Yoon Deok-won tries to face the bitterness in coming-of-age stories, and wrote that this one is bitter through and through. (Source: Channel Yes)</p>
         <a class="rl-source" href="https://ch.yes24.com/article/details/43678" rel="nofollow noopener noreferrer" target="_blank">📺 Source</a>
         <button type="button" class="heart-btn sm" data-heart="b:여름의 겨울" aria-pressed="false" aria-label="Heart this book" title="Heart this book" hidden><span class="heart-ico" aria-hidden="true">♡</span><span class="heart-n"></span></button>
       </div>
     </li>
-    <li class="rl-item">
+    <li class="rl-item" id="b12">
       <span class="rl-num">12</span>
       <a class="rl-cover" href="https://www.yes24.com/product/goods/84639666" rel="nofollow noopener noreferrer" target="_blank" aria-label="Living Like a Human — buy or read more"><img src="https://image.yes24.com/goods/84639666/L" alt="Living Like a Human by Jeong Yak-yong — book cover" loading="lazy"></a>
       <div class="rl-meta">
         <div class="rl-title"><a href="https://www.yes24.com/product/goods/84639666" rel="nofollow noopener noreferrer" target="_blank">Living Like a Human</a> <span style="color:#888;font-size:12px;font-weight:400">(인간답게 산다는 것)</span></div>
         <div class="rl-byline">Jeong Yak-yong</div>
+        <p class="rl-comment">He wrote about this accessible rendering of Dasan&#x27;s Heumheumsinseo, taking off from the Korean saying about someone who could live without laws. (Source: Channel Yes column)</p>
         <a class="rl-source" href="https://ch.yes24.com/article/details/41720" rel="nofollow noopener noreferrer" target="_blank">📺 Source</a>
         <button type="button" class="heart-btn sm" data-heart="b:인간답게 산다는 것" aria-pressed="false" aria-label="Heart this book" title="Heart this book" hidden><span class="heart-ico" aria-hidden="true">♡</span><span class="heart-n"></span></button>
       </div>
     </li>
-    <li class="rl-item">
+    <li class="rl-item" id="b13">
       <span class="rl-num">13</span>
       <a class="rl-cover" href="https://www.yes24.com/product/goods/78234055" rel="nofollow noopener noreferrer" target="_blank" aria-label="Microbial War — buy or read more"><img src="https://image.yes24.com/goods/78234055/L" alt="Microbial War by Ailsa Wild, Jeremy Barr — book cover" loading="lazy"></a>
       <div class="rl-meta">
@@ -774,7 +781,7 @@
         <button type="button" class="heart-btn sm" data-heart="b:미생물 전쟁" aria-pressed="false" aria-label="Heart this book" title="Heart this book" hidden><span class="heart-ico" aria-hidden="true">♡</span><span class="heart-n"></span></button>
       </div>
     </li>
-    <li class="rl-item">
+    <li class="rl-item" id="b14">
       <span class="rl-num">14</span>
       <a class="rl-cover" href="https://www.yes24.com/product/goods/29190285" rel="nofollow noopener noreferrer" target="_blank" aria-label="People Who Deserve to Die — buy or read more"><img src="https://image.yes24.com/goods/29190285/L" alt="People Who Deserve to Die by Peter Swanson — book cover" loading="lazy"></a>
       <div class="rl-meta">
@@ -784,7 +791,7 @@
         <button type="button" class="heart-btn sm" data-heart="b:죽어 마땅한 사람들" aria-pressed="false" aria-label="Heart this book" title="Heart this book" hidden><span class="heart-ico" aria-hidden="true">♡</span><span class="heart-n"></span></button>
       </div>
     </li>
-    <li class="rl-item">
+    <li class="rl-item" id="b15">
       <span class="rl-num">15</span>
       <a class="rl-cover" href="https://www.yes24.com/product/goods/68811285" rel="nofollow noopener noreferrer" target="_blank" aria-label="Ping-Pong King Seo Young — buy or read more"><img src="https://image.yes24.com/goods/68811285/L" alt="Ping-Pong King Seo Young by Hwang Yu-mi — book cover" loading="lazy"></a>
       <div class="rl-meta">
@@ -793,27 +800,29 @@
         <button type="button" class="heart-btn sm" data-heart="b:피구왕 서영" aria-pressed="false" aria-label="Heart this book" title="Heart this book" hidden><span class="heart-ico" aria-hidden="true">♡</span><span class="heart-n"></span></button>
       </div>
     </li>
-    <li class="rl-item">
+    <li class="rl-item" id="b16">
       <span class="rl-num">16</span>
       <a class="rl-cover" href="https://www.yes24.com/product/goods/89574522" rel="nofollow noopener noreferrer" target="_blank" aria-label="Stories Embroidered on the Heart — buy or read more"><img src="https://image.yes24.com/goods/89574522/L" alt="Stories Embroidered on the Heart by Gu Byeong-mo — book cover" loading="lazy"></a>
       <div class="rl-meta">
         <div class="rl-title"><a href="https://www.yes24.com/product/goods/89574522" rel="nofollow noopener noreferrer" target="_blank">Stories Embroidered on the Heart</a> <span style="color:#888;font-size:12px;font-weight:400">(심장에 수놓은 이야기)</span></div>
         <div class="rl-byline">Gu Byeong-mo</div>
+        <p class="rl-comment">He wrote about this Gu Byeong-mo novella in his column — a middle-aged woman goes to get a tattoo, and strange things begin to happen around her. (Source: Channel Yes column)</p>
         <a class="rl-source" href="https://ch.yes24.com/article/details/42915" rel="nofollow noopener noreferrer" target="_blank">📺 Source</a>
         <button type="button" class="heart-btn sm" data-heart="b:심장에 수놓은 이야기" aria-pressed="false" aria-label="Heart this book" title="Heart this book" hidden><span class="heart-ico" aria-hidden="true">♡</span><span class="heart-n"></span></button>
       </div>
     </li>
-    <li class="rl-item">
+    <li class="rl-item" id="b17">
       <span class="rl-num">17</span>
       <a class="rl-cover" href="https://www.yes24.com/product/goods/87005254" rel="nofollow noopener noreferrer" target="_blank" aria-label="Thanks God It&#x27;s Friday — buy or read more"><img src="https://image.yes24.com/goods/87005254/L" alt="Thanks God It&#x27;s Friday by Shim Neoul — book cover" loading="lazy"></a>
       <div class="rl-meta">
         <div class="rl-title"><a href="https://www.yes24.com/product/goods/87005254" rel="nofollow noopener noreferrer" target="_blank">Thanks God It&#x27;s Friday</a> <span style="color:#888;font-size:12px;font-weight:400">(땡스 갓, 잇츠 프라이데이)</span></div>
         <div class="rl-byline">Shim Neoul</div>
+        <p class="rl-comment">He covered this book in his own Channel Yes column. It is an SF story collection whose title piece follows a civil servant who falls asleep on Friday night and wakes the next Friday. (Source: Channel Yes column)</p>
         <a class="rl-source" href="https://ch.yes24.com/article/details/42594" rel="nofollow noopener noreferrer" target="_blank">📺 Source</a>
         <button type="button" class="heart-btn sm" data-heart="b:땡스 갓, 잇츠 프라이데이" aria-pressed="false" aria-label="Heart this book" title="Heart this book" hidden><span class="heart-ico" aria-hidden="true">♡</span><span class="heart-n"></span></button>
       </div>
     </li>
-    <li class="rl-item">
+    <li class="rl-item" id="b18">
       <span class="rl-num">18</span>
       <a class="rl-cover" href="https://www.yes24.com/product/goods/57602704" rel="nofollow noopener noreferrer" target="_blank" aria-label="The Devil&#x27;s Sentences — buy or read more"><img src="https://image.yes24.com/goods/57602704/L" alt="The Devil&#x27;s Sentences by Edogawa Ranpo — book cover" loading="lazy"></a>
       <div class="rl-meta">
@@ -823,7 +832,7 @@
         <button type="button" class="heart-btn sm" data-heart="b:악마의 문장" aria-pressed="false" aria-label="Heart this book" title="Heart this book" hidden><span class="heart-ico" aria-hidden="true">♡</span><span class="heart-n"></span></button>
       </div>
     </li>
-    <li class="rl-item">
+    <li class="rl-item" id="b19">
       <span class="rl-num">19</span>
       <a class="rl-cover" href="https://www.yes24.com/product/goods/35049446" rel="nofollow noopener noreferrer" target="_blank" aria-label="The First Sentence of a Novel — buy or read more"><img src="https://image.yes24.com/goods/35049446/L" alt="The First Sentence of a Novel by Kim Jeong-seon — book cover" loading="lazy"></a>
       <div class="rl-meta">
@@ -833,12 +842,13 @@
         <button type="button" class="heart-btn sm" data-heart="b:소설의 첫 문장" aria-pressed="false" aria-label="Heart this book" title="Heart this book" hidden><span class="heart-ico" aria-hidden="true">♡</span><span class="heart-n"></span></button>
       </div>
     </li>
-    <li class="rl-item">
+    <li class="rl-item" id="b20">
       <span class="rl-num">20</span>
       <a class="rl-cover" href="https://www.yes24.com/product/goods/85011474" rel="nofollow noopener noreferrer" target="_blank" aria-label="What Remains After Punishment — buy or read more"><img src="https://image.yes24.com/goods/85011474/L" alt="What Remains After Punishment by Lim Su-hee — book cover" loading="lazy"></a>
       <div class="rl-meta">
         <div class="rl-title"><a href="https://www.yes24.com/product/goods/85011474" rel="nofollow noopener noreferrer" target="_blank">What Remains After Punishment</a> <span style="color:#888;font-size:12px;font-weight:400">(처벌 뒤에 남는 것들)</span></div>
         <div class="rl-byline">Lim Su-hee</div>
+        <p class="rl-comment">Read while wondering what to do when punishment isn&#x27;t enough; Yoon Deok-won&#x27;s column introduced its idea of restorative justice. (Source: Channel Yes)</p>
         <a class="rl-source" href="https://ch.yes24.com/article/details/42231" rel="nofollow noopener noreferrer" target="_blank">📺 Source</a>
         <button type="button" class="heart-btn sm" data-heart="b:처벌 뒤에 남는 것들" aria-pressed="false" aria-label="Heart this book" title="Heart this book" hidden><span class="heart-ico" aria-hidden="true">♡</span><span class="heart-n"></span></button>
       </div>

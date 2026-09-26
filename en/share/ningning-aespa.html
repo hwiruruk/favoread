@@ -281,8 +281,15 @@
              background-size: 100% var(--row); background-repeat: repeat-y; }
     .new-sec { margin: 16px 0 6px; padding: 12px 12px 2px; background: #fffbe6; border: 2px dashed #000; }
     .new-sec-h { display: flex; align-items: center; gap: 8px; margin: 0 0 10px; font-size: 15px; font-weight: 800; }
-    .new-sec .reading-list { margin: 0; }
-    .rl-num.rl-num-new { font-size: 11px; letter-spacing: .04em; }
+    .rl-item { scroll-margin-top: 16px; }
+    .rl-item:target { outline: 3px solid #fde047; outline-offset: 2px; }
+    .new-tiles { display: flex; flex-wrap: wrap; gap: 12px; padding-bottom: 10px; }
+    .new-tile { width: 84px; color: #000; text-decoration: none; display: flex; flex-direction: column; gap: 5px; }
+    .new-tile:hover { text-decoration: none; transform: translateY(-2px); }
+    .nt-cover { display: block; width: 84px; aspect-ratio: 2/3; border: 1.5px solid #000; box-shadow: 2px 2px 0 0 #000; background: #f4f4f0; overflow: hidden; }
+    .nt-cover img { width: 100%; height: 100%; object-fit: cover; display: block; }
+    .nt-no-cover { display: flex; width: 100%; height: 100%; align-items: center; justify-content: center; font-size: 22px; }
+    .nt-title { font-size: 12px; font-weight: 700; line-height: 1.3; word-break: keep-all; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
     .rl-new-tag { font-size: 9px; font-weight: 800; letter-spacing: .06em; line-height: 1; padding: 3px 5px;
                   background: #fde047; color: #000; border: 1.5px solid #000; }
     .sp { position: relative; flex: none; width: auto; height: var(--sh-h);
@@ -304,7 +311,7 @@
               font-size: 8px; line-height: 1; padding: 3px 0 2px;
               border-bottom: 1px solid rgba(0,0,0,.55); }
     .sp.is-new .sp-t { padding-top: 22px; }
-    .is-capturing .sp-new, .is-capturing .rl-new, .is-capturing .rl-shared { display: none !important; }
+    .is-capturing .sp-new, .is-capturing .rl-new, .is-capturing .rl-shared, .is-capturing .rl-comment { display: none !important; }
     .is-capturing .sp.is-new .sp-t { padding-top: 14px; }
     @media (max-width: 480px) { .shelf { --sh-h: 205px; }
                                  .sp.no-img, .sp.sp-fail { width: calc(var(--w, 38px) * .88); }
@@ -331,6 +338,7 @@
     .rl-title a { color: #000; }
     .rl-title a:hover { color: #2563eb; }
     .rl-byline { font-size: 13px; color: #555; margin-bottom: 8px; line-height: 1.4; }
+    .rl-comment { font-size: 13px; line-height: 1.55; color: #222; background: #FFF7C2; border: 1.5px solid #000; padding: 6px 9px; margin: 0 0 8px; word-break: keep-all; }
     .rl-source { display: inline-block; font-size: 12px; padding: 3px 8px; background: #fff; border: 1.5px solid #000; box-shadow: 1px 1px 0 0 #000; text-decoration: none; color: #000; transition: transform .1s, box-shadow .1s, background .1s; }
     .rl-source:hover { transform: translate(-1px,-1px); box-shadow: 2px 2px 0 0 #000; background: #a7f3d0; text-decoration: none; }
     @media (max-width: 480px) { .rl-item { padding: 14px 12px 14px 46px; } .rl-num { width: 32px; height: 26px; font-size: 12px; } .rl-cover { width: 60px; height: 88px; margin-right: 10px; } .rl-meta { min-height: 88px; } .rl-title { font-size: 15px; } }
@@ -370,58 +378,13 @@
     </div>
     <div class="new-sec">
       <h3 class="new-sec-h"><span class="rl-new-tag">NEW</span> New in the last 10 days (5 books)</h3>
-      <ol class="reading-list">
-    <li class="rl-item">
-      <span class="rl-num rl-num-new">NEW</span>
-      <a class="rl-cover" href="https://www.yes24.com/product/goods/1387488" rel="nofollow noopener noreferrer" target="_blank" aria-label="No Longer Human — buy or read more"><span class="rl-new" data-added="2026-09-22">NEW</span><img src="https://image.yes24.com/goods/1387488/L" alt="No Longer Human by Osamu Dazai — book cover" loading="lazy"></a>
-      <div class="rl-meta">
-        <div class="rl-title"><a href="https://www.yes24.com/product/goods/1387488" rel="nofollow noopener noreferrer" target="_blank">No Longer Human</a> <span style="color:#888;font-size:12px;font-weight:400">(인간 실격)</span></div>
-        <div class="rl-byline">Osamu Dazai</div>
-        <a class="rl-source" href="https://x.com/ningsite/status/1409398422440873988?s=20" rel="nofollow noopener noreferrer" target="_blank">📺 Source</a>
-        <button type="button" class="heart-btn sm" data-heart="b:인간 실격" aria-pressed="false" aria-label="Heart this book" title="Heart this book" hidden><span class="heart-ico" aria-hidden="true">♡</span><span class="heart-n"></span></button>
+      <div class="new-tiles">
+        <a class="new-tile" href="#b1"><span class="nt-cover"><img src="https://image.yes24.com/goods/1387488/L" alt="No Longer Human by Osamu Dazai — book cover" loading="lazy"></span><span class="nt-title">No Longer Human</span></a>
+        <a class="new-tile" href="#b2"><span class="nt-cover"><img src="https://image.yes24.com/goods/402246/L" alt="Pride and Prejudice by Jane Austen — book cover" loading="lazy"></span><span class="nt-title">Pride and Prejudice</span></a>
+        <a class="new-tile" href="#b3"><span class="nt-cover"><img src="https://image.yes24.com/goods/85951807/L" alt="Resurrection by Leo Tolstoy — book cover" loading="lazy"></span><span class="nt-title">Resurrection</span></a>
+        <a class="new-tile" href="#b4"><span class="nt-cover"><img src="https://image.yes24.com/goods/116586056/L" alt="The Miracles of the Namiya General Store by Keigo Higashino — book cover" loading="lazy"></span><span class="nt-title">The Miracles of the Namiya General Store</span></a>
+        <a class="new-tile" href="#b7"><span class="nt-cover"><img src="https://image.yes24.com/goods/122280138/L" alt="To Live by Yu Hwa — book cover" loading="lazy"></span><span class="nt-title">To Live</span></a>
       </div>
-    </li>
-    <li class="rl-item">
-      <span class="rl-num rl-num-new">NEW</span>
-      <a class="rl-cover" href="https://www.yes24.com/product/goods/402246" rel="nofollow noopener noreferrer" target="_blank" aria-label="Pride and Prejudice — buy or read more"><span class="rl-new" data-added="2026-09-22">NEW</span><img src="https://image.yes24.com/goods/402246/L" alt="Pride and Prejudice by Jane Austen — book cover" loading="lazy"></a>
-      <div class="rl-meta">
-        <div class="rl-title"><a href="https://www.yes24.com/product/goods/402246" rel="nofollow noopener noreferrer" target="_blank">Pride and Prejudice</a> <span style="color:#888;font-size:12px;font-weight:400">(오만과 편견)</span></div>
-        <div class="rl-byline">Jane Austen</div>
-        <a class="rl-source" href="https://x.com/ningsite/status/1409398422440873988?s=20" rel="nofollow noopener noreferrer" target="_blank">📺 Source</a>
-        <button type="button" class="heart-btn sm" data-heart="b:오만과 편견" aria-pressed="false" aria-label="Heart this book" title="Heart this book" hidden><span class="heart-ico" aria-hidden="true">♡</span><span class="heart-n"></span></button>
-      </div>
-    </li>
-    <li class="rl-item">
-      <span class="rl-num rl-num-new">NEW</span>
-      <a class="rl-cover" href="https://www.yes24.com/product/goods/85951807" rel="nofollow noopener noreferrer" target="_blank" aria-label="Resurrection — buy or read more"><span class="rl-new" data-added="2026-09-22">NEW</span><img src="https://image.yes24.com/goods/85951807/L" alt="Resurrection by Leo Tolstoy — book cover" loading="lazy"></a>
-      <div class="rl-meta">
-        <div class="rl-title"><a href="https://www.yes24.com/product/goods/85951807" rel="nofollow noopener noreferrer" target="_blank">Resurrection</a> <span style="color:#888;font-size:12px;font-weight:400">(부활)</span></div>
-        <div class="rl-byline">Leo Tolstoy</div>
-        <a class="rl-source" href="https://x.com/ningsite/status/1409398422440873988?s=20" rel="nofollow noopener noreferrer" target="_blank">📺 Source</a>
-        <button type="button" class="heart-btn sm" data-heart="b:부활" aria-pressed="false" aria-label="Heart this book" title="Heart this book" hidden><span class="heart-ico" aria-hidden="true">♡</span><span class="heart-n"></span></button>
-      </div>
-    </li>
-    <li class="rl-item">
-      <span class="rl-num rl-num-new">NEW</span>
-      <a class="rl-cover" href="https://www.yes24.com/product/goods/116586056" rel="nofollow noopener noreferrer" target="_blank" aria-label="The Miracles of the Namiya General Store — buy or read more"><span class="rl-new" data-added="2026-09-22">NEW</span><img src="https://image.yes24.com/goods/116586056/L" alt="The Miracles of the Namiya General Store by Keigo Higashino — book cover" loading="lazy"></a>
-      <div class="rl-meta">
-        <div class="rl-title"><a href="https://www.yes24.com/product/goods/116586056" rel="nofollow noopener noreferrer" target="_blank">The Miracles of the Namiya General Store</a> <span style="color:#888;font-size:12px;font-weight:400">(나미야 잡화점의 기적)</span></div>
-        <div class="rl-byline">Keigo Higashino</div>
-        <a class="rl-source" href="https://x.com/ningsite/status/1409398422440873988?s=20" rel="nofollow noopener noreferrer" target="_blank">📺 Source</a>
-        <button type="button" class="heart-btn sm" data-heart="b:나미야 잡화점의 기적" aria-pressed="false" aria-label="Heart this book" title="Heart this book" hidden><span class="heart-ico" aria-hidden="true">♡</span><span class="heart-n"></span></button>
-      </div>
-    </li>
-    <li class="rl-item">
-      <span class="rl-num rl-num-new">NEW</span>
-      <a class="rl-cover" href="https://www.yes24.com/product/goods/122280138" rel="nofollow noopener noreferrer" target="_blank" aria-label="To Live — buy or read more"><span class="rl-new" data-added="2026-09-22">NEW</span><img src="https://image.yes24.com/goods/122280138/L" alt="To Live by Yu Hwa — book cover" loading="lazy"></a>
-      <div class="rl-meta">
-        <div class="rl-title"><a href="https://www.yes24.com/product/goods/122280138" rel="nofollow noopener noreferrer" target="_blank">To Live</a> <span style="color:#888;font-size:12px;font-weight:400">(인생)</span></div>
-        <div class="rl-byline">Yu Hwa</div>
-        <a class="rl-source" href="https://x.com/ningsite/status/1409398422440873988?s=20" rel="nofollow noopener noreferrer" target="_blank">📺 Source</a>
-        <button type="button" class="heart-btn sm" data-heart="b:인생" aria-pressed="false" aria-label="Heart this book" title="Heart this book" hidden><span class="heart-ico" aria-hidden="true">♡</span><span class="heart-n"></span></button>
-      </div>
-    </li>
-      </ol>
     </div>
     <div id="shelf-area">
     <div class="shelf" id="shelf">
@@ -434,7 +397,7 @@
     <a class="sp is-new" style="--c:hsl(117,48%,38%);--w:30px;--fs:15px" href="https://www.yes24.com/product/goods/122280138" rel="nofollow noopener noreferrer" target="_blank" title="To Live"><span class="sp-t"><i>To Live</i></span><img class="sp-i" src="https://image.yes24.com/goods/122280138/side" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.parentNode.classList.add('sp-fail');this.remove()" onload="if(this.naturalWidth/this.naturalHeight>0.4){this.parentNode.classList.add('sp-fail');this.remove()}"><span class="sp-new" data-added="2026-09-22">NEW</span></a>
     </div>
     <ol class="reading-list" id="rlist">
-    <li class="rl-item">
+    <li class="rl-item" id="b1">
       <span class="rl-num">1</span>
       <a class="rl-cover" href="https://www.yes24.com/product/goods/1387488" rel="nofollow noopener noreferrer" target="_blank" aria-label="No Longer Human — buy or read more"><span class="rl-new" data-added="2026-09-22">NEW</span><img src="https://image.yes24.com/goods/1387488/L" alt="No Longer Human by Osamu Dazai — book cover" loading="lazy"></a>
       <div class="rl-meta">
@@ -444,7 +407,7 @@
         <button type="button" class="heart-btn sm" data-heart="b:인간 실격" aria-pressed="false" aria-label="Heart this book" title="Heart this book" hidden><span class="heart-ico" aria-hidden="true">♡</span><span class="heart-n"></span></button>
       </div>
     </li>
-    <li class="rl-item">
+    <li class="rl-item" id="b2">
       <span class="rl-num">2</span>
       <a class="rl-cover" href="https://www.yes24.com/product/goods/402246" rel="nofollow noopener noreferrer" target="_blank" aria-label="Pride and Prejudice — buy or read more"><span class="rl-new" data-added="2026-09-22">NEW</span><img src="https://image.yes24.com/goods/402246/L" alt="Pride and Prejudice by Jane Austen — book cover" loading="lazy"></a>
       <div class="rl-meta">
@@ -454,7 +417,7 @@
         <button type="button" class="heart-btn sm" data-heart="b:오만과 편견" aria-pressed="false" aria-label="Heart this book" title="Heart this book" hidden><span class="heart-ico" aria-hidden="true">♡</span><span class="heart-n"></span></button>
       </div>
     </li>
-    <li class="rl-item">
+    <li class="rl-item" id="b3">
       <span class="rl-num">3</span>
       <a class="rl-cover" href="https://www.yes24.com/product/goods/85951807" rel="nofollow noopener noreferrer" target="_blank" aria-label="Resurrection — buy or read more"><span class="rl-new" data-added="2026-09-22">NEW</span><img src="https://image.yes24.com/goods/85951807/L" alt="Resurrection by Leo Tolstoy — book cover" loading="lazy"></a>
       <div class="rl-meta">
@@ -464,7 +427,7 @@
         <button type="button" class="heart-btn sm" data-heart="b:부활" aria-pressed="false" aria-label="Heart this book" title="Heart this book" hidden><span class="heart-ico" aria-hidden="true">♡</span><span class="heart-n"></span></button>
       </div>
     </li>
-    <li class="rl-item">
+    <li class="rl-item" id="b4">
       <span class="rl-num">4</span>
       <a class="rl-cover" href="https://www.yes24.com/product/goods/116586056" rel="nofollow noopener noreferrer" target="_blank" aria-label="The Miracles of the Namiya General Store — buy or read more"><span class="rl-new" data-added="2026-09-22">NEW</span><img src="https://image.yes24.com/goods/116586056/L" alt="The Miracles of the Namiya General Store by Keigo Higashino — book cover" loading="lazy"></a>
       <div class="rl-meta">
@@ -474,27 +437,29 @@
         <button type="button" class="heart-btn sm" data-heart="b:나미야 잡화점의 기적" aria-pressed="false" aria-label="Heart this book" title="Heart this book" hidden><span class="heart-ico" aria-hidden="true">♡</span><span class="heart-n"></span></button>
       </div>
     </li>
-    <li class="rl-item">
+    <li class="rl-item" id="b5">
       <span class="rl-num">5</span>
       <a class="rl-cover" href="https://www.yes24.com/product/goods/135880" rel="nofollow noopener noreferrer" target="_blank" aria-label="The Moon and Sixpence — buy or read more"><img src="https://image.yes24.com/goods/135880/L" alt="The Moon and Sixpence by W. Somerset Maugham — book cover" loading="lazy"></a>
       <div class="rl-meta">
         <div class="rl-title"><a href="https://www.yes24.com/product/goods/135880" rel="nofollow noopener noreferrer" target="_blank">The Moon and Sixpence</a> <span style="color:#888;font-size:12px;font-weight:400">(달과 6펜스)</span></div>
         <div class="rl-byline">W. Somerset Maugham</div>
+        <p class="rl-comment">Read by Ningning along with Karina, and seen in an aespa magazine interview video. (Source: Brunch)</p>
         <a class="rl-source" href="https://x.com/bemyae201117/status/1591010461583314944?s=20" rel="nofollow noopener noreferrer" target="_blank">📺 Source</a>
         <button type="button" class="heart-btn sm" data-heart="b:달과 6펜스" aria-pressed="false" aria-label="Heart this book" title="Heart this book" hidden><span class="heart-ico" aria-hidden="true">♡</span><span class="heart-n"></span></button>
       </div>
     </li>
-    <li class="rl-item">
+    <li class="rl-item" id="b6">
       <span class="rl-num">6</span>
       <a class="rl-cover" href="https://www.yes24.com/product/goods/30387696" rel="nofollow noopener noreferrer" target="_blank" aria-label="The Temperature of Language — buy or read more"><img src="https://image.yes24.com/goods/30387696/L" alt="The Temperature of Language by Lee Ki-ju — book cover" loading="lazy"></a>
       <div class="rl-meta">
         <div class="rl-title"><a href="https://www.yes24.com/product/goods/30387696" rel="nofollow noopener noreferrer" target="_blank">The Temperature of Language</a> <span style="color:#888;font-size:12px;font-weight:400">(언어의 온도)</span></div>
         <div class="rl-byline">Lee Ki-ju</div>
+        <p class="rl-comment">Borrowed from roommate Karina, then recommended on Bubble. Karina suggested it when Ningning wanted to learn Korean. (Source: Brunch)</p>
         <a class="rl-source" href="https://brunch.co.kr/@parkaezey/82" rel="nofollow noopener noreferrer" target="_blank">📺 Source</a>
         <button type="button" class="heart-btn sm" data-heart="b:언어의 온도" aria-pressed="false" aria-label="Heart this book" title="Heart this book" hidden><span class="heart-ico" aria-hidden="true">♡</span><span class="heart-n"></span></button>
       </div>
     </li>
-    <li class="rl-item">
+    <li class="rl-item" id="b7">
       <span class="rl-num">7</span>
       <a class="rl-cover" href="https://www.yes24.com/product/goods/122280138" rel="nofollow noopener noreferrer" target="_blank" aria-label="To Live — buy or read more"><span class="rl-new" data-added="2026-09-22">NEW</span><img src="https://image.yes24.com/goods/122280138/L" alt="To Live by Yu Hwa — book cover" loading="lazy"></a>
       <div class="rl-meta">

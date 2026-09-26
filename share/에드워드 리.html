@@ -293,8 +293,15 @@
              background-size: 100% var(--row); background-repeat: repeat-y; }
     .new-sec { margin: 16px 0 6px; padding: 12px 12px 2px; background: #fffbe6; border: 2px dashed #000; }
     .new-sec-h { display: flex; align-items: center; gap: 8px; margin: 0 0 10px; font-size: 15px; font-weight: 800; }
-    .new-sec .reading-list { margin: 0; }
-    .rl-num.rl-num-new { font-size: 11px; letter-spacing: .04em; }
+    .rl-item { scroll-margin-top: 16px; }
+    .rl-item:target { outline: 3px solid #fde047; outline-offset: 2px; }
+    .new-tiles { display: flex; flex-wrap: wrap; gap: 12px; padding-bottom: 10px; }
+    .new-tile { width: 84px; color: #000; text-decoration: none; display: flex; flex-direction: column; gap: 5px; }
+    .new-tile:hover { text-decoration: none; transform: translateY(-2px); }
+    .nt-cover { display: block; width: 84px; aspect-ratio: 2/3; border: 1.5px solid #000; box-shadow: 2px 2px 0 0 #000; background: #f4f4f0; overflow: hidden; }
+    .nt-cover img { width: 100%; height: 100%; object-fit: cover; display: block; }
+    .nt-no-cover { display: flex; width: 100%; height: 100%; align-items: center; justify-content: center; font-size: 22px; }
+    .nt-title { font-size: 12px; font-weight: 700; line-height: 1.3; word-break: keep-all; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
     .rl-new-tag { font-size: 9px; font-weight: 800; letter-spacing: .06em; line-height: 1; padding: 3px 5px;
                   background: #fde047; color: #000; border: 1.5px solid #000; }
     .sp { position: relative; flex: none; width: auto; height: var(--sh-h);
@@ -316,7 +323,7 @@
               font-size: 8px; line-height: 1; padding: 3px 0 2px;
               border-bottom: 1px solid rgba(0,0,0,.55); }
     .sp.is-new .sp-t { padding-top: 22px; }
-    .is-capturing .sp-new, .is-capturing .rl-new, .is-capturing .rl-shared { display: none !important; }
+    .is-capturing .sp-new, .is-capturing .rl-new, .is-capturing .rl-shared, .is-capturing .rl-comment { display: none !important; }
     .is-capturing .sp.is-new .sp-t { padding-top: 14px; }
     @media (max-width: 480px) { .shelf { --sh-h: 205px; }
                                  .sp.no-img, .sp.sp-fail { width: calc(var(--w, 38px) * .88); }
@@ -343,6 +350,7 @@
     .rl-title a { color: #000; }
     .rl-title a:hover { color: #2563eb; }
     .rl-byline { font-size: 13px; color: #555; margin-bottom: 8px; line-height: 1.4; }
+    .rl-comment { font-size: 13px; line-height: 1.55; color: #222; background: #FFF7C2; border: 1.5px solid #000; padding: 6px 9px; margin: 0 0 8px; word-break: keep-all; }
     .rl-source { display: inline-block; font-size: 12px; padding: 3px 8px; background: #fff; border: 1.5px solid #000; box-shadow: 1px 1px 0 0 #000; text-decoration: none; color: #000; transition: transform .1s, box-shadow .1s, background .1s; }
     .rl-source:hover { transform: translate(-1px,-1px); box-shadow: 2px 2px 0 0 #000; background: #a7f3d0; text-decoration: none; }
     .rl-shared { clear: both; margin-top: 12px; padding-top: 10px; border-top: 1.5px dashed #ccc; display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
@@ -415,100 +423,109 @@
     <a class="sp" style="--c:hsl(92,40%,39%);--w:32px;--fs:15px" href="https://www.yes24.com/product/goods/110641272" rel="nofollow noopener noreferrer" target="_blank" title="파친코"><span class="sp-t"><i>파친코</i></span><img class="sp-i" src="https://image.yes24.com/goods/110641272/side" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.parentNode.classList.add('sp-fail');this.remove()" onload="if(this.naturalWidth/this.naturalHeight>0.4){this.parentNode.classList.add('sp-fail');this.remove()}"></a>
     </div>
     <ol class="reading-list" id="rlist">
-    <li class="rl-item">
+    <li class="rl-item" id="b1">
       <span class="rl-num">1</span>
       <a class="rl-cover" href="https://www.yes24.com/product/goods/12013160" rel="nofollow noopener noreferrer" target="_blank" aria-label="마음은 외로운 사냥꾼 알라딘에서 보기"><img src="https://image.yes24.com/goods/12013160/L" alt="마음은 외로운 사냥꾼 표지" loading="lazy"></a>
       <div class="rl-meta">
         <div class="rl-title"><a href="https://www.yes24.com/product/goods/12013160" rel="nofollow noopener noreferrer" target="_blank">마음은 외로운 사냥꾼</a></div>
         <div class="rl-byline">카슨 매컬러스 · 시공사</div>
+        <p class="rl-comment">한국경제 인터뷰에서 추천 책 10권 가운데 하나로 꼽았어요. &#x27;아름답고 서정적인 책으로, 부드럽지만 가슴 아픈 이야기&#x27;라고 소개했어요. (출처: 한국경제)</p>
         <a class="rl-source" href="https://www.hankyung.com/article/202505167643i" rel="nofollow noopener noreferrer" target="_blank">📺 출처 보기</a>
         <button type="button" class="heart-btn sm" data-heart="b:마음은 외로운 사냥꾼" aria-pressed="false" aria-label="이 책에 하트" title="이 책에 하트" hidden><span class="heart-ico" aria-hidden="true">♡</span><span class="heart-n"></span></button>
       </div>
     </li>
-    <li class="rl-item">
+    <li class="rl-item" id="b2">
       <span class="rl-num">2</span>
       <a class="rl-cover" href="https://www.yes24.com/product/goods/108569727" rel="nofollow noopener noreferrer" target="_blank" aria-label="신곡 알라딘에서 보기"><img src="https://image.yes24.com/goods/108569727/L" alt="신곡 표지" loading="lazy"></a>
       <div class="rl-meta">
         <div class="rl-title"><a href="https://www.yes24.com/product/goods/108569727" rel="nofollow noopener noreferrer" target="_blank">신곡</a></div>
         <div class="rl-byline">단테 알리기에리 · 열린책들</div>
+        <p class="rl-comment">중학생 때 만화책인 줄 알고 주문했다가 어려운 시라서 책장에 꽂아뒀는데, 크게 아파 누워 있던 여름에 꺼내 읽었대요. 추천 책 10권에도 넣었어요. (출처: 한국경제)</p>
         <a class="rl-source" href="https://www.hankyung.com/article/202505167643i" rel="nofollow noopener noreferrer" target="_blank">📺 출처 보기</a>
         <button type="button" class="heart-btn sm" data-heart="b:신곡" aria-pressed="false" aria-label="이 책에 하트" title="이 책에 하트" hidden><span class="heart-ico" aria-hidden="true">♡</span><span class="heart-n"></span></button>
       </div>
       <div class="rl-shared"><span class="rl-shared-label">👥 함께 추천한 셀럽 3명:</span> <a class="rl-celeb-chip" href="https://favorbook.co.kr/share/%EB%AC%B8%EA%B0%80%EC%98%81.html">문가영</a><a class="rl-celeb-chip" href="https://favorbook.co.kr/share/%EC%9E%84%EC%9C%A4%EC%B0%AC.html">임윤찬</a><a class="rl-celeb-chip" href="https://favorbook.co.kr/share/%EC%A7%80%EB%93%9C%EB%9E%98%EA%B3%A4%28%EB%B9%85%EB%B1%85%29.html">지드래곤(빅뱅)</a></div>
     </li>
-    <li class="rl-item">
+    <li class="rl-item" id="b3">
       <span class="rl-num">3</span>
       <a class="rl-cover" href="https://www.yes24.com/product/goods/130160864" rel="nofollow noopener noreferrer" target="_blank" aria-label="어둠의 심장 알라딘에서 보기"><img src="https://image.yes24.com/goods/130160864/L" alt="어둠의 심장 표지" loading="lazy"></a>
       <div class="rl-meta">
         <div class="rl-title"><a href="https://www.yes24.com/product/goods/130160864" rel="nofollow noopener noreferrer" target="_blank">어둠의 심장</a></div>
         <div class="rl-byline">조지프 콘래드 · 휴머니스트</div>
+        <p class="rl-comment">한국경제 인터뷰에서 추천 책 10권 가운데 하나로 꼽았어요. &#x27;인간 본성을 모두 설명해 주는 책&#x27;이라고 소개했어요. (출처: 한국경제)</p>
         <a class="rl-source" href="https://www.hankyung.com/article/202505167643i" rel="nofollow noopener noreferrer" target="_blank">📺 출처 보기</a>
         <button type="button" class="heart-btn sm" data-heart="b:어둠의 심장" aria-pressed="false" aria-label="이 책에 하트" title="이 책에 하트" hidden><span class="heart-ico" aria-hidden="true">♡</span><span class="heart-n"></span></button>
       </div>
     </li>
-    <li class="rl-item">
+    <li class="rl-item" id="b4">
       <span class="rl-num">4</span>
       <a class="rl-cover" href="https://www.yes24.com/product/goods/92901787" rel="nofollow noopener noreferrer" target="_blank" aria-label="어린왕자 알라딘에서 보기"><img src="https://image.yes24.com/goods/92901787/L" alt="어린왕자 표지" loading="lazy"></a>
       <div class="rl-meta">
         <div class="rl-title"><a href="https://www.yes24.com/product/goods/92901787" rel="nofollow noopener noreferrer" target="_blank">어린왕자</a></div>
         <div class="rl-byline">앙투안 드 생텍쥐페리 · 문예출판사</div>
+        <p class="rl-comment">어린 시절 가장 좋아했던 책이고, 지금도 가장 좋아하는 책 중 하나래요. (출처: 한국경제)</p>
         <a class="rl-source" href="https://www.hankyung.com/article/202505167643i" rel="nofollow noopener noreferrer" target="_blank">📺 출처 보기</a>
         <button type="button" class="heart-btn sm" data-heart="b:어린왕자" aria-pressed="false" aria-label="이 책에 하트" title="이 책에 하트" hidden><span class="heart-ico" aria-hidden="true">♡</span><span class="heart-n"></span></button>
       </div>
       <div class="rl-shared"><span class="rl-shared-label">👥 함께 추천한 셀럽 8명:</span> <a class="rl-celeb-chip" href="https://favorbook.co.kr/share/%EA%B9%80%ED%9A%A8%EC%A7%84.html">김효진</a><a class="rl-celeb-chip" href="https://favorbook.co.kr/share/%EC%9D%B4%EB%B3%B4%EC%98%81.html">이보영</a><a class="rl-celeb-chip" href="https://favorbook.co.kr/share/%EC%9D%B4%EC%84%B8%EC%98%81.html">이세영</a><a class="rl-celeb-chip" href="https://favorbook.co.kr/share/%EC%A0%95%EC%86%8C%EB%AF%BC.html">정소민</a><a class="rl-celeb-chip" href="https://favorbook.co.kr/share/%ED%82%A4%EB%85%B8%28%ED%8E%9C%ED%83%80%EA%B3%A4%29.html">키노(펜타곤)</a><a class="rl-celeb-chip" href="https://favorbook.co.kr/share/%ED%8F%B4%ED%82%B4.html">폴킴</a><a class="rl-celeb-chip" href="https://favorbook.co.kr/share/%ED%95%9C%EC%A7%80%EB%AF%BC.html">한지민</a><a class="rl-celeb-chip" href="https://favorbook.co.kr/share/%EB%B0%95%ED%98%9C%EC%88%98.html">박혜수</a></div>
     </li>
-    <li class="rl-item">
+    <li class="rl-item" id="b5">
       <span class="rl-num">5</span>
       <a class="rl-cover" href="https://www.yes24.com/product/goods/17894904" rel="nofollow noopener noreferrer" target="_blank" aria-label="영원한 이방인 알라딘에서 보기"><img src="https://image.yes24.com/goods/17894904/L" alt="영원한 이방인 표지" loading="lazy"></a>
       <div class="rl-meta">
         <div class="rl-title"><a href="https://www.yes24.com/product/goods/17894904" rel="nofollow noopener noreferrer" target="_blank">영원한 이방인</a></div>
         <div class="rl-byline">이창래 · 알에이치코리아(RHK)</div>
+        <p class="rl-comment">한국경제 인터뷰에서 추천 책 10권 가운데 하나로 꼽았어요. &#x27;미국에서 비평가들의 찬사를 받은 최초의 한인 미국인 작가의 책&#x27;이라고 소개했어요. (출처: 한국경제)</p>
         <a class="rl-source" href="https://www.hankyung.com/article/202505167643i" rel="nofollow noopener noreferrer" target="_blank">📺 출처 보기</a>
         <button type="button" class="heart-btn sm" data-heart="b:영원한 이방인" aria-pressed="false" aria-label="이 책에 하트" title="이 책에 하트" hidden><span class="heart-ico" aria-hidden="true">♡</span><span class="heart-n"></span></button>
       </div>
     </li>
-    <li class="rl-item">
+    <li class="rl-item" id="b6">
       <span class="rl-num">6</span>
       <a class="rl-cover" href="https://www.yes24.com/product/goods/370331" rel="nofollow noopener noreferrer" target="_blank" aria-label="위대한 개츠비 알라딘에서 보기"><img src="https://image.yes24.com/goods/370331/L" alt="위대한 개츠비 표지" loading="lazy"></a>
       <div class="rl-meta">
         <div class="rl-title"><a href="https://www.yes24.com/product/goods/370331" rel="nofollow noopener noreferrer" target="_blank">위대한 개츠비</a></div>
         <div class="rl-byline">프랜시스 스콧 피츠제럴드 · 민음사</div>
+        <p class="rl-comment">최근 다시 읽었는데 대학생 때보다 지금 더 사랑하게 됐대요. 추천 책 10권에도 넣었어요. (출처: 한국경제)</p>
         <a class="rl-source" href="https://www.hankyung.com/article/202505167643i" rel="nofollow noopener noreferrer" target="_blank">📺 출처 보기</a>
         <button type="button" class="heart-btn sm" data-heart="b:위대한 개츠비" aria-pressed="false" aria-label="이 책에 하트" title="이 책에 하트" hidden><span class="heart-ico" aria-hidden="true">♡</span><span class="heart-n"></span></button>
       </div>
       <div class="rl-shared"><span class="rl-shared-label">👥 함께 추천한 셀럽 3명:</span> <a class="rl-celeb-chip" href="https://favorbook.co.kr/share/%EB%B0%95%ED%9B%88.html">박훈</a><a class="rl-celeb-chip" href="https://favorbook.co.kr/share/%EC%86%90%EC%A2%85%EC%9B%90.html">손종원</a><a class="rl-celeb-chip" href="https://favorbook.co.kr/share/%ED%99%8D%EA%B2%BD.html">홍경</a></div>
     </li>
-    <li class="rl-item">
+    <li class="rl-item" id="b7">
       <span class="rl-num">7</span>
       <a class="rl-cover" href="https://www.yes24.com/product/goods/3729147" rel="nofollow noopener noreferrer" target="_blank" aria-label="지하로부터의 수기 알라딘에서 보기"><img src="https://image.yes24.com/goods/3729147/L" alt="지하로부터의 수기 표지" loading="lazy"></a>
       <div class="rl-meta">
         <div class="rl-title"><a href="https://www.yes24.com/product/goods/3729147" rel="nofollow noopener noreferrer" target="_blank">지하로부터의 수기</a></div>
         <div class="rl-byline">표도르 도스토옙스키 · 민음사</div>
+        <p class="rl-comment">한국경제 인터뷰에서 추천 책 10권 가운데 하나로 꼽았어요. &#x27;현대 삶의 비극을 모두 설명하는 책&#x27;이라고 소개했어요. (출처: 한국경제)</p>
         <a class="rl-source" href="https://www.hankyung.com/article/202505167643i" rel="nofollow noopener noreferrer" target="_blank">📺 출처 보기</a>
         <button type="button" class="heart-btn sm" data-heart="b:지하로부터의 수기" aria-pressed="false" aria-label="이 책에 하트" title="이 책에 하트" hidden><span class="heart-ico" aria-hidden="true">♡</span><span class="heart-n"></span></button>
       </div>
       <div class="rl-shared"><span class="rl-shared-label">👥 함께 추천한 셀럽 1명:</span> <a class="rl-celeb-chip" href="https://favorbook.co.kr/share/%EC%B0%A8%EC%9A%B0%EB%AF%BC.html">차우민</a></div>
     </li>
-    <li class="rl-item">
+    <li class="rl-item" id="b8">
       <span class="rl-num">8</span>
       <a class="rl-cover" href="https://www.yes24.com/product/goods/123166502" rel="nofollow noopener noreferrer" target="_blank" aria-label="타국에서의 일 년 알라딘에서 보기"><img src="https://image.yes24.com/goods/123166502/L" alt="타국에서의 일 년 표지" loading="lazy"></a>
       <div class="rl-meta">
         <div class="rl-title"><a href="https://www.yes24.com/product/goods/123166502" rel="nofollow noopener noreferrer" target="_blank">타국에서의 일 년</a></div>
         <div class="rl-byline">이창래 · 알에이치코리아(RHK)</div>
+        <p class="rl-comment">요즘 읽고 있는 책이에요. 이창래를 미국에서 가장 뛰어난 소설가 중 한 명이라고 했어요. (출처: 한국경제)</p>
         <a class="rl-source" href="https://www.hankyung.com/article/202505167643i" rel="nofollow noopener noreferrer" target="_blank">📺 출처 보기</a>
         <button type="button" class="heart-btn sm" data-heart="b:타국에서의 일 년" aria-pressed="false" aria-label="이 책에 하트" title="이 책에 하트" hidden><span class="heart-ico" aria-hidden="true">♡</span><span class="heart-n"></span></button>
       </div>
     </li>
-    <li class="rl-item">
+    <li class="rl-item" id="b9">
       <span class="rl-num">9</span>
       <a class="rl-cover" href="https://www.yes24.com/product/goods/110641272" rel="nofollow noopener noreferrer" target="_blank" aria-label="파친코 알라딘에서 보기"><img src="https://image.yes24.com/goods/110641272/L" alt="파친코 표지" loading="lazy"></a>
       <div class="rl-meta">
         <div class="rl-title"><a href="https://www.yes24.com/product/goods/110641272" rel="nofollow noopener noreferrer" target="_blank">파친코</a></div>
         <div class="rl-byline">이민진 · 인플루엔셜(주)</div>
+        <p class="rl-comment">한국경제 인터뷰에서 추천 책 10권 가운데 하나로 꼽았어요. &#x27;세대를 넘어가는 대하소설&#x27;이라고 소개했어요. (출처: 한국경제)</p>
         <a class="rl-source" href="https://www.hankyung.com/article/202505167643i" rel="nofollow noopener noreferrer" target="_blank">📺 출처 보기</a>
         <button type="button" class="heart-btn sm" data-heart="b:파친코" aria-pressed="false" aria-label="이 책에 하트" title="이 책에 하트" hidden><span class="heart-ico" aria-hidden="true">♡</span><span class="heart-n"></span></button>
       </div>
-      <div class="rl-shared"><span class="rl-shared-label">👥 함께 추천한 셀럽 2명:</span> <a class="rl-celeb-chip" href="https://favorbook.co.kr/share/%ED%97%88%EC%9C%A4%EC%A7%84%28%EB%A5%B4%EC%84%B8%EB%9D%BC%ED%95%8C%29.html">허윤진(르세라핌)</a><a class="rl-celeb-chip" href="https://favorbook.co.kr/share/RM%28BTS%29.html">RM(BTS)</a></div>
+      <div class="rl-shared"><span class="rl-shared-label">👥 함께 추천한 셀럽 3명:</span> <a class="rl-celeb-chip" href="https://favorbook.co.kr/share/%ED%97%88%EC%9C%A4%EC%A7%84%28%EB%A5%B4%EC%84%B8%EB%9D%BC%ED%95%8C%29.html">허윤진(르세라핌)</a><a class="rl-celeb-chip" href="https://favorbook.co.kr/share/RM%28BTS%29.html">RM(BTS)</a><a class="rl-celeb-chip" href="https://favorbook.co.kr/share/%EB%A0%88%EC%9D%B4%EB%94%94%20%EC%A0%9C%EC%9D%B8.html">레이디 제인</a></div>
     </li>
     </ol>
     </div>
@@ -736,6 +753,7 @@
     <div class="related-celeb-list">
       <a class="related-celeb" href="https://favorbook.co.kr/share/RM%28BTS%29.html" title="공통 도서: 파친코">RM(BTS) <span class="rc-count">1</span></a>
       <a class="related-celeb" href="https://favorbook.co.kr/share/%EA%B9%80%ED%9A%A8%EC%A7%84.html" title="공통 도서: 어린왕자">김효진 <span class="rc-count">1</span></a>
+      <a class="related-celeb" href="https://favorbook.co.kr/share/%EB%A0%88%EC%9D%B4%EB%94%94%20%EC%A0%9C%EC%9D%B8.html" title="공통 도서: 파친코">레이디 제인 <span class="rc-count">1</span></a>
       <a class="related-celeb" href="https://favorbook.co.kr/share/%EB%AC%B8%EA%B0%80%EC%98%81.html" title="공통 도서: 신곡">문가영 <span class="rc-count">1</span></a>
       <a class="related-celeb" href="https://favorbook.co.kr/share/%EB%B0%95%ED%98%9C%EC%88%98.html" title="공통 도서: 어린왕자">박혜수 <span class="rc-count">1</span></a>
       <a class="related-celeb" href="https://favorbook.co.kr/share/%EB%B0%95%ED%9B%88.html" title="공통 도서: 위대한 개츠비">박훈 <span class="rc-count">1</span></a>
@@ -745,7 +763,6 @@
       <a class="related-celeb" href="https://favorbook.co.kr/share/%EC%9E%84%EC%9C%A4%EC%B0%AC.html" title="공통 도서: 신곡">임윤찬 <span class="rc-count">1</span></a>
       <a class="related-celeb" href="https://favorbook.co.kr/share/%EC%A0%95%EC%86%8C%EB%AF%BC.html" title="공통 도서: 어린왕자">정소민 <span class="rc-count">1</span></a>
       <a class="related-celeb" href="https://favorbook.co.kr/share/%EC%A7%80%EB%93%9C%EB%9E%98%EA%B3%A4%28%EB%B9%85%EB%B1%85%29.html" title="공통 도서: 신곡">지드래곤(빅뱅) <span class="rc-count">1</span></a>
-      <a class="related-celeb" href="https://favorbook.co.kr/share/%EC%B0%A8%EC%9A%B0%EB%AF%BC.html" title="공통 도서: 지하로부터의 수기">차우민 <span class="rc-count">1</span></a>
     </div>
   </section>
 

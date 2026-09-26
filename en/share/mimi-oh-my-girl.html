@@ -335,8 +335,15 @@
              background-size: 100% var(--row); background-repeat: repeat-y; }
     .new-sec { margin: 16px 0 6px; padding: 12px 12px 2px; background: #fffbe6; border: 2px dashed #000; }
     .new-sec-h { display: flex; align-items: center; gap: 8px; margin: 0 0 10px; font-size: 15px; font-weight: 800; }
-    .new-sec .reading-list { margin: 0; }
-    .rl-num.rl-num-new { font-size: 11px; letter-spacing: .04em; }
+    .rl-item { scroll-margin-top: 16px; }
+    .rl-item:target { outline: 3px solid #fde047; outline-offset: 2px; }
+    .new-tiles { display: flex; flex-wrap: wrap; gap: 12px; padding-bottom: 10px; }
+    .new-tile { width: 84px; color: #000; text-decoration: none; display: flex; flex-direction: column; gap: 5px; }
+    .new-tile:hover { text-decoration: none; transform: translateY(-2px); }
+    .nt-cover { display: block; width: 84px; aspect-ratio: 2/3; border: 1.5px solid #000; box-shadow: 2px 2px 0 0 #000; background: #f4f4f0; overflow: hidden; }
+    .nt-cover img { width: 100%; height: 100%; object-fit: cover; display: block; }
+    .nt-no-cover { display: flex; width: 100%; height: 100%; align-items: center; justify-content: center; font-size: 22px; }
+    .nt-title { font-size: 12px; font-weight: 700; line-height: 1.3; word-break: keep-all; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
     .rl-new-tag { font-size: 9px; font-weight: 800; letter-spacing: .06em; line-height: 1; padding: 3px 5px;
                   background: #fde047; color: #000; border: 1.5px solid #000; }
     .sp { position: relative; flex: none; width: auto; height: var(--sh-h);
@@ -358,7 +365,7 @@
               font-size: 8px; line-height: 1; padding: 3px 0 2px;
               border-bottom: 1px solid rgba(0,0,0,.55); }
     .sp.is-new .sp-t { padding-top: 22px; }
-    .is-capturing .sp-new, .is-capturing .rl-new, .is-capturing .rl-shared { display: none !important; }
+    .is-capturing .sp-new, .is-capturing .rl-new, .is-capturing .rl-shared, .is-capturing .rl-comment { display: none !important; }
     .is-capturing .sp.is-new .sp-t { padding-top: 14px; }
     @media (max-width: 480px) { .shelf { --sh-h: 205px; }
                                  .sp.no-img, .sp.sp-fail { width: calc(var(--w, 38px) * .88); }
@@ -385,6 +392,7 @@
     .rl-title a { color: #000; }
     .rl-title a:hover { color: #2563eb; }
     .rl-byline { font-size: 13px; color: #555; margin-bottom: 8px; line-height: 1.4; }
+    .rl-comment { font-size: 13px; line-height: 1.55; color: #222; background: #FFF7C2; border: 1.5px solid #000; padding: 6px 9px; margin: 0 0 8px; word-break: keep-all; }
     .rl-source { display: inline-block; font-size: 12px; padding: 3px 8px; background: #fff; border: 1.5px solid #000; box-shadow: 1px 1px 0 0 #000; text-decoration: none; color: #000; transition: transform .1s, box-shadow .1s, background .1s; }
     .rl-source:hover { transform: translate(-1px,-1px); box-shadow: 2px 2px 0 0 #000; background: #a7f3d0; text-decoration: none; }
     @media (max-width: 480px) { .rl-item { padding: 14px 12px 14px 46px; } .rl-num { width: 32px; height: 26px; font-size: 12px; } .rl-cover { width: 60px; height: 88px; margin-right: 10px; } .rl-meta { min-height: 88px; } .rl-title { font-size: 15px; } }
@@ -436,17 +444,18 @@
     <a class="sp" style="--c:hsl(4,49%,27%);--w:38px;--fs:15px" href="https://www.yes24.com/product/goods/108233519" rel="nofollow noopener noreferrer" target="_blank" title="Wizard Bakery"><span class="sp-t"><i>Wizard Bakery</i></span><img class="sp-i" src="https://image.yes24.com/goods/108233519/side" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.parentNode.classList.add('sp-fail');this.remove()" onload="if(this.naturalWidth/this.naturalHeight>0.4){this.parentNode.classList.add('sp-fail');this.remove()}"></a>
     </div>
     <ol class="reading-list" id="rlist">
-    <li class="rl-item">
+    <li class="rl-item" id="b1">
       <span class="rl-num">1</span>
       <a class="rl-cover" href="https://www.yes24.com/product/goods/122544607" rel="nofollow noopener noreferrer" target="_blank" aria-label="AI Cold Case Unit — buy or read more"><img src="https://image.yes24.com/goods/122544607/L" alt="AI Cold Case Unit by Jo Callaghan — book cover" loading="lazy"></a>
       <div class="rl-meta">
         <div class="rl-title"><a href="https://www.yes24.com/product/goods/122544607" rel="nofollow noopener noreferrer" target="_blank">AI Cold Case Unit</a> <span style="color:#888;font-size:12px;font-weight:400">(AI 미제사건 전담반)</span></div>
         <div class="rl-byline">Jo Callaghan</div>
+        <p class="rl-comment">On a fan-compiled list of Mimi&#x27;s book recommendations. &#x27;There are no bad books, only ones I haven&#x27;t read yet.&#x27; (Source: theqoo)</p>
         <a class="rl-source" href="https://theqoo.net/square/3779951555" rel="nofollow noopener noreferrer" target="_blank">📺 Source</a>
         <button type="button" class="heart-btn sm" data-heart="b:AI 미제사건 전담반" aria-pressed="false" aria-label="Heart this book" title="Heart this book" hidden><span class="heart-ico" aria-hidden="true">♡</span><span class="heart-n"></span></button>
       </div>
     </li>
-    <li class="rl-item">
+    <li class="rl-item" id="b2">
       <span class="rl-num">2</span>
       <a class="rl-cover" href="https://www.yes24.com/product/goods/96513402" rel="nofollow noopener noreferrer" target="_blank" aria-label="A Sign of Affection — buy or read more"><img src="https://image.yes24.com/goods/96513402/L" alt="A Sign of Affection by Noriko Morishita — book cover" loading="lazy"></a>
       <div class="rl-meta">
@@ -456,7 +465,7 @@
         <button type="button" class="heart-btn sm" data-heart="b:손끝과 연연" aria-pressed="false" aria-label="Heart this book" title="Heart this book" hidden><span class="heart-ico" aria-hidden="true">♡</span><span class="heart-n"></span></button>
       </div>
     </li>
-    <li class="rl-item">
+    <li class="rl-item" id="b3">
       <span class="rl-num">3</span>
       <a class="rl-cover" href="https://www.yes24.com/product/goods/106385033" rel="nofollow noopener noreferrer" target="_blank" aria-label="Beautiful Early Evening Moon — buy or read more"><img src="https://image.yes24.com/goods/106385033/L" alt="Beautiful Early Evening Moon by Mika Yamamori — book cover" loading="lazy"></a>
       <div class="rl-meta">
@@ -466,72 +475,79 @@
         <button type="button" class="heart-btn sm" data-heart="b:아름다운 초저녁달" aria-pressed="false" aria-label="Heart this book" title="Heart this book" hidden><span class="heart-ico" aria-hidden="true">♡</span><span class="heart-n"></span></button>
       </div>
     </li>
-    <li class="rl-item">
+    <li class="rl-item" id="b4">
       <span class="rl-num">4</span>
       <a class="rl-cover" href="https://www.yes24.com/product/goods/122879837" rel="nofollow noopener noreferrer" target="_blank" aria-label="Lessons in Chemistry — buy or read more"><img src="https://image.yes24.com/goods/122879837/L" alt="Lessons in Chemistry by Bonnie Garmus — book cover" loading="lazy"></a>
       <div class="rl-meta">
         <div class="rl-title"><a href="https://www.yes24.com/product/goods/122879837" rel="nofollow noopener noreferrer" target="_blank">Lessons in Chemistry</a> <span style="color:#888;font-size:12px;font-weight:400">(레슨 인 케미스트리)</span></div>
         <div class="rl-byline">Bonnie Garmus</div>
+        <p class="rl-comment">On a fan-compiled list of Mimi&#x27;s book recommendations. &#x27;There are no bad books, only ones I haven&#x27;t read yet.&#x27; (Source: theqoo)</p>
         <a class="rl-source" href="https://theqoo.net/square/3779951555" rel="nofollow noopener noreferrer" target="_blank">📺 Source</a>
         <button type="button" class="heart-btn sm" data-heart="b:레슨 인 케미스트리" aria-pressed="false" aria-label="Heart this book" title="Heart this book" hidden><span class="heart-ico" aria-hidden="true">♡</span><span class="heart-n"></span></button>
       </div>
     </li>
-    <li class="rl-item">
+    <li class="rl-item" id="b5">
       <span class="rl-num">5</span>
       <a class="rl-cover" href="https://www.yes24.com/product/goods/119709958" rel="nofollow noopener noreferrer" target="_blank" aria-label="Terror Incident at Samguk Peace High School — buy or read more"><img src="https://image.yes24.com/goods/119709958/L" alt="Terror Incident at Samguk Peace High School by Seo Gyul — book cover" loading="lazy"></a>
       <div class="rl-meta">
         <div class="rl-title"><a href="https://www.yes24.com/product/goods/119709958" rel="nofollow noopener noreferrer" target="_blank">Terror Incident at Samguk Peace High School</a> <span style="color:#888;font-size:12px;font-weight:400">(삼국평화고등학교 테러 사건)</span></div>
         <div class="rl-byline">Seo Gyul</div>
+        <p class="rl-comment">On a fan-compiled list of Mimi&#x27;s book recommendations. &#x27;There are no bad books, only ones I haven&#x27;t read yet.&#x27; (Source: theqoo)</p>
         <a class="rl-source" href="https://theqoo.net/square/3779951555" rel="nofollow noopener noreferrer" target="_blank">📺 Source</a>
         <button type="button" class="heart-btn sm" data-heart="b:삼국평화고등학교 테러 사건" aria-pressed="false" aria-label="Heart this book" title="Heart this book" hidden><span class="heart-ico" aria-hidden="true">♡</span><span class="heart-n"></span></button>
       </div>
     </li>
-    <li class="rl-item">
+    <li class="rl-item" id="b6">
       <span class="rl-num">6</span>
       <a class="rl-cover" href="https://www.yes24.com/product/goods/36118718" rel="nofollow noopener noreferrer" target="_blank" aria-label="The Highly Sensitive People — buy or read more"><img src="https://image.yes24.com/goods/36118718/L" alt="The Highly Sensitive People by Ilse Sand — book cover" loading="lazy"></a>
       <div class="rl-meta">
         <div class="rl-title"><a href="https://www.yes24.com/product/goods/36118718" rel="nofollow noopener noreferrer" target="_blank">The Highly Sensitive People</a> <span style="color:#888;font-size:12px;font-weight:400">(센서티브)</span></div>
         <div class="rl-byline">Ilse Sand</div>
+        <p class="rl-comment">Mimi has called this a life book: a book for sensitive, highly attuned people. (Source: theqoo)</p>
         <a class="rl-source" href="https://theqoo.net/square/3779951555" rel="nofollow noopener noreferrer" target="_blank">📺 Source</a>
         <button type="button" class="heart-btn sm" data-heart="b:센서티브" aria-pressed="false" aria-label="Heart this book" title="Heart this book" hidden><span class="heart-ico" aria-hidden="true">♡</span><span class="heart-n"></span></button>
       </div>
     </li>
-    <li class="rl-item">
+    <li class="rl-item" id="b7">
       <span class="rl-num">7</span>
       <a class="rl-cover" href="https://www.yes24.com/product/goods/118326453" rel="nofollow noopener noreferrer" target="_blank" aria-label="The Other You — buy or read more"><img src="https://image.yes24.com/goods/118326453/L" alt="The Other You by J.S. Monroe — book cover" loading="lazy"></a>
       <div class="rl-meta">
         <div class="rl-title"><a href="https://www.yes24.com/product/goods/118326453" rel="nofollow noopener noreferrer" target="_blank">The Other You</a> <span style="color:#888;font-size:12px;font-weight:400">(디 아더 유)</span></div>
         <div class="rl-byline">J.S. Monroe</div>
+        <p class="rl-comment">On a fan-compiled list of Mimi&#x27;s book recommendations. &#x27;There are no bad books, only ones I haven&#x27;t read yet.&#x27; (Source: theqoo)</p>
         <a class="rl-source" href="https://theqoo.net/square/3779951555" rel="nofollow noopener noreferrer" target="_blank">📺 Source</a>
         <button type="button" class="heart-btn sm" data-heart="b:디 아더 유" aria-pressed="false" aria-label="Heart this book" title="Heart this book" hidden><span class="heart-ico" aria-hidden="true">♡</span><span class="heart-n"></span></button>
       </div>
     </li>
-    <li class="rl-item">
+    <li class="rl-item" id="b8">
       <span class="rl-num">8</span>
       <a class="rl-cover" href="https://www.yes24.com/product/goods/140199769" rel="nofollow noopener noreferrer" target="_blank" aria-label="Things That Come After Love — buy or read more"><img src="https://image.yes24.com/goods/140199769/L" alt="Things That Come After Love by Gong Ji-young, Hitonari Tsuji — book cover" loading="lazy"></a>
       <div class="rl-meta">
         <div class="rl-title"><a href="https://www.yes24.com/product/goods/140199769" rel="nofollow noopener noreferrer" target="_blank">Things That Come After Love</a> <span style="color:#888;font-size:12px;font-weight:400">(사랑 후에 오는 것들)</span></div>
         <div class="rl-byline">Gong Ji-young, Hitonari Tsuji</div>
+        <p class="rl-comment">On a fan-compiled list of Mimi&#x27;s book recommendations. &#x27;There are no bad books, only ones I haven&#x27;t read yet.&#x27; (Source: theqoo)</p>
         <a class="rl-source" href="https://theqoo.net/square/3779951555" rel="nofollow noopener noreferrer" target="_blank">📺 Source</a>
         <button type="button" class="heart-btn sm" data-heart="b:사랑 후에 오는 것들" aria-pressed="false" aria-label="Heart this book" title="Heart this book" hidden><span class="heart-ico" aria-hidden="true">♡</span><span class="heart-n"></span></button>
       </div>
     </li>
-    <li class="rl-item">
+    <li class="rl-item" id="b9">
       <span class="rl-num">9</span>
       <a class="rl-cover" href="https://www.yes24.com/product/goods/115309296" rel="nofollow noopener noreferrer" target="_blank" aria-label="Things Waiting to Make You Shine — buy or read more"><img src="https://image.yes24.com/goods/115309296/L" alt="Things Waiting to Make You Shine by Hwang Hyeon — book cover" loading="lazy"></a>
       <div class="rl-meta">
         <div class="rl-title"><a href="https://www.yes24.com/product/goods/115309296" rel="nofollow noopener noreferrer" target="_blank">Things Waiting to Make You Shine</a> <span style="color:#888;font-size:12px;font-weight:400">(너를 빛나게 할 일들이 기다리고 있어)</span></div>
         <div class="rl-byline">Hwang Hyeon</div>
+        <p class="rl-comment">Mimi strongly recommended composer Hwang Hyun&#x27;s essay collection, alongside Kim Eana and Jukjae. (Source: Naver Series)</p>
         <a class="rl-source" href="https://m.series.naver.com/ebook/detail.series?productNo=9086470" rel="nofollow noopener noreferrer" target="_blank">📺 Source</a>
         <button type="button" class="heart-btn sm" data-heart="b:너를 빛나게 할 일들이 기다리고 있어" aria-pressed="false" aria-label="Heart this book" title="Heart this book" hidden><span class="heart-ico" aria-hidden="true">♡</span><span class="heart-n"></span></button>
       </div>
     </li>
-    <li class="rl-item">
+    <li class="rl-item" id="b10">
       <span class="rl-num">10</span>
       <a class="rl-cover" href="https://www.yes24.com/product/goods/108233519" rel="nofollow noopener noreferrer" target="_blank" aria-label="Wizard Bakery — buy or read more"><img src="https://image.yes24.com/goods/108233519/L" alt="Wizard Bakery by Gu Byeong-mo — book cover" loading="lazy"></a>
       <div class="rl-meta">
         <div class="rl-title"><a href="https://www.yes24.com/product/goods/108233519" rel="nofollow noopener noreferrer" target="_blank">Wizard Bakery</a> <span style="color:#888;font-size:12px;font-weight:400">(위저드 베이커리)</span></div>
         <div class="rl-byline">Gu Byeong-mo</div>
+        <p class="rl-comment">On a fan-compiled list of Mimi&#x27;s book recommendations. &#x27;There are no bad books, only ones I haven&#x27;t read yet.&#x27; (Source: theqoo)</p>
         <a class="rl-source" href="https://theqoo.net/square/3779951555" rel="nofollow noopener noreferrer" target="_blank">📺 Source</a>
         <button type="button" class="heart-btn sm" data-heart="b:위저드 베이커리" aria-pressed="false" aria-label="Heart this book" title="Heart this book" hidden><span class="heart-ico" aria-hidden="true">♡</span><span class="heart-n"></span></button>
       </div>

@@ -213,8 +213,15 @@
              background-size: 100% var(--row); background-repeat: repeat-y; }
     .new-sec { margin: 16px 0 6px; padding: 12px 12px 2px; background: #fffbe6; border: 2px dashed #000; }
     .new-sec-h { display: flex; align-items: center; gap: 8px; margin: 0 0 10px; font-size: 15px; font-weight: 800; }
-    .new-sec .reading-list { margin: 0; }
-    .rl-num.rl-num-new { font-size: 11px; letter-spacing: .04em; }
+    .rl-item { scroll-margin-top: 16px; }
+    .rl-item:target { outline: 3px solid #fde047; outline-offset: 2px; }
+    .new-tiles { display: flex; flex-wrap: wrap; gap: 12px; padding-bottom: 10px; }
+    .new-tile { width: 84px; color: #000; text-decoration: none; display: flex; flex-direction: column; gap: 5px; }
+    .new-tile:hover { text-decoration: none; transform: translateY(-2px); }
+    .nt-cover { display: block; width: 84px; aspect-ratio: 2/3; border: 1.5px solid #000; box-shadow: 2px 2px 0 0 #000; background: #f4f4f0; overflow: hidden; }
+    .nt-cover img { width: 100%; height: 100%; object-fit: cover; display: block; }
+    .nt-no-cover { display: flex; width: 100%; height: 100%; align-items: center; justify-content: center; font-size: 22px; }
+    .nt-title { font-size: 12px; font-weight: 700; line-height: 1.3; word-break: keep-all; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
     .rl-new-tag { font-size: 9px; font-weight: 800; letter-spacing: .06em; line-height: 1; padding: 3px 5px;
                   background: #fde047; color: #000; border: 1.5px solid #000; }
     .sp { position: relative; flex: none; width: auto; height: var(--sh-h);
@@ -236,7 +243,7 @@
               font-size: 8px; line-height: 1; padding: 3px 0 2px;
               border-bottom: 1px solid rgba(0,0,0,.55); }
     .sp.is-new .sp-t { padding-top: 22px; }
-    .is-capturing .sp-new, .is-capturing .rl-new, .is-capturing .rl-shared { display: none !important; }
+    .is-capturing .sp-new, .is-capturing .rl-new, .is-capturing .rl-shared, .is-capturing .rl-comment { display: none !important; }
     .is-capturing .sp.is-new .sp-t { padding-top: 14px; }
     @media (max-width: 480px) { .shelf { --sh-h: 205px; }
                                  .sp.no-img, .sp.sp-fail { width: calc(var(--w, 38px) * .88); }
@@ -263,6 +270,7 @@
     .rl-title a { color: #000; }
     .rl-title a:hover { color: #2563eb; }
     .rl-byline { font-size: 13px; color: #555; margin-bottom: 8px; line-height: 1.4; }
+    .rl-comment { font-size: 13px; line-height: 1.55; color: #222; background: #FFF7C2; border: 1.5px solid #000; padding: 6px 9px; margin: 0 0 8px; word-break: keep-all; }
     .rl-source { display: inline-block; font-size: 12px; padding: 3px 8px; background: #fff; border: 1.5px solid #000; box-shadow: 1px 1px 0 0 #000; text-decoration: none; color: #000; transition: transform .1s, box-shadow .1s, background .1s; }
     .rl-source:hover { transform: translate(-1px,-1px); box-shadow: 2px 2px 0 0 #000; background: #a7f3d0; text-decoration: none; }
     .rl-shared { clear: both; margin-top: 12px; padding-top: 10px; border-top: 1.5px dashed #ccc; display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
@@ -310,7 +318,7 @@
   </header>
 
   <section class="intro">
-    <p style="margin:0">카이(엑소)의 독서 기록을 한곳에 모았어요. 유튜브·인터뷰·SNS 등 공개 출처에서 확인된 인생책·추천 도서 <strong>4권</strong>을 한 페이지에 정리한 독서 리스트입니다. 아래 목록에서 책 제목·저자·출처 링크를 한눈에 확인할 수 있어요.</p>
+    <p style="margin:0">카이(엑소)의 독서 기록을 한곳에 모았어요. 유튜브·인터뷰·SNS 등 공개 출처에서 확인된 인생책·추천 도서 <strong>4권</strong>을 한 페이지에 정리한 독서 리스트입니다. 아래 목록에서 책 제목·저자·출처 링크를 한눈에 확인할 수 있어요. <a href="https://favorbook.co.kr/group/exo.html">엑소 멤버들이 읽은 책 모아 보기 →</a></p>
   </section>
 
   <section id="shelf-sec">
@@ -323,29 +331,10 @@
     </div>
     <div class="new-sec">
       <h3 class="new-sec-h"><span class="rl-new-tag">NEW</span> 최근 10일 새로 추가된 책 (2권)</h3>
-      <ol class="reading-list">
-    <li class="rl-item">
-      <span class="rl-num rl-num-new">NEW</span>
-      <a class="rl-cover" href="https://www.yes24.com/product/goods/160134240" rel="nofollow noopener noreferrer" target="_blank" aria-label="공허한 십자가 알라딘에서 보기"><span class="rl-new" data-added="2026-09-22">NEW</span><img src="https://image.yes24.com/goods/160134240/L" alt="공허한 십자가 표지" loading="lazy"></a>
-      <div class="rl-meta">
-        <div class="rl-title"><a href="https://www.yes24.com/product/goods/160134240" rel="nofollow noopener noreferrer" target="_blank">공허한 십자가</a></div>
-        <div class="rl-byline">히가시노 게이고 · 자음과모음</div>
-        <a class="rl-source" href="https://x.com/idolbooks/status/954629522258718720?s=20" rel="nofollow noopener noreferrer" target="_blank">📺 출처 보기</a>
-        <button type="button" class="heart-btn sm" data-heart="b:공허한 십자가" aria-pressed="false" aria-label="이 책에 하트" title="이 책에 하트" hidden><span class="heart-ico" aria-hidden="true">♡</span><span class="heart-n"></span></button>
+      <div class="new-tiles">
+        <a class="new-tile" href="#b1"><span class="nt-cover"><img src="https://image.yes24.com/goods/160134240/L" alt="공허한 십자가 표지" loading="lazy"></span><span class="nt-title">공허한 십자가</span></a>
+        <a class="new-tile" href="#b3"><span class="nt-cover"><img src="https://image.yes24.com/goods/45353675/L" alt="용의자 X의 헌신 표지" loading="lazy"></span><span class="nt-title">용의자 X의 헌신</span></a>
       </div>
-    </li>
-    <li class="rl-item">
-      <span class="rl-num rl-num-new">NEW</span>
-      <a class="rl-cover" href="https://www.yes24.com/product/goods/45353675" rel="nofollow noopener noreferrer" target="_blank" aria-label="용의자 X의 헌신 알라딘에서 보기"><span class="rl-new" data-added="2026-09-22">NEW</span><img src="https://image.yes24.com/goods/45353675/L" alt="용의자 X의 헌신 표지" loading="lazy"></a>
-      <div class="rl-meta">
-        <div class="rl-title"><a href="https://www.yes24.com/product/goods/45353675" rel="nofollow noopener noreferrer" target="_blank">용의자 X의 헌신</a></div>
-        <div class="rl-byline">히가시노 게이고 · 재인</div>
-        <a class="rl-source" href="https://x.com/idolbooks/status/977126255991508993?s=20" rel="nofollow noopener noreferrer" target="_blank">📺 출처 보기</a>
-        <button type="button" class="heart-btn sm" data-heart="b:용의자 X의 헌신" aria-pressed="false" aria-label="이 책에 하트" title="이 책에 하트" hidden><span class="heart-ico" aria-hidden="true">♡</span><span class="heart-n"></span></button>
-      </div>
-      <div class="rl-shared"><span class="rl-shared-label">👥 함께 추천한 셀럽 1명:</span> <a class="rl-celeb-chip" href="https://favorbook.co.kr/share/%EC%B9%B4%EB%A6%AC%EB%82%98%28%EC%97%90%EC%8A%A4%ED%8C%8C%29.html">카리나(에스파)</a></div>
-    </li>
-      </ol>
     </div>
     <p class="muted">1권은 다른 셀럽도 함께 추천한 책이에요. 아래 목록에서 함께 추천한 셀럽 이름을 볼 수 있어요.</p>
     <div id="shelf-area">
@@ -356,7 +345,7 @@
     <a class="sp" style="--c:hsl(232,49%,39%);--w:42px;--fs:15px" href="https://www.yes24.com/product/goods/21971" rel="nofollow noopener noreferrer" target="_blank" title="타나토노트"><span class="sp-t"><i>타나토노트</i></span><img class="sp-i" src="https://image.yes24.com/goods/21971/side" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.parentNode.classList.add('sp-fail');this.remove()" onload="if(this.naturalWidth/this.naturalHeight>0.4){this.parentNode.classList.add('sp-fail');this.remove()}"></a>
     </div>
     <ol class="reading-list" id="rlist">
-    <li class="rl-item">
+    <li class="rl-item" id="b1">
       <span class="rl-num">1</span>
       <a class="rl-cover" href="https://www.yes24.com/product/goods/160134240" rel="nofollow noopener noreferrer" target="_blank" aria-label="공허한 십자가 알라딘에서 보기"><span class="rl-new" data-added="2026-09-22">NEW</span><img src="https://image.yes24.com/goods/160134240/L" alt="공허한 십자가 표지" loading="lazy"></a>
       <div class="rl-meta">
@@ -366,17 +355,18 @@
         <button type="button" class="heart-btn sm" data-heart="b:공허한 십자가" aria-pressed="false" aria-label="이 책에 하트" title="이 책에 하트" hidden><span class="heart-ico" aria-hidden="true">♡</span><span class="heart-n"></span></button>
       </div>
     </li>
-    <li class="rl-item">
+    <li class="rl-item" id="b2">
       <span class="rl-num">2</span>
       <a class="rl-cover" href="https://www.yes24.com/product/goods/103555447" rel="nofollow noopener noreferrer" target="_blank" aria-label="여행자의 독서 알라딘에서 보기"><img src="https://image.yes24.com/goods/103555447/L" alt="여행자의 독서 표지" loading="lazy"></a>
       <div class="rl-meta">
         <div class="rl-title"><a href="https://www.yes24.com/product/goods/103555447" rel="nofollow noopener noreferrer" target="_blank">여행자의 독서</a></div>
         <div class="rl-byline">이희인 · 북노마드</div>
+        <p class="rl-comment">연말 시상식 수상소감에서 이 책의 문장을 인용했어요. &#x27;누군가의 삶은 누군가에게 풍경이 된다&#x27;는 말이었어요. (출처: 독서신문)</p>
         <a class="rl-source" href="https://www.readersnews.com/news/articleView.html?idxno=79882" rel="nofollow noopener noreferrer" target="_blank">📺 출처 보기</a>
         <button type="button" class="heart-btn sm" data-heart="b:여행자의 독서" aria-pressed="false" aria-label="이 책에 하트" title="이 책에 하트" hidden><span class="heart-ico" aria-hidden="true">♡</span><span class="heart-n"></span></button>
       </div>
     </li>
-    <li class="rl-item">
+    <li class="rl-item" id="b3">
       <span class="rl-num">3</span>
       <a class="rl-cover" href="https://www.yes24.com/product/goods/45353675" rel="nofollow noopener noreferrer" target="_blank" aria-label="용의자 X의 헌신 알라딘에서 보기"><span class="rl-new" data-added="2026-09-22">NEW</span><img src="https://image.yes24.com/goods/45353675/L" alt="용의자 X의 헌신 표지" loading="lazy"></a>
       <div class="rl-meta">
@@ -387,12 +377,13 @@
       </div>
       <div class="rl-shared"><span class="rl-shared-label">👥 함께 추천한 셀럽 1명:</span> <a class="rl-celeb-chip" href="https://favorbook.co.kr/share/%EC%B9%B4%EB%A6%AC%EB%82%98%28%EC%97%90%EC%8A%A4%ED%8C%8C%29.html">카리나(에스파)</a></div>
     </li>
-    <li class="rl-item">
+    <li class="rl-item" id="b4">
       <span class="rl-num">4</span>
       <a class="rl-cover" href="https://www.yes24.com/product/goods/21971" rel="nofollow noopener noreferrer" target="_blank" aria-label="타나토노트 알라딘에서 보기"><img src="https://image.yes24.com/goods/21971/L" alt="타나토노트 표지" loading="lazy"></a>
       <div class="rl-meta">
         <div class="rl-title"><a href="https://www.yes24.com/product/goods/21971" rel="nofollow noopener noreferrer" target="_blank">타나토노트</a></div>
         <div class="rl-byline">베르나르 베르베르 · 열린책들</div>
+        <p class="rl-comment">베르베르 작품을 많이 읽었다며, 이 시리즈까지는 거의 다 읽었대요. (출처: 독서신문)</p>
         <a class="rl-source" href="https://www.readersnews.com/news/articleView.html?idxno=79882" rel="nofollow noopener noreferrer" target="_blank">📺 출처 보기</a>
         <button type="button" class="heart-btn sm" data-heart="b:타나토노트" aria-pressed="false" aria-label="이 책에 하트" title="이 책에 하트" hidden><span class="heart-ico" aria-hidden="true">♡</span><span class="heart-n"></span></button>
       </div>

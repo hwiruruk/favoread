@@ -479,8 +479,15 @@
              background-size: 100% var(--row); background-repeat: repeat-y; }
     .new-sec { margin: 16px 0 6px; padding: 12px 12px 2px; background: #fffbe6; border: 2px dashed #000; }
     .new-sec-h { display: flex; align-items: center; gap: 8px; margin: 0 0 10px; font-size: 15px; font-weight: 800; }
-    .new-sec .reading-list { margin: 0; }
-    .rl-num.rl-num-new { font-size: 11px; letter-spacing: .04em; }
+    .rl-item { scroll-margin-top: 16px; }
+    .rl-item:target { outline: 3px solid #fde047; outline-offset: 2px; }
+    .new-tiles { display: flex; flex-wrap: wrap; gap: 12px; padding-bottom: 10px; }
+    .new-tile { width: 84px; color: #000; text-decoration: none; display: flex; flex-direction: column; gap: 5px; }
+    .new-tile:hover { text-decoration: none; transform: translateY(-2px); }
+    .nt-cover { display: block; width: 84px; aspect-ratio: 2/3; border: 1.5px solid #000; box-shadow: 2px 2px 0 0 #000; background: #f4f4f0; overflow: hidden; }
+    .nt-cover img { width: 100%; height: 100%; object-fit: cover; display: block; }
+    .nt-no-cover { display: flex; width: 100%; height: 100%; align-items: center; justify-content: center; font-size: 22px; }
+    .nt-title { font-size: 12px; font-weight: 700; line-height: 1.3; word-break: keep-all; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
     .rl-new-tag { font-size: 9px; font-weight: 800; letter-spacing: .06em; line-height: 1; padding: 3px 5px;
                   background: #fde047; color: #000; border: 1.5px solid #000; }
     .sp { position: relative; flex: none; width: auto; height: var(--sh-h);
@@ -502,7 +509,7 @@
               font-size: 8px; line-height: 1; padding: 3px 0 2px;
               border-bottom: 1px solid rgba(0,0,0,.55); }
     .sp.is-new .sp-t { padding-top: 22px; }
-    .is-capturing .sp-new, .is-capturing .rl-new, .is-capturing .rl-shared { display: none !important; }
+    .is-capturing .sp-new, .is-capturing .rl-new, .is-capturing .rl-shared, .is-capturing .rl-comment { display: none !important; }
     .is-capturing .sp.is-new .sp-t { padding-top: 14px; }
     @media (max-width: 480px) { .shelf { --sh-h: 205px; }
                                  .sp.no-img, .sp.sp-fail { width: calc(var(--w, 38px) * .88); }
@@ -529,6 +536,7 @@
     .rl-title a { color: #000; }
     .rl-title a:hover { color: #2563eb; }
     .rl-byline { font-size: 13px; color: #555; margin-bottom: 8px; line-height: 1.4; }
+    .rl-comment { font-size: 13px; line-height: 1.55; color: #222; background: #FFF7C2; border: 1.5px solid #000; padding: 6px 9px; margin: 0 0 8px; word-break: keep-all; }
     .rl-source { display: inline-block; font-size: 12px; padding: 3px 8px; background: #fff; border: 1.5px solid #000; box-shadow: 1px 1px 0 0 #000; text-decoration: none; color: #000; transition: transform .1s, box-shadow .1s, background .1s; }
     .rl-source:hover { transform: translate(-1px,-1px); box-shadow: 2px 2px 0 0 #000; background: #a7f3d0; text-decoration: none; }
     @media (max-width: 480px) { .rl-item { padding: 14px 12px 14px 46px; } .rl-num { width: 32px; height: 26px; font-size: 12px; } .rl-cover { width: 60px; height: 88px; margin-right: 10px; } .rl-meta { min-height: 88px; } .rl-title { font-size: 15px; } }
@@ -569,68 +577,14 @@
     </div>
     <div class="new-sec">
       <h3 class="new-sec-h"><span class="rl-new-tag">NEW</span> New in the last 10 days (6 books)</h3>
-      <ol class="reading-list">
-    <li class="rl-item">
-      <span class="rl-num rl-num-new">NEW</span>
-      <a class="rl-cover" href="https://www.yes24.com/product/goods/145339632" rel="nofollow noopener noreferrer" target="_blank" aria-label="Anyone Who Wants to Be Born Must Break a World. — buy or read more"><span class="rl-new" data-added="2026-09-23">NEW</span><img src="https://image.yes24.com/goods/145339632/L" alt="Anyone Who Wants to Be Born Must Break a World. by Kim Jong-Won — book cover" loading="lazy"></a>
-      <div class="rl-meta">
-        <div class="rl-title"><a href="https://www.yes24.com/product/goods/145339632" rel="nofollow noopener noreferrer" target="_blank">Anyone Who Wants to Be Born Must Break a World. *</a> <span style="color:#888;font-size:12px;font-weight:400">(태어나려는 자는 하나의 세계를 깨뜨려야 한다)</span></div>
-        <div class="rl-byline">Kim Jong-Won *</div>
-        <a class="rl-source" href="https://www.instagram.com/p/DdnV_Z1j-Q_/?utm_source=ig_web_button_share_sheet" rel="nofollow noopener noreferrer" target="_blank">📺 Source</a>
-        <button type="button" class="heart-btn sm" data-heart="b:태어나려는 자는 하나의 세계를 깨뜨려야 한다" aria-pressed="false" aria-label="Heart this book" title="Heart this book" hidden><span class="heart-ico" aria-hidden="true">♡</span><span class="heart-n"></span></button>
+      <div class="new-tiles">
+        <a class="new-tile" href="#b4"><span class="nt-cover"><img src="https://image.yes24.com/goods/145339632/L" alt="Anyone Who Wants to Be Born Must Break a World. by Kim Jong-Won — book cover" loading="lazy"></span><span class="nt-title">Anyone Who Wants to Be Born Must Break a World.</span></a>
+        <a class="new-tile" href="#b5"><span class="nt-cover"><img src="https://image.yes24.com/goods/172495308/L" alt="Conflicted Eyes by Lee Seul-Ah — book cover" loading="lazy"></span><span class="nt-title">Conflicted Eyes</span></a>
+        <a class="new-tile" href="#b7"><span class="nt-cover"><img src="https://image.yes24.com/goods/128870282/L" alt="Ghost of the Confiscated House by Jo Ye-Eun — book cover" loading="lazy"></span><span class="nt-title">Ghost of the Confiscated House</span></a>
+        <a class="new-tile" href="#b10"><span class="nt-cover"><img src="https://image.yes24.com/goods/44499829/L" alt="Norwegian Wood by Haruki Murakami — book cover" loading="lazy"></span><span class="nt-title">Norwegian Wood</span></a>
+        <a class="new-tile" href="#b13"><span class="nt-cover"><img src="https://image.yes24.com/goods/114906622/L" alt="Strange House by U Ketsu — book cover" loading="lazy"></span><span class="nt-title">Strange House</span></a>
+        <a class="new-tile" href="#b14"><span class="nt-cover"><img src="https://image.yes24.com/goods/147034731/L" alt="Summer Peach Sparkling by Cha Jeong-Eun — book cover" loading="lazy"></span><span class="nt-title">Summer Peach Sparkling</span></a>
       </div>
-    </li>
-    <li class="rl-item">
-      <span class="rl-num rl-num-new">NEW</span>
-      <a class="rl-cover" href="https://www.yes24.com/product/goods/172495308" rel="nofollow noopener noreferrer" target="_blank" aria-label="Conflicted Eyes — buy or read more"><span class="rl-new" data-added="2026-09-23">NEW</span><img src="https://image.yes24.com/goods/172495308/L" alt="Conflicted Eyes by Lee Seul-Ah — book cover" loading="lazy"></a>
-      <div class="rl-meta">
-        <div class="rl-title"><a href="https://www.yes24.com/product/goods/172495308" rel="nofollow noopener noreferrer" target="_blank">Conflicted Eyes</a> <span style="color:#888;font-size:12px;font-weight:400">(갈등하는 눈동자)</span></div>
-        <div class="rl-byline">Lee Seul-Ah *</div>
-        <a class="rl-source" href="https://www.instagram.com/p/DdnV_Z1j-Q_/?utm_source=ig_web_button_share_sheet" rel="nofollow noopener noreferrer" target="_blank">📺 Source</a>
-        <button type="button" class="heart-btn sm" data-heart="b:갈등하는 눈동자" aria-pressed="false" aria-label="Heart this book" title="Heart this book" hidden><span class="heart-ico" aria-hidden="true">♡</span><span class="heart-n"></span></button>
-      </div>
-    </li>
-    <li class="rl-item">
-      <span class="rl-num rl-num-new">NEW</span>
-      <a class="rl-cover" href="https://www.yes24.com/product/goods/128870282" rel="nofollow noopener noreferrer" target="_blank" aria-label="Ghost of the Confiscated House — buy or read more"><span class="rl-new" data-added="2026-09-23">NEW</span><img src="https://image.yes24.com/goods/128870282/L" alt="Ghost of the Confiscated House by Jo Ye-Eun — book cover" loading="lazy"></a>
-      <div class="rl-meta">
-        <div class="rl-title"><a href="https://www.yes24.com/product/goods/128870282" rel="nofollow noopener noreferrer" target="_blank">Ghost of the Confiscated House *</a> <span style="color:#888;font-size:12px;font-weight:400">(적산가옥의 유령)</span></div>
-        <div class="rl-byline">Jo Ye-Eun *</div>
-        <a class="rl-source" href="https://www.instagram.com/p/DdnV_Z1j-Q_/?utm_source=ig_web_button_share_sheet" rel="nofollow noopener noreferrer" target="_blank">📺 Source</a>
-        <button type="button" class="heart-btn sm" data-heart="b:적산가옥의 유령" aria-pressed="false" aria-label="Heart this book" title="Heart this book" hidden><span class="heart-ico" aria-hidden="true">♡</span><span class="heart-n"></span></button>
-      </div>
-    </li>
-    <li class="rl-item">
-      <span class="rl-num rl-num-new">NEW</span>
-      <a class="rl-cover" href="https://www.yes24.com/product/goods/44499829" rel="nofollow noopener noreferrer" target="_blank" aria-label="Norwegian Wood — buy or read more"><span class="rl-new" data-added="2026-09-23">NEW</span><img src="https://image.yes24.com/goods/44499829/L" alt="Norwegian Wood by Haruki Murakami — book cover" loading="lazy"></a>
-      <div class="rl-meta">
-        <div class="rl-title"><a href="https://www.yes24.com/product/goods/44499829" rel="nofollow noopener noreferrer" target="_blank">Norwegian Wood</a> <span style="color:#888;font-size:12px;font-weight:400">(노르웨이의 숲)</span></div>
-        <div class="rl-byline">Haruki Murakami</div>
-        <a class="rl-source" href="https://www.instagram.com/p/DdnV_Z1j-Q_/?utm_source=ig_web_button_share_sheet" rel="nofollow noopener noreferrer" target="_blank">📺 Source</a>
-        <button type="button" class="heart-btn sm" data-heart="b:노르웨이의 숲" aria-pressed="false" aria-label="Heart this book" title="Heart this book" hidden><span class="heart-ico" aria-hidden="true">♡</span><span class="heart-n"></span></button>
-      </div>
-    </li>
-    <li class="rl-item">
-      <span class="rl-num rl-num-new">NEW</span>
-      <a class="rl-cover" href="https://www.yes24.com/product/goods/114906622" rel="nofollow noopener noreferrer" target="_blank" aria-label="Strange House — buy or read more"><span class="rl-new" data-added="2026-09-23">NEW</span><img src="https://image.yes24.com/goods/114906622/L" alt="Strange House by U Ketsu — book cover" loading="lazy"></a>
-      <div class="rl-meta">
-        <div class="rl-title"><a href="https://www.yes24.com/product/goods/114906622" rel="nofollow noopener noreferrer" target="_blank">Strange House *</a> <span style="color:#888;font-size:12px;font-weight:400">(이상한 집)</span></div>
-        <div class="rl-byline">U Ketsu *</div>
-        <a class="rl-source" href="https://www.instagram.com/p/DdnV_Z1j-Q_/?utm_source=ig_web_button_share_sheet" rel="nofollow noopener noreferrer" target="_blank">📺 Source</a>
-        <button type="button" class="heart-btn sm" data-heart="b:이상한 집" aria-pressed="false" aria-label="Heart this book" title="Heart this book" hidden><span class="heart-ico" aria-hidden="true">♡</span><span class="heart-n"></span></button>
-      </div>
-    </li>
-    <li class="rl-item">
-      <span class="rl-num rl-num-new">NEW</span>
-      <a class="rl-cover" href="https://www.yes24.com/product/goods/147034731" rel="nofollow noopener noreferrer" target="_blank" aria-label="Summer Peach Sparkling — buy or read more"><span class="rl-new" data-added="2026-09-23">NEW</span><img src="https://image.yes24.com/goods/147034731/L" alt="Summer Peach Sparkling by Cha Jeong-Eun — book cover" loading="lazy"></a>
-      <div class="rl-meta">
-        <div class="rl-title"><a href="https://www.yes24.com/product/goods/147034731" rel="nofollow noopener noreferrer" target="_blank">Summer Peach Sparkling *</a> <span style="color:#888;font-size:12px;font-weight:400">(여름 피치 스파클링)</span></div>
-        <div class="rl-byline">Cha Jeong-Eun *</div>
-        <a class="rl-source" href="https://www.instagram.com/p/DdnV_Z1j-Q_/?utm_source=ig_web_button_share_sheet" rel="nofollow noopener noreferrer" target="_blank">📺 Source</a>
-        <button type="button" class="heart-btn sm" data-heart="b:여름 피치 스파클링" aria-pressed="false" aria-label="Heart this book" title="Heart this book" hidden><span class="heart-ico" aria-hidden="true">♡</span><span class="heart-n"></span></button>
-      </div>
-    </li>
-      </ol>
     </div>
     <div id="shelf-area">
     <div class="shelf" id="shelf">
@@ -654,7 +608,7 @@
     <a class="sp" style="--c:hsl(4,49%,27%);--w:38px;--fs:15px" href="https://www.yes24.com/product/goods/108233533" rel="nofollow noopener noreferrer" target="_blank" title="Wizard Bakery"><span class="sp-t"><i>Wizard Bakery</i></span><img class="sp-i" src="https://image.yes24.com/goods/108233519/side" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.parentNode.classList.add('sp-fail');this.remove()" onload="if(this.naturalWidth/this.naturalHeight>0.4){this.parentNode.classList.add('sp-fail');this.remove()}"></a>
     </div>
     <ol class="reading-list" id="rlist">
-    <li class="rl-item">
+    <li class="rl-item" id="b1">
       <span class="rl-num">1</span>
       <a class="rl-cover" href="https://www.yes24.com/product/goods/42702060" rel="nofollow noopener noreferrer" target="_blank" aria-label="Although Crying Would Not Change Anything — buy or read more"><img src="https://image.yes24.com/goods/42702060/L" alt="Although Crying Would Not Change Anything by Park Joon — book cover" loading="lazy"></a>
       <div class="rl-meta">
@@ -664,7 +618,7 @@
         <button type="button" class="heart-btn sm" data-heart="b:운다고 달라지는 일은 아무것도 없겠지만" aria-pressed="false" aria-label="Heart this book" title="Heart this book" hidden><span class="heart-ico" aria-hidden="true">♡</span><span class="heart-n"></span></button>
       </div>
     </li>
-    <li class="rl-item">
+    <li class="rl-item" id="b2">
       <span class="rl-num">2</span>
       <a class="rl-cover" href="https://www.yes24.com/product/goods/11865751" rel="nofollow noopener noreferrer" target="_blank" aria-label="And Then There Were None — buy or read more"><img src="https://image.yes24.com/goods/11865751/L" alt="And Then There Were None by Agatha Christie — book cover" loading="lazy"></a>
       <div class="rl-meta">
@@ -674,7 +628,7 @@
         <button type="button" class="heart-btn sm" data-heart="b:그리고 아무도 없었다" aria-pressed="false" aria-label="Heart this book" title="Heart this book" hidden><span class="heart-ico" aria-hidden="true">♡</span><span class="heart-n"></span></button>
       </div>
     </li>
-    <li class="rl-item">
+    <li class="rl-item" id="b3">
       <span class="rl-num">3</span>
       <a class="rl-cover" href="https://www.yes24.com/product/goods/33150738" rel="nofollow noopener noreferrer" target="_blank" aria-label="An Essay on the Principle of Population — buy or read more"><img src="https://image.yes24.com/goods/33150738/L" alt="An Essay on the Principle of Population by Thomas Robert Malthus — book cover" loading="lazy"></a>
       <div class="rl-meta">
@@ -684,7 +638,7 @@
         <button type="button" class="heart-btn sm" data-heart="b:인구론" aria-pressed="false" aria-label="Heart this book" title="Heart this book" hidden><span class="heart-ico" aria-hidden="true">♡</span><span class="heart-n"></span></button>
       </div>
     </li>
-    <li class="rl-item">
+    <li class="rl-item" id="b4">
       <span class="rl-num">4</span>
       <a class="rl-cover" href="https://www.yes24.com/product/goods/145339632" rel="nofollow noopener noreferrer" target="_blank" aria-label="Anyone Who Wants to Be Born Must Break a World. — buy or read more"><span class="rl-new" data-added="2026-09-23">NEW</span><img src="https://image.yes24.com/goods/145339632/L" alt="Anyone Who Wants to Be Born Must Break a World. by Kim Jong-Won — book cover" loading="lazy"></a>
       <div class="rl-meta">
@@ -694,7 +648,7 @@
         <button type="button" class="heart-btn sm" data-heart="b:태어나려는 자는 하나의 세계를 깨뜨려야 한다" aria-pressed="false" aria-label="Heart this book" title="Heart this book" hidden><span class="heart-ico" aria-hidden="true">♡</span><span class="heart-n"></span></button>
       </div>
     </li>
-    <li class="rl-item">
+    <li class="rl-item" id="b5">
       <span class="rl-num">5</span>
       <a class="rl-cover" href="https://www.yes24.com/product/goods/172495308" rel="nofollow noopener noreferrer" target="_blank" aria-label="Conflicted Eyes — buy or read more"><span class="rl-new" data-added="2026-09-23">NEW</span><img src="https://image.yes24.com/goods/172495308/L" alt="Conflicted Eyes by Lee Seul-Ah — book cover" loading="lazy"></a>
       <div class="rl-meta">
@@ -704,7 +658,7 @@
         <button type="button" class="heart-btn sm" data-heart="b:갈등하는 눈동자" aria-pressed="false" aria-label="Heart this book" title="Heart this book" hidden><span class="heart-ico" aria-hidden="true">♡</span><span class="heart-n"></span></button>
       </div>
     </li>
-    <li class="rl-item">
+    <li class="rl-item" id="b6">
       <span class="rl-num">6</span>
       <a class="rl-cover" href="https://www.yes24.com/product/goods/91901136" rel="nofollow noopener noreferrer" target="_blank" aria-label="Diary of a Murderer — buy or read more"><img src="https://image.yes24.com/goods/91901136/L" alt="Diary of a Murderer by Kim Young-ha — book cover" loading="lazy"></a>
       <div class="rl-meta">
@@ -714,7 +668,7 @@
         <button type="button" class="heart-btn sm" data-heart="b:살인자의 기억법" aria-pressed="false" aria-label="Heart this book" title="Heart this book" hidden><span class="heart-ico" aria-hidden="true">♡</span><span class="heart-n"></span></button>
       </div>
     </li>
-    <li class="rl-item">
+    <li class="rl-item" id="b7">
       <span class="rl-num">7</span>
       <a class="rl-cover" href="https://www.yes24.com/product/goods/128870282" rel="nofollow noopener noreferrer" target="_blank" aria-label="Ghost of the Confiscated House — buy or read more"><span class="rl-new" data-added="2026-09-23">NEW</span><img src="https://image.yes24.com/goods/128870282/L" alt="Ghost of the Confiscated House by Jo Ye-Eun — book cover" loading="lazy"></a>
       <div class="rl-meta">
@@ -724,7 +678,7 @@
         <button type="button" class="heart-btn sm" data-heart="b:적산가옥의 유령" aria-pressed="false" aria-label="Heart this book" title="Heart this book" hidden><span class="heart-ico" aria-hidden="true">♡</span><span class="heart-n"></span></button>
       </div>
     </li>
-    <li class="rl-item">
+    <li class="rl-item" id="b8">
       <span class="rl-num">8</span>
       <a class="rl-cover" href="https://www.yes24.com/product/goods/13137546" rel="nofollow noopener noreferrer" target="_blank" aria-label="Human Acts — buy or read more"><img src="https://image.yes24.com/goods/13137546/L" alt="Human Acts by Han Kang — book cover" loading="lazy"></a>
       <div class="rl-meta">
@@ -734,7 +688,7 @@
         <button type="button" class="heart-btn sm" data-heart="b:소년이 온다" aria-pressed="false" aria-label="Heart this book" title="Heart this book" hidden><span class="heart-ico" aria-hidden="true">♡</span><span class="heart-n"></span></button>
       </div>
     </li>
-    <li class="rl-item">
+    <li class="rl-item" id="b9">
       <span class="rl-num">9</span>
       <a class="rl-cover" href="https://www.yes24.com/product/goods/123759804" rel="nofollow noopener noreferrer" target="_blank" aria-label="I Decided Not to Be Lazy About Becoming Happy — buy or read more"><img src="https://image.yes24.com/goods/123759804/L" alt="I Decided Not to Be Lazy About Becoming Happy by Kim Hye-jun — book cover" loading="lazy"></a>
       <div class="rl-meta">
@@ -744,7 +698,7 @@
         <button type="button" class="heart-btn sm" data-heart="b:행복해지는 일에 게으름 피우지 않기로 해요" aria-pressed="false" aria-label="Heart this book" title="Heart this book" hidden><span class="heart-ico" aria-hidden="true">♡</span><span class="heart-n"></span></button>
       </div>
     </li>
-    <li class="rl-item">
+    <li class="rl-item" id="b10">
       <span class="rl-num">10</span>
       <a class="rl-cover" href="https://www.yes24.com/product/goods/44499829" rel="nofollow noopener noreferrer" target="_blank" aria-label="Norwegian Wood — buy or read more"><span class="rl-new" data-added="2026-09-23">NEW</span><img src="https://image.yes24.com/goods/44499829/L" alt="Norwegian Wood by Haruki Murakami — book cover" loading="lazy"></a>
       <div class="rl-meta">
@@ -754,7 +708,7 @@
         <button type="button" class="heart-btn sm" data-heart="b:노르웨이의 숲" aria-pressed="false" aria-label="Heart this book" title="Heart this book" hidden><span class="heart-ico" aria-hidden="true">♡</span><span class="heart-n"></span></button>
       </div>
     </li>
-    <li class="rl-item">
+    <li class="rl-item" id="b11">
       <span class="rl-num">11</span>
       <a class="rl-cover" href="https://www.yes24.com/product/goods/117188380" rel="nofollow noopener noreferrer" target="_blank" aria-label="Scythe — buy or read more"><img src="https://image.yes24.com/goods/117188380/L" alt="Scythe by Neal Shusterman — book cover" loading="lazy"></a>
       <div class="rl-meta">
@@ -764,7 +718,7 @@
         <button type="button" class="heart-btn sm" data-heart="b:수확자" aria-pressed="false" aria-label="Heart this book" title="Heart this book" hidden><span class="heart-ico" aria-hidden="true">♡</span><span class="heart-n"></span></button>
       </div>
     </li>
-    <li class="rl-item">
+    <li class="rl-item" id="b12">
       <span class="rl-num">12</span>
       <a class="rl-cover" href="https://www.yes24.com/product/goods/105407666" rel="nofollow noopener noreferrer" target="_blank" aria-label="Snowglobe — buy or read more"><img src="https://image.yes24.com/goods/105407666/L" alt="Snowglobe by Park So-Young — book cover" loading="lazy"></a>
       <div class="rl-meta">
@@ -774,7 +728,7 @@
         <button type="button" class="heart-btn sm" data-heart="b:스노볼" aria-pressed="false" aria-label="Heart this book" title="Heart this book" hidden><span class="heart-ico" aria-hidden="true">♡</span><span class="heart-n"></span></button>
       </div>
     </li>
-    <li class="rl-item">
+    <li class="rl-item" id="b13">
       <span class="rl-num">13</span>
       <a class="rl-cover" href="https://www.yes24.com/product/goods/114906622" rel="nofollow noopener noreferrer" target="_blank" aria-label="Strange House — buy or read more"><span class="rl-new" data-added="2026-09-23">NEW</span><img src="https://image.yes24.com/goods/114906622/L" alt="Strange House by U Ketsu — book cover" loading="lazy"></a>
       <div class="rl-meta">
@@ -784,7 +738,7 @@
         <button type="button" class="heart-btn sm" data-heart="b:이상한 집" aria-pressed="false" aria-label="Heart this book" title="Heart this book" hidden><span class="heart-ico" aria-hidden="true">♡</span><span class="heart-n"></span></button>
       </div>
     </li>
-    <li class="rl-item">
+    <li class="rl-item" id="b14">
       <span class="rl-num">14</span>
       <a class="rl-cover" href="https://www.yes24.com/product/goods/147034731" rel="nofollow noopener noreferrer" target="_blank" aria-label="Summer Peach Sparkling — buy or read more"><span class="rl-new" data-added="2026-09-23">NEW</span><img src="https://image.yes24.com/goods/147034731/L" alt="Summer Peach Sparkling by Cha Jeong-Eun — book cover" loading="lazy"></a>
       <div class="rl-meta">
@@ -794,7 +748,7 @@
         <button type="button" class="heart-btn sm" data-heart="b:여름 피치 스파클링" aria-pressed="false" aria-label="Heart this book" title="Heart this book" hidden><span class="heart-ico" aria-hidden="true">♡</span><span class="heart-n"></span></button>
       </div>
     </li>
-    <li class="rl-item">
+    <li class="rl-item" id="b15">
       <span class="rl-num">15</span>
       <a class="rl-cover" href="https://www.yes24.com/product/goods/310370" rel="nofollow noopener noreferrer" target="_blank" aria-label="The Complete Sherlock Holmes — buy or read more"><img src="https://image.yes24.com/goods/310370/L" alt="The Complete Sherlock Holmes by Arthur Conan Doyle — book cover" loading="lazy"></a>
       <div class="rl-meta">
@@ -804,7 +758,7 @@
         <button type="button" class="heart-btn sm" data-heart="b:셜록 홈즈 전집" aria-pressed="false" aria-label="Heart this book" title="Heart this book" hidden><span class="heart-ico" aria-hidden="true">♡</span><span class="heart-n"></span></button>
       </div>
     </li>
-    <li class="rl-item">
+    <li class="rl-item" id="b16">
       <span class="rl-num">16</span>
       <a class="rl-cover" href="https://www.yes24.com/product/goods/102832804" rel="nofollow noopener noreferrer" target="_blank" aria-label="The Prince — buy or read more"><img src="https://image.yes24.com/goods/102832804/L" alt="The Prince by Niccolò Machiavelli — book cover" loading="lazy"></a>
       <div class="rl-meta">
@@ -814,7 +768,7 @@
         <button type="button" class="heart-btn sm" data-heart="b:군주론" aria-pressed="false" aria-label="Heart this book" title="Heart this book" hidden><span class="heart-ico" aria-hidden="true">♡</span><span class="heart-n"></span></button>
       </div>
     </li>
-    <li class="rl-item">
+    <li class="rl-item" id="b17">
       <span class="rl-num">17</span>
       <a class="rl-cover" href="https://www.yes24.com/product/goods/117480112" rel="nofollow noopener noreferrer" target="_blank" aria-label="The Silence of the Lambs — buy or read more"><img src="https://image.yes24.com/goods/117480112/L" alt="The Silence of the Lambs by Thomas Harris — book cover" loading="lazy"></a>
       <div class="rl-meta">
@@ -824,7 +778,7 @@
         <button type="button" class="heart-btn sm" data-heart="b:양들의 침묵" aria-pressed="false" aria-label="Heart this book" title="Heart this book" hidden><span class="heart-ico" aria-hidden="true">♡</span><span class="heart-n"></span></button>
       </div>
     </li>
-    <li class="rl-item">
+    <li class="rl-item" id="b18">
       <span class="rl-num">18</span>
       <a class="rl-cover" href="https://www.yes24.com/product/goods/108233533" rel="nofollow noopener noreferrer" target="_blank" aria-label="Wizard Bakery — buy or read more"><img src="https://image.yes24.com/goods/108233533/L" alt="Wizard Bakery by Gu Byeong-Mo — book cover" loading="lazy"></a>
       <div class="rl-meta">

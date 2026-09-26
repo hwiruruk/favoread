@@ -469,8 +469,15 @@
              background-size: 100% var(--row); background-repeat: repeat-y; }
     .new-sec { margin: 16px 0 6px; padding: 12px 12px 2px; background: #fffbe6; border: 2px dashed #000; }
     .new-sec-h { display: flex; align-items: center; gap: 8px; margin: 0 0 10px; font-size: 15px; font-weight: 800; }
-    .new-sec .reading-list { margin: 0; }
-    .rl-num.rl-num-new { font-size: 11px; letter-spacing: .04em; }
+    .rl-item { scroll-margin-top: 16px; }
+    .rl-item:target { outline: 3px solid #fde047; outline-offset: 2px; }
+    .new-tiles { display: flex; flex-wrap: wrap; gap: 12px; padding-bottom: 10px; }
+    .new-tile { width: 84px; color: #000; text-decoration: none; display: flex; flex-direction: column; gap: 5px; }
+    .new-tile:hover { text-decoration: none; transform: translateY(-2px); }
+    .nt-cover { display: block; width: 84px; aspect-ratio: 2/3; border: 1.5px solid #000; box-shadow: 2px 2px 0 0 #000; background: #f4f4f0; overflow: hidden; }
+    .nt-cover img { width: 100%; height: 100%; object-fit: cover; display: block; }
+    .nt-no-cover { display: flex; width: 100%; height: 100%; align-items: center; justify-content: center; font-size: 22px; }
+    .nt-title { font-size: 12px; font-weight: 700; line-height: 1.3; word-break: keep-all; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
     .rl-new-tag { font-size: 9px; font-weight: 800; letter-spacing: .06em; line-height: 1; padding: 3px 5px;
                   background: #fde047; color: #000; border: 1.5px solid #000; }
     .sp { position: relative; flex: none; width: auto; height: var(--sh-h);
@@ -492,7 +499,7 @@
               font-size: 8px; line-height: 1; padding: 3px 0 2px;
               border-bottom: 1px solid rgba(0,0,0,.55); }
     .sp.is-new .sp-t { padding-top: 22px; }
-    .is-capturing .sp-new, .is-capturing .rl-new, .is-capturing .rl-shared { display: none !important; }
+    .is-capturing .sp-new, .is-capturing .rl-new, .is-capturing .rl-shared, .is-capturing .rl-comment { display: none !important; }
     .is-capturing .sp.is-new .sp-t { padding-top: 14px; }
     @media (max-width: 480px) { .shelf { --sh-h: 205px; }
                                  .sp.no-img, .sp.sp-fail { width: calc(var(--w, 38px) * .88); }
@@ -519,6 +526,7 @@
     .rl-title a { color: #000; }
     .rl-title a:hover { color: #2563eb; }
     .rl-byline { font-size: 13px; color: #555; margin-bottom: 8px; line-height: 1.4; }
+    .rl-comment { font-size: 13px; line-height: 1.55; color: #222; background: #FFF7C2; border: 1.5px solid #000; padding: 6px 9px; margin: 0 0 8px; word-break: keep-all; }
     .rl-source { display: inline-block; font-size: 12px; padding: 3px 8px; background: #fff; border: 1.5px solid #000; box-shadow: 1px 1px 0 0 #000; text-decoration: none; color: #000; transition: transform .1s, box-shadow .1s, background .1s; }
     .rl-source:hover { transform: translate(-1px,-1px); box-shadow: 2px 2px 0 0 #000; background: #a7f3d0; text-decoration: none; }
     .rl-shared { clear: both; margin-top: 12px; padding-top: 10px; border-top: 1.5px dashed #ccc; display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
@@ -579,18 +587,9 @@
     </div>
     <div class="new-sec">
       <h3 class="new-sec-h"><span class="rl-new-tag">NEW</span> 최근 10일 새로 추가된 책 (1권)</h3>
-      <ol class="reading-list">
-    <li class="rl-item">
-      <span class="rl-num rl-num-new">NEW</span>
-      <a class="rl-cover" href="https://www.yes24.com/product/goods/3378917" rel="nofollow noopener noreferrer" target="_blank" aria-label="테스 알라딘에서 보기"><span class="rl-new" data-added="2026-09-26">NEW</span><img src="https://image.yes24.com/goods/3378917/L" alt="테스 표지" loading="lazy"></a>
-      <div class="rl-meta">
-        <div class="rl-title"><a href="https://www.yes24.com/product/goods/3378917" rel="nofollow noopener noreferrer" target="_blank">테스</a></div>
-        <div class="rl-byline">토머스 하디 · 민음사</div>
-        <a class="rl-source" href="https://x.com/minumsa_books/status/624172240943362049?s=20" rel="nofollow noopener noreferrer" target="_blank">📺 출처 보기</a>
-        <button type="button" class="heart-btn sm" data-heart="b:테스" aria-pressed="false" aria-label="이 책에 하트" title="이 책에 하트" hidden><span class="heart-ico" aria-hidden="true">♡</span><span class="heart-n"></span></button>
+      <div class="new-tiles">
+        <a class="new-tile" href="#b20"><span class="nt-cover"><img src="https://image.yes24.com/goods/3378917/L" alt="테스 표지" loading="lazy"></span><span class="nt-title">테스</span></a>
       </div>
-    </li>
-      </ol>
     </div>
     <p class="muted">5권은 다른 셀럽도 함께 추천한 책이에요. 아래 목록에서 함께 추천한 셀럽 이름을 볼 수 있어요.</p>
     <div id="shelf-area">
@@ -617,202 +616,221 @@
     <a class="sp is-new" style="--c:hsl(88,45%,39%);--w:43px;--fs:15px" href="https://www.yes24.com/product/goods/3378917" rel="nofollow noopener noreferrer" target="_blank" title="테스"><span class="sp-t"><i>테스</i></span><img class="sp-i" src="https://image.yes24.com/goods/3378917/side" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.parentNode.classList.add('sp-fail');this.remove()" onload="if(this.naturalWidth/this.naturalHeight>0.4){this.parentNode.classList.add('sp-fail');this.remove()}"><span class="sp-new" data-added="2026-09-26">NEW</span></a>
     </div>
     <ol class="reading-list" id="rlist">
-    <li class="rl-item">
+    <li class="rl-item" id="b1">
       <span class="rl-num">1</span>
       <a class="rl-cover" href="https://www.yes24.com/product/goods/1947064" rel="nofollow noopener noreferrer" target="_blank" aria-label="그대 뒷모습 알라딘에서 보기"><img src="https://image.yes24.com/goods/1947064/L" alt="그대 뒷모습 표지" loading="lazy"></a>
       <div class="rl-meta">
         <div class="rl-title"><a href="https://www.yes24.com/product/goods/1947064" rel="nofollow noopener noreferrer" target="_blank">그대 뒷모습</a></div>
         <div class="rl-byline">정채봉 · 샘터사</div>
+        <p class="rl-comment">이보영이 쓴 독서 에세이 &#x27;사랑의 시간들&#x27;에서 &#x27;세상에서 가장 아름다운 부녀&#x27;라는 제목으로 이 책을 소개했어요. (출처: 교보문고)</p>
         <a class="rl-source" href="https://product.kyobobook.co.kr/detail/S000000888073" rel="nofollow noopener noreferrer" target="_blank">📺 출처 보기</a>
         <button type="button" class="heart-btn sm" data-heart="b:그대 뒷모습" aria-pressed="false" aria-label="이 책에 하트" title="이 책에 하트" hidden><span class="heart-ico" aria-hidden="true">♡</span><span class="heart-n"></span></button>
       </div>
     </li>
-    <li class="rl-item">
+    <li class="rl-item" id="b2">
       <span class="rl-num">2</span>
       <div class="rl-cover"><img src="https://image.yes24.com/goods/1403766/L" alt="꾸뻬 씨의 행복 여행 표지" loading="lazy"></div>
       <div class="rl-meta">
         <div class="rl-title">꾸뻬 씨의 행복 여행</div>
         <div class="rl-byline">프랑수아 를로르 · 오래된미래</div>
+        <p class="rl-comment">이보영이 쓴 독서 에세이 &#x27;사랑의 시간들&#x27;에서 &#x27;오늘 당신은 행복한가요?&#x27;라는 제목으로 이 책을 소개했어요. (출처: 교보문고)</p>
         <a class="rl-source" href="https://product.kyobobook.co.kr/detail/S000000888073" rel="nofollow noopener noreferrer" target="_blank">📺 출처 보기</a>
         <button type="button" class="heart-btn sm" data-heart="b:꾸뻬 씨의 행복 여행" aria-pressed="false" aria-label="이 책에 하트" title="이 책에 하트" hidden><span class="heart-ico" aria-hidden="true">♡</span><span class="heart-n"></span></button>
       </div>
     </li>
-    <li class="rl-item">
+    <li class="rl-item" id="b3">
       <span class="rl-num">3</span>
       <a class="rl-cover" href="https://www.yes24.com/product/goods/1446998" rel="nofollow noopener noreferrer" target="_blank" aria-label="나의 라임오렌지나무 알라딘에서 보기"><img src="https://image.yes24.com/goods/1446998/L" alt="나의 라임오렌지나무 표지" loading="lazy"></a>
       <div class="rl-meta">
         <div class="rl-title"><a href="https://www.yes24.com/product/goods/1446998" rel="nofollow noopener noreferrer" target="_blank">나의 라임오렌지나무</a></div>
         <div class="rl-byline">J.M. 바스콘셀로스 · 동녘</div>
+        <p class="rl-comment">이보영이 쓴 독서 에세이 &#x27;사랑의 시간들&#x27;에서 &#x27;내 안의 외로움을 들여다보다&#x27;라는 제목으로 이 책을 소개했어요. (출처: 교보문고)</p>
         <a class="rl-source" href="https://product.kyobobook.co.kr/detail/S000000888073" rel="nofollow noopener noreferrer" target="_blank">📺 출처 보기</a>
         <button type="button" class="heart-btn sm" data-heart="b:나의 라임오렌지나무" aria-pressed="false" aria-label="이 책에 하트" title="이 책에 하트" hidden><span class="heart-ico" aria-hidden="true">♡</span><span class="heart-n"></span></button>
       </div>
       <div class="rl-shared"><span class="rl-shared-label">👥 함께 추천한 셀럽 2명:</span> <a class="rl-celeb-chip" href="https://favorbook.co.kr/share/%EB%B0%8D%EA%B8%B0%EB%89%B4.html">밍기뉴</a><a class="rl-celeb-chip" href="https://favorbook.co.kr/share/%EC%A7%84%EC%98%81%28%EA%B0%93%EC%84%B8%EB%B8%90%29.html">진영(갓세븐)</a></div>
     </li>
-    <li class="rl-item">
+    <li class="rl-item" id="b4">
       <span class="rl-num">4</span>
       <a class="rl-cover" href="https://www.yes24.com/product/goods/6194565" rel="nofollow noopener noreferrer" target="_blank" aria-label="나의 삼촌 부르스 리 알라딘에서 보기"><img src="https://image.yes24.com/goods/6194565/L" alt="나의 삼촌 부르스 리 표지" loading="lazy"></a>
       <div class="rl-meta">
         <div class="rl-title"><a href="https://www.yes24.com/product/goods/6194565" rel="nofollow noopener noreferrer" target="_blank">나의 삼촌 부르스 리</a></div>
         <div class="rl-byline">천명관 · 위즈덤하우스</div>
+        <p class="rl-comment">이보영이 쓴 독서 에세이 &#x27;사랑의 시간들&#x27;에서 &#x27;멈추지 않는 꿈&#x27;라는 제목으로 이 책을 소개했어요. (출처: 교보문고)</p>
         <a class="rl-source" href="https://product.kyobobook.co.kr/detail/S000000888073" rel="nofollow noopener noreferrer" target="_blank">📺 출처 보기</a>
         <button type="button" class="heart-btn sm" data-heart="b:나의 삼촌 부르스 리" aria-pressed="false" aria-label="이 책에 하트" title="이 책에 하트" hidden><span class="heart-ico" aria-hidden="true">♡</span><span class="heart-n"></span></button>
       </div>
     </li>
-    <li class="rl-item">
+    <li class="rl-item" id="b5">
       <span class="rl-num">5</span>
       <a class="rl-cover" href="https://www.yes24.com/product/goods/1481953" rel="nofollow noopener noreferrer" target="_blank" aria-label="내 슬픈 창녀들의 추억 알라딘에서 보기"><img src="https://image.yes24.com/goods/1481953/L" alt="내 슬픈 창녀들의 추억 표지" loading="lazy"></a>
       <div class="rl-meta">
         <div class="rl-title"><a href="https://www.yes24.com/product/goods/1481953" rel="nofollow noopener noreferrer" target="_blank">내 슬픈 창녀들의 추억</a></div>
         <div class="rl-byline">가브리엘 가르시아 마르케스 · 민음사</div>
+        <p class="rl-comment">이보영이 쓴 독서 에세이 &#x27;사랑의 시간들&#x27;에서 &#x27;&#x27;나이 듦&#x27;에 대하여&#x27;라는 제목으로 이 책을 소개했어요. (출처: 교보문고)</p>
         <a class="rl-source" href="https://product.kyobobook.co.kr/detail/S000000888073" rel="nofollow noopener noreferrer" target="_blank">📺 출처 보기</a>
         <button type="button" class="heart-btn sm" data-heart="b:내 슬픈 창녀들의 추억" aria-pressed="false" aria-label="이 책에 하트" title="이 책에 하트" hidden><span class="heart-ico" aria-hidden="true">♡</span><span class="heart-n"></span></button>
       </div>
     </li>
-    <li class="rl-item">
+    <li class="rl-item" id="b6">
       <span class="rl-num">6</span>
       <a class="rl-cover" href="https://www.yes24.com/product/goods/176521109" rel="nofollow noopener noreferrer" target="_blank" aria-label="내 심장을 쏴라 알라딘에서 보기"><img src="https://image.yes24.com/goods/176521109/L" alt="내 심장을 쏴라 표지" loading="lazy"></a>
       <div class="rl-meta">
         <div class="rl-title"><a href="https://www.yes24.com/product/goods/176521109" rel="nofollow noopener noreferrer" target="_blank">내 심장을 쏴라</a></div>
         <div class="rl-byline">정유정 · 은행나무</div>
+        <p class="rl-comment">이보영이 쓴 독서 에세이 &#x27;사랑의 시간들&#x27;에서 &#x27;어느 여배우의 책 읽기&#x27;라는 제목으로 이 책을 소개했어요. (출처: 교보문고)</p>
         <a class="rl-source" href="https://product.kyobobook.co.kr/detail/S000000888073" rel="nofollow noopener noreferrer" target="_blank">📺 출처 보기</a>
         <button type="button" class="heart-btn sm" data-heart="b:내 심장을 쏴라" aria-pressed="false" aria-label="이 책에 하트" title="이 책에 하트" hidden><span class="heart-ico" aria-hidden="true">♡</span><span class="heart-n"></span></button>
       </div>
     </li>
-    <li class="rl-item">
+    <li class="rl-item" id="b7">
       <span class="rl-num">7</span>
       <a class="rl-cover" href="https://www.yes24.com/product/goods/2929586" rel="nofollow noopener noreferrer" target="_blank" aria-label="내 아들이 죽었습니다 알라딘에서 보기"><img src="https://image.yes24.com/goods/2929586/L" alt="내 아들이 죽었습니다 표지" loading="lazy"></a>
       <div class="rl-meta">
         <div class="rl-title"><a href="https://www.yes24.com/product/goods/2929586" rel="nofollow noopener noreferrer" target="_blank">내 아들이 죽었습니다</a></div>
         <div class="rl-byline">오쿠노 슈지 · 웅진지식하우스</div>
+        <p class="rl-comment">이보영이 쓴 독서 에세이 &#x27;사랑의 시간들&#x27;에서 &#x27;시간이 지날수록 더욱 선명해지는 아픔이 있다&#x27;라는 제목으로 이 책을 소개했어요. (출처: 교보문고)</p>
         <a class="rl-source" href="https://product.kyobobook.co.kr/detail/S000000888073" rel="nofollow noopener noreferrer" target="_blank">📺 출처 보기</a>
         <button type="button" class="heart-btn sm" data-heart="b:내 아들이 죽었습니다" aria-pressed="false" aria-label="이 책에 하트" title="이 책에 하트" hidden><span class="heart-ico" aria-hidden="true">♡</span><span class="heart-n"></span></button>
       </div>
     </li>
-    <li class="rl-item">
+    <li class="rl-item" id="b8">
       <span class="rl-num">8</span>
       <a class="rl-cover" href="https://www.yes24.com/product/goods/5180209" rel="nofollow noopener noreferrer" target="_blank" aria-label="더버빌가의 테스 알라딘에서 보기"><img src="https://image.yes24.com/goods/5180209/L" alt="더버빌가의 테스 표지" loading="lazy"></a>
       <div class="rl-meta">
         <div class="rl-title"><a href="https://www.yes24.com/product/goods/5180209" rel="nofollow noopener noreferrer" target="_blank">더버빌가의 테스</a></div>
         <div class="rl-byline">토마스 하디 · 문학동네</div>
+        <p class="rl-comment">이보영이 쓴 독서 에세이 &#x27;사랑의 시간들&#x27;에서 &#x27;&#x27;여자&#x27;라는 벽에 부딪혔을 때&#x27;라는 제목으로 이 책을 소개했어요. (출처: 교보문고)</p>
         <a class="rl-source" href="https://product.kyobobook.co.kr/detail/S000000888073" rel="nofollow noopener noreferrer" target="_blank">📺 출처 보기</a>
         <button type="button" class="heart-btn sm" data-heart="b:더버빌가의 테스" aria-pressed="false" aria-label="이 책에 하트" title="이 책에 하트" hidden><span class="heart-ico" aria-hidden="true">♡</span><span class="heart-n"></span></button>
       </div>
     </li>
-    <li class="rl-item">
+    <li class="rl-item" id="b9">
       <span class="rl-num">9</span>
       <a class="rl-cover" href="https://www.yes24.com/product/goods/126159296" rel="nofollow noopener noreferrer" target="_blank" aria-label="미 비포 유 알라딘에서 보기"><img src="https://image.yes24.com/goods/126159296/L" alt="미 비포 유 표지" loading="lazy"></a>
       <div class="rl-meta">
         <div class="rl-title"><a href="https://www.yes24.com/product/goods/126159296" rel="nofollow noopener noreferrer" target="_blank">미 비포 유</a></div>
         <div class="rl-byline">조조 모예스 · 다산책방</div>
+        <p class="rl-comment">이보영이 쓴 독서 에세이 &#x27;사랑의 시간들&#x27;에서 &#x27;낯선 세상으로 발걸음을 내딛다&#x27;라는 제목으로 이 책을 소개했어요. (출처: 교보문고)</p>
         <a class="rl-source" href="https://product.kyobobook.co.kr/detail/S000000888073" rel="nofollow noopener noreferrer" target="_blank">📺 출처 보기</a>
         <button type="button" class="heart-btn sm" data-heart="b:미 비포 유" aria-pressed="false" aria-label="이 책에 하트" title="이 책에 하트" hidden><span class="heart-ico" aria-hidden="true">♡</span><span class="heart-n"></span></button>
       </div>
       <div class="rl-shared"><span class="rl-shared-label">👥 함께 추천한 셀럽 4명:</span> <a class="rl-celeb-chip" href="https://favorbook.co.kr/share/%EC%9B%90%EC%9A%B0%28%EC%84%B8%EB%B8%90%ED%8B%B4%29.html">원우(세븐틴)</a><a class="rl-celeb-chip" href="https://favorbook.co.kr/share/%EC%A7%84%EC%98%81%28%EA%B0%93%EC%84%B8%EB%B8%90%29.html">진영(갓세븐)</a><a class="rl-celeb-chip" href="https://favorbook.co.kr/share/%EC%A7%84%EC%A7%84%28%EC%95%84%EC%8A%A4%ED%8A%B8%EB%A1%9C%29.html">진진(아스트로)</a><a class="rl-celeb-chip" href="https://favorbook.co.kr/share/%ED%82%A4%EB%85%B8%28%ED%8E%9C%ED%83%80%EA%B3%A4%29.html">키노(펜타곤)</a></div>
     </li>
-    <li class="rl-item">
+    <li class="rl-item" id="b10">
       <span class="rl-num">10</span>
       <a class="rl-cover" href="https://www.yes24.com/product/goods/139871136" rel="nofollow noopener noreferrer" target="_blank" aria-label="반 고흐, 영혼의 편지 알라딘에서 보기"><img src="https://image.yes24.com/goods/139871136/L" alt="반 고흐, 영혼의 편지 표지" loading="lazy"></a>
       <div class="rl-meta">
         <div class="rl-title"><a href="https://www.yes24.com/product/goods/139871136" rel="nofollow noopener noreferrer" target="_blank">반 고흐, 영혼의 편지</a></div>
         <div class="rl-byline">빈센트 반 고흐 · 위즈덤하우스</div>
+        <p class="rl-comment">이보영이 쓴 독서 에세이 &#x27;사랑의 시간들&#x27;에서 &#x27;고독한 신념이 남긴 뜨거운 열정&#x27;라는 제목으로 이 책을 소개했어요. (출처: 교보문고)</p>
         <a class="rl-source" href="https://product.kyobobook.co.kr/detail/S000000888073" rel="nofollow noopener noreferrer" target="_blank">📺 출처 보기</a>
         <button type="button" class="heart-btn sm" data-heart="b:반 고흐, 영혼의 편지" aria-pressed="false" aria-label="이 책에 하트" title="이 책에 하트" hidden><span class="heart-ico" aria-hidden="true">♡</span><span class="heart-n"></span></button>
       </div>
     </li>
-    <li class="rl-item">
+    <li class="rl-item" id="b11">
       <span class="rl-num">11</span>
       <a class="rl-cover" href="https://www.yes24.com/product/goods/7358910" rel="nofollow noopener noreferrer" target="_blank" aria-label="사랑을 선택하는 특별한 기준 알라딘에서 보기"><img src="https://image.yes24.com/goods/7358910/L" alt="사랑을 선택하는 특별한 기준 표지" loading="lazy"></a>
       <div class="rl-meta">
         <div class="rl-title"><a href="https://www.yes24.com/product/goods/7358910" rel="nofollow noopener noreferrer" target="_blank">사랑을 선택하는 특별한 기준</a></div>
         <div class="rl-byline">김형경 · 사람풍경</div>
+        <p class="rl-comment">이보영이 쓴 독서 에세이 &#x27;사랑의 시간들&#x27;에서 &#x27;토닥토닥, 우리 자신을 위로해요&#x27;라는 제목으로 이 책을 소개했어요. (출처: 교보문고)</p>
         <a class="rl-source" href="https://product.kyobobook.co.kr/detail/S000000888073" rel="nofollow noopener noreferrer" target="_blank">📺 출처 보기</a>
         <button type="button" class="heart-btn sm" data-heart="b:사랑을 선택하는 특별한 기준" aria-pressed="false" aria-label="이 책에 하트" title="이 책에 하트" hidden><span class="heart-ico" aria-hidden="true">♡</span><span class="heart-n"></span></button>
       </div>
     </li>
-    <li class="rl-item">
+    <li class="rl-item" id="b12">
       <span class="rl-num">12</span>
       <a class="rl-cover" href="https://www.yes24.com/product/goods/13165156" rel="nofollow noopener noreferrer" target="_blank" aria-label="살고 싶다 알라딘에서 보기"><img src="https://image.yes24.com/goods/13165156/L" alt="살고 싶다 표지" loading="lazy"></a>
       <div class="rl-meta">
         <div class="rl-title"><a href="https://www.yes24.com/product/goods/13165156" rel="nofollow noopener noreferrer" target="_blank">살고 싶다</a></div>
         <div class="rl-byline">이동원 · 나무옆의자</div>
+        <p class="rl-comment">이보영이 쓴 독서 에세이 &#x27;사랑의 시간들&#x27;에서 &#x27;그럼에도 불구하고, 살아 있기를&#x27;라는 제목으로 이 책을 소개했어요. (출처: 교보문고)</p>
         <a class="rl-source" href="https://product.kyobobook.co.kr/detail/S000000888073" rel="nofollow noopener noreferrer" target="_blank">📺 출처 보기</a>
         <button type="button" class="heart-btn sm" data-heart="b:살고 싶다" aria-pressed="false" aria-label="이 책에 하트" title="이 책에 하트" hidden><span class="heart-ico" aria-hidden="true">♡</span><span class="heart-n"></span></button>
       </div>
     </li>
-    <li class="rl-item">
+    <li class="rl-item" id="b13">
       <span class="rl-num">13</span>
       <a class="rl-cover" href="https://www.yes24.com/product/goods/139752580" rel="nofollow noopener noreferrer" target="_blank" aria-label="스님의 주례사 알라딘에서 보기"><img src="https://image.yes24.com/goods/139752580/L" alt="스님의 주례사 표지" loading="lazy"></a>
       <div class="rl-meta">
         <div class="rl-title"><a href="https://www.yes24.com/product/goods/139752580" rel="nofollow noopener noreferrer" target="_blank">스님의 주례사</a></div>
         <div class="rl-byline">법륜 · 정토출판</div>
+        <p class="rl-comment">이보영이 쓴 독서 에세이 &#x27;사랑의 시간들&#x27;에서 &#x27;함께 있어도 외롭다면&#x27;라는 제목으로 이 책을 소개했어요. (출처: 교보문고)</p>
         <a class="rl-source" href="https://product.kyobobook.co.kr/detail/S000000888073" rel="nofollow noopener noreferrer" target="_blank">📺 출처 보기</a>
         <button type="button" class="heart-btn sm" data-heart="b:스님의 주례사" aria-pressed="false" aria-label="이 책에 하트" title="이 책에 하트" hidden><span class="heart-ico" aria-hidden="true">♡</span><span class="heart-n"></span></button>
       </div>
     </li>
-    <li class="rl-item">
+    <li class="rl-item" id="b14">
       <span class="rl-num">14</span>
       <a class="rl-cover" href="https://www.yes24.com/product/goods/92901787" rel="nofollow noopener noreferrer" target="_blank" aria-label="어린왕자 알라딘에서 보기"><img src="https://image.yes24.com/goods/92901787/L" alt="어린왕자 표지" loading="lazy"></a>
       <div class="rl-meta">
         <div class="rl-title"><a href="https://www.yes24.com/product/goods/92901787" rel="nofollow noopener noreferrer" target="_blank">어린왕자</a></div>
         <div class="rl-byline">앙투안 드 생텍쥐페리 · 문예출판사</div>
+        <p class="rl-comment">이보영이 쓴 독서 에세이 &#x27;사랑의 시간들&#x27;에서 &#x27;마음의 사막에 단비가 내려요&#x27;라는 제목으로 이 책을 소개했어요. (출처: 교보문고)</p>
         <a class="rl-source" href="https://product.kyobobook.co.kr/detail/S000000888073" rel="nofollow noopener noreferrer" target="_blank">📺 출처 보기</a>
         <button type="button" class="heart-btn sm" data-heart="b:어린왕자" aria-pressed="false" aria-label="이 책에 하트" title="이 책에 하트" hidden><span class="heart-ico" aria-hidden="true">♡</span><span class="heart-n"></span></button>
       </div>
       <div class="rl-shared"><span class="rl-shared-label">👥 함께 추천한 셀럽 8명:</span> <a class="rl-celeb-chip" href="https://favorbook.co.kr/share/%EA%B9%80%ED%9A%A8%EC%A7%84.html">김효진</a><a class="rl-celeb-chip" href="https://favorbook.co.kr/share/%EC%9D%B4%EC%84%B8%EC%98%81.html">이세영</a><a class="rl-celeb-chip" href="https://favorbook.co.kr/share/%EC%A0%95%EC%86%8C%EB%AF%BC.html">정소민</a><a class="rl-celeb-chip" href="https://favorbook.co.kr/share/%ED%82%A4%EB%85%B8%28%ED%8E%9C%ED%83%80%EA%B3%A4%29.html">키노(펜타곤)</a><a class="rl-celeb-chip" href="https://favorbook.co.kr/share/%ED%8F%B4%ED%82%B4.html">폴킴</a><a class="rl-celeb-chip" href="https://favorbook.co.kr/share/%ED%95%9C%EC%A7%80%EB%AF%BC.html">한지민</a><a class="rl-celeb-chip" href="https://favorbook.co.kr/share/%EC%97%90%EB%93%9C%EC%9B%8C%EB%93%9C%20%EB%A6%AC.html">에드워드 리</a><a class="rl-celeb-chip" href="https://favorbook.co.kr/share/%EB%B0%95%ED%98%9C%EC%88%98.html">박혜수</a></div>
     </li>
-    <li class="rl-item">
+    <li class="rl-item" id="b15">
       <span class="rl-num">15</span>
       <a class="rl-cover" href="https://www.yes24.com/product/goods/115275383" rel="nofollow noopener noreferrer" target="_blank" aria-label="왜 나는 너를 사랑하는가 알라딘에서 보기"><img src="https://image.yes24.com/goods/115275383/L" alt="왜 나는 너를 사랑하는가 표지" loading="lazy"></a>
       <div class="rl-meta">
         <div class="rl-title"><a href="https://www.yes24.com/product/goods/115275383" rel="nofollow noopener noreferrer" target="_blank">왜 나는 너를 사랑하는가</a></div>
         <div class="rl-byline">알랭 드 보통 · 오래된미래</div>
+        <p class="rl-comment">이보영이 쓴 독서 에세이 &#x27;사랑의 시간들&#x27;에서 &#x27;사랑이 끝나도 생은 지속된다&#x27;라는 제목으로 이 책을 소개했어요. (출처: 교보문고)</p>
         <a class="rl-source" href="https://product.kyobobook.co.kr/detail/S000000888073" rel="nofollow noopener noreferrer" target="_blank">📺 출처 보기</a>
         <button type="button" class="heart-btn sm" data-heart="b:왜 나는 너를 사랑하는가" aria-pressed="false" aria-label="이 책에 하트" title="이 책에 하트" hidden><span class="heart-ico" aria-hidden="true">♡</span><span class="heart-n"></span></button>
       </div>
       <div class="rl-shared"><span class="rl-shared-label">👥 함께 추천한 셀럽 6명:</span> <a class="rl-celeb-chip" href="https://favorbook.co.kr/share/%EA%B9%80%EC%84%A4%ED%98%84.html">김설현</a><a class="rl-celeb-chip" href="https://favorbook.co.kr/share/%EC%95%84%EC%9D%B4%EC%9C%A0.html">아이유</a><a class="rl-celeb-chip" href="https://favorbook.co.kr/share/%EC%A7%84%EC%98%81%28%EA%B0%93%EC%84%B8%EB%B8%90%29.html">진영(갓세븐)</a><a class="rl-celeb-chip" href="https://favorbook.co.kr/share/%EC%B0%B0%EC%8A%A4%EC%97%94%ED%84%B0.html">찰스엔터</a><a class="rl-celeb-chip" href="https://favorbook.co.kr/share/%ED%97%88%EC%9C%A4%EC%A7%84%28%EB%A5%B4%EC%84%B8%EB%9D%BC%ED%95%8C%29.html">허윤진(르세라핌)</a><a class="rl-celeb-chip" href="https://favorbook.co.kr/share/%EC%9A%B4%ED%95%99%28%EB%B3%B4%EC%9D%B4%EB%84%A5%EC%8A%A4%ED%8A%B8%EB%8F%84%EC%96%B4%29.html">운학(보이넥스트도어)</a></div>
     </li>
-    <li class="rl-item">
+    <li class="rl-item" id="b16">
       <span class="rl-num">16</span>
       <a class="rl-cover" href="https://www.yes24.com/product/goods/24937700" rel="nofollow noopener noreferrer" target="_blank" aria-label="왜 세계의 절반은 굶주리는가 알라딘에서 보기"><img src="https://image.yes24.com/goods/24937700/L" alt="왜 세계의 절반은 굶주리는가 표지" loading="lazy"></a>
       <div class="rl-meta">
         <div class="rl-title"><a href="https://www.yes24.com/product/goods/24937700" rel="nofollow noopener noreferrer" target="_blank">왜 세계의 절반은 굶주리는가</a></div>
         <div class="rl-byline">장 지글러 · 갈라파고스</div>
+        <p class="rl-comment">이보영이 쓴 독서 에세이 &#x27;사랑의 시간들&#x27;에서 &#x27;함께 살아가기에 대해 고민해야 할 때&#x27;라는 제목으로 이 책을 소개했어요. (출처: 교보문고)</p>
         <a class="rl-source" href="https://product.kyobobook.co.kr/detail/S000000888073" rel="nofollow noopener noreferrer" target="_blank">📺 출처 보기</a>
         <button type="button" class="heart-btn sm" data-heart="b:왜 세계의 절반은 굶주리는가" aria-pressed="false" aria-label="이 책에 하트" title="이 책에 하트" hidden><span class="heart-ico" aria-hidden="true">♡</span><span class="heart-n"></span></button>
       </div>
       <div class="rl-shared"><span class="rl-shared-label">👥 함께 추천한 셀럽 2명:</span> <a class="rl-celeb-chip" href="https://favorbook.co.kr/share/%EA%B9%80%EC%9C%A4%EC%95%84%28%EC%9E%90%EC%9A%B0%EB%A6%BC%29.html">김윤아(자우림)</a><a class="rl-celeb-chip" href="https://favorbook.co.kr/share/%EA%B9%80%ED%9A%A8%EC%A7%84.html">김효진</a></div>
     </li>
-    <li class="rl-item">
+    <li class="rl-item" id="b17">
       <span class="rl-num">17</span>
       <a class="rl-cover" href="https://www.yes24.com/product/goods/136740990" rel="nofollow noopener noreferrer" target="_blank" aria-label="위키드 알라딘에서 보기"><img src="https://image.yes24.com/goods/136740990/L" alt="위키드 표지" loading="lazy"></a>
       <div class="rl-meta">
         <div class="rl-title"><a href="https://www.yes24.com/product/goods/136740990" rel="nofollow noopener noreferrer" target="_blank">위키드</a></div>
         <div class="rl-byline">그레고리 머과이어 · 민음사</div>
+        <p class="rl-comment">이보영이 쓴 독서 에세이 &#x27;사랑의 시간들&#x27;에서 &#x27;초록 마녀가 가져다준 취향의 발견&#x27;라는 제목으로 이 책을 소개했어요. (출처: 교보문고)</p>
         <a class="rl-source" href="https://product.kyobobook.co.kr/detail/S000000888073" rel="nofollow noopener noreferrer" target="_blank">📺 출처 보기</a>
         <button type="button" class="heart-btn sm" data-heart="b:위키드" aria-pressed="false" aria-label="이 책에 하트" title="이 책에 하트" hidden><span class="heart-ico" aria-hidden="true">♡</span><span class="heart-n"></span></button>
       </div>
     </li>
-    <li class="rl-item">
+    <li class="rl-item" id="b18">
       <span class="rl-num">18</span>
       <a class="rl-cover" href="https://www.yes24.com/product/goods/75192817" rel="nofollow noopener noreferrer" target="_blank" aria-label="창가의 토토 알라딘에서 보기"><img src="https://image.yes24.com/goods/75192817/L" alt="창가의 토토 표지" loading="lazy"></a>
       <div class="rl-meta">
         <div class="rl-title"><a href="https://www.yes24.com/product/goods/75192817" rel="nofollow noopener noreferrer" target="_blank">창가의 토토</a></div>
         <div class="rl-byline">구로야나기 테츠코 · 김영사</div>
+        <p class="rl-comment">이보영이 쓴 독서 에세이 &#x27;사랑의 시간들&#x27;에서 &#x27;순수한 나를 다시 만나고 싶다면&#x27;라는 제목으로 이 책을 소개했어요. (출처: 교보문고)</p>
         <a class="rl-source" href="https://product.kyobobook.co.kr/detail/S000000888073" rel="nofollow noopener noreferrer" target="_blank">📺 출처 보기</a>
         <button type="button" class="heart-btn sm" data-heart="b:창가의 토토" aria-pressed="false" aria-label="이 책에 하트" title="이 책에 하트" hidden><span class="heart-ico" aria-hidden="true">♡</span><span class="heart-n"></span></button>
       </div>
     </li>
-    <li class="rl-item">
+    <li class="rl-item" id="b19">
       <span class="rl-num">19</span>
       <a class="rl-cover" href="https://www.yes24.com/product/goods/112072262" rel="nofollow noopener noreferrer" target="_blank" aria-label="천 개의 찬란한 태양 알라딘에서 보기"><img src="https://image.yes24.com/goods/112072262/L" alt="천 개의 찬란한 태양 표지" loading="lazy"></a>
       <div class="rl-meta">
         <div class="rl-title"><a href="https://www.yes24.com/product/goods/112072262" rel="nofollow noopener noreferrer" target="_blank">천 개의 찬란한 태양</a></div>
         <div class="rl-byline">할레드 호세이니 · 현대문학</div>
+        <p class="rl-comment">이보영이 쓴 독서 에세이 &#x27;사랑의 시간들&#x27;에서 &#x27;누구에게도 꿈을 짓밟을 권리는 없다&#x27;라는 제목으로 이 책을 소개했어요. (출처: 교보문고)</p>
         <a class="rl-source" href="https://product.kyobobook.co.kr/detail/S000000888073" rel="nofollow noopener noreferrer" target="_blank">📺 출처 보기</a>
         <button type="button" class="heart-btn sm" data-heart="b:천 개의 찬란한 태양" aria-pressed="false" aria-label="이 책에 하트" title="이 책에 하트" hidden><span class="heart-ico" aria-hidden="true">♡</span><span class="heart-n"></span></button>
       </div>
     </li>
-    <li class="rl-item">
+    <li class="rl-item" id="b20">
       <span class="rl-num">20</span>
       <a class="rl-cover" href="https://www.yes24.com/product/goods/3378917" rel="nofollow noopener noreferrer" target="_blank" aria-label="테스 알라딘에서 보기"><span class="rl-new" data-added="2026-09-26">NEW</span><img src="https://image.yes24.com/goods/3378917/L" alt="테스 표지" loading="lazy"></a>
       <div class="rl-meta">

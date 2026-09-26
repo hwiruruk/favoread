@@ -337,8 +337,15 @@
              background-size: 100% var(--row); background-repeat: repeat-y; }
     .new-sec { margin: 16px 0 6px; padding: 12px 12px 2px; background: #fffbe6; border: 2px dashed #000; }
     .new-sec-h { display: flex; align-items: center; gap: 8px; margin: 0 0 10px; font-size: 15px; font-weight: 800; }
-    .new-sec .reading-list { margin: 0; }
-    .rl-num.rl-num-new { font-size: 11px; letter-spacing: .04em; }
+    .rl-item { scroll-margin-top: 16px; }
+    .rl-item:target { outline: 3px solid #fde047; outline-offset: 2px; }
+    .new-tiles { display: flex; flex-wrap: wrap; gap: 12px; padding-bottom: 10px; }
+    .new-tile { width: 84px; color: #000; text-decoration: none; display: flex; flex-direction: column; gap: 5px; }
+    .new-tile:hover { text-decoration: none; transform: translateY(-2px); }
+    .nt-cover { display: block; width: 84px; aspect-ratio: 2/3; border: 1.5px solid #000; box-shadow: 2px 2px 0 0 #000; background: #f4f4f0; overflow: hidden; }
+    .nt-cover img { width: 100%; height: 100%; object-fit: cover; display: block; }
+    .nt-no-cover { display: flex; width: 100%; height: 100%; align-items: center; justify-content: center; font-size: 22px; }
+    .nt-title { font-size: 12px; font-weight: 700; line-height: 1.3; word-break: keep-all; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
     .rl-new-tag { font-size: 9px; font-weight: 800; letter-spacing: .06em; line-height: 1; padding: 3px 5px;
                   background: #fde047; color: #000; border: 1.5px solid #000; }
     .sp { position: relative; flex: none; width: auto; height: var(--sh-h);
@@ -360,7 +367,7 @@
               font-size: 8px; line-height: 1; padding: 3px 0 2px;
               border-bottom: 1px solid rgba(0,0,0,.55); }
     .sp.is-new .sp-t { padding-top: 22px; }
-    .is-capturing .sp-new, .is-capturing .rl-new, .is-capturing .rl-shared { display: none !important; }
+    .is-capturing .sp-new, .is-capturing .rl-new, .is-capturing .rl-shared, .is-capturing .rl-comment { display: none !important; }
     .is-capturing .sp.is-new .sp-t { padding-top: 14px; }
     @media (max-width: 480px) { .shelf { --sh-h: 205px; }
                                  .sp.no-img, .sp.sp-fail { width: calc(var(--w, 38px) * .88); }
@@ -387,6 +394,7 @@
     .rl-title a { color: #000; }
     .rl-title a:hover { color: #2563eb; }
     .rl-byline { font-size: 13px; color: #555; margin-bottom: 8px; line-height: 1.4; }
+    .rl-comment { font-size: 13px; line-height: 1.55; color: #222; background: #FFF7C2; border: 1.5px solid #000; padding: 6px 9px; margin: 0 0 8px; word-break: keep-all; }
     .rl-source { display: inline-block; font-size: 12px; padding: 3px 8px; background: #fff; border: 1.5px solid #000; box-shadow: 1px 1px 0 0 #000; text-decoration: none; color: #000; transition: transform .1s, box-shadow .1s, background .1s; }
     .rl-source:hover { transform: translate(-1px,-1px); box-shadow: 2px 2px 0 0 #000; background: #a7f3d0; text-decoration: none; }
     @media (max-width: 480px) { .rl-item { padding: 14px 12px 14px 46px; } .rl-num { width: 32px; height: 26px; font-size: 12px; } .rl-cover { width: 60px; height: 88px; margin-right: 10px; } .rl-meta { min-height: 88px; } .rl-title { font-size: 15px; } }
@@ -439,7 +447,7 @@
     <a class="sp" style="--c:hsl(276,48%,31%);--w:44px;--fs:14px" href="https://www.yes24.com/product/goods/325532" rel="nofollow noopener noreferrer" target="_blank" title="Where the Wild Things Are"><span class="sp-t"><i>Where the Wild Things Are</i></span><img class="sp-i" src="https://image.yes24.com/goods/325532/side" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.parentNode.classList.add('sp-fail');this.remove()" onload="if(this.naturalWidth/this.naturalHeight>0.4){this.parentNode.classList.add('sp-fail');this.remove()}"></a>
     </div>
     <ol class="reading-list" id="rlist">
-    <li class="rl-item">
+    <li class="rl-item" id="b1">
       <span class="rl-num">1</span>
       <a class="rl-cover" href="https://www.yes24.com/product/goods/8671207" rel="nofollow noopener noreferrer" target="_blank" aria-label="Daughters of Pharmacist Kim — buy or read more"><img src="https://image.yes24.com/goods/8671207/L" alt="Daughters of Pharmacist Kim by Park Kyong-ni — book cover" loading="lazy"></a>
       <div class="rl-meta">
@@ -449,27 +457,29 @@
         <button type="button" class="heart-btn sm" data-heart="b:김약국의 딸들" aria-pressed="false" aria-label="Heart this book" title="Heart this book" hidden><span class="heart-ico" aria-hidden="true">♡</span><span class="heart-n"></span></button>
       </div>
     </li>
-    <li class="rl-item">
+    <li class="rl-item" id="b2">
       <span class="rl-num">2</span>
       <a class="rl-cover" href="https://www.yes24.com/product/goods/103102524" rel="nofollow noopener noreferrer" target="_blank" aria-label="Fifty People — buy or read more"><img src="https://image.yes24.com/goods/103102524/L" alt="Fifty People by Chung Serang — book cover" loading="lazy"></a>
       <div class="rl-meta">
         <div class="rl-title"><a href="https://www.yes24.com/product/goods/103102524" rel="nofollow noopener noreferrer" target="_blank">Fifty People</a> <span style="color:#888;font-size:12px;font-weight:400">(피프티 피플)</span></div>
         <div class="rl-byline">Chung Serang</div>
+        <p class="rl-comment">Once named as a favorite book. It&#x27;s a pick for someone curious about all kinds of people, and Kim Yuna says you can&#x27;t live without listening to others&#x27; stories. (Source: Elle Korea)</p>
         <a class="rl-source" href="https://www.elle.co.kr/article/77036" rel="nofollow noopener noreferrer" target="_blank">📺 Source</a>
         <button type="button" class="heart-btn sm" data-heart="b:피프티 피플" aria-pressed="false" aria-label="Heart this book" title="Heart this book" hidden><span class="heart-ico" aria-hidden="true">♡</span><span class="heart-n"></span></button>
       </div>
     </li>
-    <li class="rl-item">
+    <li class="rl-item" id="b3">
       <span class="rl-num">3</span>
       <a class="rl-cover" href="https://www.yes24.com/product/goods/85030489" rel="nofollow noopener noreferrer" target="_blank" aria-label="I&#x27;ll Give You My Voice — buy or read more"><img src="https://image.yes24.com/goods/85030489/L" alt="I&#x27;ll Give You My Voice by Chung Serang — book cover" loading="lazy"></a>
       <div class="rl-meta">
         <div class="rl-title"><a href="https://www.yes24.com/product/goods/85030489" rel="nofollow noopener noreferrer" target="_blank">I&#x27;ll Give You My Voice</a> <span style="color:#888;font-size:12px;font-weight:400">(목소리를 드릴게요)</span></div>
         <div class="rl-byline">Chung Serang</div>
+        <p class="rl-comment">On 11 March, her birthday, she posted that she was reading this SF collection. Author Chung Serang replied that her own fictional world began with Kim Yuna&#x27;s. (Source: Channel Yes)</p>
         <a class="rl-source" href="https://m.ch.yes24.com/article/details/41320" rel="nofollow noopener noreferrer" target="_blank">📺 Source</a>
         <button type="button" class="heart-btn sm" data-heart="b:목소리를 드릴게요" aria-pressed="false" aria-label="Heart this book" title="Heart this book" hidden><span class="heart-ico" aria-hidden="true">♡</span><span class="heart-n"></span></button>
       </div>
     </li>
-    <li class="rl-item">
+    <li class="rl-item" id="b4">
       <span class="rl-num">4</span>
       <a class="rl-cover" href="https://www.yes24.com/product/goods/8150462" rel="nofollow noopener noreferrer" target="_blank" aria-label="I Built Your Name and Ate It for a Few Days — buy or read more"><img src="https://image.yes24.com/goods/8150462/L" alt="I Built Your Name and Ate It for a Few Days by Park Joon — book cover" loading="lazy"></a>
       <div class="rl-meta">
@@ -479,37 +489,40 @@
         <button type="button" class="heart-btn sm" data-heart="b:당신의 이름을 지어다가 며칠은 먹었다" aria-pressed="false" aria-label="Heart this book" title="Heart this book" hidden><span class="heart-ico" aria-hidden="true">♡</span><span class="heart-n"></span></button>
       </div>
     </li>
-    <li class="rl-item">
+    <li class="rl-item" id="b5">
       <span class="rl-num">5</span>
       <a class="rl-cover" href="https://www.yes24.com/product/goods/1459517" rel="nofollow noopener noreferrer" target="_blank" aria-label="In the Devil&#x27;s Garden: A Sinful History of Forbidden Food — buy or read more"><img src="https://image.yes24.com/goods/1459517/L" alt="In the Devil&#x27;s Garden: A Sinful History of Forbidden Food by Stuart Lee Allen — book cover" loading="lazy"></a>
       <div class="rl-meta">
         <div class="rl-title"><a href="https://www.yes24.com/product/goods/1459517" rel="nofollow noopener noreferrer" target="_blank">In the Devil&#x27;s Garden: A Sinful History of Forbidden Food</a> <span style="color:#888;font-size:12px;font-weight:400">(악마의 정원에서)</span></div>
         <div class="rl-byline">Stuart Lee Allen *</div>
+        <p class="rl-comment">Now out of print, but Kim Yuna is completely hooked, calling it world history told through food. (Source: Cine21)</p>
         <a class="rl-source" href="https://cine21.com/news/view?mag_id=102928" rel="nofollow noopener noreferrer" target="_blank">📺 Source</a>
         <button type="button" class="heart-btn sm" data-heart="b:악마의 정원에서" aria-pressed="false" aria-label="Heart this book" title="Heart this book" hidden><span class="heart-ico" aria-hidden="true">♡</span><span class="heart-n"></span></button>
       </div>
     </li>
-    <li class="rl-item">
+    <li class="rl-item" id="b6">
       <span class="rl-num">6</span>
       <a class="rl-cover" href="https://www.yes24.com/product/goods/24937700" rel="nofollow noopener noreferrer" target="_blank" aria-label="La Faim Dans le Monde Expliquee a Mon Fils — buy or read more"><img src="https://image.yes24.com/goods/24937700/L" alt="La Faim Dans le Monde Expliquee a Mon Fils by Jean Ziegler — book cover" loading="lazy"></a>
       <div class="rl-meta">
         <div class="rl-title"><a href="https://www.yes24.com/product/goods/24937700" rel="nofollow noopener noreferrer" target="_blank">La Faim Dans le Monde Expliquee a Mon Fils</a> <span style="color:#888;font-size:12px;font-weight:400">(왜 세계의 절반은 굶주리는가)</span></div>
         <div class="rl-byline">Jean Ziegler</div>
+        <p class="rl-comment">Featured in the book That Book, Do You Have It? as the book that made Kim Yuna cry. (Source: YES24)</p>
         <a class="rl-source" href="https://www.yes24.com/product/goods/8210760" rel="nofollow noopener noreferrer" target="_blank">📺 Source</a>
         <button type="button" class="heart-btn sm" data-heart="b:왜 세계의 절반은 굶주리는가" aria-pressed="false" aria-label="Heart this book" title="Heart this book" hidden><span class="heart-ico" aria-hidden="true">♡</span><span class="heart-n"></span></button>
       </div>
     </li>
-    <li class="rl-item">
+    <li class="rl-item" id="b7">
       <span class="rl-num">7</span>
       <a class="rl-cover" href="https://www.yes24.com/product/goods/101304735" rel="nofollow noopener noreferrer" target="_blank" aria-label="The Royal Art of Poison — buy or read more"><img src="https://image.yes24.com/goods/101304735/L" alt="The Royal Art of Poison by Eleanor Herman — book cover" loading="lazy"></a>
       <div class="rl-meta">
         <div class="rl-title"><a href="https://www.yes24.com/product/goods/101304735" rel="nofollow noopener noreferrer" target="_blank">The Royal Art of Poison</a> <span style="color:#888;font-size:12px;font-weight:400">(독살로 읽는 세계사)</span></div>
         <div class="rl-byline">Eleanor Herman *</div>
+        <p class="rl-comment">Taken along on a work trip to Italy and read twice on the way. Kim Yuna loves books that carefully reconstruct history. (Source: Cine21)</p>
         <a class="rl-source" href="https://cine21.com/news/view?mag_id=102928" rel="nofollow noopener noreferrer" target="_blank">📺 Source</a>
         <button type="button" class="heart-btn sm" data-heart="b:독살로 읽는 세계사" aria-pressed="false" aria-label="Heart this book" title="Heart this book" hidden><span class="heart-ico" aria-hidden="true">♡</span><span class="heart-n"></span></button>
       </div>
     </li>
-    <li class="rl-item">
+    <li class="rl-item" id="b8">
       <span class="rl-num">8</span>
       <a class="rl-cover" href="https://www.yes24.com/product/goods/92562566" rel="nofollow noopener noreferrer" target="_blank" aria-label="The School Nurse Files — buy or read more"><img src="https://image.yes24.com/goods/92562566/L" alt="The School Nurse Files by Chung Serang — book cover" loading="lazy"></a>
       <div class="rl-meta">
@@ -519,17 +532,18 @@
         <button type="button" class="heart-btn sm" data-heart="b:보건교사 안은영" aria-pressed="false" aria-label="Heart this book" title="Heart this book" hidden><span class="heart-ico" aria-hidden="true">♡</span><span class="heart-n"></span></button>
       </div>
     </li>
-    <li class="rl-item">
+    <li class="rl-item" id="b9">
       <span class="rl-num">9</span>
       <a class="rl-cover" href="https://www.yes24.com/product/goods/140187961" rel="nofollow noopener noreferrer" target="_blank" aria-label="What Jazz Tells Me — buy or read more"><img src="https://image.yes24.com/goods/140187961/L" alt="What Jazz Tells Me by Choi Eun-chang — book cover" loading="lazy"></a>
       <div class="rl-meta">
         <div class="rl-title"><a href="https://www.yes24.com/product/goods/140187961" rel="nofollow noopener noreferrer" target="_blank">What Jazz Tells Me</a> <span style="color:#888;font-size:12px;font-weight:400">(재즈가 나에게 말하는 것들)</span></div>
         <div class="rl-byline">Choi Eun-chang</div>
+        <p class="rl-comment">Kim Yuna wrote the blurb for this book by longtime sideman Choi Eun-chang, calling it a kind intro to jazz and a great first notebook for newcomers. (Source: Aladin)</p>
         <a class="rl-source" href="https://www.aladin.co.kr/shop/wproduct.aspx?ItemId=353963467&amp;srsltid=AfmBOoolF3Ub7NeJWsxsAdVF4lJOTP1-3qiBdvf4FN4RxWLU-SMNGXaw" rel="nofollow noopener noreferrer" target="_blank">📺 Source</a>
         <button type="button" class="heart-btn sm" data-heart="b:재즈가 나에게 말하는 것들" aria-pressed="false" aria-label="Heart this book" title="Heart this book" hidden><span class="heart-ico" aria-hidden="true">♡</span><span class="heart-n"></span></button>
       </div>
     </li>
-    <li class="rl-item">
+    <li class="rl-item" id="b10">
       <span class="rl-num">10</span>
       <a class="rl-cover" href="https://www.yes24.com/product/goods/325532" rel="nofollow noopener noreferrer" target="_blank" aria-label="Where the Wild Things Are — buy or read more"><img src="https://image.yes24.com/goods/325532/L" alt="Where the Wild Things Are by Maurice Sendak — book cover" loading="lazy"></a>
       <div class="rl-meta">

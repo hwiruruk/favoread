@@ -193,8 +193,15 @@
              background-size: 100% var(--row); background-repeat: repeat-y; }
     .new-sec { margin: 16px 0 6px; padding: 12px 12px 2px; background: #fffbe6; border: 2px dashed #000; }
     .new-sec-h { display: flex; align-items: center; gap: 8px; margin: 0 0 10px; font-size: 15px; font-weight: 800; }
-    .new-sec .reading-list { margin: 0; }
-    .rl-num.rl-num-new { font-size: 11px; letter-spacing: .04em; }
+    .rl-item { scroll-margin-top: 16px; }
+    .rl-item:target { outline: 3px solid #fde047; outline-offset: 2px; }
+    .new-tiles { display: flex; flex-wrap: wrap; gap: 12px; padding-bottom: 10px; }
+    .new-tile { width: 84px; color: #000; text-decoration: none; display: flex; flex-direction: column; gap: 5px; }
+    .new-tile:hover { text-decoration: none; transform: translateY(-2px); }
+    .nt-cover { display: block; width: 84px; aspect-ratio: 2/3; border: 1.5px solid #000; box-shadow: 2px 2px 0 0 #000; background: #f4f4f0; overflow: hidden; }
+    .nt-cover img { width: 100%; height: 100%; object-fit: cover; display: block; }
+    .nt-no-cover { display: flex; width: 100%; height: 100%; align-items: center; justify-content: center; font-size: 22px; }
+    .nt-title { font-size: 12px; font-weight: 700; line-height: 1.3; word-break: keep-all; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
     .rl-new-tag { font-size: 9px; font-weight: 800; letter-spacing: .06em; line-height: 1; padding: 3px 5px;
                   background: #fde047; color: #000; border: 1.5px solid #000; }
     .sp { position: relative; flex: none; width: auto; height: var(--sh-h);
@@ -216,7 +223,7 @@
               font-size: 8px; line-height: 1; padding: 3px 0 2px;
               border-bottom: 1px solid rgba(0,0,0,.55); }
     .sp.is-new .sp-t { padding-top: 22px; }
-    .is-capturing .sp-new, .is-capturing .rl-new, .is-capturing .rl-shared { display: none !important; }
+    .is-capturing .sp-new, .is-capturing .rl-new, .is-capturing .rl-shared, .is-capturing .rl-comment { display: none !important; }
     .is-capturing .sp.is-new .sp-t { padding-top: 14px; }
     @media (max-width: 480px) { .shelf { --sh-h: 205px; }
                                  .sp.no-img, .sp.sp-fail { width: calc(var(--w, 38px) * .88); }
@@ -243,6 +250,7 @@
     .rl-title a { color: #000; }
     .rl-title a:hover { color: #2563eb; }
     .rl-byline { font-size: 13px; color: #555; margin-bottom: 8px; line-height: 1.4; }
+    .rl-comment { font-size: 13px; line-height: 1.55; color: #222; background: #FFF7C2; border: 1.5px solid #000; padding: 6px 9px; margin: 0 0 8px; word-break: keep-all; }
     .rl-source { display: inline-block; font-size: 12px; padding: 3px 8px; background: #fff; border: 1.5px solid #000; box-shadow: 1px 1px 0 0 #000; text-decoration: none; color: #000; transition: transform .1s, box-shadow .1s, background .1s; }
     .rl-source:hover { transform: translate(-1px,-1px); box-shadow: 2px 2px 0 0 #000; background: #a7f3d0; text-decoration: none; }
     .rl-shared { clear: both; margin-top: 12px; padding-top: 10px; border-top: 1.5px dashed #ccc; display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
@@ -309,33 +317,36 @@
     <a class="sp no-img" style="--c:hsl(230,57%,30%);--w:41px;--fs:9px" href="https://www.yes24.com/product/goods/60637228" rel="nofollow noopener noreferrer" target="_blank" title="프랑스 여자는 80세에도 사랑을 한다"><span class="sp-t"><i>프랑스 여자는 80세에도 사랑을 한다</i></span></a>
     </div>
     <ol class="reading-list" id="rlist">
-    <li class="rl-item">
+    <li class="rl-item" id="b1">
       <span class="rl-num">1</span>
       <a class="rl-cover" href="https://www.yes24.com/product/goods/63797637" rel="nofollow noopener noreferrer" target="_blank" aria-label="나의 사적인 그림 알라딘에서 보기"><img src="https://image.yes24.com/goods/63797637/L" alt="나의 사적인 그림 표지" loading="lazy"></a>
       <div class="rl-meta">
         <div class="rl-title"><a href="https://www.yes24.com/product/goods/63797637" rel="nofollow noopener noreferrer" target="_blank">나의 사적인 그림</a></div>
         <div class="rl-byline">우지현 · 책이있는풍경</div>
+        <p class="rl-comment">읽는 동안 마음으로 여행하는 기분이었대요. 친한 언니와 라떼 한 잔 하며 이야기 듣는 느낌이었다고 해요. (출처: 독서신문)</p>
         <a class="rl-source" href="https://www.readersnews.com/news/articleView.html?idxno=100596" rel="nofollow noopener noreferrer" target="_blank">📺 출처 보기</a>
         <button type="button" class="heart-btn sm" data-heart="b:나의 사적인 그림" aria-pressed="false" aria-label="이 책에 하트" title="이 책에 하트" hidden><span class="heart-ico" aria-hidden="true">♡</span><span class="heart-n"></span></button>
       </div>
       <div class="rl-shared"><span class="rl-shared-label">👥 함께 추천한 셀럽 1명:</span> <a class="rl-celeb-chip" href="https://favorbook.co.kr/share/%EC%9C%88%ED%84%B0%28%EC%97%90%EC%8A%A4%ED%8C%8C%29.html">윈터(에스파)</a></div>
     </li>
-    <li class="rl-item">
+    <li class="rl-item" id="b2">
       <span class="rl-num">2</span>
       <a class="rl-cover" href="https://www.yes24.com/product/goods/169462200" rel="nofollow noopener noreferrer" target="_blank" aria-label="목적이 이끄는 삶 알라딘에서 보기"><img src="https://image.yes24.com/goods/169462200/L" alt="목적이 이끄는 삶 표지" loading="lazy"></a>
       <div class="rl-meta">
         <div class="rl-title"><a href="https://www.yes24.com/product/goods/169462200" rel="nofollow noopener noreferrer" target="_blank">목적이 이끄는 삶</a></div>
         <div class="rl-byline">릭 워렌 · 디모데</div>
+        <p class="rl-comment">인생책으로 꼽았어요. 40일 구성이라 읽을 때마다 새롭대요. (출처: 독서신문)</p>
         <a class="rl-source" href="https://www.readersnews.com/news/articleView.html?idxno=100596" rel="nofollow noopener noreferrer" target="_blank">📺 출처 보기</a>
         <button type="button" class="heart-btn sm" data-heart="b:목적이 이끄는 삶" aria-pressed="false" aria-label="이 책에 하트" title="이 책에 하트" hidden><span class="heart-ico" aria-hidden="true">♡</span><span class="heart-n"></span></button>
       </div>
     </li>
-    <li class="rl-item">
+    <li class="rl-item" id="b3">
       <span class="rl-num">3</span>
       <a class="rl-cover" href="https://www.yes24.com/product/goods/60637228" rel="nofollow noopener noreferrer" target="_blank" aria-label="프랑스 여자는 80세에도 사랑을 한다 알라딘에서 보기"><img src="https://image.yes24.com/goods/60637228/L" alt="프랑스 여자는 80세에도 사랑을 한다 표지" loading="lazy"></a>
       <div class="rl-meta">
         <div class="rl-title"><a href="https://www.yes24.com/product/goods/60637228" rel="nofollow noopener noreferrer" target="_blank">프랑스 여자는 80세에도 사랑을 한다</a></div>
         <div class="rl-byline">노구치 마사코</div>
+        <p class="rl-comment">자신감과 우아함은 내면의 아름다움에서 나온다는 걸 배운 책이래요. (출처: 서울경제)</p>
         <a class="rl-source" href="http://www.sedaily.com/NewsView/1S8GOHLKID" rel="nofollow noopener noreferrer" target="_blank">📺 출처 보기</a>
         <button type="button" class="heart-btn sm" data-heart="b:프랑스 여자는 80세에도 사랑을 한다" aria-pressed="false" aria-label="이 책에 하트" title="이 책에 하트" hidden><span class="heart-ico" aria-hidden="true">♡</span><span class="heart-n"></span></button>
       </div>

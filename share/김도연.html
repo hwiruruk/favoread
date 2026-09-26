@@ -229,8 +229,15 @@
              background-size: 100% var(--row); background-repeat: repeat-y; }
     .new-sec { margin: 16px 0 6px; padding: 12px 12px 2px; background: #fffbe6; border: 2px dashed #000; }
     .new-sec-h { display: flex; align-items: center; gap: 8px; margin: 0 0 10px; font-size: 15px; font-weight: 800; }
-    .new-sec .reading-list { margin: 0; }
-    .rl-num.rl-num-new { font-size: 11px; letter-spacing: .04em; }
+    .rl-item { scroll-margin-top: 16px; }
+    .rl-item:target { outline: 3px solid #fde047; outline-offset: 2px; }
+    .new-tiles { display: flex; flex-wrap: wrap; gap: 12px; padding-bottom: 10px; }
+    .new-tile { width: 84px; color: #000; text-decoration: none; display: flex; flex-direction: column; gap: 5px; }
+    .new-tile:hover { text-decoration: none; transform: translateY(-2px); }
+    .nt-cover { display: block; width: 84px; aspect-ratio: 2/3; border: 1.5px solid #000; box-shadow: 2px 2px 0 0 #000; background: #f4f4f0; overflow: hidden; }
+    .nt-cover img { width: 100%; height: 100%; object-fit: cover; display: block; }
+    .nt-no-cover { display: flex; width: 100%; height: 100%; align-items: center; justify-content: center; font-size: 22px; }
+    .nt-title { font-size: 12px; font-weight: 700; line-height: 1.3; word-break: keep-all; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
     .rl-new-tag { font-size: 9px; font-weight: 800; letter-spacing: .06em; line-height: 1; padding: 3px 5px;
                   background: #fde047; color: #000; border: 1.5px solid #000; }
     .sp { position: relative; flex: none; width: auto; height: var(--sh-h);
@@ -252,7 +259,7 @@
               font-size: 8px; line-height: 1; padding: 3px 0 2px;
               border-bottom: 1px solid rgba(0,0,0,.55); }
     .sp.is-new .sp-t { padding-top: 22px; }
-    .is-capturing .sp-new, .is-capturing .rl-new, .is-capturing .rl-shared { display: none !important; }
+    .is-capturing .sp-new, .is-capturing .rl-new, .is-capturing .rl-shared, .is-capturing .rl-comment { display: none !important; }
     .is-capturing .sp.is-new .sp-t { padding-top: 14px; }
     @media (max-width: 480px) { .shelf { --sh-h: 205px; }
                                  .sp.no-img, .sp.sp-fail { width: calc(var(--w, 38px) * .88); }
@@ -279,6 +286,7 @@
     .rl-title a { color: #000; }
     .rl-title a:hover { color: #2563eb; }
     .rl-byline { font-size: 13px; color: #555; margin-bottom: 8px; line-height: 1.4; }
+    .rl-comment { font-size: 13px; line-height: 1.55; color: #222; background: #FFF7C2; border: 1.5px solid #000; padding: 6px 9px; margin: 0 0 8px; word-break: keep-all; }
     .rl-source { display: inline-block; font-size: 12px; padding: 3px 8px; background: #fff; border: 1.5px solid #000; box-shadow: 1px 1px 0 0 #000; text-decoration: none; color: #000; transition: transform .1s, box-shadow .1s, background .1s; }
     .rl-source:hover { transform: translate(-1px,-1px); box-shadow: 2px 2px 0 0 #000; background: #a7f3d0; text-decoration: none; }
     .rl-shared { clear: both; margin-top: 12px; padding-top: 10px; border-top: 1.5px dashed #ccc; display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
@@ -346,53 +354,58 @@
     <a class="sp" style="--c:hsl(109,38%,32%);--w:39px;--fs:15px" href="https://www.yes24.com/product/goods/123400303" rel="nofollow noopener noreferrer" target="_blank" title="이처럼 사소한 것들"><span class="sp-t"><i>이처럼 사소한 것들</i></span><img class="sp-i" src="https://image.yes24.com/goods/123400303/side" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.parentNode.classList.add('sp-fail');this.remove()" onload="if(this.naturalWidth/this.naturalHeight>0.4){this.parentNode.classList.add('sp-fail');this.remove()}"></a>
     </div>
     <ol class="reading-list" id="rlist">
-    <li class="rl-item">
+    <li class="rl-item" id="b1">
       <span class="rl-num">1</span>
       <a class="rl-cover" href="https://www.yes24.com/product/goods/43832839" rel="nofollow noopener noreferrer" target="_blank" aria-label="림 로드 알라딘에서 보기"><img src="https://image.yes24.com/goods/43832839/L" alt="림 로드 표지" loading="lazy"></a>
       <div class="rl-meta">
         <div class="rl-title"><a href="https://www.yes24.com/product/goods/43832839" rel="nofollow noopener noreferrer" target="_blank">림 로드</a></div>
         <div class="rl-byline">배미주, 김세희 · 창비</div>
+        <p class="rl-comment">EBS 아이돌 낭독 기부 프로젝트 &#x27;아이돌이 읽다, 마음을 잇다&#x27;에서 이 소설을 낭독했어요. 음원 수익금 일부는 농어촌 청소년을 위해 기부돼요. (출처: 매일경제)</p>
         <a class="rl-source" href="https://www.mk.co.kr/news/culture/8908867" rel="nofollow noopener noreferrer" target="_blank">📺 출처 보기</a>
         <button type="button" class="heart-btn sm" data-heart="b:림 로드" aria-pressed="false" aria-label="이 책에 하트" title="이 책에 하트" hidden><span class="heart-ico" aria-hidden="true">♡</span><span class="heart-n"></span></button>
       </div>
     </li>
-    <li class="rl-item">
+    <li class="rl-item" id="b2">
       <span class="rl-num">2</span>
       <a class="rl-cover" href="https://www.yes24.com/product/goods/96855075" rel="nofollow noopener noreferrer" target="_blank" aria-label="세 자매 이야기 알라딘에서 보기"><img src="https://image.yes24.com/goods/96855075/L" alt="세 자매 이야기 표지" loading="lazy"></a>
       <div class="rl-meta">
         <div class="rl-title"><a href="https://www.yes24.com/product/goods/96855075" rel="nofollow noopener noreferrer" target="_blank">세 자매 이야기</a></div>
         <div class="rl-byline">문소리, 이승원 · 마음산책</div>
+        <p class="rl-comment">영화 &#x27;세자매&#x27;를 보고 긴 여운이 남아 제작 과정을 담은 이 책도 끝까지 읽었다고 SNS에 올렸어요. (출처: 디지틀조선)</p>
         <a class="rl-source" href="https://digitalchosun.dizzo.com/site/data/html_dir/2021/01/28/2021012880030.html" rel="nofollow noopener noreferrer" target="_blank">📺 출처 보기</a>
         <button type="button" class="heart-btn sm" data-heart="b:세 자매 이야기" aria-pressed="false" aria-label="이 책에 하트" title="이 책에 하트" hidden><span class="heart-ico" aria-hidden="true">♡</span><span class="heart-n"></span></button>
       </div>
     </li>
-    <li class="rl-item">
+    <li class="rl-item" id="b3">
       <span class="rl-num">3</span>
       <a class="rl-cover" href="https://www.yes24.com/product/goods/44178849" rel="nofollow noopener noreferrer" target="_blank" aria-label="아무것도 아닌 지금은 없다 알라딘에서 보기"><img src="https://image.yes24.com/goods/44178849/L" alt="아무것도 아닌 지금은 없다 표지" loading="lazy"></a>
       <div class="rl-meta">
         <div class="rl-title"><a href="https://www.yes24.com/product/goods/44178849" rel="nofollow noopener noreferrer" target="_blank">아무것도 아닌 지금은 없다</a></div>
         <div class="rl-byline">글배우 · 쌤앤파커스</div>
+        <p class="rl-comment">요즘 읽는 책으로 꼽으며, 마음에 와닿는 부분이 많아 꾸준히 읽고 있다고 했어요. 책을 읽고 일기도 자주 쓴다고 해요. (출처: 마리끌레르)</p>
         <a class="rl-source" href="https://www.marieclairekorea.com/celebrity/2017/09/wekimeki-like-it/" rel="nofollow noopener noreferrer" target="_blank">📺 출처 보기</a>
         <button type="button" class="heart-btn sm" data-heart="b:아무것도 아닌 지금은 없다" aria-pressed="false" aria-label="이 책에 하트" title="이 책에 하트" hidden><span class="heart-ico" aria-hidden="true">♡</span><span class="heart-n"></span></button>
       </div>
       <div class="rl-shared"><span class="rl-shared-label">👥 함께 추천한 셀럽 1명:</span> <a class="rl-celeb-chip" href="https://favorbook.co.kr/share/%EC%9C%A4%EC%95%84%28%EC%86%8C%EB%85%80%EC%8B%9C%EB%8C%80%29.html">윤아(소녀시대)</a></div>
     </li>
-    <li class="rl-item">
+    <li class="rl-item" id="b4">
       <span class="rl-num">4</span>
       <a class="rl-cover" href="https://www.yes24.com/product/goods/90039222" rel="nofollow noopener noreferrer" target="_blank" aria-label="오래 준비해온 대답 알라딘에서 보기"><img src="https://image.yes24.com/goods/90039222/L" alt="오래 준비해온 대답 표지" loading="lazy"></a>
       <div class="rl-meta">
         <div class="rl-title"><a href="https://www.yes24.com/product/goods/90039222" rel="nofollow noopener noreferrer" target="_blank">오래 준비해온 대답</a></div>
         <div class="rl-byline">김영하 · 복복서가</div>
+        <p class="rl-comment">&#x27;여행의 갈증을 크게 느껴 찾게 된 책&#x27;이라는 말과 함께 SNS에 인증했어요. 김영하 작가의 시칠리아 여행기입니다. (출처: 엘르)</p>
         <a class="rl-source" href="https://www.elle.co.kr/article/63753" rel="nofollow noopener noreferrer" target="_blank">📺 출처 보기</a>
         <button type="button" class="heart-btn sm" data-heart="b:오래 준비해온 대답" aria-pressed="false" aria-label="이 책에 하트" title="이 책에 하트" hidden><span class="heart-ico" aria-hidden="true">♡</span><span class="heart-n"></span></button>
       </div>
     </li>
-    <li class="rl-item">
+    <li class="rl-item" id="b5">
       <span class="rl-num">5</span>
       <a class="rl-cover" href="https://www.yes24.com/product/goods/123400303" rel="nofollow noopener noreferrer" target="_blank" aria-label="이처럼 사소한 것들 알라딘에서 보기"><img src="https://image.yes24.com/goods/123400303/L" alt="이처럼 사소한 것들 표지" loading="lazy"></a>
       <div class="rl-meta">
         <div class="rl-title"><a href="https://www.yes24.com/product/goods/123400303" rel="nofollow noopener noreferrer" target="_blank">이처럼 사소한 것들</a></div>
         <div class="rl-byline">클레어 키건 · 다산책방</div>
+        <p class="rl-comment">밀리의서재 &#x27;취향 플레이리스트&#x27;에 게스트로 나와 소개한 소설이에요. 주인공과 주변 인물에 깊이 이입하며 이야기를 나눴어요. (출처: 독서신문)</p>
         <a class="rl-source" href="https://www.readersnews.com/news/articleView.html?idxno=114513" rel="nofollow noopener noreferrer" target="_blank">📺 출처 보기</a>
         <button type="button" class="heart-btn sm" data-heart="b:이처럼 사소한 것들" aria-pressed="false" aria-label="이 책에 하트" title="이 책에 하트" hidden><span class="heart-ico" aria-hidden="true">♡</span><span class="heart-n"></span></button>
       </div>

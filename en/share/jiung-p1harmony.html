@@ -713,8 +713,15 @@
              background-size: 100% var(--row); background-repeat: repeat-y; }
     .new-sec { margin: 16px 0 6px; padding: 12px 12px 2px; background: #fffbe6; border: 2px dashed #000; }
     .new-sec-h { display: flex; align-items: center; gap: 8px; margin: 0 0 10px; font-size: 15px; font-weight: 800; }
-    .new-sec .reading-list { margin: 0; }
-    .rl-num.rl-num-new { font-size: 11px; letter-spacing: .04em; }
+    .rl-item { scroll-margin-top: 16px; }
+    .rl-item:target { outline: 3px solid #fde047; outline-offset: 2px; }
+    .new-tiles { display: flex; flex-wrap: wrap; gap: 12px; padding-bottom: 10px; }
+    .new-tile { width: 84px; color: #000; text-decoration: none; display: flex; flex-direction: column; gap: 5px; }
+    .new-tile:hover { text-decoration: none; transform: translateY(-2px); }
+    .nt-cover { display: block; width: 84px; aspect-ratio: 2/3; border: 1.5px solid #000; box-shadow: 2px 2px 0 0 #000; background: #f4f4f0; overflow: hidden; }
+    .nt-cover img { width: 100%; height: 100%; object-fit: cover; display: block; }
+    .nt-no-cover { display: flex; width: 100%; height: 100%; align-items: center; justify-content: center; font-size: 22px; }
+    .nt-title { font-size: 12px; font-weight: 700; line-height: 1.3; word-break: keep-all; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
     .rl-new-tag { font-size: 9px; font-weight: 800; letter-spacing: .06em; line-height: 1; padding: 3px 5px;
                   background: #fde047; color: #000; border: 1.5px solid #000; }
     .sp { position: relative; flex: none; width: auto; height: var(--sh-h);
@@ -736,7 +743,7 @@
               font-size: 8px; line-height: 1; padding: 3px 0 2px;
               border-bottom: 1px solid rgba(0,0,0,.55); }
     .sp.is-new .sp-t { padding-top: 22px; }
-    .is-capturing .sp-new, .is-capturing .rl-new, .is-capturing .rl-shared { display: none !important; }
+    .is-capturing .sp-new, .is-capturing .rl-new, .is-capturing .rl-shared, .is-capturing .rl-comment { display: none !important; }
     .is-capturing .sp.is-new .sp-t { padding-top: 14px; }
     @media (max-width: 480px) { .shelf { --sh-h: 205px; }
                                  .sp.no-img, .sp.sp-fail { width: calc(var(--w, 38px) * .88); }
@@ -763,6 +770,7 @@
     .rl-title a { color: #000; }
     .rl-title a:hover { color: #2563eb; }
     .rl-byline { font-size: 13px; color: #555; margin-bottom: 8px; line-height: 1.4; }
+    .rl-comment { font-size: 13px; line-height: 1.55; color: #222; background: #FFF7C2; border: 1.5px solid #000; padding: 6px 9px; margin: 0 0 8px; word-break: keep-all; }
     .rl-source { display: inline-block; font-size: 12px; padding: 3px 8px; background: #fff; border: 1.5px solid #000; box-shadow: 1px 1px 0 0 #000; text-decoration: none; color: #000; transition: transform .1s, box-shadow .1s, background .1s; }
     .rl-source:hover { transform: translate(-1px,-1px); box-shadow: 2px 2px 0 0 #000; background: #a7f3d0; text-decoration: none; }
     @media (max-width: 480px) { .rl-item { padding: 14px 12px 14px 46px; } .rl-num { width: 32px; height: 26px; font-size: 12px; } .rl-cover { width: 60px; height: 88px; margin-right: 10px; } .rl-meta { min-height: 88px; } .rl-title { font-size: 15px; } }
@@ -803,318 +811,39 @@
     </div>
     <div class="new-sec">
       <h3 class="new-sec-h"><span class="rl-new-tag">NEW</span> New in the last 10 days (31 books)</h3>
-      <ol class="reading-list">
-    <li class="rl-item">
-      <span class="rl-num rl-num-new">NEW</span>
-      <a class="rl-cover" href="https://www.yes24.com/product/goods/75529900" rel="nofollow noopener noreferrer" target="_blank" aria-label="After Emptying the Bowl, I Missed a Lot of Things. — buy or read more"><span class="rl-new" data-added="2026-09-22">NEW</span><img src="https://image.yes24.com/goods/75529900/L" alt="After Emptying the Bowl, I Missed a Lot of Things. by Jeong Dong-Hyeon — book cover" loading="lazy"></a>
-      <div class="rl-meta">
-        <div class="rl-title"><a href="https://www.yes24.com/product/goods/75529900" rel="nofollow noopener noreferrer" target="_blank">After Emptying the Bowl, I Missed a Lot of Things.</a> <span style="color:#888;font-size:12px;font-weight:400">(그릇을 비우고 나면 많은 것이 그리워졌다)</span></div>
-        <div class="rl-byline">Jeong Dong-Hyeon *</div>
-        <a class="rl-source" href="https://x.com/P1HDeul/status/1868465685170696491?s=20" rel="nofollow noopener noreferrer" target="_blank">📺 Source</a>
-        <button type="button" class="heart-btn sm" data-heart="b:그릇을 비우고 나면 많은 것이 그리워졌다" aria-pressed="false" aria-label="Heart this book" title="Heart this book" hidden><span class="heart-ico" aria-hidden="true">♡</span><span class="heart-n"></span></button>
+      <div class="new-tiles">
+        <a class="new-tile" href="#b1"><span class="nt-cover"><img src="https://image.yes24.com/goods/75529900/L" alt="After Emptying the Bowl, I Missed a Lot of Things. by Jeong Dong-Hyeon — book cover" loading="lazy"></span><span class="nt-title">After Emptying the Bowl, I Missed a Lot of Things.</span></a>
+        <a class="new-tile" href="#b2"><span class="nt-cover"><img src="https://image.yes24.com/goods/42702060/L" alt="Although Crying Would Not Change Anything by Park Jun — book cover" loading="lazy"></span><span class="nt-title">Although Crying Would Not Change Anything</span></a>
+        <a class="new-tile" href="#b3"><span class="nt-cover"><img src="https://image.yes24.com/goods/79941819/L" alt="A Person Who Is Okay Even When Alone by Kwon Mi-Seon — book cover" loading="lazy"></span><span class="nt-title">A Person Who Is Okay Even When Alone</span></a>
+        <a class="new-tile" href="#b4"><span class="nt-cover"><img src="https://image.yes24.com/goods/57979311/L" alt="A Terribly Sensitive Mind by Virginia Woolf — book cover" loading="lazy"></span><span class="nt-title">A Terribly Sensitive Mind</span></a>
+        <a class="new-tile" href="#b5"><span class="nt-cover"><img src="https://image.yes24.com/goods/102842941/L" alt="Breaking the Habit of Being Yourself by Joe Dispenza — book cover" loading="lazy"></span><span class="nt-title">Breaking the Habit of Being Yourself</span></a>
+        <a class="new-tile" href="#b6"><span class="nt-cover"><img src="https://image.yes24.com/goods/116599481/L" alt="Courage to Be Hated 2 by Ichiro Kishimi, Fumitake Koga — book cover" loading="lazy"></span><span class="nt-title">Courage to Be Hated 2</span></a>
+        <a class="new-tile" href="#b7"><span class="nt-cover"><img src="https://image.yes24.com/goods/132891528/L" alt="Crazy Kind Oriental Philosophy by Ahn Sangheon — book cover" loading="lazy"></span><span class="nt-title">Crazy Kind Oriental Philosophy</span></a>
+        <a class="new-tile" href="#b8"><span class="nt-cover"><img src="https://image.yes24.com/goods/140239260/L" alt="Dancing with the Devil by Christa K. Thomason — book cover" loading="lazy"></span><span class="nt-title">Dancing with the Devil</span></a>
+        <a class="new-tile" href="#b9"><span class="nt-cover"><img src="https://image.yes24.com/goods/126014286/L" alt="Die unglaubliche Kraft der Natur: Wie Stress Tieren und Pflanzen den Weg weist by Madeleine Chige — book cover" loading="lazy"></span><span class="nt-title">Die unglaubliche Kraft der Natur: Wie Stress Tieren und Pflanzen den Weg weist</span></a>
+        <a class="new-tile" href="#b10"><span class="nt-cover"><img src="https://image.yes24.com/goods/115633204/L" alt="Don&#x27;t Let Your Mood Become Your Attitude by Kim Soohyun — book cover" loading="lazy"></span><span class="nt-title">Don&#x27;t Let Your Mood Become Your Attitude</span></a>
+        <a class="new-tile" href="#b11"><span class="nt-cover"><img src="https://image.yes24.com/goods/99192646/L" alt="Flowers for Algernon by Daniel Kiss — book cover" loading="lazy"></span><span class="nt-title">Flowers for Algernon</span></a>
+        <a class="new-tile" href="#b12"><span class="nt-cover"><img src="https://image.yes24.com/goods/125886942/L" alt="Go and See If Love Is Dead by Park Yeonjun — book cover" loading="lazy"></span><span class="nt-title">Go and See If Love Is Dead</span></a>
+        <a class="new-tile" href="#b13"><span class="nt-cover"><img src="https://image.yes24.com/goods/164510819/L" alt="Goethe Said It All by Suzuki Yui — book cover" loading="lazy"></span><span class="nt-title">Goethe Said It All</span></a>
+        <a class="new-tile" href="#b14"><span class="nt-cover"><img src="https://image.yes24.com/goods/143666403/L" alt="I Can Finally See It Now by Kim Changwan — book cover" loading="lazy"></span><span class="nt-title">I Can Finally See It Now</span></a>
+        <a class="new-tile" href="#b15"><span class="nt-cover"><img src="https://image.yes24.com/goods/116195594/L" alt="I Have No Choice but to Do That. by Choi Dodam — book cover" loading="lazy"></span><span class="nt-title">I Have No Choice but to Do That.</span></a>
+        <a class="new-tile" href="#b16"><span class="nt-cover"><img src="https://image.yes24.com/goods/147560984/L" alt="I Said Goodbye by Kim Ae-ran — book cover" loading="lazy"></span><span class="nt-title">I Said Goodbye</span></a>
+        <a class="new-tile" href="#b17"><span class="nt-cover"><img src="https://image.yes24.com/goods/133846097/L" alt="Let&#x27;s Run Away, the Sea Would Be Better by Lee Do-Hoon — book cover" loading="lazy"></span><span class="nt-title">Let&#x27;s Run Away, the Sea Would Be Better</span></a>
+        <a class="new-tile" href="#b18"><span class="nt-cover"><img src="https://image.yes24.com/goods/142562016/L" alt="Noble and Vulgar by Kim Sa-Wol, Lee Hwon — book cover" loading="lazy"></span><span class="nt-title">Noble and Vulgar</span></a>
+        <a class="new-tile" href="#b19"><span class="nt-cover"><img src="https://image.yes24.com/goods/83546318/L" alt="No Self No Problem: How Neuropsychology Is Catching up to Buddhism by Chris Naibauer — book cover" loading="lazy"></span><span class="nt-title">No Self No Problem: How Neuropsychology Is Catching up to Buddhism</span></a>
+        <a class="new-tile" href="#b20"><span class="nt-cover"><img src="https://image.yes24.com/goods/80386690/L" alt="Nothing Other than Love and Freedom by Kim Hana, Lee Seul-Ah, Kim Geum-Hee, Choi Eun-Young, Baek Su-Rin, Baek Se-Hee, Lee Seok-Won, Lim Jin-Ah, Kim Dong-Young — book cover" loading="lazy"></span><span class="nt-title">Nothing Other than Love and Freedom</span></a>
+        <a class="new-tile" href="#b21"><span class="nt-cover"><img src="https://image.yes24.com/goods/109622316/L" alt="Signaling the End of the Night by Shim Gyu-Seon — book cover" loading="lazy"></span><span class="nt-title">Signaling the End of the Night</span></a>
+        <a class="new-tile" href="#b22"><span class="nt-cover"><img src="https://image.yes24.com/goods/107512219/L" alt="Thank You to Me by Jeon Seunghwan — book cover" loading="lazy"></span><span class="nt-title">Thank You to Me</span></a>
+        <a class="new-tile" href="#b23"><span class="nt-cover"><img src="https://image.yes24.com/goods/116599423/L" alt="The Courage to Be Disliked: How to Free Yourself, Change Your Life, and Achieve Real Happiness by Ichiro Kishimi, Fumitake Koga — book cover" loading="lazy"></span><span class="nt-title">The Courage to Be Disliked: How to Free Yourself, Change Your Life, and Achieve Real Happiness</span></a>
+        <a class="new-tile" href="#b24"><span class="nt-cover"><img src="https://image.yes24.com/goods/119886818/L" alt="The Creative Act: A Way of Being by Rick Rubin — book cover" loading="lazy"></span><span class="nt-title">The Creative Act: A Way of Being</span></a>
+        <a class="new-tile" href="#b25"><span class="nt-cover"><img src="https://image.yes24.com/goods/2155409/L" alt="The Elements of Moral Philosophy by James Rachels — book cover" loading="lazy"></span><span class="nt-title">The Elements of Moral Philosophy</span></a>
+        <a class="new-tile" href="#b26"><span class="nt-cover"><img src="https://image.yes24.com/goods/145601726/L" alt="The Secret of What We Call Wisdom by Scott Lafee, Dilip Jeste — book cover" loading="lazy"></span><span class="nt-title">The Secret of What We Call Wisdom</span></a>
+        <a class="new-tile" href="#b27"><span class="nt-cover"><img src="https://image.yes24.com/goods/108422348/L" alt="The Vegetarian by Han Kang — book cover" loading="lazy"></span><span class="nt-title">The Vegetarian</span></a>
+        <a class="new-tile" href="#b28"><span class="nt-cover"><img src="https://image.yes24.com/goods/89182437/L" alt="To Have or to Be? by Erich Fromm — book cover" loading="lazy"></span><span class="nt-title">To Have or to Be?</span></a>
+        <a class="new-tile" href="#b29"><span class="nt-cover"><img src="https://image.yes24.com/goods/126348549/L" alt="Two People International by Kim Ki-Tae — book cover" loading="lazy"></span><span class="nt-title">Two People International</span></a>
+        <a class="new-tile" href="#b30"><span class="nt-cover"><img src="https://image.yes24.com/goods/3239082/L" alt="What I Talk About When I Talk About Running by Haruki Murakami — book cover" loading="lazy"></span><span class="nt-title">What I Talk About When I Talk About Running</span></a>
+        <a class="new-tile" href="#b31"><span class="nt-cover"><img src="https://image.yes24.com/goods/125492144/L" alt="Why Do You Live for Others by Go Yoon (Pacers Korea) — book cover" loading="lazy"></span><span class="nt-title">Why Do You Live for Others</span></a>
       </div>
-    </li>
-    <li class="rl-item">
-      <span class="rl-num rl-num-new">NEW</span>
-      <a class="rl-cover" href="https://www.yes24.com/product/goods/42702060" rel="nofollow noopener noreferrer" target="_blank" aria-label="Although Crying Would Not Change Anything — buy or read more"><span class="rl-new" data-added="2026-09-22">NEW</span><img src="https://image.yes24.com/goods/42702060/L" alt="Although Crying Would Not Change Anything by Park Jun — book cover" loading="lazy"></a>
-      <div class="rl-meta">
-        <div class="rl-title"><a href="https://www.yes24.com/product/goods/42702060" rel="nofollow noopener noreferrer" target="_blank">Although Crying Would Not Change Anything</a> <span style="color:#888;font-size:12px;font-weight:400">(운다고 달라지는 일은 아무것도 없겠지만)</span></div>
-        <div class="rl-byline">Park Jun *</div>
-        <a class="rl-source" href="https://x.com/P1HDeul/status/1868465686420591099?s=20" rel="nofollow noopener noreferrer" target="_blank">📺 Source</a>
-        <button type="button" class="heart-btn sm" data-heart="b:운다고 달라지는 일은 아무것도 없겠지만" aria-pressed="false" aria-label="Heart this book" title="Heart this book" hidden><span class="heart-ico" aria-hidden="true">♡</span><span class="heart-n"></span></button>
-      </div>
-    </li>
-    <li class="rl-item">
-      <span class="rl-num rl-num-new">NEW</span>
-      <a class="rl-cover" href="https://www.yes24.com/product/goods/79941819" rel="nofollow noopener noreferrer" target="_blank" aria-label="A Person Who Is Okay Even When Alone — buy or read more"><span class="rl-new" data-added="2026-09-22">NEW</span><img src="https://image.yes24.com/goods/79941819/L" alt="A Person Who Is Okay Even When Alone by Kwon Mi-Seon — book cover" loading="lazy"></a>
-      <div class="rl-meta">
-        <div class="rl-title"><a href="https://www.yes24.com/product/goods/79941819" rel="nofollow noopener noreferrer" target="_blank">A Person Who Is Okay Even When Alone *</a> <span style="color:#888;font-size:12px;font-weight:400">(혼자일 때도 괜찮은 사람)</span></div>
-        <div class="rl-byline">Kwon Mi-Seon *</div>
-        <a class="rl-source" href="https://x.com/P1HDeul/status/1884553603148636653?s=20" rel="nofollow noopener noreferrer" target="_blank">📺 Source</a>
-        <button type="button" class="heart-btn sm" data-heart="b:혼자일 때도 괜찮은 사람" aria-pressed="false" aria-label="Heart this book" title="Heart this book" hidden><span class="heart-ico" aria-hidden="true">♡</span><span class="heart-n"></span></button>
-      </div>
-    </li>
-    <li class="rl-item">
-      <span class="rl-num rl-num-new">NEW</span>
-      <a class="rl-cover" href="https://www.yes24.com/product/goods/57979311" rel="nofollow noopener noreferrer" target="_blank" aria-label="A Terribly Sensitive Mind — buy or read more"><span class="rl-new" data-added="2026-09-22">NEW</span><img src="https://image.yes24.com/goods/57979311/L" alt="A Terribly Sensitive Mind by Virginia Woolf — book cover" loading="lazy"></a>
-      <div class="rl-meta">
-        <div class="rl-title"><a href="https://www.yes24.com/product/goods/57979311" rel="nofollow noopener noreferrer" target="_blank">A Terribly Sensitive Mind</a> <span style="color:#888;font-size:12px;font-weight:400">(끔찍하게 민감한 마음)</span></div>
-        <div class="rl-byline">Virginia Woolf *</div>
-        <a class="rl-source" href="https://x.com/P1HDeul/status/1868465687725044016?s=20" rel="nofollow noopener noreferrer" target="_blank">📺 Source</a>
-        <button type="button" class="heart-btn sm" data-heart="b:끔찍하게 민감한 마음" aria-pressed="false" aria-label="Heart this book" title="Heart this book" hidden><span class="heart-ico" aria-hidden="true">♡</span><span class="heart-n"></span></button>
-      </div>
-    </li>
-    <li class="rl-item">
-      <span class="rl-num rl-num-new">NEW</span>
-      <a class="rl-cover" href="https://www.yes24.com/product/goods/102842941" rel="nofollow noopener noreferrer" target="_blank" aria-label="Breaking the Habit of Being Yourself — buy or read more"><span class="rl-new" data-added="2026-09-22">NEW</span><img src="https://image.yes24.com/goods/102842941/L" alt="Breaking the Habit of Being Yourself by Joe Dispenza — book cover" loading="lazy"></a>
-      <div class="rl-meta">
-        <div class="rl-title"><a href="https://www.yes24.com/product/goods/102842941" rel="nofollow noopener noreferrer" target="_blank">Breaking the Habit of Being Yourself</a> <span style="color:#888;font-size:12px;font-weight:400">(브레이킹, 당신이라는 습관을 깨라)</span></div>
-        <div class="rl-byline">Joe Dispenza *</div>
-        <a class="rl-source" href="https://x.com/P1HDeul/status/1868465687725044016?s=20" rel="nofollow noopener noreferrer" target="_blank">📺 Source</a>
-        <button type="button" class="heart-btn sm" data-heart="b:브레이킹, 당신이라는 습관을 깨라" aria-pressed="false" aria-label="Heart this book" title="Heart this book" hidden><span class="heart-ico" aria-hidden="true">♡</span><span class="heart-n"></span></button>
-      </div>
-    </li>
-    <li class="rl-item">
-      <span class="rl-num rl-num-new">NEW</span>
-      <a class="rl-cover" href="https://www.yes24.com/product/goods/116599481" rel="nofollow noopener noreferrer" target="_blank" aria-label="Courage to Be Hated 2 — buy or read more"><span class="rl-new" data-added="2026-09-22">NEW</span><img src="https://image.yes24.com/goods/116599481/L" alt="Courage to Be Hated 2 by Ichiro Kishimi, Fumitake Koga — book cover" loading="lazy"></a>
-      <div class="rl-meta">
-        <div class="rl-title"><a href="https://www.yes24.com/product/goods/116599481" rel="nofollow noopener noreferrer" target="_blank">Courage to Be Hated 2 *</a> <span style="color:#888;font-size:12px;font-weight:400">(미움받을 용기 2)</span></div>
-        <div class="rl-byline">Ichiro Kishimi, Fumitake Koga *</div>
-        <a class="rl-source" href="https://x.com/P1HDeul/status/1868465686420591099?s=20" rel="nofollow noopener noreferrer" target="_blank">📺 Source</a>
-        <button type="button" class="heart-btn sm" data-heart="b:미움받을 용기 2" aria-pressed="false" aria-label="Heart this book" title="Heart this book" hidden><span class="heart-ico" aria-hidden="true">♡</span><span class="heart-n"></span></button>
-      </div>
-    </li>
-    <li class="rl-item">
-      <span class="rl-num rl-num-new">NEW</span>
-      <a class="rl-cover" href="https://www.yes24.com/product/goods/132891528" rel="nofollow noopener noreferrer" target="_blank" aria-label="Crazy Kind Oriental Philosophy — buy or read more"><span class="rl-new" data-added="2026-09-22">NEW</span><img src="https://image.yes24.com/goods/132891528/L" alt="Crazy Kind Oriental Philosophy by Ahn Sangheon — book cover" loading="lazy"></a>
-      <div class="rl-meta">
-        <div class="rl-title"><a href="https://www.yes24.com/product/goods/132891528" rel="nofollow noopener noreferrer" target="_blank">Crazy Kind Oriental Philosophy *</a> <span style="color:#888;font-size:12px;font-weight:400">(미치게 친절한 동양철학)</span></div>
-        <div class="rl-byline">Ahn Sangheon *</div>
-        <a class="rl-source" href="https://x.com/P1HDeul/status/1892219736035152365?s=20" rel="nofollow noopener noreferrer" target="_blank">📺 Source</a>
-        <button type="button" class="heart-btn sm" data-heart="b:미치게 친절한 동양철학" aria-pressed="false" aria-label="Heart this book" title="Heart this book" hidden><span class="heart-ico" aria-hidden="true">♡</span><span class="heart-n"></span></button>
-      </div>
-    </li>
-    <li class="rl-item">
-      <span class="rl-num rl-num-new">NEW</span>
-      <a class="rl-cover" href="https://www.yes24.com/product/goods/140239260" rel="nofollow noopener noreferrer" target="_blank" aria-label="Dancing with the Devil — buy or read more"><span class="rl-new" data-added="2026-09-22">NEW</span><img src="https://image.yes24.com/goods/140239260/L" alt="Dancing with the Devil by Christa K. Thomason — book cover" loading="lazy"></a>
-      <div class="rl-meta">
-        <div class="rl-title"><a href="https://www.yes24.com/product/goods/140239260" rel="nofollow noopener noreferrer" target="_blank">Dancing with the Devil</a> <span style="color:#888;font-size:12px;font-weight:400">(악마와 함께 춤을)</span></div>
-        <div class="rl-byline">Christa K. Thomason *</div>
-        <a class="rl-source" href="https://x.com/P1HDeul/status/1897220052631609518?s=20" rel="nofollow noopener noreferrer" target="_blank">📺 Source</a>
-        <button type="button" class="heart-btn sm" data-heart="b:악마와 함께 춤을" aria-pressed="false" aria-label="Heart this book" title="Heart this book" hidden><span class="heart-ico" aria-hidden="true">♡</span><span class="heart-n"></span></button>
-      </div>
-    </li>
-    <li class="rl-item">
-      <span class="rl-num rl-num-new">NEW</span>
-      <a class="rl-cover" href="https://www.yes24.com/product/goods/126014286" rel="nofollow noopener noreferrer" target="_blank" aria-label="Die unglaubliche Kraft der Natur: Wie Stress Tieren und Pflanzen den Weg weist — buy or read more"><span class="rl-new" data-added="2026-09-22">NEW</span><img src="https://image.yes24.com/goods/126014286/L" alt="Die unglaubliche Kraft der Natur: Wie Stress Tieren und Pflanzen den Weg weist by Madeleine Chige — book cover" loading="lazy"></a>
-      <div class="rl-meta">
-        <div class="rl-title"><a href="https://www.yes24.com/product/goods/126014286" rel="nofollow noopener noreferrer" target="_blank">Die unglaubliche Kraft der Natur: Wie Stress Tieren und Pflanzen den Weg weist</a> <span style="color:#888;font-size:12px;font-weight:400">(숨 쉬는 것들은 어떻게든 진화한다)</span></div>
-        <div class="rl-byline">Madeleine Chige *</div>
-        <a class="rl-source" href="https://x.com/P1HDeul/status/1868465685170696491?s=20" rel="nofollow noopener noreferrer" target="_blank">📺 Source</a>
-        <button type="button" class="heart-btn sm" data-heart="b:숨 쉬는 것들은 어떻게든 진화한다" aria-pressed="false" aria-label="Heart this book" title="Heart this book" hidden><span class="heart-ico" aria-hidden="true">♡</span><span class="heart-n"></span></button>
-      </div>
-    </li>
-    <li class="rl-item">
-      <span class="rl-num rl-num-new">NEW</span>
-      <a class="rl-cover" href="https://www.yes24.com/product/goods/115633204" rel="nofollow noopener noreferrer" target="_blank" aria-label="Don&#x27;t Let Your Mood Become Your Attitude — buy or read more"><span class="rl-new" data-added="2026-09-22">NEW</span><img src="https://image.yes24.com/goods/115633204/L" alt="Don&#x27;t Let Your Mood Become Your Attitude by Kim Soohyun — book cover" loading="lazy"></a>
-      <div class="rl-meta">
-        <div class="rl-title"><a href="https://www.yes24.com/product/goods/115633204" rel="nofollow noopener noreferrer" target="_blank">Don&#x27;t Let Your Mood Become Your Attitude</a> <span style="color:#888;font-size:12px;font-weight:400">(기분이 태도가 되지 말자)</span></div>
-        <div class="rl-byline">Kim Soohyun *</div>
-        <a class="rl-source" href="https://x.com/P1HDeul/status/1868465685170696491?s=20" rel="nofollow noopener noreferrer" target="_blank">📺 Source</a>
-        <button type="button" class="heart-btn sm" data-heart="b:기분이 태도가 되지 말자" aria-pressed="false" aria-label="Heart this book" title="Heart this book" hidden><span class="heart-ico" aria-hidden="true">♡</span><span class="heart-n"></span></button>
-      </div>
-    </li>
-    <li class="rl-item">
-      <span class="rl-num rl-num-new">NEW</span>
-      <a class="rl-cover" href="https://www.yes24.com/product/goods/99192646" rel="nofollow noopener noreferrer" target="_blank" aria-label="Flowers for Algernon — buy or read more"><span class="rl-new" data-added="2026-09-22">NEW</span><img src="https://image.yes24.com/goods/99192646/L" alt="Flowers for Algernon by Daniel Kiss — book cover" loading="lazy"></a>
-      <div class="rl-meta">
-        <div class="rl-title"><a href="https://www.yes24.com/product/goods/99192646" rel="nofollow noopener noreferrer" target="_blank">Flowers for Algernon</a> <span style="color:#888;font-size:12px;font-weight:400">(앨저넌에게 꽃을)</span></div>
-        <div class="rl-byline">Daniel Kiss *</div>
-        <a class="rl-source" href="https://x.com/P1HDeul/status/1990191294497558568?s=20" rel="nofollow noopener noreferrer" target="_blank">📺 Source</a>
-        <button type="button" class="heart-btn sm" data-heart="b:앨저넌에게 꽃을" aria-pressed="false" aria-label="Heart this book" title="Heart this book" hidden><span class="heart-ico" aria-hidden="true">♡</span><span class="heart-n"></span></button>
-      </div>
-    </li>
-    <li class="rl-item">
-      <span class="rl-num rl-num-new">NEW</span>
-      <a class="rl-cover" href="https://www.yes24.com/product/goods/125886942" rel="nofollow noopener noreferrer" target="_blank" aria-label="Go and See If Love Is Dead — buy or read more"><span class="rl-new" data-added="2026-09-22">NEW</span><img src="https://image.yes24.com/goods/125886942/L" alt="Go and See If Love Is Dead by Park Yeonjun — book cover" loading="lazy"></a>
-      <div class="rl-meta">
-        <div class="rl-title"><a href="https://www.yes24.com/product/goods/125886942" rel="nofollow noopener noreferrer" target="_blank">Go and See If Love Is Dead</a> <span style="color:#888;font-size:12px;font-weight:400">(사랑이 죽었는지 가서 보고 오렴)</span></div>
-        <div class="rl-byline">Park Yeonjun *</div>
-        <a class="rl-source" href="https://x.com/P1HDeul/status/1868465685170696491?s=20" rel="nofollow noopener noreferrer" target="_blank">📺 Source</a>
-        <button type="button" class="heart-btn sm" data-heart="b:사랑이 죽었는지 가서 보고 오렴" aria-pressed="false" aria-label="Heart this book" title="Heart this book" hidden><span class="heart-ico" aria-hidden="true">♡</span><span class="heart-n"></span></button>
-      </div>
-    </li>
-    <li class="rl-item">
-      <span class="rl-num rl-num-new">NEW</span>
-      <a class="rl-cover" href="https://www.yes24.com/product/goods/164510819" rel="nofollow noopener noreferrer" target="_blank" aria-label="Goethe Said It All — buy or read more"><span class="rl-new" data-added="2026-09-22">NEW</span><img src="https://image.yes24.com/goods/164510819/L" alt="Goethe Said It All by Suzuki Yui — book cover" loading="lazy"></a>
-      <div class="rl-meta">
-        <div class="rl-title"><a href="https://www.yes24.com/product/goods/164510819" rel="nofollow noopener noreferrer" target="_blank">Goethe Said It All *</a> <span style="color:#888;font-size:12px;font-weight:400">(괴테는 모든 것을 말했다)</span></div>
-        <div class="rl-byline">Suzuki Yui *</div>
-        <a class="rl-source" href="https://x.com/P1HDeul/status/2024363452807225855?s=20" rel="nofollow noopener noreferrer" target="_blank">📺 Source</a>
-        <button type="button" class="heart-btn sm" data-heart="b:괴테는 모든 것을 말했다" aria-pressed="false" aria-label="Heart this book" title="Heart this book" hidden><span class="heart-ico" aria-hidden="true">♡</span><span class="heart-n"></span></button>
-      </div>
-    </li>
-    <li class="rl-item">
-      <span class="rl-num rl-num-new">NEW</span>
-      <a class="rl-cover" href="https://www.yes24.com/product/goods/143666403" rel="nofollow noopener noreferrer" target="_blank" aria-label="I Can Finally See It Now — buy or read more"><span class="rl-new" data-added="2026-09-22">NEW</span><img src="https://image.yes24.com/goods/143666403/L" alt="I Can Finally See It Now by Kim Changwan — book cover" loading="lazy"></a>
-      <div class="rl-meta">
-        <div class="rl-title"><a href="https://www.yes24.com/product/goods/143666403" rel="nofollow noopener noreferrer" target="_blank">I Can Finally See It Now *</a> <span style="color:#888;font-size:12px;font-weight:400">(이제야 보이네)</span></div>
-        <div class="rl-byline">Kim Changwan *</div>
-        <a class="rl-source" href="https://x.com/P1HDeul/status/1914232580054139159?s=20" rel="nofollow noopener noreferrer" target="_blank">📺 Source</a>
-        <button type="button" class="heart-btn sm" data-heart="b:이제야 보이네" aria-pressed="false" aria-label="Heart this book" title="Heart this book" hidden><span class="heart-ico" aria-hidden="true">♡</span><span class="heart-n"></span></button>
-      </div>
-    </li>
-    <li class="rl-item">
-      <span class="rl-num rl-num-new">NEW</span>
-      <a class="rl-cover" href="https://www.yes24.com/product/goods/116195594" rel="nofollow noopener noreferrer" target="_blank" aria-label="I Have No Choice but to Do That. — buy or read more"><span class="rl-new" data-added="2026-09-22">NEW</span><img src="https://image.yes24.com/goods/116195594/L" alt="I Have No Choice but to Do That. by Choi Dodam — book cover" loading="lazy"></a>
-      <div class="rl-meta">
-        <div class="rl-title"><a href="https://www.yes24.com/product/goods/116195594" rel="nofollow noopener noreferrer" target="_blank">I Have No Choice but to Do That.</a> <span style="color:#888;font-size:12px;font-weight:400">(그렇게 할 수밖에)</span></div>
-        <div class="rl-byline">Choi Dodam *</div>
-        <a class="rl-source" href="https://x.com/P1HDeul/status/1868465687725044016?s=20" rel="nofollow noopener noreferrer" target="_blank">📺 Source</a>
-        <button type="button" class="heart-btn sm" data-heart="b:그렇게 할 수밖에" aria-pressed="false" aria-label="Heart this book" title="Heart this book" hidden><span class="heart-ico" aria-hidden="true">♡</span><span class="heart-n"></span></button>
-      </div>
-    </li>
-    <li class="rl-item">
-      <span class="rl-num rl-num-new">NEW</span>
-      <a class="rl-cover" href="https://www.yes24.com/product/goods/147560984" rel="nofollow noopener noreferrer" target="_blank" aria-label="I Said Goodbye — buy or read more"><span class="rl-new" data-added="2026-09-22">NEW</span><img src="https://image.yes24.com/goods/147560984/L" alt="I Said Goodbye by Kim Ae-ran — book cover" loading="lazy"></a>
-      <div class="rl-meta">
-        <div class="rl-title"><a href="https://www.yes24.com/product/goods/147560984" rel="nofollow noopener noreferrer" target="_blank">I Said Goodbye</a> <span style="color:#888;font-size:12px;font-weight:400">(안녕이라 그랬어)</span></div>
-        <div class="rl-byline">Kim Ae-ran</div>
-        <a class="rl-source" href="https://x.com/P1HDeul/status/2064341184584319409?s=20" rel="nofollow noopener noreferrer" target="_blank">📺 Source</a>
-        <button type="button" class="heart-btn sm" data-heart="b:안녕이라 그랬어" aria-pressed="false" aria-label="Heart this book" title="Heart this book" hidden><span class="heart-ico" aria-hidden="true">♡</span><span class="heart-n"></span></button>
-      </div>
-    </li>
-    <li class="rl-item">
-      <span class="rl-num rl-num-new">NEW</span>
-      <a class="rl-cover" href="https://www.yes24.com/product/goods/133846097" rel="nofollow noopener noreferrer" target="_blank" aria-label="Let&#x27;s Run Away, the Sea Would Be Better — buy or read more"><span class="rl-new" data-added="2026-09-22">NEW</span><img src="https://image.yes24.com/goods/133846097/L" alt="Let&#x27;s Run Away, the Sea Would Be Better by Lee Do-Hoon — book cover" loading="lazy"></a>
-      <div class="rl-meta">
-        <div class="rl-title"><a href="https://www.yes24.com/product/goods/133846097" rel="nofollow noopener noreferrer" target="_blank">Let&#x27;s Run Away, the Sea Would Be Better *</a> <span style="color:#888;font-size:12px;font-weight:400">(도망가자, 바다면 더 좋고)</span></div>
-        <div class="rl-byline">Lee Do-Hoon *</div>
-        <a class="rl-source" href="https://x.com/P1HDeul/status/1868465686420591099?s=20" rel="nofollow noopener noreferrer" target="_blank">📺 Source</a>
-        <button type="button" class="heart-btn sm" data-heart="b:도망가자, 바다면 더 좋고" aria-pressed="false" aria-label="Heart this book" title="Heart this book" hidden><span class="heart-ico" aria-hidden="true">♡</span><span class="heart-n"></span></button>
-      </div>
-    </li>
-    <li class="rl-item">
-      <span class="rl-num rl-num-new">NEW</span>
-      <a class="rl-cover" href="https://www.yes24.com/product/goods/142562016" rel="nofollow noopener noreferrer" target="_blank" aria-label="Noble and Vulgar — buy or read more"><span class="rl-new" data-added="2026-09-22">NEW</span><img src="https://image.yes24.com/goods/142562016/L" alt="Noble and Vulgar by Kim Sa-Wol, Lee Hwon — book cover" loading="lazy"></a>
-      <div class="rl-meta">
-        <div class="rl-title"><a href="https://www.yes24.com/product/goods/142562016" rel="nofollow noopener noreferrer" target="_blank">Noble and Vulgar</a> <span style="color:#888;font-size:12px;font-weight:400">(고상하고 천박하게)</span></div>
-        <div class="rl-byline">Kim Sa-Wol, Lee Hwon *</div>
-        <a class="rl-source" href="https://x.com/P1HDeul/status/2064341184584319409?s=20" rel="nofollow noopener noreferrer" target="_blank">📺 Source</a>
-        <button type="button" class="heart-btn sm" data-heart="b:고상하고 천박하게" aria-pressed="false" aria-label="Heart this book" title="Heart this book" hidden><span class="heart-ico" aria-hidden="true">♡</span><span class="heart-n"></span></button>
-      </div>
-    </li>
-    <li class="rl-item">
-      <span class="rl-num rl-num-new">NEW</span>
-      <a class="rl-cover" href="https://www.yes24.com/product/goods/83546318" rel="nofollow noopener noreferrer" target="_blank" aria-label="No Self No Problem: How Neuropsychology Is Catching up to Buddhism — buy or read more"><span class="rl-new" data-added="2026-09-22">NEW</span><img src="https://image.yes24.com/goods/83546318/L" alt="No Self No Problem: How Neuropsychology Is Catching up to Buddhism by Chris Naibauer — book cover" loading="lazy"></a>
-      <div class="rl-meta">
-        <div class="rl-title"><a href="https://www.yes24.com/product/goods/83546318" rel="nofollow noopener noreferrer" target="_blank">No Self No Problem: How Neuropsychology Is Catching up to Buddhism</a> <span style="color:#888;font-size:12px;font-weight:400">(자네, 좌뇌한테 속았네!)</span></div>
-        <div class="rl-byline">Chris Naibauer *</div>
-        <a class="rl-source" href="https://x.com/P1HDeul/status/1988795195589292442?s=20" rel="nofollow noopener noreferrer" target="_blank">📺 Source</a>
-        <button type="button" class="heart-btn sm" data-heart="b:자네, 좌뇌한테 속았네!" aria-pressed="false" aria-label="Heart this book" title="Heart this book" hidden><span class="heart-ico" aria-hidden="true">♡</span><span class="heart-n"></span></button>
-      </div>
-    </li>
-    <li class="rl-item">
-      <span class="rl-num rl-num-new">NEW</span>
-      <a class="rl-cover" href="https://www.yes24.com/product/goods/80386690" rel="nofollow noopener noreferrer" target="_blank" aria-label="Nothing Other than Love and Freedom — buy or read more"><span class="rl-new" data-added="2026-09-22">NEW</span><img src="https://image.yes24.com/goods/80386690/L" alt="Nothing Other than Love and Freedom by Kim Hana, Lee Seul-Ah, Kim Geum-Hee, Choi Eun-Young, Baek Su-Rin, Baek Se-Hee, Lee Seok-Won, Lim Jin-Ah, Kim Dong-Young — book cover" loading="lazy"></a>
-      <div class="rl-meta">
-        <div class="rl-title"><a href="https://www.yes24.com/product/goods/80386690" rel="nofollow noopener noreferrer" target="_blank">Nothing Other than Love and Freedom *</a> <span style="color:#888;font-size:12px;font-weight:400">(다름 아닌 사랑과 자유)</span></div>
-        <div class="rl-byline">Kim Hana, Lee Seul-Ah, Kim Geum-Hee, Choi Eun-Young, Baek Su-Rin, Baek Se-Hee, Lee Seok-Won, Lim Jin-Ah, Kim Dong-Young *</div>
-        <a class="rl-source" href="https://x.com/P1HDeul/status/1868465687725044016?s=20" rel="nofollow noopener noreferrer" target="_blank">📺 Source</a>
-        <button type="button" class="heart-btn sm" data-heart="b:다름 아닌 사랑과 자유" aria-pressed="false" aria-label="Heart this book" title="Heart this book" hidden><span class="heart-ico" aria-hidden="true">♡</span><span class="heart-n"></span></button>
-      </div>
-    </li>
-    <li class="rl-item">
-      <span class="rl-num rl-num-new">NEW</span>
-      <a class="rl-cover" href="https://www.yes24.com/product/goods/109622316" rel="nofollow noopener noreferrer" target="_blank" aria-label="Signaling the End of the Night — buy or read more"><span class="rl-new" data-added="2026-09-22">NEW</span><img src="https://image.yes24.com/goods/109622316/L" alt="Signaling the End of the Night by Shim Gyu-Seon — book cover" loading="lazy"></a>
-      <div class="rl-meta">
-        <div class="rl-title"><a href="https://www.yes24.com/product/goods/109622316" rel="nofollow noopener noreferrer" target="_blank">Signaling the End of the Night *</a> <span style="color:#888;font-size:12px;font-weight:400">(밤의 끝을 알리는)</span></div>
-        <div class="rl-byline">Shim Gyu-Seon *</div>
-        <a class="rl-source" href="https://x.com/P1HDeul/status/1868465686420591099?s=20" rel="nofollow noopener noreferrer" target="_blank">📺 Source</a>
-        <button type="button" class="heart-btn sm" data-heart="b:밤의 끝을 알리는" aria-pressed="false" aria-label="Heart this book" title="Heart this book" hidden><span class="heart-ico" aria-hidden="true">♡</span><span class="heart-n"></span></button>
-      </div>
-    </li>
-    <li class="rl-item">
-      <span class="rl-num rl-num-new">NEW</span>
-      <a class="rl-cover" href="https://www.yes24.com/product/goods/107512219" rel="nofollow noopener noreferrer" target="_blank" aria-label="Thank You to Me — buy or read more"><span class="rl-new" data-added="2026-09-22">NEW</span><img src="https://image.yes24.com/goods/107512219/L" alt="Thank You to Me by Jeon Seunghwan — book cover" loading="lazy"></a>
-      <div class="rl-meta">
-        <div class="rl-title"><a href="https://www.yes24.com/product/goods/107512219" rel="nofollow noopener noreferrer" target="_blank">Thank You to Me</a> <span style="color:#888;font-size:12px;font-weight:400">(나에게 고맙다)</span></div>
-        <div class="rl-byline">Jeon Seunghwan *</div>
-        <a class="rl-source" href="https://x.com/P1HDeul/status/1868465686420591099?s=20" rel="nofollow noopener noreferrer" target="_blank">📺 Source</a>
-        <button type="button" class="heart-btn sm" data-heart="b:나에게 고맙다" aria-pressed="false" aria-label="Heart this book" title="Heart this book" hidden><span class="heart-ico" aria-hidden="true">♡</span><span class="heart-n"></span></button>
-      </div>
-    </li>
-    <li class="rl-item">
-      <span class="rl-num rl-num-new">NEW</span>
-      <a class="rl-cover" href="https://www.yes24.com/product/goods/116599423" rel="nofollow noopener noreferrer" target="_blank" aria-label="The Courage to Be Disliked: How to Free Yourself, Change Your Life, and Achieve Real Happiness — buy or read more"><span class="rl-new" data-added="2026-09-22">NEW</span><img src="https://image.yes24.com/goods/116599423/L" alt="The Courage to Be Disliked: How to Free Yourself, Change Your Life, and Achieve Real Happiness by Ichiro Kishimi, Fumitake Koga — book cover" loading="lazy"></a>
-      <div class="rl-meta">
-        <div class="rl-title"><a href="https://www.yes24.com/product/goods/116599423" rel="nofollow noopener noreferrer" target="_blank">The Courage to Be Disliked: How to Free Yourself, Change Your Life, and Achieve Real Happiness</a> <span style="color:#888;font-size:12px;font-weight:400">(미움받을 용기)</span></div>
-        <div class="rl-byline">Ichiro Kishimi, Fumitake Koga *</div>
-        <a class="rl-source" href="https://x.com/P1HDeul/status/1868465686420591099?s=20" rel="nofollow noopener noreferrer" target="_blank">📺 Source</a>
-        <button type="button" class="heart-btn sm" data-heart="b:미움받을 용기" aria-pressed="false" aria-label="Heart this book" title="Heart this book" hidden><span class="heart-ico" aria-hidden="true">♡</span><span class="heart-n"></span></button>
-      </div>
-    </li>
-    <li class="rl-item">
-      <span class="rl-num rl-num-new">NEW</span>
-      <a class="rl-cover" href="https://www.yes24.com/product/goods/119886818" rel="nofollow noopener noreferrer" target="_blank" aria-label="The Creative Act: A Way of Being — buy or read more"><span class="rl-new" data-added="2026-09-22">NEW</span><img src="https://image.yes24.com/goods/119886818/L" alt="The Creative Act: A Way of Being by Rick Rubin — book cover" loading="lazy"></a>
-      <div class="rl-meta">
-        <div class="rl-title"><a href="https://www.yes24.com/product/goods/119886818" rel="nofollow noopener noreferrer" target="_blank">The Creative Act: A Way of Being</a> <span style="color:#888;font-size:12px;font-weight:400">(창조적 행위)</span></div>
-        <div class="rl-byline">Rick Rubin *</div>
-        <a class="rl-source" href="https://x.com/P1HDeul/status/1949118539635556793?s=20" rel="nofollow noopener noreferrer" target="_blank">📺 Source</a>
-        <button type="button" class="heart-btn sm" data-heart="b:창조적 행위" aria-pressed="false" aria-label="Heart this book" title="Heart this book" hidden><span class="heart-ico" aria-hidden="true">♡</span><span class="heart-n"></span></button>
-      </div>
-    </li>
-    <li class="rl-item">
-      <span class="rl-num rl-num-new">NEW</span>
-      <a class="rl-cover" href="https://www.yes24.com/product/goods/2155409" rel="nofollow noopener noreferrer" target="_blank" aria-label="The Elements of Moral Philosophy — buy or read more"><span class="rl-new" data-added="2026-09-22">NEW</span><img src="https://image.yes24.com/goods/2155409/L" alt="The Elements of Moral Philosophy by James Rachels — book cover" loading="lazy"></a>
-      <div class="rl-meta">
-        <div class="rl-title"><a href="https://www.yes24.com/product/goods/2155409" rel="nofollow noopener noreferrer" target="_blank">The Elements of Moral Philosophy</a> <span style="color:#888;font-size:12px;font-weight:400">(도덕 철학의 기초)</span></div>
-        <div class="rl-byline">James Rachels *</div>
-        <a class="rl-source" href="https://x.com/P1HDeul/status/1868465685170696491?s=20" rel="nofollow noopener noreferrer" target="_blank">📺 Source</a>
-        <button type="button" class="heart-btn sm" data-heart="b:도덕 철학의 기초" aria-pressed="false" aria-label="Heart this book" title="Heart this book" hidden><span class="heart-ico" aria-hidden="true">♡</span><span class="heart-n"></span></button>
-      </div>
-    </li>
-    <li class="rl-item">
-      <span class="rl-num rl-num-new">NEW</span>
-      <a class="rl-cover" href="https://www.yes24.com/product/goods/145601726" rel="nofollow noopener noreferrer" target="_blank" aria-label="The Secret of What We Call Wisdom — buy or read more"><span class="rl-new" data-added="2026-09-22">NEW</span><img src="https://image.yes24.com/goods/145601726/L" alt="The Secret of What We Call Wisdom by Scott Lafee, Dilip Jeste — book cover" loading="lazy"></a>
-      <div class="rl-meta">
-        <div class="rl-title"><a href="https://www.yes24.com/product/goods/145601726" rel="nofollow noopener noreferrer" target="_blank">The Secret of What We Call Wisdom *</a> <span style="color:#888;font-size:12px;font-weight:400">(우리가 지혜라고 부르는 것의 비밀)</span></div>
-        <div class="rl-byline">Scott Lafee, Dilip Jeste *</div>
-        <a class="rl-source" href="https://x.com/P1HDeul/status/1988795195589292442?s=20" rel="nofollow noopener noreferrer" target="_blank">📺 Source</a>
-        <button type="button" class="heart-btn sm" data-heart="b:우리가 지혜라고 부르는 것의 비밀" aria-pressed="false" aria-label="Heart this book" title="Heart this book" hidden><span class="heart-ico" aria-hidden="true">♡</span><span class="heart-n"></span></button>
-      </div>
-    </li>
-    <li class="rl-item">
-      <span class="rl-num rl-num-new">NEW</span>
-      <a class="rl-cover" href="https://www.yes24.com/product/goods/108422348" rel="nofollow noopener noreferrer" target="_blank" aria-label="The Vegetarian — buy or read more"><span class="rl-new" data-added="2026-09-22">NEW</span><img src="https://image.yes24.com/goods/108422348/L" alt="The Vegetarian by Han Kang — book cover" loading="lazy"></a>
-      <div class="rl-meta">
-        <div class="rl-title"><a href="https://www.yes24.com/product/goods/108422348" rel="nofollow noopener noreferrer" target="_blank">The Vegetarian</a> <span style="color:#888;font-size:12px;font-weight:400">(채식주의자)</span></div>
-        <div class="rl-byline">Han Kang</div>
-        <a class="rl-source" href="https://x.com/P1HDeul/status/1868465686420591099?s=20" rel="nofollow noopener noreferrer" target="_blank">📺 Source</a>
-        <button type="button" class="heart-btn sm" data-heart="b:채식주의자" aria-pressed="false" aria-label="Heart this book" title="Heart this book" hidden><span class="heart-ico" aria-hidden="true">♡</span><span class="heart-n"></span></button>
-      </div>
-    </li>
-    <li class="rl-item">
-      <span class="rl-num rl-num-new">NEW</span>
-      <a class="rl-cover" href="https://www.yes24.com/product/goods/89182437" rel="nofollow noopener noreferrer" target="_blank" aria-label="To Have or to Be? — buy or read more"><span class="rl-new" data-added="2026-09-22">NEW</span><img src="https://image.yes24.com/goods/89182437/L" alt="To Have or to Be? by Erich Fromm — book cover" loading="lazy"></a>
-      <div class="rl-meta">
-        <div class="rl-title"><a href="https://www.yes24.com/product/goods/89182437" rel="nofollow noopener noreferrer" target="_blank">To Have or to Be?</a> <span style="color:#888;font-size:12px;font-weight:400">(소유냐 존재냐)</span></div>
-        <div class="rl-byline">Erich Fromm</div>
-        <a class="rl-source" href="https://x.com/P1HDeul/status/2024363452807225855?s=20" rel="nofollow noopener noreferrer" target="_blank">📺 Source</a>
-        <button type="button" class="heart-btn sm" data-heart="b:소유냐 존재냐" aria-pressed="false" aria-label="Heart this book" title="Heart this book" hidden><span class="heart-ico" aria-hidden="true">♡</span><span class="heart-n"></span></button>
-      </div>
-    </li>
-    <li class="rl-item">
-      <span class="rl-num rl-num-new">NEW</span>
-      <a class="rl-cover" href="https://www.yes24.com/product/goods/126348549" rel="nofollow noopener noreferrer" target="_blank" aria-label="Two People International — buy or read more"><span class="rl-new" data-added="2026-09-22">NEW</span><img src="https://image.yes24.com/goods/126348549/L" alt="Two People International by Kim Ki-Tae — book cover" loading="lazy"></a>
-      <div class="rl-meta">
-        <div class="rl-title"><a href="https://www.yes24.com/product/goods/126348549" rel="nofollow noopener noreferrer" target="_blank">Two People International *</a> <span style="color:#888;font-size:12px;font-weight:400">(두 사람의 인터내셔널)</span></div>
-        <div class="rl-byline">Kim Ki-Tae *</div>
-        <a class="rl-source" href="https://x.com/P1HDeul/status/1868465687725044016?s=20" rel="nofollow noopener noreferrer" target="_blank">📺 Source</a>
-        <button type="button" class="heart-btn sm" data-heart="b:두 사람의 인터내셔널" aria-pressed="false" aria-label="Heart this book" title="Heart this book" hidden><span class="heart-ico" aria-hidden="true">♡</span><span class="heart-n"></span></button>
-      </div>
-    </li>
-    <li class="rl-item">
-      <span class="rl-num rl-num-new">NEW</span>
-      <a class="rl-cover" href="https://www.yes24.com/product/goods/3239082" rel="nofollow noopener noreferrer" target="_blank" aria-label="What I Talk About When I Talk About Running — buy or read more"><span class="rl-new" data-added="2026-09-22">NEW</span><img src="https://image.yes24.com/goods/3239082/L" alt="What I Talk About When I Talk About Running by Haruki Murakami — book cover" loading="lazy"></a>
-      <div class="rl-meta">
-        <div class="rl-title"><a href="https://www.yes24.com/product/goods/3239082" rel="nofollow noopener noreferrer" target="_blank">What I Talk About When I Talk About Running</a> <span style="color:#888;font-size:12px;font-weight:400">(달리기를 말할 때 내가 하고 싶은 이야기)</span></div>
-        <div class="rl-byline">Haruki Murakami</div>
-        <a class="rl-source" href="https://x.com/P1HDeul/status/1868465685170696491?s=20" rel="nofollow noopener noreferrer" target="_blank">📺 Source</a>
-        <button type="button" class="heart-btn sm" data-heart="b:달리기를 말할 때 내가 하고 싶은 이야기" aria-pressed="false" aria-label="Heart this book" title="Heart this book" hidden><span class="heart-ico" aria-hidden="true">♡</span><span class="heart-n"></span></button>
-      </div>
-    </li>
-    <li class="rl-item">
-      <span class="rl-num rl-num-new">NEW</span>
-      <a class="rl-cover" href="https://www.yes24.com/product/goods/125492144" rel="nofollow noopener noreferrer" target="_blank" aria-label="Why Do You Live for Others — buy or read more"><span class="rl-new" data-added="2026-09-22">NEW</span><img src="https://image.yes24.com/goods/125492144/L" alt="Why Do You Live for Others by Go Yoon (Pacers Korea) — book cover" loading="lazy"></a>
-      <div class="rl-meta">
-        <div class="rl-title"><a href="https://www.yes24.com/product/goods/125492144" rel="nofollow noopener noreferrer" target="_blank">Why Do You Live for Others *</a> <span style="color:#888;font-size:12px;font-weight:400">(왜 당신은 다른 사람을 위해 살고 있는가)</span></div>
-        <div class="rl-byline">Go Yoon (Pacers Korea) *</div>
-        <a class="rl-source" href="https://x.com/P1HDeul/status/1988795195589292442?s=20" rel="nofollow noopener noreferrer" target="_blank">📺 Source</a>
-        <button type="button" class="heart-btn sm" data-heart="b:왜 당신은 다른 사람을 위해 살고 있는가" aria-pressed="false" aria-label="Heart this book" title="Heart this book" hidden><span class="heart-ico" aria-hidden="true">♡</span><span class="heart-n"></span></button>
-      </div>
-    </li>
-      </ol>
     </div>
     <div id="shelf-area">
     <div class="shelf" id="shelf">
@@ -1151,7 +880,7 @@
     <a class="sp is-new" style="--c:hsl(155,35%,42%);--w:43px;--fs:14px" href="https://www.yes24.com/product/goods/125492144" rel="nofollow noopener noreferrer" target="_blank" title="Why Do You Live for Others"><span class="sp-t"><i>Why Do You Live for Others</i></span><img class="sp-i" src="https://image.yes24.com/goods/125492144/side" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.parentNode.classList.add('sp-fail');this.remove()" onload="if(this.naturalWidth/this.naturalHeight>0.4){this.parentNode.classList.add('sp-fail');this.remove()}"><span class="sp-new" data-added="2026-09-22">NEW</span></a>
     </div>
     <ol class="reading-list" id="rlist">
-    <li class="rl-item">
+    <li class="rl-item" id="b1">
       <span class="rl-num">1</span>
       <a class="rl-cover" href="https://www.yes24.com/product/goods/75529900" rel="nofollow noopener noreferrer" target="_blank" aria-label="After Emptying the Bowl, I Missed a Lot of Things. — buy or read more"><span class="rl-new" data-added="2026-09-22">NEW</span><img src="https://image.yes24.com/goods/75529900/L" alt="After Emptying the Bowl, I Missed a Lot of Things. by Jeong Dong-Hyeon — book cover" loading="lazy"></a>
       <div class="rl-meta">
@@ -1161,7 +890,7 @@
         <button type="button" class="heart-btn sm" data-heart="b:그릇을 비우고 나면 많은 것이 그리워졌다" aria-pressed="false" aria-label="Heart this book" title="Heart this book" hidden><span class="heart-ico" aria-hidden="true">♡</span><span class="heart-n"></span></button>
       </div>
     </li>
-    <li class="rl-item">
+    <li class="rl-item" id="b2">
       <span class="rl-num">2</span>
       <a class="rl-cover" href="https://www.yes24.com/product/goods/42702060" rel="nofollow noopener noreferrer" target="_blank" aria-label="Although Crying Would Not Change Anything — buy or read more"><span class="rl-new" data-added="2026-09-22">NEW</span><img src="https://image.yes24.com/goods/42702060/L" alt="Although Crying Would Not Change Anything by Park Jun — book cover" loading="lazy"></a>
       <div class="rl-meta">
@@ -1171,7 +900,7 @@
         <button type="button" class="heart-btn sm" data-heart="b:운다고 달라지는 일은 아무것도 없겠지만" aria-pressed="false" aria-label="Heart this book" title="Heart this book" hidden><span class="heart-ico" aria-hidden="true">♡</span><span class="heart-n"></span></button>
       </div>
     </li>
-    <li class="rl-item">
+    <li class="rl-item" id="b3">
       <span class="rl-num">3</span>
       <a class="rl-cover" href="https://www.yes24.com/product/goods/79941819" rel="nofollow noopener noreferrer" target="_blank" aria-label="A Person Who Is Okay Even When Alone — buy or read more"><span class="rl-new" data-added="2026-09-22">NEW</span><img src="https://image.yes24.com/goods/79941819/L" alt="A Person Who Is Okay Even When Alone by Kwon Mi-Seon — book cover" loading="lazy"></a>
       <div class="rl-meta">
@@ -1181,7 +910,7 @@
         <button type="button" class="heart-btn sm" data-heart="b:혼자일 때도 괜찮은 사람" aria-pressed="false" aria-label="Heart this book" title="Heart this book" hidden><span class="heart-ico" aria-hidden="true">♡</span><span class="heart-n"></span></button>
       </div>
     </li>
-    <li class="rl-item">
+    <li class="rl-item" id="b4">
       <span class="rl-num">4</span>
       <a class="rl-cover" href="https://www.yes24.com/product/goods/57979311" rel="nofollow noopener noreferrer" target="_blank" aria-label="A Terribly Sensitive Mind — buy or read more"><span class="rl-new" data-added="2026-09-22">NEW</span><img src="https://image.yes24.com/goods/57979311/L" alt="A Terribly Sensitive Mind by Virginia Woolf — book cover" loading="lazy"></a>
       <div class="rl-meta">
@@ -1191,7 +920,7 @@
         <button type="button" class="heart-btn sm" data-heart="b:끔찍하게 민감한 마음" aria-pressed="false" aria-label="Heart this book" title="Heart this book" hidden><span class="heart-ico" aria-hidden="true">♡</span><span class="heart-n"></span></button>
       </div>
     </li>
-    <li class="rl-item">
+    <li class="rl-item" id="b5">
       <span class="rl-num">5</span>
       <a class="rl-cover" href="https://www.yes24.com/product/goods/102842941" rel="nofollow noopener noreferrer" target="_blank" aria-label="Breaking the Habit of Being Yourself — buy or read more"><span class="rl-new" data-added="2026-09-22">NEW</span><img src="https://image.yes24.com/goods/102842941/L" alt="Breaking the Habit of Being Yourself by Joe Dispenza — book cover" loading="lazy"></a>
       <div class="rl-meta">
@@ -1201,7 +930,7 @@
         <button type="button" class="heart-btn sm" data-heart="b:브레이킹, 당신이라는 습관을 깨라" aria-pressed="false" aria-label="Heart this book" title="Heart this book" hidden><span class="heart-ico" aria-hidden="true">♡</span><span class="heart-n"></span></button>
       </div>
     </li>
-    <li class="rl-item">
+    <li class="rl-item" id="b6">
       <span class="rl-num">6</span>
       <a class="rl-cover" href="https://www.yes24.com/product/goods/116599481" rel="nofollow noopener noreferrer" target="_blank" aria-label="Courage to Be Hated 2 — buy or read more"><span class="rl-new" data-added="2026-09-22">NEW</span><img src="https://image.yes24.com/goods/116599481/L" alt="Courage to Be Hated 2 by Ichiro Kishimi, Fumitake Koga — book cover" loading="lazy"></a>
       <div class="rl-meta">
@@ -1211,7 +940,7 @@
         <button type="button" class="heart-btn sm" data-heart="b:미움받을 용기 2" aria-pressed="false" aria-label="Heart this book" title="Heart this book" hidden><span class="heart-ico" aria-hidden="true">♡</span><span class="heart-n"></span></button>
       </div>
     </li>
-    <li class="rl-item">
+    <li class="rl-item" id="b7">
       <span class="rl-num">7</span>
       <a class="rl-cover" href="https://www.yes24.com/product/goods/132891528" rel="nofollow noopener noreferrer" target="_blank" aria-label="Crazy Kind Oriental Philosophy — buy or read more"><span class="rl-new" data-added="2026-09-22">NEW</span><img src="https://image.yes24.com/goods/132891528/L" alt="Crazy Kind Oriental Philosophy by Ahn Sangheon — book cover" loading="lazy"></a>
       <div class="rl-meta">
@@ -1221,7 +950,7 @@
         <button type="button" class="heart-btn sm" data-heart="b:미치게 친절한 동양철학" aria-pressed="false" aria-label="Heart this book" title="Heart this book" hidden><span class="heart-ico" aria-hidden="true">♡</span><span class="heart-n"></span></button>
       </div>
     </li>
-    <li class="rl-item">
+    <li class="rl-item" id="b8">
       <span class="rl-num">8</span>
       <a class="rl-cover" href="https://www.yes24.com/product/goods/140239260" rel="nofollow noopener noreferrer" target="_blank" aria-label="Dancing with the Devil — buy or read more"><span class="rl-new" data-added="2026-09-22">NEW</span><img src="https://image.yes24.com/goods/140239260/L" alt="Dancing with the Devil by Christa K. Thomason — book cover" loading="lazy"></a>
       <div class="rl-meta">
@@ -1231,7 +960,7 @@
         <button type="button" class="heart-btn sm" data-heart="b:악마와 함께 춤을" aria-pressed="false" aria-label="Heart this book" title="Heart this book" hidden><span class="heart-ico" aria-hidden="true">♡</span><span class="heart-n"></span></button>
       </div>
     </li>
-    <li class="rl-item">
+    <li class="rl-item" id="b9">
       <span class="rl-num">9</span>
       <a class="rl-cover" href="https://www.yes24.com/product/goods/126014286" rel="nofollow noopener noreferrer" target="_blank" aria-label="Die unglaubliche Kraft der Natur: Wie Stress Tieren und Pflanzen den Weg weist — buy or read more"><span class="rl-new" data-added="2026-09-22">NEW</span><img src="https://image.yes24.com/goods/126014286/L" alt="Die unglaubliche Kraft der Natur: Wie Stress Tieren und Pflanzen den Weg weist by Madeleine Chige — book cover" loading="lazy"></a>
       <div class="rl-meta">
@@ -1241,7 +970,7 @@
         <button type="button" class="heart-btn sm" data-heart="b:숨 쉬는 것들은 어떻게든 진화한다" aria-pressed="false" aria-label="Heart this book" title="Heart this book" hidden><span class="heart-ico" aria-hidden="true">♡</span><span class="heart-n"></span></button>
       </div>
     </li>
-    <li class="rl-item">
+    <li class="rl-item" id="b10">
       <span class="rl-num">10</span>
       <a class="rl-cover" href="https://www.yes24.com/product/goods/115633204" rel="nofollow noopener noreferrer" target="_blank" aria-label="Don&#x27;t Let Your Mood Become Your Attitude — buy or read more"><span class="rl-new" data-added="2026-09-22">NEW</span><img src="https://image.yes24.com/goods/115633204/L" alt="Don&#x27;t Let Your Mood Become Your Attitude by Kim Soohyun — book cover" loading="lazy"></a>
       <div class="rl-meta">
@@ -1251,7 +980,7 @@
         <button type="button" class="heart-btn sm" data-heart="b:기분이 태도가 되지 말자" aria-pressed="false" aria-label="Heart this book" title="Heart this book" hidden><span class="heart-ico" aria-hidden="true">♡</span><span class="heart-n"></span></button>
       </div>
     </li>
-    <li class="rl-item">
+    <li class="rl-item" id="b11">
       <span class="rl-num">11</span>
       <a class="rl-cover" href="https://www.yes24.com/product/goods/99192646" rel="nofollow noopener noreferrer" target="_blank" aria-label="Flowers for Algernon — buy or read more"><span class="rl-new" data-added="2026-09-22">NEW</span><img src="https://image.yes24.com/goods/99192646/L" alt="Flowers for Algernon by Daniel Kiss — book cover" loading="lazy"></a>
       <div class="rl-meta">
@@ -1261,7 +990,7 @@
         <button type="button" class="heart-btn sm" data-heart="b:앨저넌에게 꽃을" aria-pressed="false" aria-label="Heart this book" title="Heart this book" hidden><span class="heart-ico" aria-hidden="true">♡</span><span class="heart-n"></span></button>
       </div>
     </li>
-    <li class="rl-item">
+    <li class="rl-item" id="b12">
       <span class="rl-num">12</span>
       <a class="rl-cover" href="https://www.yes24.com/product/goods/125886942" rel="nofollow noopener noreferrer" target="_blank" aria-label="Go and See If Love Is Dead — buy or read more"><span class="rl-new" data-added="2026-09-22">NEW</span><img src="https://image.yes24.com/goods/125886942/L" alt="Go and See If Love Is Dead by Park Yeonjun — book cover" loading="lazy"></a>
       <div class="rl-meta">
@@ -1271,7 +1000,7 @@
         <button type="button" class="heart-btn sm" data-heart="b:사랑이 죽었는지 가서 보고 오렴" aria-pressed="false" aria-label="Heart this book" title="Heart this book" hidden><span class="heart-ico" aria-hidden="true">♡</span><span class="heart-n"></span></button>
       </div>
     </li>
-    <li class="rl-item">
+    <li class="rl-item" id="b13">
       <span class="rl-num">13</span>
       <a class="rl-cover" href="https://www.yes24.com/product/goods/164510819" rel="nofollow noopener noreferrer" target="_blank" aria-label="Goethe Said It All — buy or read more"><span class="rl-new" data-added="2026-09-22">NEW</span><img src="https://image.yes24.com/goods/164510819/L" alt="Goethe Said It All by Suzuki Yui — book cover" loading="lazy"></a>
       <div class="rl-meta">
@@ -1281,7 +1010,7 @@
         <button type="button" class="heart-btn sm" data-heart="b:괴테는 모든 것을 말했다" aria-pressed="false" aria-label="Heart this book" title="Heart this book" hidden><span class="heart-ico" aria-hidden="true">♡</span><span class="heart-n"></span></button>
       </div>
     </li>
-    <li class="rl-item">
+    <li class="rl-item" id="b14">
       <span class="rl-num">14</span>
       <a class="rl-cover" href="https://www.yes24.com/product/goods/143666403" rel="nofollow noopener noreferrer" target="_blank" aria-label="I Can Finally See It Now — buy or read more"><span class="rl-new" data-added="2026-09-22">NEW</span><img src="https://image.yes24.com/goods/143666403/L" alt="I Can Finally See It Now by Kim Changwan — book cover" loading="lazy"></a>
       <div class="rl-meta">
@@ -1291,7 +1020,7 @@
         <button type="button" class="heart-btn sm" data-heart="b:이제야 보이네" aria-pressed="false" aria-label="Heart this book" title="Heart this book" hidden><span class="heart-ico" aria-hidden="true">♡</span><span class="heart-n"></span></button>
       </div>
     </li>
-    <li class="rl-item">
+    <li class="rl-item" id="b15">
       <span class="rl-num">15</span>
       <a class="rl-cover" href="https://www.yes24.com/product/goods/116195594" rel="nofollow noopener noreferrer" target="_blank" aria-label="I Have No Choice but to Do That. — buy or read more"><span class="rl-new" data-added="2026-09-22">NEW</span><img src="https://image.yes24.com/goods/116195594/L" alt="I Have No Choice but to Do That. by Choi Dodam — book cover" loading="lazy"></a>
       <div class="rl-meta">
@@ -1301,7 +1030,7 @@
         <button type="button" class="heart-btn sm" data-heart="b:그렇게 할 수밖에" aria-pressed="false" aria-label="Heart this book" title="Heart this book" hidden><span class="heart-ico" aria-hidden="true">♡</span><span class="heart-n"></span></button>
       </div>
     </li>
-    <li class="rl-item">
+    <li class="rl-item" id="b16">
       <span class="rl-num">16</span>
       <a class="rl-cover" href="https://www.yes24.com/product/goods/147560984" rel="nofollow noopener noreferrer" target="_blank" aria-label="I Said Goodbye — buy or read more"><span class="rl-new" data-added="2026-09-22">NEW</span><img src="https://image.yes24.com/goods/147560984/L" alt="I Said Goodbye by Kim Ae-ran — book cover" loading="lazy"></a>
       <div class="rl-meta">
@@ -1311,7 +1040,7 @@
         <button type="button" class="heart-btn sm" data-heart="b:안녕이라 그랬어" aria-pressed="false" aria-label="Heart this book" title="Heart this book" hidden><span class="heart-ico" aria-hidden="true">♡</span><span class="heart-n"></span></button>
       </div>
     </li>
-    <li class="rl-item">
+    <li class="rl-item" id="b17">
       <span class="rl-num">17</span>
       <a class="rl-cover" href="https://www.yes24.com/product/goods/133846097" rel="nofollow noopener noreferrer" target="_blank" aria-label="Let&#x27;s Run Away, the Sea Would Be Better — buy or read more"><span class="rl-new" data-added="2026-09-22">NEW</span><img src="https://image.yes24.com/goods/133846097/L" alt="Let&#x27;s Run Away, the Sea Would Be Better by Lee Do-Hoon — book cover" loading="lazy"></a>
       <div class="rl-meta">
@@ -1321,7 +1050,7 @@
         <button type="button" class="heart-btn sm" data-heart="b:도망가자, 바다면 더 좋고" aria-pressed="false" aria-label="Heart this book" title="Heart this book" hidden><span class="heart-ico" aria-hidden="true">♡</span><span class="heart-n"></span></button>
       </div>
     </li>
-    <li class="rl-item">
+    <li class="rl-item" id="b18">
       <span class="rl-num">18</span>
       <a class="rl-cover" href="https://www.yes24.com/product/goods/142562016" rel="nofollow noopener noreferrer" target="_blank" aria-label="Noble and Vulgar — buy or read more"><span class="rl-new" data-added="2026-09-22">NEW</span><img src="https://image.yes24.com/goods/142562016/L" alt="Noble and Vulgar by Kim Sa-Wol, Lee Hwon — book cover" loading="lazy"></a>
       <div class="rl-meta">
@@ -1331,7 +1060,7 @@
         <button type="button" class="heart-btn sm" data-heart="b:고상하고 천박하게" aria-pressed="false" aria-label="Heart this book" title="Heart this book" hidden><span class="heart-ico" aria-hidden="true">♡</span><span class="heart-n"></span></button>
       </div>
     </li>
-    <li class="rl-item">
+    <li class="rl-item" id="b19">
       <span class="rl-num">19</span>
       <a class="rl-cover" href="https://www.yes24.com/product/goods/83546318" rel="nofollow noopener noreferrer" target="_blank" aria-label="No Self No Problem: How Neuropsychology Is Catching up to Buddhism — buy or read more"><span class="rl-new" data-added="2026-09-22">NEW</span><img src="https://image.yes24.com/goods/83546318/L" alt="No Self No Problem: How Neuropsychology Is Catching up to Buddhism by Chris Naibauer — book cover" loading="lazy"></a>
       <div class="rl-meta">
@@ -1341,7 +1070,7 @@
         <button type="button" class="heart-btn sm" data-heart="b:자네, 좌뇌한테 속았네!" aria-pressed="false" aria-label="Heart this book" title="Heart this book" hidden><span class="heart-ico" aria-hidden="true">♡</span><span class="heart-n"></span></button>
       </div>
     </li>
-    <li class="rl-item">
+    <li class="rl-item" id="b20">
       <span class="rl-num">20</span>
       <a class="rl-cover" href="https://www.yes24.com/product/goods/80386690" rel="nofollow noopener noreferrer" target="_blank" aria-label="Nothing Other than Love and Freedom — buy or read more"><span class="rl-new" data-added="2026-09-22">NEW</span><img src="https://image.yes24.com/goods/80386690/L" alt="Nothing Other than Love and Freedom by Kim Hana, Lee Seul-Ah, Kim Geum-Hee, Choi Eun-Young, Baek Su-Rin, Baek Se-Hee, Lee Seok-Won, Lim Jin-Ah, Kim Dong-Young — book cover" loading="lazy"></a>
       <div class="rl-meta">
@@ -1351,7 +1080,7 @@
         <button type="button" class="heart-btn sm" data-heart="b:다름 아닌 사랑과 자유" aria-pressed="false" aria-label="Heart this book" title="Heart this book" hidden><span class="heart-ico" aria-hidden="true">♡</span><span class="heart-n"></span></button>
       </div>
     </li>
-    <li class="rl-item">
+    <li class="rl-item" id="b21">
       <span class="rl-num">21</span>
       <a class="rl-cover" href="https://www.yes24.com/product/goods/109622316" rel="nofollow noopener noreferrer" target="_blank" aria-label="Signaling the End of the Night — buy or read more"><span class="rl-new" data-added="2026-09-22">NEW</span><img src="https://image.yes24.com/goods/109622316/L" alt="Signaling the End of the Night by Shim Gyu-Seon — book cover" loading="lazy"></a>
       <div class="rl-meta">
@@ -1361,7 +1090,7 @@
         <button type="button" class="heart-btn sm" data-heart="b:밤의 끝을 알리는" aria-pressed="false" aria-label="Heart this book" title="Heart this book" hidden><span class="heart-ico" aria-hidden="true">♡</span><span class="heart-n"></span></button>
       </div>
     </li>
-    <li class="rl-item">
+    <li class="rl-item" id="b22">
       <span class="rl-num">22</span>
       <a class="rl-cover" href="https://www.yes24.com/product/goods/107512219" rel="nofollow noopener noreferrer" target="_blank" aria-label="Thank You to Me — buy or read more"><span class="rl-new" data-added="2026-09-22">NEW</span><img src="https://image.yes24.com/goods/107512219/L" alt="Thank You to Me by Jeon Seunghwan — book cover" loading="lazy"></a>
       <div class="rl-meta">
@@ -1371,7 +1100,7 @@
         <button type="button" class="heart-btn sm" data-heart="b:나에게 고맙다" aria-pressed="false" aria-label="Heart this book" title="Heart this book" hidden><span class="heart-ico" aria-hidden="true">♡</span><span class="heart-n"></span></button>
       </div>
     </li>
-    <li class="rl-item">
+    <li class="rl-item" id="b23">
       <span class="rl-num">23</span>
       <a class="rl-cover" href="https://www.yes24.com/product/goods/116599423" rel="nofollow noopener noreferrer" target="_blank" aria-label="The Courage to Be Disliked: How to Free Yourself, Change Your Life, and Achieve Real Happiness — buy or read more"><span class="rl-new" data-added="2026-09-22">NEW</span><img src="https://image.yes24.com/goods/116599423/L" alt="The Courage to Be Disliked: How to Free Yourself, Change Your Life, and Achieve Real Happiness by Ichiro Kishimi, Fumitake Koga — book cover" loading="lazy"></a>
       <div class="rl-meta">
@@ -1381,7 +1110,7 @@
         <button type="button" class="heart-btn sm" data-heart="b:미움받을 용기" aria-pressed="false" aria-label="Heart this book" title="Heart this book" hidden><span class="heart-ico" aria-hidden="true">♡</span><span class="heart-n"></span></button>
       </div>
     </li>
-    <li class="rl-item">
+    <li class="rl-item" id="b24">
       <span class="rl-num">24</span>
       <a class="rl-cover" href="https://www.yes24.com/product/goods/119886818" rel="nofollow noopener noreferrer" target="_blank" aria-label="The Creative Act: A Way of Being — buy or read more"><span class="rl-new" data-added="2026-09-22">NEW</span><img src="https://image.yes24.com/goods/119886818/L" alt="The Creative Act: A Way of Being by Rick Rubin — book cover" loading="lazy"></a>
       <div class="rl-meta">
@@ -1391,7 +1120,7 @@
         <button type="button" class="heart-btn sm" data-heart="b:창조적 행위" aria-pressed="false" aria-label="Heart this book" title="Heart this book" hidden><span class="heart-ico" aria-hidden="true">♡</span><span class="heart-n"></span></button>
       </div>
     </li>
-    <li class="rl-item">
+    <li class="rl-item" id="b25">
       <span class="rl-num">25</span>
       <a class="rl-cover" href="https://www.yes24.com/product/goods/2155409" rel="nofollow noopener noreferrer" target="_blank" aria-label="The Elements of Moral Philosophy — buy or read more"><span class="rl-new" data-added="2026-09-22">NEW</span><img src="https://image.yes24.com/goods/2155409/L" alt="The Elements of Moral Philosophy by James Rachels — book cover" loading="lazy"></a>
       <div class="rl-meta">
@@ -1401,7 +1130,7 @@
         <button type="button" class="heart-btn sm" data-heart="b:도덕 철학의 기초" aria-pressed="false" aria-label="Heart this book" title="Heart this book" hidden><span class="heart-ico" aria-hidden="true">♡</span><span class="heart-n"></span></button>
       </div>
     </li>
-    <li class="rl-item">
+    <li class="rl-item" id="b26">
       <span class="rl-num">26</span>
       <a class="rl-cover" href="https://www.yes24.com/product/goods/145601726" rel="nofollow noopener noreferrer" target="_blank" aria-label="The Secret of What We Call Wisdom — buy or read more"><span class="rl-new" data-added="2026-09-22">NEW</span><img src="https://image.yes24.com/goods/145601726/L" alt="The Secret of What We Call Wisdom by Scott Lafee, Dilip Jeste — book cover" loading="lazy"></a>
       <div class="rl-meta">
@@ -1411,7 +1140,7 @@
         <button type="button" class="heart-btn sm" data-heart="b:우리가 지혜라고 부르는 것의 비밀" aria-pressed="false" aria-label="Heart this book" title="Heart this book" hidden><span class="heart-ico" aria-hidden="true">♡</span><span class="heart-n"></span></button>
       </div>
     </li>
-    <li class="rl-item">
+    <li class="rl-item" id="b27">
       <span class="rl-num">27</span>
       <a class="rl-cover" href="https://www.yes24.com/product/goods/108422348" rel="nofollow noopener noreferrer" target="_blank" aria-label="The Vegetarian — buy or read more"><span class="rl-new" data-added="2026-09-22">NEW</span><img src="https://image.yes24.com/goods/108422348/L" alt="The Vegetarian by Han Kang — book cover" loading="lazy"></a>
       <div class="rl-meta">
@@ -1421,7 +1150,7 @@
         <button type="button" class="heart-btn sm" data-heart="b:채식주의자" aria-pressed="false" aria-label="Heart this book" title="Heart this book" hidden><span class="heart-ico" aria-hidden="true">♡</span><span class="heart-n"></span></button>
       </div>
     </li>
-    <li class="rl-item">
+    <li class="rl-item" id="b28">
       <span class="rl-num">28</span>
       <a class="rl-cover" href="https://www.yes24.com/product/goods/89182437" rel="nofollow noopener noreferrer" target="_blank" aria-label="To Have or to Be? — buy or read more"><span class="rl-new" data-added="2026-09-22">NEW</span><img src="https://image.yes24.com/goods/89182437/L" alt="To Have or to Be? by Erich Fromm — book cover" loading="lazy"></a>
       <div class="rl-meta">
@@ -1431,7 +1160,7 @@
         <button type="button" class="heart-btn sm" data-heart="b:소유냐 존재냐" aria-pressed="false" aria-label="Heart this book" title="Heart this book" hidden><span class="heart-ico" aria-hidden="true">♡</span><span class="heart-n"></span></button>
       </div>
     </li>
-    <li class="rl-item">
+    <li class="rl-item" id="b29">
       <span class="rl-num">29</span>
       <a class="rl-cover" href="https://www.yes24.com/product/goods/126348549" rel="nofollow noopener noreferrer" target="_blank" aria-label="Two People International — buy or read more"><span class="rl-new" data-added="2026-09-22">NEW</span><img src="https://image.yes24.com/goods/126348549/L" alt="Two People International by Kim Ki-Tae — book cover" loading="lazy"></a>
       <div class="rl-meta">
@@ -1441,7 +1170,7 @@
         <button type="button" class="heart-btn sm" data-heart="b:두 사람의 인터내셔널" aria-pressed="false" aria-label="Heart this book" title="Heart this book" hidden><span class="heart-ico" aria-hidden="true">♡</span><span class="heart-n"></span></button>
       </div>
     </li>
-    <li class="rl-item">
+    <li class="rl-item" id="b30">
       <span class="rl-num">30</span>
       <a class="rl-cover" href="https://www.yes24.com/product/goods/3239082" rel="nofollow noopener noreferrer" target="_blank" aria-label="What I Talk About When I Talk About Running — buy or read more"><span class="rl-new" data-added="2026-09-22">NEW</span><img src="https://image.yes24.com/goods/3239082/L" alt="What I Talk About When I Talk About Running by Haruki Murakami — book cover" loading="lazy"></a>
       <div class="rl-meta">
@@ -1451,7 +1180,7 @@
         <button type="button" class="heart-btn sm" data-heart="b:달리기를 말할 때 내가 하고 싶은 이야기" aria-pressed="false" aria-label="Heart this book" title="Heart this book" hidden><span class="heart-ico" aria-hidden="true">♡</span><span class="heart-n"></span></button>
       </div>
     </li>
-    <li class="rl-item">
+    <li class="rl-item" id="b31">
       <span class="rl-num">31</span>
       <a class="rl-cover" href="https://www.yes24.com/product/goods/125492144" rel="nofollow noopener noreferrer" target="_blank" aria-label="Why Do You Live for Others — buy or read more"><span class="rl-new" data-added="2026-09-22">NEW</span><img src="https://image.yes24.com/goods/125492144/L" alt="Why Do You Live for Others by Go Yoon (Pacers Korea) — book cover" loading="lazy"></a>
       <div class="rl-meta">

@@ -785,8 +785,15 @@
              background-size: 100% var(--row); background-repeat: repeat-y; }
     .new-sec { margin: 16px 0 6px; padding: 12px 12px 2px; background: #fffbe6; border: 2px dashed #000; }
     .new-sec-h { display: flex; align-items: center; gap: 8px; margin: 0 0 10px; font-size: 15px; font-weight: 800; }
-    .new-sec .reading-list { margin: 0; }
-    .rl-num.rl-num-new { font-size: 11px; letter-spacing: .04em; }
+    .rl-item { scroll-margin-top: 16px; }
+    .rl-item:target { outline: 3px solid #fde047; outline-offset: 2px; }
+    .new-tiles { display: flex; flex-wrap: wrap; gap: 12px; padding-bottom: 10px; }
+    .new-tile { width: 84px; color: #000; text-decoration: none; display: flex; flex-direction: column; gap: 5px; }
+    .new-tile:hover { text-decoration: none; transform: translateY(-2px); }
+    .nt-cover { display: block; width: 84px; aspect-ratio: 2/3; border: 1.5px solid #000; box-shadow: 2px 2px 0 0 #000; background: #f4f4f0; overflow: hidden; }
+    .nt-cover img { width: 100%; height: 100%; object-fit: cover; display: block; }
+    .nt-no-cover { display: flex; width: 100%; height: 100%; align-items: center; justify-content: center; font-size: 22px; }
+    .nt-title { font-size: 12px; font-weight: 700; line-height: 1.3; word-break: keep-all; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
     .rl-new-tag { font-size: 9px; font-weight: 800; letter-spacing: .06em; line-height: 1; padding: 3px 5px;
                   background: #fde047; color: #000; border: 1.5px solid #000; }
     .sp { position: relative; flex: none; width: auto; height: var(--sh-h);
@@ -808,7 +815,7 @@
               font-size: 8px; line-height: 1; padding: 3px 0 2px;
               border-bottom: 1px solid rgba(0,0,0,.55); }
     .sp.is-new .sp-t { padding-top: 22px; }
-    .is-capturing .sp-new, .is-capturing .rl-new, .is-capturing .rl-shared { display: none !important; }
+    .is-capturing .sp-new, .is-capturing .rl-new, .is-capturing .rl-shared, .is-capturing .rl-comment { display: none !important; }
     .is-capturing .sp.is-new .sp-t { padding-top: 14px; }
     @media (max-width: 480px) { .shelf { --sh-h: 205px; }
                                  .sp.no-img, .sp.sp-fail { width: calc(var(--w, 38px) * .88); }
@@ -835,6 +842,7 @@
     .rl-title a { color: #000; }
     .rl-title a:hover { color: #2563eb; }
     .rl-byline { font-size: 13px; color: #555; margin-bottom: 8px; line-height: 1.4; }
+    .rl-comment { font-size: 13px; line-height: 1.55; color: #222; background: #FFF7C2; border: 1.5px solid #000; padding: 6px 9px; margin: 0 0 8px; word-break: keep-all; }
     .rl-source { display: inline-block; font-size: 12px; padding: 3px 8px; background: #fff; border: 1.5px solid #000; box-shadow: 1px 1px 0 0 #000; text-decoration: none; color: #000; transition: transform .1s, box-shadow .1s, background .1s; }
     .rl-source:hover { transform: translate(-1px,-1px); box-shadow: 2px 2px 0 0 #000; background: #a7f3d0; text-decoration: none; }
     @media (max-width: 480px) { .rl-item { padding: 14px 12px 14px 46px; } .rl-num { width: 32px; height: 26px; font-size: 12px; } .rl-cover { width: 60px; height: 88px; margin-right: 10px; } .rl-meta { min-height: 88px; } .rl-title { font-size: 15px; } }
@@ -874,18 +882,9 @@
     </div>
     <div class="new-sec">
       <h3 class="new-sec-h"><span class="rl-new-tag">NEW</span> New in the last 10 days (1 book)</h3>
-      <ol class="reading-list">
-    <li class="rl-item">
-      <span class="rl-num rl-num-new">NEW</span>
-      <a class="rl-cover" href="https://www.yes24.com/product/goods/133217357" rel="nofollow noopener noreferrer" target="_blank" aria-label="The World of Learning — buy or read more"><span class="rl-new" data-added="2026-09-26">NEW</span><img src="https://image.yes24.com/goods/133217357/L" alt="The World of Learning by Shin Yongwook — book cover" loading="lazy"></a>
-      <div class="rl-meta">
-        <div class="rl-title"><a href="https://www.yes24.com/product/goods/133217357" rel="nofollow noopener noreferrer" target="_blank">The World of Learning *</a> <span style="color:#888;font-size:12px;font-weight:400">(배우라는 세계)</span></div>
-        <div class="rl-byline">Shin Yongwook *</div>
-        <a class="rl-source" href="https://x.com/bookiepub/status/2046825184569815244?s=20" rel="nofollow noopener noreferrer" target="_blank">📺 Source</a>
-        <button type="button" class="heart-btn sm" data-heart="b:배우라는 세계" aria-pressed="false" aria-label="Heart this book" title="Heart this book" hidden><span class="heart-ico" aria-hidden="true">♡</span><span class="heart-n"></span></button>
+      <div class="new-tiles">
+        <a class="new-tile" href="#b30"><span class="nt-cover"><img src="https://image.yes24.com/goods/133217357/L" alt="The World of Learning by Shin Yongwook — book cover" loading="lazy"></span><span class="nt-title">The World of Learning</span></a>
       </div>
-    </li>
-      </ol>
     </div>
     <div id="shelf-area">
     <div class="shelf" id="shelf">
@@ -926,17 +925,18 @@
     <a class="sp" style="--c:hsl(249,32%,33%);--w:35px;--fs:15px" href="https://www.yes24.com/product/goods/66752481" rel="nofollow noopener noreferrer" target="_blank" title="Yeosu"><span class="sp-t"><i>Yeosu</i></span><img class="sp-i" src="https://image.yes24.com/goods/66752481/side" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.parentNode.classList.add('sp-fail');this.remove()" onload="if(this.naturalWidth/this.naturalHeight>0.4){this.parentNode.classList.add('sp-fail');this.remove()}"></a>
     </div>
     <ol class="reading-list" id="rlist">
-    <li class="rl-item">
+    <li class="rl-item" id="b1">
       <span class="rl-num">1</span>
       <a class="rl-cover" href="https://www.yes24.com/product/goods/91555358" rel="nofollow noopener noreferrer" target="_blank" aria-label="2020 11th Young Writer Award Collection of Winning Works — buy or read more"><img src="https://image.yes24.com/goods/91555358/L" alt="2020 11th Young Writer Award Collection of Winning Works by Ganghwa-Gil, Choi Eun-Young, Lee Hyun-Seok, Kim Cho-Yeop, Jang Ryu-Jin, Jang Hee-Won, Etc. — book cover" loading="lazy"></a>
       <div class="rl-meta">
         <div class="rl-title"><a href="https://www.yes24.com/product/goods/91555358" rel="nofollow noopener noreferrer" target="_blank">2020 11th Young Writer Award Collection of Winning Works *</a> <span style="color:#888;font-size:12px;font-weight:400">(2020 제11회 젊은작가상 수상작품집)</span></div>
         <div class="rl-byline">Ganghwa-Gil, Choi Eun-Young, Lee Hyun-Seok, Kim Cho-Yeop, Jang Ryu-Jin, Jang Hee-Won, Etc. *</div>
+        <p class="rl-comment">A recent read; Kang Hwa-gil&#x27;s story &#x27;Eumbok&#x27; left the strongest impression. (Source: Cine21)</p>
         <a class="rl-source" href="https://cine21.com/news/view/?mag_id=95582&amp;utm_source=naver&amp;utm_medium=news" rel="nofollow noopener noreferrer" target="_blank">📺 Source</a>
         <button type="button" class="heart-btn sm" data-heart="b:2020 제11회 젊은작가상 수상작품집" aria-pressed="false" aria-label="Heart this book" title="Heart this book" hidden><span class="heart-ico" aria-hidden="true">♡</span><span class="heart-n"></span></button>
       </div>
     </li>
-    <li class="rl-item">
+    <li class="rl-item" id="b2">
       <span class="rl-num">2</span>
       <a class="rl-cover" href="https://www.yes24.com/product/goods/99018415" rel="nofollow noopener noreferrer" target="_blank" aria-label="2021 12th Young Writer Award Collection of Winning Works — buy or read more"><img src="https://image.yes24.com/goods/99018415/L" alt="2021 12th Young Writer Award Collection of Winning Works by Ha-Young Jeon, Mela Kim, Ji-Yeon Kim, Hye-Jin Kim, Seo-Ryun Park, Yi-Je Seo, Jeong-Hyun Han — book cover" loading="lazy"></a>
       <div class="rl-meta">
@@ -946,7 +946,7 @@
         <button type="button" class="heart-btn sm" data-heart="b:2021 제12회 젊은작가상 수상작품집" aria-pressed="false" aria-label="Heart this book" title="Heart this book" hidden><span class="heart-ico" aria-hidden="true">♡</span><span class="heart-n"></span></button>
       </div>
     </li>
-    <li class="rl-item">
+    <li class="rl-item" id="b3">
       <span class="rl-num">3</span>
       <a class="rl-cover" href="https://www.yes24.com/product/goods/90115037" rel="nofollow noopener noreferrer" target="_blank" aria-label="Agnès Varda: Interviews — buy or read more"><img src="https://image.yes24.com/goods/90115037/L" alt="Agnès Varda: Interviews by Agnès Varda — book cover" loading="lazy"></a>
       <div class="rl-meta">
@@ -956,7 +956,7 @@
         <button type="button" class="heart-btn sm" data-heart="b:아녜스 바르다의 말" aria-pressed="false" aria-label="Heart this book" title="Heart this book" hidden><span class="heart-ico" aria-hidden="true">♡</span><span class="heart-n"></span></button>
       </div>
     </li>
-    <li class="rl-item">
+    <li class="rl-item" id="b4">
       <span class="rl-num">4</span>
       <a class="rl-cover" href="https://www.yes24.com/product/goods/42702060" rel="nofollow noopener noreferrer" target="_blank" aria-label="Although Crying Would Not Change Anything — buy or read more"><img src="https://image.yes24.com/goods/42702060/L" alt="Although Crying Would Not Change Anything by Park Jun — book cover" loading="lazy"></a>
       <div class="rl-meta">
@@ -966,7 +966,7 @@
         <button type="button" class="heart-btn sm" data-heart="b:운다고 달라지는 일은 아무것도 없겠지만" aria-pressed="false" aria-label="Heart this book" title="Heart this book" hidden><span class="heart-ico" aria-hidden="true">♡</span><span class="heart-n"></span></button>
       </div>
     </li>
-    <li class="rl-item">
+    <li class="rl-item" id="b5">
       <span class="rl-num">5</span>
       <a class="rl-cover" href="https://www.yes24.com/product/goods/119149162" rel="nofollow noopener noreferrer" target="_blank" aria-label="Beasts of a Little Land — buy or read more"><img src="https://contents.kyobobook.co.kr/sih/fit-in/458x0/pdt/9791130642574.jpg" alt="Beasts of a Little Land by Juhea Kim — book cover" loading="lazy"></a>
       <div class="rl-meta">
@@ -976,7 +976,7 @@
         <button type="button" class="heart-btn sm" data-heart="b:작은 땅의 야수들" aria-pressed="false" aria-label="Heart this book" title="Heart this book" hidden><span class="heart-ico" aria-hidden="true">♡</span><span class="heart-n"></span></button>
       </div>
     </li>
-    <li class="rl-item">
+    <li class="rl-item" id="b6">
       <span class="rl-num">6</span>
       <a class="rl-cover" href="https://www.yes24.com/product/goods/17972275" rel="nofollow noopener noreferrer" target="_blank" aria-label="Because I Hate Korea — buy or read more"><img src="https://image.yes24.com/goods/17972275/L" alt="Because I Hate Korea by Jang Kang-Myeong — book cover" loading="lazy"></a>
       <div class="rl-meta">
@@ -986,7 +986,7 @@
         <button type="button" class="heart-btn sm" data-heart="b:한국이 싫어서" aria-pressed="false" aria-label="Heart this book" title="Heart this book" hidden><span class="heart-ico" aria-hidden="true">♡</span><span class="heart-n"></span></button>
       </div>
     </li>
-    <li class="rl-item">
+    <li class="rl-item" id="b7">
       <span class="rl-num">7</span>
       <a class="rl-cover" href="https://www.yes24.com/product/goods/9104090" rel="nofollow noopener noreferrer" target="_blank" aria-label="Colorless Tsukuru Tazaki and His Years of Pilgrimage — buy or read more"><img src="https://image.yes24.com/goods/9104090/L" alt="Colorless Tsukuru Tazaki and His Years of Pilgrimage by Haruki Murakami — book cover" loading="lazy"></a>
       <div class="rl-meta">
@@ -996,7 +996,7 @@
         <button type="button" class="heart-btn sm" data-heart="b:색채가 없는 다자키 쓰쿠루와 그가 순례를 떠낸 해" aria-pressed="false" aria-label="Heart this book" title="Heart this book" hidden><span class="heart-ico" aria-hidden="true">♡</span><span class="heart-n"></span></button>
       </div>
     </li>
-    <li class="rl-item">
+    <li class="rl-item" id="b8">
       <span class="rl-num">8</span>
       <a class="rl-cover" href="https://www.yes24.com/product/goods/118399675" rel="nofollow noopener noreferrer" target="_blank" aria-label="Cursed Bunny — buy or read more"><img src="https://image.yes24.com/goods/118399675/L" alt="Cursed Bunny by Information — book cover" loading="lazy"></a>
       <div class="rl-meta">
@@ -1006,7 +1006,7 @@
         <button type="button" class="heart-btn sm" data-heart="b:저주토끼" aria-pressed="false" aria-label="Heart this book" title="Heart this book" hidden><span class="heart-ico" aria-hidden="true">♡</span><span class="heart-n"></span></button>
       </div>
     </li>
-    <li class="rl-item">
+    <li class="rl-item" id="b9">
       <span class="rl-num">9</span>
       <a class="rl-cover" href="https://www.yes24.com/product/goods/109080475" rel="nofollow noopener noreferrer" target="_blank" aria-label="Even Without Trying — buy or read more"><img src="https://image.yes24.com/goods/109080475/L" alt="Even Without Trying by Written By Eunyoung Choi/Illustrated By Sehee Kim — book cover" loading="lazy"></a>
       <div class="rl-meta">
@@ -1016,7 +1016,7 @@
         <button type="button" class="heart-btn sm" data-heart="b:애쓰지 않아도" aria-pressed="false" aria-label="Heart this book" title="Heart this book" hidden><span class="heart-ico" aria-hidden="true">♡</span><span class="heart-n"></span></button>
       </div>
     </li>
-    <li class="rl-item">
+    <li class="rl-item" id="b10">
       <span class="rl-num">10</span>
       <a class="rl-cover" href="https://www.yes24.com/product/goods/95538356" rel="nofollow noopener noreferrer" target="_blank" aria-label="First Person Singular — buy or read more"><img src="https://image.yes24.com/goods/95538356/L" alt="First Person Singular by Haruki Murakami — book cover" loading="lazy"></a>
       <div class="rl-meta">
@@ -1026,7 +1026,7 @@
         <button type="button" class="heart-btn sm" data-heart="b:일인칭 단수" aria-pressed="false" aria-label="Heart this book" title="Heart this book" hidden><span class="heart-ico" aria-hidden="true">♡</span><span class="heart-n"></span></button>
       </div>
     </li>
-    <li class="rl-item">
+    <li class="rl-item" id="b11">
       <span class="rl-num">11</span>
       <a class="rl-cover" href="https://www.yes24.com/product/goods/107679350" rel="nofollow noopener noreferrer" target="_blank" aria-label="Flights — buy or read more"><img src="https://image.yes24.com/goods/107679350/L" alt="Flights by Olga Tokarczuk — book cover" loading="lazy"></a>
       <div class="rl-meta">
@@ -1036,7 +1036,7 @@
         <button type="button" class="heart-btn sm" data-heart="b:방랑자들" aria-pressed="false" aria-label="Heart this book" title="Heart this book" hidden><span class="heart-ico" aria-hidden="true">♡</span><span class="heart-n"></span></button>
       </div>
     </li>
-    <li class="rl-item">
+    <li class="rl-item" id="b12">
       <span class="rl-num">12</span>
       <a class="rl-cover" href="https://www.yes24.com/product/goods/66752465" rel="nofollow noopener noreferrer" target="_blank" aria-label="Fruits of My Woman — buy or read more"><img src="https://image.yes24.com/goods/66752465/L" alt="Fruits of My Woman by Han Kang — book cover" loading="lazy"></a>
       <div class="rl-meta">
@@ -1046,7 +1046,7 @@
         <button type="button" class="heart-btn sm" data-heart="b:내 여자의 열매" aria-pressed="false" aria-label="Heart this book" title="Heart this book" hidden><span class="heart-ico" aria-hidden="true">♡</span><span class="heart-n"></span></button>
       </div>
     </li>
-    <li class="rl-item">
+    <li class="rl-item" id="b13">
       <span class="rl-num">13</span>
       <a class="rl-cover" href="https://www.yes24.com/product/goods/4810410" rel="nofollow noopener noreferrer" target="_blank" aria-label="Home, Pilgrimage — buy or read more"><img src="https://image.yes24.com/goods/4810410/L" alt="Home, Pilgrimage by Yoshifumi Nakamura — book cover" loading="lazy"></a>
       <div class="rl-meta">
@@ -1056,7 +1056,7 @@
         <button type="button" class="heart-btn sm" data-heart="b:집을, 순례하다" aria-pressed="false" aria-label="Heart this book" title="Heart this book" hidden><span class="heart-ico" aria-hidden="true">♡</span><span class="heart-n"></span></button>
       </div>
     </li>
-    <li class="rl-item">
+    <li class="rl-item" id="b14">
       <span class="rl-num">14</span>
       <a class="rl-cover" href="https://www.yes24.com/product/goods/12591797" rel="nofollow noopener noreferrer" target="_blank" aria-label="Livro Do Desassossego — buy or read more"><img src="https://image.yes24.com/goods/12591797/L" alt="Livro Do Desassossego by Fernando Pessoa — book cover" loading="lazy"></a>
       <div class="rl-meta">
@@ -1066,17 +1066,18 @@
         <button type="button" class="heart-btn sm" data-heart="b:불안의 서" aria-pressed="false" aria-label="Heart this book" title="Heart this book" hidden><span class="heart-ico" aria-hidden="true">♡</span><span class="heart-n"></span></button>
       </div>
     </li>
-    <li class="rl-item">
+    <li class="rl-item" id="b15">
       <span class="rl-num">15</span>
       <a class="rl-cover" href="https://www.yes24.com/product/goods/14170073" rel="nofollow noopener noreferrer" target="_blank" aria-label="Men Without Women — buy or read more"><img src="https://image.yes24.com/goods/14170073/L" alt="Men Without Women by Haruki Murakami — book cover" loading="lazy"></a>
       <div class="rl-meta">
         <div class="rl-title"><a href="https://www.yes24.com/product/goods/14170073" rel="nofollow noopener noreferrer" target="_blank">Men Without Women</a> <span style="color:#888;font-size:12px;font-weight:400">(여자 없는 남자들)</span></div>
         <div class="rl-byline">Haruki Murakami</div>
+        <p class="rl-comment">Read after watching Drive My Car, out of curiosity about the original stories. (Source: Allure Korea)</p>
         <a class="rl-source" href="https://www.allurekorea.com/2022/03/01/keep-warm-%ed%99%8d%ea%b2%bd/" rel="nofollow noopener noreferrer" target="_blank">📺 Source</a>
         <button type="button" class="heart-btn sm" data-heart="b:여자 없는 남자들" aria-pressed="false" aria-label="Heart this book" title="Heart this book" hidden><span class="heart-ico" aria-hidden="true">♡</span><span class="heart-n"></span></button>
       </div>
     </li>
-    <li class="rl-item">
+    <li class="rl-item" id="b16">
       <span class="rl-num">16</span>
       <a class="rl-cover" href="https://www.yes24.com/product/goods/147069400" rel="nofollow noopener noreferrer" target="_blank" aria-label="Morning Piano — buy or read more"><img src="https://image.yes24.com/goods/147069400/L" alt="Morning Piano by Kim Jinyoung — book cover" loading="lazy"></a>
       <div class="rl-meta">
@@ -1085,7 +1086,7 @@
         <button type="button" class="heart-btn sm" data-heart="b:아침의 피아노" aria-pressed="false" aria-label="Heart this book" title="Heart this book" hidden><span class="heart-ico" aria-hidden="true">♡</span><span class="heart-n"></span></button>
       </div>
     </li>
-    <li class="rl-item">
+    <li class="rl-item" id="b17">
       <span class="rl-num">17</span>
       <a class="rl-cover" href="https://www.yes24.com/product/goods/126646573" rel="nofollow noopener noreferrer" target="_blank" aria-label="Namok — buy or read more"><img src="https://image.yes24.com/goods/126646573/L" alt="Namok by Park Wansuh — book cover" loading="lazy"></a>
       <div class="rl-meta">
@@ -1095,7 +1096,7 @@
         <button type="button" class="heart-btn sm" data-heart="b:나목" aria-pressed="false" aria-label="Heart this book" title="Heart this book" hidden><span class="heart-ico" aria-hidden="true">♡</span><span class="heart-n"></span></button>
       </div>
     </li>
-    <li class="rl-item">
+    <li class="rl-item" id="b18">
       <span class="rl-num">18</span>
       <a class="rl-cover" href="https://www.yes24.com/product/goods/1387488" rel="nofollow noopener noreferrer" target="_blank" aria-label="No Longer Human — buy or read more"><img src="https://image.yes24.com/goods/1387488/L" alt="No Longer Human by Osamu Dazai — book cover" loading="lazy"></a>
       <div class="rl-meta">
@@ -1105,7 +1106,7 @@
         <button type="button" class="heart-btn sm" data-heart="b:인간 실격" aria-pressed="false" aria-label="Heart this book" title="Heart this book" hidden><span class="heart-ico" aria-hidden="true">♡</span><span class="heart-n"></span></button>
       </div>
     </li>
-    <li class="rl-item">
+    <li class="rl-item" id="b19">
       <span class="rl-num">19</span>
       <a class="rl-cover" href="https://www.yes24.com/product/goods/90628215" rel="nofollow noopener noreferrer" target="_blank" aria-label="Reading Novel: Summer 2020 — buy or read more"><img src="https://image.yes24.com/goods/90628215/L" alt="Reading Novel: Summer 2020 by Ganghwa-Gil, Seo Yi-Je, Im Sol-Ah — book cover" loading="lazy"></a>
       <div class="rl-meta">
@@ -1115,7 +1116,7 @@
         <button type="button" class="heart-btn sm" data-heart="b:소설 보다 : 여름 2020" aria-pressed="false" aria-label="Heart this book" title="Heart this book" hidden><span class="heart-ico" aria-hidden="true">♡</span><span class="heart-n"></span></button>
       </div>
     </li>
-    <li class="rl-item">
+    <li class="rl-item" id="b20">
       <span class="rl-num">20</span>
       <a class="rl-cover" href="https://www.yes24.com/product/goods/89969235" rel="nofollow noopener noreferrer" target="_blank" aria-label="Space Made by Space — buy or read more"><img src="https://image.yes24.com/goods/89969235/L" alt="Space Made by Space by Yoo Hyeonjun — book cover" loading="lazy"></a>
       <div class="rl-meta">
@@ -1125,7 +1126,7 @@
         <button type="button" class="heart-btn sm" data-heart="b:공간이 만든 공간" aria-pressed="false" aria-label="Heart this book" title="Heart this book" hidden><span class="heart-ico" aria-hidden="true">♡</span><span class="heart-n"></span></button>
       </div>
     </li>
-    <li class="rl-item">
+    <li class="rl-item" id="b21">
       <span class="rl-num">21</span>
       <a class="rl-cover" href="https://www.yes24.com/product/goods/30435587" rel="nofollow noopener noreferrer" target="_blank" aria-label="Summer Stays There for a Long Time — buy or read more"><img src="https://image.yes24.com/goods/30435587/L" alt="Summer Stays There for a Long Time by Masashi Matsui — book cover" loading="lazy"></a>
       <div class="rl-meta">
@@ -1135,7 +1136,7 @@
         <button type="button" class="heart-btn sm" data-heart="b:여름은 오래 그곳에 남아" aria-pressed="false" aria-label="Heart this book" title="Heart this book" hidden><span class="heart-ico" aria-hidden="true">♡</span><span class="heart-n"></span></button>
       </div>
     </li>
-    <li class="rl-item">
+    <li class="rl-item" id="b22">
       <span class="rl-num">22</span>
       <a class="rl-cover" href="https://www.yes24.com/product/goods/102220939" rel="nofollow noopener noreferrer" target="_blank" aria-label="Swimming in the Dark — buy or read more"><img src="https://image.yes24.com/goods/102220939/L" alt="Swimming in the Dark by Tomasz Jedrowski — book cover" loading="lazy"></a>
       <div class="rl-meta">
@@ -1145,17 +1146,18 @@
         <button type="button" class="heart-btn sm" data-heart="b:어둠 속에서 헤엄치기" aria-pressed="false" aria-label="Heart this book" title="Heart this book" hidden><span class="heart-ico" aria-hidden="true">♡</span><span class="heart-n"></span></button>
       </div>
     </li>
-    <li class="rl-item">
+    <li class="rl-item" id="b23">
       <span class="rl-num">23</span>
       <a class="rl-cover" href="https://www.yes24.com/product/goods/57665662" rel="nofollow noopener noreferrer" target="_blank" aria-label="The Black Deer — buy or read more"><img src="https://image.yes24.com/goods/57665662/L" alt="The Black Deer by Han Kang — book cover" loading="lazy"></a>
       <div class="rl-meta">
         <div class="rl-title"><a href="https://www.yes24.com/product/goods/57665662" rel="nofollow noopener noreferrer" target="_blank">The Black Deer</a> <span style="color:#888;font-size:12px;font-weight:400">(검은 사슴)</span></div>
         <div class="rl-byline">Han Kang</div>
+        <p class="rl-comment">The last Han Kang book left to read; halfway through, Hong Kyung already found many insights. (Source: GQ Korea)</p>
         <a class="rl-source" href="https://www.gqkorea.co.kr/2024/01/25/%ed%99%8d%ea%b2%bd/" rel="nofollow noopener noreferrer" target="_blank">📺 Source</a>
         <button type="button" class="heart-btn sm" data-heart="b:검은 사슴" aria-pressed="false" aria-label="Heart this book" title="Heart this book" hidden><span class="heart-ico" aria-hidden="true">♡</span><span class="heart-n"></span></button>
       </div>
     </li>
-    <li class="rl-item">
+    <li class="rl-item" id="b24">
       <span class="rl-num">24</span>
       <a class="rl-cover" href="https://www.yes24.com/product/goods/370331" rel="nofollow noopener noreferrer" target="_blank" aria-label="The Great Gatsby — buy or read more"><img src="https://image.yes24.com/goods/370331/L" alt="The Great Gatsby by F. Scott Fitzgerald — book cover" loading="lazy"></a>
       <div class="rl-meta">
@@ -1165,7 +1167,7 @@
         <button type="button" class="heart-btn sm" data-heart="b:위대한 개츠비" aria-pressed="false" aria-label="Heart this book" title="Heart this book" hidden><span class="heart-ico" aria-hidden="true">♡</span><span class="heart-n"></span></button>
       </div>
     </li>
-    <li class="rl-item">
+    <li class="rl-item" id="b25">
       <span class="rl-num">25</span>
       <a class="rl-cover" href="https://www.yes24.com/product/goods/103168353" rel="nofollow noopener noreferrer" target="_blank" aria-label="The Remains of the Day — buy or read more"><img src="https://image.yes24.com/goods/103168353/L" alt="The Remains of the Day by Kazuo Ishiguro — book cover" loading="lazy"></a>
       <div class="rl-meta">
@@ -1175,7 +1177,7 @@
         <button type="button" class="heart-btn sm" data-heart="b:남아 있는 나날" aria-pressed="false" aria-label="Heart this book" title="Heart this book" hidden><span class="heart-ico" aria-hidden="true">♡</span><span class="heart-n"></span></button>
       </div>
     </li>
-    <li class="rl-item">
+    <li class="rl-item" id="b26">
       <span class="rl-num">26</span>
       <a class="rl-cover" href="https://www.yes24.com/product/goods/195804435" rel="nofollow noopener noreferrer" target="_blank" aria-label="The Selfish Gene — buy or read more"><img src="https://image.yes24.com/goods/195804435/L" alt="The Selfish Gene by Richard Dawkins — book cover" loading="lazy"></a>
       <div class="rl-meta">
@@ -1185,7 +1187,7 @@
         <button type="button" class="heart-btn sm" data-heart="b:이기적 유전자" aria-pressed="false" aria-label="Heart this book" title="Heart this book" hidden><span class="heart-ico" aria-hidden="true">♡</span><span class="heart-n"></span></button>
       </div>
     </li>
-    <li class="rl-item">
+    <li class="rl-item" id="b27">
       <span class="rl-num">27</span>
       <a class="rl-cover" href="https://www.yes24.com/product/goods/92744494" rel="nofollow noopener noreferrer" target="_blank" aria-label="The Shallows — buy or read more"><img src="https://image.yes24.com/goods/92744494/L" alt="The Shallows by Nicholas Carr — book cover" loading="lazy"></a>
       <div class="rl-meta">
@@ -1195,7 +1197,7 @@
         <button type="button" class="heart-btn sm" data-heart="b:생각하지 않는 사람들" aria-pressed="false" aria-label="Heart this book" title="Heart this book" hidden><span class="heart-ico" aria-hidden="true">♡</span><span class="heart-n"></span></button>
       </div>
     </li>
-    <li class="rl-item">
+    <li class="rl-item" id="b28">
       <span class="rl-num">28</span>
       <a class="rl-cover" href="https://www.yes24.com/product/goods/108422348" rel="nofollow noopener noreferrer" target="_blank" aria-label="The Vegetarian — buy or read more"><img src="https://image.yes24.com/goods/108422348/L" alt="The Vegetarian by Han Kang — book cover" loading="lazy"></a>
       <div class="rl-meta">
@@ -1205,7 +1207,7 @@
         <button type="button" class="heart-btn sm" data-heart="b:채식주의자" aria-pressed="false" aria-label="Heart this book" title="Heart this book" hidden><span class="heart-ico" aria-hidden="true">♡</span><span class="heart-n"></span></button>
       </div>
     </li>
-    <li class="rl-item">
+    <li class="rl-item" id="b29">
       <span class="rl-num">29</span>
       <a class="rl-cover" href="https://www.yes24.com/product/goods/143896198" rel="nofollow noopener noreferrer" target="_blank" aria-label="The White Book — buy or read more"><img src="https://image.yes24.com/goods/143896198/L" alt="The White Book by Han Kang — book cover" loading="lazy"></a>
       <div class="rl-meta">
@@ -1215,7 +1217,7 @@
         <button type="button" class="heart-btn sm" data-heart="b:흰" aria-pressed="false" aria-label="Heart this book" title="Heart this book" hidden><span class="heart-ico" aria-hidden="true">♡</span><span class="heart-n"></span></button>
       </div>
     </li>
-    <li class="rl-item">
+    <li class="rl-item" id="b30">
       <span class="rl-num">30</span>
       <a class="rl-cover" href="https://www.yes24.com/product/goods/133217357" rel="nofollow noopener noreferrer" target="_blank" aria-label="The World of Learning — buy or read more"><span class="rl-new" data-added="2026-09-26">NEW</span><img src="https://image.yes24.com/goods/133217357/L" alt="The World of Learning by Shin Yongwook — book cover" loading="lazy"></a>
       <div class="rl-meta">
@@ -1225,7 +1227,7 @@
         <button type="button" class="heart-btn sm" data-heart="b:배우라는 세계" aria-pressed="false" aria-label="Heart this book" title="Heart this book" hidden><span class="heart-ico" aria-hidden="true">♡</span><span class="heart-n"></span></button>
       </div>
     </li>
-    <li class="rl-item">
+    <li class="rl-item" id="b31">
       <span class="rl-num">31</span>
       <a class="rl-cover" href="https://www.yes24.com/product/goods/98983220" rel="nofollow noopener noreferrer" target="_blank" aria-label="We All Go Home — buy or read more"><img src="https://image.yes24.com/goods/98983220/L" alt="We All Go Home by Masashi Matsui — book cover" loading="lazy"></a>
       <div class="rl-meta">
@@ -1235,7 +1237,7 @@
         <button type="button" class="heart-btn sm" data-heart="b:우리는 모두 집으로 돌아간다" aria-pressed="false" aria-label="Heart this book" title="Heart this book" hidden><span class="heart-ico" aria-hidden="true">♡</span><span class="heart-n"></span></button>
       </div>
     </li>
-    <li class="rl-item">
+    <li class="rl-item" id="b32">
       <span class="rl-num">32</span>
       <a class="rl-cover" href="https://www.yes24.com/product/goods/103495056" rel="nofollow noopener noreferrer" target="_blank" aria-label="We Do Not Part — buy or read more"><img src="https://image.yes24.com/goods/103495056/L" alt="We Do Not Part by Han Kang — book cover" loading="lazy"></a>
       <div class="rl-meta">
@@ -1245,7 +1247,7 @@
         <button type="button" class="heart-btn sm" data-heart="b:작별하지 않는다" aria-pressed="false" aria-label="Heart this book" title="Heart this book" hidden><span class="heart-ico" aria-hidden="true">♡</span><span class="heart-n"></span></button>
       </div>
     </li>
-    <li class="rl-item">
+    <li class="rl-item" id="b33">
       <span class="rl-num">33</span>
       <a class="rl-cover" href="https://www.yes24.com/product/goods/62096461" rel="nofollow noopener noreferrer" target="_blank" aria-label="Wenn Die Haut Zu Dunn Ist: Hochsensibilitat ? Vom Manko Zum Plus — buy or read more"><img src="https://image.yes24.com/goods/62096461/L" alt="Wenn Die Haut Zu Dunn Ist: Hochsensibilitat ? Vom Manko Zum Plus by Rolf Zelin — book cover" loading="lazy"></a>
       <div class="rl-meta">
@@ -1255,22 +1257,24 @@
         <button type="button" class="heart-btn sm" data-heart="b:예민함이라는 무기" aria-pressed="false" aria-label="Heart this book" title="Heart this book" hidden><span class="heart-ico" aria-hidden="true">♡</span><span class="heart-n"></span></button>
       </div>
     </li>
-    <li class="rl-item">
+    <li class="rl-item" id="b34">
       <span class="rl-num">34</span>
       <a class="rl-cover" href="https://www.yes24.com/product/goods/74258260" rel="nofollow noopener noreferrer" target="_blank" aria-label="Winners Take All: The Elite Charade of Changing the World — buy or read more"><img src="https://image.yes24.com/goods/74258260/L" alt="Winners Take All: The Elite Charade of Changing the World by Anand Giridharadas — book cover" loading="lazy"></a>
       <div class="rl-meta">
         <div class="rl-title"><a href="https://www.yes24.com/product/goods/74258260" rel="nofollow noopener noreferrer" target="_blank">Winners Take All: The Elite Charade of Changing the World</a> <span style="color:#888;font-size:12px;font-weight:400">(엘리트 독식 사회)</span></div>
         <div class="rl-byline">Anand Giridharadas *</div>
+        <p class="rl-comment">An enjoyable read that critiques the hypocrisy of Western elites. (Source: Cine21)</p>
         <a class="rl-source" href="https://cine21.com/news/view/?mag_id=95582&amp;utm_source=naver&amp;utm_medium=news" rel="nofollow noopener noreferrer" target="_blank">📺 Source</a>
         <button type="button" class="heart-btn sm" data-heart="b:엘리트 독식 사회" aria-pressed="false" aria-label="Heart this book" title="Heart this book" hidden><span class="heart-ico" aria-hidden="true">♡</span><span class="heart-n"></span></button>
       </div>
     </li>
-    <li class="rl-item">
+    <li class="rl-item" id="b35">
       <span class="rl-num">35</span>
       <a class="rl-cover" href="https://www.yes24.com/product/goods/66752481" rel="nofollow noopener noreferrer" target="_blank" aria-label="Yeosu — buy or read more"><img src="https://image.yes24.com/goods/66752481/L" alt="Yeosu by Han Kang — book cover" loading="lazy"></a>
       <div class="rl-meta">
         <div class="rl-title"><a href="https://www.yes24.com/product/goods/66752481" rel="nofollow noopener noreferrer" target="_blank">Yeosu</a> <span style="color:#888;font-size:12px;font-weight:400">(여수의 사랑)</span></div>
         <div class="rl-byline">Han Kang</div>
+        <p class="rl-comment">He picked this book in a Cine21 interview, saying it made him think about how unstable and fragile life is for someone passing through their twenties, and that because we crack at the smallest fracture, we need to step closer to each other. (Source: Cine21)</p>
         <a class="rl-source" href="https://cine21.com/news/view?mag_id=101480" rel="nofollow noopener noreferrer" target="_blank">📺 Source</a>
         <button type="button" class="heart-btn sm" data-heart="b:여수의 사랑" aria-pressed="false" aria-label="Heart this book" title="Heart this book" hidden><span class="heart-ico" aria-hidden="true">♡</span><span class="heart-n"></span></button>
       </div>

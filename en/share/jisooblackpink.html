@@ -407,8 +407,15 @@
              background-size: 100% var(--row); background-repeat: repeat-y; }
     .new-sec { margin: 16px 0 6px; padding: 12px 12px 2px; background: #fffbe6; border: 2px dashed #000; }
     .new-sec-h { display: flex; align-items: center; gap: 8px; margin: 0 0 10px; font-size: 15px; font-weight: 800; }
-    .new-sec .reading-list { margin: 0; }
-    .rl-num.rl-num-new { font-size: 11px; letter-spacing: .04em; }
+    .rl-item { scroll-margin-top: 16px; }
+    .rl-item:target { outline: 3px solid #fde047; outline-offset: 2px; }
+    .new-tiles { display: flex; flex-wrap: wrap; gap: 12px; padding-bottom: 10px; }
+    .new-tile { width: 84px; color: #000; text-decoration: none; display: flex; flex-direction: column; gap: 5px; }
+    .new-tile:hover { text-decoration: none; transform: translateY(-2px); }
+    .nt-cover { display: block; width: 84px; aspect-ratio: 2/3; border: 1.5px solid #000; box-shadow: 2px 2px 0 0 #000; background: #f4f4f0; overflow: hidden; }
+    .nt-cover img { width: 100%; height: 100%; object-fit: cover; display: block; }
+    .nt-no-cover { display: flex; width: 100%; height: 100%; align-items: center; justify-content: center; font-size: 22px; }
+    .nt-title { font-size: 12px; font-weight: 700; line-height: 1.3; word-break: keep-all; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
     .rl-new-tag { font-size: 9px; font-weight: 800; letter-spacing: .06em; line-height: 1; padding: 3px 5px;
                   background: #fde047; color: #000; border: 1.5px solid #000; }
     .sp { position: relative; flex: none; width: auto; height: var(--sh-h);
@@ -430,7 +437,7 @@
               font-size: 8px; line-height: 1; padding: 3px 0 2px;
               border-bottom: 1px solid rgba(0,0,0,.55); }
     .sp.is-new .sp-t { padding-top: 22px; }
-    .is-capturing .sp-new, .is-capturing .rl-new, .is-capturing .rl-shared { display: none !important; }
+    .is-capturing .sp-new, .is-capturing .rl-new, .is-capturing .rl-shared, .is-capturing .rl-comment { display: none !important; }
     .is-capturing .sp.is-new .sp-t { padding-top: 14px; }
     @media (max-width: 480px) { .shelf { --sh-h: 205px; }
                                  .sp.no-img, .sp.sp-fail { width: calc(var(--w, 38px) * .88); }
@@ -457,6 +464,7 @@
     .rl-title a { color: #000; }
     .rl-title a:hover { color: #2563eb; }
     .rl-byline { font-size: 13px; color: #555; margin-bottom: 8px; line-height: 1.4; }
+    .rl-comment { font-size: 13px; line-height: 1.55; color: #222; background: #FFF7C2; border: 1.5px solid #000; padding: 6px 9px; margin: 0 0 8px; word-break: keep-all; }
     .rl-source { display: inline-block; font-size: 12px; padding: 3px 8px; background: #fff; border: 1.5px solid #000; box-shadow: 1px 1px 0 0 #000; text-decoration: none; color: #000; transition: transform .1s, box-shadow .1s, background .1s; }
     .rl-source:hover { transform: translate(-1px,-1px); box-shadow: 2px 2px 0 0 #000; background: #a7f3d0; text-decoration: none; }
     @media (max-width: 480px) { .rl-item { padding: 14px 12px 14px 46px; } .rl-num { width: 32px; height: 26px; font-size: 12px; } .rl-cover { width: 60px; height: 88px; margin-right: 10px; } .rl-meta { min-height: 88px; } .rl-title { font-size: 15px; } }
@@ -497,148 +505,22 @@
     </div>
     <div class="new-sec">
       <h3 class="new-sec-h"><span class="rl-new-tag">NEW</span> New in the last 10 days (14 books)</h3>
-      <ol class="reading-list">
-    <li class="rl-item">
-      <span class="rl-num rl-num-new">NEW</span>
-      <a class="rl-cover" href="https://www.yes24.com/product/goods/12418152" rel="nofollow noopener noreferrer" target="_blank" aria-label="A Midsummer&#x27;s Equation — buy or read more"><span class="rl-new" data-added="2026-09-22">NEW</span><img src="https://image.yes24.com/goods/12418152/L" alt="A Midsummer&#x27;s Equation by Keigo Higashino — book cover" loading="lazy"></a>
-      <div class="rl-meta">
-        <div class="rl-title"><a href="https://www.yes24.com/product/goods/12418152" rel="nofollow noopener noreferrer" target="_blank">A Midsummer&#x27;s Equation</a> <span style="color:#888;font-size:12px;font-weight:400">(한여름의 방정식)</span></div>
-        <div class="rl-byline">Keigo Higashino</div>
-        <a class="rl-source" href="https://x.com/idolbooks/status/988038249187655681?s=20" rel="nofollow noopener noreferrer" target="_blank">📺 Source</a>
-        <button type="button" class="heart-btn sm" data-heart="b:한여름의 방정식" aria-pressed="false" aria-label="Heart this book" title="Heart this book" hidden><span class="heart-ico" aria-hidden="true">♡</span><span class="heart-n"></span></button>
+      <div class="new-tiles">
+        <a class="new-tile" href="#b1"><span class="nt-cover"><img src="https://image.yes24.com/goods/12418152/L" alt="A Midsummer&#x27;s Equation by Keigo Higashino — book cover" loading="lazy"></span><span class="nt-title">A Midsummer&#x27;s Equation</span></a>
+        <a class="new-tile" href="#b2"><span class="nt-cover"><img src="https://image.yes24.com/goods/60665767/L" alt="Anyway, Foreign Language by Cho Jiyoung — book cover" loading="lazy"></span><span class="nt-title">Anyway, Foreign Language</span></a>
+        <a class="new-tile" href="#b3"><span class="nt-cover"><img src="https://image.yes24.com/goods/91901136/L" alt="Diary of a Murderer by Kim Youngha — book cover" loading="lazy"></span><span class="nt-title">Diary of a Murderer</span></a>
+        <a class="new-tile" href="#b4"><span class="nt-cover"><img src="https://image.yes24.com/goods/14382311/L" alt="Firefly by Haruki Murakami — book cover" loading="lazy"></span><span class="nt-title">Firefly</span></a>
+        <a class="new-tile" href="#b5"><span class="nt-cover"><img src="https://image.yes24.com/goods/76108862/L" alt="Graduation by Keigo Higashino — book cover" loading="lazy"></span><span class="nt-title">Graduation</span></a>
+        <a class="new-tile" href="#b6"><span class="nt-cover"><img src="https://image.yes24.com/goods/24259730/L" alt="I See You Like I See a Flower by Na Tae-Joo — book cover" loading="lazy"></span><span class="nt-title">I See You Like I See a Flower</span></a>
+        <a class="new-tile" href="#b7"><span class="nt-cover"><img src="https://image.yes24.com/goods/3718187/L" alt="It&#x27;s Humane by Seong Seokje — book cover" loading="lazy"></span><span class="nt-title">It&#x27;s Humane</span></a>
+        <a class="new-tile" href="#b8"><span class="nt-cover"><img src="https://image.yes24.com/goods/126795598/L" alt="Kafka on the Shore by Haruki Murakami — book cover" loading="lazy"></span><span class="nt-title">Kafka on the Shore</span></a>
+        <a class="new-tile" href="#b9"><span class="nt-cover"><img src="https://image.yes24.com/goods/1951050/L" alt="May All Living Things Be Happy by 법정, 류시화 편 — book cover" loading="lazy"></span><span class="nt-title">May All Living Things Be Happy</span></a>
+        <a class="new-tile" href="#b10"><span class="nt-cover"><img src="https://image.yes24.com/goods/29288225/L" alt="Shoko&#x27;s Smile by Choi Eunyoung — book cover" loading="lazy"></span><span class="nt-title">Shoko&#x27;s Smile</span></a>
+        <a class="new-tile" href="#b11"><span class="nt-cover"><img src="https://image.yes24.com/goods/116599423/L" alt="The Courage to Be Disliked: How to Free Yourself, Change Your Life, and Achieve Real Happiness by Ichiro Kishimi, Fumitake Koga — book cover" loading="lazy"></span><span class="nt-title">The Courage to Be Disliked: How to Free Yourself, Change Your Life, and Achieve Real Happiness</span></a>
+        <a class="new-tile" href="#b12"><span class="nt-cover"><img src="https://image.yes24.com/goods/143896198/L" alt="The White Book by Han Kang — book cover" loading="lazy"></span><span class="nt-title">The White Book</span></a>
+        <a class="new-tile" href="#b13"><span class="nt-cover"><img src="https://image.yes24.com/goods/62108348/L" alt="Today Is Sweet. Yesterday Was Shit, But by Weigh — book cover" loading="lazy"></span><span class="nt-title">Today Is Sweet. Yesterday Was Shit, But</span></a>
+        <a class="new-tile" href="#b14"><span class="nt-cover"><img src="https://image.yes24.com/goods/130146486/L" alt="Who Moved My Cheese? by Spencer Johnson — book cover" loading="lazy"></span><span class="nt-title">Who Moved My Cheese?</span></a>
       </div>
-    </li>
-    <li class="rl-item">
-      <span class="rl-num rl-num-new">NEW</span>
-      <a class="rl-cover" href="https://www.yes24.com/product/goods/60665767" rel="nofollow noopener noreferrer" target="_blank" aria-label="Anyway, Foreign Language — buy or read more"><span class="rl-new" data-added="2026-09-22">NEW</span><img src="https://image.yes24.com/goods/60665767/L" alt="Anyway, Foreign Language by Cho Jiyoung — book cover" loading="lazy"></a>
-      <div class="rl-meta">
-        <div class="rl-title"><a href="https://www.yes24.com/product/goods/60665767" rel="nofollow noopener noreferrer" target="_blank">Anyway, Foreign Language *</a> <span style="color:#888;font-size:12px;font-weight:400">(아무튼, 외국어)</span></div>
-        <div class="rl-byline">Cho Jiyoung *</div>
-        <a class="rl-source" href="https://x.com/idolbooks/status/1032450234230534144?s=20" rel="nofollow noopener noreferrer" target="_blank">📺 Source</a>
-        <button type="button" class="heart-btn sm" data-heart="b:아무튼, 외국어" aria-pressed="false" aria-label="Heart this book" title="Heart this book" hidden><span class="heart-ico" aria-hidden="true">♡</span><span class="heart-n"></span></button>
-      </div>
-    </li>
-    <li class="rl-item">
-      <span class="rl-num rl-num-new">NEW</span>
-      <a class="rl-cover" href="https://www.yes24.com/product/goods/91901136" rel="nofollow noopener noreferrer" target="_blank" aria-label="Diary of a Murderer — buy or read more"><span class="rl-new" data-added="2026-09-22">NEW</span><img src="https://image.yes24.com/goods/91901136/L" alt="Diary of a Murderer by Kim Youngha — book cover" loading="lazy"></a>
-      <div class="rl-meta">
-        <div class="rl-title"><a href="https://www.yes24.com/product/goods/91901136" rel="nofollow noopener noreferrer" target="_blank">Diary of a Murderer</a> <span style="color:#888;font-size:12px;font-weight:400">(살인자의 기억법)</span></div>
-        <div class="rl-byline">Kim Youngha *</div>
-        <a class="rl-source" href="https://x.com/idolbooks/status/1032450234230534144?s=20" rel="nofollow noopener noreferrer" target="_blank">📺 Source</a>
-        <button type="button" class="heart-btn sm" data-heart="b:살인자의 기억법" aria-pressed="false" aria-label="Heart this book" title="Heart this book" hidden><span class="heart-ico" aria-hidden="true">♡</span><span class="heart-n"></span></button>
-      </div>
-    </li>
-    <li class="rl-item">
-      <span class="rl-num rl-num-new">NEW</span>
-      <a class="rl-cover" href="https://www.yes24.com/product/goods/14382311" rel="nofollow noopener noreferrer" target="_blank" aria-label="Firefly — buy or read more"><span class="rl-new" data-added="2026-09-22">NEW</span><img src="https://image.yes24.com/goods/14382311/L" alt="Firefly by Haruki Murakami — book cover" loading="lazy"></a>
-      <div class="rl-meta">
-        <div class="rl-title"><a href="https://www.yes24.com/product/goods/14382311" rel="nofollow noopener noreferrer" target="_blank">Firefly</a> <span style="color:#888;font-size:12px;font-weight:400">(반딧불이)</span></div>
-        <div class="rl-byline">Haruki Murakami</div>
-        <a class="rl-source" href="https://x.com/idolbooks/status/1032450234230534144?s=20" rel="nofollow noopener noreferrer" target="_blank">📺 Source</a>
-        <button type="button" class="heart-btn sm" data-heart="b:반딧불이" aria-pressed="false" aria-label="Heart this book" title="Heart this book" hidden><span class="heart-ico" aria-hidden="true">♡</span><span class="heart-n"></span></button>
-      </div>
-    </li>
-    <li class="rl-item">
-      <span class="rl-num rl-num-new">NEW</span>
-      <a class="rl-cover" href="https://www.yes24.com/product/goods/76108862" rel="nofollow noopener noreferrer" target="_blank" aria-label="Graduation — buy or read more"><span class="rl-new" data-added="2026-09-22">NEW</span><img src="https://image.yes24.com/goods/76108862/L" alt="Graduation by Keigo Higashino — book cover" loading="lazy"></a>
-      <div class="rl-meta">
-        <div class="rl-title"><a href="https://www.yes24.com/product/goods/76108862" rel="nofollow noopener noreferrer" target="_blank">Graduation</a> <span style="color:#888;font-size:12px;font-weight:400">(졸업)</span></div>
-        <div class="rl-byline">Keigo Higashino *</div>
-        <a class="rl-source" href="https://x.com/idolbooks/status/992286911694753792?s=20" rel="nofollow noopener noreferrer" target="_blank">📺 Source</a>
-        <button type="button" class="heart-btn sm" data-heart="b:졸업" aria-pressed="false" aria-label="Heart this book" title="Heart this book" hidden><span class="heart-ico" aria-hidden="true">♡</span><span class="heart-n"></span></button>
-      </div>
-    </li>
-    <li class="rl-item">
-      <span class="rl-num rl-num-new">NEW</span>
-      <a class="rl-cover" href="https://www.yes24.com/product/goods/24259730" rel="nofollow noopener noreferrer" target="_blank" aria-label="I See You Like I See a Flower — buy or read more"><span class="rl-new" data-added="2026-09-22">NEW</span><img src="https://image.yes24.com/goods/24259730/L" alt="I See You Like I See a Flower by Na Tae-Joo — book cover" loading="lazy"></a>
-      <div class="rl-meta">
-        <div class="rl-title"><a href="https://www.yes24.com/product/goods/24259730" rel="nofollow noopener noreferrer" target="_blank">I See You Like I See a Flower</a> <span style="color:#888;font-size:12px;font-weight:400">(꽃을 보듯 너를 본다)</span></div>
-        <div class="rl-byline">Na Tae-Joo *</div>
-        <a class="rl-source" href="https://x.com/idolbooks/status/1088993216727179265?s=20" rel="nofollow noopener noreferrer" target="_blank">📺 Source</a>
-        <button type="button" class="heart-btn sm" data-heart="b:꽃을 보듯 너를 본다" aria-pressed="false" aria-label="Heart this book" title="Heart this book" hidden><span class="heart-ico" aria-hidden="true">♡</span><span class="heart-n"></span></button>
-      </div>
-    </li>
-    <li class="rl-item">
-      <span class="rl-num rl-num-new">NEW</span>
-      <a class="rl-cover" href="https://www.yes24.com/product/goods/3718187" rel="nofollow noopener noreferrer" target="_blank" aria-label="It&#x27;s Humane — buy or read more"><span class="rl-new" data-added="2026-09-22">NEW</span><img src="https://image.yes24.com/goods/3718187/L" alt="It&#x27;s Humane by Seong Seokje — book cover" loading="lazy"></a>
-      <div class="rl-meta">
-        <div class="rl-title"><a href="https://www.yes24.com/product/goods/3718187" rel="nofollow noopener noreferrer" target="_blank">It&#x27;s Humane *</a> <span style="color:#888;font-size:12px;font-weight:400">(인간적이다)</span></div>
-        <div class="rl-byline">Seong Seokje *</div>
-        <a class="rl-source" href="https://x.com/idolbooks/status/1032450234230534144?s=20" rel="nofollow noopener noreferrer" target="_blank">📺 Source</a>
-        <button type="button" class="heart-btn sm" data-heart="b:인간적이다" aria-pressed="false" aria-label="Heart this book" title="Heart this book" hidden><span class="heart-ico" aria-hidden="true">♡</span><span class="heart-n"></span></button>
-      </div>
-    </li>
-    <li class="rl-item">
-      <span class="rl-num rl-num-new">NEW</span>
-      <a class="rl-cover" href="https://www.yes24.com/product/goods/126795598" rel="nofollow noopener noreferrer" target="_blank" aria-label="Kafka on the Shore — buy or read more"><span class="rl-new" data-added="2026-09-22">NEW</span><img src="https://image.yes24.com/goods/126795598/L" alt="Kafka on the Shore by Haruki Murakami — book cover" loading="lazy"></a>
-      <div class="rl-meta">
-        <div class="rl-title"><a href="https://www.yes24.com/product/goods/126795598" rel="nofollow noopener noreferrer" target="_blank">Kafka on the Shore</a> <span style="color:#888;font-size:12px;font-weight:400">(해변의 카프카)</span></div>
-        <div class="rl-byline">Haruki Murakami</div>
-        <a class="rl-source" href="https://x.com/idolbooks/status/1096794695491964928?s=20" rel="nofollow noopener noreferrer" target="_blank">📺 Source</a>
-        <button type="button" class="heart-btn sm" data-heart="b:해변의 카프카" aria-pressed="false" aria-label="Heart this book" title="Heart this book" hidden><span class="heart-ico" aria-hidden="true">♡</span><span class="heart-n"></span></button>
-      </div>
-    </li>
-    <li class="rl-item">
-      <span class="rl-num rl-num-new">NEW</span>
-      <a class="rl-cover" href="https://www.yes24.com/product/goods/1951050" rel="nofollow noopener noreferrer" target="_blank" aria-label="May All Living Things Be Happy — buy or read more"><span class="rl-new" data-added="2026-09-22">NEW</span><img src="https://image.yes24.com/goods/1951050/L" alt="May All Living Things Be Happy by 법정, 류시화 편 — book cover" loading="lazy"></a>
-      <div class="rl-meta">
-        <div class="rl-title"><a href="https://www.yes24.com/product/goods/1951050" rel="nofollow noopener noreferrer" target="_blank">May All Living Things Be Happy *</a> <span style="color:#888;font-size:12px;font-weight:400">(살아 있는 것은 다 행복하라)</span></div>
-        <div class="rl-byline">법정, 류시화 편</div>
-        <a class="rl-source" href="https://x.com/idolbooks/status/1032450234230534144?s=20" rel="nofollow noopener noreferrer" target="_blank">📺 Source</a>
-        <button type="button" class="heart-btn sm" data-heart="b:살아 있는 것은 다 행복하라" aria-pressed="false" aria-label="Heart this book" title="Heart this book" hidden><span class="heart-ico" aria-hidden="true">♡</span><span class="heart-n"></span></button>
-      </div>
-    </li>
-    <li class="rl-item">
-      <span class="rl-num rl-num-new">NEW</span>
-      <a class="rl-cover" href="https://www.yes24.com/product/goods/29288225" rel="nofollow noopener noreferrer" target="_blank" aria-label="Shoko&#x27;s Smile — buy or read more"><span class="rl-new" data-added="2026-09-22">NEW</span><img src="https://image.yes24.com/goods/29288225/L" alt="Shoko&#x27;s Smile by Choi Eunyoung — book cover" loading="lazy"></a>
-      <div class="rl-meta">
-        <div class="rl-title"><a href="https://www.yes24.com/product/goods/29288225" rel="nofollow noopener noreferrer" target="_blank">Shoko&#x27;s Smile</a> <span style="color:#888;font-size:12px;font-weight:400">(쇼코의 미소)</span></div>
-        <div class="rl-byline">Choi Eunyoung *</div>
-        <a class="rl-source" href="https://x.com/idolbooks/status/1032453551337832449?s=20" rel="nofollow noopener noreferrer" target="_blank">📺 Source</a>
-        <button type="button" class="heart-btn sm" data-heart="b:쇼코의 미소" aria-pressed="false" aria-label="Heart this book" title="Heart this book" hidden><span class="heart-ico" aria-hidden="true">♡</span><span class="heart-n"></span></button>
-      </div>
-    </li>
-    <li class="rl-item">
-      <span class="rl-num rl-num-new">NEW</span>
-      <a class="rl-cover" href="https://www.yes24.com/product/goods/116599423" rel="nofollow noopener noreferrer" target="_blank" aria-label="The Courage to Be Disliked: How to Free Yourself, Change Your Life, and Achieve Real Happiness — buy or read more"><span class="rl-new" data-added="2026-09-22">NEW</span><img src="https://image.yes24.com/goods/116599423/L" alt="The Courage to Be Disliked: How to Free Yourself, Change Your Life, and Achieve Real Happiness by Ichiro Kishimi, Fumitake Koga — book cover" loading="lazy"></a>
-      <div class="rl-meta">
-        <div class="rl-title"><a href="https://www.yes24.com/product/goods/116599423" rel="nofollow noopener noreferrer" target="_blank">The Courage to Be Disliked: How to Free Yourself, Change Your Life, and Achieve Real Happiness</a> <span style="color:#888;font-size:12px;font-weight:400">(미움받을 용기)</span></div>
-        <div class="rl-byline">Ichiro Kishimi, Fumitake Koga *</div>
-        <a class="rl-source" href="https://x.com/idolbooks/status/1032463742938767360?s=20" rel="nofollow noopener noreferrer" target="_blank">📺 Source</a>
-        <button type="button" class="heart-btn sm" data-heart="b:미움받을 용기" aria-pressed="false" aria-label="Heart this book" title="Heart this book" hidden><span class="heart-ico" aria-hidden="true">♡</span><span class="heart-n"></span></button>
-      </div>
-    </li>
-    <li class="rl-item">
-      <span class="rl-num rl-num-new">NEW</span>
-      <a class="rl-cover" href="https://www.yes24.com/product/goods/143896198" rel="nofollow noopener noreferrer" target="_blank" aria-label="The White Book — buy or read more"><span class="rl-new" data-added="2026-09-22">NEW</span><img src="https://image.yes24.com/goods/143896198/L" alt="The White Book by Han Kang — book cover" loading="lazy"></a>
-      <div class="rl-meta">
-        <div class="rl-title"><a href="https://www.yes24.com/product/goods/143896198" rel="nofollow noopener noreferrer" target="_blank">The White Book</a> <span style="color:#888;font-size:12px;font-weight:400">(흰)</span></div>
-        <div class="rl-byline">Han Kang</div>
-        <a class="rl-source" href="https://x.com/idolbooks/status/1032450234230534144?s=20" rel="nofollow noopener noreferrer" target="_blank">📺 Source</a>
-        <button type="button" class="heart-btn sm" data-heart="b:흰" aria-pressed="false" aria-label="Heart this book" title="Heart this book" hidden><span class="heart-ico" aria-hidden="true">♡</span><span class="heart-n"></span></button>
-      </div>
-    </li>
-    <li class="rl-item">
-      <span class="rl-num rl-num-new">NEW</span>
-      <a class="rl-cover" href="https://www.yes24.com/product/goods/62108348" rel="nofollow noopener noreferrer" target="_blank" aria-label="Today Is Sweet. Yesterday Was Shit, But — buy or read more"><span class="rl-new" data-added="2026-09-22">NEW</span><img src="https://image.yes24.com/goods/62108348/L" alt="Today Is Sweet. Yesterday Was Shit, But by Weigh — book cover" loading="lazy"></a>
-      <div class="rl-meta">
-        <div class="rl-title"><a href="https://www.yes24.com/product/goods/62108348" rel="nofollow noopener noreferrer" target="_blank">Today Is Sweet. Yesterday Was Shit, But *</a> <span style="color:#888;font-size:12px;font-weight:400">(오늘은 달다. 어제는 지랄맞았지만,)</span></div>
-        <div class="rl-byline">Weigh *</div>
-        <a class="rl-source" href="https://x.com/idolbooks/status/1032450234230534144?s=20" rel="nofollow noopener noreferrer" target="_blank">📺 Source</a>
-        <button type="button" class="heart-btn sm" data-heart="b:오늘은 달다. 어제는 지랄맞았지만," aria-pressed="false" aria-label="Heart this book" title="Heart this book" hidden><span class="heart-ico" aria-hidden="true">♡</span><span class="heart-n"></span></button>
-      </div>
-    </li>
-    <li class="rl-item">
-      <span class="rl-num rl-num-new">NEW</span>
-      <a class="rl-cover" href="https://www.yes24.com/product/goods/130146486" rel="nofollow noopener noreferrer" target="_blank" aria-label="Who Moved My Cheese? — buy or read more"><span class="rl-new" data-added="2026-09-22">NEW</span><img src="https://image.yes24.com/goods/130146486/L" alt="Who Moved My Cheese? by Spencer Johnson — book cover" loading="lazy"></a>
-      <div class="rl-meta">
-        <div class="rl-title"><a href="https://www.yes24.com/product/goods/130146486" rel="nofollow noopener noreferrer" target="_blank">Who Moved My Cheese?</a> <span style="color:#888;font-size:12px;font-weight:400">(누가 내 치즈를 옮겼을까?)</span></div>
-        <div class="rl-byline">Spencer Johnson *</div>
-        <a class="rl-source" href="https://x.com/idolbooks/status/1032450234230534144?s=20" rel="nofollow noopener noreferrer" target="_blank">📺 Source</a>
-        <button type="button" class="heart-btn sm" data-heart="b:누가 내 치즈를 옮겼을까?" aria-pressed="false" aria-label="Heart this book" title="Heart this book" hidden><span class="heart-ico" aria-hidden="true">♡</span><span class="heart-n"></span></button>
-      </div>
-    </li>
-      </ol>
     </div>
     <div id="shelf-area">
     <div class="shelf" id="shelf">
@@ -658,7 +540,7 @@
     <a class="sp is-new" style="--c:hsl(309,49%,38%);--w:39px;--fs:15px" href="https://www.yes24.com/product/goods/130146486" rel="nofollow noopener noreferrer" target="_blank" title="Who Moved My Cheese?"><span class="sp-t"><i>Who Moved My Cheese?</i></span><img class="sp-i" src="https://image.yes24.com/goods/130146486/side" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.parentNode.classList.add('sp-fail');this.remove()" onload="if(this.naturalWidth/this.naturalHeight>0.4){this.parentNode.classList.add('sp-fail');this.remove()}"><span class="sp-new" data-added="2026-09-22">NEW</span></a>
     </div>
     <ol class="reading-list" id="rlist">
-    <li class="rl-item">
+    <li class="rl-item" id="b1">
       <span class="rl-num">1</span>
       <a class="rl-cover" href="https://www.yes24.com/product/goods/12418152" rel="nofollow noopener noreferrer" target="_blank" aria-label="A Midsummer&#x27;s Equation — buy or read more"><span class="rl-new" data-added="2026-09-22">NEW</span><img src="https://image.yes24.com/goods/12418152/L" alt="A Midsummer&#x27;s Equation by Keigo Higashino — book cover" loading="lazy"></a>
       <div class="rl-meta">
@@ -668,7 +550,7 @@
         <button type="button" class="heart-btn sm" data-heart="b:한여름의 방정식" aria-pressed="false" aria-label="Heart this book" title="Heart this book" hidden><span class="heart-ico" aria-hidden="true">♡</span><span class="heart-n"></span></button>
       </div>
     </li>
-    <li class="rl-item">
+    <li class="rl-item" id="b2">
       <span class="rl-num">2</span>
       <a class="rl-cover" href="https://www.yes24.com/product/goods/60665767" rel="nofollow noopener noreferrer" target="_blank" aria-label="Anyway, Foreign Language — buy or read more"><span class="rl-new" data-added="2026-09-22">NEW</span><img src="https://image.yes24.com/goods/60665767/L" alt="Anyway, Foreign Language by Cho Jiyoung — book cover" loading="lazy"></a>
       <div class="rl-meta">
@@ -678,7 +560,7 @@
         <button type="button" class="heart-btn sm" data-heart="b:아무튼, 외국어" aria-pressed="false" aria-label="Heart this book" title="Heart this book" hidden><span class="heart-ico" aria-hidden="true">♡</span><span class="heart-n"></span></button>
       </div>
     </li>
-    <li class="rl-item">
+    <li class="rl-item" id="b3">
       <span class="rl-num">3</span>
       <a class="rl-cover" href="https://www.yes24.com/product/goods/91901136" rel="nofollow noopener noreferrer" target="_blank" aria-label="Diary of a Murderer — buy or read more"><span class="rl-new" data-added="2026-09-22">NEW</span><img src="https://image.yes24.com/goods/91901136/L" alt="Diary of a Murderer by Kim Youngha — book cover" loading="lazy"></a>
       <div class="rl-meta">
@@ -688,7 +570,7 @@
         <button type="button" class="heart-btn sm" data-heart="b:살인자의 기억법" aria-pressed="false" aria-label="Heart this book" title="Heart this book" hidden><span class="heart-ico" aria-hidden="true">♡</span><span class="heart-n"></span></button>
       </div>
     </li>
-    <li class="rl-item">
+    <li class="rl-item" id="b4">
       <span class="rl-num">4</span>
       <a class="rl-cover" href="https://www.yes24.com/product/goods/14382311" rel="nofollow noopener noreferrer" target="_blank" aria-label="Firefly — buy or read more"><span class="rl-new" data-added="2026-09-22">NEW</span><img src="https://image.yes24.com/goods/14382311/L" alt="Firefly by Haruki Murakami — book cover" loading="lazy"></a>
       <div class="rl-meta">
@@ -698,7 +580,7 @@
         <button type="button" class="heart-btn sm" data-heart="b:반딧불이" aria-pressed="false" aria-label="Heart this book" title="Heart this book" hidden><span class="heart-ico" aria-hidden="true">♡</span><span class="heart-n"></span></button>
       </div>
     </li>
-    <li class="rl-item">
+    <li class="rl-item" id="b5">
       <span class="rl-num">5</span>
       <a class="rl-cover" href="https://www.yes24.com/product/goods/76108862" rel="nofollow noopener noreferrer" target="_blank" aria-label="Graduation — buy or read more"><span class="rl-new" data-added="2026-09-22">NEW</span><img src="https://image.yes24.com/goods/76108862/L" alt="Graduation by Keigo Higashino — book cover" loading="lazy"></a>
       <div class="rl-meta">
@@ -708,7 +590,7 @@
         <button type="button" class="heart-btn sm" data-heart="b:졸업" aria-pressed="false" aria-label="Heart this book" title="Heart this book" hidden><span class="heart-ico" aria-hidden="true">♡</span><span class="heart-n"></span></button>
       </div>
     </li>
-    <li class="rl-item">
+    <li class="rl-item" id="b6">
       <span class="rl-num">6</span>
       <a class="rl-cover" href="https://www.yes24.com/product/goods/24259730" rel="nofollow noopener noreferrer" target="_blank" aria-label="I See You Like I See a Flower — buy or read more"><span class="rl-new" data-added="2026-09-22">NEW</span><img src="https://image.yes24.com/goods/24259730/L" alt="I See You Like I See a Flower by Na Tae-Joo — book cover" loading="lazy"></a>
       <div class="rl-meta">
@@ -718,7 +600,7 @@
         <button type="button" class="heart-btn sm" data-heart="b:꽃을 보듯 너를 본다" aria-pressed="false" aria-label="Heart this book" title="Heart this book" hidden><span class="heart-ico" aria-hidden="true">♡</span><span class="heart-n"></span></button>
       </div>
     </li>
-    <li class="rl-item">
+    <li class="rl-item" id="b7">
       <span class="rl-num">7</span>
       <a class="rl-cover" href="https://www.yes24.com/product/goods/3718187" rel="nofollow noopener noreferrer" target="_blank" aria-label="It&#x27;s Humane — buy or read more"><span class="rl-new" data-added="2026-09-22">NEW</span><img src="https://image.yes24.com/goods/3718187/L" alt="It&#x27;s Humane by Seong Seokje — book cover" loading="lazy"></a>
       <div class="rl-meta">
@@ -728,7 +610,7 @@
         <button type="button" class="heart-btn sm" data-heart="b:인간적이다" aria-pressed="false" aria-label="Heart this book" title="Heart this book" hidden><span class="heart-ico" aria-hidden="true">♡</span><span class="heart-n"></span></button>
       </div>
     </li>
-    <li class="rl-item">
+    <li class="rl-item" id="b8">
       <span class="rl-num">8</span>
       <a class="rl-cover" href="https://www.yes24.com/product/goods/126795598" rel="nofollow noopener noreferrer" target="_blank" aria-label="Kafka on the Shore — buy or read more"><span class="rl-new" data-added="2026-09-22">NEW</span><img src="https://image.yes24.com/goods/126795598/L" alt="Kafka on the Shore by Haruki Murakami — book cover" loading="lazy"></a>
       <div class="rl-meta">
@@ -738,7 +620,7 @@
         <button type="button" class="heart-btn sm" data-heart="b:해변의 카프카" aria-pressed="false" aria-label="Heart this book" title="Heart this book" hidden><span class="heart-ico" aria-hidden="true">♡</span><span class="heart-n"></span></button>
       </div>
     </li>
-    <li class="rl-item">
+    <li class="rl-item" id="b9">
       <span class="rl-num">9</span>
       <a class="rl-cover" href="https://www.yes24.com/product/goods/1951050" rel="nofollow noopener noreferrer" target="_blank" aria-label="May All Living Things Be Happy — buy or read more"><span class="rl-new" data-added="2026-09-22">NEW</span><img src="https://image.yes24.com/goods/1951050/L" alt="May All Living Things Be Happy by 법정, 류시화 편 — book cover" loading="lazy"></a>
       <div class="rl-meta">
@@ -748,7 +630,7 @@
         <button type="button" class="heart-btn sm" data-heart="b:살아 있는 것은 다 행복하라" aria-pressed="false" aria-label="Heart this book" title="Heart this book" hidden><span class="heart-ico" aria-hidden="true">♡</span><span class="heart-n"></span></button>
       </div>
     </li>
-    <li class="rl-item">
+    <li class="rl-item" id="b10">
       <span class="rl-num">10</span>
       <a class="rl-cover" href="https://www.yes24.com/product/goods/29288225" rel="nofollow noopener noreferrer" target="_blank" aria-label="Shoko&#x27;s Smile — buy or read more"><span class="rl-new" data-added="2026-09-22">NEW</span><img src="https://image.yes24.com/goods/29288225/L" alt="Shoko&#x27;s Smile by Choi Eunyoung — book cover" loading="lazy"></a>
       <div class="rl-meta">
@@ -758,7 +640,7 @@
         <button type="button" class="heart-btn sm" data-heart="b:쇼코의 미소" aria-pressed="false" aria-label="Heart this book" title="Heart this book" hidden><span class="heart-ico" aria-hidden="true">♡</span><span class="heart-n"></span></button>
       </div>
     </li>
-    <li class="rl-item">
+    <li class="rl-item" id="b11">
       <span class="rl-num">11</span>
       <a class="rl-cover" href="https://www.yes24.com/product/goods/116599423" rel="nofollow noopener noreferrer" target="_blank" aria-label="The Courage to Be Disliked: How to Free Yourself, Change Your Life, and Achieve Real Happiness — buy or read more"><span class="rl-new" data-added="2026-09-22">NEW</span><img src="https://image.yes24.com/goods/116599423/L" alt="The Courage to Be Disliked: How to Free Yourself, Change Your Life, and Achieve Real Happiness by Ichiro Kishimi, Fumitake Koga — book cover" loading="lazy"></a>
       <div class="rl-meta">
@@ -768,7 +650,7 @@
         <button type="button" class="heart-btn sm" data-heart="b:미움받을 용기" aria-pressed="false" aria-label="Heart this book" title="Heart this book" hidden><span class="heart-ico" aria-hidden="true">♡</span><span class="heart-n"></span></button>
       </div>
     </li>
-    <li class="rl-item">
+    <li class="rl-item" id="b12">
       <span class="rl-num">12</span>
       <a class="rl-cover" href="https://www.yes24.com/product/goods/143896198" rel="nofollow noopener noreferrer" target="_blank" aria-label="The White Book — buy or read more"><span class="rl-new" data-added="2026-09-22">NEW</span><img src="https://image.yes24.com/goods/143896198/L" alt="The White Book by Han Kang — book cover" loading="lazy"></a>
       <div class="rl-meta">
@@ -778,7 +660,7 @@
         <button type="button" class="heart-btn sm" data-heart="b:흰" aria-pressed="false" aria-label="Heart this book" title="Heart this book" hidden><span class="heart-ico" aria-hidden="true">♡</span><span class="heart-n"></span></button>
       </div>
     </li>
-    <li class="rl-item">
+    <li class="rl-item" id="b13">
       <span class="rl-num">13</span>
       <a class="rl-cover" href="https://www.yes24.com/product/goods/62108348" rel="nofollow noopener noreferrer" target="_blank" aria-label="Today Is Sweet. Yesterday Was Shit, But — buy or read more"><span class="rl-new" data-added="2026-09-22">NEW</span><img src="https://image.yes24.com/goods/62108348/L" alt="Today Is Sweet. Yesterday Was Shit, But by Weigh — book cover" loading="lazy"></a>
       <div class="rl-meta">
@@ -788,7 +670,7 @@
         <button type="button" class="heart-btn sm" data-heart="b:오늘은 달다. 어제는 지랄맞았지만," aria-pressed="false" aria-label="Heart this book" title="Heart this book" hidden><span class="heart-ico" aria-hidden="true">♡</span><span class="heart-n"></span></button>
       </div>
     </li>
-    <li class="rl-item">
+    <li class="rl-item" id="b14">
       <span class="rl-num">14</span>
       <a class="rl-cover" href="https://www.yes24.com/product/goods/130146486" rel="nofollow noopener noreferrer" target="_blank" aria-label="Who Moved My Cheese? — buy or read more"><span class="rl-new" data-added="2026-09-22">NEW</span><img src="https://image.yes24.com/goods/130146486/L" alt="Who Moved My Cheese? by Spencer Johnson — book cover" loading="lazy"></a>
       <div class="rl-meta">

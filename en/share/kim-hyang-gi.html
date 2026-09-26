@@ -247,8 +247,15 @@
              background-size: 100% var(--row); background-repeat: repeat-y; }
     .new-sec { margin: 16px 0 6px; padding: 12px 12px 2px; background: #fffbe6; border: 2px dashed #000; }
     .new-sec-h { display: flex; align-items: center; gap: 8px; margin: 0 0 10px; font-size: 15px; font-weight: 800; }
-    .new-sec .reading-list { margin: 0; }
-    .rl-num.rl-num-new { font-size: 11px; letter-spacing: .04em; }
+    .rl-item { scroll-margin-top: 16px; }
+    .rl-item:target { outline: 3px solid #fde047; outline-offset: 2px; }
+    .new-tiles { display: flex; flex-wrap: wrap; gap: 12px; padding-bottom: 10px; }
+    .new-tile { width: 84px; color: #000; text-decoration: none; display: flex; flex-direction: column; gap: 5px; }
+    .new-tile:hover { text-decoration: none; transform: translateY(-2px); }
+    .nt-cover { display: block; width: 84px; aspect-ratio: 2/3; border: 1.5px solid #000; box-shadow: 2px 2px 0 0 #000; background: #f4f4f0; overflow: hidden; }
+    .nt-cover img { width: 100%; height: 100%; object-fit: cover; display: block; }
+    .nt-no-cover { display: flex; width: 100%; height: 100%; align-items: center; justify-content: center; font-size: 22px; }
+    .nt-title { font-size: 12px; font-weight: 700; line-height: 1.3; word-break: keep-all; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
     .rl-new-tag { font-size: 9px; font-weight: 800; letter-spacing: .06em; line-height: 1; padding: 3px 5px;
                   background: #fde047; color: #000; border: 1.5px solid #000; }
     .sp { position: relative; flex: none; width: auto; height: var(--sh-h);
@@ -270,7 +277,7 @@
               font-size: 8px; line-height: 1; padding: 3px 0 2px;
               border-bottom: 1px solid rgba(0,0,0,.55); }
     .sp.is-new .sp-t { padding-top: 22px; }
-    .is-capturing .sp-new, .is-capturing .rl-new, .is-capturing .rl-shared { display: none !important; }
+    .is-capturing .sp-new, .is-capturing .rl-new, .is-capturing .rl-shared, .is-capturing .rl-comment { display: none !important; }
     .is-capturing .sp.is-new .sp-t { padding-top: 14px; }
     @media (max-width: 480px) { .shelf { --sh-h: 205px; }
                                  .sp.no-img, .sp.sp-fail { width: calc(var(--w, 38px) * .88); }
@@ -297,6 +304,7 @@
     .rl-title a { color: #000; }
     .rl-title a:hover { color: #2563eb; }
     .rl-byline { font-size: 13px; color: #555; margin-bottom: 8px; line-height: 1.4; }
+    .rl-comment { font-size: 13px; line-height: 1.55; color: #222; background: #FFF7C2; border: 1.5px solid #000; padding: 6px 9px; margin: 0 0 8px; word-break: keep-all; }
     .rl-source { display: inline-block; font-size: 12px; padding: 3px 8px; background: #fff; border: 1.5px solid #000; box-shadow: 1px 1px 0 0 #000; text-decoration: none; color: #000; transition: transform .1s, box-shadow .1s, background .1s; }
     .rl-source:hover { transform: translate(-1px,-1px); box-shadow: 2px 2px 0 0 #000; background: #a7f3d0; text-decoration: none; }
     @media (max-width: 480px) { .rl-item { padding: 14px 12px 14px 46px; } .rl-num { width: 32px; height: 26px; font-size: 12px; } .rl-cover { width: 60px; height: 88px; margin-right: 10px; } .rl-meta { min-height: 88px; } .rl-title { font-size: 15px; } }
@@ -344,37 +352,40 @@
     <a class="sp" style="--c:hsl(278,56%,43%);--w:33px;--fs:13px" href="https://www.yes24.com/product/goods/102836095" rel="nofollow noopener noreferrer" target="_blank" title="Survival of the Friendliest"><span class="sp-t"><i>Survival of the Friendliest</i></span><img class="sp-i" src="https://image.yes24.com/goods/102836095/side" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.parentNode.classList.add('sp-fail');this.remove()" onload="if(this.naturalWidth/this.naturalHeight>0.4){this.parentNode.classList.add('sp-fail');this.remove()}"></a>
     </div>
     <ol class="reading-list" id="rlist">
-    <li class="rl-item">
+    <li class="rl-item" id="b1">
       <span class="rl-num">1</span>
       <a class="rl-cover" href="https://www.yes24.com/product/goods/175882885" rel="nofollow noopener noreferrer" target="_blank" aria-label="Discomfort in a Pleasant Society — buy or read more"><img src="https://image.yes24.com/goods/175882885/L" alt="Discomfort in a Pleasant Society by Kumashiro  Toru — book cover" loading="lazy"></a>
       <div class="rl-meta">
         <div class="rl-title"><a href="https://www.yes24.com/product/goods/175882885" rel="nofollow noopener noreferrer" target="_blank">Discomfort in a Pleasant Society *</a> <span style="color:#888;font-size:12px;font-weight:400">(쾌적한 사회의 불쾌함)</span></div>
         <div class="rl-byline">Kumashiro  Toru*</div>
+        <p class="rl-comment">Named in JoongAng Ilbo&#x27;s Gen Z bookshelf series as a book in the cart, to be read soon. (Source: JoongAng Ilbo)</p>
         <a class="rl-source" href="https://www.joongang.co.kr/article/25431010" rel="nofollow noopener noreferrer" target="_blank">📺 Source</a>
         <button type="button" class="heart-btn sm" data-heart="b:쾌적한 사회의 불쾌함" aria-pressed="false" aria-label="Heart this book" title="Heart this book" hidden><span class="heart-ico" aria-hidden="true">♡</span><span class="heart-n"></span></button>
       </div>
     </li>
-    <li class="rl-item">
+    <li class="rl-item" id="b2">
       <span class="rl-num">2</span>
       <a class="rl-cover" href="https://www.yes24.com/product/goods/173654407" rel="nofollow noopener noreferrer" target="_blank" aria-label="Japanese Advertising Copy Illustration — buy or read more"><img src="https://image.yes24.com/goods/173654407/L" alt="Japanese Advertising Copy Illustration by Oh Harim — book cover" loading="lazy"></a>
       <div class="rl-meta">
         <div class="rl-title"><a href="https://www.yes24.com/product/goods/173654407" rel="nofollow noopener noreferrer" target="_blank">Japanese Advertising Copy Illustration *</a> <span style="color:#888;font-size:12px;font-weight:400">(일본 광고 카피 도감)</span></div>
         <div class="rl-byline">Oh Harim *</div>
+        <p class="rl-comment">Named in JoongAng Ilbo&#x27;s Gen Z bookshelf series as a book waiting in the shopping cart. (Source: JoongAng Ilbo)</p>
         <a class="rl-source" href="https://www.joongang.co.kr/article/25431010" rel="nofollow noopener noreferrer" target="_blank">📺 Source</a>
         <button type="button" class="heart-btn sm" data-heart="b:일본 광고 카피 도감" aria-pressed="false" aria-label="Heart this book" title="Heart this book" hidden><span class="heart-ico" aria-hidden="true">♡</span><span class="heart-n"></span></button>
       </div>
     </li>
-    <li class="rl-item">
+    <li class="rl-item" id="b3">
       <span class="rl-num">3</span>
       <a class="rl-cover" href="https://www.yes24.com/product/goods/61933303" rel="nofollow noopener noreferrer" target="_blank" aria-label="L&#x27;insoutenable légèreté de l&#x27;être — buy or read more"><img src="https://image.yes24.com/goods/61933303/L" alt="L&#x27;insoutenable légèreté de l&#x27;être by Milan Kundera — book cover" loading="lazy"></a>
       <div class="rl-meta">
         <div class="rl-title"><a href="https://www.yes24.com/product/goods/61933303" rel="nofollow noopener noreferrer" target="_blank">L&#x27;insoutenable légèreté de l&#x27;être</a> <span style="color:#888;font-size:12px;font-weight:400">(참을 수 없는 존재의 가벼움)</span></div>
         <div class="rl-byline">Milan Kundera</div>
+        <p class="rl-comment">A night-time read. The first pass, between drama shoots last year, was hard to fully grasp, so Kim Hyang-gi picked it up again as the weather turned cold. (Source: Marie Claire Korea)</p>
         <a class="rl-source" href="https://www.marieclairekorea.com/celebrity/2021/12/kimhyanggi/" rel="nofollow noopener noreferrer" target="_blank">📺 Source</a>
         <button type="button" class="heart-btn sm" data-heart="b:참을 수 없는 존재의 가벼움" aria-pressed="false" aria-label="Heart this book" title="Heart this book" hidden><span class="heart-ico" aria-hidden="true">♡</span><span class="heart-n"></span></button>
       </div>
     </li>
-    <li class="rl-item">
+    <li class="rl-item" id="b4">
       <span class="rl-num">4</span>
       <a class="rl-cover" href="https://www.yes24.com/product/goods/193059981" rel="nofollow noopener noreferrer" target="_blank" aria-label="New Philosopher 2026 No. 33 - Vol 33: Emotions Are Not ‘Emotional’ — buy or read more"><img src="https://image.yes24.com/goods/193059981/L" alt="New Philosopher 2026 No. 33 - Vol 33: Emotions Are Not ‘Emotional’ by New Philosopher Editorial Department (Editor) — book cover" loading="lazy"></a>
       <div class="rl-meta">
@@ -384,12 +395,13 @@
         <button type="button" class="heart-btn sm" data-heart="b:뉴필로소퍼 2026 33호 - vol 33 : 감정은 ‘감정적’인 것이 아니다" aria-pressed="false" aria-label="Heart this book" title="Heart this book" hidden><span class="heart-ico" aria-hidden="true">♡</span><span class="heart-n"></span></button>
       </div>
     </li>
-    <li class="rl-item">
+    <li class="rl-item" id="b5">
       <span class="rl-num">5</span>
       <a class="rl-cover" href="https://www.yes24.com/product/goods/102836095" rel="nofollow noopener noreferrer" target="_blank" aria-label="Survival of the Friendliest — buy or read more"><img src="https://image.yes24.com/goods/102836095/L" alt="Survival of the Friendliest by Brian Hare, Vanessa Woods — book cover" loading="lazy"></a>
       <div class="rl-meta">
         <div class="rl-title"><a href="https://www.yes24.com/product/goods/102836095" rel="nofollow noopener noreferrer" target="_blank">Survival of the Friendliest</a> <span style="color:#888;font-size:12px;font-weight:400">(다정한 것이 살아남는다)</span></div>
         <div class="rl-byline">Brian Hare, Vanessa Woods *</div>
+        <p class="rl-comment">A daytime read, since mornings are for learning something new. Evolutionary biology seemed hard at first, but the book makes human friendliness and sharing easy to grasp. (Source: Marie Claire Korea)</p>
         <a class="rl-source" href="https://www.marieclairekorea.com/celebrity/2021/12/kimhyanggi/" rel="nofollow noopener noreferrer" target="_blank">📺 Source</a>
         <button type="button" class="heart-btn sm" data-heart="b:다정한 것이 살아남는다" aria-pressed="false" aria-label="Heart this book" title="Heart this book" hidden><span class="heart-ico" aria-hidden="true">♡</span><span class="heart-n"></span></button>
       </div>

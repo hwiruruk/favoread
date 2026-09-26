@@ -197,8 +197,15 @@
              background-size: 100% var(--row); background-repeat: repeat-y; }
     .new-sec { margin: 16px 0 6px; padding: 12px 12px 2px; background: #fffbe6; border: 2px dashed #000; }
     .new-sec-h { display: flex; align-items: center; gap: 8px; margin: 0 0 10px; font-size: 15px; font-weight: 800; }
-    .new-sec .reading-list { margin: 0; }
-    .rl-num.rl-num-new { font-size: 11px; letter-spacing: .04em; }
+    .rl-item { scroll-margin-top: 16px; }
+    .rl-item:target { outline: 3px solid #fde047; outline-offset: 2px; }
+    .new-tiles { display: flex; flex-wrap: wrap; gap: 12px; padding-bottom: 10px; }
+    .new-tile { width: 84px; color: #000; text-decoration: none; display: flex; flex-direction: column; gap: 5px; }
+    .new-tile:hover { text-decoration: none; transform: translateY(-2px); }
+    .nt-cover { display: block; width: 84px; aspect-ratio: 2/3; border: 1.5px solid #000; box-shadow: 2px 2px 0 0 #000; background: #f4f4f0; overflow: hidden; }
+    .nt-cover img { width: 100%; height: 100%; object-fit: cover; display: block; }
+    .nt-no-cover { display: flex; width: 100%; height: 100%; align-items: center; justify-content: center; font-size: 22px; }
+    .nt-title { font-size: 12px; font-weight: 700; line-height: 1.3; word-break: keep-all; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
     .rl-new-tag { font-size: 9px; font-weight: 800; letter-spacing: .06em; line-height: 1; padding: 3px 5px;
                   background: #fde047; color: #000; border: 1.5px solid #000; }
     .sp { position: relative; flex: none; width: auto; height: var(--sh-h);
@@ -220,7 +227,7 @@
               font-size: 8px; line-height: 1; padding: 3px 0 2px;
               border-bottom: 1px solid rgba(0,0,0,.55); }
     .sp.is-new .sp-t { padding-top: 22px; }
-    .is-capturing .sp-new, .is-capturing .rl-new, .is-capturing .rl-shared { display: none !important; }
+    .is-capturing .sp-new, .is-capturing .rl-new, .is-capturing .rl-shared, .is-capturing .rl-comment { display: none !important; }
     .is-capturing .sp.is-new .sp-t { padding-top: 14px; }
     @media (max-width: 480px) { .shelf { --sh-h: 205px; }
                                  .sp.no-img, .sp.sp-fail { width: calc(var(--w, 38px) * .88); }
@@ -247,6 +254,7 @@
     .rl-title a { color: #000; }
     .rl-title a:hover { color: #2563eb; }
     .rl-byline { font-size: 13px; color: #555; margin-bottom: 8px; line-height: 1.4; }
+    .rl-comment { font-size: 13px; line-height: 1.55; color: #222; background: #FFF7C2; border: 1.5px solid #000; padding: 6px 9px; margin: 0 0 8px; word-break: keep-all; }
     .rl-source { display: inline-block; font-size: 12px; padding: 3px 8px; background: #fff; border: 1.5px solid #000; box-shadow: 1px 1px 0 0 #000; text-decoration: none; color: #000; transition: transform .1s, box-shadow .1s, background .1s; }
     .rl-source:hover { transform: translate(-1px,-1px); box-shadow: 2px 2px 0 0 #000; background: #a7f3d0; text-decoration: none; }
     .rl-shared { clear: both; margin-top: 12px; padding-top: 10px; border-top: 1.5px dashed #ccc; display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
@@ -312,17 +320,18 @@
     <a class="sp" style="--c:hsl(110,37%,47%);--w:35px;--fs:12px" href="https://www.yes24.com/product/goods/61933303" rel="nofollow noopener noreferrer" target="_blank" title="참을 수 없는 존재의 가벼움"><span class="sp-t"><i>참을 수 없는 존재의 가벼움</i></span><img class="sp-i" src="https://image.yes24.com/goods/61933303/side" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.parentNode.classList.add('sp-fail');this.remove()" onload="if(this.naturalWidth/this.naturalHeight>0.4){this.parentNode.classList.add('sp-fail');this.remove()}"></a>
     </div>
     <ol class="reading-list" id="rlist">
-    <li class="rl-item">
+    <li class="rl-item" id="b1">
       <span class="rl-num">1</span>
       <a class="rl-cover" href="https://www.yes24.com/product/goods/3647046" rel="nofollow noopener noreferrer" target="_blank" aria-label="그리스인 조르바 알라딘에서 보기"><img src="https://image.yes24.com/goods/3647046/L" alt="그리스인 조르바 표지" loading="lazy"></a>
       <div class="rl-meta">
         <div class="rl-title"><a href="https://www.yes24.com/product/goods/3647046" rel="nofollow noopener noreferrer" target="_blank">그리스인 조르바</a></div>
         <div class="rl-byline">니코스 카잔자키스 · 열린책들</div>
+        <p class="rl-comment">장편 세 권을 동시에 읽다가 이 두꺼운 책을 가장 먼저 다 읽었다고 했어요. 휴대폰에 휩쓸리지 않으려고 가방에 늘 책 한 권을 넣고 다닌대요. (출처: W코리아)</p>
         <a class="rl-source" href="https://www.wkorea.com/2019/11/25/who-me/" rel="nofollow noopener noreferrer" target="_blank">📺 출처 보기</a>
         <button type="button" class="heart-btn sm" data-heart="b:그리스인 조르바" aria-pressed="false" aria-label="이 책에 하트" title="이 책에 하트" hidden><span class="heart-ico" aria-hidden="true">♡</span><span class="heart-n"></span></button>
       </div>
     </li>
-    <li class="rl-item">
+    <li class="rl-item" id="b2">
       <span class="rl-num">2</span>
       <a class="rl-cover" href="https://www.yes24.com/product/goods/44499829" rel="nofollow noopener noreferrer" target="_blank" aria-label="노르웨이의 숲 알라딘에서 보기"><img src="https://image.yes24.com/goods/44499829/L" alt="노르웨이의 숲 표지" loading="lazy"></a>
       <div class="rl-meta">
@@ -333,12 +342,13 @@
       </div>
       <div class="rl-shared"><span class="rl-shared-label">👥 함께 추천한 셀럽 12명:</span> <a class="rl-celeb-chip" href="https://favorbook.co.kr/share/%EA%B0%80%EC%9B%90%28%EB%AF%B8%EC%95%BC%EC%98%A4%29.html">가원(미야오)</a><a class="rl-celeb-chip" href="https://favorbook.co.kr/share/%EA%B0%80%EC%9D%84%28%EC%95%84%EC%9D%B4%EB%B8%8C%29.html">가을(아이브)</a><a class="rl-celeb-chip" href="https://favorbook.co.kr/share/%EA%B1%B4%ED%98%B8%28%EC%BD%94%EB%A5%B4%ED%8B%B0%EC%8A%A4%29.html">건호(코르티스)</a><a class="rl-celeb-chip" href="https://favorbook.co.kr/share/%EA%B3%A0%EB%AF%BC%EC%8B%9C.html">고민시</a><a class="rl-celeb-chip" href="https://favorbook.co.kr/share/%EB%A6%B4%EB%A6%AC%28NMIXX%29.html">릴리(NMIXX)</a><a class="rl-celeb-chip" href="https://favorbook.co.kr/share/%EC%86%90%EC%A2%85%EC%9B%90.html">손종원</a><a class="rl-celeb-chip" href="https://favorbook.co.kr/share/%EC%98%88%EB%A6%AC%28%EB%A0%88%EB%93%9C%EB%B2%A8%EB%B2%B3%29.html">예리(레드벨벳)</a><a class="rl-celeb-chip" href="https://favorbook.co.kr/share/%EC%9D%B4%EC%A0%9C%ED%9B%88.html">이제훈</a><a class="rl-celeb-chip" href="https://favorbook.co.kr/share/%ED%8E%98%EC%9D%B4%EC%BB%A4.html">페이커</a><a class="rl-celeb-chip" href="https://favorbook.co.kr/share/%ED%97%88%EC%84%B1%EB%B2%94.html">허성범</a><a class="rl-celeb-chip" href="https://favorbook.co.kr/share/%EC%84%B1%ED%98%B8%28%EB%B3%B4%EC%9D%B4%EB%84%A5%EC%8A%A4%ED%8A%B8%EB%8F%84%EC%96%B4%29.html">성호(보이넥스트도어)</a><a class="rl-celeb-chip" href="https://favorbook.co.kr/share/%ED%83%9C%EC%82%B0%28%EB%B3%B4%EC%9D%B4%EB%84%A5%EC%8A%A4%ED%8A%B8%EB%8F%84%EC%96%B4%29.html">태산(보이넥스트도어)</a></div>
     </li>
-    <li class="rl-item">
+    <li class="rl-item" id="b3">
       <span class="rl-num">3</span>
       <a class="rl-cover" href="https://www.yes24.com/product/goods/61933303" rel="nofollow noopener noreferrer" target="_blank" aria-label="참을 수 없는 존재의 가벼움 알라딘에서 보기"><img src="https://image.yes24.com/goods/61933303/L" alt="참을 수 없는 존재의 가벼움 표지" loading="lazy"></a>
       <div class="rl-meta">
         <div class="rl-title"><a href="https://www.yes24.com/product/goods/61933303" rel="nofollow noopener noreferrer" target="_blank">참을 수 없는 존재의 가벼움</a></div>
         <div class="rl-byline">밀란 쿤데라 · 민음사</div>
+        <p class="rl-comment">&#x27;상실의 시대&#x27;, &#x27;그리스인 조르바&#x27;와 함께 동시에 읽고 있던 장편이에요. 재미없으면 바로 덮는 편인데 세 권을 나란히 읽었다고 해요. (출처: W코리아)</p>
         <a class="rl-source" href="https://www.wkorea.com/2019/11/25/who-me/" rel="nofollow noopener noreferrer" target="_blank">📺 출처 보기</a>
         <button type="button" class="heart-btn sm" data-heart="b:참을 수 없는 존재의 가벼움" aria-pressed="false" aria-label="이 책에 하트" title="이 책에 하트" hidden><span class="heart-ico" aria-hidden="true">♡</span><span class="heart-n"></span></button>
       </div>

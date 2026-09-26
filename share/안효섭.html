@@ -213,8 +213,15 @@
              background-size: 100% var(--row); background-repeat: repeat-y; }
     .new-sec { margin: 16px 0 6px; padding: 12px 12px 2px; background: #fffbe6; border: 2px dashed #000; }
     .new-sec-h { display: flex; align-items: center; gap: 8px; margin: 0 0 10px; font-size: 15px; font-weight: 800; }
-    .new-sec .reading-list { margin: 0; }
-    .rl-num.rl-num-new { font-size: 11px; letter-spacing: .04em; }
+    .rl-item { scroll-margin-top: 16px; }
+    .rl-item:target { outline: 3px solid #fde047; outline-offset: 2px; }
+    .new-tiles { display: flex; flex-wrap: wrap; gap: 12px; padding-bottom: 10px; }
+    .new-tile { width: 84px; color: #000; text-decoration: none; display: flex; flex-direction: column; gap: 5px; }
+    .new-tile:hover { text-decoration: none; transform: translateY(-2px); }
+    .nt-cover { display: block; width: 84px; aspect-ratio: 2/3; border: 1.5px solid #000; box-shadow: 2px 2px 0 0 #000; background: #f4f4f0; overflow: hidden; }
+    .nt-cover img { width: 100%; height: 100%; object-fit: cover; display: block; }
+    .nt-no-cover { display: flex; width: 100%; height: 100%; align-items: center; justify-content: center; font-size: 22px; }
+    .nt-title { font-size: 12px; font-weight: 700; line-height: 1.3; word-break: keep-all; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
     .rl-new-tag { font-size: 9px; font-weight: 800; letter-spacing: .06em; line-height: 1; padding: 3px 5px;
                   background: #fde047; color: #000; border: 1.5px solid #000; }
     .sp { position: relative; flex: none; width: auto; height: var(--sh-h);
@@ -236,7 +243,7 @@
               font-size: 8px; line-height: 1; padding: 3px 0 2px;
               border-bottom: 1px solid rgba(0,0,0,.55); }
     .sp.is-new .sp-t { padding-top: 22px; }
-    .is-capturing .sp-new, .is-capturing .rl-new, .is-capturing .rl-shared { display: none !important; }
+    .is-capturing .sp-new, .is-capturing .rl-new, .is-capturing .rl-shared, .is-capturing .rl-comment { display: none !important; }
     .is-capturing .sp.is-new .sp-t { padding-top: 14px; }
     @media (max-width: 480px) { .shelf { --sh-h: 205px; }
                                  .sp.no-img, .sp.sp-fail { width: calc(var(--w, 38px) * .88); }
@@ -263,6 +270,7 @@
     .rl-title a { color: #000; }
     .rl-title a:hover { color: #2563eb; }
     .rl-byline { font-size: 13px; color: #555; margin-bottom: 8px; line-height: 1.4; }
+    .rl-comment { font-size: 13px; line-height: 1.55; color: #222; background: #FFF7C2; border: 1.5px solid #000; padding: 6px 9px; margin: 0 0 8px; word-break: keep-all; }
     .rl-source { display: inline-block; font-size: 12px; padding: 3px 8px; background: #fff; border: 1.5px solid #000; box-shadow: 1px 1px 0 0 #000; text-decoration: none; color: #000; transition: transform .1s, box-shadow .1s, background .1s; }
     .rl-source:hover { transform: translate(-1px,-1px); box-shadow: 2px 2px 0 0 #000; background: #a7f3d0; text-decoration: none; }
     .rl-shared { clear: both; margin-top: 12px; padding-top: 10px; border-top: 1.5px dashed #ccc; display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
@@ -330,7 +338,7 @@
     <a class="sp" style="--c:hsl(350,54%,46%);--w:35px;--fs:9px" href="https://www.yes24.com/product/goods/68749139" rel="nofollow noopener noreferrer" target="_blank" title="철학은 어떻게 삶의 무기가 되는가"><span class="sp-t"><i>철학은 어떻게 삶의 무기가 되는가</i></span><img class="sp-i" src="https://image.yes24.com/goods/68749139/side" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.parentNode.classList.add('sp-fail');this.remove()" onload="if(this.naturalWidth/this.naturalHeight>0.4){this.parentNode.classList.add('sp-fail');this.remove()}"></a>
     </div>
     <ol class="reading-list" id="rlist">
-    <li class="rl-item">
+    <li class="rl-item" id="b1">
       <span class="rl-num">1</span>
       <a class="rl-cover" href="https://www.yes24.com/product/goods/108389546" rel="nofollow noopener noreferrer" target="_blank" aria-label="도파민네이션 알라딘에서 보기"><img src="https://image.yes24.com/goods/108389546/L" alt="도파민네이션 표지" loading="lazy"></a>
       <div class="rl-meta">
@@ -340,18 +348,19 @@
         <button type="button" class="heart-btn sm" data-heart="b:도파민네이션" aria-pressed="false" aria-label="이 책에 하트" title="이 책에 하트" hidden><span class="heart-ico" aria-hidden="true">♡</span><span class="heart-n"></span></button>
       </div>
     </li>
-    <li class="rl-item">
+    <li class="rl-item" id="b2">
       <span class="rl-num">2</span>
       <a class="rl-cover" href="https://www.yes24.com/product/goods/116599423" rel="nofollow noopener noreferrer" target="_blank" aria-label="미움받을 용기 알라딘에서 보기"><img src="https://image.yes24.com/goods/116599423/L" alt="미움받을 용기 표지" loading="lazy"></a>
       <div class="rl-meta">
         <div class="rl-title"><a href="https://www.yes24.com/product/goods/116599423" rel="nofollow noopener noreferrer" target="_blank">미움받을 용기</a></div>
         <div class="rl-byline">기시미 이치로, 고가 후미타케 · 인플루엔셜(주)</div>
+        <p class="rl-comment">감명 깊게 읽고 아들러의 생각을 받아들이게 됐다고 알려져 있어요. (출처: 얼루어 코리아)</p>
         <a class="rl-source" href="https://www.allurekorea.com/2021/06/23/a-way-of-seeing-%EC%95%88%ED%9A%A8%EC%84%AD-2/" rel="nofollow noopener noreferrer" target="_blank">📺 출처 보기</a>
         <button type="button" class="heart-btn sm" data-heart="b:미움받을 용기" aria-pressed="false" aria-label="이 책에 하트" title="이 책에 하트" hidden><span class="heart-ico" aria-hidden="true">♡</span><span class="heart-n"></span></button>
       </div>
       <div class="rl-shared"><span class="rl-shared-label">👥 함께 추천한 셀럽 4명:</span> <a class="rl-celeb-chip" href="https://favorbook.co.kr/share/%EB%A1%9C%EC%9A%B4.html">로운</a><a class="rl-celeb-chip" href="https://favorbook.co.kr/share/%EC%A7%80%EC%88%98%28%EB%B8%94%EB%9E%99%ED%95%91%ED%81%AC%29.html">지수(블랙핑크)</a><a class="rl-celeb-chip" href="https://favorbook.co.kr/share/%EA%B6%8C%EC%84%B1%EC%A4%80.html">권성준</a><a class="rl-celeb-chip" href="https://favorbook.co.kr/share/%EC%A7%80%EC%9B%85%28P%EC%9B%90%ED%95%98%EB%AA%A8%EB%8B%88%29.html">지웅(P원하모니)</a></div>
     </li>
-    <li class="rl-item">
+    <li class="rl-item" id="b3">
       <span class="rl-num">3</span>
       <a class="rl-cover" href="https://www.yes24.com/product/goods/142972546" rel="nofollow noopener noreferrer" target="_blank" aria-label="위버멘쉬 알라딘에서 보기"><img src="https://image.yes24.com/goods/142972546/L" alt="위버멘쉬 표지" loading="lazy"></a>
       <div class="rl-meta">
@@ -361,12 +370,13 @@
       </div>
       <div class="rl-shared"><span class="rl-shared-label">👥 함께 추천한 셀럽 3명:</span> <a class="rl-celeb-chip" href="https://favorbook.co.kr/share/%EA%B1%B4%ED%98%B8%28%EC%BD%94%EB%A5%B4%ED%8B%B0%EC%8A%A4%29.html">건호(코르티스)</a><a class="rl-celeb-chip" href="https://favorbook.co.kr/share/%EB%B0%95%EC%A7%80%ED%9B%88.html">박지훈</a><a class="rl-celeb-chip" href="https://favorbook.co.kr/share/%EC%A3%BC%ED%9B%88%28%EC%BD%94%EB%A5%B4%ED%8B%B0%EC%8A%A4%29.html">주훈(코르티스)</a></div>
     </li>
-    <li class="rl-item">
+    <li class="rl-item" id="b4">
       <span class="rl-num">4</span>
       <a class="rl-cover" href="https://www.yes24.com/product/goods/68749139" rel="nofollow noopener noreferrer" target="_blank" aria-label="철학은 어떻게 삶의 무기가 되는가 알라딘에서 보기"><img src="https://image.yes24.com/goods/68749139/L" alt="철학은 어떻게 삶의 무기가 되는가 표지" loading="lazy"></a>
       <div class="rl-meta">
         <div class="rl-title"><a href="https://www.yes24.com/product/goods/68749139" rel="nofollow noopener noreferrer" target="_blank">철학은 어떻게 삶의 무기가 되는가</a></div>
         <div class="rl-byline">야마구치 슈 · 다산초당</div>
+        <p class="rl-comment">철학에 입문하게 해준 책으로 소개했어요. 조금 어렵지만 쉽고 재미있게 풀어 써서 추천한대요. (출처: GQ)</p>
         <a class="rl-source" href="https://www.gqkorea.co.kr/2025/06/20/%ec%95%88%ed%9a%a8%ec%84%ad-%ec%9a%b0%eb%a6%ac%ea%b0%80-%ed%96%89%eb%b3%b5%ec%9d%84-%eb%8a%90%eb%82%84-%ec%88%98-%ec%9e%88%eb%8a%94-%ea%b1%b4-%ec%a7%80%ea%b8%88-%ec%9d%b4-%ec%88%9c%ea%b0%84%eb%b0%96/" rel="nofollow noopener noreferrer" target="_blank">📺 출처 보기</a>
         <button type="button" class="heart-btn sm" data-heart="b:철학은 어떻게 삶의 무기가 되는가" aria-pressed="false" aria-label="이 책에 하트" title="이 책에 하트" hidden><span class="heart-ico" aria-hidden="true">♡</span><span class="heart-n"></span></button>
       </div>

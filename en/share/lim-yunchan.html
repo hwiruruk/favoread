@@ -371,8 +371,15 @@
              background-size: 100% var(--row); background-repeat: repeat-y; }
     .new-sec { margin: 16px 0 6px; padding: 12px 12px 2px; background: #fffbe6; border: 2px dashed #000; }
     .new-sec-h { display: flex; align-items: center; gap: 8px; margin: 0 0 10px; font-size: 15px; font-weight: 800; }
-    .new-sec .reading-list { margin: 0; }
-    .rl-num.rl-num-new { font-size: 11px; letter-spacing: .04em; }
+    .rl-item { scroll-margin-top: 16px; }
+    .rl-item:target { outline: 3px solid #fde047; outline-offset: 2px; }
+    .new-tiles { display: flex; flex-wrap: wrap; gap: 12px; padding-bottom: 10px; }
+    .new-tile { width: 84px; color: #000; text-decoration: none; display: flex; flex-direction: column; gap: 5px; }
+    .new-tile:hover { text-decoration: none; transform: translateY(-2px); }
+    .nt-cover { display: block; width: 84px; aspect-ratio: 2/3; border: 1.5px solid #000; box-shadow: 2px 2px 0 0 #000; background: #f4f4f0; overflow: hidden; }
+    .nt-cover img { width: 100%; height: 100%; object-fit: cover; display: block; }
+    .nt-no-cover { display: flex; width: 100%; height: 100%; align-items: center; justify-content: center; font-size: 22px; }
+    .nt-title { font-size: 12px; font-weight: 700; line-height: 1.3; word-break: keep-all; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
     .rl-new-tag { font-size: 9px; font-weight: 800; letter-spacing: .06em; line-height: 1; padding: 3px 5px;
                   background: #fde047; color: #000; border: 1.5px solid #000; }
     .sp { position: relative; flex: none; width: auto; height: var(--sh-h);
@@ -394,7 +401,7 @@
               font-size: 8px; line-height: 1; padding: 3px 0 2px;
               border-bottom: 1px solid rgba(0,0,0,.55); }
     .sp.is-new .sp-t { padding-top: 22px; }
-    .is-capturing .sp-new, .is-capturing .rl-new, .is-capturing .rl-shared { display: none !important; }
+    .is-capturing .sp-new, .is-capturing .rl-new, .is-capturing .rl-shared, .is-capturing .rl-comment { display: none !important; }
     .is-capturing .sp.is-new .sp-t { padding-top: 14px; }
     @media (max-width: 480px) { .shelf { --sh-h: 205px; }
                                  .sp.no-img, .sp.sp-fail { width: calc(var(--w, 38px) * .88); }
@@ -421,6 +428,7 @@
     .rl-title a { color: #000; }
     .rl-title a:hover { color: #2563eb; }
     .rl-byline { font-size: 13px; color: #555; margin-bottom: 8px; line-height: 1.4; }
+    .rl-comment { font-size: 13px; line-height: 1.55; color: #222; background: #FFF7C2; border: 1.5px solid #000; padding: 6px 9px; margin: 0 0 8px; word-break: keep-all; }
     .rl-source { display: inline-block; font-size: 12px; padding: 3px 8px; background: #fff; border: 1.5px solid #000; box-shadow: 1px 1px 0 0 #000; text-decoration: none; color: #000; transition: transform .1s, box-shadow .1s, background .1s; }
     .rl-source:hover { transform: translate(-1px,-1px); box-shadow: 2px 2px 0 0 #000; background: #a7f3d0; text-decoration: none; }
     @media (max-width: 480px) { .rl-item { padding: 14px 12px 14px 46px; } .rl-num { width: 32px; height: 26px; font-size: 12px; } .rl-cover { width: 60px; height: 88px; margin-right: 10px; } .rl-meta { min-height: 88px; } .rl-title { font-size: 15px; } }
@@ -474,37 +482,40 @@
     <a class="sp" style="--c:hsl(156,44%,41%);--w:30px;--fs:15px" href="https://www.yes24.com/product/goods/23599602" rel="nofollow noopener noreferrer" target="_blank" title="Sky, Wind, Star and Poem"><span class="sp-t"><i>Sky, Wind, Star and Poem</i></span><img class="sp-i" src="https://image.yes24.com/goods/23599602/side" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.parentNode.classList.add('sp-fail');this.remove()" onload="if(this.naturalWidth/this.naturalHeight>0.4){this.parentNode.classList.add('sp-fail');this.remove()}"></a>
     </div>
     <ol class="reading-list" id="rlist">
-    <li class="rl-item">
+    <li class="rl-item" id="b1">
       <span class="rl-num">1</span>
       <a class="rl-cover" href="https://www.yes24.com/product/goods/92323121" rel="nofollow noopener noreferrer" target="_blank" aria-label="A Letter to a Young Poet — buy or read more"><img src="https://image.yes24.com/goods/92323121/L" alt="A Letter to a Young Poet by Rainer Maria Rilke — book cover" loading="lazy"></a>
       <div class="rl-meta">
         <div class="rl-title"><a href="https://www.yes24.com/product/goods/92323121" rel="nofollow noopener noreferrer" target="_blank">A Letter to a Young Poet</a> <span style="color:#888;font-size:12px;font-weight:400">(젊은 시인에게 보내는 편지)</span></div>
         <div class="rl-byline">Rainer Maria Rilke</div>
+        <p class="rl-comment">On a fan-compiled list of books Lim Yunchan has mentioned or recommended. (Source: DC Inside)</p>
         <a class="rl-source" href="https://gall.dcinside.com/mgallery/board/view/?id=yunchan&amp;no=3596" rel="nofollow noopener noreferrer" target="_blank">📺 Source</a>
         <button type="button" class="heart-btn sm" data-heart="b:젊은 시인에게 보내는 편지" aria-pressed="false" aria-label="Heart this book" title="Heart this book" hidden><span class="heart-ico" aria-hidden="true">♡</span><span class="heart-n"></span></button>
       </div>
     </li>
-    <li class="rl-item">
+    <li class="rl-item" id="b2">
       <span class="rl-num">2</span>
       <a class="rl-cover" href="https://www.yes24.com/product/goods/176787" rel="nofollow noopener noreferrer" target="_blank" aria-label="Demian — buy or read more"><img src="https://image.yes24.com/goods/176787/L" alt="Demian by Hermann Hesse — book cover" loading="lazy"></a>
       <div class="rl-meta">
         <div class="rl-title"><a href="https://www.yes24.com/product/goods/176787" rel="nofollow noopener noreferrer" target="_blank">Demian</a> <span style="color:#888;font-size:12px;font-weight:400">(데미안)</span></div>
         <div class="rl-byline">Hermann Hesse</div>
+        <p class="rl-comment">Named, along with books by the monk Beopjeong, when Lim Yunchan was asked about memorable reads. (Source: Daum News)</p>
         <a class="rl-source" href="https://v.daum.net/v/16riRDyP31" rel="nofollow noopener noreferrer" target="_blank">📺 Source</a>
         <button type="button" class="heart-btn sm" data-heart="b:데미안" aria-pressed="false" aria-label="Heart this book" title="Heart this book" hidden><span class="heart-ico" aria-hidden="true">♡</span><span class="heart-n"></span></button>
       </div>
     </li>
-    <li class="rl-item">
+    <li class="rl-item" id="b3">
       <span class="rl-num">3</span>
       <a class="rl-cover" href="https://www.yes24.com/product/goods/166" rel="nofollow noopener noreferrer" target="_blank" aria-label="Flowers Bloom in the Mountains — buy or read more"><img src="https://image.yes24.com/goods/166/L" alt="Flowers Bloom in the Mountains by 법정 — book cover" loading="lazy"></a>
       <div class="rl-meta">
         <div class="rl-title"><a href="https://www.yes24.com/product/goods/166" rel="nofollow noopener noreferrer" target="_blank">Flowers Bloom in the Mountains *</a> <span style="color:#888;font-size:12px;font-weight:400">(산에는 꽃이 피네)</span></div>
         <div class="rl-byline">법정</div>
+        <p class="rl-comment">On a fan-compiled list of books Lim Yunchan has mentioned or recommended. (Source: DC Inside)</p>
         <a class="rl-source" href="https://gall.dcinside.com/mgallery/board/view/?id=yunchan&amp;no=3596" rel="nofollow noopener noreferrer" target="_blank">📺 Source</a>
         <button type="button" class="heart-btn sm" data-heart="b:산에는 꽃이 피네" aria-pressed="false" aria-label="Heart this book" title="Heart this book" hidden><span class="heart-ico" aria-hidden="true">♡</span><span class="heart-n"></span></button>
       </div>
     </li>
-    <li class="rl-item">
+    <li class="rl-item" id="b4">
       <span class="rl-num">4</span>
       <a class="rl-cover" href="https://www.yes24.com/product/goods/75213659" rel="nofollow noopener noreferrer" target="_blank" aria-label="In Search of Chopin — buy or read more"><img src="https://image.yes24.com/goods/75213659/L" alt="In Search of Chopin by Alfred Cortot — book cover" loading="lazy"></a>
       <div class="rl-meta">
@@ -514,77 +525,84 @@
         <button type="button" class="heart-btn sm" data-heart="b:쇼팽을 찾아서" aria-pressed="false" aria-label="Heart this book" title="Heart this book" hidden><span class="heart-ico" aria-hidden="true">♡</span><span class="heart-n"></span></button>
       </div>
     </li>
-    <li class="rl-item">
+    <li class="rl-item" id="b5">
       <span class="rl-num">5</span>
       <a class="rl-cover" href="https://www.yes24.com/product/goods/1405848" rel="nofollow noopener noreferrer" target="_blank" aria-label="Italian Journey — buy or read more"><img src="https://image.yes24.com/goods/1405848/L" alt="Italian Journey by Johann Wolfgang von Goethe — book cover" loading="lazy"></a>
       <div class="rl-meta">
         <div class="rl-title"><a href="https://www.yes24.com/product/goods/1405848" rel="nofollow noopener noreferrer" target="_blank">Italian Journey</a> <span style="color:#888;font-size:12px;font-weight:400">(이탈리아 기행)</span></div>
         <div class="rl-byline">Johann Wolfgang von Goethe</div>
+        <p class="rl-comment">On a fan-compiled list of books Lim Yunchan has mentioned or recommended. (Source: DC Inside)</p>
         <a class="rl-source" href="https://gall.dcinside.com/mgallery/board/view/?id=yunchan&amp;no=3596" rel="nofollow noopener noreferrer" target="_blank">📺 Source</a>
         <button type="button" class="heart-btn sm" data-heart="b:이탈리아 기행" aria-pressed="false" aria-label="Heart this book" title="Heart this book" hidden><span class="heart-ico" aria-hidden="true">♡</span><span class="heart-n"></span></button>
       </div>
     </li>
-    <li class="rl-item">
+    <li class="rl-item" id="b6">
       <span class="rl-num">6</span>
       <a class="rl-cover" href="https://www.yes24.com/product/goods/108569727" rel="nofollow noopener noreferrer" target="_blank" aria-label="La comedia di Dante Alighieri — buy or read more"><img src="https://image.yes24.com/goods/108569727/L" alt="La comedia di Dante Alighieri by 단테 알리기에리 — book cover" loading="lazy"></a>
       <div class="rl-meta">
         <div class="rl-title"><a href="https://www.yes24.com/product/goods/108569727" rel="nofollow noopener noreferrer" target="_blank">La comedia di Dante Alighieri</a> <span style="color:#888;font-size:12px;font-weight:400">(신곡)</span></div>
         <div class="rl-byline">단테 알리기에리</div>
+        <p class="rl-comment">Lim Yunchan&#x27;s most enjoyable and most reread book. To understand Liszt&#x27;s Dante Sonata, Lim bought several editions and nearly memorized the whole thing. (Source: Daum News)</p>
         <a class="rl-source" href="https://v.daum.net/v/16riRDyP31" rel="nofollow noopener noreferrer" target="_blank">📺 Source</a>
         <button type="button" class="heart-btn sm" data-heart="b:신곡" aria-pressed="false" aria-label="Heart this book" title="Heart this book" hidden><span class="heart-ico" aria-hidden="true">♡</span><span class="heart-n"></span></button>
       </div>
     </li>
-    <li class="rl-item">
+    <li class="rl-item" id="b7">
       <span class="rl-num">7</span>
       <a class="rl-cover" href="https://www.yes24.com/product/goods/22431294" rel="nofollow noopener noreferrer" target="_blank" aria-label="Le Petit Prince — buy or read more"><img src="https://image.yes24.com/goods/22431294/L" alt="Le Petit Prince by 앙투안 드 생텍쥐페리 — book cover" loading="lazy"></a>
       <div class="rl-meta">
         <div class="rl-title"><a href="https://www.yes24.com/product/goods/22431294" rel="nofollow noopener noreferrer" target="_blank">Le Petit Prince</a> <span style="color:#888;font-size:12px;font-weight:400">(어린 왕자)</span></div>
         <div class="rl-byline">앙투안 드 생텍쥐페리</div>
+        <p class="rl-comment">On a fan-compiled list of books Lim Yunchan has mentioned or recommended. (Source: DC Inside)</p>
         <a class="rl-source" href="https://gall.dcinside.com/mgallery/board/view/?id=yunchan&amp;no=3596" rel="nofollow noopener noreferrer" target="_blank">📺 Source</a>
         <button type="button" class="heart-btn sm" data-heart="b:어린 왕자" aria-pressed="false" aria-label="Heart this book" title="Heart this book" hidden><span class="heart-ico" aria-hidden="true">♡</span><span class="heart-n"></span></button>
       </div>
     </li>
-    <li class="rl-item">
+    <li class="rl-item" id="b8">
       <span class="rl-num">8</span>
       <a class="rl-cover" href="https://www.yes24.com/product/goods/245524" rel="nofollow noopener noreferrer" target="_blank" aria-label="Pale Blue Dot: A Vision of the Human Future in Space — buy or read more"><img src="https://image.yes24.com/goods/245524/L" alt="Pale Blue Dot: A Vision of the Human Future in Space by Carl Sagan — book cover" loading="lazy"></a>
       <div class="rl-meta">
         <div class="rl-title"><a href="https://www.yes24.com/product/goods/245524" rel="nofollow noopener noreferrer" target="_blank">Pale Blue Dot: A Vision of the Human Future in Space</a> <span style="color:#888;font-size:12px;font-weight:400">(창백한 푸른 점)</span></div>
         <div class="rl-byline">Carl Sagan</div>
+        <p class="rl-comment">On a fan-compiled list of books Lim Yunchan has mentioned or recommended. (Source: DC Inside)</p>
         <a class="rl-source" href="https://gall.dcinside.com/mgallery/board/view/?id=yunchan&amp;no=3596" rel="nofollow noopener noreferrer" target="_blank">📺 Source</a>
         <button type="button" class="heart-btn sm" data-heart="b:창백한 푸른 점" aria-pressed="false" aria-label="Heart this book" title="Heart this book" hidden><span class="heart-ico" aria-hidden="true">♡</span><span class="heart-n"></span></button>
       </div>
     </li>
-    <li class="rl-item">
+    <li class="rl-item" id="b9">
       <span class="rl-num">9</span>
       <a class="rl-cover" href="https://www.yes24.com/product/goods/95377075" rel="nofollow noopener noreferrer" target="_blank" aria-label="Piano Pieces — buy or read more"><img src="https://image.yes24.com/goods/95377075/L" alt="Piano Pieces by Russell Sherman — book cover" loading="lazy"></a>
       <div class="rl-meta">
         <div class="rl-title"><a href="https://www.yes24.com/product/goods/95377075" rel="nofollow noopener noreferrer" target="_blank">Piano Pieces</a> <span style="color:#888;font-size:12px;font-weight:400">(피아노 이야기)</span></div>
         <div class="rl-byline">Russell Sherman</div>
+        <p class="rl-comment">On a fan-compiled list of books Lim Yunchan has mentioned or recommended. (Source: DC Inside)</p>
         <a class="rl-source" href="https://gall.dcinside.com/mgallery/board/view/?id=yunchan&amp;no=3596" rel="nofollow noopener noreferrer" target="_blank">📺 Source</a>
         <button type="button" class="heart-btn sm" data-heart="b:피아노 이야기" aria-pressed="false" aria-label="Heart this book" title="Heart this book" hidden><span class="heart-ico" aria-hidden="true">♡</span><span class="heart-n"></span></button>
       </div>
     </li>
-    <li class="rl-item">
+    <li class="rl-item" id="b10">
       <span class="rl-num">10</span>
       <a class="rl-cover" href="https://www.yes24.com/product/goods/12779398" rel="nofollow noopener noreferrer" target="_blank" aria-label="Rilke&#x27;s Poetry — buy or read more"><img src="https://image.yes24.com/goods/12779398/L" alt="Rilke&#x27;s Poetry by Rainer Maria Rilke — book cover" loading="lazy"></a>
       <div class="rl-meta">
         <div class="rl-title"><a href="https://www.yes24.com/product/goods/12779398" rel="nofollow noopener noreferrer" target="_blank">Rilke&#x27;s Poetry *</a> <span style="color:#888;font-size:12px;font-weight:400">(릴케 시집)</span></div>
         <div class="rl-byline">Rainer Maria Rilke</div>
+        <p class="rl-comment">On a fan-compiled list of books Lim Yunchan has mentioned or recommended. (Source: DC Inside)</p>
         <a class="rl-source" href="https://gall.dcinside.com/mgallery/board/view/?id=yunchan&amp;no=3596" rel="nofollow noopener noreferrer" target="_blank">📺 Source</a>
         <button type="button" class="heart-btn sm" data-heart="b:릴케 시집" aria-pressed="false" aria-label="Heart this book" title="Heart this book" hidden><span class="heart-ico" aria-hidden="true">♡</span><span class="heart-n"></span></button>
       </div>
     </li>
-    <li class="rl-item">
+    <li class="rl-item" id="b11">
       <span class="rl-num">11</span>
       <a class="rl-cover" href="https://www.yes24.com/product/goods/257435" rel="nofollow noopener noreferrer" target="_blank" aria-label="Siddhartha — buy or read more"><img src="https://image.yes24.com/goods/257435/L" alt="Siddhartha by Hermann Hesse — book cover" loading="lazy"></a>
       <div class="rl-meta">
         <div class="rl-title"><a href="https://www.yes24.com/product/goods/257435" rel="nofollow noopener noreferrer" target="_blank">Siddhartha</a> <span style="color:#888;font-size:12px;font-weight:400">(싯다르타)</span></div>
         <div class="rl-byline">Hermann Hesse</div>
+        <p class="rl-comment">A gift from teacher Minsoo Sohn. Its lesson, that insight must be found on your own rather than taught, answered Lim Yunchan&#x27;s questions about how to practice. (Source: Auditorium)</p>
         <a class="rl-source" href="https://auditorium.kr/2023/05/%ED%94%BC%EC%95%84%EB%8B%88%EC%8A%A4%ED%8A%B8-%EC%9E%84%EC%9C%A4%EC%B0%AC-%EC%8B%A0%EB%93%9C%EB%A1%AC%EC%9D%98-%EB%82%B4%EB%A9%B4-%EA%B7%B8%EC%9D%98-%EC%8A%A4%EB%AC%BC%EC%97%90-%EB%8C%80/" rel="nofollow noopener noreferrer" target="_blank">📺 Source</a>
         <button type="button" class="heart-btn sm" data-heart="b:싯다르타" aria-pressed="false" aria-label="Heart this book" title="Heart this book" hidden><span class="heart-ico" aria-hidden="true">♡</span><span class="heart-n"></span></button>
       </div>
     </li>
-    <li class="rl-item">
+    <li class="rl-item" id="b12">
       <span class="rl-num">12</span>
       <a class="rl-cover" href="https://www.yes24.com/product/goods/23599602" rel="nofollow noopener noreferrer" target="_blank" aria-label="Sky, Wind, Star and Poem — buy or read more"><img src="https://image.yes24.com/goods/23599602/L" alt="Sky, Wind, Star and Poem by Yun Dong-ju — book cover" loading="lazy"></a>
       <div class="rl-meta">

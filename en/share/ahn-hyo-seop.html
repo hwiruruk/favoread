@@ -229,8 +229,15 @@
              background-size: 100% var(--row); background-repeat: repeat-y; }
     .new-sec { margin: 16px 0 6px; padding: 12px 12px 2px; background: #fffbe6; border: 2px dashed #000; }
     .new-sec-h { display: flex; align-items: center; gap: 8px; margin: 0 0 10px; font-size: 15px; font-weight: 800; }
-    .new-sec .reading-list { margin: 0; }
-    .rl-num.rl-num-new { font-size: 11px; letter-spacing: .04em; }
+    .rl-item { scroll-margin-top: 16px; }
+    .rl-item:target { outline: 3px solid #fde047; outline-offset: 2px; }
+    .new-tiles { display: flex; flex-wrap: wrap; gap: 12px; padding-bottom: 10px; }
+    .new-tile { width: 84px; color: #000; text-decoration: none; display: flex; flex-direction: column; gap: 5px; }
+    .new-tile:hover { text-decoration: none; transform: translateY(-2px); }
+    .nt-cover { display: block; width: 84px; aspect-ratio: 2/3; border: 1.5px solid #000; box-shadow: 2px 2px 0 0 #000; background: #f4f4f0; overflow: hidden; }
+    .nt-cover img { width: 100%; height: 100%; object-fit: cover; display: block; }
+    .nt-no-cover { display: flex; width: 100%; height: 100%; align-items: center; justify-content: center; font-size: 22px; }
+    .nt-title { font-size: 12px; font-weight: 700; line-height: 1.3; word-break: keep-all; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
     .rl-new-tag { font-size: 9px; font-weight: 800; letter-spacing: .06em; line-height: 1; padding: 3px 5px;
                   background: #fde047; color: #000; border: 1.5px solid #000; }
     .sp { position: relative; flex: none; width: auto; height: var(--sh-h);
@@ -252,7 +259,7 @@
               font-size: 8px; line-height: 1; padding: 3px 0 2px;
               border-bottom: 1px solid rgba(0,0,0,.55); }
     .sp.is-new .sp-t { padding-top: 22px; }
-    .is-capturing .sp-new, .is-capturing .rl-new, .is-capturing .rl-shared { display: none !important; }
+    .is-capturing .sp-new, .is-capturing .rl-new, .is-capturing .rl-shared, .is-capturing .rl-comment { display: none !important; }
     .is-capturing .sp.is-new .sp-t { padding-top: 14px; }
     @media (max-width: 480px) { .shelf { --sh-h: 205px; }
                                  .sp.no-img, .sp.sp-fail { width: calc(var(--w, 38px) * .88); }
@@ -279,6 +286,7 @@
     .rl-title a { color: #000; }
     .rl-title a:hover { color: #2563eb; }
     .rl-byline { font-size: 13px; color: #555; margin-bottom: 8px; line-height: 1.4; }
+    .rl-comment { font-size: 13px; line-height: 1.55; color: #222; background: #FFF7C2; border: 1.5px solid #000; padding: 6px 9px; margin: 0 0 8px; word-break: keep-all; }
     .rl-source { display: inline-block; font-size: 12px; padding: 3px 8px; background: #fff; border: 1.5px solid #000; box-shadow: 1px 1px 0 0 #000; text-decoration: none; color: #000; transition: transform .1s, box-shadow .1s, background .1s; }
     .rl-source:hover { transform: translate(-1px,-1px); box-shadow: 2px 2px 0 0 #000; background: #a7f3d0; text-decoration: none; }
     @media (max-width: 480px) { .rl-item { padding: 14px 12px 14px 46px; } .rl-num { width: 32px; height: 26px; font-size: 12px; } .rl-cover { width: 60px; height: 88px; margin-right: 10px; } .rl-meta { min-height: 88px; } .rl-title { font-size: 15px; } }
@@ -325,7 +333,7 @@
     <a class="sp" style="--c:hsl(4,46%,47%);--w:40px;--fs:15px" href="https://www.yes24.com/product/goods/142972546" rel="nofollow noopener noreferrer" target="_blank" title="Übermensch"><span class="sp-t"><i>Übermensch</i></span><img class="sp-i" src="https://image.yes24.com/goods/142972546/side" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.parentNode.classList.add('sp-fail');this.remove()" onload="if(this.naturalWidth/this.naturalHeight>0.4){this.parentNode.classList.add('sp-fail');this.remove()}"></a>
     </div>
     <ol class="reading-list" id="rlist">
-    <li class="rl-item">
+    <li class="rl-item" id="b1">
       <span class="rl-num">1</span>
       <a class="rl-cover" href="https://www.yes24.com/product/goods/108389546" rel="nofollow noopener noreferrer" target="_blank" aria-label="Dopamine Nation: Finding Balance in the Age of Indulgence — buy or read more"><img src="https://image.yes24.com/goods/108389546/L" alt="Dopamine Nation: Finding Balance in the Age of Indulgence by 애나 렘키 — book cover" loading="lazy"></a>
       <div class="rl-meta">
@@ -335,27 +343,29 @@
         <button type="button" class="heart-btn sm" data-heart="b:도파민네이션" aria-pressed="false" aria-label="Heart this book" title="Heart this book" hidden><span class="heart-ico" aria-hidden="true">♡</span><span class="heart-n"></span></button>
       </div>
     </li>
-    <li class="rl-item">
+    <li class="rl-item" id="b2">
       <span class="rl-num">2</span>
       <a class="rl-cover" href="https://www.yes24.com/product/goods/68749139" rel="nofollow noopener noreferrer" target="_blank" aria-label="How Philosophy Becomes a Weapon in Life — buy or read more"><img src="https://image.yes24.com/goods/68749139/L" alt="How Philosophy Becomes a Weapon in Life by Shu Yamaguchi — book cover" loading="lazy"></a>
       <div class="rl-meta">
         <div class="rl-title"><a href="https://www.yes24.com/product/goods/68749139" rel="nofollow noopener noreferrer" target="_blank">How Philosophy Becomes a Weapon in Life *</a> <span style="color:#888;font-size:12px;font-weight:400">(철학은 어떻게 삶의 무기가 되는가)</span></div>
         <div class="rl-byline">Shu Yamaguchi *</div>
+        <p class="rl-comment">The book that got Ahn Hyo-seop into philosophy: a bit challenging, but told in a fun, accessible way. (Source: GQ Korea)</p>
         <a class="rl-source" href="https://www.gqkorea.co.kr/2025/06/20/%ec%95%88%ed%9a%a8%ec%84%ad-%ec%9a%b0%eb%a6%ac%ea%b0%80-%ed%96%89%eb%b3%b5%ec%9d%84-%eb%8a%90%eb%82%84-%ec%88%98-%ec%9e%88%eb%8a%94-%ea%b1%b4-%ec%a7%80%ea%b8%88-%ec%9d%b4-%ec%88%9c%ea%b0%84%eb%b0%96/" rel="nofollow noopener noreferrer" target="_blank">📺 Source</a>
         <button type="button" class="heart-btn sm" data-heart="b:철학은 어떻게 삶의 무기가 되는가" aria-pressed="false" aria-label="Heart this book" title="Heart this book" hidden><span class="heart-ico" aria-hidden="true">♡</span><span class="heart-n"></span></button>
       </div>
     </li>
-    <li class="rl-item">
+    <li class="rl-item" id="b3">
       <span class="rl-num">3</span>
       <a class="rl-cover" href="https://www.yes24.com/product/goods/116599423" rel="nofollow noopener noreferrer" target="_blank" aria-label="The Courage to Be Disliked: How to Free Yourself, Change Your Life, and Achieve Real Happiness — buy or read more"><img src="https://image.yes24.com/goods/116599423/L" alt="The Courage to Be Disliked: How to Free Yourself, Change Your Life, and Achieve Real Happiness by Ichiro Kishimi, Fumitake Koga — book cover" loading="lazy"></a>
       <div class="rl-meta">
         <div class="rl-title"><a href="https://www.yes24.com/product/goods/116599423" rel="nofollow noopener noreferrer" target="_blank">The Courage to Be Disliked: How to Free Yourself, Change Your Life, and Achieve Real Happiness</a> <span style="color:#888;font-size:12px;font-weight:400">(미움받을 용기)</span></div>
         <div class="rl-byline">Ichiro Kishimi, Fumitake Koga *</div>
+        <p class="rl-comment">Ahn Hyo-seop is known to have been moved by this book and to have taken on Adler&#x27;s way of thinking. (Source: Allure Korea)</p>
         <a class="rl-source" href="https://www.allurekorea.com/2021/06/23/a-way-of-seeing-%EC%95%88%ED%9A%A8%EC%84%AD-2/" rel="nofollow noopener noreferrer" target="_blank">📺 Source</a>
         <button type="button" class="heart-btn sm" data-heart="b:미움받을 용기" aria-pressed="false" aria-label="Heart this book" title="Heart this book" hidden><span class="heart-ico" aria-hidden="true">♡</span><span class="heart-n"></span></button>
       </div>
     </li>
-    <li class="rl-item">
+    <li class="rl-item" id="b4">
       <span class="rl-num">4</span>
       <a class="rl-cover" href="https://www.yes24.com/product/goods/142972546" rel="nofollow noopener noreferrer" target="_blank" aria-label="Übermensch — buy or read more"><img src="https://image.yes24.com/goods/142972546/L" alt="Übermensch by 프리드리히 니체 — book cover" loading="lazy"></a>
       <div class="rl-meta">

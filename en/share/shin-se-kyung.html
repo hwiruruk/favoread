@@ -301,8 +301,15 @@
              background-size: 100% var(--row); background-repeat: repeat-y; }
     .new-sec { margin: 16px 0 6px; padding: 12px 12px 2px; background: #fffbe6; border: 2px dashed #000; }
     .new-sec-h { display: flex; align-items: center; gap: 8px; margin: 0 0 10px; font-size: 15px; font-weight: 800; }
-    .new-sec .reading-list { margin: 0; }
-    .rl-num.rl-num-new { font-size: 11px; letter-spacing: .04em; }
+    .rl-item { scroll-margin-top: 16px; }
+    .rl-item:target { outline: 3px solid #fde047; outline-offset: 2px; }
+    .new-tiles { display: flex; flex-wrap: wrap; gap: 12px; padding-bottom: 10px; }
+    .new-tile { width: 84px; color: #000; text-decoration: none; display: flex; flex-direction: column; gap: 5px; }
+    .new-tile:hover { text-decoration: none; transform: translateY(-2px); }
+    .nt-cover { display: block; width: 84px; aspect-ratio: 2/3; border: 1.5px solid #000; box-shadow: 2px 2px 0 0 #000; background: #f4f4f0; overflow: hidden; }
+    .nt-cover img { width: 100%; height: 100%; object-fit: cover; display: block; }
+    .nt-no-cover { display: flex; width: 100%; height: 100%; align-items: center; justify-content: center; font-size: 22px; }
+    .nt-title { font-size: 12px; font-weight: 700; line-height: 1.3; word-break: keep-all; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
     .rl-new-tag { font-size: 9px; font-weight: 800; letter-spacing: .06em; line-height: 1; padding: 3px 5px;
                   background: #fde047; color: #000; border: 1.5px solid #000; }
     .sp { position: relative; flex: none; width: auto; height: var(--sh-h);
@@ -324,7 +331,7 @@
               font-size: 8px; line-height: 1; padding: 3px 0 2px;
               border-bottom: 1px solid rgba(0,0,0,.55); }
     .sp.is-new .sp-t { padding-top: 22px; }
-    .is-capturing .sp-new, .is-capturing .rl-new, .is-capturing .rl-shared { display: none !important; }
+    .is-capturing .sp-new, .is-capturing .rl-new, .is-capturing .rl-shared, .is-capturing .rl-comment { display: none !important; }
     .is-capturing .sp.is-new .sp-t { padding-top: 14px; }
     @media (max-width: 480px) { .shelf { --sh-h: 205px; }
                                  .sp.no-img, .sp.sp-fail { width: calc(var(--w, 38px) * .88); }
@@ -351,6 +358,7 @@
     .rl-title a { color: #000; }
     .rl-title a:hover { color: #2563eb; }
     .rl-byline { font-size: 13px; color: #555; margin-bottom: 8px; line-height: 1.4; }
+    .rl-comment { font-size: 13px; line-height: 1.55; color: #222; background: #FFF7C2; border: 1.5px solid #000; padding: 6px 9px; margin: 0 0 8px; word-break: keep-all; }
     .rl-source { display: inline-block; font-size: 12px; padding: 3px 8px; background: #fff; border: 1.5px solid #000; box-shadow: 1px 1px 0 0 #000; text-decoration: none; color: #000; transition: transform .1s, box-shadow .1s, background .1s; }
     .rl-source:hover { transform: translate(-1px,-1px); box-shadow: 2px 2px 0 0 #000; background: #a7f3d0; text-decoration: none; }
     @media (max-width: 480px) { .rl-item { padding: 14px 12px 14px 46px; } .rl-num { width: 32px; height: 26px; font-size: 12px; } .rl-cover { width: 60px; height: 88px; margin-right: 10px; } .rl-meta { min-height: 88px; } .rl-title { font-size: 15px; } }
@@ -400,47 +408,51 @@
     <a class="sp" style="--c:hsl(192,54%,39%);--w:30px;--fs:15px" href="https://www.yes24.com/product/goods/119458386" rel="nofollow noopener noreferrer" target="_blank" title="Toji"><span class="sp-t"><i>Toji</i></span><img class="sp-i" src="https://image.yes24.com/goods/119458386/side" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.parentNode.classList.add('sp-fail');this.remove()" onload="if(this.naturalWidth/this.naturalHeight>0.4){this.parentNode.classList.add('sp-fail');this.remove()}"></a>
     </div>
     <ol class="reading-list" id="rlist">
-    <li class="rl-item">
+    <li class="rl-item" id="b1">
       <span class="rl-num">1</span>
       <a class="rl-cover" href="https://www.yes24.com/product/goods/1428139" rel="nofollow noopener noreferrer" target="_blank" aria-label="Ash Wednesday — buy or read more"><img src="https://image.yes24.com/goods/1428139/L" alt="Ash Wednesday by Ethan Hawke — book cover" loading="lazy"></a>
       <div class="rl-meta">
         <div class="rl-title"><a href="https://www.yes24.com/product/goods/1428139" rel="nofollow noopener noreferrer" target="_blank">Ash Wednesday</a> <span style="color:#888;font-size:12px;font-weight:400">(웬즈데이)</span></div>
         <div class="rl-byline">Ethan Hawke</div>
+        <p class="rl-comment">A novel by Ethan Hawke, a favorite. Its raw, unpolished style suits a burning love story, Shin Se-kyung said. (Source: Cine21)</p>
         <a class="rl-source" href="https://cine21.com/news/view?mag_id=40795" rel="nofollow noopener noreferrer" target="_blank">📺 Source</a>
         <button type="button" class="heart-btn sm" data-heart="b:웬즈데이" aria-pressed="false" aria-label="Heart this book" title="Heart this book" hidden><span class="heart-ico" aria-hidden="true">♡</span><span class="heart-n"></span></button>
       </div>
     </li>
-    <li class="rl-item">
+    <li class="rl-item" id="b2">
       <span class="rl-num">2</span>
       <a class="rl-cover" href="https://www.yes24.com/product/goods/73162483" rel="nofollow noopener noreferrer" target="_blank" aria-label="Depuis l&#x27;au-dela — buy or read more"><img src="https://image.yes24.com/goods/73162483/L" alt="Depuis l&#x27;au-dela by Bernard Werber — book cover" loading="lazy"></a>
       <div class="rl-meta">
         <div class="rl-title"><a href="https://www.yes24.com/product/goods/73162483" rel="nofollow noopener noreferrer" target="_blank">Depuis l&#x27;au-dela</a> <span style="color:#888;font-size:12px;font-weight:400">(죽음)</span></div>
         <div class="rl-byline">Bernard Werber</div>
+        <p class="rl-comment">A longtime Werber fan, Shin Se-kyung interviewed the author for this book&#x27;s launch, asking questions prepared after reading it. (Source: Channel Yes)</p>
         <a class="rl-source" href="https://m.ch.yes24.com/article/details/40594" rel="nofollow noopener noreferrer" target="_blank">📺 Source</a>
         <button type="button" class="heart-btn sm" data-heart="b:죽음" aria-pressed="false" aria-label="Heart this book" title="Heart this book" hidden><span class="heart-ico" aria-hidden="true">♡</span><span class="heart-n"></span></button>
       </div>
     </li>
-    <li class="rl-item">
+    <li class="rl-item" id="b3">
       <span class="rl-num">3</span>
       <a class="rl-cover" href="https://www.yes24.com/product/goods/7006631" rel="nofollow noopener noreferrer" target="_blank" aria-label="Education — buy or read more"><img src="https://image.yes24.com/goods/7006631/L" alt="Education by Kim Seung-il — book cover" loading="lazy"></a>
       <div class="rl-meta">
         <div class="rl-title"><a href="https://www.yes24.com/product/goods/7006631" rel="nofollow noopener noreferrer" target="_blank">Education</a> <span style="color:#888;font-size:12px;font-weight:400">(에듀케이션)</span></div>
         <div class="rl-byline">Kim Seung-il</div>
+        <p class="rl-comment">On Shin Se-kyung&#x27;s list of recommended books. (Source: Channel Yes)</p>
         <a class="rl-source" href="https://m.ch.yes24.com/article/details/40594" rel="nofollow noopener noreferrer" target="_blank">📺 Source</a>
         <button type="button" class="heart-btn sm" data-heart="b:에듀케이션" aria-pressed="false" aria-label="Heart this book" title="Heart this book" hidden><span class="heart-ico" aria-hidden="true">♡</span><span class="heart-n"></span></button>
       </div>
     </li>
-    <li class="rl-item">
+    <li class="rl-item" id="b4">
       <span class="rl-num">4</span>
       <a class="rl-cover" href="https://www.yes24.com/product/goods/122547573" rel="nofollow noopener noreferrer" target="_blank" aria-label="How Proust Can Change Your Life — buy or read more"><img src="https://image.yes24.com/goods/122547573/L" alt="How Proust Can Change Your Life by Alain de Botton — book cover" loading="lazy"></a>
       <div class="rl-meta">
         <div class="rl-title"><a href="https://www.yes24.com/product/goods/122547573" rel="nofollow noopener noreferrer" target="_blank">How Proust Can Change Your Life</a> <span style="color:#888;font-size:12px;font-weight:400">(프루스트가 우리의 삶을 바꾸는 방법들)</span></div>
         <div class="rl-byline">Alain de Botton</div>
+        <p class="rl-comment">On Shin Se-kyung&#x27;s list of recommended books. (Source: Channel Yes)</p>
         <a class="rl-source" href="https://m.ch.yes24.com/article/details/40594" rel="nofollow noopener noreferrer" target="_blank">📺 Source</a>
         <button type="button" class="heart-btn sm" data-heart="b:프루스트가 우리의 삶을 바꾸는 방법들" aria-pressed="false" aria-label="Heart this book" title="Heart this book" hidden><span class="heart-ico" aria-hidden="true">♡</span><span class="heart-n"></span></button>
       </div>
     </li>
-    <li class="rl-item">
+    <li class="rl-item" id="b5">
       <span class="rl-num">5</span>
       <a class="rl-cover" href="https://www.yes24.com/product/goods/86895809" rel="nofollow noopener noreferrer" target="_blank" aria-label="Salt, Fat, Acid, Heat — buy or read more"><img src="https://image.yes24.com/goods/86895809/L" alt="Salt, Fat, Acid, Heat by Samin Nosrat — book cover" loading="lazy"></a>
       <div class="rl-meta">
@@ -450,7 +462,7 @@
         <button type="button" class="heart-btn sm" data-heart="b:소금 지방 산 열" aria-pressed="false" aria-label="Heart this book" title="Heart this book" hidden><span class="heart-ico" aria-hidden="true">♡</span><span class="heart-n"></span></button>
       </div>
     </li>
-    <li class="rl-item">
+    <li class="rl-item" id="b6">
       <span class="rl-num">6</span>
       <a class="rl-cover" href="https://www.yes24.com/product/goods/1520340" rel="nofollow noopener noreferrer" target="_blank" aria-label="The Hottest State — buy or read more"><img src="https://image.yes24.com/goods/1520340/L" alt="The Hottest State by Ethan Hawke — book cover" loading="lazy"></a>
       <div class="rl-meta">
@@ -459,22 +471,24 @@
         <button type="button" class="heart-btn sm" data-heart="b:이토록 뜨거운 순간" aria-pressed="false" aria-label="Heart this book" title="Heart this book" hidden><span class="heart-ico" aria-hidden="true">♡</span><span class="heart-n"></span></button>
       </div>
     </li>
-    <li class="rl-item">
+    <li class="rl-item" id="b7">
       <span class="rl-num">7</span>
       <a class="rl-cover" href="https://www.yes24.com/product/goods/4827613" rel="nofollow noopener noreferrer" target="_blank" aria-label="The Stranger — buy or read more"><img src="https://image.yes24.com/goods/4827613/L" alt="The Stranger by Albert Camus — book cover" loading="lazy"></a>
       <div class="rl-meta">
         <div class="rl-title"><a href="https://www.yes24.com/product/goods/4827613" rel="nofollow noopener noreferrer" target="_blank">The Stranger</a> <span style="color:#888;font-size:12px;font-weight:400">(이방인)</span></div>
         <div class="rl-byline">Albert Camus</div>
+        <p class="rl-comment">On Shin Se-kyung&#x27;s list of recommended books. (Source: Channel Yes)</p>
         <a class="rl-source" href="https://m.ch.yes24.com/article/details/40594" rel="nofollow noopener noreferrer" target="_blank">📺 Source</a>
         <button type="button" class="heart-btn sm" data-heart="b:이방인" aria-pressed="false" aria-label="Heart this book" title="Heart this book" hidden><span class="heart-ico" aria-hidden="true">♡</span><span class="heart-n"></span></button>
       </div>
     </li>
-    <li class="rl-item">
+    <li class="rl-item" id="b8">
       <span class="rl-num">8</span>
       <a class="rl-cover" href="https://www.yes24.com/product/goods/119458386" rel="nofollow noopener noreferrer" target="_blank" aria-label="Toji — buy or read more"><img src="https://image.yes24.com/goods/119458386/L" alt="Toji by Park Kyong-ni — book cover" loading="lazy"></a>
       <div class="rl-meta">
         <div class="rl-title"><a href="https://www.yes24.com/product/goods/119458386" rel="nofollow noopener noreferrer" target="_blank">Toji</a> <span style="color:#888;font-size:12px;font-weight:400">(토지)</span></div>
         <div class="rl-byline">Park Kyong-ni</div>
+        <p class="rl-comment">To understand the role of Seo-hee in the drama, Shin Se-kyung read the massive original novel twice. (Source: Channel Yes)</p>
         <a class="rl-source" href="https://m.ch.yes24.com/article/details/40594" rel="nofollow noopener noreferrer" target="_blank">📺 Source</a>
         <button type="button" class="heart-btn sm" data-heart="b:토지" aria-pressed="false" aria-label="Heart this book" title="Heart this book" hidden><span class="heart-ico" aria-hidden="true">♡</span><span class="heart-n"></span></button>
       </div>

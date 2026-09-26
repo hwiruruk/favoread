@@ -245,8 +245,15 @@
              background-size: 100% var(--row); background-repeat: repeat-y; }
     .new-sec { margin: 16px 0 6px; padding: 12px 12px 2px; background: #fffbe6; border: 2px dashed #000; }
     .new-sec-h { display: flex; align-items: center; gap: 8px; margin: 0 0 10px; font-size: 15px; font-weight: 800; }
-    .new-sec .reading-list { margin: 0; }
-    .rl-num.rl-num-new { font-size: 11px; letter-spacing: .04em; }
+    .rl-item { scroll-margin-top: 16px; }
+    .rl-item:target { outline: 3px solid #fde047; outline-offset: 2px; }
+    .new-tiles { display: flex; flex-wrap: wrap; gap: 12px; padding-bottom: 10px; }
+    .new-tile { width: 84px; color: #000; text-decoration: none; display: flex; flex-direction: column; gap: 5px; }
+    .new-tile:hover { text-decoration: none; transform: translateY(-2px); }
+    .nt-cover { display: block; width: 84px; aspect-ratio: 2/3; border: 1.5px solid #000; box-shadow: 2px 2px 0 0 #000; background: #f4f4f0; overflow: hidden; }
+    .nt-cover img { width: 100%; height: 100%; object-fit: cover; display: block; }
+    .nt-no-cover { display: flex; width: 100%; height: 100%; align-items: center; justify-content: center; font-size: 22px; }
+    .nt-title { font-size: 12px; font-weight: 700; line-height: 1.3; word-break: keep-all; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
     .rl-new-tag { font-size: 9px; font-weight: 800; letter-spacing: .06em; line-height: 1; padding: 3px 5px;
                   background: #fde047; color: #000; border: 1.5px solid #000; }
     .sp { position: relative; flex: none; width: auto; height: var(--sh-h);
@@ -268,7 +275,7 @@
               font-size: 8px; line-height: 1; padding: 3px 0 2px;
               border-bottom: 1px solid rgba(0,0,0,.55); }
     .sp.is-new .sp-t { padding-top: 22px; }
-    .is-capturing .sp-new, .is-capturing .rl-new, .is-capturing .rl-shared { display: none !important; }
+    .is-capturing .sp-new, .is-capturing .rl-new, .is-capturing .rl-shared, .is-capturing .rl-comment { display: none !important; }
     .is-capturing .sp.is-new .sp-t { padding-top: 14px; }
     @media (max-width: 480px) { .shelf { --sh-h: 205px; }
                                  .sp.no-img, .sp.sp-fail { width: calc(var(--w, 38px) * .88); }
@@ -295,6 +302,7 @@
     .rl-title a { color: #000; }
     .rl-title a:hover { color: #2563eb; }
     .rl-byline { font-size: 13px; color: #555; margin-bottom: 8px; line-height: 1.4; }
+    .rl-comment { font-size: 13px; line-height: 1.55; color: #222; background: #FFF7C2; border: 1.5px solid #000; padding: 6px 9px; margin: 0 0 8px; word-break: keep-all; }
     .rl-source { display: inline-block; font-size: 12px; padding: 3px 8px; background: #fff; border: 1.5px solid #000; box-shadow: 1px 1px 0 0 #000; text-decoration: none; color: #000; transition: transform .1s, box-shadow .1s, background .1s; }
     .rl-source:hover { transform: translate(-1px,-1px); box-shadow: 2px 2px 0 0 #000; background: #a7f3d0; text-decoration: none; }
     .rl-shared { clear: both; margin-top: 12px; padding-top: 10px; border-top: 1.5px dashed #ccc; display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
@@ -364,62 +372,68 @@
     <a class="sp" style="--c:hsl(347,40%,33%);--w:43px;--fs:15px" href="https://www.yes24.com/product/goods/1492648" rel="nofollow noopener noreferrer" target="_blank" title="지문사냥꾼"><span class="sp-t"><i>지문사냥꾼</i></span><img class="sp-i" src="https://image.yes24.com/goods/1492648/side" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.parentNode.classList.add('sp-fail');this.remove()" onload="if(this.naturalWidth/this.naturalHeight>0.4){this.parentNode.classList.add('sp-fail');this.remove()}"></a>
     </div>
     <ol class="reading-list" id="rlist">
-    <li class="rl-item">
+    <li class="rl-item" id="b1">
       <span class="rl-num">1</span>
       <a class="rl-cover" href="https://www.yes24.com/product/goods/108234153" rel="nofollow noopener noreferrer" target="_blank" aria-label="도망을 잘 치는 도련님 알라딘에서 보기"><img src="https://image.yes24.com/goods/108234153/L" alt="도망을 잘 치는 도련님 표지" loading="lazy"></a>
       <div class="rl-meta">
         <div class="rl-title"><a href="https://www.yes24.com/product/goods/108234153" rel="nofollow noopener noreferrer" target="_blank">도망을 잘 치는 도련님</a></div>
         <div class="rl-byline">마츠이 유세이 · 대원씨아이(만화)</div>
+        <p class="rl-comment">SNS에서 애니메이션 클립을 보고 작화에 꽂혀 e북 단행본까지 사서 읽은 만화예요. 끝까지 생존의 가치를 말하는 주인공에게 받은 충격이 아직 생생하대요. (출처: 씨네21)</p>
         <a class="rl-source" href="https://cine21.com/news/view?mag_id=106920" rel="nofollow noopener noreferrer" target="_blank">📺 출처 보기</a>
         <button type="button" class="heart-btn sm" data-heart="b:도망을 잘 치는 도련님" aria-pressed="false" aria-label="이 책에 하트" title="이 책에 하트" hidden><span class="heart-ico" aria-hidden="true">♡</span><span class="heart-n"></span></button>
       </div>
     </li>
-    <li class="rl-item">
+    <li class="rl-item" id="b2">
       <span class="rl-num">2</span>
       <a class="rl-cover" href="https://www.yes24.com/product/goods/25748112" rel="nofollow noopener noreferrer" target="_blank" aria-label="무당, 여성, 신령들 알라딘에서 보기"><img src="https://image.yes24.com/goods/25748112/L" alt="무당, 여성, 신령들 표지" loading="lazy"></a>
       <div class="rl-meta">
         <div class="rl-title"><a href="https://www.yes24.com/product/goods/25748112" rel="nofollow noopener noreferrer" target="_blank">무당, 여성, 신령들</a></div>
         <div class="rl-byline">로렐 켄달 · 일조각</div>
+        <p class="rl-comment">취향에 갇히지 않으려고 일부러 끼워 읽은 책이에요. 몇 해째 &#x27;여성 작가 책 읽기 챌린지&#x27;를 이어가고 있대요. (출처: 채널예스)</p>
         <a class="rl-source" href="https://m.ch.yes24.com/article/details/51977" rel="nofollow noopener noreferrer" target="_blank">📺 출처 보기</a>
         <button type="button" class="heart-btn sm" data-heart="b:무당, 여성, 신령들" aria-pressed="false" aria-label="이 책에 하트" title="이 책에 하트" hidden><span class="heart-ico" aria-hidden="true">♡</span><span class="heart-n"></span></button>
       </div>
     </li>
-    <li class="rl-item">
+    <li class="rl-item" id="b3">
       <span class="rl-num">3</span>
       <a class="rl-cover" href="https://www.yes24.com/product/goods/12149766" rel="nofollow noopener noreferrer" target="_blank" aria-label="우리는 언제나 성에 살았다 알라딘에서 보기"><img src="https://image.yes24.com/goods/12149766/L" alt="우리는 언제나 성에 살았다 표지" loading="lazy"></a>
       <div class="rl-meta">
         <div class="rl-title"><a href="https://www.yes24.com/product/goods/12149766" rel="nofollow noopener noreferrer" target="_blank">우리는 언제나 성에 살았다</a></div>
         <div class="rl-byline">셜리 잭슨 · 엘릭시르</div>
+        <p class="rl-comment">씨네21 &#x27;요즘 빠져 있는 것들&#x27; 목록에 올린 소설이에요. 스스로 택한 삶의 방식을 끝까지 밀어붙이는 기괴함에 주목했대요. (출처: 씨네21)</p>
         <a class="rl-source" href="https://cine21.com/news/view?mag_id=106920" rel="nofollow noopener noreferrer" target="_blank">📺 출처 보기</a>
         <button type="button" class="heart-btn sm" data-heart="b:우리는 언제나 성에 살았다" aria-pressed="false" aria-label="이 책에 하트" title="이 책에 하트" hidden><span class="heart-ico" aria-hidden="true">♡</span><span class="heart-n"></span></button>
       </div>
     </li>
-    <li class="rl-item">
+    <li class="rl-item" id="b4">
       <span class="rl-num">4</span>
       <a class="rl-cover" href="https://www.yes24.com/product/goods/124201245" rel="nofollow noopener noreferrer" target="_blank" aria-label="잘돼가? 무엇이든 알라딘에서 보기"><img src="https://image.yes24.com/goods/124201245/L" alt="잘돼가? 무엇이든 표지" loading="lazy"></a>
       <div class="rl-meta">
         <div class="rl-title"><a href="https://www.yes24.com/product/goods/124201245" rel="nofollow noopener noreferrer" target="_blank">잘돼가? 무엇이든</a></div>
         <div class="rl-byline">이경미 · 유선사</div>
+        <p class="rl-comment">에세이는 잘 안 읽는데, 친구 추천으로 읽고 너무 재밌어서 이렇게 유쾌한 글을 쓰고 싶어졌대요. (출처: 채널예스)</p>
         <a class="rl-source" href="https://m.ch.yes24.com/article/details/51977" rel="nofollow noopener noreferrer" target="_blank">📺 출처 보기</a>
         <button type="button" class="heart-btn sm" data-heart="b:잘돼가? 무엇이든" aria-pressed="false" aria-label="이 책에 하트" title="이 책에 하트" hidden><span class="heart-ico" aria-hidden="true">♡</span><span class="heart-n"></span></button>
       </div>
     </li>
-    <li class="rl-item">
+    <li class="rl-item" id="b5">
       <span class="rl-num">5</span>
       <a class="rl-cover" href="https://www.yes24.com/product/goods/33694483" rel="nofollow noopener noreferrer" target="_blank" aria-label="제5도살장 알라딘에서 보기"><img src="https://image.yes24.com/goods/33694483/L" alt="제5도살장 표지" loading="lazy"></a>
       <div class="rl-meta">
         <div class="rl-title"><a href="https://www.yes24.com/product/goods/33694483" rel="nofollow noopener noreferrer" target="_blank">제5도살장</a></div>
         <div class="rl-byline">커트 보니것 · 문학동네</div>
+        <p class="rl-comment">커트 보니것을 처음 읽은 게 이 책이라고 했어요. 문체라기보다 말투에 가깝고, 시공간과 희극·비극을 자유롭게 오가는 방식이 매력이라고 했습니다. (출처: 씨네21)</p>
         <a class="rl-source" href="https://cine21.com/news/view?mag_id=106920" rel="nofollow noopener noreferrer" target="_blank">📺 출처 보기</a>
         <button type="button" class="heart-btn sm" data-heart="b:제5도살장" aria-pressed="false" aria-label="이 책에 하트" title="이 책에 하트" hidden><span class="heart-ico" aria-hidden="true">♡</span><span class="heart-n"></span></button>
       </div>
     </li>
-    <li class="rl-item">
+    <li class="rl-item" id="b6">
       <span class="rl-num">6</span>
       <a class="rl-cover" href="https://www.yes24.com/product/goods/1492648" rel="nofollow noopener noreferrer" target="_blank" aria-label="지문사냥꾼 알라딘에서 보기"><img src="https://image.yes24.com/goods/1492648/L" alt="지문사냥꾼 표지" loading="lazy"></a>
       <div class="rl-meta">
         <div class="rl-title"><a href="https://www.yes24.com/product/goods/1492648" rel="nofollow noopener noreferrer" target="_blank">지문사냥꾼</a></div>
         <div class="rl-byline">이적 · 웅진지식하우스</div>
+        <p class="rl-comment">청소년기에 이 책을 보고 &#x27;나도 이런 책을 쓰고 싶다&#x27;는 꿈을 품었대요. (출처: 채널예스)</p>
         <a class="rl-source" href="https://m.ch.yes24.com/article/details/51977" rel="nofollow noopener noreferrer" target="_blank">📺 출처 보기</a>
         <button type="button" class="heart-btn sm" data-heart="b:지문사냥꾼" aria-pressed="false" aria-label="이 책에 하트" title="이 책에 하트" hidden><span class="heart-ico" aria-hidden="true">♡</span><span class="heart-n"></span></button>
       </div>

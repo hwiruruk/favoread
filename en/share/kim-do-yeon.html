@@ -245,8 +245,15 @@
              background-size: 100% var(--row); background-repeat: repeat-y; }
     .new-sec { margin: 16px 0 6px; padding: 12px 12px 2px; background: #fffbe6; border: 2px dashed #000; }
     .new-sec-h { display: flex; align-items: center; gap: 8px; margin: 0 0 10px; font-size: 15px; font-weight: 800; }
-    .new-sec .reading-list { margin: 0; }
-    .rl-num.rl-num-new { font-size: 11px; letter-spacing: .04em; }
+    .rl-item { scroll-margin-top: 16px; }
+    .rl-item:target { outline: 3px solid #fde047; outline-offset: 2px; }
+    .new-tiles { display: flex; flex-wrap: wrap; gap: 12px; padding-bottom: 10px; }
+    .new-tile { width: 84px; color: #000; text-decoration: none; display: flex; flex-direction: column; gap: 5px; }
+    .new-tile:hover { text-decoration: none; transform: translateY(-2px); }
+    .nt-cover { display: block; width: 84px; aspect-ratio: 2/3; border: 1.5px solid #000; box-shadow: 2px 2px 0 0 #000; background: #f4f4f0; overflow: hidden; }
+    .nt-cover img { width: 100%; height: 100%; object-fit: cover; display: block; }
+    .nt-no-cover { display: flex; width: 100%; height: 100%; align-items: center; justify-content: center; font-size: 22px; }
+    .nt-title { font-size: 12px; font-weight: 700; line-height: 1.3; word-break: keep-all; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
     .rl-new-tag { font-size: 9px; font-weight: 800; letter-spacing: .06em; line-height: 1; padding: 3px 5px;
                   background: #fde047; color: #000; border: 1.5px solid #000; }
     .sp { position: relative; flex: none; width: auto; height: var(--sh-h);
@@ -268,7 +275,7 @@
               font-size: 8px; line-height: 1; padding: 3px 0 2px;
               border-bottom: 1px solid rgba(0,0,0,.55); }
     .sp.is-new .sp-t { padding-top: 22px; }
-    .is-capturing .sp-new, .is-capturing .rl-new, .is-capturing .rl-shared { display: none !important; }
+    .is-capturing .sp-new, .is-capturing .rl-new, .is-capturing .rl-shared, .is-capturing .rl-comment { display: none !important; }
     .is-capturing .sp.is-new .sp-t { padding-top: 14px; }
     @media (max-width: 480px) { .shelf { --sh-h: 205px; }
                                  .sp.no-img, .sp.sp-fail { width: calc(var(--w, 38px) * .88); }
@@ -295,6 +302,7 @@
     .rl-title a { color: #000; }
     .rl-title a:hover { color: #2563eb; }
     .rl-byline { font-size: 13px; color: #555; margin-bottom: 8px; line-height: 1.4; }
+    .rl-comment { font-size: 13px; line-height: 1.55; color: #222; background: #FFF7C2; border: 1.5px solid #000; padding: 6px 9px; margin: 0 0 8px; word-break: keep-all; }
     .rl-source { display: inline-block; font-size: 12px; padding: 3px 8px; background: #fff; border: 1.5px solid #000; box-shadow: 1px 1px 0 0 #000; text-decoration: none; color: #000; transition: transform .1s, box-shadow .1s, background .1s; }
     .rl-source:hover { transform: translate(-1px,-1px); box-shadow: 2px 2px 0 0 #000; background: #a7f3d0; text-decoration: none; }
     @media (max-width: 480px) { .rl-item { padding: 14px 12px 14px 46px; } .rl-num { width: 32px; height: 26px; font-size: 12px; } .rl-cover { width: 60px; height: 88px; margin-right: 10px; } .rl-meta { min-height: 88px; } .rl-title { font-size: 15px; } }
@@ -340,52 +348,57 @@
     <a class="sp" style="--c:hsl(327,52%,31%);--w:34px;--fs:15px" href="https://www.yes24.com/product/goods/44178849" rel="nofollow noopener noreferrer" target="_blank" title="There Is Nothing Now"><span class="sp-t"><i>There Is Nothing Now</i></span><img class="sp-i" src="https://image.yes24.com/goods/44178849/side" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.parentNode.classList.add('sp-fail');this.remove()" onload="if(this.naturalWidth/this.naturalHeight>0.4){this.parentNode.classList.add('sp-fail');this.remove()}"></a>
     </div>
     <ol class="reading-list" id="rlist">
-    <li class="rl-item">
+    <li class="rl-item" id="b1">
       <span class="rl-num">1</span>
       <a class="rl-cover" href="https://www.yes24.com/product/goods/43832839" rel="nofollow noopener noreferrer" target="_blank" aria-label="RimRoad — buy or read more"><img src="https://image.yes24.com/goods/43832839/L" alt="RimRoad by Bae Mi-Joo, Kim Se-Hee — book cover" loading="lazy"></a>
       <div class="rl-meta">
         <div class="rl-title"><a href="https://www.yes24.com/product/goods/43832839" rel="nofollow noopener noreferrer" target="_blank">RimRoad</a> <span style="color:#888;font-size:12px;font-weight:400">(림 로드)</span></div>
         <div class="rl-byline">Bae Mi-Joo, Kim Se-Hee *</div>
+        <p class="rl-comment">Kim Do-yeon read this novel aloud for EBS&#x27;s idol reading donation project; part of the proceeds goes to rural youth. (Source: Maeil Business)</p>
         <a class="rl-source" href="https://www.mk.co.kr/news/culture/8908867" rel="nofollow noopener noreferrer" target="_blank">📺 Source</a>
         <button type="button" class="heart-btn sm" data-heart="b:림 로드" aria-pressed="false" aria-label="Heart this book" title="Heart this book" hidden><span class="heart-ico" aria-hidden="true">♡</span><span class="heart-n"></span></button>
       </div>
     </li>
-    <li class="rl-item">
+    <li class="rl-item" id="b2">
       <span class="rl-num">2</span>
       <a class="rl-cover" href="https://www.yes24.com/product/goods/123400303" rel="nofollow noopener noreferrer" target="_blank" aria-label="Small Things Like These — buy or read more"><img src="https://image.yes24.com/goods/123400303/L" alt="Small Things Like These by Claire Keegan — book cover" loading="lazy"></a>
       <div class="rl-meta">
         <div class="rl-title"><a href="https://www.yes24.com/product/goods/123400303" rel="nofollow noopener noreferrer" target="_blank">Small Things Like These</a> <span style="color:#888;font-size:12px;font-weight:400">(이처럼 사소한 것들)</span></div>
         <div class="rl-byline">Claire Keegan</div>
+        <p class="rl-comment">Introduced as a guest on Millie&#x27;s taste-playlist program, with Kim Do-yeon getting deeply into the protagonist and the people around the protagonist. (Source: Readers News)</p>
         <a class="rl-source" href="https://www.readersnews.com/news/articleView.html?idxno=114513" rel="nofollow noopener noreferrer" target="_blank">📺 Source</a>
         <button type="button" class="heart-btn sm" data-heart="b:이처럼 사소한 것들" aria-pressed="false" aria-label="Heart this book" title="Heart this book" hidden><span class="heart-ico" aria-hidden="true">♡</span><span class="heart-n"></span></button>
       </div>
     </li>
-    <li class="rl-item">
+    <li class="rl-item" id="b3">
       <span class="rl-num">3</span>
       <a class="rl-cover" href="https://www.yes24.com/product/goods/96855075" rel="nofollow noopener noreferrer" target="_blank" aria-label="Story of Three Sisters — buy or read more"><img src="https://image.yes24.com/goods/96855075/L" alt="Story of Three Sisters by Moon So-Ri, Lee Seung-Won — book cover" loading="lazy"></a>
       <div class="rl-meta">
         <div class="rl-title"><a href="https://www.yes24.com/product/goods/96855075" rel="nofollow noopener noreferrer" target="_blank">Story of Three Sisters *</a> <span style="color:#888;font-size:12px;font-weight:400">(세 자매 이야기)</span></div>
         <div class="rl-byline">Moon So-Ri, Lee Seung-Won *</div>
+        <p class="rl-comment">After seeing the film Three Sisters, the lingering feeling led Kim Do-yeon to read this making-of book cover to cover, then share pages on social media. (Source: Digital Chosun)</p>
         <a class="rl-source" href="https://digitalchosun.dizzo.com/site/data/html_dir/2021/01/28/2021012880030.html" rel="nofollow noopener noreferrer" target="_blank">📺 Source</a>
         <button type="button" class="heart-btn sm" data-heart="b:세 자매 이야기" aria-pressed="false" aria-label="Heart this book" title="Heart this book" hidden><span class="heart-ico" aria-hidden="true">♡</span><span class="heart-n"></span></button>
       </div>
     </li>
-    <li class="rl-item">
+    <li class="rl-item" id="b4">
       <span class="rl-num">4</span>
       <a class="rl-cover" href="https://www.yes24.com/product/goods/90039222" rel="nofollow noopener noreferrer" target="_blank" aria-label="The Answer I&#x27;ve Been Preparing for a Long Time — buy or read more"><img src="https://image.yes24.com/goods/90039222/L" alt="The Answer I&#x27;ve Been Preparing for a Long Time by Kim Youngha — book cover" loading="lazy"></a>
       <div class="rl-meta">
         <div class="rl-title"><a href="https://www.yes24.com/product/goods/90039222" rel="nofollow noopener noreferrer" target="_blank">The Answer I&#x27;ve Been Preparing for a Long Time *</a> <span style="color:#888;font-size:12px;font-weight:400">(오래 준비해온 대답)</span></div>
         <div class="rl-byline">Kim Youngha</div>
+        <p class="rl-comment">Posted on social media with a note: a book sought out while craving travel. It&#x27;s Kim Young-ha&#x27;s account of Sicily. (Source: Elle Korea)</p>
         <a class="rl-source" href="https://www.elle.co.kr/article/63753" rel="nofollow noopener noreferrer" target="_blank">📺 Source</a>
         <button type="button" class="heart-btn sm" data-heart="b:오래 준비해온 대답" aria-pressed="false" aria-label="Heart this book" title="Heart this book" hidden><span class="heart-ico" aria-hidden="true">♡</span><span class="heart-n"></span></button>
       </div>
     </li>
-    <li class="rl-item">
+    <li class="rl-item" id="b5">
       <span class="rl-num">5</span>
       <a class="rl-cover" href="https://www.yes24.com/product/goods/44178849" rel="nofollow noopener noreferrer" target="_blank" aria-label="There Is Nothing Now — buy or read more"><img src="https://image.yes24.com/goods/44178849/L" alt="There Is Nothing Now by 글배우 — book cover" loading="lazy"></a>
       <div class="rl-meta">
         <div class="rl-title"><a href="https://www.yes24.com/product/goods/44178849" rel="nofollow noopener noreferrer" target="_blank">There Is Nothing Now *</a> <span style="color:#888;font-size:12px;font-weight:400">(아무것도 아닌 지금은 없다)</span></div>
         <div class="rl-byline">글배우</div>
+        <p class="rl-comment">A current read that keeps hitting home, so Kim Do-yeon keeps coming back to it, often journaling after reading. (Source: Marie Claire Korea)</p>
         <a class="rl-source" href="https://www.marieclairekorea.com/celebrity/2017/09/wekimeki-like-it/" rel="nofollow noopener noreferrer" target="_blank">📺 Source</a>
         <button type="button" class="heart-btn sm" data-heart="b:아무것도 아닌 지금은 없다" aria-pressed="false" aria-label="Heart this book" title="Heart this book" hidden><span class="heart-ico" aria-hidden="true">♡</span><span class="heart-n"></span></button>
       </div>

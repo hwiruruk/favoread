@@ -457,8 +457,15 @@
              background-size: 100% var(--row); background-repeat: repeat-y; }
     .new-sec { margin: 16px 0 6px; padding: 12px 12px 2px; background: #fffbe6; border: 2px dashed #000; }
     .new-sec-h { display: flex; align-items: center; gap: 8px; margin: 0 0 10px; font-size: 15px; font-weight: 800; }
-    .new-sec .reading-list { margin: 0; }
-    .rl-num.rl-num-new { font-size: 11px; letter-spacing: .04em; }
+    .rl-item { scroll-margin-top: 16px; }
+    .rl-item:target { outline: 3px solid #fde047; outline-offset: 2px; }
+    .new-tiles { display: flex; flex-wrap: wrap; gap: 12px; padding-bottom: 10px; }
+    .new-tile { width: 84px; color: #000; text-decoration: none; display: flex; flex-direction: column; gap: 5px; }
+    .new-tile:hover { text-decoration: none; transform: translateY(-2px); }
+    .nt-cover { display: block; width: 84px; aspect-ratio: 2/3; border: 1.5px solid #000; box-shadow: 2px 2px 0 0 #000; background: #f4f4f0; overflow: hidden; }
+    .nt-cover img { width: 100%; height: 100%; object-fit: cover; display: block; }
+    .nt-no-cover { display: flex; width: 100%; height: 100%; align-items: center; justify-content: center; font-size: 22px; }
+    .nt-title { font-size: 12px; font-weight: 700; line-height: 1.3; word-break: keep-all; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
     .rl-new-tag { font-size: 9px; font-weight: 800; letter-spacing: .06em; line-height: 1; padding: 3px 5px;
                   background: #fde047; color: #000; border: 1.5px solid #000; }
     .sp { position: relative; flex: none; width: auto; height: var(--sh-h);
@@ -480,7 +487,7 @@
               font-size: 8px; line-height: 1; padding: 3px 0 2px;
               border-bottom: 1px solid rgba(0,0,0,.55); }
     .sp.is-new .sp-t { padding-top: 22px; }
-    .is-capturing .sp-new, .is-capturing .rl-new, .is-capturing .rl-shared { display: none !important; }
+    .is-capturing .sp-new, .is-capturing .rl-new, .is-capturing .rl-shared, .is-capturing .rl-comment { display: none !important; }
     .is-capturing .sp.is-new .sp-t { padding-top: 14px; }
     @media (max-width: 480px) { .shelf { --sh-h: 205px; }
                                  .sp.no-img, .sp.sp-fail { width: calc(var(--w, 38px) * .88); }
@@ -507,6 +514,7 @@
     .rl-title a { color: #000; }
     .rl-title a:hover { color: #2563eb; }
     .rl-byline { font-size: 13px; color: #555; margin-bottom: 8px; line-height: 1.4; }
+    .rl-comment { font-size: 13px; line-height: 1.55; color: #222; background: #FFF7C2; border: 1.5px solid #000; padding: 6px 9px; margin: 0 0 8px; word-break: keep-all; }
     .rl-source { display: inline-block; font-size: 12px; padding: 3px 8px; background: #fff; border: 1.5px solid #000; box-shadow: 1px 1px 0 0 #000; text-decoration: none; color: #000; transition: transform .1s, box-shadow .1s, background .1s; }
     .rl-source:hover { transform: translate(-1px,-1px); box-shadow: 2px 2px 0 0 #000; background: #a7f3d0; text-decoration: none; }
     @media (max-width: 480px) { .rl-item { padding: 14px 12px 14px 46px; } .rl-num { width: 32px; height: 26px; font-size: 12px; } .rl-cover { width: 60px; height: 88px; margin-right: 10px; } .rl-meta { min-height: 88px; } .rl-title { font-size: 15px; } }
@@ -566,7 +574,7 @@
     <a class="sp" style="--c:hsl(72,35%,26%);--w:42px;--fs:15px" href="https://www.yes24.com/product/goods/143896198" rel="nofollow noopener noreferrer" target="_blank" title="The White Book"><span class="sp-t"><i>The White Book</i></span><img class="sp-i" src="https://image.yes24.com/goods/143896198/side" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.parentNode.classList.add('sp-fail');this.remove()" onload="if(this.naturalWidth/this.naturalHeight>0.4){this.parentNode.classList.add('sp-fail');this.remove()}"></a>
     </div>
     <ol class="reading-list" id="rlist">
-    <li class="rl-item">
+    <li class="rl-item" id="b1">
       <span class="rl-num">1</span>
       <a class="rl-cover" href="https://www.yes24.com/product/goods/131930939" rel="nofollow noopener noreferrer" target="_blank" aria-label="Classics Answered — buy or read more"><img src="https://image.yes24.com/goods/131930939/L" alt="Classics Answered by Ko Myeong-hwan — book cover" loading="lazy"></a>
       <div class="rl-meta">
@@ -576,47 +584,51 @@
         <button type="button" class="heart-btn sm" data-heart="b:고전이 답했다" aria-pressed="false" aria-label="Heart this book" title="Heart this book" hidden><span class="heart-ico" aria-hidden="true">♡</span><span class="heart-n"></span></button>
       </div>
     </li>
-    <li class="rl-item">
+    <li class="rl-item" id="b2">
       <span class="rl-num">2</span>
       <a class="rl-cover" href="https://www.yes24.com/product/goods/8759796" rel="nofollow noopener noreferrer" target="_blank" aria-label="Contradictions — buy or read more"><img src="https://image.yes24.com/goods/8759796/L" alt="Contradictions by Yang Gui-ja — book cover" loading="lazy"></a>
       <div class="rl-meta">
         <div class="rl-title"><a href="https://www.yes24.com/product/goods/8759796" rel="nofollow noopener noreferrer" target="_blank">Contradictions</a> <span style="color:#888;font-size:12px;font-weight:400">(모순)</span></div>
         <div class="rl-byline">Yang Gui-ja</div>
+        <p class="rl-comment">Mentioned in a W Korea interview as a current read, along with The Picture of Dorian Gray. (Source: W Korea)</p>
         <a class="rl-source" href="https://www.wkorea.com/2026/04/20/%eb%af%b8%ec%95%bc%ec%98%a4-%ea%b0%80%ec%9b%90%ec%9d%b4-%eb%a7%8c%eb%82%9c-%eb%b4%84%eb%82%a0/" rel="nofollow noopener noreferrer" target="_blank">📺 Source</a>
         <button type="button" class="heart-btn sm" data-heart="b:모순" aria-pressed="false" aria-label="Heart this book" title="Heart this book" hidden><span class="heart-ico" aria-hidden="true">♡</span><span class="heart-n"></span></button>
       </div>
     </li>
-    <li class="rl-item">
+    <li class="rl-item" id="b3">
       <span class="rl-num">3</span>
       <a class="rl-cover" href="https://www.yes24.com/product/goods/6712992" rel="nofollow noopener noreferrer" target="_blank" aria-label="Crime and Punishment — buy or read more"><img src="https://image.yes24.com/goods/6712992/L" alt="Crime and Punishment by Fyodor Dostoevsky — book cover" loading="lazy"></a>
       <div class="rl-meta">
         <div class="rl-title"><a href="https://www.yes24.com/product/goods/6712992" rel="nofollow noopener noreferrer" target="_blank">Crime and Punishment</a> <span style="color:#888;font-size:12px;font-weight:400">(죄와 벌)</span></div>
         <div class="rl-byline">Fyodor Dostoevsky</div>
+        <p class="rl-comment">Named in a photo-shoot interview as a current read. Hard to get through between schedules, so it&#x27;s on pause, but Gawon plans to finish it when the timing feels right. (Source: theqoo)</p>
         <a class="rl-source" href="https://theqoo.net/square/3693718898" rel="nofollow noopener noreferrer" target="_blank">📺 Source</a>
         <button type="button" class="heart-btn sm" data-heart="b:죄와 벌" aria-pressed="false" aria-label="Heart this book" title="Heart this book" hidden><span class="heart-ico" aria-hidden="true">♡</span><span class="heart-n"></span></button>
       </div>
     </li>
-    <li class="rl-item">
+    <li class="rl-item" id="b4">
       <span class="rl-num">4</span>
       <a class="rl-cover" href="https://www.yes24.com/product/goods/95746166" rel="nofollow noopener noreferrer" target="_blank" aria-label="Elementary Korean — buy or read more"><img src="https://image.yes24.com/goods/95746166/L" alt="Elementary Korean by Moon Ji-hyuk — book cover" loading="lazy"></a>
       <div class="rl-meta">
         <div class="rl-title"><a href="https://www.yes24.com/product/goods/95746166" rel="nofollow noopener noreferrer" target="_blank">Elementary Korean</a> <span style="color:#888;font-size:12px;font-weight:400">(초급 한국어)</span></div>
         <div class="rl-byline">Moon Ji-hyuk</div>
+        <p class="rl-comment">A novel by Moon Ji-hyuk, on the list of books MEOVV members mentioned reading or were seen with in videos. (Source: theqoo)</p>
         <a class="rl-source" href="https://theqoo.net/square/4054539851" rel="nofollow noopener noreferrer" target="_blank">📺 Source</a>
         <button type="button" class="heart-btn sm" data-heart="b:초급 한국어" aria-pressed="false" aria-label="Heart this book" title="Heart this book" hidden><span class="heart-ico" aria-hidden="true">♡</span><span class="heart-n"></span></button>
       </div>
     </li>
-    <li class="rl-item">
+    <li class="rl-item" id="b5">
       <span class="rl-num">5</span>
       <a class="rl-cover" href="https://www.yes24.com/product/goods/118578901" rel="nofollow noopener noreferrer" target="_blank" aria-label="Hunger — buy or read more"><img src="https://image.yes24.com/goods/118578901/L" alt="Hunger by Jinyoung Choi — book cover" loading="lazy"></a>
       <div class="rl-meta">
         <div class="rl-title"><a href="https://www.yes24.com/product/goods/118578901" rel="nofollow noopener noreferrer" target="_blank">Hunger</a> <span style="color:#888;font-size:12px;font-weight:400">(구의 증명)</span></div>
         <div class="rl-byline">Jinyoung Choi *</div>
+        <p class="rl-comment">In a W Korea interview, Gawon named this as a book enjoyed this year. (Source: W Korea)</p>
         <a class="rl-source" href="https://www.wkorea.com/2026/04/20/%eb%af%b8%ec%95%bc%ec%98%a4-%ea%b0%80%ec%9b%90%ec%9d%b4-%eb%a7%8c%eb%82%9c-%eb%b4%84%eb%82%a0/" rel="nofollow noopener noreferrer" target="_blank">📺 Source</a>
         <button type="button" class="heart-btn sm" data-heart="b:구의 증명" aria-pressed="false" aria-label="Heart this book" title="Heart this book" hidden><span class="heart-ico" aria-hidden="true">♡</span><span class="heart-n"></span></button>
       </div>
     </li>
-    <li class="rl-item">
+    <li class="rl-item" id="b6">
       <span class="rl-num">6</span>
       <a class="rl-cover" href="https://www.yes24.com/product/goods/14943878" rel="nofollow noopener noreferrer" target="_blank" aria-label="If Cats Disappeared from the World — buy or read more"><img src="https://image.yes24.com/goods/14943878/L" alt="If Cats Disappeared from the World by Genki Kawamura — book cover" loading="lazy"></a>
       <div class="rl-meta">
@@ -626,7 +638,7 @@
         <button type="button" class="heart-btn sm" data-heart="b:세상에서 고양이가 사라진다면" aria-pressed="false" aria-label="Heart this book" title="Heart this book" hidden><span class="heart-ico" aria-hidden="true">♡</span><span class="heart-n"></span></button>
       </div>
     </li>
-    <li class="rl-item">
+    <li class="rl-item" id="b7">
       <span class="rl-num">7</span>
       <a class="rl-cover" href="https://www.yes24.com/product/goods/108669858" rel="nofollow noopener noreferrer" target="_blank" aria-label="Mythology (Edith Hamilton&#x27;s) — buy or read more"><img src="https://image.yes24.com/goods/108669858/L" alt="Mythology (Edith Hamilton&#x27;s) by Edith Hamilton — book cover" loading="lazy"></a>
       <div class="rl-meta">
@@ -636,7 +648,7 @@
         <button type="button" class="heart-btn sm" data-heart="b:해밀턴의 그리스로마신화" aria-pressed="false" aria-label="Heart this book" title="Heart this book" hidden><span class="heart-ico" aria-hidden="true">♡</span><span class="heart-n"></span></button>
       </div>
     </li>
-    <li class="rl-item">
+    <li class="rl-item" id="b8">
       <span class="rl-num">8</span>
       <a class="rl-cover" href="https://www.yes24.com/product/goods/44499829" rel="nofollow noopener noreferrer" target="_blank" aria-label="Norwegian Wood — buy or read more"><img src="https://image.yes24.com/goods/44499829/L" alt="Norwegian Wood by Haruki Murakami — book cover" loading="lazy"></a>
       <div class="rl-meta">
@@ -646,37 +658,40 @@
         <button type="button" class="heart-btn sm" data-heart="b:노르웨이의 숲" aria-pressed="false" aria-label="Heart this book" title="Heart this book" hidden><span class="heart-ico" aria-hidden="true">♡</span><span class="heart-n"></span></button>
       </div>
     </li>
-    <li class="rl-item">
+    <li class="rl-item" id="b9">
       <span class="rl-num">9</span>
       <a class="rl-cover" href="https://www.yes24.com/product/goods/124106315" rel="nofollow noopener noreferrer" target="_blank" aria-label="Please Be My Summer — buy or read more"><img src="https://image.yes24.com/goods/124106315/L" alt="Please Be My Summer by Seo Deok-jun — book cover" loading="lazy"></a>
       <div class="rl-meta">
         <div class="rl-title"><a href="https://www.yes24.com/product/goods/124106315" rel="nofollow noopener noreferrer" target="_blank">Please Be My Summer</a> <span style="color:#888;font-size:12px;font-weight:400">(그대는 나의 여름이 되세요)</span></div>
         <div class="rl-byline">Seo Deok-jun</div>
+        <p class="rl-comment">A poetry collection by Seo Deok-jun, on the list of books MEOVV members mentioned reading or were seen with in videos. (Source: theqoo)</p>
         <a class="rl-source" href="https://theqoo.net/square/4054539851" rel="nofollow noopener noreferrer" target="_blank">📺 Source</a>
         <button type="button" class="heart-btn sm" data-heart="b:그대는 나의 여름이 되세요" aria-pressed="false" aria-label="Heart this book" title="Heart this book" hidden><span class="heart-ico" aria-hidden="true">♡</span><span class="heart-n"></span></button>
       </div>
     </li>
-    <li class="rl-item">
+    <li class="rl-item" id="b10">
       <span class="rl-num">10</span>
       <a class="rl-cover" href="https://www.yes24.com/product/goods/122883845" rel="nofollow noopener noreferrer" target="_blank" aria-label="Shower Gel and Soda Water — buy or read more"><img src="https://image.yes24.com/goods/122883845/L" alt="Shower Gel and Soda Water by Ko Sun-kyung — book cover" loading="lazy"></a>
       <div class="rl-meta">
         <div class="rl-title"><a href="https://www.yes24.com/product/goods/122883845" rel="nofollow noopener noreferrer" target="_blank">Shower Gel and Soda Water</a> <span style="color:#888;font-size:12px;font-weight:400">(샤워젤과 소다수)</span></div>
         <div class="rl-byline">Ko Sun-kyung</div>
+        <p class="rl-comment">A poetry collection by Ko Seon-kyung, on the list of books MEOVV members mentioned reading or were seen with in videos. (Source: theqoo)</p>
         <a class="rl-source" href="https://theqoo.net/square/4054539851" rel="nofollow noopener noreferrer" target="_blank">📺 Source</a>
         <button type="button" class="heart-btn sm" data-heart="b:샤워젤과 소다수" aria-pressed="false" aria-label="Heart this book" title="Heart this book" hidden><span class="heart-ico" aria-hidden="true">♡</span><span class="heart-n"></span></button>
       </div>
     </li>
-    <li class="rl-item">
+    <li class="rl-item" id="b11">
       <span class="rl-num">11</span>
       <a class="rl-cover" href="https://www.yes24.com/product/goods/146810656" rel="nofollow noopener noreferrer" target="_blank" aria-label="The Definition of Love Is a Cat — buy or read more"><img src="https://image.yes24.com/goods/146810656/L" alt="The Definition of Love Is a Cat by Hyunwoo Lim — book cover" loading="lazy"></a>
       <div class="rl-meta">
         <div class="rl-title"><a href="https://www.yes24.com/product/goods/146810656" rel="nofollow noopener noreferrer" target="_blank">The Definition of Love Is a Cat *</a> <span style="color:#888;font-size:12px;font-weight:400">(사랑의 정의는 고양이)</span></div>
         <div class="rl-byline">Hyunwoo Lim *</div>
+        <p class="rl-comment">Gawon told W Korea about loving poetry and really enjoying this collection. (Source: W Korea)</p>
         <a class="rl-source" href="https://www.wkorea.com/2026/04/20/%eb%af%b8%ec%95%bc%ec%98%a4-%ea%b0%80%ec%9b%90%ec%9d%b4-%eb%a7%8c%eb%82%9c-%eb%b4%84%eb%82%a0/" rel="nofollow noopener noreferrer" target="_blank">📺 Source</a>
         <button type="button" class="heart-btn sm" data-heart="b:사랑의 정의는 고양이" aria-pressed="false" aria-label="Heart this book" title="Heart this book" hidden><span class="heart-ico" aria-hidden="true">♡</span><span class="heart-n"></span></button>
       </div>
     </li>
-    <li class="rl-item">
+    <li class="rl-item" id="b12">
       <span class="rl-num">12</span>
       <a class="rl-cover" href="https://www.yes24.com/product/goods/2131169" rel="nofollow noopener noreferrer" target="_blank" aria-label="The Old Kingdom (Series) — buy or read more"><img src="https://image.yes24.com/goods/2131169/L" alt="The Old Kingdom (Series) by Garth Nix — book cover" loading="lazy"></a>
       <div class="rl-meta">
@@ -686,7 +701,7 @@
         <button type="button" class="heart-btn sm" data-heart="b:고왕국기" aria-pressed="false" aria-label="Heart this book" title="Heart this book" hidden><span class="heart-ico" aria-hidden="true">♡</span><span class="heart-n"></span></button>
       </div>
     </li>
-    <li class="rl-item">
+    <li class="rl-item" id="b13">
       <span class="rl-num">13</span>
       <a class="rl-cover" href="https://www.yes24.com/product/goods/4486713" rel="nofollow noopener noreferrer" target="_blank" aria-label="The Picture of Dorian Gray — buy or read more"><img src="https://image.yes24.com/goods/4486713/L" alt="The Picture of Dorian Gray by Oscar Wilde — book cover" loading="lazy"></a>
       <div class="rl-meta">
@@ -696,17 +711,18 @@
         <button type="button" class="heart-btn sm" data-heart="b:도리안 그레이의 초상" aria-pressed="false" aria-label="Heart this book" title="Heart this book" hidden><span class="heart-ico" aria-hidden="true">♡</span><span class="heart-n"></span></button>
       </div>
     </li>
-    <li class="rl-item">
+    <li class="rl-item" id="b14">
       <span class="rl-num">14</span>
       <a class="rl-cover" href="https://www.yes24.com/product/goods/109145050" rel="nofollow noopener noreferrer" target="_blank" aria-label="The Picture of Dorian Gray 1890 — buy or read more"><img src="https://image.yes24.com/goods/109145050/L" alt="The Picture of Dorian Gray 1890 by Oscar Wilde — book cover" loading="lazy"></a>
       <div class="rl-meta">
         <div class="rl-title"><a href="https://www.yes24.com/product/goods/109145050" rel="nofollow noopener noreferrer" target="_blank">The Picture of Dorian Gray 1890</a> <span style="color:#888;font-size:12px;font-weight:400">(도리언 그레이의 초상 1890)</span></div>
         <div class="rl-byline">Oscar Wilde</div>
+        <p class="rl-comment">Mentioned in a W Korea interview as a current read, along with Contradiction. (Source: W Korea)</p>
         <a class="rl-source" href="https://www.wkorea.com/2026/04/20/%eb%af%b8%ec%95%bc%ec%98%a4-%ea%b0%80%ec%9b%90%ec%9d%b4-%eb%a7%8c%eb%82%9c-%eb%b4%84%eb%82%a0/" rel="nofollow noopener noreferrer" target="_blank">📺 Source</a>
         <button type="button" class="heart-btn sm" data-heart="b:도리언 그레이의 초상 1890" aria-pressed="false" aria-label="Heart this book" title="Heart this book" hidden><span class="heart-ico" aria-hidden="true">♡</span><span class="heart-n"></span></button>
       </div>
     </li>
-    <li class="rl-item">
+    <li class="rl-item" id="b15">
       <span class="rl-num">15</span>
       <a class="rl-cover" href="https://www.yes24.com/product/goods/19021240" rel="nofollow noopener noreferrer" target="_blank" aria-label="The Secret History — buy or read more"><img src="https://image.yes24.com/goods/19021240/L" alt="The Secret History by Donna Tartt — book cover" loading="lazy"></a>
       <div class="rl-meta">
@@ -716,7 +732,7 @@
         <button type="button" class="heart-btn sm" data-heart="b:비밀의 계절" aria-pressed="false" aria-label="Heart this book" title="Heart this book" hidden><span class="heart-ico" aria-hidden="true">♡</span><span class="heart-n"></span></button>
       </div>
     </li>
-    <li class="rl-item">
+    <li class="rl-item" id="b16">
       <span class="rl-num">16</span>
       <a class="rl-cover" href="https://www.yes24.com/product/goods/1442299" rel="nofollow noopener noreferrer" target="_blank" aria-label="The Tale of Despereaux — buy or read more"><img src="https://image.yes24.com/goods/1442299/L" alt="The Tale of Despereaux by Kate DiCamillo — book cover" loading="lazy"></a>
       <div class="rl-meta">
@@ -726,7 +742,7 @@
         <button type="button" class="heart-btn sm" data-heart="b:생쥐 기사 데스페로" aria-pressed="false" aria-label="Heart this book" title="Heart this book" hidden><span class="heart-ico" aria-hidden="true">♡</span><span class="heart-n"></span></button>
       </div>
     </li>
-    <li class="rl-item">
+    <li class="rl-item" id="b17">
       <span class="rl-num">17</span>
       <a class="rl-cover" href="https://www.yes24.com/product/goods/143896198" rel="nofollow noopener noreferrer" target="_blank" aria-label="The White Book — buy or read more"><img src="https://image.yes24.com/goods/143896198/L" alt="The White Book by Han Kang — book cover" loading="lazy"></a>
       <div class="rl-meta">

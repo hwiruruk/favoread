@@ -232,8 +232,15 @@
              background-size: 100% var(--row); background-repeat: repeat-y; }
     .new-sec { margin: 16px 0 6px; padding: 12px 12px 2px; background: #fffbe6; border: 2px dashed #000; }
     .new-sec-h { display: flex; align-items: center; gap: 8px; margin: 0 0 10px; font-size: 15px; font-weight: 800; }
-    .new-sec .reading-list { margin: 0; }
-    .rl-num.rl-num-new { font-size: 11px; letter-spacing: .04em; }
+    .rl-item { scroll-margin-top: 16px; }
+    .rl-item:target { outline: 3px solid #fde047; outline-offset: 2px; }
+    .new-tiles { display: flex; flex-wrap: wrap; gap: 12px; padding-bottom: 10px; }
+    .new-tile { width: 84px; color: #000; text-decoration: none; display: flex; flex-direction: column; gap: 5px; }
+    .new-tile:hover { text-decoration: none; transform: translateY(-2px); }
+    .nt-cover { display: block; width: 84px; aspect-ratio: 2/3; border: 1.5px solid #000; box-shadow: 2px 2px 0 0 #000; background: #f4f4f0; overflow: hidden; }
+    .nt-cover img { width: 100%; height: 100%; object-fit: cover; display: block; }
+    .nt-no-cover { display: flex; width: 100%; height: 100%; align-items: center; justify-content: center; font-size: 22px; }
+    .nt-title { font-size: 12px; font-weight: 700; line-height: 1.3; word-break: keep-all; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
     .rl-new-tag { font-size: 9px; font-weight: 800; letter-spacing: .06em; line-height: 1; padding: 3px 5px;
                   background: #fde047; color: #000; border: 1.5px solid #000; }
     .sp { position: relative; flex: none; width: auto; height: var(--sh-h);
@@ -255,7 +262,7 @@
               font-size: 8px; line-height: 1; padding: 3px 0 2px;
               border-bottom: 1px solid rgba(0,0,0,.55); }
     .sp.is-new .sp-t { padding-top: 22px; }
-    .is-capturing .sp-new, .is-capturing .rl-new, .is-capturing .rl-shared { display: none !important; }
+    .is-capturing .sp-new, .is-capturing .rl-new, .is-capturing .rl-shared, .is-capturing .rl-comment { display: none !important; }
     .is-capturing .sp.is-new .sp-t { padding-top: 14px; }
     @media (max-width: 480px) { .shelf { --sh-h: 205px; }
                                  .sp.no-img, .sp.sp-fail { width: calc(var(--w, 38px) * .88); }
@@ -282,6 +289,7 @@
     .rl-title a { color: #000; }
     .rl-title a:hover { color: #2563eb; }
     .rl-byline { font-size: 13px; color: #555; margin-bottom: 8px; line-height: 1.4; }
+    .rl-comment { font-size: 13px; line-height: 1.55; color: #222; background: #FFF7C2; border: 1.5px solid #000; padding: 6px 9px; margin: 0 0 8px; word-break: keep-all; }
     .rl-source { display: inline-block; font-size: 12px; padding: 3px 8px; background: #fff; border: 1.5px solid #000; box-shadow: 1px 1px 0 0 #000; text-decoration: none; color: #000; transition: transform .1s, box-shadow .1s, background .1s; }
     .rl-source:hover { transform: translate(-1px,-1px); box-shadow: 2px 2px 0 0 #000; background: #a7f3d0; text-decoration: none; }
     @media (max-width: 480px) { .rl-item { padding: 14px 12px 14px 46px; } .rl-num { width: 32px; height: 26px; font-size: 12px; } .rl-cover { width: 60px; height: 88px; margin-right: 10px; } .rl-meta { min-height: 88px; } .rl-title { font-size: 15px; } }
@@ -327,47 +335,51 @@
     <span class="sp no-img" style="--c:hsl(8,44%,28%);--w:33px;--fs:15px" title="Rubber Boy"><span class="sp-t"><i>Rubber Boy</i></span></span>
     </div>
     <ol class="reading-list" id="rlist">
-    <li class="rl-item">
+    <li class="rl-item" id="b1">
       <span class="rl-num">1</span>
       <a class="rl-cover" href="https://www.yes24.com/product/goods/1428345" rel="nofollow noopener noreferrer" target="_blank" aria-label="A Fortunate Man — buy or read more"><img src="https://image.yes24.com/goods/1428345/L" alt="A Fortunate Man by John Berger — book cover" loading="lazy"></a>
       <div class="rl-meta">
         <div class="rl-title"><a href="https://www.yes24.com/product/goods/1428345" rel="nofollow noopener noreferrer" target="_blank">A Fortunate Man</a> <span style="color:#888;font-size:12px;font-weight:400">(행운아)</span></div>
         <div class="rl-byline">John Berger</div>
+        <p class="rl-comment">Kino&#x27;s recommendation to readers; the doctor Sassall models the ideal kind of relationship Kino hopes for. (Source: Seoul Economic Daily)</p>
         <a class="rl-source" href="https://www.sedaily.com/article/12141887" rel="nofollow noopener noreferrer" target="_blank">📺 Source</a>
         <button type="button" class="heart-btn sm" data-heart="b:행운아" aria-pressed="false" aria-label="Heart this book" title="Heart this book" hidden><span class="heart-ico" aria-hidden="true">♡</span><span class="heart-n"></span></button>
       </div>
     </li>
-    <li class="rl-item">
+    <li class="rl-item" id="b2">
       <span class="rl-num">2</span>
       <a class="rl-cover" href="https://www.yes24.com/product/goods/15156691" rel="nofollow noopener noreferrer" target="_blank" aria-label="Justice: What&#x27;s the Right Thing to Do? — buy or read more"><img src="https://image.yes24.com/goods/15156691/L" alt="Justice: What&#x27;s the Right Thing to Do? by Michael Sandel — book cover" loading="lazy"></a>
       <div class="rl-meta">
         <div class="rl-title"><a href="https://www.yes24.com/product/goods/15156691" rel="nofollow noopener noreferrer" target="_blank">Justice: What&#x27;s the Right Thing to Do?</a> <span style="color:#888;font-size:12px;font-weight:400">(정의란 무엇인가)</span></div>
         <div class="rl-byline">Michael Sandel</div>
+        <p class="rl-comment">Recommended by Kino&#x27;s father and the hardest book yet, read chapter by chapter to get through it. (Source: Seoul Economic Daily)</p>
         <a class="rl-source" href="https://www.sedaily.com/article/12141887" rel="nofollow noopener noreferrer" target="_blank">📺 Source</a>
         <button type="button" class="heart-btn sm" data-heart="b:정의란 무엇인가" aria-pressed="false" aria-label="Heart this book" title="Heart this book" hidden><span class="heart-ico" aria-hidden="true">♡</span><span class="heart-n"></span></button>
       </div>
     </li>
-    <li class="rl-item">
+    <li class="rl-item" id="b3">
       <span class="rl-num">3</span>
       <a class="rl-cover" href="https://www.yes24.com/product/goods/92901787" rel="nofollow noopener noreferrer" target="_blank" aria-label="Le Petit Prince — buy or read more"><img src="https://image.yes24.com/goods/92901787/L" alt="Le Petit Prince by Antoine de Saint-Exupéry — book cover" loading="lazy"></a>
       <div class="rl-meta">
         <div class="rl-title"><a href="https://www.yes24.com/product/goods/92901787" rel="nofollow noopener noreferrer" target="_blank">Le Petit Prince</a> <span style="color:#888;font-size:12px;font-weight:400">(어린왕자)</span></div>
         <div class="rl-byline">Antoine de Saint-Exupéry</div>
+        <p class="rl-comment">Good enough to gift, Kino says; each reread at a different age moves in a different way. (Source: Seoul Economic Daily)</p>
         <a class="rl-source" href="https://www.sedaily.com/article/12141887" rel="nofollow noopener noreferrer" target="_blank">📺 Source</a>
         <button type="button" class="heart-btn sm" data-heart="b:어린왕자" aria-pressed="false" aria-label="Heart this book" title="Heart this book" hidden><span class="heart-ico" aria-hidden="true">♡</span><span class="heart-n"></span></button>
       </div>
     </li>
-    <li class="rl-item">
+    <li class="rl-item" id="b4">
       <span class="rl-num">4</span>
       <a class="rl-cover" href="https://www.yes24.com/product/goods/126159296" rel="nofollow noopener noreferrer" target="_blank" aria-label="Me Before You — buy or read more"><img src="https://image.yes24.com/goods/126159296/L" alt="Me Before You by Jojo Moyes — book cover" loading="lazy"></a>
       <div class="rl-meta">
         <div class="rl-title"><a href="https://www.yes24.com/product/goods/126159296" rel="nofollow noopener noreferrer" target="_blank">Me Before You</a> <span style="color:#888;font-size:12px;font-weight:400">(미 비포 유)</span></div>
         <div class="rl-byline">Jojo Moyes</div>
+        <p class="rl-comment">A story Kino got completely absorbed in; the film exists, but the book is the recommendation. (Source: Seoul Economic Daily)</p>
         <a class="rl-source" href="https://www.sedaily.com/article/12141887" rel="nofollow noopener noreferrer" target="_blank">📺 Source</a>
         <button type="button" class="heart-btn sm" data-heart="b:미 비포 유" aria-pressed="false" aria-label="Heart this book" title="Heart this book" hidden><span class="heart-ico" aria-hidden="true">♡</span><span class="heart-n"></span></button>
       </div>
     </li>
-    <li class="rl-item">
+    <li class="rl-item" id="b5">
       <span class="rl-num">5</span>
       <div class="rl-cover"><div class="rl-no-cover">📕</div></div>
       <div class="rl-meta">

@@ -461,8 +461,15 @@
              background-size: 100% var(--row); background-repeat: repeat-y; }
     .new-sec { margin: 16px 0 6px; padding: 12px 12px 2px; background: #fffbe6; border: 2px dashed #000; }
     .new-sec-h { display: flex; align-items: center; gap: 8px; margin: 0 0 10px; font-size: 15px; font-weight: 800; }
-    .new-sec .reading-list { margin: 0; }
-    .rl-num.rl-num-new { font-size: 11px; letter-spacing: .04em; }
+    .rl-item { scroll-margin-top: 16px; }
+    .rl-item:target { outline: 3px solid #fde047; outline-offset: 2px; }
+    .new-tiles { display: flex; flex-wrap: wrap; gap: 12px; padding-bottom: 10px; }
+    .new-tile { width: 84px; color: #000; text-decoration: none; display: flex; flex-direction: column; gap: 5px; }
+    .new-tile:hover { text-decoration: none; transform: translateY(-2px); }
+    .nt-cover { display: block; width: 84px; aspect-ratio: 2/3; border: 1.5px solid #000; box-shadow: 2px 2px 0 0 #000; background: #f4f4f0; overflow: hidden; }
+    .nt-cover img { width: 100%; height: 100%; object-fit: cover; display: block; }
+    .nt-no-cover { display: flex; width: 100%; height: 100%; align-items: center; justify-content: center; font-size: 22px; }
+    .nt-title { font-size: 12px; font-weight: 700; line-height: 1.3; word-break: keep-all; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
     .rl-new-tag { font-size: 9px; font-weight: 800; letter-spacing: .06em; line-height: 1; padding: 3px 5px;
                   background: #fde047; color: #000; border: 1.5px solid #000; }
     .sp { position: relative; flex: none; width: auto; height: var(--sh-h);
@@ -484,7 +491,7 @@
               font-size: 8px; line-height: 1; padding: 3px 0 2px;
               border-bottom: 1px solid rgba(0,0,0,.55); }
     .sp.is-new .sp-t { padding-top: 22px; }
-    .is-capturing .sp-new, .is-capturing .rl-new, .is-capturing .rl-shared { display: none !important; }
+    .is-capturing .sp-new, .is-capturing .rl-new, .is-capturing .rl-shared, .is-capturing .rl-comment { display: none !important; }
     .is-capturing .sp.is-new .sp-t { padding-top: 14px; }
     @media (max-width: 480px) { .shelf { --sh-h: 205px; }
                                  .sp.no-img, .sp.sp-fail { width: calc(var(--w, 38px) * .88); }
@@ -511,6 +518,7 @@
     .rl-title a { color: #000; }
     .rl-title a:hover { color: #2563eb; }
     .rl-byline { font-size: 13px; color: #555; margin-bottom: 8px; line-height: 1.4; }
+    .rl-comment { font-size: 13px; line-height: 1.55; color: #222; background: #FFF7C2; border: 1.5px solid #000; padding: 6px 9px; margin: 0 0 8px; word-break: keep-all; }
     .rl-source { display: inline-block; font-size: 12px; padding: 3px 8px; background: #fff; border: 1.5px solid #000; box-shadow: 1px 1px 0 0 #000; text-decoration: none; color: #000; transition: transform .1s, box-shadow .1s, background .1s; }
     .rl-source:hover { transform: translate(-1px,-1px); box-shadow: 2px 2px 0 0 #000; background: #a7f3d0; text-decoration: none; }
     @media (max-width: 480px) { .rl-item { padding: 14px 12px 14px 46px; } .rl-num { width: 32px; height: 26px; font-size: 12px; } .rl-cover { width: 60px; height: 88px; margin-right: 10px; } .rl-meta { min-height: 88px; } .rl-title { font-size: 15px; } }
@@ -551,178 +559,25 @@
     </div>
     <div class="new-sec">
       <h3 class="new-sec-h"><span class="rl-new-tag">NEW</span> New in the last 10 days (17 books)</h3>
-      <ol class="reading-list">
-    <li class="rl-item">
-      <span class="rl-num rl-num-new">NEW</span>
-      <a class="rl-cover" href="https://www.yes24.com/product/goods/18360997" rel="nofollow noopener noreferrer" target="_blank" aria-label="Brave New World — buy or read more"><span class="rl-new" data-added="2026-09-22">NEW</span><img src="https://image.yes24.com/goods/18360997/L" alt="Brave New World by Aldous Huxley — book cover" loading="lazy"></a>
-      <div class="rl-meta">
-        <div class="rl-title"><a href="https://www.yes24.com/product/goods/18360997" rel="nofollow noopener noreferrer" target="_blank">Brave New World</a> <span style="color:#888;font-size:12px;font-weight:400">(멋진 신세계)</span></div>
-        <div class="rl-byline">Aldous Huxley</div>
-        <a class="rl-source" href="https://www.instagram.com/p/Bphjg43gB8T/" rel="nofollow noopener noreferrer" target="_blank">📺 Source</a>
-        <button type="button" class="heart-btn sm" data-heart="b:멋진 신세계" aria-pressed="false" aria-label="Heart this book" title="Heart this book" hidden><span class="heart-ico" aria-hidden="true">♡</span><span class="heart-n"></span></button>
+      <div class="new-tiles">
+        <a class="new-tile" href="#b1"><span class="nt-cover"><img src="https://image.yes24.com/goods/18360997/L" alt="Brave New World by Aldous Huxley — book cover" loading="lazy"></span><span class="nt-title">Brave New World</span></a>
+        <a class="new-tile" href="#b2"><span class="nt-cover"><img src="https://image.yes24.com/goods/39441749/L" alt="Dignity of Words by Lee Ki-ju — book cover" loading="lazy"></span><span class="nt-title">Dignity of Words</span></a>
+        <a class="new-tile" href="#b3"><span class="nt-cover"><img src="https://image.yes24.com/goods/132226737/L" alt="Factfulness by Hans Rosling — book cover" loading="lazy"></span><span class="nt-title">Factfulness</span></a>
+        <a class="new-tile" href="#b4"><span class="nt-cover"><img src="https://image.yes24.com/goods/22712338/L" alt="Food Is Common Sense by Yoon Deok-no — book cover" loading="lazy"></span><span class="nt-title">Food Is Common Sense</span></a>
+        <a class="new-tile" href="#b5"><span class="nt-cover"><img src="https://image.yes24.com/goods/79297023/L" alt="How to Win Friends &amp; Influence People by Dale Carnegie — book cover" loading="lazy"></span><span class="nt-title">How to Win Friends &amp; Influence People</span></a>
+        <a class="new-tile" href="#b6"><span class="nt-cover"><img src="https://image.yes24.com/goods/73162329/L" alt="If Reborn, Would You Live in Korea? by Lee Jae-yeol — book cover" loading="lazy"></span><span class="nt-title">If Reborn, Would You Live in Korea?</span></a>
+        <a class="new-tile" href="#b7"><span class="nt-cover"><img src="https://image.yes24.com/goods/22862876/L" alt="Intellectual Capital Theory by Muneaki Masuda — book cover" loading="lazy"></span><span class="nt-title">Intellectual Capital Theory</span></a>
+        <a class="new-tile" href="#b8"><span class="nt-cover"><img src="https://image.yes24.com/goods/79296230/L" alt="Liberal Arts on the Way Home from Work by Baeksang Economic Research Institute — book cover" loading="lazy"></span><span class="nt-title">Liberal Arts on the Way Home from Work</span></a>
+        <a class="new-tile" href="#b9"><span class="nt-cover"><img src="https://image.yes24.com/goods/118805757/L" alt="Living, Loving, Learning by Leo Buscaglia — book cover" loading="lazy"></span><span class="nt-title">Living, Loving, Learning</span></a>
+        <a class="new-tile" href="#b10"><span class="nt-cover"><img src="https://image.yes24.com/goods/110157236/L" alt="Nudge by Richard Thaler — book cover" loading="lazy"></span><span class="nt-title">Nudge</span></a>
+        <a class="new-tile" href="#b11"><span class="nt-cover"><img src="https://image.yes24.com/goods/125905365/L" alt="Reason for Travel by Kim Young-ha — book cover" loading="lazy"></span><span class="nt-title">Reason for Travel</span></a>
+        <a class="new-tile" href="#b12"><span class="nt-cover"><img src="https://image.yes24.com/goods/125753838/L" alt="The 90s Generation Is Coming by Lim Hong-taek — book cover" loading="lazy"></span><span class="nt-title">The 90s Generation Is Coming</span></a>
+        <a class="new-tile" href="#b13"><span class="nt-cover"><img src="https://image.yes24.com/goods/38296798/L" alt="The Harm in Hate Speech by Jeremy Waldron — book cover" loading="lazy"></span><span class="nt-title">The Harm in Hate Speech</span></a>
+        <a class="new-tile" href="#b14"><span class="nt-cover"><img src="https://image.yes24.com/goods/4614945/L" alt="Time When Philosophy Is Needed by Kang Shin-ju — book cover" loading="lazy"></span><span class="nt-title">Time When Philosophy Is Needed</span></a>
+        <a class="new-tile" href="#b15"><span class="nt-cover"><img src="https://image.yes24.com/goods/56789708/L" alt="Tsutaya, a Place Where Tastes Are Designed by Muneaki Masuda — book cover" loading="lazy"></span><span class="nt-title">Tsutaya, a Place Where Tastes Are Designed</span></a>
+        <a class="new-tile" href="#b16"><span class="nt-cover"><img src="https://image.yes24.com/goods/116922356/L" alt="Twelve Footsteps by Jeong Jae-seung — book cover" loading="lazy"></span><span class="nt-title">Twelve Footsteps</span></a>
+        <a class="new-tile" href="#b17"><span class="nt-cover"><img src="https://image.yes24.com/goods/182624787/L" alt="What Makes a City Live by Yoo Hyun-joon — book cover" loading="lazy"></span><span class="nt-title">What Makes a City Live</span></a>
       </div>
-    </li>
-    <li class="rl-item">
-      <span class="rl-num rl-num-new">NEW</span>
-      <a class="rl-cover" href="https://www.yes24.com/product/goods/39441749" rel="nofollow noopener noreferrer" target="_blank" aria-label="Dignity of Words — buy or read more"><span class="rl-new" data-added="2026-09-22">NEW</span><img src="https://image.yes24.com/goods/39441749/L" alt="Dignity of Words by Lee Ki-ju — book cover" loading="lazy"></a>
-      <div class="rl-meta">
-        <div class="rl-title"><a href="https://www.yes24.com/product/goods/39441749" rel="nofollow noopener noreferrer" target="_blank">Dignity of Words</a> <span style="color:#888;font-size:12px;font-weight:400">(말의 품격)</span></div>
-        <div class="rl-byline">Lee Ki-ju</div>
-        <a class="rl-source" href="https://www.elle.co.kr/article/42162?utm_source=twitter&amp;utm_medium=other&amp;utm_campaign=twitter" rel="nofollow noopener noreferrer" target="_blank">📺 Source</a>
-        <button type="button" class="heart-btn sm" data-heart="b:말의 품격" aria-pressed="false" aria-label="Heart this book" title="Heart this book" hidden><span class="heart-ico" aria-hidden="true">♡</span><span class="heart-n"></span></button>
-      </div>
-    </li>
-    <li class="rl-item">
-      <span class="rl-num rl-num-new">NEW</span>
-      <a class="rl-cover" href="https://www.yes24.com/product/goods/132226737" rel="nofollow noopener noreferrer" target="_blank" aria-label="Factfulness — buy or read more"><span class="rl-new" data-added="2026-09-22">NEW</span><img src="https://image.yes24.com/goods/132226737/L" alt="Factfulness by Hans Rosling — book cover" loading="lazy"></a>
-      <div class="rl-meta">
-        <div class="rl-title"><a href="https://www.yes24.com/product/goods/132226737" rel="nofollow noopener noreferrer" target="_blank">Factfulness</a> <span style="color:#888;font-size:12px;font-weight:400">(팩트풀니스)</span></div>
-        <div class="rl-byline">Hans Rosling</div>
-        <a class="rl-source" href="https://www.instagram.com/p/B4d_aerAr7d/" rel="nofollow noopener noreferrer" target="_blank">📺 Source</a>
-        <button type="button" class="heart-btn sm" data-heart="b:팩트풀니스" aria-pressed="false" aria-label="Heart this book" title="Heart this book" hidden><span class="heart-ico" aria-hidden="true">♡</span><span class="heart-n"></span></button>
-      </div>
-    </li>
-    <li class="rl-item">
-      <span class="rl-num rl-num-new">NEW</span>
-      <a class="rl-cover" href="https://www.yes24.com/product/goods/22712338" rel="nofollow noopener noreferrer" target="_blank" aria-label="Food Is Common Sense — buy or read more"><span class="rl-new" data-added="2026-09-22">NEW</span><img src="https://image.yes24.com/goods/22712338/L" alt="Food Is Common Sense by Yoon Deok-no — book cover" loading="lazy"></a>
-      <div class="rl-meta">
-        <div class="rl-title"><a href="https://www.yes24.com/product/goods/22712338" rel="nofollow noopener noreferrer" target="_blank">Food Is Common Sense</a> <span style="color:#888;font-size:12px;font-weight:400">(음식이 상식이다)</span></div>
-        <div class="rl-byline">Yoon Deok-no</div>
-        <a class="rl-source" href="https://dingziiiiii.tistory.com/78" rel="nofollow noopener noreferrer" target="_blank">📺 Source</a>
-        <button type="button" class="heart-btn sm" data-heart="b:음식이 상식이다" aria-pressed="false" aria-label="Heart this book" title="Heart this book" hidden><span class="heart-ico" aria-hidden="true">♡</span><span class="heart-n"></span></button>
-      </div>
-    </li>
-    <li class="rl-item">
-      <span class="rl-num rl-num-new">NEW</span>
-      <a class="rl-cover" href="https://www.yes24.com/product/goods/79297023" rel="nofollow noopener noreferrer" target="_blank" aria-label="How to Win Friends &amp; Influence People — buy or read more"><span class="rl-new" data-added="2026-09-22">NEW</span><img src="https://image.yes24.com/goods/79297023/L" alt="How to Win Friends &amp; Influence People by Dale Carnegie — book cover" loading="lazy"></a>
-      <div class="rl-meta">
-        <div class="rl-title"><a href="https://www.yes24.com/product/goods/79297023" rel="nofollow noopener noreferrer" target="_blank">How to Win Friends &amp; Influence People</a> <span style="color:#888;font-size:12px;font-weight:400">(데일 카네기 인간 관계론)</span></div>
-        <div class="rl-byline">Dale Carnegie</div>
-        <a class="rl-source" href="https://view.asiae.co.kr/article/2018062009021020052?idxno=2018062009021020052" rel="nofollow noopener noreferrer" target="_blank">📺 Source</a>
-        <button type="button" class="heart-btn sm" data-heart="b:데일 카네기 인간 관계론" aria-pressed="false" aria-label="Heart this book" title="Heart this book" hidden><span class="heart-ico" aria-hidden="true">♡</span><span class="heart-n"></span></button>
-      </div>
-    </li>
-    <li class="rl-item">
-      <span class="rl-num rl-num-new">NEW</span>
-      <a class="rl-cover" href="https://www.yes24.com/product/goods/73162329" rel="nofollow noopener noreferrer" target="_blank" aria-label="If Reborn, Would You Live in Korea? — buy or read more"><span class="rl-new" data-added="2026-09-22">NEW</span><img src="https://image.yes24.com/goods/73162329/L" alt="If Reborn, Would You Live in Korea? by Lee Jae-yeol — book cover" loading="lazy"></a>
-      <div class="rl-meta">
-        <div class="rl-title"><a href="https://www.yes24.com/product/goods/73162329" rel="nofollow noopener noreferrer" target="_blank">If Reborn, Would You Live in Korea?</a> <span style="color:#888;font-size:12px;font-weight:400">(다시 태어난다면, 한국에서 살겠습니까)</span></div>
-        <div class="rl-byline">Lee Jae-yeol</div>
-        <a class="rl-source" href="https://www.instagram.com/p/B2snnnYga17/" rel="nofollow noopener noreferrer" target="_blank">📺 Source</a>
-        <button type="button" class="heart-btn sm" data-heart="b:다시 태어난다면, 한국에서 살겠습니까" aria-pressed="false" aria-label="Heart this book" title="Heart this book" hidden><span class="heart-ico" aria-hidden="true">♡</span><span class="heart-n"></span></button>
-      </div>
-    </li>
-    <li class="rl-item">
-      <span class="rl-num rl-num-new">NEW</span>
-      <a class="rl-cover" href="https://www.yes24.com/product/goods/22862876" rel="nofollow noopener noreferrer" target="_blank" aria-label="Intellectual Capital Theory — buy or read more"><span class="rl-new" data-added="2026-09-22">NEW</span><img src="https://image.yes24.com/goods/22862876/L" alt="Intellectual Capital Theory by Muneaki Masuda — book cover" loading="lazy"></a>
-      <div class="rl-meta">
-        <div class="rl-title"><a href="https://www.yes24.com/product/goods/22862876" rel="nofollow noopener noreferrer" target="_blank">Intellectual Capital Theory *</a> <span style="color:#888;font-size:12px;font-weight:400">(지적자본론)</span></div>
-        <div class="rl-byline">Muneaki Masuda *</div>
-        <a class="rl-source" href="https://x.com/idolbooks/status/1036923414491975680?s=20" rel="nofollow noopener noreferrer" target="_blank">📺 Source</a>
-        <button type="button" class="heart-btn sm" data-heart="b:지적자본론" aria-pressed="false" aria-label="Heart this book" title="Heart this book" hidden><span class="heart-ico" aria-hidden="true">♡</span><span class="heart-n"></span></button>
-      </div>
-    </li>
-    <li class="rl-item">
-      <span class="rl-num rl-num-new">NEW</span>
-      <a class="rl-cover" href="https://www.yes24.com/product/goods/79296230" rel="nofollow noopener noreferrer" target="_blank" aria-label="Liberal Arts on the Way Home from Work — buy or read more"><span class="rl-new" data-added="2026-09-22">NEW</span><img src="https://image.yes24.com/goods/79296230/L" alt="Liberal Arts on the Way Home from Work by Baeksang Economic Research Institute — book cover" loading="lazy"></a>
-      <div class="rl-meta">
-        <div class="rl-title"><a href="https://www.yes24.com/product/goods/79296230" rel="nofollow noopener noreferrer" target="_blank">Liberal Arts on the Way Home from Work</a> <span style="color:#888;font-size:12px;font-weight:400">(퇴근길 인문학수업)</span></div>
-        <div class="rl-byline">Baeksang Economic Research Institute</div>
-        <a class="rl-source" href="https://www.instagram.com/p/Bx0tEumg7sN/" rel="nofollow noopener noreferrer" target="_blank">📺 Source</a>
-        <button type="button" class="heart-btn sm" data-heart="b:퇴근길 인문학수업" aria-pressed="false" aria-label="Heart this book" title="Heart this book" hidden><span class="heart-ico" aria-hidden="true">♡</span><span class="heart-n"></span></button>
-      </div>
-    </li>
-    <li class="rl-item">
-      <span class="rl-num rl-num-new">NEW</span>
-      <a class="rl-cover" href="https://www.yes24.com/product/goods/118805757" rel="nofollow noopener noreferrer" target="_blank" aria-label="Living, Loving, Learning — buy or read more"><span class="rl-new" data-added="2026-09-22">NEW</span><img src="https://image.yes24.com/goods/118805757/L" alt="Living, Loving, Learning by Leo Buscaglia — book cover" loading="lazy"></a>
-      <div class="rl-meta">
-        <div class="rl-title"><a href="https://www.yes24.com/product/goods/118805757" rel="nofollow noopener noreferrer" target="_blank">Living, Loving, Learning</a> <span style="color:#888;font-size:12px;font-weight:400">(살며 사랑하며 배우며)</span></div>
-        <div class="rl-byline">Leo Buscaglia</div>
-        <a class="rl-source" href="https://www.instagram.com/p/Blpw7pVFoYH/" rel="nofollow noopener noreferrer" target="_blank">📺 Source</a>
-        <button type="button" class="heart-btn sm" data-heart="b:살며 사랑하며 배우며" aria-pressed="false" aria-label="Heart this book" title="Heart this book" hidden><span class="heart-ico" aria-hidden="true">♡</span><span class="heart-n"></span></button>
-      </div>
-    </li>
-    <li class="rl-item">
-      <span class="rl-num rl-num-new">NEW</span>
-      <a class="rl-cover" href="https://www.yes24.com/product/goods/110157236" rel="nofollow noopener noreferrer" target="_blank" aria-label="Nudge — buy or read more"><span class="rl-new" data-added="2026-09-22">NEW</span><img src="https://image.yes24.com/goods/110157236/L" alt="Nudge by Richard Thaler — book cover" loading="lazy"></a>
-      <div class="rl-meta">
-        <div class="rl-title"><a href="https://www.yes24.com/product/goods/110157236" rel="nofollow noopener noreferrer" target="_blank">Nudge</a> <span style="color:#888;font-size:12px;font-weight:400">(넛지)</span></div>
-        <div class="rl-byline">Richard Thaler</div>
-        <a class="rl-source" href="https://www.instagram.com/p/Bj8BfsTlXmC/" rel="nofollow noopener noreferrer" target="_blank">📺 Source</a>
-        <button type="button" class="heart-btn sm" data-heart="b:넛지" aria-pressed="false" aria-label="Heart this book" title="Heart this book" hidden><span class="heart-ico" aria-hidden="true">♡</span><span class="heart-n"></span></button>
-      </div>
-    </li>
-    <li class="rl-item">
-      <span class="rl-num rl-num-new">NEW</span>
-      <a class="rl-cover" href="https://www.yes24.com/product/goods/125905365" rel="nofollow noopener noreferrer" target="_blank" aria-label="Reason for Travel — buy or read more"><span class="rl-new" data-added="2026-09-22">NEW</span><img src="https://image.yes24.com/goods/125905365/L" alt="Reason for Travel by Kim Young-ha — book cover" loading="lazy"></a>
-      <div class="rl-meta">
-        <div class="rl-title"><a href="https://www.yes24.com/product/goods/125905365" rel="nofollow noopener noreferrer" target="_blank">Reason for Travel *</a> <span style="color:#888;font-size:12px;font-weight:400">(여행의 이유)</span></div>
-        <div class="rl-byline">Kim Young-ha</div>
-        <a class="rl-source" href="https://www.elle.co.kr/article/42162?utm_source=twitter&amp;utm_medium=other&amp;utm_campaign=twitter" rel="nofollow noopener noreferrer" target="_blank">📺 Source</a>
-        <button type="button" class="heart-btn sm" data-heart="b:여행의 이유" aria-pressed="false" aria-label="Heart this book" title="Heart this book" hidden><span class="heart-ico" aria-hidden="true">♡</span><span class="heart-n"></span></button>
-      </div>
-    </li>
-    <li class="rl-item">
-      <span class="rl-num rl-num-new">NEW</span>
-      <a class="rl-cover" href="https://www.yes24.com/product/goods/125753838" rel="nofollow noopener noreferrer" target="_blank" aria-label="The 90s Generation Is Coming — buy or read more"><span class="rl-new" data-added="2026-09-22">NEW</span><img src="https://image.yes24.com/goods/125753838/L" alt="The 90s Generation Is Coming by Lim Hong-taek — book cover" loading="lazy"></a>
-      <div class="rl-meta">
-        <div class="rl-title"><a href="https://www.yes24.com/product/goods/125753838" rel="nofollow noopener noreferrer" target="_blank">The 90s Generation Is Coming</a> <span style="color:#888;font-size:12px;font-weight:400">(90년생이 온다)</span></div>
-        <div class="rl-byline">Lim Hong-taek</div>
-        <a class="rl-source" href="https://www.instagram.com/p/B0zf5yzgzKN/" rel="nofollow noopener noreferrer" target="_blank">📺 Source</a>
-        <button type="button" class="heart-btn sm" data-heart="b:90년생이 온다" aria-pressed="false" aria-label="Heart this book" title="Heart this book" hidden><span class="heart-ico" aria-hidden="true">♡</span><span class="heart-n"></span></button>
-      </div>
-    </li>
-    <li class="rl-item">
-      <span class="rl-num rl-num-new">NEW</span>
-      <a class="rl-cover" href="https://www.yes24.com/product/goods/38296798" rel="nofollow noopener noreferrer" target="_blank" aria-label="The Harm in Hate Speech — buy or read more"><span class="rl-new" data-added="2026-09-22">NEW</span><img src="https://image.yes24.com/goods/38296798/L" alt="The Harm in Hate Speech by Jeremy Waldron — book cover" loading="lazy"></a>
-      <div class="rl-meta">
-        <div class="rl-title"><a href="https://www.yes24.com/product/goods/38296798" rel="nofollow noopener noreferrer" target="_blank">The Harm in Hate Speech</a> <span style="color:#888;font-size:12px;font-weight:400">(혐오표현 자유는 어떻게 해악이 되는가)</span></div>
-        <div class="rl-byline">Jeremy Waldron</div>
-        <a class="rl-source" href="https://dingziiiiii.tistory.com/78" rel="nofollow noopener noreferrer" target="_blank">📺 Source</a>
-        <button type="button" class="heart-btn sm" data-heart="b:혐오표현 자유는 어떻게 해악이 되는가" aria-pressed="false" aria-label="Heart this book" title="Heart this book" hidden><span class="heart-ico" aria-hidden="true">♡</span><span class="heart-n"></span></button>
-      </div>
-    </li>
-    <li class="rl-item">
-      <span class="rl-num rl-num-new">NEW</span>
-      <a class="rl-cover" href="https://www.yes24.com/product/goods/4614945" rel="nofollow noopener noreferrer" target="_blank" aria-label="Time When Philosophy Is Needed — buy or read more"><span class="rl-new" data-added="2026-09-22">NEW</span><img src="https://image.yes24.com/goods/4614945/L" alt="Time When Philosophy Is Needed by Kang Shin-ju — book cover" loading="lazy"></a>
-      <div class="rl-meta">
-        <div class="rl-title"><a href="https://www.yes24.com/product/goods/4614945" rel="nofollow noopener noreferrer" target="_blank">Time When Philosophy Is Needed</a> <span style="color:#888;font-size:12px;font-weight:400">(철학이 필요한 시간)</span></div>
-        <div class="rl-byline">Kang Shin-ju</div>
-        <a class="rl-source" href="https://dingziiiiii.tistory.com/78" rel="nofollow noopener noreferrer" target="_blank">📺 Source</a>
-        <button type="button" class="heart-btn sm" data-heart="b:철학이 필요한 시간" aria-pressed="false" aria-label="Heart this book" title="Heart this book" hidden><span class="heart-ico" aria-hidden="true">♡</span><span class="heart-n"></span></button>
-      </div>
-    </li>
-    <li class="rl-item">
-      <span class="rl-num rl-num-new">NEW</span>
-      <a class="rl-cover" href="https://www.yes24.com/product/goods/56789708" rel="nofollow noopener noreferrer" target="_blank" aria-label="Tsutaya, a Place Where Tastes Are Designed — buy or read more"><span class="rl-new" data-added="2026-09-22">NEW</span><img src="https://image.yes24.com/goods/56789708/L" alt="Tsutaya, a Place Where Tastes Are Designed by Muneaki Masuda — book cover" loading="lazy"></a>
-      <div class="rl-meta">
-        <div class="rl-title"><a href="https://www.yes24.com/product/goods/56789708" rel="nofollow noopener noreferrer" target="_blank">Tsutaya, a Place Where Tastes Are Designed *</a> <span style="color:#888;font-size:12px;font-weight:400">(취향을 설계하는 곳, 츠타야)</span></div>
-        <div class="rl-byline">Muneaki Masuda *</div>
-        <a class="rl-source" href="https://x.com/idolbooks/status/1050812326717284352?s=20" rel="nofollow noopener noreferrer" target="_blank">📺 Source</a>
-        <button type="button" class="heart-btn sm" data-heart="b:취향을 설계하는 곳, 츠타야" aria-pressed="false" aria-label="Heart this book" title="Heart this book" hidden><span class="heart-ico" aria-hidden="true">♡</span><span class="heart-n"></span></button>
-      </div>
-    </li>
-    <li class="rl-item">
-      <span class="rl-num rl-num-new">NEW</span>
-      <a class="rl-cover" href="https://www.yes24.com/product/goods/116922356" rel="nofollow noopener noreferrer" target="_blank" aria-label="Twelve Footsteps — buy or read more"><span class="rl-new" data-added="2026-09-22">NEW</span><img src="https://image.yes24.com/goods/116922356/L" alt="Twelve Footsteps by Jeong Jae-seung — book cover" loading="lazy"></a>
-      <div class="rl-meta">
-        <div class="rl-title"><a href="https://www.yes24.com/product/goods/116922356" rel="nofollow noopener noreferrer" target="_blank">Twelve Footsteps</a> <span style="color:#888;font-size:12px;font-weight:400">(열두 발자국)</span></div>
-        <div class="rl-byline">Jeong Jae-seung</div>
-        <a class="rl-source" href="https://www.instagram.com/p/Bn1R0_ql-gl/" rel="nofollow noopener noreferrer" target="_blank">📺 Source</a>
-        <button type="button" class="heart-btn sm" data-heart="b:열두 발자국" aria-pressed="false" aria-label="Heart this book" title="Heart this book" hidden><span class="heart-ico" aria-hidden="true">♡</span><span class="heart-n"></span></button>
-      </div>
-    </li>
-    <li class="rl-item">
-      <span class="rl-num rl-num-new">NEW</span>
-      <a class="rl-cover" href="https://www.yes24.com/product/goods/182624787" rel="nofollow noopener noreferrer" target="_blank" aria-label="What Makes a City Live — buy or read more"><span class="rl-new" data-added="2026-09-22">NEW</span><img src="https://image.yes24.com/goods/182624787/L" alt="What Makes a City Live by Yoo Hyun-joon — book cover" loading="lazy"></a>
-      <div class="rl-meta">
-        <div class="rl-title"><a href="https://www.yes24.com/product/goods/182624787" rel="nofollow noopener noreferrer" target="_blank">What Makes a City Live</a> <span style="color:#888;font-size:12px;font-weight:400">(도시는 무엇으로 사는가)</span></div>
-        <div class="rl-byline">Yoo Hyun-joon</div>
-        <a class="rl-source" href="https://dingziiiiii.tistory.com/78" rel="nofollow noopener noreferrer" target="_blank">📺 Source</a>
-        <button type="button" class="heart-btn sm" data-heart="b:도시는 무엇으로 사는가" aria-pressed="false" aria-label="Heart this book" title="Heart this book" hidden><span class="heart-ico" aria-hidden="true">♡</span><span class="heart-n"></span></button>
-      </div>
-    </li>
-      </ol>
     </div>
     <div id="shelf-area">
     <div class="shelf" id="shelf">
@@ -745,7 +600,7 @@
     <a class="sp is-new" style="--c:hsl(207,37%,41%);--w:44px;--fs:15px" href="https://www.yes24.com/product/goods/182624787" rel="nofollow noopener noreferrer" target="_blank" title="What Makes a City Live"><span class="sp-t"><i>What Makes a City Live</i></span><img class="sp-i" src="https://image.yes24.com/goods/182624787/side" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.parentNode.classList.add('sp-fail');this.remove()" onload="if(this.naturalWidth/this.naturalHeight>0.4){this.parentNode.classList.add('sp-fail');this.remove()}"><span class="sp-new" data-added="2026-09-22">NEW</span></a>
     </div>
     <ol class="reading-list" id="rlist">
-    <li class="rl-item">
+    <li class="rl-item" id="b1">
       <span class="rl-num">1</span>
       <a class="rl-cover" href="https://www.yes24.com/product/goods/18360997" rel="nofollow noopener noreferrer" target="_blank" aria-label="Brave New World — buy or read more"><span class="rl-new" data-added="2026-09-22">NEW</span><img src="https://image.yes24.com/goods/18360997/L" alt="Brave New World by Aldous Huxley — book cover" loading="lazy"></a>
       <div class="rl-meta">
@@ -755,7 +610,7 @@
         <button type="button" class="heart-btn sm" data-heart="b:멋진 신세계" aria-pressed="false" aria-label="Heart this book" title="Heart this book" hidden><span class="heart-ico" aria-hidden="true">♡</span><span class="heart-n"></span></button>
       </div>
     </li>
-    <li class="rl-item">
+    <li class="rl-item" id="b2">
       <span class="rl-num">2</span>
       <a class="rl-cover" href="https://www.yes24.com/product/goods/39441749" rel="nofollow noopener noreferrer" target="_blank" aria-label="Dignity of Words — buy or read more"><span class="rl-new" data-added="2026-09-22">NEW</span><img src="https://image.yes24.com/goods/39441749/L" alt="Dignity of Words by Lee Ki-ju — book cover" loading="lazy"></a>
       <div class="rl-meta">
@@ -765,7 +620,7 @@
         <button type="button" class="heart-btn sm" data-heart="b:말의 품격" aria-pressed="false" aria-label="Heart this book" title="Heart this book" hidden><span class="heart-ico" aria-hidden="true">♡</span><span class="heart-n"></span></button>
       </div>
     </li>
-    <li class="rl-item">
+    <li class="rl-item" id="b3">
       <span class="rl-num">3</span>
       <a class="rl-cover" href="https://www.yes24.com/product/goods/132226737" rel="nofollow noopener noreferrer" target="_blank" aria-label="Factfulness — buy or read more"><span class="rl-new" data-added="2026-09-22">NEW</span><img src="https://image.yes24.com/goods/132226737/L" alt="Factfulness by Hans Rosling — book cover" loading="lazy"></a>
       <div class="rl-meta">
@@ -775,27 +630,29 @@
         <button type="button" class="heart-btn sm" data-heart="b:팩트풀니스" aria-pressed="false" aria-label="Heart this book" title="Heart this book" hidden><span class="heart-ico" aria-hidden="true">♡</span><span class="heart-n"></span></button>
       </div>
     </li>
-    <li class="rl-item">
+    <li class="rl-item" id="b4">
       <span class="rl-num">4</span>
       <a class="rl-cover" href="https://www.yes24.com/product/goods/22712338" rel="nofollow noopener noreferrer" target="_blank" aria-label="Food Is Common Sense — buy or read more"><span class="rl-new" data-added="2026-09-22">NEW</span><img src="https://image.yes24.com/goods/22712338/L" alt="Food Is Common Sense by Yoon Deok-no — book cover" loading="lazy"></a>
       <div class="rl-meta">
         <div class="rl-title"><a href="https://www.yes24.com/product/goods/22712338" rel="nofollow noopener noreferrer" target="_blank">Food Is Common Sense</a> <span style="color:#888;font-size:12px;font-weight:400">(음식이 상식이다)</span></div>
         <div class="rl-byline">Yoon Deok-no</div>
+        <p class="rl-comment">Known among fans as a book Max Changmin shared on Instagram. (Source: Personal blog)</p>
         <a class="rl-source" href="https://dingziiiiii.tistory.com/78" rel="nofollow noopener noreferrer" target="_blank">📺 Source</a>
         <button type="button" class="heart-btn sm" data-heart="b:음식이 상식이다" aria-pressed="false" aria-label="Heart this book" title="Heart this book" hidden><span class="heart-ico" aria-hidden="true">♡</span><span class="heart-n"></span></button>
       </div>
     </li>
-    <li class="rl-item">
+    <li class="rl-item" id="b5">
       <span class="rl-num">5</span>
       <a class="rl-cover" href="https://www.yes24.com/product/goods/79297023" rel="nofollow noopener noreferrer" target="_blank" aria-label="How to Win Friends &amp; Influence People — buy or read more"><span class="rl-new" data-added="2026-09-22">NEW</span><img src="https://image.yes24.com/goods/79297023/L" alt="How to Win Friends &amp; Influence People by Dale Carnegie — book cover" loading="lazy"></a>
       <div class="rl-meta">
         <div class="rl-title"><a href="https://www.yes24.com/product/goods/79297023" rel="nofollow noopener noreferrer" target="_blank">How to Win Friends &amp; Influence People</a> <span style="color:#888;font-size:12px;font-weight:400">(데일 카네기 인간 관계론)</span></div>
         <div class="rl-byline">Dale Carnegie</div>
+        <p class="rl-comment">Recommended for Auction&#x27;s Star Bookstore campaign, where sales funded books for a children&#x27;s rehabilitation hospital. (Source: Asia Economy)</p>
         <a class="rl-source" href="https://view.asiae.co.kr/article/2018062009021020052?idxno=2018062009021020052" rel="nofollow noopener noreferrer" target="_blank">📺 Source</a>
         <button type="button" class="heart-btn sm" data-heart="b:데일 카네기 인간 관계론" aria-pressed="false" aria-label="Heart this book" title="Heart this book" hidden><span class="heart-ico" aria-hidden="true">♡</span><span class="heart-n"></span></button>
       </div>
     </li>
-    <li class="rl-item">
+    <li class="rl-item" id="b6">
       <span class="rl-num">6</span>
       <a class="rl-cover" href="https://www.yes24.com/product/goods/73162329" rel="nofollow noopener noreferrer" target="_blank" aria-label="If Reborn, Would You Live in Korea? — buy or read more"><span class="rl-new" data-added="2026-09-22">NEW</span><img src="https://image.yes24.com/goods/73162329/L" alt="If Reborn, Would You Live in Korea? by Lee Jae-yeol — book cover" loading="lazy"></a>
       <div class="rl-meta">
@@ -805,7 +662,7 @@
         <button type="button" class="heart-btn sm" data-heart="b:다시 태어난다면, 한국에서 살겠습니까" aria-pressed="false" aria-label="Heart this book" title="Heart this book" hidden><span class="heart-ico" aria-hidden="true">♡</span><span class="heart-n"></span></button>
       </div>
     </li>
-    <li class="rl-item">
+    <li class="rl-item" id="b7">
       <span class="rl-num">7</span>
       <a class="rl-cover" href="https://www.yes24.com/product/goods/22862876" rel="nofollow noopener noreferrer" target="_blank" aria-label="Intellectual Capital Theory — buy or read more"><span class="rl-new" data-added="2026-09-22">NEW</span><img src="https://image.yes24.com/goods/22862876/L" alt="Intellectual Capital Theory by Muneaki Masuda — book cover" loading="lazy"></a>
       <div class="rl-meta">
@@ -815,7 +672,7 @@
         <button type="button" class="heart-btn sm" data-heart="b:지적자본론" aria-pressed="false" aria-label="Heart this book" title="Heart this book" hidden><span class="heart-ico" aria-hidden="true">♡</span><span class="heart-n"></span></button>
       </div>
     </li>
-    <li class="rl-item">
+    <li class="rl-item" id="b8">
       <span class="rl-num">8</span>
       <a class="rl-cover" href="https://www.yes24.com/product/goods/79296230" rel="nofollow noopener noreferrer" target="_blank" aria-label="Liberal Arts on the Way Home from Work — buy or read more"><span class="rl-new" data-added="2026-09-22">NEW</span><img src="https://image.yes24.com/goods/79296230/L" alt="Liberal Arts on the Way Home from Work by Baeksang Economic Research Institute — book cover" loading="lazy"></a>
       <div class="rl-meta">
@@ -825,7 +682,7 @@
         <button type="button" class="heart-btn sm" data-heart="b:퇴근길 인문학수업" aria-pressed="false" aria-label="Heart this book" title="Heart this book" hidden><span class="heart-ico" aria-hidden="true">♡</span><span class="heart-n"></span></button>
       </div>
     </li>
-    <li class="rl-item">
+    <li class="rl-item" id="b9">
       <span class="rl-num">9</span>
       <a class="rl-cover" href="https://www.yes24.com/product/goods/118805757" rel="nofollow noopener noreferrer" target="_blank" aria-label="Living, Loving, Learning — buy or read more"><span class="rl-new" data-added="2026-09-22">NEW</span><img src="https://image.yes24.com/goods/118805757/L" alt="Living, Loving, Learning by Leo Buscaglia — book cover" loading="lazy"></a>
       <div class="rl-meta">
@@ -835,7 +692,7 @@
         <button type="button" class="heart-btn sm" data-heart="b:살며 사랑하며 배우며" aria-pressed="false" aria-label="Heart this book" title="Heart this book" hidden><span class="heart-ico" aria-hidden="true">♡</span><span class="heart-n"></span></button>
       </div>
     </li>
-    <li class="rl-item">
+    <li class="rl-item" id="b10">
       <span class="rl-num">10</span>
       <a class="rl-cover" href="https://www.yes24.com/product/goods/110157236" rel="nofollow noopener noreferrer" target="_blank" aria-label="Nudge — buy or read more"><span class="rl-new" data-added="2026-09-22">NEW</span><img src="https://image.yes24.com/goods/110157236/L" alt="Nudge by Richard Thaler — book cover" loading="lazy"></a>
       <div class="rl-meta">
@@ -845,17 +702,18 @@
         <button type="button" class="heart-btn sm" data-heart="b:넛지" aria-pressed="false" aria-label="Heart this book" title="Heart this book" hidden><span class="heart-ico" aria-hidden="true">♡</span><span class="heart-n"></span></button>
       </div>
     </li>
-    <li class="rl-item">
+    <li class="rl-item" id="b11">
       <span class="rl-num">11</span>
       <a class="rl-cover" href="https://www.yes24.com/product/goods/125905365" rel="nofollow noopener noreferrer" target="_blank" aria-label="Reason for Travel — buy or read more"><span class="rl-new" data-added="2026-09-22">NEW</span><img src="https://image.yes24.com/goods/125905365/L" alt="Reason for Travel by Kim Young-ha — book cover" loading="lazy"></a>
       <div class="rl-meta">
         <div class="rl-title"><a href="https://www.yes24.com/product/goods/125905365" rel="nofollow noopener noreferrer" target="_blank">Reason for Travel *</a> <span style="color:#888;font-size:12px;font-weight:400">(여행의 이유)</span></div>
         <div class="rl-byline">Kim Young-ha</div>
+        <p class="rl-comment">A recent read shared on social media; it brought back solo trips swinging between excitement and caution, anxiety and ease. (Source: Elle Korea)</p>
         <a class="rl-source" href="https://www.elle.co.kr/article/42162?utm_source=twitter&amp;utm_medium=other&amp;utm_campaign=twitter" rel="nofollow noopener noreferrer" target="_blank">📺 Source</a>
         <button type="button" class="heart-btn sm" data-heart="b:여행의 이유" aria-pressed="false" aria-label="Heart this book" title="Heart this book" hidden><span class="heart-ico" aria-hidden="true">♡</span><span class="heart-n"></span></button>
       </div>
     </li>
-    <li class="rl-item">
+    <li class="rl-item" id="b12">
       <span class="rl-num">12</span>
       <a class="rl-cover" href="https://www.yes24.com/product/goods/125753838" rel="nofollow noopener noreferrer" target="_blank" aria-label="The 90s Generation Is Coming — buy or read more"><span class="rl-new" data-added="2026-09-22">NEW</span><img src="https://image.yes24.com/goods/125753838/L" alt="The 90s Generation Is Coming by Lim Hong-taek — book cover" loading="lazy"></a>
       <div class="rl-meta">
@@ -865,7 +723,7 @@
         <button type="button" class="heart-btn sm" data-heart="b:90년생이 온다" aria-pressed="false" aria-label="Heart this book" title="Heart this book" hidden><span class="heart-ico" aria-hidden="true">♡</span><span class="heart-n"></span></button>
       </div>
     </li>
-    <li class="rl-item">
+    <li class="rl-item" id="b13">
       <span class="rl-num">13</span>
       <a class="rl-cover" href="https://www.yes24.com/product/goods/38296798" rel="nofollow noopener noreferrer" target="_blank" aria-label="The Harm in Hate Speech — buy or read more"><span class="rl-new" data-added="2026-09-22">NEW</span><img src="https://image.yes24.com/goods/38296798/L" alt="The Harm in Hate Speech by Jeremy Waldron — book cover" loading="lazy"></a>
       <div class="rl-meta">
@@ -875,7 +733,7 @@
         <button type="button" class="heart-btn sm" data-heart="b:혐오표현 자유는 어떻게 해악이 되는가" aria-pressed="false" aria-label="Heart this book" title="Heart this book" hidden><span class="heart-ico" aria-hidden="true">♡</span><span class="heart-n"></span></button>
       </div>
     </li>
-    <li class="rl-item">
+    <li class="rl-item" id="b14">
       <span class="rl-num">14</span>
       <a class="rl-cover" href="https://www.yes24.com/product/goods/4614945" rel="nofollow noopener noreferrer" target="_blank" aria-label="Time When Philosophy Is Needed — buy or read more"><span class="rl-new" data-added="2026-09-22">NEW</span><img src="https://image.yes24.com/goods/4614945/L" alt="Time When Philosophy Is Needed by Kang Shin-ju — book cover" loading="lazy"></a>
       <div class="rl-meta">
@@ -885,7 +743,7 @@
         <button type="button" class="heart-btn sm" data-heart="b:철학이 필요한 시간" aria-pressed="false" aria-label="Heart this book" title="Heart this book" hidden><span class="heart-ico" aria-hidden="true">♡</span><span class="heart-n"></span></button>
       </div>
     </li>
-    <li class="rl-item">
+    <li class="rl-item" id="b15">
       <span class="rl-num">15</span>
       <a class="rl-cover" href="https://www.yes24.com/product/goods/56789708" rel="nofollow noopener noreferrer" target="_blank" aria-label="Tsutaya, a Place Where Tastes Are Designed — buy or read more"><span class="rl-new" data-added="2026-09-22">NEW</span><img src="https://image.yes24.com/goods/56789708/L" alt="Tsutaya, a Place Where Tastes Are Designed by Muneaki Masuda — book cover" loading="lazy"></a>
       <div class="rl-meta">
@@ -895,7 +753,7 @@
         <button type="button" class="heart-btn sm" data-heart="b:취향을 설계하는 곳, 츠타야" aria-pressed="false" aria-label="Heart this book" title="Heart this book" hidden><span class="heart-ico" aria-hidden="true">♡</span><span class="heart-n"></span></button>
       </div>
     </li>
-    <li class="rl-item">
+    <li class="rl-item" id="b16">
       <span class="rl-num">16</span>
       <a class="rl-cover" href="https://www.yes24.com/product/goods/116922356" rel="nofollow noopener noreferrer" target="_blank" aria-label="Twelve Footsteps — buy or read more"><span class="rl-new" data-added="2026-09-22">NEW</span><img src="https://image.yes24.com/goods/116922356/L" alt="Twelve Footsteps by Jeong Jae-seung — book cover" loading="lazy"></a>
       <div class="rl-meta">
@@ -905,12 +763,13 @@
         <button type="button" class="heart-btn sm" data-heart="b:열두 발자국" aria-pressed="false" aria-label="Heart this book" title="Heart this book" hidden><span class="heart-ico" aria-hidden="true">♡</span><span class="heart-n"></span></button>
       </div>
     </li>
-    <li class="rl-item">
+    <li class="rl-item" id="b17">
       <span class="rl-num">17</span>
       <a class="rl-cover" href="https://www.yes24.com/product/goods/182624787" rel="nofollow noopener noreferrer" target="_blank" aria-label="What Makes a City Live — buy or read more"><span class="rl-new" data-added="2026-09-22">NEW</span><img src="https://image.yes24.com/goods/182624787/L" alt="What Makes a City Live by Yoo Hyun-joon — book cover" loading="lazy"></a>
       <div class="rl-meta">
         <div class="rl-title"><a href="https://www.yes24.com/product/goods/182624787" rel="nofollow noopener noreferrer" target="_blank">What Makes a City Live</a> <span style="color:#888;font-size:12px;font-weight:400">(도시는 무엇으로 사는가)</span></div>
         <div class="rl-byline">Yoo Hyun-joon</div>
+        <p class="rl-comment">Known among fans as a book Max Changmin shared on Instagram. (Source: Personal blog)</p>
         <a class="rl-source" href="https://dingziiiiii.tistory.com/78" rel="nofollow noopener noreferrer" target="_blank">📺 Source</a>
         <button type="button" class="heart-btn sm" data-heart="b:도시는 무엇으로 사는가" aria-pressed="false" aria-label="Heart this book" title="Heart this book" hidden><span class="heart-ico" aria-hidden="true">♡</span><span class="heart-n"></span></button>
       </div>

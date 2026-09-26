@@ -501,8 +501,15 @@
              background-size: 100% var(--row); background-repeat: repeat-y; }
     .new-sec { margin: 16px 0 6px; padding: 12px 12px 2px; background: #fffbe6; border: 2px dashed #000; }
     .new-sec-h { display: flex; align-items: center; gap: 8px; margin: 0 0 10px; font-size: 15px; font-weight: 800; }
-    .new-sec .reading-list { margin: 0; }
-    .rl-num.rl-num-new { font-size: 11px; letter-spacing: .04em; }
+    .rl-item { scroll-margin-top: 16px; }
+    .rl-item:target { outline: 3px solid #fde047; outline-offset: 2px; }
+    .new-tiles { display: flex; flex-wrap: wrap; gap: 12px; padding-bottom: 10px; }
+    .new-tile { width: 84px; color: #000; text-decoration: none; display: flex; flex-direction: column; gap: 5px; }
+    .new-tile:hover { text-decoration: none; transform: translateY(-2px); }
+    .nt-cover { display: block; width: 84px; aspect-ratio: 2/3; border: 1.5px solid #000; box-shadow: 2px 2px 0 0 #000; background: #f4f4f0; overflow: hidden; }
+    .nt-cover img { width: 100%; height: 100%; object-fit: cover; display: block; }
+    .nt-no-cover { display: flex; width: 100%; height: 100%; align-items: center; justify-content: center; font-size: 22px; }
+    .nt-title { font-size: 12px; font-weight: 700; line-height: 1.3; word-break: keep-all; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
     .rl-new-tag { font-size: 9px; font-weight: 800; letter-spacing: .06em; line-height: 1; padding: 3px 5px;
                   background: #fde047; color: #000; border: 1.5px solid #000; }
     .sp { position: relative; flex: none; width: auto; height: var(--sh-h);
@@ -524,7 +531,7 @@
               font-size: 8px; line-height: 1; padding: 3px 0 2px;
               border-bottom: 1px solid rgba(0,0,0,.55); }
     .sp.is-new .sp-t { padding-top: 22px; }
-    .is-capturing .sp-new, .is-capturing .rl-new, .is-capturing .rl-shared { display: none !important; }
+    .is-capturing .sp-new, .is-capturing .rl-new, .is-capturing .rl-shared, .is-capturing .rl-comment { display: none !important; }
     .is-capturing .sp.is-new .sp-t { padding-top: 14px; }
     @media (max-width: 480px) { .shelf { --sh-h: 205px; }
                                  .sp.no-img, .sp.sp-fail { width: calc(var(--w, 38px) * .88); }
@@ -551,6 +558,7 @@
     .rl-title a { color: #000; }
     .rl-title a:hover { color: #2563eb; }
     .rl-byline { font-size: 13px; color: #555; margin-bottom: 8px; line-height: 1.4; }
+    .rl-comment { font-size: 13px; line-height: 1.55; color: #222; background: #FFF7C2; border: 1.5px solid #000; padding: 6px 9px; margin: 0 0 8px; word-break: keep-all; }
     .rl-source { display: inline-block; font-size: 12px; padding: 3px 8px; background: #fff; border: 1.5px solid #000; box-shadow: 1px 1px 0 0 #000; text-decoration: none; color: #000; transition: transform .1s, box-shadow .1s, background .1s; }
     .rl-source:hover { transform: translate(-1px,-1px); box-shadow: 2px 2px 0 0 #000; background: #a7f3d0; text-decoration: none; }
     .rl-shared { clear: both; margin-top: 12px; padding-top: 10px; border-top: 1.5px dashed #ccc; display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
@@ -636,147 +644,161 @@
     <a class="sp" style="--c:hsl(140,51%,33%);--w:42px;--fs:15px" href="https://www.yes24.com/product/goods/126646941" rel="nofollow noopener noreferrer" target="_blank" title="행복의 기원"><span class="sp-t"><i>행복의 기원</i></span><img class="sp-i" src="https://image.yes24.com/goods/126646941/side" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.parentNode.classList.add('sp-fail');this.remove()" onload="if(this.naturalWidth/this.naturalHeight>0.4){this.parentNode.classList.add('sp-fail');this.remove()}"></a>
     </div>
     <ol class="reading-list" id="rlist">
-    <li class="rl-item">
+    <li class="rl-item" id="b1">
       <span class="rl-num">1</span>
       <a class="rl-cover" href="https://www.yes24.com/product/goods/120495905" rel="nofollow noopener noreferrer" target="_blank" aria-label="그렇게 인생은 이야기가 된다 알라딘에서 보기"><img src="https://image.yes24.com/goods/120495905/L" alt="그렇게 인생은 이야기가 된다 표지" loading="lazy"></a>
       <div class="rl-meta">
         <div class="rl-title"><a href="https://www.yes24.com/product/goods/120495905" rel="nofollow noopener noreferrer" target="_blank">그렇게 인생은 이야기가 된다</a></div>
         <div class="rl-byline">제임스 R. 해거티 · 인플루엔셜(주)</div>
+        <p class="rl-comment">&#x27;이야기&#x27;를 좋아한다며 추천한 책이에요. 자기 부고를 직접 쓰게 이끄는 책으로, 인생에서 무엇이 중요한지 되새기게 한대요. (출처: 한국경제)</p>
         <a class="rl-source" href="https://www.hankyung.com/article/202504074305i" rel="nofollow noopener noreferrer" target="_blank">📺 출처 보기</a>
         <button type="button" class="heart-btn sm" data-heart="b:그렇게 인생은 이야기가 된다" aria-pressed="false" aria-label="이 책에 하트" title="이 책에 하트" hidden><span class="heart-ico" aria-hidden="true">♡</span><span class="heart-n"></span></button>
       </div>
     </li>
-    <li class="rl-item">
+    <li class="rl-item" id="b2">
       <span class="rl-num">2</span>
       <a class="rl-cover" href="https://www.yes24.com/product/goods/116991024" rel="nofollow noopener noreferrer" target="_blank" aria-label="기후위기인간 알라딘에서 보기"><img src="https://image.yes24.com/goods/116991024/L" alt="기후위기인간 표지" loading="lazy"></a>
       <div class="rl-meta">
         <div class="rl-title"><a href="https://www.yes24.com/product/goods/116991024" rel="nofollow noopener noreferrer" target="_blank">기후위기인간</a></div>
         <div class="rl-byline">구희 · 알에이치코리아(RHK)</div>
+        <p class="rl-comment">환경 책을 꼭 한 권 넣고 싶어 고른 만화예요. 가장 거부감 없이 쉽게 읽히는 책으로 일부러 골랐대요. (출처: 한국경제)</p>
         <a class="rl-source" href="https://www.hankyung.com/article/202504074305i" rel="nofollow noopener noreferrer" target="_blank">📺 출처 보기</a>
         <button type="button" class="heart-btn sm" data-heart="b:기후위기인간" aria-pressed="false" aria-label="이 책에 하트" title="이 책에 하트" hidden><span class="heart-ico" aria-hidden="true">♡</span><span class="heart-n"></span></button>
       </div>
     </li>
-    <li class="rl-item">
+    <li class="rl-item" id="b3">
       <span class="rl-num">3</span>
       <a class="rl-cover" href="https://www.yes24.com/product/goods/57884775" rel="nofollow noopener noreferrer" target="_blank" aria-label="먹고 기도하고 사랑하라 알라딘에서 보기"><img src="https://image.yes24.com/goods/57884775/L" alt="먹고 기도하고 사랑하라 표지" loading="lazy"></a>
       <div class="rl-meta">
         <div class="rl-title"><a href="https://www.yes24.com/product/goods/57884775" rel="nofollow noopener noreferrer" target="_blank">먹고 기도하고 사랑하라</a></div>
         <div class="rl-byline">엘리자베스 길버트 · 민음사</div>
+        <p class="rl-comment">기자 시절 이 책을 읽다가 인도에 가게 됐대요. 자신을 그곳으로 이끈 뿌리에 이 책이 있었다고 했어요. (출처: 한국경제)</p>
         <a class="rl-source" href="https://www.hankyung.com/article/202504074305i" rel="nofollow noopener noreferrer" target="_blank">📺 출처 보기</a>
         <button type="button" class="heart-btn sm" data-heart="b:먹고 기도하고 사랑하라" aria-pressed="false" aria-label="이 책에 하트" title="이 책에 하트" hidden><span class="heart-ico" aria-hidden="true">♡</span><span class="heart-n"></span></button>
       </div>
     </li>
-    <li class="rl-item">
+    <li class="rl-item" id="b4">
       <span class="rl-num">4</span>
       <a class="rl-cover" href="https://www.yes24.com/product/goods/6770100" rel="nofollow noopener noreferrer" target="_blank" aria-label="무엇이 되기 위해 살지 마라 - 세계은행 총재 김용의 마음 습관 알라딘에서 보기"><img src="https://image.yes24.com/goods/6770100/L" alt="무엇이 되기 위해 살지 마라 - 세계은행 총재 김용의 마음 습관 표지" loading="lazy"></a>
       <div class="rl-meta">
         <div class="rl-title"><a href="https://www.yes24.com/product/goods/6770100" rel="nofollow noopener noreferrer" target="_blank">무엇이 되기 위해 살지 마라 - 세계은행 총재 김용의 마음 습관</a></div>
         <div class="rl-byline">백지연 · 알마</div>
+        <p class="rl-comment">성장 욕구가 커서 즐겨 읽는 자기계발서로 떠올린 책이에요. 비슷한 말 같아도 스스로에게 계속 새기려고 읽는대요. (출처: 한국경제)</p>
         <a class="rl-source" href="https://www.hankyung.com/article/202504074305i" rel="nofollow noopener noreferrer" target="_blank">📺 출처 보기</a>
         <button type="button" class="heart-btn sm" data-heart="b:무엇이 되기 위해 살지 마라 - 세계은행 총재 김용의 마음 습관" aria-pressed="false" aria-label="이 책에 하트" title="이 책에 하트" hidden><span class="heart-ico" aria-hidden="true">♡</span><span class="heart-n"></span></button>
       </div>
     </li>
-    <li class="rl-item">
+    <li class="rl-item" id="b5">
       <span class="rl-num">5</span>
       <a class="rl-cover" href="https://www.yes24.com/product/goods/105851069" rel="nofollow noopener noreferrer" target="_blank" aria-label="미식가의 어원 사전 알라딘에서 보기"><img src="https://image.yes24.com/goods/105851069/L" alt="미식가의 어원 사전 표지" loading="lazy"></a>
       <div class="rl-meta">
         <div class="rl-title"><a href="https://www.yes24.com/product/goods/105851069" rel="nofollow noopener noreferrer" target="_blank">미식가의 어원 사전</a></div>
         <div class="rl-byline">앨버트 잭 · 윌북</div>
+        <p class="rl-comment">독자를 위한 추천 책 10권 가운데 첫 번째로 꼽았어요. &#x27;언어 덕후&#x27;로서 재밌게 읽었다며, 음식 이름의 기원을 살피는 책이래요. (출처: 한국경제)</p>
         <a class="rl-source" href="https://www.hankyung.com/article/202504074305i" rel="nofollow noopener noreferrer" target="_blank">📺 출처 보기</a>
         <button type="button" class="heart-btn sm" data-heart="b:미식가의 어원 사전" aria-pressed="false" aria-label="이 책에 하트" title="이 책에 하트" hidden><span class="heart-ico" aria-hidden="true">♡</span><span class="heart-n"></span></button>
       </div>
     </li>
-    <li class="rl-item">
+    <li class="rl-item" id="b6">
       <span class="rl-num">6</span>
       <a class="rl-cover" href="https://www.yes24.com/product/goods/14752204" rel="nofollow noopener noreferrer" target="_blank" aria-label="발칙한 현대미술사 - 천재 예술가들의 크리에이티브 경쟁 알라딘에서 보기"><img src="https://image.yes24.com/goods/14752204/L" alt="발칙한 현대미술사 - 천재 예술가들의 크리에이티브 경쟁 표지" loading="lazy"></a>
       <div class="rl-meta">
         <div class="rl-title"><a href="https://www.yes24.com/product/goods/14752204" rel="nofollow noopener noreferrer" target="_blank">발칙한 현대미술사 - 천재 예술가들의 크리에이티브 경쟁</a></div>
         <div class="rl-byline">윌 곰퍼츠 · 알에이치코리아(RHK)</div>
+        <p class="rl-comment">혼자 살게 되면서 방해받지 않고 읽는 시간이 늘었다며, 지금 읽고 있는 책으로 꼽았어요. (출처: 한국경제)</p>
         <a class="rl-source" href="https://www.hankyung.com/article/202504074305i" rel="nofollow noopener noreferrer" target="_blank">📺 출처 보기</a>
         <button type="button" class="heart-btn sm" data-heart="b:발칙한 현대미술사 - 천재 예술가들의 크리에이티브 경쟁" aria-pressed="false" aria-label="이 책에 하트" title="이 책에 하트" hidden><span class="heart-ico" aria-hidden="true">♡</span><span class="heart-n"></span></button>
       </div>
     </li>
-    <li class="rl-item">
+    <li class="rl-item" id="b7">
       <span class="rl-num">7</span>
       <a class="rl-cover" href="https://www.yes24.com/product/goods/107908967" rel="nofollow noopener noreferrer" target="_blank" aria-label="백만장자와 승려 알라딘에서 보기"><img src="https://image.yes24.com/goods/107908967/L" alt="백만장자와 승려 표지" loading="lazy"></a>
       <div class="rl-meta">
         <div class="rl-title"><a href="https://www.yes24.com/product/goods/107908967" rel="nofollow noopener noreferrer" target="_blank">백만장자와 승려</a></div>
         <div class="rl-byline">비보르 쿠마르 싱 · 다산초당(다산북스)</div>
+        <p class="rl-comment">추천 책 10권 가운데 하나예요. 황금 같은 문장이 가득하니 빨리 읽기보다 천천히 곱씹으며 읽기를 권했어요. (출처: 한국경제)</p>
         <a class="rl-source" href="https://www.hankyung.com/article/202504074305i" rel="nofollow noopener noreferrer" target="_blank">📺 출처 보기</a>
         <button type="button" class="heart-btn sm" data-heart="b:백만장자와 승려" aria-pressed="false" aria-label="이 책에 하트" title="이 책에 하트" hidden><span class="heart-ico" aria-hidden="true">♡</span><span class="heart-n"></span></button>
       </div>
     </li>
-    <li class="rl-item">
+    <li class="rl-item" id="b8">
       <span class="rl-num">8</span>
       <a class="rl-cover" href="https://www.yes24.com/product/goods/109752978" rel="nofollow noopener noreferrer" target="_blank" aria-label="법관의 일 알라딘에서 보기"><img src="https://image.yes24.com/goods/109752978/L" alt="법관의 일 표지" loading="lazy"></a>
       <div class="rl-meta">
         <div class="rl-title"><a href="https://www.yes24.com/product/goods/109752978" rel="nofollow noopener noreferrer" target="_blank">법관의 일</a></div>
         <div class="rl-byline">송민경 · 문학동네</div>
+        <p class="rl-comment">추천 책 10권 가운데 하나예요. 누구나 법의 토양 위에서 살기에 법을 알아야 한다며, 판사인 저자의 필력에 감탄하며 읽었대요. (출처: 한국경제)</p>
         <a class="rl-source" href="https://www.hankyung.com/article/202504074305i" rel="nofollow noopener noreferrer" target="_blank">📺 출처 보기</a>
         <button type="button" class="heart-btn sm" data-heart="b:법관의 일" aria-pressed="false" aria-label="이 책에 하트" title="이 책에 하트" hidden><span class="heart-ico" aria-hidden="true">♡</span><span class="heart-n"></span></button>
       </div>
     </li>
-    <li class="rl-item">
+    <li class="rl-item" id="b9">
       <span class="rl-num">9</span>
       <a class="rl-cover" href="https://www.yes24.com/product/goods/129059963" rel="nofollow noopener noreferrer" target="_blank" aria-label="빨강머리 앤 알라딘에서 보기"><img src="https://image.yes24.com/goods/129059963/L" alt="빨강머리 앤 표지" loading="lazy"></a>
       <div class="rl-meta">
         <div class="rl-title"><a href="https://www.yes24.com/product/goods/129059963" rel="nofollow noopener noreferrer" target="_blank">빨강머리 앤</a></div>
         <div class="rl-byline">루시 모드 몽고메리 · 더스토리</div>
+        <p class="rl-comment">영어에 매료된 첫 책이에요. 열두세 살 무렵 종이 사전을 찾아가며 밑줄 치고 닳도록 읽었대요. (출처: 한국경제)</p>
         <a class="rl-source" href="https://www.hankyung.com/article/202504074305i" rel="nofollow noopener noreferrer" target="_blank">📺 출처 보기</a>
         <button type="button" class="heart-btn sm" data-heart="b:빨강머리 앤" aria-pressed="false" aria-label="이 책에 하트" title="이 책에 하트" hidden><span class="heart-ico" aria-hidden="true">♡</span><span class="heart-n"></span></button>
       </div>
     </li>
-    <li class="rl-item">
+    <li class="rl-item" id="b10">
       <span class="rl-num">10</span>
       <a class="rl-cover" href="https://www.yes24.com/product/goods/11611521" rel="nofollow noopener noreferrer" target="_blank" aria-label="술 취한 코끼리 길들이기 알라딘에서 보기"><img src="https://image.yes24.com/goods/11611521/L" alt="술 취한 코끼리 길들이기 표지" loading="lazy"></a>
       <div class="rl-meta">
         <div class="rl-title"><a href="https://www.yes24.com/product/goods/11611521" rel="nofollow noopener noreferrer" target="_blank">술 취한 코끼리 길들이기</a></div>
         <div class="rl-byline">아잔 브람 · 연금술사</div>
+        <p class="rl-comment">추천 책 10권 가운데 하나예요. 읽고 또 읽고 명상 모임 친구들에게도 권했대요. (출처: 한국경제)</p>
         <a class="rl-source" href="https://www.hankyung.com/article/202504074305i" rel="nofollow noopener noreferrer" target="_blank">📺 출처 보기</a>
         <button type="button" class="heart-btn sm" data-heart="b:술 취한 코끼리 길들이기" aria-pressed="false" aria-label="이 책에 하트" title="이 책에 하트" hidden><span class="heart-ico" aria-hidden="true">♡</span><span class="heart-n"></span></button>
       </div>
     </li>
-    <li class="rl-item">
+    <li class="rl-item" id="b11">
       <span class="rl-num">11</span>
       <a class="rl-cover" href="https://www.yes24.com/product/goods/56774544" rel="nofollow noopener noreferrer" target="_blank" aria-label="시간은 이야기가 된다 알라딘에서 보기"><img src="https://image.yes24.com/goods/56774544/L" alt="시간은 이야기가 된다 표지" loading="lazy"></a>
       <div class="rl-meta">
         <div class="rl-title"><a href="https://www.yes24.com/product/goods/56774544" rel="nofollow noopener noreferrer" target="_blank">시간은 이야기가 된다</a></div>
         <div class="rl-byline">강세형 · 김영사</div>
+        <p class="rl-comment">좋아하는 강세형 작가의 에세이예요. 좋아하는 영화와 소설, 캐릭터들이 잔뜩 나와 아는 사람이 TV에 나온 것처럼 반가웠대요. (출처: 한국경제)</p>
         <a class="rl-source" href="https://www.hankyung.com/article/202504074305i" rel="nofollow noopener noreferrer" target="_blank">📺 출처 보기</a>
         <button type="button" class="heart-btn sm" data-heart="b:시간은 이야기가 된다" aria-pressed="false" aria-label="이 책에 하트" title="이 책에 하트" hidden><span class="heart-ico" aria-hidden="true">♡</span><span class="heart-n"></span></button>
       </div>
     </li>
-    <li class="rl-item">
+    <li class="rl-item" id="b12">
       <span class="rl-num">12</span>
       <a class="rl-cover" href="https://www.yes24.com/product/goods/66876728" rel="nofollow noopener noreferrer" target="_blank" aria-label="아름다움이란 무엇인가 알라딘에서 보기"><img src="https://image.yes24.com/goods/66876728/L" alt="아름다움이란 무엇인가 표지" loading="lazy"></a>
       <div class="rl-meta">
         <div class="rl-title"><a href="https://www.yes24.com/product/goods/66876728" rel="nofollow noopener noreferrer" target="_blank">아름다움이란 무엇인가</a></div>
         <div class="rl-byline">주광첸 · 쌤앤파커스</div>
+        <p class="rl-comment">추천 책을 소개하며 같은 작가의 또 다른 책으로 언급했어요. 미학책에 더 가깝다고 했어요. (출처: 한국경제)</p>
         <a class="rl-source" href="https://www.hankyung.com/article/202504074305i" rel="nofollow noopener noreferrer" target="_blank">📺 출처 보기</a>
         <button type="button" class="heart-btn sm" data-heart="b:아름다움이란 무엇인가" aria-pressed="false" aria-label="이 책에 하트" title="이 책에 하트" hidden><span class="heart-ico" aria-hidden="true">♡</span><span class="heart-n"></span></button>
       </div>
     </li>
-    <li class="rl-item">
+    <li class="rl-item" id="b13">
       <span class="rl-num">13</span>
       <a class="rl-cover" href="https://www.yes24.com/product/goods/107649047" rel="nofollow noopener noreferrer" target="_blank" aria-label="엑설런스 - 인간의 탁월함을 결정하는 9가지 능력 알라딘에서 보기"><img src="https://image.yes24.com/goods/107649047/L" alt="엑설런스 - 인간의 탁월함을 결정하는 9가지 능력 표지" loading="lazy"></a>
       <div class="rl-meta">
         <div class="rl-title"><a href="https://www.yes24.com/product/goods/107649047" rel="nofollow noopener noreferrer" target="_blank">엑설런스 - 인간의 탁월함을 결정하는 9가지 능력</a></div>
         <div class="rl-byline">도리스 메르틴 · 다산초당(다산북스)</div>
+        <p class="rl-comment">성장 욕구가 커서 즐겨 읽는 자기계발서로 떠올린 책이에요. 비슷한 말 같아도 스스로에게 계속 새기려고 읽는대요. (출처: 한국경제)</p>
         <a class="rl-source" href="https://www.hankyung.com/article/202504074305i" rel="nofollow noopener noreferrer" target="_blank">📺 출처 보기</a>
         <button type="button" class="heart-btn sm" data-heart="b:엑설런스 - 인간의 탁월함을 결정하는 9가지 능력" aria-pressed="false" aria-label="이 책에 하트" title="이 책에 하트" hidden><span class="heart-ico" aria-hidden="true">♡</span><span class="heart-n"></span></button>
       </div>
     </li>
-    <li class="rl-item">
+    <li class="rl-item" id="b14">
       <span class="rl-num">14</span>
       <a class="rl-cover" href="https://www.yes24.com/product/goods/141401231" rel="nofollow noopener noreferrer" target="_blank" aria-label="예쁘다 예쁘다 말하면 사랑이 오고 알라딘에서 보기"><img src="https://image.yes24.com/goods/141401231/L" alt="예쁘다 예쁘다 말하면 사랑이 오고 표지" loading="lazy"></a>
       <div class="rl-meta">
         <div class="rl-title"><a href="https://www.yes24.com/product/goods/141401231" rel="nofollow noopener noreferrer" target="_blank">예쁘다 예쁘다 말하면 사랑이 오고</a></div>
         <div class="rl-byline">박제근 · 지와인</div>
+        <p class="rl-comment">박찬호 선수의 아버지가 평생 농사지으며 쓴 시를 묶은 시집이에요. (출처: 한국경제)</p>
         <a class="rl-source" href="https://www.hankyung.com/article/202504074305i" rel="nofollow noopener noreferrer" target="_blank">📺 출처 보기</a>
         <button type="button" class="heart-btn sm" data-heart="b:예쁘다 예쁘다 말하면 사랑이 오고" aria-pressed="false" aria-label="이 책에 하트" title="이 책에 하트" hidden><span class="heart-ico" aria-hidden="true">♡</span><span class="heart-n"></span></button>
       </div>
     </li>
-    <li class="rl-item">
+    <li class="rl-item" id="b15">
       <span class="rl-num">15</span>
       <a class="rl-cover" href="https://www.yes24.com/product/goods/74261416" rel="nofollow noopener noreferrer" target="_blank" aria-label="우리가 빛의 속도로 갈 수 없다면 알라딘에서 보기"><img src="https://image.yes24.com/goods/74261416/L" alt="우리가 빛의 속도로 갈 수 없다면 표지" loading="lazy"></a>
       <div class="rl-meta">
@@ -787,72 +809,79 @@
       </div>
       <div class="rl-shared"><span class="rl-shared-label">👥 함께 추천한 셀럽 5명:</span> <a class="rl-celeb-chip" href="https://favorbook.co.kr/share/%EA%B9%80%EC%84%B8%EC%A0%95.html">김세정</a><a class="rl-celeb-chip" href="https://favorbook.co.kr/share/%EC%98%88%EB%A6%AC%28%EB%A0%88%EB%93%9C%EB%B2%A8%EB%B2%B3%29.html">예리(레드벨벳)</a><a class="rl-celeb-chip" href="https://favorbook.co.kr/share/%EC%9C%A4%EB%8D%95%EC%9B%90%28%EB%B8%8C%EB%A1%9C%EC%BD%9C%EB%A6%AC%EB%84%88%EB%A7%88%EC%A0%80%29.html">윤덕원(브로콜리너마저)</a><a class="rl-celeb-chip" href="https://favorbook.co.kr/share/%ED%97%88%EC%9C%A4%EC%A7%84%28%EB%A5%B4%EC%84%B8%EB%9D%BC%ED%95%8C%29.html">허윤진(르세라핌)</a><a class="rl-celeb-chip" href="https://favorbook.co.kr/share/%EA%B9%80%EC%A4%80%EC%84%9C%28%EC%95%8C%ED%8C%8C%EB%93%9C%EB%9D%BC%EC%9D%B4%EB%B8%8C%EC%9B%90%29.html">김준서(알파드라이브원)</a></div>
     </li>
-    <li class="rl-item">
+    <li class="rl-item" id="b16">
       <span class="rl-num">16</span>
       <a class="rl-cover" href="https://www.yes24.com/product/goods/95878805" rel="nofollow noopener noreferrer" target="_blank" aria-label="우리가 할 일은 인생의 아름다움을 발견하는 일뿐이다 알라딘에서 보기"><img src="https://image.yes24.com/goods/95878805/L" alt="우리가 할 일은 인생의 아름다움을 발견하는 일뿐이다 표지" loading="lazy"></a>
       <div class="rl-meta">
         <div class="rl-title"><a href="https://www.yes24.com/product/goods/95878805" rel="nofollow noopener noreferrer" target="_blank">우리가 할 일은 인생의 아름다움을 발견하는 일뿐이다</a></div>
         <div class="rl-byline">주광첸 · 쌤앤파커스</div>
+        <p class="rl-comment">추천 책 10권 가운데 하나예요. 돈도 되지 않는 시와 그림, 자연을 왜 즐기는지에 대한 사무치는 답이라고 했어요. (출처: 한국경제)</p>
         <a class="rl-source" href="https://www.hankyung.com/article/202504074305i" rel="nofollow noopener noreferrer" target="_blank">📺 출처 보기</a>
         <button type="button" class="heart-btn sm" data-heart="b:우리가 할 일은 인생의 아름다움을 발견하는 일뿐이다" aria-pressed="false" aria-label="이 책에 하트" title="이 책에 하트" hidden><span class="heart-ico" aria-hidden="true">♡</span><span class="heart-n"></span></button>
       </div>
     </li>
-    <li class="rl-item">
+    <li class="rl-item" id="b17">
       <span class="rl-num">17</span>
       <a class="rl-cover" href="https://www.yes24.com/product/goods/95861737" rel="nofollow noopener noreferrer" target="_blank" aria-label="이해인의 말 알라딘에서 보기"><img src="https://image.yes24.com/goods/95861737/L" alt="이해인의 말 표지" loading="lazy"></a>
       <div class="rl-meta">
         <div class="rl-title"><a href="https://www.yes24.com/product/goods/95861737" rel="nofollow noopener noreferrer" target="_blank">이해인의 말</a></div>
         <div class="rl-byline">이해인 · 마음산책</div>
+        <p class="rl-comment">추천 책 10권 가운데 하나예요. 수녀님과 마주 앉아 대화하는 느낌이라며, 인간관계에 대한 지혜를 얻게 된대요. (출처: 한국경제)</p>
         <a class="rl-source" href="https://www.hankyung.com/article/202504074305i" rel="nofollow noopener noreferrer" target="_blank">📺 출처 보기</a>
         <button type="button" class="heart-btn sm" data-heart="b:이해인의 말" aria-pressed="false" aria-label="이 책에 하트" title="이 책에 하트" hidden><span class="heart-ico" aria-hidden="true">♡</span><span class="heart-n"></span></button>
       </div>
     </li>
-    <li class="rl-item">
+    <li class="rl-item" id="b18">
       <span class="rl-num">18</span>
       <a class="rl-cover" href="https://www.yes24.com/product/goods/75223524" rel="nofollow noopener noreferrer" target="_blank" aria-label="지구별 여행자 알라딘에서 보기"><img src="https://image.yes24.com/goods/75223524/L" alt="지구별 여행자 표지" loading="lazy"></a>
       <div class="rl-meta">
         <div class="rl-title"><a href="https://www.yes24.com/product/goods/75223524" rel="nofollow noopener noreferrer" target="_blank">지구별 여행자</a></div>
         <div class="rl-byline">류시화 · 연금술사</div>
+        <p class="rl-comment">마음 공부에 입문하게 해준 책이에요. 고등학생 때 선물받아 침대맡에 끼고 살았대요. (출처: 한국경제)</p>
         <a class="rl-source" href="https://www.hankyung.com/article/202504074305i" rel="nofollow noopener noreferrer" target="_blank">📺 출처 보기</a>
         <button type="button" class="heart-btn sm" data-heart="b:지구별 여행자" aria-pressed="false" aria-label="이 책에 하트" title="이 책에 하트" hidden><span class="heart-ico" aria-hidden="true">♡</span><span class="heart-n"></span></button>
       </div>
     </li>
-    <li class="rl-item">
+    <li class="rl-item" id="b19">
       <span class="rl-num">19</span>
       <a class="rl-cover" href="https://www.yes24.com/product/goods/88430059" rel="nofollow noopener noreferrer" target="_blank" aria-label="진리의 발견 알라딘에서 보기"><img src="https://image.yes24.com/goods/88430059/L" alt="진리의 발견 표지" loading="lazy"></a>
       <div class="rl-meta">
         <div class="rl-title"><a href="https://www.yes24.com/product/goods/88430059" rel="nofollow noopener noreferrer" target="_blank">진리의 발견</a></div>
         <div class="rl-byline">마리아 포포바 · 다른</div>
+        <p class="rl-comment">추천 목록에서 가장 오래 걸려 완독한 책이에요. 엄청난 두께에 미리 양해를 구했어요. (출처: 한국경제)</p>
         <a class="rl-source" href="https://www.hankyung.com/article/202504074305i" rel="nofollow noopener noreferrer" target="_blank">📺 출처 보기</a>
         <button type="button" class="heart-btn sm" data-heart="b:진리의 발견" aria-pressed="false" aria-label="이 책에 하트" title="이 책에 하트" hidden><span class="heart-ico" aria-hidden="true">♡</span><span class="heart-n"></span></button>
       </div>
     </li>
-    <li class="rl-item">
+    <li class="rl-item" id="b20">
       <span class="rl-num">20</span>
       <a class="rl-cover" href="https://www.yes24.com/product/goods/110225268" rel="nofollow noopener noreferrer" target="_blank" aria-label="포르투갈은 블루다 - 느릿느릿, 걸음마다 블루가 일렁일렁 알라딘에서 보기"><img src="https://image.yes24.com/goods/110225268/L" alt="포르투갈은 블루다 - 느릿느릿, 걸음마다 블루가 일렁일렁 표지" loading="lazy"></a>
       <div class="rl-meta">
         <div class="rl-title"><a href="https://www.yes24.com/product/goods/110225268" rel="nofollow noopener noreferrer" target="_blank">포르투갈은 블루다 - 느릿느릿, 걸음마다 블루가 일렁일렁</a></div>
         <div class="rl-byline">조용준 · 도도(도서출판)</div>
+        <p class="rl-comment">포르투갈 여행을 준비하며 빌린 책 가운데 너무 위대해서 꼭 소개하고 싶었대요. 여행 내내 가방에 넣고 다녀 반납할 때 미안할 만큼 닳았어요. (출처: 한국경제)</p>
         <a class="rl-source" href="https://www.hankyung.com/article/202504074305i" rel="nofollow noopener noreferrer" target="_blank">📺 출처 보기</a>
         <button type="button" class="heart-btn sm" data-heart="b:포르투갈은 블루다 - 느릿느릿, 걸음마다 블루가 일렁일렁" aria-pressed="false" aria-label="이 책에 하트" title="이 책에 하트" hidden><span class="heart-ico" aria-hidden="true">♡</span><span class="heart-n"></span></button>
       </div>
     </li>
-    <li class="rl-item">
+    <li class="rl-item" id="b21">
       <span class="rl-num">21</span>
       <a class="rl-cover" href="https://www.yes24.com/product/goods/65282018" rel="nofollow noopener noreferrer" target="_blank" aria-label="하버드 상위 1퍼센트의 비밀 (2021 리커버 에디션) - 신호를 차단하고 깊이 몰입하라 알라딘에서 보기"><img src="https://image.yes24.com/goods/65282018/L" alt="하버드 상위 1퍼센트의 비밀 (2021 리커버 에디션) - 신호를 차단하고 깊이 몰입하라 표지" loading="lazy"></a>
       <div class="rl-meta">
         <div class="rl-title"><a href="https://www.yes24.com/product/goods/65282018" rel="nofollow noopener noreferrer" target="_blank">하버드 상위 1퍼센트의 비밀 (2021 리커버 에디션) - 신호를 차단하고 깊이 몰입하라</a></div>
         <div class="rl-byline">정주영 · 한국경제신문</div>
+        <p class="rl-comment">성장 욕구가 커서 즐겨 읽는 자기계발서로 떠올린 책이에요. 비슷한 말 같아도 스스로에게 계속 새기려고 읽는대요. (출처: 한국경제)</p>
         <a class="rl-source" href="https://www.hankyung.com/article/202504074305i" rel="nofollow noopener noreferrer" target="_blank">📺 출처 보기</a>
         <button type="button" class="heart-btn sm" data-heart="b:하버드 상위 1퍼센트의 비밀 (2021 리커버 에디션) - 신호를 차단하고 깊이 몰입하라" aria-pressed="false" aria-label="이 책에 하트" title="이 책에 하트" hidden><span class="heart-ico" aria-hidden="true">♡</span><span class="heart-n"></span></button>
       </div>
     </li>
-    <li class="rl-item">
+    <li class="rl-item" id="b22">
       <span class="rl-num">22</span>
       <a class="rl-cover" href="https://www.yes24.com/product/goods/126646941" rel="nofollow noopener noreferrer" target="_blank" aria-label="행복의 기원 알라딘에서 보기"><img src="https://image.yes24.com/goods/126646941/L" alt="행복의 기원 표지" loading="lazy"></a>
       <div class="rl-meta">
         <div class="rl-title"><a href="https://www.yes24.com/product/goods/126646941" rel="nofollow noopener noreferrer" target="_blank">행복의 기원</a></div>
         <div class="rl-byline">서은국 · 21세기북스</div>
+        <p class="rl-comment">정말 좋아하는 책으로, 행복의 핵심을 &#x27;좋아하는 사람과 함께 음식을 먹는 장면&#x27;으로 정리한 마지막 페이지를 가장 좋아하는 문장으로 꼽았어요. (출처: 한국경제)</p>
         <a class="rl-source" href="https://www.hankyung.com/article/202504074305i" rel="nofollow noopener noreferrer" target="_blank">📺 출처 보기</a>
         <button type="button" class="heart-btn sm" data-heart="b:행복의 기원" aria-pressed="false" aria-label="이 책에 하트" title="이 책에 하트" hidden><span class="heart-ico" aria-hidden="true">♡</span><span class="heart-n"></span></button>
       </div>

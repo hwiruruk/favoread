@@ -327,8 +327,15 @@
              background-size: 100% var(--row); background-repeat: repeat-y; }
     .new-sec { margin: 16px 0 6px; padding: 12px 12px 2px; background: #fffbe6; border: 2px dashed #000; }
     .new-sec-h { display: flex; align-items: center; gap: 8px; margin: 0 0 10px; font-size: 15px; font-weight: 800; }
-    .new-sec .reading-list { margin: 0; }
-    .rl-num.rl-num-new { font-size: 11px; letter-spacing: .04em; }
+    .rl-item { scroll-margin-top: 16px; }
+    .rl-item:target { outline: 3px solid #fde047; outline-offset: 2px; }
+    .new-tiles { display: flex; flex-wrap: wrap; gap: 12px; padding-bottom: 10px; }
+    .new-tile { width: 84px; color: #000; text-decoration: none; display: flex; flex-direction: column; gap: 5px; }
+    .new-tile:hover { text-decoration: none; transform: translateY(-2px); }
+    .nt-cover { display: block; width: 84px; aspect-ratio: 2/3; border: 1.5px solid #000; box-shadow: 2px 2px 0 0 #000; background: #f4f4f0; overflow: hidden; }
+    .nt-cover img { width: 100%; height: 100%; object-fit: cover; display: block; }
+    .nt-no-cover { display: flex; width: 100%; height: 100%; align-items: center; justify-content: center; font-size: 22px; }
+    .nt-title { font-size: 12px; font-weight: 700; line-height: 1.3; word-break: keep-all; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
     .rl-new-tag { font-size: 9px; font-weight: 800; letter-spacing: .06em; line-height: 1; padding: 3px 5px;
                   background: #fde047; color: #000; border: 1.5px solid #000; }
     .sp { position: relative; flex: none; width: auto; height: var(--sh-h);
@@ -350,7 +357,7 @@
               font-size: 8px; line-height: 1; padding: 3px 0 2px;
               border-bottom: 1px solid rgba(0,0,0,.55); }
     .sp.is-new .sp-t { padding-top: 22px; }
-    .is-capturing .sp-new, .is-capturing .rl-new, .is-capturing .rl-shared { display: none !important; }
+    .is-capturing .sp-new, .is-capturing .rl-new, .is-capturing .rl-shared, .is-capturing .rl-comment { display: none !important; }
     .is-capturing .sp.is-new .sp-t { padding-top: 14px; }
     @media (max-width: 480px) { .shelf { --sh-h: 205px; }
                                  .sp.no-img, .sp.sp-fail { width: calc(var(--w, 38px) * .88); }
@@ -377,6 +384,7 @@
     .rl-title a { color: #000; }
     .rl-title a:hover { color: #2563eb; }
     .rl-byline { font-size: 13px; color: #555; margin-bottom: 8px; line-height: 1.4; }
+    .rl-comment { font-size: 13px; line-height: 1.55; color: #222; background: #FFF7C2; border: 1.5px solid #000; padding: 6px 9px; margin: 0 0 8px; word-break: keep-all; }
     .rl-source { display: inline-block; font-size: 12px; padding: 3px 8px; background: #fff; border: 1.5px solid #000; box-shadow: 1px 1px 0 0 #000; text-decoration: none; color: #000; transition: transform .1s, box-shadow .1s, background .1s; }
     .rl-source:hover { transform: translate(-1px,-1px); box-shadow: 2px 2px 0 0 #000; background: #a7f3d0; text-decoration: none; }
     .rl-shared { clear: both; margin-top: 12px; padding-top: 10px; border-top: 1.5px dashed #ccc; display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
@@ -437,82 +445,15 @@
     </div>
     <div class="new-sec">
       <h3 class="new-sec-h"><span class="rl-new-tag">NEW</span> 최근 10일 새로 추가된 책 (7권)</h3>
-      <ol class="reading-list">
-    <li class="rl-item">
-      <span class="rl-num rl-num-new">NEW</span>
-      <a class="rl-cover" href="https://www.yes24.com/product/goods/80386690" rel="nofollow noopener noreferrer" target="_blank" aria-label="다름 아닌 사랑과 자유 알라딘에서 보기"><span class="rl-new" data-added="2026-09-26">NEW</span><img src="https://image.yes24.com/goods/80386690/L" alt="다름 아닌 사랑과 자유 표지" loading="lazy"></a>
-      <div class="rl-meta">
-        <div class="rl-title"><a href="https://www.yes24.com/product/goods/80386690" rel="nofollow noopener noreferrer" target="_blank">다름 아닌 사랑과 자유</a></div>
-        <div class="rl-byline">김하나, 이슬아, 김금희, 최은영, 백수린, 백세희, 이석원, 임진아, 김동영 · 문학동네</div>
-        <a class="rl-source" href="https://x.com/munhakdongne/status/1197386186995535875?s=20" rel="nofollow noopener noreferrer" target="_blank">📺 출처 보기</a>
-        <button type="button" class="heart-btn sm" data-heart="b:다름 아닌 사랑과 자유" aria-pressed="false" aria-label="이 책에 하트" title="이 책에 하트" hidden><span class="heart-ico" aria-hidden="true">♡</span><span class="heart-n"></span></button>
+      <div class="new-tiles">
+        <a class="new-tile" href="#b3"><span class="nt-cover"><img src="https://image.yes24.com/goods/80386690/L" alt="다름 아닌 사랑과 자유 표지" loading="lazy"></span><span class="nt-title">다름 아닌 사랑과 자유</span></a>
+        <a class="new-tile" href="#b7"><span class="nt-cover"><img src="https://image.yes24.com/goods/117012879/L" alt="시간이 조금 걸리더라도 표지" loading="lazy"></span><span class="nt-title">시간이 조금 걸리더라도</span></a>
+        <a class="new-tile" href="#b2"><span class="nt-cover"><img src="https://image.yes24.com/goods/1433435/L" alt="강의 표지" loading="lazy"></span><span class="nt-title">강의</span></a>
+        <a class="new-tile" href="#b6"><span class="nt-cover"><img src="https://image.yes24.com/goods/112392703/L" alt="불교를 철학하다 표지" loading="lazy"></span><span class="nt-title">불교를 철학하다</span></a>
+        <a class="new-tile" href="#b8"><span class="nt-cover"><img src="https://image.yes24.com/goods/29334433/L" alt="야생연극 표지" loading="lazy"></span><span class="nt-title">야생연극</span></a>
+        <a class="new-tile" href="#b9"><span class="nt-cover"><img src="https://image.yes24.com/goods/36917853/L" alt="어린 나무의 눈을 털어주다 표지" loading="lazy"></span><span class="nt-title">어린 나무의 눈을 털어주다</span></a>
+        <a class="new-tile" href="#b11"><span class="nt-cover"><img src="https://image.yes24.com/goods/115050039/L" alt="회복기 표지" loading="lazy"></span><span class="nt-title">회복기</span></a>
       </div>
-      <div class="rl-shared"><span class="rl-shared-label">👥 함께 추천한 셀럽 1명:</span> <a class="rl-celeb-chip" href="https://favorbook.co.kr/share/%EC%A7%80%EC%9B%85%28P%EC%9B%90%ED%95%98%EB%AA%A8%EB%8B%88%29.html">지웅(P원하모니)</a></div>
-    </li>
-    <li class="rl-item">
-      <span class="rl-num rl-num-new">NEW</span>
-      <a class="rl-cover" href="https://www.yes24.com/product/goods/117012879" rel="nofollow noopener noreferrer" target="_blank" aria-label="시간이 조금 걸리더라도 알라딘에서 보기"><span class="rl-new" data-added="2026-09-26">NEW</span><img src="https://image.yes24.com/goods/117012879/L" alt="시간이 조금 걸리더라도 표지" loading="lazy"></a>
-      <div class="rl-meta">
-        <div class="rl-title"><a href="https://www.yes24.com/product/goods/117012879" rel="nofollow noopener noreferrer" target="_blank">시간이 조금 걸리더라도</a></div>
-        <div class="rl-byline">이윤엽 · 서유재</div>
-        <a class="rl-source" href="https://x.com/yes24_official/status/1616284387426930691?s=20" rel="nofollow noopener noreferrer" target="_blank">📺 출처 보기</a>
-        <button type="button" class="heart-btn sm" data-heart="b:시간이 조금 걸리더라도" aria-pressed="false" aria-label="이 책에 하트" title="이 책에 하트" hidden><span class="heart-ico" aria-hidden="true">♡</span><span class="heart-n"></span></button>
-      </div>
-      <div class="rl-shared"><span class="rl-shared-label">👥 함께 추천한 셀럽 1명:</span> <a class="rl-celeb-chip" href="https://favorbook.co.kr/share/%EC%9C%A4%EB%8D%95%EC%9B%90%28%EB%B8%8C%EB%A1%9C%EC%BD%9C%EB%A6%AC%EB%84%88%EB%A7%88%EC%A0%80%29.html">윤덕원(브로콜리너마저)</a></div>
-    </li>
-    <li class="rl-item">
-      <span class="rl-num rl-num-new">NEW</span>
-      <a class="rl-cover" href="https://www.yes24.com/product/goods/1433435" rel="nofollow noopener noreferrer" target="_blank" aria-label="강의 알라딘에서 보기"><span class="rl-new" data-added="2026-09-23">NEW</span><img src="https://image.yes24.com/goods/1433435/L" alt="강의 표지" loading="lazy"></a>
-      <div class="rl-meta">
-        <div class="rl-title"><a href="https://www.yes24.com/product/goods/1433435" rel="nofollow noopener noreferrer" target="_blank">강의</a></div>
-        <div class="rl-byline">신영복 · 돌베개</div>
-        <a class="rl-source" href="https://www.instagram.com/p/DdaH8IeDxrN/?utm_source=ig_web_copy_link&amp;stkn=MzRlODBiNWFlZA==" rel="nofollow noopener noreferrer" target="_blank">📺 출처 보기</a>
-        <button type="button" class="heart-btn sm" data-heart="b:강의" aria-pressed="false" aria-label="이 책에 하트" title="이 책에 하트" hidden><span class="heart-ico" aria-hidden="true">♡</span><span class="heart-n"></span></button>
-      </div>
-      <div class="rl-shared"><span class="rl-shared-label">👥 함께 추천한 셀럽 1명:</span> <a class="rl-celeb-chip" href="https://favorbook.co.kr/share/%ED%95%98%ED%98%84%EC%83%81.html">하현상</a></div>
-    </li>
-    <li class="rl-item">
-      <span class="rl-num rl-num-new">NEW</span>
-      <a class="rl-cover" href="https://www.yes24.com/product/goods/112392703" rel="nofollow noopener noreferrer" target="_blank" aria-label="불교를 철학하다 알라딘에서 보기"><span class="rl-new" data-added="2026-09-23">NEW</span><img src="https://image.yes24.com/goods/112392703/L" alt="불교를 철학하다 표지" loading="lazy"></a>
-      <div class="rl-meta">
-        <div class="rl-title"><a href="https://www.yes24.com/product/goods/112392703" rel="nofollow noopener noreferrer" target="_blank">불교를 철학하다</a></div>
-        <div class="rl-byline">이진경 · 휴(休)</div>
-        <a class="rl-source" href="https://www.instagram.com/p/DdaH8IeDxrN/?utm_source=ig_web_copy_link&amp;stkn=MzRlODBiNWFlZA==" rel="nofollow noopener noreferrer" target="_blank">📺 출처 보기</a>
-        <button type="button" class="heart-btn sm" data-heart="b:불교를 철학하다" aria-pressed="false" aria-label="이 책에 하트" title="이 책에 하트" hidden><span class="heart-ico" aria-hidden="true">♡</span><span class="heart-n"></span></button>
-      </div>
-    </li>
-    <li class="rl-item">
-      <span class="rl-num rl-num-new">NEW</span>
-      <a class="rl-cover" href="https://www.yes24.com/product/goods/29334433" rel="nofollow noopener noreferrer" target="_blank" aria-label="야생연극 알라딘에서 보기"><span class="rl-new" data-added="2026-09-23">NEW</span><img src="https://image.yes24.com/goods/29334433/L" alt="야생연극 표지" loading="lazy"></a>
-      <div class="rl-meta">
-        <div class="rl-title"><a href="https://www.yes24.com/product/goods/29334433" rel="nofollow noopener noreferrer" target="_blank">야생연극</a></div>
-        <div class="rl-byline">이상우 · 나의시간</div>
-        <a class="rl-source" href="https://www.instagram.com/p/DdaH8IeDxrN/?utm_source=ig_web_copy_link&amp;stkn=MzRlODBiNWFlZA==" rel="nofollow noopener noreferrer" target="_blank">📺 출처 보기</a>
-        <button type="button" class="heart-btn sm" data-heart="b:야생연극" aria-pressed="false" aria-label="이 책에 하트" title="이 책에 하트" hidden><span class="heart-ico" aria-hidden="true">♡</span><span class="heart-n"></span></button>
-      </div>
-      <div class="rl-shared"><span class="rl-shared-label">👥 함께 추천한 셀럽 2명:</span> <a class="rl-celeb-chip" href="https://favorbook.co.kr/share/%EC%A0%84%EC%97%AC%EB%B9%88.html">전여빈</a><a class="rl-celeb-chip" href="https://favorbook.co.kr/share/%EC%95%88%EC%9D%80%EC%A7%84.html">안은진</a></div>
-    </li>
-    <li class="rl-item">
-      <span class="rl-num rl-num-new">NEW</span>
-      <a class="rl-cover" href="https://www.yes24.com/product/goods/36917853" rel="nofollow noopener noreferrer" target="_blank" aria-label="어린 나무의 눈을 털어주다 알라딘에서 보기"><span class="rl-new" data-added="2026-09-23">NEW</span><img src="https://image.yes24.com/goods/36917853/L" alt="어린 나무의 눈을 털어주다 표지" loading="lazy"></a>
-      <div class="rl-meta">
-        <div class="rl-title"><a href="https://www.yes24.com/product/goods/36917853" rel="nofollow noopener noreferrer" target="_blank">어린 나무의 눈을 털어주다</a></div>
-        <div class="rl-byline">울라브 하우게 · 봄날의책</div>
-        <a class="rl-source" href="https://www.instagram.com/p/DdaH8IeDxrN/?utm_source=ig_web_copy_link&amp;stkn=MzRlODBiNWFlZA==" rel="nofollow noopener noreferrer" target="_blank">📺 출처 보기</a>
-        <button type="button" class="heart-btn sm" data-heart="b:어린 나무의 눈을 털어주다" aria-pressed="false" aria-label="이 책에 하트" title="이 책에 하트" hidden><span class="heart-ico" aria-hidden="true">♡</span><span class="heart-n"></span></button>
-      </div>
-    </li>
-    <li class="rl-item">
-      <span class="rl-num rl-num-new">NEW</span>
-      <a class="rl-cover" href="https://www.yes24.com/product/goods/115050039" rel="nofollow noopener noreferrer" target="_blank" aria-label="회복기 알라딘에서 보기"><span class="rl-new" data-added="2026-09-23">NEW</span><img src="https://image.yes24.com/goods/115050039/L" alt="회복기 표지" loading="lazy"></a>
-      <div class="rl-meta">
-        <div class="rl-title"><a href="https://www.yes24.com/product/goods/115050039" rel="nofollow noopener noreferrer" target="_blank">회복기</a></div>
-        <div class="rl-byline">허은실 · 문학동네</div>
-        <a class="rl-source" href="https://www.instagram.com/p/DdaH8IeDxrN/?utm_source=ig_web_copy_link&amp;stkn=MzRlODBiNWFlZA==" rel="nofollow noopener noreferrer" target="_blank">📺 출처 보기</a>
-        <button type="button" class="heart-btn sm" data-heart="b:회복기" aria-pressed="false" aria-label="이 책에 하트" title="이 책에 하트" hidden><span class="heart-ico" aria-hidden="true">♡</span><span class="heart-n"></span></button>
-      </div>
-    </li>
-      </ol>
     </div>
     <p class="muted">5권은 다른 셀럽도 함께 추천한 책이에요. 아래 목록에서 함께 추천한 셀럽 이름을 볼 수 있어요.</p>
     <div id="shelf-area">
@@ -530,7 +471,7 @@
     <a class="sp is-new" style="--c:hsl(319,57%,44%);--w:37px;--fs:15px" href="https://www.yes24.com/product/goods/115050039" rel="nofollow noopener noreferrer" target="_blank" title="회복기"><span class="sp-t"><i>회복기</i></span><img class="sp-i" src="https://image.yes24.com/goods/115050039/side" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.parentNode.classList.add('sp-fail');this.remove()" onload="if(this.naturalWidth/this.naturalHeight>0.4){this.parentNode.classList.add('sp-fail');this.remove()}"><span class="sp-new" data-added="2026-09-23">NEW</span></a>
     </div>
     <ol class="reading-list" id="rlist">
-    <li class="rl-item">
+    <li class="rl-item" id="b1">
       <span class="rl-num">1</span>
       <a class="rl-cover" href="https://www.yes24.com/product/goods/9000389" rel="nofollow noopener noreferrer" target="_blank" aria-label="가벼운 나날 알라딘에서 보기"><img src="https://image.yes24.com/goods/9000389/L" alt="가벼운 나날 표지" loading="lazy"></a>
       <div class="rl-meta">
@@ -540,7 +481,7 @@
         <button type="button" class="heart-btn sm" data-heart="b:가벼운 나날" aria-pressed="false" aria-label="이 책에 하트" title="이 책에 하트" hidden><span class="heart-ico" aria-hidden="true">♡</span><span class="heart-n"></span></button>
       </div>
     </li>
-    <li class="rl-item">
+    <li class="rl-item" id="b2">
       <span class="rl-num">2</span>
       <a class="rl-cover" href="https://www.yes24.com/product/goods/1433435" rel="nofollow noopener noreferrer" target="_blank" aria-label="강의 알라딘에서 보기"><span class="rl-new" data-added="2026-09-23">NEW</span><img src="https://image.yes24.com/goods/1433435/L" alt="강의 표지" loading="lazy"></a>
       <div class="rl-meta">
@@ -551,7 +492,7 @@
       </div>
       <div class="rl-shared"><span class="rl-shared-label">👥 함께 추천한 셀럽 1명:</span> <a class="rl-celeb-chip" href="https://favorbook.co.kr/share/%ED%95%98%ED%98%84%EC%83%81.html">하현상</a></div>
     </li>
-    <li class="rl-item">
+    <li class="rl-item" id="b3">
       <span class="rl-num">3</span>
       <a class="rl-cover" href="https://www.yes24.com/product/goods/80386690" rel="nofollow noopener noreferrer" target="_blank" aria-label="다름 아닌 사랑과 자유 알라딘에서 보기"><span class="rl-new" data-added="2026-09-26">NEW</span><img src="https://image.yes24.com/goods/80386690/L" alt="다름 아닌 사랑과 자유 표지" loading="lazy"></a>
       <div class="rl-meta">
@@ -562,28 +503,30 @@
       </div>
       <div class="rl-shared"><span class="rl-shared-label">👥 함께 추천한 셀럽 1명:</span> <a class="rl-celeb-chip" href="https://favorbook.co.kr/share/%EC%A7%80%EC%9B%85%28P%EC%9B%90%ED%95%98%EB%AA%A8%EB%8B%88%29.html">지웅(P원하모니)</a></div>
     </li>
-    <li class="rl-item">
+    <li class="rl-item" id="b4">
       <span class="rl-num">4</span>
       <a class="rl-cover" href="https://www.yes24.com/product/goods/64694842" rel="nofollow noopener noreferrer" target="_blank" aria-label="당신이 옳다 알라딘에서 보기"><img src="https://image.yes24.com/goods/64694842/L" alt="당신이 옳다 표지" loading="lazy"></a>
       <div class="rl-meta">
         <div class="rl-title"><a href="https://www.yes24.com/product/goods/64694842" rel="nofollow noopener noreferrer" target="_blank">당신이 옳다</a></div>
         <div class="rl-byline">정혜신 · 해냄</div>
+        <p class="rl-comment">&#x27;밥블레스유2&#x27;에서 이 책의 한 대목을 소개했어요. 충고·조언·평가·판단을 하지 않는다는 대목이 크게 와닿았고, 도우려고 뱉은 바른말이 가장 폭력적일 수 있다는 걸 깨달았다고 했습니다. (출처: 채널예스 &#x27;셀럽의 책&#x27;)</p>
         <a class="rl-source" href="https://m.ch.yes24.com/article/details/41420" rel="nofollow noopener noreferrer" target="_blank">📺 출처 보기</a>
         <button type="button" class="heart-btn sm" data-heart="b:당신이 옳다" aria-pressed="false" aria-label="이 책에 하트" title="이 책에 하트" hidden><span class="heart-ico" aria-hidden="true">♡</span><span class="heart-n"></span></button>
       </div>
       <div class="rl-shared"><span class="rl-shared-label">👥 함께 추천한 셀럽 2명:</span> <a class="rl-celeb-chip" href="https://favorbook.co.kr/share/%ED%95%9C%EC%86%8C%ED%9D%AC.html">한소희</a><a class="rl-celeb-chip" href="https://favorbook.co.kr/share/%EB%A6%AC%EC%98%A4%28%EC%95%8C%ED%8C%8C%EB%93%9C%EB%9D%BC%EC%9D%B4%EB%B8%8C%EC%9B%90%29.html">리오(알파드라이브원)</a></div>
     </li>
-    <li class="rl-item">
+    <li class="rl-item" id="b5">
       <span class="rl-num">5</span>
       <a class="rl-cover" href="https://www.aladin.co.kr/shop/wproduct.aspx?ItemId=381929336&amp;partner=openAPI&amp;start=api" rel="nofollow noopener noreferrer" target="_blank" aria-label="목걸이 알라딘에서 보기"><img src="https://image.aladin.co.kr/product/38192/93/cover500/k082034605_1.jpg" alt="목걸이 표지" loading="lazy"></a>
       <div class="rl-meta">
         <div class="rl-title"><a href="https://www.aladin.co.kr/shop/wproduct.aspx?ItemId=381929336&amp;partner=openAPI&amp;start=api" rel="nofollow noopener noreferrer" target="_blank">목걸이</a></div>
         <div class="rl-byline">기 드 모파상 · 칼로스</div>
+        <p class="rl-comment">&#x27;100인의 배우, 세계 문학을 읽다&#x27; 오디오북에서 모파상의 단편 &#x27;목걸이&#x27;를 낭독했어요. (출처: 밀리의서재)</p>
         <a class="rl-source" href="https://www.millie.co.kr/v4/book/1b6047d0b45f411f" rel="nofollow noopener noreferrer" target="_blank">📺 출처 보기</a>
         <button type="button" class="heart-btn sm" data-heart="b:목걸이" aria-pressed="false" aria-label="이 책에 하트" title="이 책에 하트" hidden><span class="heart-ico" aria-hidden="true">♡</span><span class="heart-n"></span></button>
       </div>
     </li>
-    <li class="rl-item">
+    <li class="rl-item" id="b6">
       <span class="rl-num">6</span>
       <a class="rl-cover" href="https://www.yes24.com/product/goods/112392703" rel="nofollow noopener noreferrer" target="_blank" aria-label="불교를 철학하다 알라딘에서 보기"><span class="rl-new" data-added="2026-09-23">NEW</span><img src="https://image.yes24.com/goods/112392703/L" alt="불교를 철학하다 표지" loading="lazy"></a>
       <div class="rl-meta">
@@ -593,7 +536,7 @@
         <button type="button" class="heart-btn sm" data-heart="b:불교를 철학하다" aria-pressed="false" aria-label="이 책에 하트" title="이 책에 하트" hidden><span class="heart-ico" aria-hidden="true">♡</span><span class="heart-n"></span></button>
       </div>
     </li>
-    <li class="rl-item">
+    <li class="rl-item" id="b7">
       <span class="rl-num">7</span>
       <a class="rl-cover" href="https://www.yes24.com/product/goods/117012879" rel="nofollow noopener noreferrer" target="_blank" aria-label="시간이 조금 걸리더라도 알라딘에서 보기"><span class="rl-new" data-added="2026-09-26">NEW</span><img src="https://image.yes24.com/goods/117012879/L" alt="시간이 조금 걸리더라도 표지" loading="lazy"></a>
       <div class="rl-meta">
@@ -604,7 +547,7 @@
       </div>
       <div class="rl-shared"><span class="rl-shared-label">👥 함께 추천한 셀럽 1명:</span> <a class="rl-celeb-chip" href="https://favorbook.co.kr/share/%EC%9C%A4%EB%8D%95%EC%9B%90%28%EB%B8%8C%EB%A1%9C%EC%BD%9C%EB%A6%AC%EB%84%88%EB%A7%88%EC%A0%80%29.html">윤덕원(브로콜리너마저)</a></div>
     </li>
-    <li class="rl-item">
+    <li class="rl-item" id="b8">
       <span class="rl-num">8</span>
       <a class="rl-cover" href="https://www.yes24.com/product/goods/29334433" rel="nofollow noopener noreferrer" target="_blank" aria-label="야생연극 알라딘에서 보기"><span class="rl-new" data-added="2026-09-23">NEW</span><img src="https://image.yes24.com/goods/29334433/L" alt="야생연극 표지" loading="lazy"></a>
       <div class="rl-meta">
@@ -615,7 +558,7 @@
       </div>
       <div class="rl-shared"><span class="rl-shared-label">👥 함께 추천한 셀럽 2명:</span> <a class="rl-celeb-chip" href="https://favorbook.co.kr/share/%EC%A0%84%EC%97%AC%EB%B9%88.html">전여빈</a><a class="rl-celeb-chip" href="https://favorbook.co.kr/share/%EC%95%88%EC%9D%80%EC%A7%84.html">안은진</a></div>
     </li>
-    <li class="rl-item">
+    <li class="rl-item" id="b9">
       <span class="rl-num">9</span>
       <a class="rl-cover" href="https://www.yes24.com/product/goods/36917853" rel="nofollow noopener noreferrer" target="_blank" aria-label="어린 나무의 눈을 털어주다 알라딘에서 보기"><span class="rl-new" data-added="2026-09-23">NEW</span><img src="https://image.yes24.com/goods/36917853/L" alt="어린 나무의 눈을 털어주다 표지" loading="lazy"></a>
       <div class="rl-meta">
@@ -625,7 +568,7 @@
         <button type="button" class="heart-btn sm" data-heart="b:어린 나무의 눈을 털어주다" aria-pressed="false" aria-label="이 책에 하트" title="이 책에 하트" hidden><span class="heart-ico" aria-hidden="true">♡</span><span class="heart-n"></span></button>
       </div>
     </li>
-    <li class="rl-item">
+    <li class="rl-item" id="b10">
       <span class="rl-num">10</span>
       <a class="rl-cover" href="https://www.yes24.com/product/goods/175476999" rel="nofollow noopener noreferrer" target="_blank" aria-label="죽은 이는 모두 날아오른다 알라딘에서 보기"><img src="https://image.yes24.com/goods/175476999/L" alt="죽은 이는 모두 날아오른다 표지" loading="lazy"></a>
       <div class="rl-meta">
@@ -635,7 +578,7 @@
         <button type="button" class="heart-btn sm" data-heart="b:죽은 이는 모두 날아오른다" aria-pressed="false" aria-label="이 책에 하트" title="이 책에 하트" hidden><span class="heart-ico" aria-hidden="true">♡</span><span class="heart-n"></span></button>
       </div>
     </li>
-    <li class="rl-item">
+    <li class="rl-item" id="b11">
       <span class="rl-num">11</span>
       <a class="rl-cover" href="https://www.yes24.com/product/goods/115050039" rel="nofollow noopener noreferrer" target="_blank" aria-label="회복기 알라딘에서 보기"><span class="rl-new" data-added="2026-09-23">NEW</span><img src="https://image.yes24.com/goods/115050039/L" alt="회복기 표지" loading="lazy"></a>
       <div class="rl-meta">

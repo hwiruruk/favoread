@@ -499,8 +499,15 @@
              background-size: 100% var(--row); background-repeat: repeat-y; }
     .new-sec { margin: 16px 0 6px; padding: 12px 12px 2px; background: #fffbe6; border: 2px dashed #000; }
     .new-sec-h { display: flex; align-items: center; gap: 8px; margin: 0 0 10px; font-size: 15px; font-weight: 800; }
-    .new-sec .reading-list { margin: 0; }
-    .rl-num.rl-num-new { font-size: 11px; letter-spacing: .04em; }
+    .rl-item { scroll-margin-top: 16px; }
+    .rl-item:target { outline: 3px solid #fde047; outline-offset: 2px; }
+    .new-tiles { display: flex; flex-wrap: wrap; gap: 12px; padding-bottom: 10px; }
+    .new-tile { width: 84px; color: #000; text-decoration: none; display: flex; flex-direction: column; gap: 5px; }
+    .new-tile:hover { text-decoration: none; transform: translateY(-2px); }
+    .nt-cover { display: block; width: 84px; aspect-ratio: 2/3; border: 1.5px solid #000; box-shadow: 2px 2px 0 0 #000; background: #f4f4f0; overflow: hidden; }
+    .nt-cover img { width: 100%; height: 100%; object-fit: cover; display: block; }
+    .nt-no-cover { display: flex; width: 100%; height: 100%; align-items: center; justify-content: center; font-size: 22px; }
+    .nt-title { font-size: 12px; font-weight: 700; line-height: 1.3; word-break: keep-all; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
     .rl-new-tag { font-size: 9px; font-weight: 800; letter-spacing: .06em; line-height: 1; padding: 3px 5px;
                   background: #fde047; color: #000; border: 1.5px solid #000; }
     .sp { position: relative; flex: none; width: auto; height: var(--sh-h);
@@ -522,7 +529,7 @@
               font-size: 8px; line-height: 1; padding: 3px 0 2px;
               border-bottom: 1px solid rgba(0,0,0,.55); }
     .sp.is-new .sp-t { padding-top: 22px; }
-    .is-capturing .sp-new, .is-capturing .rl-new, .is-capturing .rl-shared { display: none !important; }
+    .is-capturing .sp-new, .is-capturing .rl-new, .is-capturing .rl-shared, .is-capturing .rl-comment { display: none !important; }
     .is-capturing .sp.is-new .sp-t { padding-top: 14px; }
     @media (max-width: 480px) { .shelf { --sh-h: 205px; }
                                  .sp.no-img, .sp.sp-fail { width: calc(var(--w, 38px) * .88); }
@@ -549,6 +556,7 @@
     .rl-title a { color: #000; }
     .rl-title a:hover { color: #2563eb; }
     .rl-byline { font-size: 13px; color: #555; margin-bottom: 8px; line-height: 1.4; }
+    .rl-comment { font-size: 13px; line-height: 1.55; color: #222; background: #FFF7C2; border: 1.5px solid #000; padding: 6px 9px; margin: 0 0 8px; word-break: keep-all; }
     .rl-source { display: inline-block; font-size: 12px; padding: 3px 8px; background: #fff; border: 1.5px solid #000; box-shadow: 1px 1px 0 0 #000; text-decoration: none; color: #000; transition: transform .1s, box-shadow .1s, background .1s; }
     .rl-source:hover { transform: translate(-1px,-1px); box-shadow: 2px 2px 0 0 #000; background: #a7f3d0; text-decoration: none; }
     @media (max-width: 480px) { .rl-item { padding: 14px 12px 14px 46px; } .rl-num { width: 32px; height: 26px; font-size: 12px; } .rl-cover { width: 60px; height: 88px; margin-right: 10px; } .rl-meta { min-height: 88px; } .rl-title { font-size: 15px; } }
@@ -610,7 +618,7 @@
     <a class="sp" style="--c:hsl(314,55%,40%);--w:37px;--fs:14px" href="https://www.yes24.com/product/goods/6259976" rel="nofollow noopener noreferrer" target="_blank" title="Who Ate up All the Shinga?"><span class="sp-t"><i>Who Ate up All the Shinga?</i></span><img class="sp-i" src="https://image.yes24.com/goods/6259976/side" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.parentNode.classList.add('sp-fail');this.remove()" onload="if(this.naturalWidth/this.naturalHeight>0.4){this.parentNode.classList.add('sp-fail');this.remove()}"></a>
     </div>
     <ol class="reading-list" id="rlist">
-    <li class="rl-item">
+    <li class="rl-item" id="b1">
       <span class="rl-num">1</span>
       <a class="rl-cover" href="https://www.yes24.com/product/goods/144414985" rel="nofollow noopener noreferrer" target="_blank" aria-label="A Christmas Carol — buy or read more"><img src="https://image.yes24.com/goods/144414985/L" alt="A Christmas Carol by Charles Dickens — book cover" loading="lazy"></a>
       <div class="rl-meta">
@@ -620,7 +628,7 @@
         <button type="button" class="heart-btn sm" data-heart="b:크리스마스 캐럴" aria-pressed="false" aria-label="Heart this book" title="Heart this book" hidden><span class="heart-ico" aria-hidden="true">♡</span><span class="heart-n"></span></button>
       </div>
     </li>
-    <li class="rl-item">
+    <li class="rl-item" id="b2">
       <span class="rl-num">2</span>
       <a class="rl-cover" href="https://www.yes24.com/product/goods/7007186" rel="nofollow noopener noreferrer" target="_blank" aria-label="A Moveable Feast — buy or read more"><img src="https://image.yes24.com/goods/7007186/L" alt="A Moveable Feast by Ernest Hemingway — book cover" loading="lazy"></a>
       <div class="rl-meta">
@@ -630,7 +638,7 @@
         <button type="button" class="heart-btn sm" data-heart="b:파리는 날마다 축제" aria-pressed="false" aria-label="Heart this book" title="Heart this book" hidden><span class="heart-ico" aria-hidden="true">♡</span><span class="heart-n"></span></button>
       </div>
     </li>
-    <li class="rl-item">
+    <li class="rl-item" id="b3">
       <span class="rl-num">3</span>
       <a class="rl-cover" href="https://www.yes24.com/product/goods/86680050" rel="nofollow noopener noreferrer" target="_blank" aria-label="Anyway, Haruki — buy or read more"><img src="https://image.yes24.com/goods/86680050/L" alt="Anyway, Haruki by Lee Jisu — book cover" loading="lazy"></a>
       <div class="rl-meta">
@@ -640,7 +648,7 @@
         <button type="button" class="heart-btn sm" data-heart="b:아무튼, 하루키" aria-pressed="false" aria-label="Heart this book" title="Heart this book" hidden><span class="heart-ico" aria-hidden="true">♡</span><span class="heart-n"></span></button>
       </div>
     </li>
-    <li class="rl-item">
+    <li class="rl-item" id="b4">
       <span class="rl-num">4</span>
       <a class="rl-cover" href="https://www.yes24.com/product/goods/103649004" rel="nofollow noopener noreferrer" target="_blank" aria-label="Burger King — buy or read more"><img src="https://image.yes24.com/goods/103649004/L" alt="Burger King by James W. Mclamore — book cover" loading="lazy"></a>
       <div class="rl-meta">
@@ -650,7 +658,7 @@
         <button type="button" class="heart-btn sm" data-heart="b:버거킹" aria-pressed="false" aria-label="Heart this book" title="Heart this book" hidden><span class="heart-ico" aria-hidden="true">♡</span><span class="heart-n"></span></button>
       </div>
     </li>
-    <li class="rl-item">
+    <li class="rl-item" id="b5">
       <span class="rl-num">5</span>
       <a class="rl-cover" href="https://www.yes24.com/product/goods/59674136" rel="nofollow noopener noreferrer" target="_blank" aria-label="Gastrophysics — buy or read more"><img src="https://image.yes24.com/goods/59674136/L" alt="Gastrophysics by Charles Spence — book cover" loading="lazy"></a>
       <div class="rl-meta">
@@ -660,7 +668,7 @@
         <button type="button" class="heart-btn sm" data-heart="b:왜 맛있을까" aria-pressed="false" aria-label="Heart this book" title="Heart this book" hidden><span class="heart-ico" aria-hidden="true">♡</span><span class="heart-n"></span></button>
       </div>
     </li>
-    <li class="rl-item">
+    <li class="rl-item" id="b6">
       <span class="rl-num">6</span>
       <a class="rl-cover" href="https://www.yes24.com/product/goods/57197" rel="nofollow noopener noreferrer" target="_blank" aria-label="Hamlet — buy or read more"><img src="https://image.yes24.com/goods/57197/L" alt="Hamlet by William Shakespeare — book cover" loading="lazy"></a>
       <div class="rl-meta">
@@ -670,7 +678,7 @@
         <button type="button" class="heart-btn sm" data-heart="b:햄릿" aria-pressed="false" aria-label="Heart this book" title="Heart this book" hidden><span class="heart-ico" aria-hidden="true">♡</span><span class="heart-n"></span></button>
       </div>
     </li>
-    <li class="rl-item">
+    <li class="rl-item" id="b7">
       <span class="rl-num">7</span>
       <a class="rl-cover" href="https://www.yes24.com/product/goods/1785733" rel="nofollow noopener noreferrer" target="_blank" aria-label="In the Solitude of Cotton Fields — buy or read more"><img src="https://image.yes24.com/goods/1785733/L" alt="In the Solitude of Cotton Fields by Bernard Marie Coltes — book cover" loading="lazy"></a>
       <div class="rl-meta">
@@ -680,7 +688,7 @@
         <button type="button" class="heart-btn sm" data-heart="b:목화밭의 고독 속에서" aria-pressed="false" aria-label="Heart this book" title="Heart this book" hidden><span class="heart-ico" aria-hidden="true">♡</span><span class="heart-n"></span></button>
       </div>
     </li>
-    <li class="rl-item">
+    <li class="rl-item" id="b8">
       <span class="rl-num">8</span>
       <a class="rl-cover" href="https://www.yes24.com/product/goods/1440642" rel="nofollow noopener noreferrer" target="_blank" aria-label="Knulp — buy or read more"><img src="https://image.yes24.com/goods/1440642/L" alt="Knulp by Hermann Hesse — book cover" loading="lazy"></a>
       <div class="rl-meta">
@@ -690,7 +698,7 @@
         <button type="button" class="heart-btn sm" data-heart="b:크눌프" aria-pressed="false" aria-label="Heart this book" title="Heart this book" hidden><span class="heart-ico" aria-hidden="true">♡</span><span class="heart-n"></span></button>
       </div>
     </li>
-    <li class="rl-item">
+    <li class="rl-item" id="b9">
       <span class="rl-num">9</span>
       <a class="rl-cover" href="https://www.yes24.com/product/goods/2546383" rel="nofollow noopener noreferrer" target="_blank" aria-label="L&#x27;Amant — buy or read more"><img src="https://image.yes24.com/goods/2546383/L" alt="L&#x27;Amant by Marguerite Duras — book cover" loading="lazy"></a>
       <div class="rl-meta">
@@ -700,7 +708,7 @@
         <button type="button" class="heart-btn sm" data-heart="b:연인" aria-pressed="false" aria-label="Heart this book" title="Heart this book" hidden><span class="heart-ico" aria-hidden="true">♡</span><span class="heart-n"></span></button>
       </div>
     </li>
-    <li class="rl-item">
+    <li class="rl-item" id="b10">
       <span class="rl-num">10</span>
       <a class="rl-cover" href="https://www.yes24.com/product/goods/3657268" rel="nofollow noopener noreferrer" target="_blank" aria-label="L&#x27;insoutenable légèreté de l&#x27;être — buy or read more"><img src="https://image.yes24.com/goods/3657268/L" alt="L&#x27;insoutenable légèreté de l&#x27;être by Milan Kundera — book cover" loading="lazy"></a>
       <div class="rl-meta">
@@ -710,7 +718,7 @@
         <button type="button" class="heart-btn sm" data-heart="b:참을 수 없는 존재의 가벼움" aria-pressed="false" aria-label="Heart this book" title="Heart this book" hidden><span class="heart-ico" aria-hidden="true">♡</span><span class="heart-n"></span></button>
       </div>
     </li>
-    <li class="rl-item">
+    <li class="rl-item" id="b11">
       <span class="rl-num">11</span>
       <a class="rl-cover" href="https://www.yes24.com/product/goods/35084734" rel="nofollow noopener noreferrer" target="_blank" aria-label="La hojarasca — buy or read more"><img src="https://image.yes24.com/goods/35084734/L" alt="La hojarasca by Gabriel García Márquez — book cover" loading="lazy"></a>
       <div class="rl-meta">
@@ -720,7 +728,7 @@
         <button type="button" class="heart-btn sm" data-heart="b:썩은 잎" aria-pressed="false" aria-label="Heart this book" title="Heart this book" hidden><span class="heart-ico" aria-hidden="true">♡</span><span class="heart-n"></span></button>
       </div>
     </li>
-    <li class="rl-item">
+    <li class="rl-item" id="b12">
       <span class="rl-num">12</span>
       <a class="rl-cover" href="https://www.yes24.com/product/goods/1422121" rel="nofollow noopener noreferrer" target="_blank" aria-label="Like Water for Chocolate — buy or read more"><img src="https://image.yes24.com/goods/1422121/L" alt="Like Water for Chocolate by Laura Esquivel — book cover" loading="lazy"></a>
       <div class="rl-meta">
@@ -730,7 +738,7 @@
         <button type="button" class="heart-btn sm" data-heart="b:달콤 쌉싸름한 초콜릿" aria-pressed="false" aria-label="Heart this book" title="Heart this book" hidden><span class="heart-ico" aria-hidden="true">♡</span><span class="heart-n"></span></button>
       </div>
     </li>
-    <li class="rl-item">
+    <li class="rl-item" id="b13">
       <span class="rl-num">13</span>
       <a class="rl-cover" href="https://www.yes24.com/product/goods/432945" rel="nofollow noopener noreferrer" target="_blank" aria-label="Love in the Time of Cholera — buy or read more"><img src="https://image.yes24.com/goods/432945/L" alt="Love in the Time of Cholera by Gabriel García Márquez — book cover" loading="lazy"></a>
       <div class="rl-meta">
@@ -740,7 +748,7 @@
         <button type="button" class="heart-btn sm" data-heart="b:콜레라 시대의 사랑" aria-pressed="false" aria-label="Heart this book" title="Heart this book" hidden><span class="heart-ico" aria-hidden="true">♡</span><span class="heart-n"></span></button>
       </div>
     </li>
-    <li class="rl-item">
+    <li class="rl-item" id="b14">
       <span class="rl-num">14</span>
       <a class="rl-cover" href="https://www.yes24.com/product/goods/44499829" rel="nofollow noopener noreferrer" target="_blank" aria-label="Norwegian Wood — buy or read more"><img src="https://image.yes24.com/goods/44499829/L" alt="Norwegian Wood by Haruki Murakami — book cover" loading="lazy"></a>
       <div class="rl-meta">
@@ -750,7 +758,7 @@
         <button type="button" class="heart-btn sm" data-heart="b:노르웨이의 숲" aria-pressed="false" aria-label="Heart this book" title="Heart this book" hidden><span class="heart-ico" aria-hidden="true">♡</span><span class="heart-n"></span></button>
       </div>
     </li>
-    <li class="rl-item">
+    <li class="rl-item" id="b15">
       <span class="rl-num">15</span>
       <a class="rl-cover" href="https://www.yes24.com/product/goods/36921296" rel="nofollow noopener noreferrer" target="_blank" aria-label="On Food and Cooking — buy or read more"><img src="https://image.yes24.com/goods/36921296/L" alt="On Food and Cooking by Harold Mcgee — book cover" loading="lazy"></a>
       <div class="rl-meta">
@@ -760,27 +768,29 @@
         <button type="button" class="heart-btn sm" data-heart="b:음식과 요리" aria-pressed="false" aria-label="Heart this book" title="Heart this book" hidden><span class="heart-ico" aria-hidden="true">♡</span><span class="heart-n"></span></button>
       </div>
     </li>
-    <li class="rl-item">
+    <li class="rl-item" id="b16">
       <span class="rl-num">16</span>
       <a class="rl-cover" href="https://www.yes24.com/product/goods/169631372" rel="nofollow noopener noreferrer" target="_blank" aria-label="Tastes and Traditions — buy or read more"><img src="https://image.yes24.com/goods/169631372/L" alt="Tastes and Traditions by Natalie Cook — book cover" loading="lazy"></a>
       <div class="rl-meta">
         <div class="rl-title"><a href="https://www.yes24.com/product/goods/169631372" rel="nofollow noopener noreferrer" target="_blank">Tastes and Traditions</a> <span style="color:#888;font-size:12px;font-weight:400">(미식가의 메뉴판)</span></div>
         <div class="rl-byline">Natalie Cook</div>
+        <p class="rl-comment">Chef Son Jong-won wrote the foreword, calling it a museum of menus from around the world, arranged by era and culture. (Source: Aladin)</p>
         <a class="rl-source" href="https://www.aladin.co.kr/shop/wproduct.aspx?ItemId=381508575" rel="nofollow noopener noreferrer" target="_blank">📺 Source</a>
         <button type="button" class="heart-btn sm" data-heart="b:미식가의 메뉴판" aria-pressed="false" aria-label="Heart this book" title="Heart this book" hidden><span class="heart-ico" aria-hidden="true">♡</span><span class="heart-n"></span></button>
       </div>
     </li>
-    <li class="rl-item">
+    <li class="rl-item" id="b17">
       <span class="rl-num">17</span>
       <a class="rl-cover" href="https://www.yes24.com/product/goods/204300" rel="nofollow noopener noreferrer" target="_blank" aria-label="The Catcher in the Rye — buy or read more"><img src="https://image.yes24.com/goods/204300/L" alt="The Catcher in the Rye by J. D. Salinger — book cover" loading="lazy"></a>
       <div class="rl-meta">
         <div class="rl-title"><a href="https://www.yes24.com/product/goods/204300" rel="nofollow noopener noreferrer" target="_blank">The Catcher in the Rye</a> <span style="color:#888;font-size:12px;font-weight:400">(호밀밭의 파수꾼)</span></div>
         <div class="rl-byline">J. D. Salinger</div>
+        <p class="rl-comment">One of three favorites Son Jong-won named when a fan asked; all three are about passing through loss, confusion and wandering rather than tidy success. (Source: Harper&#x27;s Bazaar Korea)</p>
         <a class="rl-source" href="https://www.harpersbazaar.co.kr/article/1894892" rel="nofollow noopener noreferrer" target="_blank">📺 Source</a>
         <button type="button" class="heart-btn sm" data-heart="b:호밀밭의 파수꾼" aria-pressed="false" aria-label="Heart this book" title="Heart this book" hidden><span class="heart-ico" aria-hidden="true">♡</span><span class="heart-n"></span></button>
       </div>
     </li>
-    <li class="rl-item">
+    <li class="rl-item" id="b18">
       <span class="rl-num">18</span>
       <a class="rl-cover" href="https://www.yes24.com/product/goods/370331" rel="nofollow noopener noreferrer" target="_blank" aria-label="The Great Gatsby — buy or read more"><img src="https://image.yes24.com/goods/370331/L" alt="The Great Gatsby by F. Scott Fitzgerald — book cover" loading="lazy"></a>
       <div class="rl-meta">
@@ -790,7 +800,7 @@
         <button type="button" class="heart-btn sm" data-heart="b:위대한 개츠비" aria-pressed="false" aria-label="Heart this book" title="Heart this book" hidden><span class="heart-ico" aria-hidden="true">♡</span><span class="heart-n"></span></button>
       </div>
     </li>
-    <li class="rl-item">
+    <li class="rl-item" id="b19">
       <span class="rl-num">19</span>
       <a class="rl-cover" href="https://www.yes24.com/product/goods/6259976" rel="nofollow noopener noreferrer" target="_blank" aria-label="Who Ate up All the Shinga? — buy or read more"><img src="https://image.yes24.com/goods/6259976/L" alt="Who Ate up All the Shinga? by Park Wan-suh — book cover" loading="lazy"></a>
       <div class="rl-meta">

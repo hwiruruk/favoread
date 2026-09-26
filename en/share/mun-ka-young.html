@@ -409,8 +409,15 @@
              background-size: 100% var(--row); background-repeat: repeat-y; }
     .new-sec { margin: 16px 0 6px; padding: 12px 12px 2px; background: #fffbe6; border: 2px dashed #000; }
     .new-sec-h { display: flex; align-items: center; gap: 8px; margin: 0 0 10px; font-size: 15px; font-weight: 800; }
-    .new-sec .reading-list { margin: 0; }
-    .rl-num.rl-num-new { font-size: 11px; letter-spacing: .04em; }
+    .rl-item { scroll-margin-top: 16px; }
+    .rl-item:target { outline: 3px solid #fde047; outline-offset: 2px; }
+    .new-tiles { display: flex; flex-wrap: wrap; gap: 12px; padding-bottom: 10px; }
+    .new-tile { width: 84px; color: #000; text-decoration: none; display: flex; flex-direction: column; gap: 5px; }
+    .new-tile:hover { text-decoration: none; transform: translateY(-2px); }
+    .nt-cover { display: block; width: 84px; aspect-ratio: 2/3; border: 1.5px solid #000; box-shadow: 2px 2px 0 0 #000; background: #f4f4f0; overflow: hidden; }
+    .nt-cover img { width: 100%; height: 100%; object-fit: cover; display: block; }
+    .nt-no-cover { display: flex; width: 100%; height: 100%; align-items: center; justify-content: center; font-size: 22px; }
+    .nt-title { font-size: 12px; font-weight: 700; line-height: 1.3; word-break: keep-all; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
     .rl-new-tag { font-size: 9px; font-weight: 800; letter-spacing: .06em; line-height: 1; padding: 3px 5px;
                   background: #fde047; color: #000; border: 1.5px solid #000; }
     .sp { position: relative; flex: none; width: auto; height: var(--sh-h);
@@ -432,7 +439,7 @@
               font-size: 8px; line-height: 1; padding: 3px 0 2px;
               border-bottom: 1px solid rgba(0,0,0,.55); }
     .sp.is-new .sp-t { padding-top: 22px; }
-    .is-capturing .sp-new, .is-capturing .rl-new, .is-capturing .rl-shared { display: none !important; }
+    .is-capturing .sp-new, .is-capturing .rl-new, .is-capturing .rl-shared, .is-capturing .rl-comment { display: none !important; }
     .is-capturing .sp.is-new .sp-t { padding-top: 14px; }
     @media (max-width: 480px) { .shelf { --sh-h: 205px; }
                                  .sp.no-img, .sp.sp-fail { width: calc(var(--w, 38px) * .88); }
@@ -459,6 +466,7 @@
     .rl-title a { color: #000; }
     .rl-title a:hover { color: #2563eb; }
     .rl-byline { font-size: 13px; color: #555; margin-bottom: 8px; line-height: 1.4; }
+    .rl-comment { font-size: 13px; line-height: 1.55; color: #222; background: #FFF7C2; border: 1.5px solid #000; padding: 6px 9px; margin: 0 0 8px; word-break: keep-all; }
     .rl-source { display: inline-block; font-size: 12px; padding: 3px 8px; background: #fff; border: 1.5px solid #000; box-shadow: 1px 1px 0 0 #000; text-decoration: none; color: #000; transition: transform .1s, box-shadow .1s, background .1s; }
     .rl-source:hover { transform: translate(-1px,-1px); box-shadow: 2px 2px 0 0 #000; background: #a7f3d0; text-decoration: none; }
     @media (max-width: 480px) { .rl-item { padding: 14px 12px 14px 46px; } .rl-num { width: 32px; height: 26px; font-size: 12px; } .rl-cover { width: 60px; height: 88px; margin-right: 10px; } .rl-meta { min-height: 88px; } .rl-title { font-size: 15px; } }
@@ -499,18 +507,9 @@
     </div>
     <div class="new-sec">
       <h3 class="new-sec-h"><span class="rl-new-tag">NEW</span> New in the last 10 days (1 book)</h3>
-      <ol class="reading-list">
-    <li class="rl-item">
-      <span class="rl-num rl-num-new">NEW</span>
-      <a class="rl-cover" href="https://www.yes24.com/product/goods/118578901" rel="nofollow noopener noreferrer" target="_blank" aria-label="Hunger — buy or read more"><span class="rl-new" data-added="2026-09-26">NEW</span><img src="https://image.yes24.com/goods/118578901/L" alt="Hunger by 최진영 — book cover" loading="lazy"></a>
-      <div class="rl-meta">
-        <div class="rl-title"><a href="https://www.yes24.com/product/goods/118578901" rel="nofollow noopener noreferrer" target="_blank">Hunger</a> <span style="color:#888;font-size:12px;font-weight:400">(구의 증명)</span></div>
-        <div class="rl-byline">최진영</div>
-        <a class="rl-source" href="https://x.com/ehbook/status/1910544334468112395?s=20" rel="nofollow noopener noreferrer" target="_blank">📺 Source</a>
-        <button type="button" class="heart-btn sm" data-heart="b:구의 증명" aria-pressed="false" aria-label="Heart this book" title="Heart this book" hidden><span class="heart-ico" aria-hidden="true">♡</span><span class="heart-n"></span></button>
+      <div class="new-tiles">
+        <a class="new-tile" href="#b5"><span class="nt-cover"><img src="https://image.yes24.com/goods/118578901/L" alt="Hunger by 최진영 — book cover" loading="lazy"></span><span class="nt-title">Hunger</span></a>
       </div>
-    </li>
-      </ol>
     </div>
     <div id="shelf-area">
     <div class="shelf" id="shelf">
@@ -530,7 +529,7 @@
     <a class="sp" style="--c:hsl(128,41%,35%);--w:44px;--fs:15px" href="https://www.yes24.com/product/goods/3452430" rel="nofollow noopener noreferrer" target="_blank" title="The Razor&#x27;s Edge"><span class="sp-t"><i>The Razor&#x27;s Edge</i></span><img class="sp-i" src="https://image.yes24.com/goods/3452430/side" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.parentNode.classList.add('sp-fail');this.remove()" onload="if(this.naturalWidth/this.naturalHeight>0.4){this.parentNode.classList.add('sp-fail');this.remove()}"></a>
     </div>
     <ol class="reading-list" id="rlist">
-    <li class="rl-item">
+    <li class="rl-item" id="b1">
       <span class="rl-num">1</span>
       <a class="rl-cover" href="https://www.yes24.com/product/goods/64610378" rel="nofollow noopener noreferrer" target="_blank" aria-label="Analects — buy or read more"><img src="https://image.yes24.com/goods/64610378/L" alt="Analects by Confucius — book cover" loading="lazy"></a>
       <div class="rl-meta">
@@ -540,37 +539,40 @@
         <button type="button" class="heart-btn sm" data-heart="b:논어" aria-pressed="false" aria-label="Heart this book" title="Heart this book" hidden><span class="heart-ico" aria-hidden="true">♡</span><span class="heart-n"></span></button>
       </div>
     </li>
-    <li class="rl-item">
+    <li class="rl-item" id="b2">
       <span class="rl-num">2</span>
       <a class="rl-cover" href="https://www.yes24.com/product/goods/17352" rel="nofollow noopener noreferrer" target="_blank" aria-label="Animal Farm — buy or read more"><img src="https://image.yes24.com/goods/17352/L" alt="Animal Farm by George Orwell — book cover" loading="lazy"></a>
       <div class="rl-meta">
         <div class="rl-title"><a href="https://www.yes24.com/product/goods/17352" rel="nofollow noopener noreferrer" target="_blank">Animal Farm</a> <span style="color:#888;font-size:12px;font-weight:400">(동물농장)</span></div>
         <div class="rl-byline">George Orwell</div>
+        <p class="rl-comment">A recent finish Moon Ga-young recommends, even to co-star Kim Dong-wook: it can be a lot of fun. (Source: Naver)</p>
         <a class="rl-source" href="https://naver.me/5K6S0jo6" rel="nofollow noopener noreferrer" target="_blank">📺 Source</a>
         <button type="button" class="heart-btn sm" data-heart="b:동물농장" aria-pressed="false" aria-label="Heart this book" title="Heart this book" hidden><span class="heart-ico" aria-hidden="true">♡</span><span class="heart-n"></span></button>
       </div>
     </li>
-    <li class="rl-item">
+    <li class="rl-item" id="b3">
       <span class="rl-num">3</span>
       <a class="rl-cover" href="https://www.yes24.com/product/goods/33631480" rel="nofollow noopener noreferrer" target="_blank" aria-label="A Room of One&#x27;s Own — buy or read more"><img src="https://image.yes24.com/goods/33631480/L" alt="A Room of One&#x27;s Own by Virginia Woolf — book cover" loading="lazy"></a>
       <div class="rl-meta">
         <div class="rl-title"><a href="https://www.yes24.com/product/goods/33631480" rel="nofollow noopener noreferrer" target="_blank">A Room of One&#x27;s Own</a> <span style="color:#888;font-size:12px;font-weight:400">(자기만의 방)</span></div>
         <div class="rl-byline">Virginia Woolf</div>
+        <p class="rl-comment">One of the feminist books Moon Ga-young has openly said to have read. (Source: Nate News)</p>
         <a class="rl-source" href="https://news.nate.com/view/20200520n04921" rel="nofollow noopener noreferrer" target="_blank">📺 Source</a>
         <button type="button" class="heart-btn sm" data-heart="b:자기만의 방" aria-pressed="false" aria-label="Heart this book" title="Heart this book" hidden><span class="heart-ico" aria-hidden="true">♡</span><span class="heart-n"></span></button>
       </div>
     </li>
-    <li class="rl-item">
+    <li class="rl-item" id="b4">
       <span class="rl-num">4</span>
       <a class="rl-cover" href="https://www.yes24.com/product/goods/145364909" rel="nofollow noopener noreferrer" target="_blank" aria-label="Deutsche Liebe — buy or read more"><img src="https://image.yes24.com/goods/145364909/L" alt="Deutsche Liebe by Friedrich Max Müller — book cover" loading="lazy"></a>
       <div class="rl-meta">
         <div class="rl-title"><a href="https://www.yes24.com/product/goods/145364909" rel="nofollow noopener noreferrer" target="_blank">Deutsche Liebe</a> <span style="color:#888;font-size:12px;font-weight:400">(독일인의 사랑)</span></div>
         <div class="rl-byline">Friedrich Max Müller</div>
+        <p class="rl-comment">Moon Ga-young suggested this book for the film&#x27;s read-aloud scene. (Source: Daum News)</p>
         <a class="rl-source" href="https://v.daum.net/v/20251226043604056?f=p" rel="nofollow noopener noreferrer" target="_blank">📺 Source</a>
         <button type="button" class="heart-btn sm" data-heart="b:독일인의 사랑" aria-pressed="false" aria-label="Heart this book" title="Heart this book" hidden><span class="heart-ico" aria-hidden="true">♡</span><span class="heart-n"></span></button>
       </div>
     </li>
-    <li class="rl-item">
+    <li class="rl-item" id="b5">
       <span class="rl-num">5</span>
       <a class="rl-cover" href="https://www.yes24.com/product/goods/118578901" rel="nofollow noopener noreferrer" target="_blank" aria-label="Hunger — buy or read more"><span class="rl-new" data-added="2026-09-26">NEW</span><img src="https://image.yes24.com/goods/118578901/L" alt="Hunger by 최진영 — book cover" loading="lazy"></a>
       <div class="rl-meta">
@@ -580,92 +582,101 @@
         <button type="button" class="heart-btn sm" data-heart="b:구의 증명" aria-pressed="false" aria-label="Heart this book" title="Heart this book" hidden><span class="heart-ico" aria-hidden="true">♡</span><span class="heart-n"></span></button>
       </div>
     </li>
-    <li class="rl-item">
+    <li class="rl-item" id="b6">
       <span class="rl-num">6</span>
       <a class="rl-cover" href="https://www.yes24.com/product/goods/108569727" rel="nofollow noopener noreferrer" target="_blank" aria-label="La comedia di Dante Alighieri — buy or read more"><img src="https://image.yes24.com/goods/108569727/L" alt="La comedia di Dante Alighieri by Dante Alighieri — book cover" loading="lazy"></a>
       <div class="rl-meta">
         <div class="rl-title"><a href="https://www.yes24.com/product/goods/108569727" rel="nofollow noopener noreferrer" target="_blank">La comedia di Dante Alighieri</a> <span style="color:#888;font-size:12px;font-weight:400">(신곡)</span></div>
         <div class="rl-byline">Dante Alighieri</div>
+        <p class="rl-comment">Finished while appearing on tvN&#x27;s book talk show. When thoughts pile up or mood dips, Moon Ga-young finds answers and calm in books. (Source: Chosun Ilbo)</p>
         <a class="rl-source" href="https://www.chosun.com/topclass/topclass_issue/2025/11/08/B7G3BLQY4ZEGFHI5YV7UVF2NYQ/" rel="nofollow noopener noreferrer" target="_blank">📺 Source</a>
         <button type="button" class="heart-btn sm" data-heart="b:신곡" aria-pressed="false" aria-label="Heart this book" title="Heart this book" hidden><span class="heart-ico" aria-hidden="true">♡</span><span class="heart-n"></span></button>
       </div>
     </li>
-    <li class="rl-item">
+    <li class="rl-item" id="b7">
       <span class="rl-num">7</span>
       <a class="rl-cover" href="https://www.yes24.com/product/goods/128262651" rel="nofollow noopener noreferrer" target="_blank" aria-label="La Fete de L&#x27;insignifiance — buy or read more"><img src="https://image.yes24.com/goods/128262651/L" alt="La Fete de L&#x27;insignifiance by Milan Kundera — book cover" loading="lazy"></a>
       <div class="rl-meta">
         <div class="rl-title"><a href="https://www.yes24.com/product/goods/128262651" rel="nofollow noopener noreferrer" target="_blank">La Fete de L&#x27;insignifiance</a> <span style="color:#888;font-size:12px;font-weight:400">(무의미의 축제)</span></div>
         <div class="rl-byline">Milan Kundera</div>
+        <p class="rl-comment">Moon Ga-young knows its page 147 line by heart: insignificance is the essence of existence. The first book to teach that the world needn&#x27;t always be taken seriously. (Source: Dong-A Ilbo)</p>
         <a class="rl-source" href="https://www.donga.com/news/amp/all/20180115/88181143/1" rel="nofollow noopener noreferrer" target="_blank">📺 Source</a>
         <button type="button" class="heart-btn sm" data-heart="b:무의미의 축제" aria-pressed="false" aria-label="Heart this book" title="Heart this book" hidden><span class="heart-ico" aria-hidden="true">♡</span><span class="heart-n"></span></button>
       </div>
     </li>
-    <li class="rl-item">
+    <li class="rl-item" id="b8">
       <span class="rl-num">8</span>
       <a class="rl-cover" href="https://www.yes24.com/product/goods/17849462" rel="nofollow noopener noreferrer" target="_blank" aria-label="Men Explain Things to Me — buy or read more"><img src="https://image.yes24.com/goods/17849462/L" alt="Men Explain Things to Me by Rebecca Solnit — book cover" loading="lazy"></a>
       <div class="rl-meta">
         <div class="rl-title"><a href="https://www.yes24.com/product/goods/17849462" rel="nofollow noopener noreferrer" target="_blank">Men Explain Things to Me</a> <span style="color:#888;font-size:12px;font-weight:400">(남자들은 자꾸 나를 가르치려 든다)</span></div>
         <div class="rl-byline">Rebecca Solnit</div>
+        <p class="rl-comment">One of the feminist books Moon Ga-young has openly said to have read. (Source: Nate News)</p>
         <a class="rl-source" href="https://news.nate.com/view/20200520n04921" rel="nofollow noopener noreferrer" target="_blank">📺 Source</a>
         <button type="button" class="heart-btn sm" data-heart="b:남자들은 자꾸 나를 가르치려 든다" aria-pressed="false" aria-label="Heart this book" title="Heart this book" hidden><span class="heart-ico" aria-hidden="true">♡</span><span class="heart-n"></span></button>
       </div>
     </li>
-    <li class="rl-item">
+    <li class="rl-item" id="b9">
       <span class="rl-num">9</span>
       <a class="rl-cover" href="https://www.yes24.com/product/goods/14791613" rel="nofollow noopener noreferrer" target="_blank" aria-label="Reading Women: How the Great Books of Feminism Changed My Life — buy or read more"><img src="https://image.yes24.com/goods/14791613/L" alt="Reading Women: How the Great Books of Feminism Changed My Life by Stefanie Stahl — book cover" loading="lazy"></a>
       <div class="rl-meta">
         <div class="rl-title"><a href="https://www.yes24.com/product/goods/14791613" rel="nofollow noopener noreferrer" target="_blank">Reading Women: How the Great Books of Feminism Changed My Life</a> <span style="color:#888;font-size:12px;font-weight:400">(빨래하는 페미니즘)</span></div>
         <div class="rl-byline">Stefanie Stahl</div>
+        <p class="rl-comment">One of the feminist books Moon Ga-young has openly said to have read. (Source: Nate News)</p>
         <a class="rl-source" href="https://news.nate.com/view/20200520n04921" rel="nofollow noopener noreferrer" target="_blank">📺 Source</a>
         <button type="button" class="heart-btn sm" data-heart="b:빨래하는 페미니즘" aria-pressed="false" aria-label="Heart this book" title="Heart this book" hidden><span class="heart-ico" aria-hidden="true">♡</span><span class="heart-n"></span></button>
       </div>
     </li>
-    <li class="rl-item">
+    <li class="rl-item" id="b10">
       <span class="rl-num">10</span>
       <a class="rl-cover" href="https://www.yes24.com/product/goods/2533908" rel="nofollow noopener noreferrer" target="_blank" aria-label="Running with Scissors: A Memoir — buy or read more"><img src="https://image.yes24.com/goods/2533908/L" alt="Running with Scissors: A Memoir by Augusten Burroughs — book cover" loading="lazy"></a>
       <div class="rl-meta">
         <div class="rl-title"><a href="https://www.yes24.com/product/goods/2533908" rel="nofollow noopener noreferrer" target="_blank">Running with Scissors: A Memoir</a> <span style="color:#888;font-size:12px;font-weight:400">(가위 들고 달리기)</span></div>
         <div class="rl-byline">Augusten Burroughs *</div>
+        <p class="rl-comment">Recommended by Moon Ga-young&#x27;s sister. It&#x27;s out of print, so tracking down a used copy took some effort. (Source: Marie Claire Korea)</p>
         <a class="rl-source" href="https://www.marieclairekorea.com/celebrity/2021/06/munkayoung-2/" rel="nofollow noopener noreferrer" target="_blank">📺 Source</a>
         <button type="button" class="heart-btn sm" data-heart="b:가위 들고 달리기" aria-pressed="false" aria-label="Heart this book" title="Heart this book" hidden><span class="heart-ico" aria-hidden="true">♡</span><span class="heart-n"></span></button>
       </div>
     </li>
-    <li class="rl-item">
+    <li class="rl-item" id="b11">
       <span class="rl-num">11</span>
       <a class="rl-cover" href="https://www.yes24.com/product/goods/96020239" rel="nofollow noopener noreferrer" target="_blank" aria-label="The Challenge of Feminism — buy or read more"><img src="https://image.yes24.com/goods/96020239/L" alt="The Challenge of Feminism by Jeong Hui-jin — book cover" loading="lazy"></a>
       <div class="rl-meta">
         <div class="rl-title"><a href="https://www.yes24.com/product/goods/96020239" rel="nofollow noopener noreferrer" target="_blank">The Challenge of Feminism</a> <span style="color:#888;font-size:12px;font-weight:400">(페미니즘의 도전)</span></div>
         <div class="rl-byline">Jeong Hui-jin</div>
+        <p class="rl-comment">One of the feminist books Moon Ga-young has openly said to have read. (Source: Nate News)</p>
         <a class="rl-source" href="https://news.nate.com/view/20200520n04921" rel="nofollow noopener noreferrer" target="_blank">📺 Source</a>
         <button type="button" class="heart-btn sm" data-heart="b:페미니즘의 도전" aria-pressed="false" aria-label="Heart this book" title="Heart this book" hidden><span class="heart-ico" aria-hidden="true">♡</span><span class="heart-n"></span></button>
       </div>
     </li>
-    <li class="rl-item">
+    <li class="rl-item" id="b12">
       <span class="rl-num">12</span>
       <a class="rl-cover" href="https://www.yes24.com/product/goods/102832804" rel="nofollow noopener noreferrer" target="_blank" aria-label="The Prince — buy or read more"><img src="https://image.yes24.com/goods/102832804/L" alt="The Prince by Niccolò Machiavelli — book cover" loading="lazy"></a>
       <div class="rl-meta">
         <div class="rl-title"><a href="https://www.yes24.com/product/goods/102832804" rel="nofollow noopener noreferrer" target="_blank">The Prince</a> <span style="color:#888;font-size:12px;font-weight:400">(군주론)</span></div>
         <div class="rl-byline">Niccolò Machiavelli</div>
+        <p class="rl-comment">She appeared on the episode of tvN&#x27;s book talk show devoted to The Prince. (Source: Kyeongin Ilbo)</p>
         <a class="rl-source" href="https://www.kyeongin.com/article/1458022" rel="nofollow noopener noreferrer" target="_blank">📺 Source</a>
         <button type="button" class="heart-btn sm" data-heart="b:군주론" aria-pressed="false" aria-label="Heart this book" title="Heart this book" hidden><span class="heart-ico" aria-hidden="true">♡</span><span class="heart-n"></span></button>
       </div>
     </li>
-    <li class="rl-item">
+    <li class="rl-item" id="b13">
       <span class="rl-num">13</span>
       <a class="rl-cover" href="https://www.yes24.com/product/goods/102366723" rel="nofollow noopener noreferrer" target="_blank" aria-label="The Pure and the Impure — buy or read more"><img src="https://image.yes24.com/goods/102366723/L" alt="The Pure and the Impure by Sidonie-Gabrielle Colette — book cover" loading="lazy"></a>
       <div class="rl-meta">
         <div class="rl-title"><a href="https://www.yes24.com/product/goods/102366723" rel="nofollow noopener noreferrer" target="_blank">The Pure and the Impure</a> <span style="color:#888;font-size:12px;font-weight:400">(순수와 비순수)</span></div>
         <div class="rl-byline">Sidonie-Gabrielle Colette</div>
+        <p class="rl-comment">Moon Ga-young&#x27;s pick, per Cosmopolitan: a novel about the mysterious, complex inner life behind human behavior. (Source: Cosmopolitan Korea)</p>
         <a class="rl-source" href="https://www.cosmopolitan.co.kr/article/1871533" rel="nofollow noopener noreferrer" target="_blank">📺 Source</a>
         <button type="button" class="heart-btn sm" data-heart="b:순수와 비순수" aria-pressed="false" aria-label="Heart this book" title="Heart this book" hidden><span class="heart-ico" aria-hidden="true">♡</span><span class="heart-n"></span></button>
       </div>
     </li>
-    <li class="rl-item">
+    <li class="rl-item" id="b14">
       <span class="rl-num">14</span>
       <a class="rl-cover" href="https://www.yes24.com/product/goods/3452430" rel="nofollow noopener noreferrer" target="_blank" aria-label="The Razor&#x27;s Edge — buy or read more"><img src="https://image.yes24.com/goods/3452430/L" alt="The Razor&#x27;s Edge by W. Somerset Maugham — book cover" loading="lazy"></a>
       <div class="rl-meta">
         <div class="rl-title"><a href="https://www.yes24.com/product/goods/3452430" rel="nofollow noopener noreferrer" target="_blank">The Razor&#x27;s Edge</a> <span style="color:#888;font-size:12px;font-weight:400">(면도날)</span></div>
         <div class="rl-byline">W. Somerset Maugham</div>
+        <p class="rl-comment">Known as the book Moon Ga-young rereads every year, a reminder of what life is really about. (Source: Personal blog)</p>
         <a class="rl-source" href="https://bookishreels.tistory.com/115" rel="nofollow noopener noreferrer" target="_blank">📺 Source</a>
         <button type="button" class="heart-btn sm" data-heart="b:면도날" aria-pressed="false" aria-label="Heart this book" title="Heart this book" hidden><span class="heart-ico" aria-hidden="true">♡</span><span class="heart-n"></span></button>
       </div>
