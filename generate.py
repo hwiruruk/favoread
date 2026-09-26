@@ -744,7 +744,7 @@ SHELF_CSS = (
     '              border-bottom: 1px solid rgba(0,0,0,.55); }\n'
     '    .sp.is-new .sp-t { padding-top: 22px; }\n'
     # 이미지로 저장하는 동안에는 NEW 표시와 함께 추천한 셀럽 목록을 뺀다
-    '    .is-capturing .sp-new, .is-capturing .rl-new, .is-capturing .rl-shared { display: none !important; }\n'
+    '    .is-capturing .sp-new, .is-capturing .rl-new, .is-capturing .rl-shared, .is-capturing .rl-comment { display: none !important; }\n'
     '    .is-capturing .sp.is-new .sp-t { padding-top: 14px; }\n'
     # 좁은 화면에서는 한 줄에 너무 적게 들어가므로 조금 줄인다
     # 좁은 화면에서는 책등을 낮추므로 글자도 그 비율(205/270)만큼 줄인다
@@ -1033,12 +1033,16 @@ except (FileNotFoundError, json.JSONDecodeError):
 _auto_comment_count = 0
 for _name, _info in celebs.items():
     for _b in _info['books']:
-        if _b['comment']:
-            continue
         _entry = _comments_db.get(_name + '|' + _b['title'])
-        if _entry and _entry.get('status') == 'approved' and (_entry.get('ko') or '').strip():
-            _b['comment'] = _entry['ko'].strip()
-            _auto_comment_count += 1
+        if not (_entry and _entry.get('status') == 'approved'):
+            continue
+        # 영문 페이지용 — 사람이 쓴 한국어 코멘트가 있어도 승인된 영문은 쓴다
+        if (_entry.get('en') or '').strip():
+            _b['comment_en'] = _entry['en'].strip()
+        if _b['comment'] or not (_entry.get('ko') or '').strip():
+            continue
+        _b['comment'] = _entry['ko'].strip()
+        _auto_comment_count += 1
 print(f"💬 검수 승인된 자동 코멘트 {_auto_comment_count}건 반영")
 
 print(f"CSV 파싱 완료: {len(celebs)}명")
@@ -1203,6 +1207,87 @@ data_json = {
 with open('data.json', 'w', encoding='utf-8') as f:
     json.dump(data_json, f, ensure_ascii=False, separators=(',', ':'))
 print(f"✅ data.json 생성: {os.path.getsize('data.json') // 1024}KB (comment/source/link는 data/detail/*.json으로 분리)")
+
+# ── 2.9. 그룹 묶음 · 그룹 공식 색 ─────────────────────────────────────
+#
+# 이름 끝 괄호(예: "카리나(에스파)")가 소속이다. 같은 그룹이 한글·영문 두 가지로
+# 적힌 경우(엑소 / EXO)가 있어 영문명 괄호(연예인_en)를 기준으로 합친다.
+# 색은 data/group_colors.json (공식 색이 확인된 그룹만). 없으면 흰 박스.
+
+GROUP_COLORS_PATH = os.path.join('data', 'group_colors.json')
+try:
+    with open(GROUP_COLORS_PATH, encoding='utf-8') as _f:
+        _gc_raw = json.load(_f).get('groups', {})
+except (FileNotFoundError, json.JSONDecodeError):
+    _gc_raw = {}
+GROUP_COLORS = {k.lower(): v for k, v in _gc_raw.items()}
+
+
+def group_color(group_en):
+    """그룹 영문명 → {'name', 'colors'} 또는 None"""
+    return GROUP_COLORS.get((group_en or '').strip().lower())
+
+
+def _hex_luma(h):
+    h = h.lstrip('#')
+    r, g, b = (int(h[i:i + 2], 16) for i in (0, 2, 4))
+    return 0.299 * r + 0.587 * g + 0.114 * b
+
+
+def group_box_style(group_en):
+    """박스 배경 style 속성값과 글자색. 공식 색이 없으면 ('', '')"""
+    gc = group_color(group_en)
+    if not gc or not gc.get('colors'):
+        return '', ''
+    cs = gc['colors']
+    bg = cs[0] if len(cs) == 1 else 'linear-gradient(135deg, ' + ', '.join(cs) + ')'
+    dark = sum(_hex_luma(c) for c in cs) / len(cs) < 140
+    fg = '#fff' if dark else '#111'
+    return 'background:' + bg + ';color:' + fg, fg
+
+
+_GROUP_SUFFIX_RE = re.compile(r'\(([^)]+)\)\s*$')
+_NOT_GROUP = {'영화감독', '배우', '가수', '감독', '작가', '모델', '방송인', '셰프'}
+
+# 한글 그룹명 → 영문 그룹명 (영문명이 적힌 멤버에게서 배운다)
+_ko2en = {}
+for _n in celebs:
+    _m = _GROUP_SUFFIX_RE.search(_n)
+    _me = _GROUP_SUFFIX_RE.search(celebs[_n].get('name_en') or '')
+    if _m and _me:
+        _ko2en.setdefault(_m.group(1).strip(), _me.group(1).strip().strip('()[]').strip())
+
+ko_groups = {}   # key(영문 소문자 또는 한글) → {'ko', 'en', 'members': [이름]}
+for _n in sorted(celebs):
+    _m = _GROUP_SUFFIX_RE.search(_n)
+    if not _m:
+        continue
+    _gko = _m.group(1).strip()
+    if not _gko or _gko.isdigit() or _gko in _NOT_GROUP:
+        continue
+    _gen = None
+    _me = _GROUP_SUFFIX_RE.search(celebs[_n].get('name_en') or '')
+    if _me:
+        _gen = _me.group(1).strip().strip('()[]').strip() or None
+    _gen = _gen or _ko2en.get(_gko)
+    _key = (_gen or _gko).lower()
+    _g = ko_groups.setdefault(_key, {'ko': _gko, 'en': _gen, 'members': []})
+    # 한글로 적힌 이름을 표시 이름으로 쓴다 (엑소 / EXO → 엑소)
+    if re.search('[가-힣]', _gko) and not re.search('[가-힣]', _g['ko']):
+        _g['ko'] = _gko
+    if not _g['en'] and _gen:
+        _g['en'] = _gen
+    _g['members'].append(_n)
+ko_groups = {k: v for k, v in ko_groups.items() if len(v['members']) >= 2}
+for _g in ko_groups.values():
+    _g['slug'] = safe_en_filename(_g['en']) if _g['en'] else safe_filename(_g['ko'])
+    _g['n_books'] = len({b['title'] for _n in _g['members'] for b in celebs[_n]['books']})
+KO_GROUP_OF = {n: g for g in ko_groups.values() for n in g['members']}
+
+
+def make_group_url(g):
+    return BASE + 'group/' + quote(g['slug'], safe='') + '.html'
+
 
 # ── 3. index.html 정적 셀럽 목록 갱신 ───────────────────────────────
 
@@ -1584,6 +1669,37 @@ idx_html = _inject_featured(idx_html, featured_title, featured_subtitle, feature
 
 idx_html = _inject_updates_banner(idx_html, update_entries)
 
+# 그룹으로 찾기 — 한국어 메인. 그룹 공식 색으로 박스를 칠한다.
+_ko_group_chips = '\n'.join(
+    '      <a href="' + 'group/' + quote(g['slug'], safe='') + '.html" '
+    'class="flex flex-col justify-between border-2 border-ink bg-white shadow-neo-sm hover:shadow-neo '
+    'hover:-translate-y-0.5 transition-all px-3 py-2.5"'
+    + ((' style="' + group_box_style(g['en'])[0] + '"') if group_box_style(g['en'])[0] else '') + '>\n'
+    '        <span class="font-black text-sm md:text-base leading-tight word-break-keep">' + esc(g['ko']) + '</span>\n'
+    '        <span class="font-sans text-[10px] md:text-xs font-bold opacity-80">' + str(len(g['members'])) + '명 · '
+    + str(g['n_books']) + '권</span>\n'
+    '      </a>'
+    for g in sorted(ko_groups.values(), key=lambda g: (-len(g['members']), g['ko']))
+)
+_ko_groups_section = (
+    '<!-- groups:start -->\n'
+    '  <section id="groups" class="border-t-4 border-ink pt-12 md:pt-16 w-full">\n'
+    '    <h2 class="text-2xl md:text-3xl font-black mb-2 word-break-keep">그룹으로 찾기</h2>\n'
+    '    <p class="text-sm md:text-base font-bold text-muted mb-8 word-break-keep">'
+    '멤버들이 읽은 책을 그룹별로 모아 봤어요 (' + str(len(ko_groups)) + '개 그룹). 박스 색은 그룹 공식 색이에요.</p>\n'
+    '    <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3 md:gap-4">\n'
+    + _ko_group_chips + '\n'
+    '    </div>\n'
+    '  </section>\n'
+    '  <!-- groups:end -->'
+)
+if '<!-- groups:start -->' in idx_html:
+    idx_html = re.sub(r'<!-- groups:start -->.*?<!-- groups:end -->',
+                      lambda m: _ko_groups_section, idx_html, flags=re.DOTALL)
+elif ko_groups:
+    idx_html = idx_html.replace('<section id="common-books"',
+                                _ko_groups_section + '\n\n  <section id="common-books"', 1)
+
 write_if_changed('index.html', idx_html)
 if featured_picks:
     print("✅ 메인 고정 인물 " + str(len(featured_picks)) + "명: "
@@ -1875,6 +1991,7 @@ for name, info in celebs.items():
             '      <div class="rl-meta">\n'
             '        <div class="rl-title">' + title_html + '</div>\n'
             + (('        <div class="rl-byline">' + byline_html + '</div>\n') if byline_html else '')
+            + (('        <p class="rl-comment">' + esc(b['comment']) + '</p>\n') if b.get('comment') else '')
             + (('        ' + source_html + '\n') if source_html else '')
             + '      </div>'
             + shared_html
@@ -1893,6 +2010,10 @@ for name, info in celebs.items():
         '<strong>' + str(n_books) + '권</strong>을 한 페이지에 정리한 독서 리스트입니다. '
         '아래 목록에서 책 제목·저자·출처 링크를 한눈에 확인할 수 있어요.'
     )
+    if name in KO_GROUP_OF:
+        _kg = KO_GROUP_OF[name]
+        intro_p += (' <a href="' + esc(make_group_url(_kg)) + '">' + esc(_kg['ko'])
+                    + ' 멤버들이 읽은 책 모아 보기 →</a>')
 
     # 작가 빈도 요약 (간단한 unique 콘텐츠)
     author_counts = {}
@@ -2088,6 +2209,7 @@ for name, info in celebs.items():
         '    .rl-title a { color: #000; }\n'
         '    .rl-title a:hover { color: #2563eb; }\n'
         '    .rl-byline { font-size: 13px; color: #555; margin-bottom: 8px; line-height: 1.4; }\n'
+        '    .rl-comment { font-size: 13px; line-height: 1.55; color: #222; background: #FFF7C2; border: 1.5px solid #000; padding: 6px 9px; margin: 0 0 8px; word-break: keep-all; }\n'
         '    .rl-source { display: inline-block; font-size: 12px; padding: 3px 8px; background: #fff; border: 1.5px solid #000; box-shadow: 1px 1px 0 0 #000; text-decoration: none; color: #000; transition: transform .1s, box-shadow .1s, background .1s; }\n'
         '    .rl-source:hover { transform: translate(-1px,-1px); box-shadow: 2px 2px 0 0 #000; background: #a7f3d0; text-decoration: none; }\n'
         '    .rl-shared { clear: both; margin-top: 12px; padding-top: 10px; border-top: 1.5px dashed #ccc; display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }\n'
@@ -2356,6 +2478,164 @@ for title, binfo in book_celebs.items():
     book_pages.append((fn, title))
 
 print(f"✅ 책 역방향 페이지 생성: {len(book_pages)}개")
+
+# ── 4.5. /group/*.html — 그룹별 모아보기 (한국어) ─────────────────────
+# "세븐틴 멤버 책", "에스파가 읽은 책"처럼 그룹 이름으로 찾는 사람을 위한 페이지.
+
+os.makedirs('group', exist_ok=True)
+ko_group_pages = []   # [(slug, 그룹명)]
+for _g in sorted(ko_groups.values(), key=lambda g: g['ko']):
+    members = sorted(_g['members'], key=lambda n: n.lower())
+    gurl = make_group_url(_g)
+    style, fg = group_box_style(_g['en'])
+    gc = group_color(_g['en'])
+
+    gbooks = {}
+    for _n in members:
+        for b in celebs[_n]['books']:
+            t = b['title'].strip()
+            hit = gbooks.setdefault(t, {'readers': [], 'author': b['author'], 'cover': b.get('coverUrl', '')})
+            if _n not in hit['readers']:
+                hit['readers'].append(_n)
+            if not hit['cover'] and b.get('coverUrl'):
+                hit['cover'] = b['coverUrl']
+    ranked = sorted(gbooks.items(), key=lambda kv: (-len(kv[1]['readers']), title_sort_key(kv[0])))
+    shared = [x for x in ranked if len(x[1]['readers']) >= 2]
+
+    def _short(n):
+        return _GROUP_SUFFIX_RE.sub('', n).strip() or n
+
+    member_cards = ''
+    for _n in members:
+        img = celebs[_n]['img']
+        member_cards += (
+            '    <li class="gm"><a href="' + esc(make_celeb_url(_n)) + '">\n'
+            + (('      <img src="' + esc(img) + '" alt="' + esc(_n) + ' 사진" loading="lazy" referrerpolicy="no-referrer">\n')
+               if img.startswith('http') else '')
+            + '      <span class="gm-n">' + esc(_short(_n)) + '</span>\n'
+            '      <span class="gm-c">' + str(len(celebs[_n]['books'])) + '권</span>\n'
+            '    </a></li>\n'
+        )
+
+    LIMIT = 60
+    book_rows = ''
+    for t, info in ranked[:LIMIT]:
+        who = ', '.join('<a href="' + esc(make_celeb_url(r)) + '">' + esc(_short(r)) + '</a>'
+                        for r in info['readers'])
+        t_html = ('<a href="' + esc(make_book_url(t)) + '">' + esc(t) + '</a>') if t in books_with_pages else esc(t)
+        book_rows += (
+            '    <li class="gb">\n'
+            '      <span class="gb-t">' + t_html + '</span>\n'
+            + (('      <span class="gb-a">' + esc(info['author']) + '</span>\n') if info['author'] else '')
+            + '      <span class="gb-w">' + who + '</span>\n'
+            '    </li>\n'
+        )
+
+    name = _g['ko']
+    n_members, n_books = len(members), len(gbooks)
+    picks = [t for t, _ in ranked[:3]]
+    g_title = name + ' 멤버들이 읽은 책 · 추천 책 ' + str(n_books) + '권'
+    g_desc = (name + ' 멤버 ' + str(n_members) + '명이 읽고 추천한 책 ' + str(n_books) + '권'
+              + ((' — ' + ', '.join(picks)) if picks else '')
+              + '. 멤버별 독서 기록과 출처를 한곳에 모았어요.')
+    g_ld = clean_none({
+        '@context': 'https://schema.org',
+        '@type': 'CollectionPage',
+        'name': g_title,
+        'url': gurl,
+        'inLanguage': 'ko',
+        'description': g_desc,
+        'about': {'@type': 'MusicGroup', 'name': name, 'alternateName': _g['en'] or None},
+        'isPartOf': {'@type': 'WebSite', 'name': '최애의 독서', 'url': BASE},
+        'hasPart': {
+            '@type': 'ItemList',
+            'name': name + ' 멤버',
+            'numberOfItems': n_members,
+            'itemListElement': [
+                {'@type': 'ListItem', 'position': i + 1,
+                 'item': {'@type': 'Person', 'name': m, 'url': make_celeb_url(m)}}
+                for i, m in enumerate(members)
+            ],
+        },
+    })
+    color_note = (('<p class="gc">공식 색 · ' + esc(gc['name']) + '</p>\n') if gc else '')
+    page = (
+        '<!DOCTYPE html>\n'
+        '<html lang="ko">\n'
+        '<head>\n' + GA_TAG +
+        '  <meta charset="utf-8">\n'
+        '  <meta name="viewport" content="width=device-width, initial-scale=1">\n'
+        '  <title>' + esc(g_title) + ' | 최애의 독서</title>\n'
+        '  <meta name="description" content="' + esc(g_desc) + '">\n'
+        '  <meta name="robots" content="index, follow, max-image-preview:large">\n'
+        '  <meta property="og:title" content="' + esc(g_title) + '">\n'
+        '  <meta property="og:description" content="' + esc(g_desc) + '">\n'
+        '  <meta property="og:url" content="' + esc(gurl) + '">\n'
+        '  <meta property="og:type" content="website">\n'
+        '  <meta property="og:locale" content="ko_KR">\n'
+        '  <meta property="og:site_name" content="최애의 독서">\n'
+        '  <meta property="og:image" content="' + BASE + 'og-image.jpg">\n'
+        '  <meta name="twitter:card" content="summary_large_image">\n'
+        '  <link rel="canonical" href="' + esc(gurl) + '">\n'
+        '  <link rel="icon" href="' + BASE + 'favicon.svg" type="image/svg+xml">\n'
+        '  <script type="application/ld+json">\n  '
+        + json.dumps(g_ld, ensure_ascii=False, indent=2) + '\n  </script>\n'
+        '  <style>\n'
+        '    body { font-family: -apple-system, BlinkMacSystemFont, "Apple SD Gothic Neo", "Segoe UI", sans-serif; max-width: 860px; margin: 0 auto; padding: 20px; color: #222; line-height: 1.6; background: #fcfaf5; word-break: keep-all; }\n'
+        '    a { color: #2563eb; text-decoration: none; }\n'
+        '    a:hover { text-decoration: underline; }\n'
+        '    nav { margin: 8px 0 16px; font-size: 13px; }\n'
+        '    .hero { border: 3px solid #000; box-shadow: 5px 5px 0 0 #000; padding: 18px 18px 14px; background: #fff; }\n'
+        '    .hero h1 { font-size: 26px; margin: 0 0 8px; font-weight: 900; line-height: 1.3; }\n'
+        '    .hero p { margin: 0; font-size: 15px; }\n'
+        '    .hero .gc { margin-top: 8px; font-size: 12px; font-weight: 700; opacity: .85; }\n'
+        '    h2 { font-size: 19px; margin: 32px 0 12px; padding-bottom: 4px; border-bottom: 2px solid #000; font-weight: 800; }\n'
+        '    .members { list-style: none; padding: 0; margin: 0; display: grid; grid-template-columns: repeat(auto-fill, minmax(110px, 1fr)); gap: 12px; }\n'
+        '    .gm a { display: block; color: #000; text-align: center; }\n'
+        '    .gm a:hover { text-decoration: none; }\n'
+        '    .gm img { width: 100%; aspect-ratio: 1/1; object-fit: cover; border: 2px solid #000; box-shadow: 2px 2px 0 0 #000; display: block; background: #f4f4f0; }\n'
+        '    .gm-n { display: block; font-weight: 800; font-size: 13px; margin-top: 6px; line-height: 1.25; }\n'
+        '    .gm-c { display: block; font-size: 11px; color: #666; }\n'
+        '    .books { padding: 0; margin: 0; }\n'
+        '    .gb { background: #fff; border: 2px solid #000; box-shadow: 3px 3px 0 0 #000; padding: 10px 12px; margin-bottom: 10px; list-style: none; }\n'
+        '    .gb-t { display: block; font-weight: 800; font-size: 15px; line-height: 1.3; }\n'
+        '    .gb-a { display: block; font-size: 12px; color: #555; }\n'
+        '    .gb-w { display: block; font-size: 12px; margin-top: 3px; }\n'
+        '    footer { margin-top: 40px; padding-top: 16px; border-top: 2px solid #000; font-size: 12px; color: #666; }\n'
+        '  </style>\n'
+        '</head>\n'
+        '<body>\n'
+        '  <nav><a href="' + BASE + '">← 최애의 독서</a> · <a href="' + BASE + '#groups">그룹 전체 보기</a></nav>\n'
+        '  <div class="hero"' + ((' style="' + style + '"') if style else '') + '>\n'
+        '    <h1>' + esc(name) + ' 멤버들이 읽은 책</h1>\n'
+        '    <p>' + esc(name) + ' 멤버 ' + str(n_members) + '명이 읽거나 추천한 책 <strong>'
+        + str(n_books) + '권</strong>'
+        + ((', 그중 ' + str(len(shared)) + '권은 여러 멤버가 함께 읽었어요') if shared else '')
+        + '. 책마다 인터뷰·유튜브·SNS 출처를 확인할 수 있어요.</p>\n'
+        '    ' + color_note +
+        '  </div>\n'
+        '  <h2>멤버</h2>\n'
+        '  <ul class="members">\n' + member_cards + '  </ul>\n'
+        '  <h2>멤버들이 읽은 책</h2>\n'
+        '  <ul class="books">\n' + book_rows + '  </ul>\n'
+        + (('  <p>여러 멤버가 읽은 책부터 ' + str(LIMIT) + '권을 보여드려요. 전체 목록은 멤버 페이지에서 볼 수 있어요.</p>\n')
+           if len(ranked) > LIMIT else '')
+        + '  <footer>\n'
+        '    <p>공개된 인터뷰·방송·SNS를 바탕으로 정리했어요. '
+        '<a href="' + BASE + '">다른 셀럽·아이돌이 읽은 책 보기 →</a></p>\n'
+        '  </footer>\n'
+        '</body>\n'
+        '</html>'
+    )
+    write_if_changed('group/' + _g['slug'] + '.html', page)
+    ko_group_pages.append((_g['slug'], name))
+
+# 그룹에서 빠진 옛 파일 정리
+_ko_group_files = {slug + '.html' for slug, _ in ko_group_pages}
+for _f in os.listdir('group'):
+    if _f.endswith('.html') and _f not in _ko_group_files:
+        os.remove(os.path.join('group', _f))
+print(f"✅ /group/ 그룹 페이지: {len(ko_group_pages)}개")
 
 # ── 5.5. /en/ 영문 페이지 생성 ──────────────────────────────────────
 # 영문 메타데이터(검수 완료된 `연예인_en`, `도서명_en`)가 있는 행만 노출.
@@ -2757,6 +3037,7 @@ for name, info in celebs.items():
             '      <div class="rl-meta">\n'
             '        <div class="rl-title">' + t_html + '</div>\n'
             + (('        <div class="rl-byline">' + author_text + '</div>\n') if author_text else '')
+            + (('        <p class="rl-comment">' + esc(b['comment_en']) + '</p>\n') if b.get('comment_en') else '')
             + (('        ' + src_html + '\n') if src_html else '')
             + '      </div>\n'
             '    </li>\n'
@@ -2981,6 +3262,7 @@ for name, info in celebs.items():
         '    .rl-title a { color: #000; }\n'
         '    .rl-title a:hover { color: #2563eb; }\n'
         '    .rl-byline { font-size: 13px; color: #555; margin-bottom: 8px; line-height: 1.4; }\n'
+        '    .rl-comment { font-size: 13px; line-height: 1.55; color: #222; background: #FFF7C2; border: 1.5px solid #000; padding: 6px 9px; margin: 0 0 8px; word-break: keep-all; }\n'
         '    .rl-source { display: inline-block; font-size: 12px; padding: 3px 8px; background: #fff; border: 1.5px solid #000; box-shadow: 1px 1px 0 0 #000; text-decoration: none; color: #000; transition: transform .1s, box-shadow .1s, background .1s; }\n'
         '    .rl-source:hover { transform: translate(-1px,-1px); box-shadow: 2px 2px 0 0 #000; background: #a7f3d0; text-decoration: none; }\n'
         '    @media (max-width: 480px) { .rl-item { padding: 14px 12px 14px 46px; } .rl-num { width: 32px; height: 26px; font-size: 12px; } .rl-cover { width: 60px; height: 88px; margin-right: 10px; } .rl-meta { min-height: 88px; } .rl-title { font-size: 15px; } }\n'
@@ -3373,7 +3655,7 @@ for _group in sorted(en_groups, key=lambda g: g.lower()):
         '<body>\n'
         '  <nav><a href="' + EN_BASE + '">← Favorbook</a></nav>\n'
         '  <h1>' + esc(_group) + ' Members’ Book Recommendations</h1>\n'
-        '  <div class="lead">\n'
+        '  <div class="lead"' + ((' style="' + group_box_style(_group)[0] + '"') if group_box_style(_group)[0] else '') + '>\n'
         '    <p style="margin:0">Every book we could verify that <strong>' + esc(_group)
         + '</strong> members have read or recommended — ' + str(n_books) + ' books across '
         + str(n_members) + ' members'
@@ -3665,9 +3947,11 @@ for slug, t_en, t_ko in sorted(en_book_pages, key=lambda x: x[1].lower()):
         'cover': cover if cover.startswith('http') else '',
         'readers': book_readers_en,
     })
+    # 너무 길어서 처음 20권만 보여주고 나머지는 'Show more'로 편다 (HTML에는 모두 남긴다)
+    _more_cls = ' hidden en-book-more' if len(en_book_cards) >= 20 else ''
     en_book_cards.append(
         '    <a href="share/book/' + slug + '.html" data-q="'
-        + esc((t_en + ' ' + t_ko).lower()) + '" class="group flex flex-col">\n'
+        + esc((t_en + ' ' + t_ko).lower()) + '" class="group flex flex-col' + _more_cls + '">\n'
         '      <div class="aspect-[3/4] overflow-hidden border-2 border-ink shadow-neo-sm bg-paper-dark group-hover:shadow-neo group-hover:-translate-y-0.5 transition-all">\n'
         '        ' + cover_img + '\n'
         '      </div>\n'
@@ -3685,9 +3969,10 @@ en_book_grid = '\n'.join(en_book_cards)
 # 그룹부터 찾으므로 목록으로 들어가는 문을 하나 더 둔다.
 en_group_chips = '\n'.join(
     '    <a href="group/' + gslug + '.html" class="flex flex-col justify-between border-2 border-ink '
-    'bg-white shadow-neo-sm hover:shadow-neo hover:-translate-y-0.5 transition-all px-3 py-2.5">\n'
+    'bg-white shadow-neo-sm hover:shadow-neo hover:-translate-y-0.5 transition-all px-3 py-2.5"'
+    + ((' style="' + group_box_style(group)[0] + '"') if group_box_style(group)[0] else '') + '>\n'
     '      <span class="font-black text-sm md:text-base leading-tight word-break-keep">' + esc(group) + '</span>\n'
-    '      <span class="font-sans text-[10px] md:text-xs text-muted">' + str(n_m) + ' members · '
+    '      <span class="font-sans text-[10px] md:text-xs font-bold opacity-80">' + str(n_m) + ' members · '
     + str(n_b) + ' books</span>\n'
     '    </a>'
     for gslug, group, n_m, n_b in sorted(en_group_pages, key=lambda g: (-g[2], g[1].lower()))
@@ -3991,10 +4276,24 @@ en_index = (
     + ('  <section id="books" class="border-t-4 border-ink pt-12 md:pt-16 w-full">\n'
        '    <h2 class="text-2xl md:text-3xl font-black mb-2 word-break-keep">Books Read by 2+ Celebrities</h2>\n'
        '    <p class="text-sm md:text-base font-bold text-muted mb-8 word-break-keep">Titles that appear across multiple reading lists (' + str(len(en_book_pages)) + ' books).</p>\n'
-       '    <div class="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 gap-4 md:gap-5">\n'
+       '    <div id="en-books-grid" class="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 gap-4 md:gap-5">\n'
        + en_book_grid + '\n'
        '    </div>\n'
-       '  </section>\n\n' if en_book_cards else '')
+       + (('    <button type="button" id="en-books-more" class="mt-8 mx-auto block px-6 py-3 bg-neo-yellow border-2 border-ink shadow-neo font-black text-sm hover:-translate-y-0.5 transition-all">'
+           'Show more (' + str(len(en_book_cards) - 20) + ' more books)</button>\n'
+           '    <script>\n'
+           '    (function () {\n'
+           '      var btn = document.getElementById("en-books-more");\n'
+           '      if (!btn) return;\n'
+           '      btn.addEventListener("click", function () {\n'
+           '        var rest = document.querySelectorAll("#en-books-grid .en-book-more.hidden");\n'
+           '        for (var i = 0; i < rest.length && i < 20; i++) rest[i].classList.remove("hidden");\n'
+           '        var left = rest.length - Math.min(20, rest.length);\n'
+           '        if (left <= 0) btn.remove(); else btn.textContent = "Show more (" + left + " more books)";\n'
+           '      });\n'
+           '    })();\n'
+           '    </script>\n') if len(en_book_cards) > 20 else '')
+       + '  </section>\n\n' if en_book_cards else '')
     + '  <section id="faq" class="border-t-4 border-ink pt-12 md:pt-16 w-full">\n'
     '    <h2 class="text-2xl md:text-3xl font-black mb-8 word-break-keep">Questions people ask</h2>\n'
     '    <div class="flex flex-col gap-3 max-w-3xl">\n'
@@ -4409,6 +4708,17 @@ lines = [
     '    <priority>0.6</priority>',
     '  </url>',
 ]
+
+# 그룹 페이지
+for _gslug, _gname in ko_group_pages:
+    lines += [
+        '  <url>',
+        '    <loc>' + esc_xml(BASE + 'group/' + quote(_gslug, safe='') + '.html') + '</loc>',
+        '    <lastmod>' + lastmod_for('group/' + _gslug + '.html') + '</lastmod>',
+        '    <changefreq>weekly</changefreq>',
+        '    <priority>0.6</priority>',
+        '  </url>',
+    ]
 
 # 셀럽 페이지 (이미지 포함)
 for name in sorted(celebs.keys()):

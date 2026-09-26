@@ -15,6 +15,8 @@ on:
       # 코멘트 검수 결과 — 승인한 코멘트가 셀럽 모달에 나간다
       # (편집기의 '💬 코멘트 검수' 창이 저장한다)
       - 'data/comments.json'
+      # 그룹 공식 색 — 그룹 박스 색이 바뀐다
+      - 'data/group_colors.json'
       # 페이지 생성기 자체 — 화면 구성을 바꾸면 모든 페이지를 다시 만들어야 한다
       - 'generate.py'
       - '.github/workflows/update-sitemap.yml'
@@ -42,6 +44,6 @@ jobs:
         run: |
           git config user.name  "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
-          git add -A data.json sitemap.xml share/ en/ s/ data/shortlinks.json data/detail/ index.html updates.html robots.txt feed.xml
+          git add -A data.json sitemap.xml share/ group/ en/ s/ data/shortlinks.json data/detail/ index.html updates.html robots.txt feed.xml
           git diff --cached --quiet || git commit -m "chore: data.json·sitemap·share·index·en·s 자동 갱신 [$(date +%Y-%m-%d)]"
           git push
