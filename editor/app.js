@@ -1689,8 +1689,10 @@ async function reloadFromGithub() {
     State.selected = null;
     setDirty(false);
     setStatus(`로드 완료 · ${State.celebs.size}명, sha ${sha.slice(0,7)}`);
+    const nTtl = await syncTitlesToBooks();
     renderSidebar(); renderDetail();
-    toast('불러오기 완료', 'ok');
+    toast(nTtl ? `불러오기 완료 — 검수한 영문 제목 ${nTtl}건을 도서명_en에 반영했습니다 (저장하면 data.csv에도 반영)`
+               : '불러오기 완료', 'ok');
   } catch (err) {
     setStatus('');
     toast(err.message, 'err');
@@ -2439,6 +2441,48 @@ function enTitleCase(value) {
   return tokens.join('') + star;
 }
 
+/* 검수 결과를 편집기의 도서명_en 칸에 옮긴다 — generate.py 의 resolve_title_en() 과 같은 규칙.
+ * approved 면 그 값, none(직역) 이면 값 + ' *'. 미검수·'영문 숨김'(값 없음)은 CSV 값을 그대로 둔다. */
+function ttlResolved(ent) {
+  if (!ent) return null;
+  const v = stripStar(ent.value);
+  if (!v) return null;
+  if (ent.status === 'approved') return enTitleCase(v);
+  if (ent.status === 'none') return enTitleCase(v) + ' *';
+  return null;
+}
+
+function applyTitlesToBooks(keys) {
+  let n = 0;
+  for (const c of State.celebs.values()) {
+    for (const b of c.books) {
+      const key = `${b.title}|${b.author || ''}`;
+      if (keys && !keys.has(key)) continue;
+      const v = ttlResolved(Ttl.items.get(key));
+      if (v && v !== (b.title_en || '')) { b.title_en = v; n++; }
+    }
+  }
+  if (n) setDirty(true);
+  return n;
+}
+
+// 불러오기 때 한 번 — 검수 파일을 읽어(아직 안 읽었으면) 도서명_en 에 반영한다
+async function syncTitlesToBooks() {
+  if (!Config.token) return 0;
+  if (!Ttl.loaded) {
+    try {
+      const doc = await fetchTitlesDoc();
+      if (!doc) return 0;
+      for (const [k, v] of Object.entries(doc.titles || {})) Ttl.items.set(k, v);
+      Ttl.loaded = true;
+    } catch (err) {
+      console.warn('영문 제목 검수 파일 읽기 실패', err);
+      return 0;
+    }
+  }
+  return applyTitlesToBooks();
+}
+
 function setTtlStatus(msg) { $('#ttlStatus').textContent = msg || ''; }
 
 function markTtlDirty(key) {
@@ -2625,6 +2669,7 @@ function setTtlState(card, act) {
   delete it.auto;
   it.reviewed = new Date().toISOString().slice(0, 10);
   markTtlDirty(key);
+  if (applyTitlesToBooks(new Set([key]))) { renderSidebar(); renderDetail(); }
   renderTitlesList();
 }
 
@@ -2688,6 +2733,7 @@ async function saveTitles() {
     doc._updated = new Date().toISOString().slice(0, 10);
     await Gh.putFile({ content: JSON.stringify(doc, null, 2) + '\n', sha, message, path: TITLES_PATH });
     for (const [k, v] of Object.entries(doc.titles)) Ttl.items.set(k, v);
+    if (applyTitlesToBooks()) { renderSidebar(); renderDetail(); }
     Ttl.touched.clear();
     Ttl.dirty = false;
     if (!State.dirty && !Cmt.dirty) window.onbeforeunload = null;
