@@ -711,8 +711,15 @@ SHELF_CSS = (
     # 최근 추가된 책 칸 — 본 목록 위에 따로 모은다
     '    .new-sec { margin: 16px 0 6px; padding: 12px 12px 2px; background: #fffbe6; border: 2px dashed #000; }\n'
     '    .new-sec-h { display: flex; align-items: center; gap: 8px; margin: 0 0 10px; font-size: 15px; font-weight: 800; }\n'
-    '    .new-sec .reading-list { margin: 0; }\n'
-    '    .rl-num.rl-num-new { font-size: 11px; letter-spacing: .04em; }\n'
+    '    .rl-item { scroll-margin-top: 16px; }\n'
+    '    .rl-item:target { outline: 3px solid #fde047; outline-offset: 2px; }\n'
+    '    .new-tiles { display: flex; flex-wrap: wrap; gap: 12px; padding-bottom: 10px; }\n'
+    '    .new-tile { width: 84px; color: #000; text-decoration: none; display: flex; flex-direction: column; gap: 5px; }\n'
+    '    .new-tile:hover { text-decoration: none; transform: translateY(-2px); }\n'
+    '    .nt-cover { display: block; width: 84px; aspect-ratio: 2/3; border: 1.5px solid #000; box-shadow: 2px 2px 0 0 #000; background: #f4f4f0; overflow: hidden; }\n'
+    '    .nt-cover img { width: 100%; height: 100%; object-fit: cover; display: block; }\n'
+    '    .nt-no-cover { display: flex; width: 100%; height: 100%; align-items: center; justify-content: center; font-size: 22px; }\n'
+    '    .nt-title { font-size: 12px; font-weight: 700; line-height: 1.3; word-break: keep-all; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }\n'
     '    .rl-new-tag { font-size: 9px; font-weight: 800; letter-spacing: .06em; line-height: 1; padding: 3px 5px;\n'
     '                  background: #fde047; color: #000; border: 1.5px solid #000; }\n'
     '    .sp { position: relative; flex: none; width: auto; height: var(--sh-h);\n'
@@ -1367,8 +1374,9 @@ def title_sort_key(title):
 
 
 def new_block(items, lang='ko'):
-    """최근 NEW_BADGE_DAYS일 안에 추가된 책을 본 목록과 따로 모아 보여 주는 칸.
-    items: [(추가된 날짜, 목록 카드 html)]. 최신순으로 늘어놓는다.
+    """최근 NEW_BADGE_DAYS일 안에 추가된 책을 본 목록 위에 따로 모아 보여 주는 칸.
+    items: [(추가된 날짜, 타일 html)]. 최신순으로 늘어놓는다.
+    표지와 제목만 작게 보여 주고, 누르면 본 목록의 그 책으로 내려간다.
     본 목록(가나다 순)에도 같은 책이 그대로 있다."""
     if not items:
         return ''
@@ -1381,16 +1389,21 @@ def new_block(items, lang='ko'):
         head = '최근 ' + str(NEW_BADGE_DAYS) + '일 새로 추가된 책 (' + str(n) + '권)'
     return ('    <div class="new-sec">\n'
             '      <h3 class="new-sec-h"><span class="rl-new-tag">NEW</span> ' + esc(head) + '</h3>\n'
-            '      <ol class="reading-list">\n'
-            + ''.join(card for _, card in items) +
-            '      </ol>\n'
+            '      <div class="new-tiles">\n'
+            + ''.join(tile for _, tile in items) +
+            '      </div>\n'
             '    </div>\n')
 
 
-def new_card(card, num):
-    """본 목록 카드를 NEW 칸용으로 — 번호 자리에 NEW를 단다."""
-    return card.replace('<span class="rl-num">' + str(num) + '</span>',
-                        '<span class="rl-num rl-num-new">NEW</span>', 1)
+def new_tile(num, title, cover_url, alt):
+    """NEW 칸의 작은 타일 — 표지와 제목만. 본 목록의 같은 책(#b번호)으로 이어진다."""
+    if cover_url and cover_url.startswith('http'):
+        img = '<img src="' + esc(cover_url) + '" alt="' + esc(alt) + '" loading="lazy">'
+    else:
+        img = '<span class="nt-no-cover">📕</span>'
+    return ('        <a class="new-tile" href="#b' + str(num) + '">'
+            + '<span class="nt-cover">' + img + '</span>'
+            + '<span class="nt-title">' + esc(title) + '</span></a>\n')
 
 
 def spine_new_badge(added):
@@ -1985,7 +1998,7 @@ for name, info in celebs.items():
                            + esc(b['title']) + '">' + _spine_inner + '</span>\n')
 
         _card = (
-            '    <li class="rl-item">\n'
+            '    <li class="rl-item" id="b' + str(i+1) + '">\n'
             '      <span class="rl-num">' + str(i+1) + '</span>\n'
             '      ' + cover_html + '\n'
             '      <div class="rl-meta">\n'
@@ -1999,7 +2012,7 @@ for name, info in celebs.items():
         )
         book_cards_html += _card
         if _added:
-            new_items.append((_added, new_card(_card, i + 1)))
+            new_items.append((_added, new_tile(i + 1, b['title'], b['coverUrl'], b['title'] + ' 표지')))
 
     sname = short_name(name)  # 본문 반복용 짧은 이름
 
@@ -3031,7 +3044,7 @@ for name, info in celebs.items():
                               + esc(t_plain) + '">' + _sp_inner + '</span>\n')
 
         _card = (
-            '    <li class="rl-item">\n'
+            '    <li class="rl-item" id="b' + str(i+1) + '">\n'
             '      <span class="rl-num">' + str(i+1) + '</span>\n'
             '      ' + cover_html + '\n'
             '      <div class="rl-meta">\n'
@@ -3044,7 +3057,7 @@ for name, info in celebs.items():
         )
         rows += _card
         if _added:
-            en_new_items.append((_added, new_card(_card, i + 1)))
+            en_new_items.append((_added, new_tile(i + 1, t_plain, b['coverUrl'], alt_text)))
 
     # 제목에 이름을 세 번 넣으면 구글이 키워드 반복으로 보고 제목을 갈아치운다.
     # 한 번만 쓰고, 검색어와 맞닿는 말(reading list · books)만 남긴다.
