@@ -8,6 +8,7 @@ data/detail/*.json 에 들어 있는 모든 출처(source) URL을 모은 뒤
 
 결과 (기본 archive/ 아래, 저장소에는 커밋하지 않는다):
   archive/web/<도메인>/<해시>.pdf   출처 한 개당 PDF 한 개
+  archive/web/<도메인>/<해시>.txt   같은 페이지의 본문 텍스트 (첫 줄은 URL)
   archive/web/index.csv             URL ↔ PDF 파일 ↔ 셀럽·책 대응표, 성공 여부
   archive/youtube/youtube.csv       유튜브 출처 목록 (셀럽·책·영상 제목·채널·시작 시각)
 
@@ -129,6 +130,10 @@ async def save_pdf(ctx, url, dest, timeout_ms):
         os.makedirs(os.path.dirname(dest), exist_ok=True)
         await page.pdf(path=dest, format='A4', print_background=True,
                        margin={'top': '10mm', 'bottom': '10mm', 'left': '8mm', 'right': '8mm'})
+        # 코멘트 작업용 본문 텍스트. PDF는 한 개에 수 MB라 전부 받기 무겁다.
+        text = await page.evaluate("() => document.body ? document.body.innerText : ''")
+        with open(dest[:-4] + '.txt', 'w', encoding='utf-8') as fp:
+            fp.write(url + '\n\n' + (text or ''))
         return (resp.status if resp else ''), (await page.title()), ''
     finally:
         await page.close()

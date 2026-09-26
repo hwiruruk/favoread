@@ -6,6 +6,7 @@ name: Archive Source Pages
 #
 # 결과는 저장소에 커밋하지 않고, 실행 화면 맨 아래 Artifacts 에 zip으로 올라온다 (90일 보관).
 #   source-pdfs    웹페이지 PDF + index.csv (URL ↔ PDF ↔ 셀럽·책 대응표)
+#   source-texts   같은 페이지의 본문 텍스트(.txt) + index.csv — 가벼워서 코멘트 작업에 쓴다
 #   youtube-list   유튜브 출처 목록 youtube.csv (영상 제목·채널·시작 시각 포함)
 
 on:
@@ -64,6 +65,16 @@ jobs:
         with:
           name: source-pdfs
           path: archive/web/
+          retention-days: 90
+          if-no-files-found: warn
+
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: source-texts
+          path: |
+            archive/web/**/*.txt
+            archive/web/index.csv
           retention-days: 90
           if-no-files-found: warn
 
