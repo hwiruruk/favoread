@@ -8,25 +8,14 @@ BASE = "https://favorbook.co.kr/"
 # 내부 관리 도구(editor/, cardnews/)는 noindex이며 통계를 왜곡하므로 제외한다.
 GA_MEASUREMENT_ID = "G-42YXZRRS25"
 GA_TAG = (
-    '  <!-- Google tag (gtag.js) — Consent Mode: 동의 전에는 analytics_storage를 기본 거부 -->\n'
+    '  <!-- Google tag (gtag.js) -->\n'
+    '  <script async src="https://www.googletagmanager.com/gtag/js?id=' + GA_MEASUREMENT_ID + '"></script>\n'
     '  <script>\n'
     '    window.dataLayer = window.dataLayer || [];\n'
     '    function gtag(){dataLayer.push(arguments);}\n'
-    "    gtag('consent', 'default', {\n"
-    "      'analytics_storage': 'denied',\n"
-    "      'ad_storage': 'denied',\n"
-    "      'ad_user_data': 'denied',\n"
-    "      'ad_personalization': 'denied'\n"
-    '    });\n'
     "    gtag('js', new Date());\n"
     "    gtag('config', '" + GA_MEASUREMENT_ID + "');\n"
-    '    try {\n'
-    "      if (localStorage.getItem('ga-consent') === 'granted') {\n"
-    "        gtag('consent', 'update', { analytics_storage: 'granted' });\n"
-    '      }\n'
-    '    } catch (e) {}\n'
     '  </script>\n'
-    '  <script async src="https://www.googletagmanager.com/gtag/js?id=' + GA_MEASUREMENT_ID + '"></script>\n'
 )
 TODAY = datetime.date.today().isoformat()
 
