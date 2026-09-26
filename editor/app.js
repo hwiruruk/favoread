@@ -2207,6 +2207,7 @@ function renderCommentsList() {
         ${(v.ko || '').trim() ? '' : '<span class="cmt-state s-unwritten">문장 미작성</span>'}
         ${(v.memo || '').trim() && !(v.ko || '').trim() ? '<span class="cmt-state s-memo">메모 있음</span>' : ''}
         ${v.score != null ? `<span class="muted small" title="추천 이유가 담겼을 법한 정도">점수 ${v.score}</span>` : ''}
+        ${v.date ? `<span class="muted small" title="${esc(v.date_type || '게재일')}">${esc(v.date_type || '게재일')} ${esc(v.date)}</span>` : ''}
         ${known ? '' : '<span class="badge">데이터에 없는 항목</span>'}
         <span class="cmt-spacer"></span>
         ${v.source
@@ -2214,7 +2215,7 @@ function renderCommentsList() {
           : '<span class="flag warn">출처 없음</span>'}
       </div>
       ${v.note ? `<p class="cmt-note">⚠ ${esc(v.note)}</p>` : ''}
-      ${v.quote ? `<blockquote class="cmt-quote">${esc(v.quote)}</blockquote>` : ''}
+      ${v.quote ? `<blockquote class="cmt-quote">${v.quote_type ? `<span class="muted small">원문 ${esc(v.quote_type)} · </span>` : ''}${esc(v.quote)}</blockquote>` : ''}
       ${v.context ? `<details class="cmt-ctx"><summary>앞뒤 문단</summary><p>${esc(v.context)}</p></details>` : ''}
       <label class="small cmt-memo">내 메모 — 출처를 보고 편한 말투로 적어두면 됩니다
         <textarea data-f="memo" rows="2" placeholder="예: 헌책방에서 우연히 샀는데 그때 찾던 주제라 방향을 잡아줬다고 함"></textarea>
