@@ -2764,7 +2764,12 @@ for name, info in celebs.items():
     # 구글이 meta description을 버리고 본문에서 목록을 긁어가던 자리를
     # 사람이 읽을 만한 문장으로 채운다.
     def _desc(k):
-        picks = [plain_en(b['title_en']) for b in en_books[:k] if b.get('title_en')]
+        # 영어권 검색자가 알아보는 제목(공식 영문판)을 앞에 둔다.
+        # 직역(*)이나 원서 언어 제목(Drei Geschichten…)은 뒤로 미룬다.
+        _ranked = sorted(en_books, key=lambda b: (
+            (b.get('title_en') or '').rstrip().endswith('*'),
+            bool(EN_FOREIGN_RE.search(plain_en(b.get('title_en'))))))
+        picks = [plain_en(b['title_en']) for b in _ranked[:k] if b.get('title_en')]
         picks = [t for t in picks if t]
         if len(picks) >= 2:
             txt = ', '.join(picks[:-1]) + ' and ' + picks[-1]
@@ -4531,10 +4536,10 @@ print(f"✅ sitemap.xml 생성: {total_urls}개 URL (이미지 사이트맵 포�
 robots_txt = (
     'User-agent: *\n'
     'Allow: /\n'
-    # 원본 데이터 파일(data.json/data.csv)은 검색 노출용 콘텐츠가 아니라
-    # 직접 수집·정리한 원자료이므로 대량 수집 방지 차원에서 색인/크롤링만 막는다.
-    # 실제 콘텐츠 페이지(share/*.html 등)는 그대로 색인되므로 검색 결과에는 영향 없음.
-    'Disallow: /data.json\n'
+    # 원자료(data.csv, data/ 아래 셀럽별 상세)는 크롤링 대상에서 뺀다.
+    # data.json은 막지 않는다 — 홈(index.html)이 이 파일로 화면을 그리므로
+    # 구글봇이 못 받으면 렌더링된 홈이 빈 목록으로 보인다(구글 권장: 렌더링
+    # 리소스 차단 금지). robots.txt는 스크래퍼가 무시하므로 막아도 보호 효과는 없다.
     'Disallow: /data.csv\n'
     'Disallow: /data/\n'
     'Disallow: /lookup_csv/\n'
