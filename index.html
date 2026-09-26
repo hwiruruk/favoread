@@ -1221,6 +1221,7 @@
             class="font-sans font-bold text-xs tracking-widest border-2 border-ink bg-white shadow-neo-sm px-4 hover:bg-neo-mint hover:-translate-y-0.5 hover:shadow-neo active:shadow-neo-sm transition-all flex items-center justify-center m-0 leading-none">
             공유하기
           </button>
+          <button id="modal-heart" type="button" class="heart-btn" aria-pressed="false" aria-label="하트" title="하트" hidden><span class="heart-ico" aria-hidden="true">♡</span><span class="heart-n"></span></button>
         </div>
         <a id="bookshelf-btn" href="#"
           class="mt-3 inline-flex items-center justify-center gap-1.5 font-sans font-black text-xs md:text-sm tracking-widest border-2 border-ink bg-neo-mint shadow-neo px-5 py-2 hover:bg-ink hover:text-paper hover:-translate-y-0.5 hover:shadow-neo-lg active:translate-y-0 active:shadow-neo-sm transition-all text-ink no-underline">
@@ -1311,6 +1312,7 @@
     mCount:     document.getElementById('modal-count'),
     shareBtn:   document.getElementById('share-btn'),
     bookshelfBtn: document.getElementById('bookshelf-btn'),
+    heartBtn:   document.getElementById('modal-heart'),
     closeBtn:   document.getElementById('close-modal'),
     viewport:   document.getElementById('swiper-viewport'),
     track:      document.getElementById('swiper-track'),
@@ -1708,6 +1710,12 @@
     D.mNameLink.href = shareHref;
     if (D.bookshelfBtn) D.bookshelfBtn.href = shareHref;
     D.mCount.textContent = `${data.books.length} records`;
+    if (D.heartBtn) {
+      D.heartBtn.setAttribute('data-heart', 'c:' + name);
+      D.heartBtn.setAttribute('aria-label', name + '에게 하트');
+      D.heartBtn.title = name + '에게 하트';
+      if (window.FavorHearts) window.FavorHearts.scan(D.heartBtn.parentElement);
+    }
 
     buildSlides();
     D.overlay.classList.add('active');
@@ -2331,5 +2339,6 @@
   sections.forEach(s => observer.observe(s));
 })();
 </script>
+<script src="/assets/hearts.js" defer></script>
 </body>
 </html>
