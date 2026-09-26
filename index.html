@@ -1848,6 +1848,31 @@
     tabs.forEach(t => t.classList.remove('hidden'));
   }
 
+  // '여러 명이 읽은 책' 더보기 — 누를 때마다 20권씩 더 펼친다
+  function setupCommonBooksMore(total) {
+    const box = D.commonBooks;
+    let btn = document.getElementById('common-books-more');
+    const hiddenLeft = () => box.querySelectorAll('.cb-more.hidden').length;
+    if (!btn) {
+      btn = document.createElement('button');
+      btn.type = 'button';
+      btn.id = 'common-books-more';
+      btn.className = 'mt-8 mx-auto block px-6 py-3 bg-neo-yellow border-2 border-ink shadow-neo font-black text-sm hover:-translate-y-0.5 hover:shadow-neo-lg transition-all';
+      box.insertAdjacentElement('afterend', btn);
+      btn.addEventListener('click', () => {
+        [...box.querySelectorAll('.cb-more.hidden')].slice(0, 20)
+          .forEach(el => el.classList.remove('hidden'));
+        update();
+      });
+    }
+    function update() {
+      const left = hiddenLeft();
+      btn.textContent = `더보기 (${left}권 더 있어요)`;
+      btn.classList.toggle('hidden', left === 0);
+    }
+    update();
+  }
+
   function renderDynamicSections() {
     renderFeatured();
 
@@ -1908,6 +1933,8 @@
       .sort((a, b) => b[1].count - a[1].count);
 
     const colors = ['bg-neo-yellow', 'bg-neo-mint', 'bg-neo-pink', 'bg-white'];
+    // 너무 길어서 처음엔 COMMON_BOOKS_STEP권만 보여주고 '더보기'로 이어서 편다
+    const COMMON_BOOKS_STEP = 20;
     let commonHtml = '';
     commonBooksList.forEach(([title, info], i) => {
       const color = colors[i % colors.length];
@@ -1916,8 +1943,9 @@
         ? `<img src="${info.coverUrl}" class="w-full h-full object-cover" alt="${title} 표지" loading="lazy">`
         : `<span class="font-black text-xs sm:text-sm text-ink leading-snug word-break-keep">${title}</span>`;
       const coverBg = info.coverUrl ? '' : color;
+      const moreCls = i >= COMMON_BOOKS_STEP ? ' hidden cb-more' : '';
       commonHtml += `
-        <div class="cursor-pointer group flex flex-col items-center bg-white border-2 border-ink shadow-neo hover:shadow-neo-lg hover:-translate-y-1 transition-all p-2.5 sm:p-3 relative overflow-hidden"
+        <div class="cursor-pointer group flex flex-col items-center bg-white border-2 border-ink shadow-neo hover:shadow-neo-lg hover:-translate-y-1 transition-all p-2.5 sm:p-3 relative overflow-hidden${moreCls}"
              onclick="searchBook('${title.replace(/'/g, "\\'")}')">
           <div class="w-full aspect-[2/3] ${coverBg} border-2 border-ink mb-2 sm:mb-3 flex items-center justify-center p-0 text-center group-hover:opacity-90 transition-opacity overflow-hidden">
              ${coverHtml}
@@ -1929,6 +1957,7 @@
       `;
     });
     D.commonBooks.innerHTML = commonHtml;
+    setupCommonBooksMore(commonBooksList.length);
 
     // 3. 전체 목록
     const allNames = Object.keys(celebMap).sort((a, b) => a.localeCompare(b, 'ko'));
