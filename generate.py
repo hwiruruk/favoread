@@ -1790,6 +1790,55 @@ for _name, _info in celebs.items():
 assign_shorts('book', sorted(
     (t, book_title_en.get(t) or '') for t in books_with_pages), cap=36)
 
+# ── 책 페이지 색인 기준 ──────────────────────────────────────────────
+#
+# 책 페이지는 제목·저자·셀럽 이름 몇 개뿐이라 본문이 100~300자에 그쳤다.
+# 이런 템플릿 페이지가 수백 개 한꺼번에 생기자 서치콘솔에서 "발견됨 - 현재
+# 색인이 생성되지 않음"이 265개까지 늘었고, 내용이 충분한 셀럽 페이지까지
+# 크롤링 대기열에 밀렸다. 그래서
+#   1) 셀럽별 추천 코멘트·출처와 관련 책 링크를 책 페이지에 싣고
+#   2) 코멘트가 한 건도 없는 책 페이지는 noindex로 두고 sitemap에서 뺀다.
+# 페이지 자체는 남겨 두므로 셀럽 페이지의 내부 링크와 공유 주소는 그대로 산다.
+
+def book_notes(title):
+    """[(셀럽, 코멘트, 영문 코멘트, 출처 URL)] — 셀럽 가나다순."""
+    out = []
+    for c in sorted(book_celebs[title]['celebs']):
+        for b in celebs[c]['books']:
+            if b['title'].strip() == title:
+                src = b.get('source') or ''
+                out.append((c, (b.get('comment') or '').strip(),
+                            (b.get('comment_en') or '').strip(),
+                            src if src.startswith('http') else ''))
+                break
+    return out
+
+
+def book_indexable(title, lang='ko'):
+    key = 1 if lang == 'ko' else 2
+    return title in books_with_pages and any(n[key] for n in book_notes(title))
+
+
+def related_books(title, pool, limit=6):
+    """같은 셀럽이 함께 읽은 다른 책 — 겹치는 셀럽이 많은 순. pool 안에서만 고른다."""
+    mine = set(book_celebs[title]['celebs'])
+    scored = []
+    for t in pool:
+        if t == title:
+            continue
+        n = len(mine & set(book_celebs[t]['celebs']))
+        if n:
+            scored.append((-n, -len(book_celebs[t]['celebs']), t))
+    return [t for _, _, t in sorted(scored)[:limit]]
+
+
+def same_author_books(title, pool, limit=6):
+    a = (book_celebs[title]['author'] or '').strip()
+    if not a:
+        return []
+    return sorted(t for t in pool
+                  if t != title and (book_celebs[t]['author'] or '').strip() == a)[:limit]
+
 # sitemap 이미지 정보 수집용
 sitemap_images = {}  # { url: [image_url, ...] }
 
@@ -2367,6 +2416,17 @@ print(f"✅ share 페이지 생성: {len(celebs)}개")
 # book_celebs는 섹션 4 시작 부분에서 사전 계산됨 (share 페이지 내부링크 위해)
 
 book_pages = []
+ko_book_indexed = set()   # 색인 대상(코멘트 있음) — sitemap에만 싣는다
+
+# 책 페이지 공용 스타일 — 셀럽별 코멘트 인용과 출처
+BOOK_NOTE_CSS = (
+    '    .intro { margin: 8px 0 0; }\n'
+    '    ul.notes { line-height: 1.7; }\n'
+    '    ul.notes li { margin: 0 0 12px; }\n'
+    '    ul.notes blockquote { margin: 4px 0 0; padding: 6px 12px; border-left: 3px solid #000; background: #fff; color: #333; font-size: 14px; }\n'
+    '    .src { font-size: 12px; color: #666; }\n'
+    '    .by { color: #888; font-size: 13px; }\n'
+)
 
 for title, binfo in book_celebs.items():
     if len(binfo['celebs']) < 2:
@@ -2378,10 +2438,40 @@ for title, binfo in book_celebs.items():
 
     celeb_names_str = ', '.join(esc(c) for c in sorted(binfo['celebs']))
 
+    indexable = book_indexable(title, 'ko')
+    notes = book_notes(title)
     celeb_rows = '\n'.join(
-        '    <li><a href="../' + quote(safe_filename(c), safe='') + '.html">' + esc(c) + '</a></li>'
-        for c in sorted(binfo['celebs'])
+        '    <li><a href="../' + quote(safe_filename(c), safe='') + '.html">' + esc(c) + '</a>'
+        + (' <a class="src" href="' + esc(src) + '" rel="nofollow noopener noreferrer" target="_blank">출처</a>'
+           if src else '')
+        + (('\n      <blockquote>' + esc(cm) + '</blockquote>') if cm else '')
+        + '</li>'
+        for c, cm, _cm_en, src in notes
     )
+    n_comments = sum(1 for n in notes if n[1])
+    intro_html = (
+        '  <p class="intro">' + esc(title)
+        + ((' (' + esc(binfo['author'].strip()) + ')') if binfo['author'].strip() else '')
+        + '은(는) ' + celeb_names_str + ' 등 ' + str(celeb_count) + '명의 셀럽이 읽거나 추천한 책이에요.'
+        + ((' 아래에 셀럽별로 이 책을 언급한 맥락과 출처 ' + str(n_comments) + '건을 모았어요.')
+           if n_comments else ' 셀럽 이름을 누르면 그 사람의 전체 독서 목록을 볼 수 있어요.')
+        + '</p>\n'
+    )
+
+    def _book_links(ts):
+        return '\n'.join(
+            '    <li><a href="' + quote(safe_book_filename(t), safe='') + '.html">' + esc(t) + '</a>'
+            + ((' <span class="by">' + esc(book_celebs[t]['author'].strip()) + '</span>')
+               if book_celebs[t]['author'].strip() else '')
+            + ' <span class="by">· ' + str(len(book_celebs[t]['celebs'])) + '명</span></li>'
+            for t in ts)
+    _same = same_author_books(title, books_with_pages)
+    _rel = [t for t in related_books(title, books_with_pages) if t not in _same]
+    more_html = ''
+    if _same:
+        more_html += ('  <h2>같은 저자의 다른 책</h2>\n  <ul>\n' + _book_links(_same) + '\n  </ul>\n')
+    if _rel:
+        more_html += ('  <h2>이 셀럽들이 함께 읽은 책</h2>\n  <ul>\n' + _book_links(_rel) + '\n  </ul>\n')
 
     cover_html = ''
     if binfo['coverUrl'] and binfo['coverUrl'].startswith('http'):
@@ -2425,10 +2515,10 @@ for title, binfo in book_celebs.items():
     if binfo['coverUrl'] and binfo['coverUrl'].startswith('http'):
         json_ld['image'] = binfo['coverUrl']
 
-    # 영문 책 페이지가 있으면 hreflang 추가
+    # 영문 책 페이지가 있으면 hreflang 추가 (양쪽 다 색인 대상일 때만)
     title_en = book_title_en.get(title)
     book_hreflang = ''
-    if title_en:
+    if title_en and indexable and book_indexable(title, 'en'):
         en_book_url = make_en_book_url(title_en)
         book_hreflang = (
             '  <link rel="alternate" hreflang="ko" href="' + esc(page_url) + '">\n'
@@ -2445,7 +2535,8 @@ for title, binfo in book_celebs.items():
         '  <title>' + esc(title) + ' - ' + str(celeb_count) + '명의 셀럽이 읽은 책 | 최애의 독서</title>\n'
         '  <meta name="description" content="' + desc_text + '">\n'
         '  <meta name="keywords" content="' + esc(title) + ', ' + esc(binfo['author']) + ', 셀럽독서, 책추천, 최애의 독서">\n'
-        '  <meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1">\n'
+        + ('  <meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1">\n'
+           if indexable else '  <meta name="robots" content="noindex, follow">\n') +
         '  <meta name="theme-color" content="#ffffff">\n'
         '\n'
         '  <meta property="og:title" content="' + esc(title) + ' | ' + str(celeb_count) + '명의 셀럽이 읽은 책">\n'
@@ -2491,6 +2582,7 @@ for title, binfo in book_celebs.items():
         '    h1 { font-size: 28px; margin: 0 0 6px; font-weight: 900; }\n'
         '    h2 { font-size: 19px; margin: 32px 0 12px; padding-bottom: 4px; border-bottom: 2px solid #000; font-weight: 800; }\n'
         '    ul { line-height: 2; padding-left: 22px; }\n'
+        + BOOK_NOTE_CSS +
         '    a { color: #2563eb; text-decoration: none; }\n'
         '    a:hover { text-decoration: underline; }\n'
         '  </style>\n'
@@ -2506,9 +2598,10 @@ for title, binfo in book_celebs.items():
         '  <h1>' + esc(title) + '</h1>\n'
         '  <p>' + esc(binfo['author']) + ((' · ' + esc(binfo['publisher'])) if binfo['publisher'] else '') + '</p>\n'
         '  <p class="heart-row">' + heart_btn_html(book_heart_key(title), '이 책에 하트') + '</p>\n'
-        + cover_html +
+        + cover_html + intro_html +
         '  <h2>이 책을 읽은 셀럽 (' + str(celeb_count) + '명)</h2>\n'
-        '  <ul>\n' + celeb_rows + '\n  </ul>\n'
+        '  <ul class="notes">\n' + celeb_rows + '\n  </ul>\n'
+        + more_html +
         '\n'
         '  <p><a href="' + BASE + '">최애의 독서 홈으로 →</a></p>\n'
         '\n'
@@ -2519,8 +2612,10 @@ for title, binfo in book_celebs.items():
 
     write_if_changed('share/book/' + fn + '.html', page)
     book_pages.append((fn, title))
+    if indexable:
+        ko_book_indexed.add(title)
 
-print(f"✅ 책 역방향 페이지 생성: {len(book_pages)}개")
+print(f"✅ 책 역방향 페이지 생성: {len(book_pages)}개 (색인 대상 {len(ko_book_indexed)}개, 나머지 noindex)")
 
 # ── 4.5. /group/*.html — 그룹별 모아보기 (한국어) ─────────────────────
 # "세븐틴 멤버 책", "에스파가 읽은 책"처럼 그룹 이름으로 찾는 사람을 위한 페이지.
@@ -3396,11 +3491,16 @@ for name, info in celebs.items():
 print(f"✅ /en/ 셀럽 페이지: {len(en_celeb_pages)}개")
 
 # 영문 책 페이지 (≥2 셀럽 읽은 책 + title_en 검수 완료)
+en_book_pool = [t for t in book_title_en if t in books_with_pages]
+en_book_indexed = set()   # 색인 대상(영문 코멘트 있음) — sitemap에만 싣는다
 for title, t_en in book_title_en.items():
     if title not in books_with_pages:
         continue
     binfo = book_celebs[title]
     slug = safe_en_filename(t_en)
+    indexable = book_indexable(title, 'en')
+    ko_indexable = book_indexable(title, 'ko')
+    _notes = {c: (cm_en, src) for c, _cm, cm_en, src in book_notes(title)}
     page_url = make_en_book_url(t_en)
     ko_url   = make_book_url(title)
     n_celebs = len(binfo['celebs'])
@@ -3410,19 +3510,37 @@ for title, t_en in book_title_en.items():
     celeb_items = []
     for c in sorted(binfo['celebs']):
         c_en = celebs[c].get('name_en')
+        cm_en, src = _notes.get(c, ('', ''))
+        tail = ((' <a class="src" href="' + esc(src) + '" rel="nofollow noopener noreferrer" target="_blank">Source</a>')
+                if src else '')
+        tail += ('\n      <blockquote>' + esc(cm_en) + '</blockquote>') if cm_en else ''
         if c_en:
             celeb_items.append(
                 '    <li><a href="../' + safe_en_filename(c_en) + '.html">'
                 + esc(c_en) + '</a> <span style="color:#888;font-size:13px">('
-                + esc(c) + ')</span></li>'
+                + esc(c) + ')</span>' + tail + '</li>'
             )
         else:
             # name_en 없으면 한국어 이름만 KO 페이지로. 향후 enrich으로 채워짐.
             celeb_items.append(
                 '    <li><a href="' + esc(make_celeb_url(c)) + '" hreflang="ko">'
-                + esc(c) + '</a> <span style="color:#888;font-size:12px">(English name pending)</span></li>'
+                + esc(c) + '</a> <span style="color:#888;font-size:12px">(English name pending)</span>'
+                + tail + '</li>'
             )
     celeb_list = '\n'.join(celeb_items)
+
+    def _en_book_links(ts):
+        return '\n'.join(
+            '    <li><a href="' + safe_en_filename(book_title_en[t]) + '.html">' + esc(book_title_en[t]) + '</a>'
+            + ' <span class="by">(' + esc(t) + ') · ' + str(len(book_celebs[t]['celebs'])) + ' celebrities</span></li>'
+            for t in ts)
+    _same = same_author_books(title, en_book_pool)
+    _rel = [t for t in related_books(title, en_book_pool) if t not in _same]
+    en_more_html = ''
+    if _same:
+        en_more_html += ('  <h2>More by the same author</h2>\n  <ul>\n' + _en_book_links(_same) + '\n  </ul>\n')
+    if _rel:
+        en_more_html += ('  <h2>Also read by these celebrities</h2>\n  <ul>\n' + _en_book_links(_rel) + '\n  </ul>\n')
 
     cover_html = ''
     if binfo['coverUrl'] and binfo['coverUrl'].startswith('http'):
@@ -3479,7 +3597,8 @@ for title, t_en in book_title_en.items():
         + 'books read by ' + esc(top_celebs_str) + ', '
         + ', '.join((esc(c) + ' books') for c in celeb_names_en[:3]) + ', '
         + 'kpop idol books, korean celebrity book recommendations, kpop reading list">\n'
-        '  <meta name="robots" content="index, follow, max-image-preview:large">\n'
+        + ('  <meta name="robots" content="index, follow, max-image-preview:large">\n'
+           if indexable else '  <meta name="robots" content="noindex, follow">\n') +
         '  <meta property="og:title" content="' + esc(title_text) + '">\n'
         '  <meta property="og:description" content="' + esc(desc_text) + '">\n'
         '  <meta property="og:url" content="' + esc(page_url) + '">\n'
@@ -3488,10 +3607,11 @@ for title, t_en in book_title_en.items():
         + (('  <meta property="og:image" content="' + esc(binfo['coverUrl']) + '">\n')
            if binfo['coverUrl'].startswith('http') else '')
         + '  <link rel="canonical" href="' + esc(page_url) + '">\n'
-        '  <link rel="alternate" hreflang="en" href="' + esc(page_url) + '">\n'
-        '  <link rel="alternate" hreflang="ko" href="' + esc(ko_url) + '">\n'
-        '  <link rel="alternate" hreflang="x-default" href="' + esc(ko_url) + '">\n'
-        '  <link rel="icon" href="' + BASE + 'favicon.svg" type="image/svg+xml">\n'
+        + (('  <link rel="alternate" hreflang="en" href="' + esc(page_url) + '">\n'
+            '  <link rel="alternate" hreflang="ko" href="' + esc(ko_url) + '">\n'
+            '  <link rel="alternate" hreflang="x-default" href="' + esc(ko_url) + '">\n')
+           if indexable and ko_indexable else '')
+        + '  <link rel="icon" href="' + BASE + 'favicon.svg" type="image/svg+xml">\n'
         '  <script type="application/ld+json">\n  '
         + json.dumps(json_ld, ensure_ascii=False, indent=2) + '\n  </script>\n'
         '  <style>\n'
@@ -3507,6 +3627,7 @@ for title, t_en in book_title_en.items():
         '    .meta { color: #666; margin: 0 0 16px; }\n'
         + (EN_TR_NOTE_CSS if en_show_tr_note else '')
         + '    ul { line-height: 2; padding-left: 22px; }\n'
+        + BOOK_NOTE_CSS +
         '    a { color: #2563eb; text-decoration: none; }\n'
         '    a:hover { text-decoration: underline; }\n'
         '  </style>\n'
@@ -3525,8 +3646,16 @@ for title, t_en in book_title_en.items():
         + '</p>\n'
         '  <p class="heart-row">' + heart_btn_html(book_heart_key(title), 'Heart this book') + '</p>\n'
         + cover_html
+        + '  <p class="intro">' + esc(t_en) + ' (Korean title: ' + esc(title) + ')'
+        + ((' by ' + esc(author_display)) if author_display.strip() else '')
+        + ' has been read or recommended by ' + str(n_celebs) + ' Korean celebrities, including '
+        + esc(top_celebs_str) + '.'
+        + (' Below, each entry shows where they mentioned it and what they said.'
+           if any(v[0] for v in _notes.values()) else '')
+        + '</p>\n'
         + '  <h2>Read by ' + str(n_celebs) + ' Korean celebrities</h2>\n'
-        '  <ul>\n' + celeb_list + '\n  </ul>\n'
+        '  <ul class="notes">\n' + celeb_list + '\n  </ul>\n'
+        + en_more_html
         + (EN_TR_NOTE_HTML if en_show_tr_note else '')
         + '  <p style="margin-top:32px"><a href="' + EN_BASE + '">← Back to Favorbook</a></p>\n'
         + COPY_BTN_JS + HEART_JS +
@@ -3535,8 +3664,10 @@ for title, t_en in book_title_en.items():
     )
     write_if_changed('en/share/book/' + slug + '.html', page)
     en_book_pages.append((slug, t_en, title))
+    if indexable:
+        en_book_indexed.add(title)
 
-print(f"✅ /en/ 책 페이지: {len(en_book_pages)}개")
+print(f"✅ /en/ 책 페이지: {len(en_book_pages)}개 (색인 대상 {len(en_book_indexed)}개, 나머지 noindex)")
 
 # ── /en/group/*.html — 그룹별 모아보기 ───────────────────────────────
 #
@@ -4609,9 +4740,57 @@ for f in os.listdir('share/book'):
         os.remove(p)
         removed += 1
 
+# /en/ 영문 책 옛 주소 → 새 주소
+#
+# 영문 책 주소는 검수된 영문 제목에서 만든다. 제목을 고치면 주소도 바뀌는데,
+# 예전엔 옛 파일을 그냥 지워서 구글이 알던 주소 30여 개가 404가 됐다
+# (예: vegetarian.html → the-vegetarian.html). 책마다 마지막 주소를
+# data/en_slugs.json에 적어 두고, 바뀌면 옛 주소에 이동 페이지를 남긴다.
+# GitHub Pages라 301은 못 쓰니 /s/와 같은 canonical + 즉시 이동 조합이다.
+
+EN_SLUG_FILE = 'data/en_slugs.json'
+try:
+    with io.open(EN_SLUG_FILE, encoding='utf-8') as f:
+        _en_slugs = json.load(f)
+except (FileNotFoundError, json.JSONDecodeError):
+    _en_slugs = {}
+_en_slugs.setdefault('book', {})
+_en_slugs.setdefault('book_redirects', {})
+
+_live_en_book = {t_ko: slug for slug, _t_en, t_ko in en_book_pages}
+for _ko, _slug in _live_en_book.items():
+    _prev = _en_slugs['book'].get(_ko)
+    if _prev and _prev != _slug:
+        _en_slugs['book_redirects'][_prev] = _ko
+_en_slugs['book'].update(_live_en_book)
+
+with io.open(EN_SLUG_FILE, 'w', encoding='utf-8') as f:
+    json.dump(_en_slugs, f, ensure_ascii=False, indent=1, sort_keys=True)
+
+en_book_redirect_paths = set()
+_live_slugs = set(_live_en_book.values())
+for _old, _ko in _en_slugs['book_redirects'].items():
+    if _old in _live_slugs or _ko not in _live_en_book:
+        continue
+    _target = EN_BASE + 'share/book/' + _live_en_book[_ko] + '.html'
+    _p = 'en/share/book/' + _old + '.html'
+    write_if_changed(_p,
+        '<!DOCTYPE html>\n<html lang="en">\n<head>\n'
+        '  <meta charset="UTF-8">\n'
+        '  <title>Moved | Favorbook</title>\n'
+        '  <link rel="canonical" href="' + esc(_target) + '">\n'
+        '  <meta http-equiv="refresh" content="0; url=' + esc(_target) + '">\n'
+        '  <script>location.replace(' + json.dumps(_target) + ');</script>\n'
+        '</head>\n<body>\n'
+        '  <p>This page has moved: <a href="' + esc(_target) + '">' + esc(_target) + '</a></p>\n'
+        '</body>\n</html>\n')
+    en_book_redirect_paths.add(_p)
+print(f"✅ /en/ 책 옛 주소 이동 페이지: {len(en_book_redirect_paths)}개")
+
 # /en/ 영문 페이지 고아 정리
 generated_en_celeb_paths = {'en/share/' + slug + '.html' for slug, _, _ in en_celeb_pages}
-generated_en_book_paths  = {'en/share/book/' + slug + '.html' for slug, _, _ in en_book_pages}
+generated_en_book_paths  = ({'en/share/book/' + slug + '.html' for slug, _, _ in en_book_pages}
+                            | en_book_redirect_paths)
 keep_en_top = generated_en_celeb_paths
 for f in os.listdir('en/share'):
     p = 'en/share/' + f
@@ -4809,6 +4988,8 @@ for name in sorted(celebs.keys()):
 
 # 책 역방향 페이지
 for fn, title in book_pages:
+    if title not in ko_book_indexed:
+        continue
     url = BASE + 'share/book/' + quote(fn, safe='') + '.html'
     book_lastmod = lastmod_for('share/book/' + fn + '.html')
     lines += [
@@ -4872,6 +5053,8 @@ if en_celeb_pages or en_book_pages:
             '  </url>',
         ]
     for slug, t_en, t_ko in en_book_pages:
+        if t_ko not in en_book_indexed:
+            continue
         url = make_en_book_url(t_en)
         lines += [
             '  <url>',
@@ -4886,8 +5069,7 @@ lines.append('</urlset>')
 
 write_if_changed('sitemap.xml', '\n'.join(lines) + '\n')
 
-total_urls = (1 + 1 + len(celebs) + len(book_pages)
-              + (1 + len(en_celeb_pages) + len(en_book_pages) if en_celeb_pages or en_book_pages else 0))
+total_urls = sum(1 for l in lines if l.lstrip().startswith('<loc>'))
 print(f"✅ sitemap.xml 생성: {total_urls}개 URL (이미지 사이트맵 포함)")
 
 # ── 8. robots.txt 생성 (사이트맵 위치 명시) ─────────────────────────
