@@ -461,6 +461,19 @@
               background: #fff; color: #000; border: 2px solid #000; box-shadow: 2px 2px 0 0 #000; }
     .sh-cap:hover { background: #fde047; }
     .sh-cap[disabled] { opacity: .55; cursor: default; }
+    .view-tabs { display: inline-flex; border: 2px solid #000; box-shadow: 2px 2px 0 0 #000; background: #fff; }
+    .vt { font: inherit; font-size: 12px; font-weight: 700; padding: 5px 10px; background: #fff; color: #000; border: 0; cursor: pointer; }
+    .vt + .vt { border-left: 2px solid #000; }
+    .vt[aria-pressed="true"] { background: #000; color: #fff; }
+    .covers { display: none; grid-template-columns: repeat(auto-fill, minmax(84px, 1fr)); gap: 14px 12px; margin: 14px 0 22px; }
+    .show-covers .covers { display: grid; }
+    .show-covers .shelf { display: none; }
+    .cv { position: relative; display: block; aspect-ratio: 2/3; border: 1.5px solid #000; box-shadow: 2px 2px 0 0 #000;
+          background: #f4f4f0; overflow: hidden; color: #000; text-decoration: none; transition: transform .12s; }
+    .cv:hover { transform: translateY(-3px); text-decoration: none; }
+    .cv img { width: 100%; height: 100%; object-fit: cover; display: block; }
+    .cv-no { display: flex; height: 100%; align-items: center; justify-content: center; padding: 6px;
+             font-size: 11px; font-weight: 700; line-height: 1.3; text-align: center; word-break: keep-all; }
     .shelf { --sh-h: 270px; --plank: 7px; --row: calc(var(--sh-h) + 18px);
              display: flex; flex-wrap: wrap; align-items: flex-end; gap: 11px 2px;
              margin: 14px 0 22px; padding: 0 8px 7px;
@@ -581,6 +594,7 @@
     <div class="shelf-head">
       <h2>📚 김효진의 독서 리스트 (20권)</h2>
       <div class="shelf-tabs">
+        <span class="view-tabs" role="group"><button type="button" class="vt" data-view="spine" aria-pressed="true">📚 책등</button><button type="button" class="vt" data-view="cover" aria-pressed="false">🖼 표지</button></span>
         <button type="button" class="sh-cap" id="shelf-cap" title="책장을 그림으로 내려받아요">⤓ 이미지 저장</button>
         <button type="button" class="sh-cap" id="shelf-cap-clear" title="배경 없이 투명한 PNG로 내려받아요">⤓ 투명 배경</button>
       </div>
@@ -608,6 +622,28 @@
     <a class="sp" style="--c:hsl(6,38%,32%);--w:41px;--fs:12px" href="https://www.yes24.com/product/goods/64197033" rel="nofollow noopener noreferrer" target="_blank" title="헬렌 니어링의 소박한 밥상"><span class="sp-t"><i>헬렌 니어링의 소박한 밥상</i></span><img class="sp-i" src="https://image.yes24.com/goods/64197033/side" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.parentNode.classList.add('sp-fail');this.remove()" onload="if(this.naturalWidth/this.naturalHeight>0.4){this.parentNode.classList.add('sp-fail');this.remove()}"></a>
     <a class="sp" style="--c:hsl(139,45%,29%);--w:37px;--fs:15px" href="https://www.yes24.com/product/goods/204300" rel="nofollow noopener noreferrer" target="_blank" title="호밀밭의 파수꾼"><span class="sp-t"><i>호밀밭의 파수꾼</i></span><img class="sp-i" src="https://image.yes24.com/goods/204300/side" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.parentNode.classList.add('sp-fail');this.remove()" onload="if(this.naturalWidth/this.naturalHeight>0.4){this.parentNode.classList.add('sp-fail');this.remove()}"></a>
     <a class="sp" style="--c:hsl(332,50%,39%);--w:38px;--fs:15px" href="https://www.yes24.com/product/goods/6322199" rel="nofollow noopener noreferrer" target="_blank" title="화차"><span class="sp-t"><i>화차</i></span><img class="sp-i" src="https://image.yes24.com/goods/6322199/side" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.parentNode.classList.add('sp-fail');this.remove()" onload="if(this.naturalWidth/this.naturalHeight>0.4){this.parentNode.classList.add('sp-fail');this.remove()}"></a>
+    </div>
+    <div class="covers" id="covers">
+    <a class="cv" href="https://www.yes24.com/product/goods/1482917" rel="nofollow noopener noreferrer" target="_blank" title="개를 위한 변명"><img src="https://image.yes24.com/goods/1482917/L" alt="개를 위한 변명 표지" loading="lazy"></a>
+    <a class="cv" href="https://www.yes24.com/product/goods/8091413" rel="nofollow noopener noreferrer" target="_blank" title="그린보이"><img src="https://image.yes24.com/goods/8091413/L" alt="그린보이 표지" loading="lazy"></a>
+    <a class="cv" href="https://www.yes24.com/product/goods/1373199" rel="nofollow noopener noreferrer" target="_blank" title="꽃으로 때리지 말라"><img src="https://image.yes24.com/goods/1373199/L" alt="꽃으로 때리지 말라 표지" loading="lazy"></a>
+    <a class="cv" href="https://www.yes24.com/product/goods/86154834" rel="nofollow noopener noreferrer" target="_blank" title="나의 비거니즘 만화"><img src="https://image.yes24.com/goods/86154834/L" alt="나의 비거니즘 만화 표지" loading="lazy"></a>
+    <a class="cv" href="https://www.yes24.com/product/goods/106722" rel="nofollow noopener noreferrer" target="_blank" title="달의 궁전"><img src="https://image.yes24.com/goods/106722/L" alt="달의 궁전 표지" loading="lazy"></a>
+    <a class="cv" href="https://www.yes24.com/product/goods/74207752" rel="nofollow noopener noreferrer" target="_blank" title="당신은 개를 키우면 안 된다"><img src="https://image.yes24.com/goods/74207752/L" alt="당신은 개를 키우면 안 된다 표지" loading="lazy"></a>
+    <a class="cv" href="https://www.yes24.com/product/goods/167892656" rel="nofollow noopener noreferrer" target="_blank" title="모피를 입은 비너스"><img src="https://image.yes24.com/goods/167892656/L" alt="모피를 입은 비너스 표지" loading="lazy"></a>
+    <a class="cv" href="https://www.yes24.com/product/goods/1789" rel="nofollow noopener noreferrer" target="_blank" title="무소유"><img src="https://image.yes24.com/goods/1789/L" alt="무소유 표지" loading="lazy"></a>
+    <a class="cv" href="https://www.yes24.com/product/goods/110545378" rel="nofollow noopener noreferrer" target="_blank" title="문학의 숲을 거닐다"><img src="https://image.yes24.com/goods/110545378/L" alt="문학의 숲을 거닐다 표지" loading="lazy"></a>
+    <a class="cv" href="https://www.yes24.com/product/goods/1979099" rel="nofollow noopener noreferrer" target="_blank" title="생일"><img src="https://image.yes24.com/goods/1979099/L" alt="생일 표지" loading="lazy"></a>
+    <a class="cv" href="https://www.yes24.com/product/goods/177155069" rel="nofollow noopener noreferrer" target="_blank" title="심플하게 산다"><img src="https://image.yes24.com/goods/177155069/L" alt="심플하게 산다 표지" loading="lazy"></a>
+    <a class="cv" href="https://www.yes24.com/product/goods/92901787" rel="nofollow noopener noreferrer" target="_blank" title="어린왕자"><img src="https://image.yes24.com/goods/92901787/L" alt="어린왕자 표지" loading="lazy"></a>
+    <a class="cv" href="https://www.yes24.com/product/goods/27832932" rel="nofollow noopener noreferrer" target="_blank" title="열정"><img src="https://image.yes24.com/goods/27832932/L" alt="열정 표지" loading="lazy"></a>
+    <a class="cv" href="https://www.yes24.com/product/goods/24937700" rel="nofollow noopener noreferrer" target="_blank" title="왜 세계의 절반은 굶주리는가"><img src="https://image.yes24.com/goods/24937700/L" alt="왜 세계의 절반은 굶주리는가 표지" loading="lazy"></a>
+    <a class="cv" href="https://www.yes24.com/product/goods/74466" rel="nofollow noopener noreferrer" target="_blank" title="외딴 방"><img src="https://image.yes24.com/goods/74466/L" alt="외딴 방 표지" loading="lazy"></a>
+    <a class="cv" href="https://www.yes24.com/product/goods/249882" rel="nofollow noopener noreferrer" target="_blank" title="육식의 종말"><img src="https://image.yes24.com/goods/249882/L" alt="육식의 종말 표지" loading="lazy"></a>
+    <a class="cv" href="https://www.yes24.com/product/goods/134636122" rel="nofollow noopener noreferrer" target="_blank" title="채링크로스 84번지"><img src="https://image.yes24.com/goods/134636122/L" alt="채링크로스 84번지 표지" loading="lazy"></a>
+    <a class="cv" href="https://www.yes24.com/product/goods/64197033" rel="nofollow noopener noreferrer" target="_blank" title="헬렌 니어링의 소박한 밥상"><img src="https://image.yes24.com/goods/64197033/L" alt="헬렌 니어링의 소박한 밥상 표지" loading="lazy"></a>
+    <a class="cv" href="https://www.yes24.com/product/goods/204300" rel="nofollow noopener noreferrer" target="_blank" title="호밀밭의 파수꾼"><img src="https://image.yes24.com/goods/204300/L" alt="호밀밭의 파수꾼 표지" loading="lazy"></a>
+    <a class="cv" href="https://www.yes24.com/product/goods/6322199" rel="nofollow noopener noreferrer" target="_blank" title="화차"><img src="https://image.yes24.com/goods/6322199/L" alt="화차 표지" loading="lazy"></a>
     </div>
     <ol class="reading-list" id="rlist">
     <li class="rl-item" id="b1">
@@ -831,6 +867,22 @@
     </ol>
     </div>
   </section>
+  <script>
+  (function () {
+    var area = document.getElementById("shelf-area");
+    var tabs = document.querySelectorAll(".view-tabs .vt");
+    if (!area || !tabs.length) return;
+    function set(v, save) {
+      area.classList.toggle("show-covers", v === "cover");
+      tabs.forEach(function (t) { t.setAttribute("aria-pressed", String(t.dataset.view === v)); });
+      if (save) { try { localStorage.setItem("shelfView", v); } catch (e) {} }
+    }
+    var saved = null;
+    try { saved = localStorage.getItem("shelfView"); } catch (e) {}
+    if (saved === "cover") set("cover", false);
+    tabs.forEach(function (t) { t.addEventListener("click", function () { set(t.dataset.view, true); }); });
+  })();
+  </script>
   <script>
   (function () {
     var btns = [document.getElementById("shelf-cap"), document.getElementById("shelf-cap-clear")]

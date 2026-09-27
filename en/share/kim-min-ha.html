@@ -53,7 +53,6 @@
     "description": "South Korean actress known for Apple TV+ series 'Pachinko' and K-drama 'Mr. Sunshine'.",
     "image": "https://media.themoviedb.org/t/p/w500/zPNNamrJLWoXADXALQmuTdo6zBS.jpg"
   },
-  "mainEntityOfPage": "https://favorbook.co.kr/en/share/kim-min-ha.html",
   "hasPart": {
     "@type": "ItemList",
     "name": "Books read by Kim Min-ha",
@@ -348,6 +347,9 @@
     nav { margin: 50px 0 16px; font-size: 13px; }
     .celeb-header { display: flex; align-items: center; gap: 20px; margin-bottom: 16px; flex-wrap: wrap; }
     .celeb-img { width: 120px; height: 120px; border-radius: 50%; object-fit: cover; border: 2px solid #000; }
+    .celeb-photo-wrap { position: relative; flex-shrink: 0; }
+    .img-credit { position: absolute; bottom: 0; right: 0; font-size: 10px; line-height: 1; padding: 2px 4px; background: rgba(255,255,255,0.85); border: 1px solid #ccc; border-radius: 999px; text-decoration: none; color: #555; opacity: 0.55; transition: opacity .15s; }
+    .img-credit:hover { opacity: 1; text-decoration: none; }
     h1 { font-size: 28px; margin: 0 0 8px; font-weight: 900; }
     h2 { font-size: 19px; margin: 32px 0 12px; padding-bottom: 4px; border-bottom: 2px solid #000; font-weight: 800; }
     .intro { background: #fff; border: 2px solid #000; box-shadow: 4px 4px 0 0 #000; padding: 14px 16px; margin: 16px 0 24px; font-size: 15px; }
@@ -358,6 +360,17 @@
     .pfaq-q h3 { font-size: 15px; font-weight: 800; margin: 0 0 6px; }
     .pfaq-q p { font-size: 14px; margin: 0; color: #333; }
     .grp-link { margin: 10px 0 0; padding: 8px 12px; background: #fff8e7; border: 2px solid #000; box-shadow: 3px 3px 0 0 #000; font-size: 14px; }
+    .rl-shared { clear: both; margin-top: 12px; padding-top: 10px; border-top: 1.5px dashed #ccc; display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
+    .rl-shared-label { font-size: 12px; color: #666; font-weight: 700; }
+    .rl-celeb-chip { font-size: 12px; padding: 2px 8px; background: #fff; border: 1.5px solid #000; border-radius: 999px; color: #000; }
+    .rl-book-link { font-size: 12px; font-weight: 700; }
+    .muted { color: #666; font-size: 13px; }
+    .related-celebs { margin: 24px 0; }
+    .related-celeb-list { display: flex; flex-wrap: wrap; gap: 8px; }
+    .related-celeb { padding: 6px 12px; background: #fff; border: 2px solid #000; box-shadow: 2px 2px 0 0 #000; font-size: 13px; font-weight: 700; color: #000; }
+    .rc-count { display: inline-block; min-width: 18px; padding: 0 5px; margin-left: 4px; background: #fde047; border: 1.5px solid #000; border-radius: 999px; font-size: 11px; text-align: center; }
+    .celeb-pager { margin: 32px 0 16px; display: flex; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
+    .pager-link { padding: 8px 12px; background: #fff; border: 2px solid #000; box-shadow: 3px 3px 0 0 #000; font-size: 13px; font-weight: 700; color: #000; }
     .shelf-head { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
     .shelf-head h2 { margin-bottom: 0; border-bottom: none; padding-bottom: 0; }
     .shelf-tabs { display: flex; gap: 6px; flex-wrap: wrap; }
@@ -365,6 +378,19 @@
               background: #fff; color: #000; border: 2px solid #000; box-shadow: 2px 2px 0 0 #000; }
     .sh-cap:hover { background: #fde047; }
     .sh-cap[disabled] { opacity: .55; cursor: default; }
+    .view-tabs { display: inline-flex; border: 2px solid #000; box-shadow: 2px 2px 0 0 #000; background: #fff; }
+    .vt { font: inherit; font-size: 12px; font-weight: 700; padding: 5px 10px; background: #fff; color: #000; border: 0; cursor: pointer; }
+    .vt + .vt { border-left: 2px solid #000; }
+    .vt[aria-pressed="true"] { background: #000; color: #fff; }
+    .covers { display: none; grid-template-columns: repeat(auto-fill, minmax(84px, 1fr)); gap: 14px 12px; margin: 14px 0 22px; }
+    .show-covers .covers { display: grid; }
+    .show-covers .shelf { display: none; }
+    .cv { position: relative; display: block; aspect-ratio: 2/3; border: 1.5px solid #000; box-shadow: 2px 2px 0 0 #000;
+          background: #f4f4f0; overflow: hidden; color: #000; text-decoration: none; transition: transform .12s; }
+    .cv:hover { transform: translateY(-3px); text-decoration: none; }
+    .cv img { width: 100%; height: 100%; object-fit: cover; display: block; }
+    .cv-no { display: flex; height: 100%; align-items: center; justify-content: center; padding: 6px;
+             font-size: 11px; font-weight: 700; line-height: 1.3; text-align: center; word-break: keep-all; }
     .shelf { --sh-h: 270px; --plank: 7px; --row: calc(var(--sh-h) + 18px);
              display: flex; flex-wrap: wrap; align-items: flex-end; gap: 11px 2px;
              margin: 14px 0 22px; padding: 0 8px 7px;
@@ -442,13 +468,16 @@
 </head>
 <body>
   <div class="lang-toggle">
-    <button class="lang-btn copy-btn" type="button" data-url="https://favorbook.co.kr/en/share/kim-min-ha.html" data-done="Copied!">🔗 Copy link</button>
+    <button class="lang-btn copy-btn" type="button" data-url="https://favorbook.co.kr/s/e/kim-min-ha.html" data-done="Copied!">🔗 Copy link</button>
     <a class="lang-btn" href="https://favorbook.co.kr/share/%EA%B9%80%EB%AF%BC%ED%95%98.html" hreflang="ko">한국어</a>
     <span class="lang-btn active">EN</span>
   </div>
-  <nav><a href="https://favorbook.co.kr/en/">← Favorbook Home</a></nav>
+  <nav><a href="https://favorbook.co.kr/en/">← Favorbook Home</a> · <a href="https://favorbook.co.kr/en/share/ranking.html">Most-read books ranking</a></nav>
   <header class="celeb-header">
+    <div class="celeb-photo-wrap">
     <img class="celeb-img" src="https://media.themoviedb.org/t/p/w500/zPNNamrJLWoXADXALQmuTdo6zBS.jpg" alt="Kim Min-ha profile photo" width="120" height="120">
+      <a class="img-credit" href="https://media.themoviedb.org/t/p/w500/zPNNamrJLWoXADXALQmuTdo6zBS.jpg" target="_blank" rel="nofollow noopener noreferrer" title="Image source">📷</a>
+    </div>
     <div>
       <h1>Kim Min-ha Books<span style="font-weight:400;color:#666;font-size:18px"> · 김민하 책</span></h1>
       <p class="celeb-bio">South Korean actress known for Apple TV+ series &#x27;Pachinko&#x27; and K-drama &#x27;Mr. Sunshine&#x27;.</p>
@@ -465,6 +494,7 @@
     <div class="shelf-head">
       <h2>Books Kim Min-ha has read (12)</h2>
       <div class="shelf-tabs">
+        <span class="view-tabs" role="group"><button type="button" class="vt" data-view="spine" aria-pressed="true">📚 Spines</button><button type="button" class="vt" data-view="cover" aria-pressed="false">🖼 Covers</button></span>
         <button type="button" class="sh-cap" id="shelf-cap" title="Download the bookshelf as an image">⤓ Save image</button>
         <button type="button" class="sh-cap" id="shelf-cap-clear" title="Download as a PNG with a transparent background">⤓ Transparent</button>
       </div>
@@ -493,6 +523,20 @@
     <a class="sp" style="--c:hsl(74,42%,31%);--w:41px;--fs:13px" href="https://www.yes24.com/product/goods/3819356" rel="nofollow noopener noreferrer" target="_blank" title="Time to Live and Time to Die"><span class="sp-t"><i>Time to Live and Time to Die</i></span><img class="sp-i" src="https://image.yes24.com/goods/3819356/side" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.parentNode.classList.add('sp-fail');this.remove()" onload="if(this.naturalWidth/this.naturalHeight>0.4){this.parentNode.classList.add('sp-fail');this.remove()}"></a>
     <a class="sp is-new" style="--c:hsl(295,57%,41%);--w:36px;--fs:14px" href="https://www.yes24.com/product/goods/127043675" rel="nofollow noopener noreferrer" target="_blank" title="Walking in A Carrot Field"><span class="sp-t"><i>Walking in A Carrot Field</i></span><img class="sp-i" src="https://image.yes24.com/goods/127043675/side" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.parentNode.classList.add('sp-fail');this.remove()" onload="if(this.naturalWidth/this.naturalHeight>0.4){this.parentNode.classList.add('sp-fail');this.remove()}"><span class="sp-new" data-added="2026-09-26">NEW</span></a>
     </div>
+    <div class="covers" id="covers">
+    <a class="cv" href="https://www.yes24.com/product/goods/123040491" rel="nofollow noopener noreferrer" target="_blank" title="Cat&#x27;s Eye"><img src="https://image.yes24.com/goods/123040491/L" alt="Cat&#x27;s Eye by Margaret Atwood — book cover" loading="lazy"></a>
+    <a class="cv" href="https://www.yes24.com/product/goods/116046899" rel="nofollow noopener noreferrer" target="_blank" title="Closing My Eyes When We Kiss"><span class="rl-new" data-added="2026-09-26">NEW</span><img src="https://image.yes24.com/goods/116046899/L" alt="Closing My Eyes When We Kiss by Go Myeongjae — book cover" loading="lazy"></a>
+    <a class="cv" href="https://www.yes24.com/product/goods/118578901" rel="nofollow noopener noreferrer" target="_blank" title="Hunger"><img src="https://image.yes24.com/goods/118578901/L" alt="Hunger by Choi Jin-young — book cover" loading="lazy"></a>
+    <a class="cv" href="https://www.yes24.com/product/goods/122544941" rel="nofollow noopener noreferrer" target="_blank" title="Just One Person"><img src="https://image.yes24.com/goods/122544941/L" alt="Just One Person by Choi Jin-young — book cover" loading="lazy"></a>
+    <a class="cv" href="https://www.yes24.com/product/goods/29172898" rel="nofollow noopener noreferrer" target="_blank" title="Kokoro"><img src="https://image.yes24.com/goods/29172898/L" alt="Kokoro by Soseki Natsume — book cover" loading="lazy"></a>
+    <a class="cv" href="https://www.yes24.com/product/goods/129094707" rel="nofollow noopener noreferrer" target="_blank" title="Memory Gesture"><span class="rl-new" data-added="2026-09-26">NEW</span><img src="https://image.yes24.com/goods/129094707/L" alt="Memory Gesture by Ahn Taewoon — book cover" loading="lazy"></a>
+    <a class="cv" href="https://www.yes24.com/product/goods/147560993" rel="nofollow noopener noreferrer" target="_blank" title="My Pocket Is Clear and Strong Wind"><img src="https://image.yes24.com/goods/147560993/L" alt="My Pocket Is Clear and Strong Wind by Choi Jin-young — book cover" loading="lazy"></a>
+    <a class="cv" href="https://www.yes24.com/product/goods/125678791" rel="nofollow noopener noreferrer" target="_blank" title="Person Crying in A Dream"><span class="rl-new" data-added="2026-09-26">NEW</span><img src="https://image.yes24.com/goods/125678791/L" alt="Person Crying in A Dream by Jang Seok-Ju — book cover" loading="lazy"></a>
+    <a class="cv" href="https://www.yes24.com/product/goods/195293" rel="nofollow noopener noreferrer" target="_blank" title="Surviving on a Desert Island"><img src="https://image.yes24.com/goods/195293/L" alt="Surviving on a Desert Island by Choi Deok-hee, Kang Gyung-hyo — book cover" loading="lazy"></a>
+    <a class="cv" href="https://www.yes24.com/product/goods/119886818" rel="nofollow noopener noreferrer" target="_blank" title="The Creative Act: A Way of Being"><img src="https://image.yes24.com/goods/119886818/L" alt="The Creative Act: A Way of Being by Rick Rubin — book cover" loading="lazy"></a>
+    <a class="cv" href="https://www.yes24.com/product/goods/3819356" rel="nofollow noopener noreferrer" target="_blank" title="Time to Live and Time to Die"><img src="https://image.yes24.com/goods/3819356/L" alt="Time to Live and Time to Die by Erich Maria Remarque — book cover" loading="lazy"></a>
+    <a class="cv" href="https://www.yes24.com/product/goods/127043675" rel="nofollow noopener noreferrer" target="_blank" title="Walking in A Carrot Field"><span class="rl-new" data-added="2026-09-26">NEW</span><img src="https://image.yes24.com/goods/127043675/L" alt="Walking in A Carrot Field by Ahn Hee-Yeon — book cover" loading="lazy"></a>
+    </div>
     <ol class="reading-list" id="rlist">
     <li class="rl-item" id="b1">
       <span class="rl-num">1</span>
@@ -512,6 +556,7 @@
         <div class="rl-byline">Go Myeongjae *</div>
         <a class="rl-source" href="https://www.facebook.com/munhak/posts/%EC%9A%B0%EC%8B%9C%EC%82%AC%EC%99%80-%ED%95%A8%EA%BB%98%EA%B9%80%EB%AF%BC%ED%95%98-%EB%B0%B0%EC%9A%B0%EA%B0%80-%EC%82%AC%EB%9E%91%ED%95%9C-%EC%88%9C%EA%B0%84%EB%93%A4%EC%A0%84-%EC%A0%95%EB%A7%90-%EA%B7%B8%EB%8F%99%EC%95%88-%EC%9A%B0%EC%8B%9C%EC%82%AC%EB%A5%BC-%ED%86%B5%ED%95%B4-%EB%A7%8E%EC%9D%80-%EA%B2%83%EB%93%A4%EC%9D%84-%EB%8A%90%EA%BC%88%EC%8A%B5%EB%8B%88%EB%8B%A4%EC%95%84%EB%8B%88-%EB%98%90-%EB%8A%90%EB%82%8D%EB%8B%88%EB%8B%A4-%EB%82%98%EB%8A%94-%EC%A0%95%EB%A7%90-%ED%98%BC%EC%9E%90%EA%B0%80-%EC%95%84%EB%8B%88%EA%B5%AC%EB%82%98%EC%9D%B4%EB%A0%87%EA%B2%8C-%EC%86%8C/993494019477962/" rel="nofollow noopener noreferrer" target="_blank">📺 Source</a>
         <button type="button" class="heart-btn sm" data-heart="b:우리가 키스할 때 눈을 감는 건" aria-pressed="false" aria-label="Heart this book" title="Heart this book" hidden><span class="heart-ico" aria-hidden="true">♡</span><span class="heart-n"></span></button>
+        <div class="rl-shared"><span class="rl-shared-label">👥 Also recommended by 2:</span> <a class="rl-celeb-chip" href="https://favorbook.co.kr/en/share/park-jung-min.html">Park Jung-min</a><a class="rl-celeb-chip" href="https://favorbook.co.kr/en/share/lee-je-hoon.html">Lee Je-hoon</a> <a class="rl-book-link" href="https://favorbook.co.kr/en/share/book/closing-my-eyes-when-we-kiss.html">All readers →</a></div>
       </div>
     </li>
     <li class="rl-item" id="b3">
@@ -522,6 +567,7 @@
         <div class="rl-byline">Choi Jin-young</div>
         <a class="rl-source" href="https://blog.naver.com/minumworld/223316875496" rel="nofollow noopener noreferrer" target="_blank">📺 Source</a>
         <button type="button" class="heart-btn sm" data-heart="b:구의 증명" aria-pressed="false" aria-label="Heart this book" title="Heart this book" hidden><span class="heart-ico" aria-hidden="true">♡</span><span class="heart-n"></span></button>
+        <div class="rl-shared"><span class="rl-shared-label">👥 Also recommended by 9:</span> <a class="rl-celeb-chip" href="https://favorbook.co.kr/en/share/gawon-meovv.html">Gawon (MEOVV)</a><a class="rl-celeb-chip" href="https://favorbook.co.kr/en/share/martin-cortis.html">Martin (CORTIS)</a><a class="rl-celeb-chip" href="https://favorbook.co.kr/en/share/mun-ka-young.html">Mun Ka-young</a><a class="rl-celeb-chip" href="https://favorbook.co.kr/en/share/juhoon-cortis.html">Juhoon (CORTIS)</a><a class="rl-celeb-chip" href="https://favorbook.co.kr/en/share/hanroro.html">Hanroro</a><a class="rl-celeb-chip" href="https://favorbook.co.kr/en/share/kim-minju.html">Kim Minju</a><a class="rl-celeb-chip" href="https://favorbook.co.kr/en/share/leoalpha-drive-one.html">LEO(ALPHA DRIVE ONE)</a><a class="rl-celeb-chip" href="https://favorbook.co.kr/en/share/g-dragon-bigbang.html">G-Dragon (BIGBANG)</a><a class="rl-celeb-chip" href="https://favorbook.co.kr/en/share/jo-yu-ri.html">Jo Yu-ri</a> <a class="rl-book-link" href="https://favorbook.co.kr/en/share/book/hunger.html">All readers →</a></div>
       </div>
     </li>
     <li class="rl-item" id="b4">
@@ -533,6 +579,7 @@
         <p class="rl-comment">A book by Choi Jin-young, an author Kim Min-ha has long loved; fans recall an interview where the book was mentioned as one to look forward to. (Source: Elle Korea)</p>
         <a class="rl-source" href="https://www.elle.co.kr/ellevoice/community/detail/3833" rel="nofollow noopener noreferrer" target="_blank">📺 Source</a>
         <button type="button" class="heart-btn sm" data-heart="b:단 한 사람" aria-pressed="false" aria-label="Heart this book" title="Heart this book" hidden><span class="heart-ico" aria-hidden="true">♡</span><span class="heart-n"></span></button>
+        <div class="rl-shared"><span class="rl-shared-label">👥 Also recommended by 1:</span> <a class="rl-celeb-chip" href="https://favorbook.co.kr/en/share/seolhyun.html">Seolhyun</a> <a class="rl-book-link" href="https://favorbook.co.kr/en/share/book/just-one-person.html">All readers →</a></div>
       </div>
     </li>
     <li class="rl-item" id="b5">
@@ -543,6 +590,7 @@
         <div class="rl-byline">Soseki Natsume</div>
         <a class="rl-source" href="https://www.allurekorea.com/2024/11/22/full-of-love-%ea%b9%80%eb%af%bc%ed%95%98/" rel="nofollow noopener noreferrer" target="_blank">📺 Source</a>
         <button type="button" class="heart-btn sm" data-heart="b:마음" aria-pressed="false" aria-label="Heart this book" title="Heart this book" hidden><span class="heart-ico" aria-hidden="true">♡</span><span class="heart-n"></span></button>
+        <div class="rl-shared"><span class="rl-shared-label">👥 Also recommended by 2:</span> <a class="rl-celeb-chip" href="https://favorbook.co.kr/en/share/shim-eun-kyung.html">Shim Eun-kyung</a><a class="rl-celeb-chip" href="https://favorbook.co.kr/en/share/yeri-red-velvet.html">Yeri (Red Velvet)</a> <a class="rl-book-link" href="https://favorbook.co.kr/en/share/book/kokoro.html">All readers →</a></div>
       </div>
     </li>
     <li class="rl-item" id="b6">
@@ -564,6 +612,7 @@
         <p class="rl-comment">Picked in a GQ interview as a recent read. It feels like the diary of Choi Jin-young, a favorite author, and one line about writing desperately what no one will ever see mirrors Kim Min-ha&#x27;s own daily journaling. (Source: GQ Korea)</p>
         <a class="rl-source" href="https://www.gqkorea.co.kr/2026/02/26/%EA%B9%80%EB%AF%BC%ED%95%98/" rel="nofollow noopener noreferrer" target="_blank">📺 Source</a>
         <button type="button" class="heart-btn sm" data-heart="b:내 주머니는 맑고 강풍" aria-pressed="false" aria-label="Heart this book" title="Heart this book" hidden><span class="heart-ico" aria-hidden="true">♡</span><span class="heart-n"></span></button>
+        <div class="rl-shared"><span class="rl-shared-label">👥 Also recommended by 1:</span> <a class="rl-celeb-chip" href="https://favorbook.co.kr/en/share/yozoh.html">Yozoh</a> <a class="rl-book-link" href="https://favorbook.co.kr/en/share/book/my-pocket-is-clear-and-strong-wind.html">All readers →</a></div>
       </div>
     </li>
     <li class="rl-item" id="b8">
@@ -596,6 +645,7 @@
         <p class="rl-comment">Recommended in a Rolling Stone Korea interview. A rare non-fiction read that felt like meeting a friend you could talk with for four hours straight. (Source: Rolling Stone Korea)</p>
         <a class="rl-source" href="https://rollingstone.co.kr/main-trending/$/20329" rel="nofollow noopener noreferrer" target="_blank">📺 Source</a>
         <button type="button" class="heart-btn sm" data-heart="b:창조적 행위" aria-pressed="false" aria-label="Heart this book" title="Heart this book" hidden><span class="heart-ico" aria-hidden="true">♡</span><span class="heart-n"></span></button>
+        <div class="rl-shared"><span class="rl-shared-label">👥 Also recommended by 12:</span> <a class="rl-celeb-chip" href="https://favorbook.co.kr/en/share/geonho-cortis.html">Geonho (CORTIS)</a><a class="rl-celeb-chip" href="https://favorbook.co.kr/en/share/kim-yoo-jung.html">Kim Yoo-jung</a><a class="rl-celeb-chip" href="https://favorbook.co.kr/en/share/dino-seventeen.html">Dino (SEVENTEEN)</a><a class="rl-celeb-chip" href="https://favorbook.co.kr/en/share/martin-cortis.html">Martin (CORTIS)</a><a class="rl-celeb-chip" href="https://favorbook.co.kr/en/share/vernon-seventeen.html">Vernon (SEVENTEEN)</a><a class="rl-celeb-chip" href="https://favorbook.co.kr/en/share/choi-jung-hoon-jannabi.html">Choi Jung-hoon (Jannabi)</a><a class="rl-celeb-chip" href="https://favorbook.co.kr/en/share/theo-p1harmony.html">Theo (P1Harmony)</a><a class="rl-celeb-chip" href="https://favorbook.co.kr/en/share/huh-yunjin-le-sserafim.html">Huh Yunjin (LE SSERAFIM)</a><a class="rl-celeb-chip" href="https://favorbook.co.kr/en/share/sumin.html">Sumin</a><a class="rl-celeb-chip" href="https://favorbook.co.kr/en/share/g-dragon-bigbang.html">G-Dragon (BIGBANG)</a><a class="rl-celeb-chip" href="https://favorbook.co.kr/en/share/ha-hyun-sang.html">Ha Hyun Sang</a><a class="rl-celeb-chip" href="https://favorbook.co.kr/en/share/jiung-p1harmony.html">JIUNG (P1Harmony)</a> <a class="rl-book-link" href="https://favorbook.co.kr/en/share/book/the-creative-act-a-way-of-being.html">All readers →</a></div>
       </div>
     </li>
     <li class="rl-item" id="b11">
@@ -621,6 +671,22 @@
     </ol>
     </div>
   </section>
+  <script>
+  (function () {
+    var area = document.getElementById("shelf-area");
+    var tabs = document.querySelectorAll(".view-tabs .vt");
+    if (!area || !tabs.length) return;
+    function set(v, save) {
+      area.classList.toggle("show-covers", v === "cover");
+      tabs.forEach(function (t) { t.setAttribute("aria-pressed", String(t.dataset.view === v)); });
+      if (save) { try { localStorage.setItem("shelfView", v); } catch (e) {} }
+    }
+    var saved = null;
+    try { saved = localStorage.getItem("shelfView"); } catch (e) {}
+    if (saved === "cover") set("cover", false);
+    tabs.forEach(function (t) { t.addEventListener("click", function () { set(t.dataset.view, true); }); });
+  })();
+  </script>
   <script>
   (function () {
     var btns = [document.getElementById("shelf-cap"), document.getElementById("shelf-cap-clear")]
@@ -833,6 +899,28 @@
   })();
   </script>
   <p class="tr-note">Book titles and author names marked with an asterisk (<strong>*</strong>) are machine-translated from Korean. No official English edition was confirmed for them, so read them as approximations of the Korean original shown next to them.</p>
+  <section>
+    <h2>📝 Kim Min-ha's reading taste</h2>
+    <p>Authors that come up most often in Kim Min-ha's list: Choi Jin-young (3 books), Ahn Hee-Yeon, Ahn Taewoon.</p>
+  </section>
+  <section class="related-celebs">
+    <h2>🤝 Celebrities with similar reading taste</h2>
+    <p class="muted">They recommended some of the same books. The number is how many books they share.</p>
+    <div class="related-celeb-list">
+      <a class="related-celeb" href="https://favorbook.co.kr/en/share/martin-cortis.html">Martin (CORTIS) <span class="rc-count">2</span></a>
+      <a class="related-celeb" href="https://favorbook.co.kr/en/share/g-dragon-bigbang.html">G-Dragon (BIGBANG) <span class="rc-count">2</span></a>
+      <a class="related-celeb" href="https://favorbook.co.kr/en/share/gawon-meovv.html">Gawon (MEOVV) <span class="rc-count">1</span></a>
+      <a class="related-celeb" href="https://favorbook.co.kr/en/share/geonho-cortis.html">Geonho (CORTIS) <span class="rc-count">1</span></a>
+      <a class="related-celeb" href="https://favorbook.co.kr/en/share/kim-minju.html">Kim Minju <span class="rc-count">1</span></a>
+      <a class="related-celeb" href="https://favorbook.co.kr/en/share/seolhyun.html">Seolhyun <span class="rc-count">1</span></a>
+      <a class="related-celeb" href="https://favorbook.co.kr/en/share/kim-yoo-jung.html">Kim Yoo-jung <span class="rc-count">1</span></a>
+      <a class="related-celeb" href="https://favorbook.co.kr/en/share/dino-seventeen.html">Dino (SEVENTEEN) <span class="rc-count">1</span></a>
+      <a class="related-celeb" href="https://favorbook.co.kr/en/share/leoalpha-drive-one.html">LEO(ALPHA DRIVE ONE) <span class="rc-count">1</span></a>
+      <a class="related-celeb" href="https://favorbook.co.kr/en/share/mun-ka-young.html">Mun Ka-young <span class="rc-count">1</span></a>
+      <a class="related-celeb" href="https://favorbook.co.kr/en/share/park-jung-min.html">Park Jung-min <span class="rc-count">1</span></a>
+      <a class="related-celeb" href="https://favorbook.co.kr/en/share/vernon-seventeen.html">Vernon (SEVENTEEN) <span class="rc-count">1</span></a>
+    </div>
+  </section>
   <section class="pfaq">
     <h2>Kim Min-ha book recommendations — FAQ</h2>
     <div class="pfaq-q">
@@ -848,6 +936,10 @@
       <p>Public sources only — interviews, YouTube clips, variety shows, fan-cafe posts and SNS. A book is added to this reading list only when the mention can be linked, and the link stays on the entry so you can check it yourself.</p>
     </div>
   </section>
+  <nav class="celeb-pager" aria-label="Browse celebrities">
+      <a class="pager-link pager-prev" rel="prev" href="https://favorbook.co.kr/en/share/kim-kang-woo.html">← Kim Kang-woo's books</a>
+      <a class="pager-link pager-next" rel="next" href="https://favorbook.co.kr/en/share/kim-min-seok.html">Kim Min-seok's books →</a>
+  </nav>
   <footer>
     <p>Curated from public Korean-language sources. Korean original page: <a href="https://favorbook.co.kr/share/%EA%B9%80%EB%AF%BC%ED%95%98.html" hreflang="ko">김민하</a>.</p>
     <p><a href="https://favorbook.co.kr/en/">Browse more Korean celebrity book lists →</a></p>

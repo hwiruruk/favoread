@@ -53,7 +53,6 @@
     "description": "South Korean model and actress, married to actor Yoo Ji-tae.",
     "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/4/4e/Marie_Claire_Korea_%EA%B9%80%ED%9A%A8%EC%A7%84%EC%9D%98_Cozy_Scenes.png/330px-Marie_Claire_Korea_%EA%B9%80%ED%9A%A8%EC%A7%84%EC%9D%98_Cozy_Scenes.png"
   },
-  "mainEntityOfPage": "https://favorbook.co.kr/en/share/kim-hyo-jin.html",
   "hasPart": {
     "@type": "ItemList",
     "name": "Books read by Kim Hyo-jin",
@@ -492,6 +491,9 @@
     nav { margin: 50px 0 16px; font-size: 13px; }
     .celeb-header { display: flex; align-items: center; gap: 20px; margin-bottom: 16px; flex-wrap: wrap; }
     .celeb-img { width: 120px; height: 120px; border-radius: 50%; object-fit: cover; border: 2px solid #000; }
+    .celeb-photo-wrap { position: relative; flex-shrink: 0; }
+    .img-credit { position: absolute; bottom: 0; right: 0; font-size: 10px; line-height: 1; padding: 2px 4px; background: rgba(255,255,255,0.85); border: 1px solid #ccc; border-radius: 999px; text-decoration: none; color: #555; opacity: 0.55; transition: opacity .15s; }
+    .img-credit:hover { opacity: 1; text-decoration: none; }
     h1 { font-size: 28px; margin: 0 0 8px; font-weight: 900; }
     h2 { font-size: 19px; margin: 32px 0 12px; padding-bottom: 4px; border-bottom: 2px solid #000; font-weight: 800; }
     .intro { background: #fff; border: 2px solid #000; box-shadow: 4px 4px 0 0 #000; padding: 14px 16px; margin: 16px 0 24px; font-size: 15px; }
@@ -502,6 +504,17 @@
     .pfaq-q h3 { font-size: 15px; font-weight: 800; margin: 0 0 6px; }
     .pfaq-q p { font-size: 14px; margin: 0; color: #333; }
     .grp-link { margin: 10px 0 0; padding: 8px 12px; background: #fff8e7; border: 2px solid #000; box-shadow: 3px 3px 0 0 #000; font-size: 14px; }
+    .rl-shared { clear: both; margin-top: 12px; padding-top: 10px; border-top: 1.5px dashed #ccc; display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
+    .rl-shared-label { font-size: 12px; color: #666; font-weight: 700; }
+    .rl-celeb-chip { font-size: 12px; padding: 2px 8px; background: #fff; border: 1.5px solid #000; border-radius: 999px; color: #000; }
+    .rl-book-link { font-size: 12px; font-weight: 700; }
+    .muted { color: #666; font-size: 13px; }
+    .related-celebs { margin: 24px 0; }
+    .related-celeb-list { display: flex; flex-wrap: wrap; gap: 8px; }
+    .related-celeb { padding: 6px 12px; background: #fff; border: 2px solid #000; box-shadow: 2px 2px 0 0 #000; font-size: 13px; font-weight: 700; color: #000; }
+    .rc-count { display: inline-block; min-width: 18px; padding: 0 5px; margin-left: 4px; background: #fde047; border: 1.5px solid #000; border-radius: 999px; font-size: 11px; text-align: center; }
+    .celeb-pager { margin: 32px 0 16px; display: flex; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
+    .pager-link { padding: 8px 12px; background: #fff; border: 2px solid #000; box-shadow: 3px 3px 0 0 #000; font-size: 13px; font-weight: 700; color: #000; }
     .shelf-head { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
     .shelf-head h2 { margin-bottom: 0; border-bottom: none; padding-bottom: 0; }
     .shelf-tabs { display: flex; gap: 6px; flex-wrap: wrap; }
@@ -509,6 +522,19 @@
               background: #fff; color: #000; border: 2px solid #000; box-shadow: 2px 2px 0 0 #000; }
     .sh-cap:hover { background: #fde047; }
     .sh-cap[disabled] { opacity: .55; cursor: default; }
+    .view-tabs { display: inline-flex; border: 2px solid #000; box-shadow: 2px 2px 0 0 #000; background: #fff; }
+    .vt { font: inherit; font-size: 12px; font-weight: 700; padding: 5px 10px; background: #fff; color: #000; border: 0; cursor: pointer; }
+    .vt + .vt { border-left: 2px solid #000; }
+    .vt[aria-pressed="true"] { background: #000; color: #fff; }
+    .covers { display: none; grid-template-columns: repeat(auto-fill, minmax(84px, 1fr)); gap: 14px 12px; margin: 14px 0 22px; }
+    .show-covers .covers { display: grid; }
+    .show-covers .shelf { display: none; }
+    .cv { position: relative; display: block; aspect-ratio: 2/3; border: 1.5px solid #000; box-shadow: 2px 2px 0 0 #000;
+          background: #f4f4f0; overflow: hidden; color: #000; text-decoration: none; transition: transform .12s; }
+    .cv:hover { transform: translateY(-3px); text-decoration: none; }
+    .cv img { width: 100%; height: 100%; object-fit: cover; display: block; }
+    .cv-no { display: flex; height: 100%; align-items: center; justify-content: center; padding: 6px;
+             font-size: 11px; font-weight: 700; line-height: 1.3; text-align: center; word-break: keep-all; }
     .shelf { --sh-h: 270px; --plank: 7px; --row: calc(var(--sh-h) + 18px);
              display: flex; flex-wrap: wrap; align-items: flex-end; gap: 11px 2px;
              margin: 14px 0 22px; padding: 0 8px 7px;
@@ -586,13 +612,16 @@
 </head>
 <body>
   <div class="lang-toggle">
-    <button class="lang-btn copy-btn" type="button" data-url="https://favorbook.co.kr/en/share/kim-hyo-jin.html" data-done="Copied!">🔗 Copy link</button>
+    <button class="lang-btn copy-btn" type="button" data-url="https://favorbook.co.kr/s/e/kim-hyo-jin.html" data-done="Copied!">🔗 Copy link</button>
     <a class="lang-btn" href="https://favorbook.co.kr/share/%EA%B9%80%ED%9A%A8%EC%A7%84.html" hreflang="ko">한국어</a>
     <span class="lang-btn active">EN</span>
   </div>
-  <nav><a href="https://favorbook.co.kr/en/">← Favorbook Home</a></nav>
+  <nav><a href="https://favorbook.co.kr/en/">← Favorbook Home</a> · <a href="https://favorbook.co.kr/en/share/ranking.html">Most-read books ranking</a></nav>
   <header class="celeb-header">
+    <div class="celeb-photo-wrap">
     <img class="celeb-img" src="https://upload.wikimedia.org/wikipedia/commons/thumb/4/4e/Marie_Claire_Korea_%EA%B9%80%ED%9A%A8%EC%A7%84%EC%9D%98_Cozy_Scenes.png/330px-Marie_Claire_Korea_%EA%B9%80%ED%9A%A8%EC%A7%84%EC%9D%98_Cozy_Scenes.png" alt="Kim Hyo-jin profile photo" width="120" height="120">
+      <a class="img-credit" href="https://upload.wikimedia.org/wikipedia/commons/thumb/4/4e/Marie_Claire_Korea_%EA%B9%80%ED%9A%A8%EC%A7%84%EC%9D%98_Cozy_Scenes.png/330px-Marie_Claire_Korea_%EA%B9%80%ED%9A%A8%EC%A7%84%EC%9D%98_Cozy_Scenes.png" target="_blank" rel="nofollow noopener noreferrer" title="Image source">📷</a>
+    </div>
     <div>
       <h1>Kim Hyo-jin Books<span style="font-weight:400;color:#666;font-size:18px"> · 김효진 책</span></h1>
       <p class="celeb-bio">South Korean model and actress, married to actor Yoo Ji-tae.</p>
@@ -609,6 +638,7 @@
     <div class="shelf-head">
       <h2>Books Kim Hyo-jin has read (20)</h2>
       <div class="shelf-tabs">
+        <span class="view-tabs" role="group"><button type="button" class="vt" data-view="spine" aria-pressed="true">📚 Spines</button><button type="button" class="vt" data-view="cover" aria-pressed="false">🖼 Covers</button></span>
         <button type="button" class="sh-cap" id="shelf-cap" title="Download the bookshelf as an image">⤓ Save image</button>
         <button type="button" class="sh-cap" id="shelf-cap-clear" title="Download as a PNG with a transparent background">⤓ Transparent</button>
       </div>
@@ -635,6 +665,28 @@
     <a class="sp" style="--c:hsl(317,57%,34%);--w:38px;--fs:12px" href="https://www.yes24.com/product/goods/74466" rel="nofollow noopener noreferrer" target="_blank" title="The Girl Who Wrote Loneliness"><span class="sp-t"><i>The Girl Who Wrote Loneliness</i></span><img class="sp-i" src="https://image.yes24.com/goods/74466/side" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.parentNode.classList.add('sp-fail');this.remove()" onload="if(this.naturalWidth/this.naturalHeight>0.4){this.parentNode.classList.add('sp-fail');this.remove()}"></a>
     <a class="sp" style="--c:hsl(99,48%,32%);--w:42px;--fs:15px" href="https://www.yes24.com/product/goods/167892656" rel="nofollow noopener noreferrer" target="_blank" title="Venus in Furs"><span class="sp-t"><i>Venus in Furs</i></span><img class="sp-i" src="https://image.yes24.com/goods/167892656/side" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.parentNode.classList.add('sp-fail');this.remove()" onload="if(this.naturalWidth/this.naturalHeight>0.4){this.parentNode.classList.add('sp-fail');this.remove()}"></a>
     <a class="sp" style="--c:hsl(9,37%,26%);--w:36px;--fs:15px" href="https://www.yes24.com/product/goods/74207752" rel="nofollow noopener noreferrer" target="_blank" title="You Shouldn&#x27;t Have a Dog"><span class="sp-t"><i>You Shouldn&#x27;t Have a Dog</i></span><img class="sp-i" src="https://image.yes24.com/goods/74207752/side" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.parentNode.classList.add('sp-fail');this.remove()" onload="if(this.naturalWidth/this.naturalHeight>0.4){this.parentNode.classList.add('sp-fail');this.remove()}"></a>
+    </div>
+    <div class="covers" id="covers">
+    <a class="cv" href="https://www.yes24.com/product/goods/134636122" rel="nofollow noopener noreferrer" target="_blank" title="84, Charing Cross Road"><img src="https://image.yes24.com/goods/134636122/L" alt="84, Charing Cross Road by Helene Hanff — book cover" loading="lazy"></a>
+    <a class="cv" href="https://www.yes24.com/product/goods/6322199" rel="nofollow noopener noreferrer" target="_blank" title="All She Was Worth"><img src="https://image.yes24.com/goods/6322199/L" alt="All She Was Worth by Miyuki Miyabe — book cover" loading="lazy"></a>
+    <a class="cv" href="https://www.yes24.com/product/goods/1979099" rel="nofollow noopener noreferrer" target="_blank" title="Birthday"><img src="https://image.yes24.com/goods/1979099/L" alt="Birthday by Chang Young-hee — book cover" loading="lazy"></a>
+    <a class="cv" href="https://www.yes24.com/product/goods/27832932" rel="nofollow noopener noreferrer" target="_blank" title="Die Glut"><img src="https://image.yes24.com/goods/27832932/L" alt="Die Glut by Sándor Márai — book cover" loading="lazy"></a>
+    <a class="cv" href="https://www.yes24.com/product/goods/1373199" rel="nofollow noopener noreferrer" target="_blank" title="Don&#x27;t Hit with Flowers"><img src="https://image.yes24.com/goods/1373199/L" alt="Don&#x27;t Hit with Flowers by Kim Hye-ja — book cover" loading="lazy"></a>
+    <a class="cv" href="https://www.yes24.com/product/goods/1482917" rel="nofollow noopener noreferrer" target="_blank" title="Excuses for Dogs"><img src="https://image.yes24.com/goods/1482917/L" alt="Excuses for Dogs by Nam Yu-Cheol — book cover" loading="lazy"></a>
+    <a class="cv" href="https://www.yes24.com/product/goods/8091413" rel="nofollow noopener noreferrer" target="_blank" title="Green Boy"><img src="https://image.yes24.com/goods/8091413/L" alt="Green Boy by Hyunseong Kim — book cover" loading="lazy"></a>
+    <a class="cv" href="https://www.yes24.com/product/goods/177155069" rel="nofollow noopener noreferrer" target="_blank" title="L&#x27;art de la Simplicite"><img src="https://image.yes24.com/goods/177155069/L" alt="L&#x27;art de la Simplicite by Dominique Loreau — book cover" loading="lazy"></a>
+    <a class="cv" href="https://www.yes24.com/product/goods/24937700" rel="nofollow noopener noreferrer" target="_blank" title="La Faim Dans le Monde Expliquee a Mon Fils"><img src="https://image.yes24.com/goods/24937700/L" alt="La Faim Dans le Monde Expliquee a Mon Fils by Jean Ziegler — book cover" loading="lazy"></a>
+    <a class="cv" href="https://www.yes24.com/product/goods/92901787" rel="nofollow noopener noreferrer" target="_blank" title="Le Petit Prince"><img src="https://image.yes24.com/goods/92901787/L" alt="Le Petit Prince by Antoine de Saint-Exupéry — book cover" loading="lazy"></a>
+    <a class="cv" href="https://www.yes24.com/product/goods/106722" rel="nofollow noopener noreferrer" target="_blank" title="Moon Palace"><img src="https://image.yes24.com/goods/106722/L" alt="Moon Palace by Paul Auster — book cover" loading="lazy"></a>
+    <a class="cv" href="https://www.yes24.com/product/goods/86154834" rel="nofollow noopener noreferrer" target="_blank" title="My Veganism Comic"><img src="https://image.yes24.com/goods/86154834/L" alt="My Veganism Comic by Bo-seon — book cover" loading="lazy"></a>
+    <a class="cv" href="https://www.yes24.com/product/goods/1789" rel="nofollow noopener noreferrer" target="_blank" title="Non-Possession"><img src="https://image.yes24.com/goods/1789/L" alt="Non-Possession by Beopjeong — book cover" loading="lazy"></a>
+    <a class="cv" href="https://www.yes24.com/product/goods/64197033" rel="nofollow noopener noreferrer" target="_blank" title="Simple Food for the Good Life"><img src="https://image.yes24.com/goods/64197033/L" alt="Simple Food for the Good Life by Helen Nearing — book cover" loading="lazy"></a>
+    <a class="cv" href="https://www.yes24.com/product/goods/110545378" rel="nofollow noopener noreferrer" target="_blank" title="Strolling in the Forest of Literature"><img src="https://image.yes24.com/goods/110545378/L" alt="Strolling in the Forest of Literature by Chang Young-hee — book cover" loading="lazy"></a>
+    <a class="cv" href="https://www.yes24.com/product/goods/204300" rel="nofollow noopener noreferrer" target="_blank" title="The Catcher in the Rye"><img src="https://image.yes24.com/goods/204300/L" alt="The Catcher in the Rye by J. D. Salinger — book cover" loading="lazy"></a>
+    <a class="cv" href="https://www.yes24.com/product/goods/249882" rel="nofollow noopener noreferrer" target="_blank" title="The End of Meat"><img src="https://image.yes24.com/goods/249882/L" alt="The End of Meat by Jeremy Rifkin — book cover" loading="lazy"></a>
+    <a class="cv" href="https://www.yes24.com/product/goods/74466" rel="nofollow noopener noreferrer" target="_blank" title="The Girl Who Wrote Loneliness"><img src="https://image.yes24.com/goods/74466/L" alt="The Girl Who Wrote Loneliness by Kyung-Sook Shin — book cover" loading="lazy"></a>
+    <a class="cv" href="https://www.yes24.com/product/goods/167892656" rel="nofollow noopener noreferrer" target="_blank" title="Venus in Furs"><img src="https://image.yes24.com/goods/167892656/L" alt="Venus in Furs by Leopold von Sacher-Masoch — book cover" loading="lazy"></a>
+    <a class="cv" href="https://www.yes24.com/product/goods/74207752" rel="nofollow noopener noreferrer" target="_blank" title="You Shouldn&#x27;t Have a Dog"><img src="https://image.yes24.com/goods/74207752/L" alt="You Shouldn&#x27;t Have a Dog by Kang Hyeong-Wook — book cover" loading="lazy"></a>
     </div>
     <ol class="reading-list" id="rlist">
     <li class="rl-item" id="b1">
@@ -732,6 +784,7 @@
         <p class="rl-comment">One of the year-end reads Kim Hyo-jin picked. A heavy subject in an easy style; it sparked a wish to be of some small help. (Source: Metro Seoul)</p>
         <a class="rl-source" href="https://www.metroseoul.co.kr/article/2010112200045" rel="nofollow noopener noreferrer" target="_blank">📺 Source</a>
         <button type="button" class="heart-btn sm" data-heart="b:왜 세계의 절반은 굶주리는가" aria-pressed="false" aria-label="Heart this book" title="Heart this book" hidden><span class="heart-ico" aria-hidden="true">♡</span><span class="heart-n"></span></button>
+        <div class="rl-shared"><span class="rl-shared-label">👥 Also recommended by 2:</span> <a class="rl-celeb-chip" href="https://favorbook.co.kr/en/share/kim-yoon-ah-jaurim.html">Kim Yoon-ah (Jaurim)</a><a class="rl-celeb-chip" href="https://favorbook.co.kr/en/share/lee-bo-young.html">Lee Bo-young</a> <a class="rl-book-link" href="https://favorbook.co.kr/en/share/book/la-faim-dans-le-monde-expliquee-a-mon-fils.html">All readers →</a></div>
       </div>
     </li>
     <li class="rl-item" id="b10">
@@ -742,6 +795,7 @@
         <div class="rl-byline">Antoine de Saint-Exupéry</div>
         <a class="rl-source" href="https://www.youtube.com/watch?v=NYcnmgf8PNs" rel="nofollow noopener noreferrer" target="_blank">📺 Source</a>
         <button type="button" class="heart-btn sm" data-heart="b:어린왕자" aria-pressed="false" aria-label="Heart this book" title="Heart this book" hidden><span class="heart-ico" aria-hidden="true">♡</span><span class="heart-n"></span></button>
+        <div class="rl-shared"><span class="rl-shared-label">👥 Also recommended by 8:</span> <a class="rl-celeb-chip" href="https://favorbook.co.kr/en/share/lee-bo-young.html">Lee Bo-young</a><a class="rl-celeb-chip" href="https://favorbook.co.kr/en/share/lee-se-young.html">Lee Se-young</a><a class="rl-celeb-chip" href="https://favorbook.co.kr/en/share/jung-so-min.html">Jung So-min</a><a class="rl-celeb-chip" href="https://favorbook.co.kr/en/share/kino-pentagon.html">Kino (PENTAGON)</a><a class="rl-celeb-chip" href="https://favorbook.co.kr/en/share/paul-kim.html">Paul Kim</a><a class="rl-celeb-chip" href="https://favorbook.co.kr/en/share/han-ji-min.html">Han Ji-min</a><a class="rl-celeb-chip" href="https://favorbook.co.kr/en/share/edward-lee.html">Edward Lee</a><a class="rl-celeb-chip" href="https://favorbook.co.kr/en/share/park-hye-soo.html">Park Hye-soo</a> <a class="rl-book-link" href="https://favorbook.co.kr/en/share/book/le-petit-prince.html">All readers →</a></div>
       </div>
     </li>
     <li class="rl-item" id="b11">
@@ -763,6 +817,7 @@
         <div class="rl-byline">Bo-seon</div>
         <a class="rl-source" href="https://blog.naver.com/theneighbormagazine/223774171737" rel="nofollow noopener noreferrer" target="_blank">📺 Source</a>
         <button type="button" class="heart-btn sm" data-heart="b:나의 비거니즘 만화" aria-pressed="false" aria-label="Heart this book" title="Heart this book" hidden><span class="heart-ico" aria-hidden="true">♡</span><span class="heart-n"></span></button>
+        <div class="rl-shared"><span class="rl-shared-label">👥 Also recommended by 1:</span> <a class="rl-celeb-chip" href="https://favorbook.co.kr/en/share/son-soo-hyun.html">Son Soo-hyun</a> <a class="rl-book-link" href="https://favorbook.co.kr/en/share/book/my-veganism-comic.html">All readers →</a></div>
       </div>
     </li>
     <li class="rl-item" id="b13">
@@ -805,6 +860,7 @@
         <p class="rl-comment">One of seven books Kim Hyo-jin personally chose, and brought to set, for a &#x27;woman who reads&#x27; photo shoot. (Source: Chosun Ilbo)</p>
         <a class="rl-source" href="https://www.chosun.com/site/data/html_dir/2011/03/25/2011032500527.html" rel="nofollow noopener noreferrer" target="_blank">📺 Source</a>
         <button type="button" class="heart-btn sm" data-heart="b:호밀밭의 파수꾼" aria-pressed="false" aria-label="Heart this book" title="Heart this book" hidden><span class="heart-ico" aria-hidden="true">♡</span><span class="heart-n"></span></button>
+        <div class="rl-shared"><span class="rl-shared-label">👥 Also recommended by 5:</span> <a class="rl-celeb-chip" href="https://favorbook.co.kr/en/share/soy.html">Soy</a><a class="rl-celeb-chip" href="https://favorbook.co.kr/en/share/son-jong-won.html">Son Jong-won</a><a class="rl-celeb-chip" href="https://favorbook.co.kr/en/share/jinyoung-got7.html">Jinyoung (GOT7)</a><a class="rl-celeb-chip" href="https://favorbook.co.kr/en/share/choi-hee-seo.html">Choi Hee-seo</a><a class="rl-celeb-chip" href="https://favorbook.co.kr/en/share/kim-gan-jisultan-of-the-disco.html">Kim Gan-ji(Sultan of The Disco)</a> <a class="rl-book-link" href="https://favorbook.co.kr/en/share/book/the-catcher-in-the-rye.html">All readers →</a></div>
       </div>
     </li>
     <li class="rl-item" id="b17">
@@ -854,6 +910,22 @@
     </ol>
     </div>
   </section>
+  <script>
+  (function () {
+    var area = document.getElementById("shelf-area");
+    var tabs = document.querySelectorAll(".view-tabs .vt");
+    if (!area || !tabs.length) return;
+    function set(v, save) {
+      area.classList.toggle("show-covers", v === "cover");
+      tabs.forEach(function (t) { t.setAttribute("aria-pressed", String(t.dataset.view === v)); });
+      if (save) { try { localStorage.setItem("shelfView", v); } catch (e) {} }
+    }
+    var saved = null;
+    try { saved = localStorage.getItem("shelfView"); } catch (e) {}
+    if (saved === "cover") set("cover", false);
+    tabs.forEach(function (t) { t.addEventListener("click", function () { set(t.dataset.view, true); }); });
+  })();
+  </script>
   <script>
   (function () {
     var btns = [document.getElementById("shelf-cap"), document.getElementById("shelf-cap-clear")]
@@ -1066,6 +1138,28 @@
   })();
   </script>
   <p class="tr-note">Book titles and author names marked with an asterisk (<strong>*</strong>) are machine-translated from Korean. No official English edition was confirmed for them, so read them as approximations of the Korean original shown next to them.</p>
+  <section>
+    <h2>📝 Kim Hyo-jin's reading taste</h2>
+    <p>Authors that come up most often in Kim Hyo-jin's list: Chang Young-hee (2 books), Antoine de Saint-Exupéry, Beopjeong.</p>
+  </section>
+  <section class="related-celebs">
+    <h2>🤝 Celebrities with similar reading taste</h2>
+    <p class="muted">They recommended some of the same books. The number is how many books they share.</p>
+    <div class="related-celeb-list">
+      <a class="related-celeb" href="https://favorbook.co.kr/en/share/lee-bo-young.html">Lee Bo-young <span class="rc-count">2</span></a>
+      <a class="related-celeb" href="https://favorbook.co.kr/en/share/kim-gan-jisultan-of-the-disco.html">Kim Gan-ji(Sultan of The Disco) <span class="rc-count">1</span></a>
+      <a class="related-celeb" href="https://favorbook.co.kr/en/share/kim-yoon-ah-jaurim.html">Kim Yoon-ah (Jaurim) <span class="rc-count">1</span></a>
+      <a class="related-celeb" href="https://favorbook.co.kr/en/share/park-hye-soo.html">Park Hye-soo <span class="rc-count">1</span></a>
+      <a class="related-celeb" href="https://favorbook.co.kr/en/share/soy.html">Soy <span class="rc-count">1</span></a>
+      <a class="related-celeb" href="https://favorbook.co.kr/en/share/son-soo-hyun.html">Son Soo-hyun <span class="rc-count">1</span></a>
+      <a class="related-celeb" href="https://favorbook.co.kr/en/share/son-jong-won.html">Son Jong-won <span class="rc-count">1</span></a>
+      <a class="related-celeb" href="https://favorbook.co.kr/en/share/edward-lee.html">Edward Lee <span class="rc-count">1</span></a>
+      <a class="related-celeb" href="https://favorbook.co.kr/en/share/lee-se-young.html">Lee Se-young <span class="rc-count">1</span></a>
+      <a class="related-celeb" href="https://favorbook.co.kr/en/share/jung-so-min.html">Jung So-min <span class="rc-count">1</span></a>
+      <a class="related-celeb" href="https://favorbook.co.kr/en/share/jinyoung-got7.html">Jinyoung (GOT7) <span class="rc-count">1</span></a>
+      <a class="related-celeb" href="https://favorbook.co.kr/en/share/choi-hee-seo.html">Choi Hee-seo <span class="rc-count">1</span></a>
+    </div>
+  </section>
   <section class="pfaq">
     <h2>Kim Hyo-jin book recommendations — FAQ</h2>
     <div class="pfaq-q">
@@ -1081,6 +1175,10 @@
       <p>Public sources only — interviews, YouTube clips, variety shows, fan-cafe posts and SNS. A book is added to this reading list only when the mention can be linked, and the link stays on the entry so you can check it yourself.</p>
     </div>
   </section>
+  <nav class="celeb-pager" aria-label="Browse celebrities">
+      <a class="pager-link pager-prev" rel="prev" href="https://favorbook.co.kr/en/share/kim-hye-yoon.html">← Kim Hye-yoon's books</a>
+      <a class="pager-link pager-next" rel="next" href="https://favorbook.co.kr/en/share/kim-jae-hwa.html">Kim Jae-Hwa's books →</a>
+  </nav>
   <footer>
     <p>Curated from public Korean-language sources. Korean original page: <a href="https://favorbook.co.kr/share/%EA%B9%80%ED%9A%A8%EC%A7%84.html" hreflang="ko">김효진</a>.</p>
     <p><a href="https://favorbook.co.kr/en/">Browse more Korean celebrity book lists →</a></p>

@@ -53,7 +53,6 @@
     "description": "South Korean actress known for K-dramas 'Love in the Moonlight' and 'Backstreet Rookie'.",
     "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/a/af/231124_Kim_Yoo-jung.jpg/250px-231124_Kim_Yoo-jung.jpg"
   },
-  "mainEntityOfPage": "https://favorbook.co.kr/en/share/kim-yoo-jung.html",
   "hasPart": {
     "@type": "ItemList",
     "name": "Books read by Kim Yoo-jung",
@@ -294,6 +293,9 @@
     nav { margin: 50px 0 16px; font-size: 13px; }
     .celeb-header { display: flex; align-items: center; gap: 20px; margin-bottom: 16px; flex-wrap: wrap; }
     .celeb-img { width: 120px; height: 120px; border-radius: 50%; object-fit: cover; border: 2px solid #000; }
+    .celeb-photo-wrap { position: relative; flex-shrink: 0; }
+    .img-credit { position: absolute; bottom: 0; right: 0; font-size: 10px; line-height: 1; padding: 2px 4px; background: rgba(255,255,255,0.85); border: 1px solid #ccc; border-radius: 999px; text-decoration: none; color: #555; opacity: 0.55; transition: opacity .15s; }
+    .img-credit:hover { opacity: 1; text-decoration: none; }
     h1 { font-size: 28px; margin: 0 0 8px; font-weight: 900; }
     h2 { font-size: 19px; margin: 32px 0 12px; padding-bottom: 4px; border-bottom: 2px solid #000; font-weight: 800; }
     .intro { background: #fff; border: 2px solid #000; box-shadow: 4px 4px 0 0 #000; padding: 14px 16px; margin: 16px 0 24px; font-size: 15px; }
@@ -304,6 +306,17 @@
     .pfaq-q h3 { font-size: 15px; font-weight: 800; margin: 0 0 6px; }
     .pfaq-q p { font-size: 14px; margin: 0; color: #333; }
     .grp-link { margin: 10px 0 0; padding: 8px 12px; background: #fff8e7; border: 2px solid #000; box-shadow: 3px 3px 0 0 #000; font-size: 14px; }
+    .rl-shared { clear: both; margin-top: 12px; padding-top: 10px; border-top: 1.5px dashed #ccc; display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
+    .rl-shared-label { font-size: 12px; color: #666; font-weight: 700; }
+    .rl-celeb-chip { font-size: 12px; padding: 2px 8px; background: #fff; border: 1.5px solid #000; border-radius: 999px; color: #000; }
+    .rl-book-link { font-size: 12px; font-weight: 700; }
+    .muted { color: #666; font-size: 13px; }
+    .related-celebs { margin: 24px 0; }
+    .related-celeb-list { display: flex; flex-wrap: wrap; gap: 8px; }
+    .related-celeb { padding: 6px 12px; background: #fff; border: 2px solid #000; box-shadow: 2px 2px 0 0 #000; font-size: 13px; font-weight: 700; color: #000; }
+    .rc-count { display: inline-block; min-width: 18px; padding: 0 5px; margin-left: 4px; background: #fde047; border: 1.5px solid #000; border-radius: 999px; font-size: 11px; text-align: center; }
+    .celeb-pager { margin: 32px 0 16px; display: flex; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
+    .pager-link { padding: 8px 12px; background: #fff; border: 2px solid #000; box-shadow: 3px 3px 0 0 #000; font-size: 13px; font-weight: 700; color: #000; }
     .shelf-head { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
     .shelf-head h2 { margin-bottom: 0; border-bottom: none; padding-bottom: 0; }
     .shelf-tabs { display: flex; gap: 6px; flex-wrap: wrap; }
@@ -311,6 +324,19 @@
               background: #fff; color: #000; border: 2px solid #000; box-shadow: 2px 2px 0 0 #000; }
     .sh-cap:hover { background: #fde047; }
     .sh-cap[disabled] { opacity: .55; cursor: default; }
+    .view-tabs { display: inline-flex; border: 2px solid #000; box-shadow: 2px 2px 0 0 #000; background: #fff; }
+    .vt { font: inherit; font-size: 12px; font-weight: 700; padding: 5px 10px; background: #fff; color: #000; border: 0; cursor: pointer; }
+    .vt + .vt { border-left: 2px solid #000; }
+    .vt[aria-pressed="true"] { background: #000; color: #fff; }
+    .covers { display: none; grid-template-columns: repeat(auto-fill, minmax(84px, 1fr)); gap: 14px 12px; margin: 14px 0 22px; }
+    .show-covers .covers { display: grid; }
+    .show-covers .shelf { display: none; }
+    .cv { position: relative; display: block; aspect-ratio: 2/3; border: 1.5px solid #000; box-shadow: 2px 2px 0 0 #000;
+          background: #f4f4f0; overflow: hidden; color: #000; text-decoration: none; transition: transform .12s; }
+    .cv:hover { transform: translateY(-3px); text-decoration: none; }
+    .cv img { width: 100%; height: 100%; object-fit: cover; display: block; }
+    .cv-no { display: flex; height: 100%; align-items: center; justify-content: center; padding: 6px;
+             font-size: 11px; font-weight: 700; line-height: 1.3; text-align: center; word-break: keep-all; }
     .shelf { --sh-h: 270px; --plank: 7px; --row: calc(var(--sh-h) + 18px);
              display: flex; flex-wrap: wrap; align-items: flex-end; gap: 11px 2px;
              margin: 14px 0 22px; padding: 0 8px 7px;
@@ -388,13 +414,16 @@
 </head>
 <body>
   <div class="lang-toggle">
-    <button class="lang-btn copy-btn" type="button" data-url="https://favorbook.co.kr/en/share/kim-yoo-jung.html" data-done="Copied!">🔗 Copy link</button>
+    <button class="lang-btn copy-btn" type="button" data-url="https://favorbook.co.kr/s/e/kim-yoo-jung.html" data-done="Copied!">🔗 Copy link</button>
     <a class="lang-btn" href="https://favorbook.co.kr/share/%EA%B9%80%EC%9C%A0%EC%A0%95.html" hreflang="ko">한국어</a>
     <span class="lang-btn active">EN</span>
   </div>
-  <nav><a href="https://favorbook.co.kr/en/">← Favorbook Home</a></nav>
+  <nav><a href="https://favorbook.co.kr/en/">← Favorbook Home</a> · <a href="https://favorbook.co.kr/en/share/ranking.html">Most-read books ranking</a></nav>
   <header class="celeb-header">
+    <div class="celeb-photo-wrap">
     <img class="celeb-img" src="https://upload.wikimedia.org/wikipedia/commons/thumb/a/af/231124_Kim_Yoo-jung.jpg/250px-231124_Kim_Yoo-jung.jpg" alt="Kim Yoo-jung profile photo" width="120" height="120">
+      <a class="img-credit" href="https://upload.wikimedia.org/wikipedia/commons/thumb/a/af/231124_Kim_Yoo-jung.jpg/250px-231124_Kim_Yoo-jung.jpg" target="_blank" rel="nofollow noopener noreferrer" title="Image source">📷</a>
+    </div>
     <div>
       <h1>Kim Yoo-jung Books<span style="font-weight:400;color:#666;font-size:18px"> · 김유정 책</span></h1>
       <p class="celeb-bio">South Korean actress known for K-dramas &#x27;Love in the Moonlight&#x27; and &#x27;Backstreet Rookie&#x27;.</p>
@@ -411,6 +440,7 @@
     <div class="shelf-head">
       <h2>Books Kim Yoo-jung has read (9)</h2>
       <div class="shelf-tabs">
+        <span class="view-tabs" role="group"><button type="button" class="vt" data-view="spine" aria-pressed="true">📚 Spines</button><button type="button" class="vt" data-view="cover" aria-pressed="false">🖼 Covers</button></span>
         <button type="button" class="sh-cap" id="shelf-cap" title="Download the bookshelf as an image">⤓ Save image</button>
         <button type="button" class="sh-cap" id="shelf-cap-clear" title="Download as a PNG with a transparent background">⤓ Transparent</button>
       </div>
@@ -434,6 +464,17 @@
     <a class="sp" style="--c:hsl(26,43%,33%);--w:32px;--fs:8px" href="https://www.yes24.com/product/goods/188694737" rel="nofollow noopener noreferrer" target="_blank" title="The Plain Reader: Essays on Making a Simple Life"><span class="sp-t"><i>The Plain Reader: Essays on Making a Simple Life</i></span><img class="sp-i" src="https://image.yes24.com/goods/188694737/side" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.parentNode.classList.add('sp-fail');this.remove()" onload="if(this.naturalWidth/this.naturalHeight>0.4){this.parentNode.classList.add('sp-fail');this.remove()}"></a>
     <a class="sp" style="--c:hsl(17,49%,39%);--w:38px;--fs:15px" href="https://www.yes24.com/product/goods/92729657" rel="nofollow noopener noreferrer" target="_blank" title="Walking and Dating"><span class="sp-t"><i>Walking and Dating</i></span><img class="sp-i" src="https://image.yes24.com/goods/92729657/side" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.parentNode.classList.add('sp-fail');this.remove()" onload="if(this.naturalWidth/this.naturalHeight>0.4){this.parentNode.classList.add('sp-fail');this.remove()}"></a>
     </div>
+    <div class="covers" id="covers">
+    <a class="cv" href="https://www.yes24.com/product/goods/42702060" rel="nofollow noopener noreferrer" target="_blank" title="Although Crying Would Not Change Anything"><img src="https://image.yes24.com/goods/42702060/L" alt="Although Crying Would Not Change Anything by Park Jun — book cover" loading="lazy"></a>
+    <a class="cv" href="https://www.yes24.com/product/goods/19001" rel="nofollow noopener noreferrer" target="_blank" title="Bhagavadgita"><span class="rl-new" data-added="2026-09-22">NEW</span><img src="https://image.yes24.com/goods/19001/L" alt="Bhagavadgita by Seokheon Ham — book cover" loading="lazy"></a>
+    <a class="cv" href="https://www.yes24.com/product/goods/15816722" rel="nofollow noopener noreferrer" target="_blank" title="If I Had Known Then What I Know Now"><img src="https://image.yes24.com/goods/15816722/L" alt="If I Had Known Then What I Know Now by Shiva Ryu — book cover" loading="lazy"></a>
+    <a class="cv" href="https://www.yes24.com/product/goods/79181360" rel="nofollow noopener noreferrer" target="_blank" title="Now to My Sister"><img src="https://image.yes24.com/goods/79181360/L" alt="Now to My Sister by Choi Jin-young — book cover" loading="lazy"></a>
+    <a class="cv" href="https://www.yes24.com/product/goods/22885785" rel="nofollow noopener noreferrer" target="_blank" title="Princess Deokhye"><span class="rl-new" data-added="2026-09-26">NEW</span><img src="https://image.yes24.com/goods/22885785/L" alt="Princess Deokhye by Kwon Bi-Young — book cover" loading="lazy"></a>
+    <a class="cv" href="https://www.yes24.com/product/goods/119886818" rel="nofollow noopener noreferrer" target="_blank" title="The Creative Act: A Way of Being"><img src="https://image.yes24.com/goods/119886818/L" alt="The Creative Act: A Way of Being by Rick Rubin — book cover" loading="lazy"></a>
+    <a class="cv" href="https://www.yes24.com/product/goods/77672909" rel="nofollow noopener noreferrer" target="_blank" title="The Denial of Death"><img src="https://image.yes24.com/goods/77672909/L" alt="The Denial of Death by Ernest Becker — book cover" loading="lazy"></a>
+    <a class="cv" href="https://www.yes24.com/product/goods/188694737" rel="nofollow noopener noreferrer" target="_blank" title="The Plain Reader: Essays on Making a Simple Life"><img src="https://image.yes24.com/goods/188694737/L" alt="The Plain Reader: Essays on Making a Simple Life by Scott Savage — book cover" loading="lazy"></a>
+    <a class="cv" href="https://www.yes24.com/product/goods/92729657" rel="nofollow noopener noreferrer" target="_blank" title="Walking and Dating"><img src="https://image.yes24.com/goods/92729657/L" alt="Walking and Dating by Yoo Jin-Mok — book cover" loading="lazy"></a>
+    </div>
     <ol class="reading-list" id="rlist">
     <li class="rl-item" id="b1">
       <span class="rl-num">1</span>
@@ -443,6 +484,7 @@
         <div class="rl-byline">Park Jun</div>
         <a class="rl-source" href="https://www.instagram.com/p/DYtyK6EkYxa/?img_index=10" rel="nofollow noopener noreferrer" target="_blank">📺 Source</a>
         <button type="button" class="heart-btn sm" data-heart="b:운다고 달라지는 일은 아무것도 없겠지만" aria-pressed="false" aria-label="Heart this book" title="Heart this book" hidden><span class="heart-ico" aria-hidden="true">♡</span><span class="heart-n"></span></button>
+        <div class="rl-shared"><span class="rl-shared-label">👥 Also recommended by 6:</span> <a class="rl-celeb-chip" href="https://favorbook.co.kr/en/share/gaeul-ive.html">Gaeul (IVE)</a><a class="rl-celeb-chip" href="https://favorbook.co.kr/en/share/mingyuseventeen.html">Mingyu(SEVENTEEN)</a><a class="rl-celeb-chip" href="https://favorbook.co.kr/en/share/sehun-exo.html">Sehun (EXO)</a><a class="rl-celeb-chip" href="https://favorbook.co.kr/en/share/ong-seong-wu.html">Ong Seong-wu</a><a class="rl-celeb-chip" href="https://favorbook.co.kr/en/share/hong-kyung.html">Hong Kyung</a><a class="rl-celeb-chip" href="https://favorbook.co.kr/en/share/jiung-p1harmony.html">JIUNG (P1Harmony)</a> <a class="rl-book-link" href="https://favorbook.co.kr/en/share/book/although-crying-would-not-change-anything.html">All readers →</a></div>
       </div>
     </li>
     <li class="rl-item" id="b2">
@@ -464,6 +506,7 @@
         <p class="rl-comment">Pulled from the bag in a What&#x27;s in My Bag video. A poetry book comes along because short reading breaks interrupt longer books, and Kim Yoo-jung strongly recommends it. (Source: Nate News)</p>
         <a class="rl-source" href="https://news.nate.com/view/20231228n26946" rel="nofollow noopener noreferrer" target="_blank">📺 Source</a>
         <button type="button" class="heart-btn sm" data-heart="b:지금 알고 있는 걸 그때도 알았더라면" aria-pressed="false" aria-label="Heart this book" title="Heart this book" hidden><span class="heart-ico" aria-hidden="true">♡</span><span class="heart-n"></span></button>
+        <div class="rl-shared"><span class="rl-shared-label">👥 Also recommended by 2:</span> <a class="rl-celeb-chip" href="https://favorbook.co.kr/en/share/nam-joo-hyuk.html">Nam Joo-hyuk</a><a class="rl-celeb-chip" href="https://favorbook.co.kr/en/share/giselle-aespa.html">Giselle (aespa)</a> <a class="rl-book-link" href="https://favorbook.co.kr/en/share/book/if-i-had-known-then-what-i-know-now.html">All readers →</a></div>
       </div>
     </li>
     <li class="rl-item" id="b4">
@@ -495,6 +538,7 @@
         <p class="rl-comment">Pulled from the bag in a What&#x27;s in My Bag video: a recent gift that Kim Yoo-jung strongly recommends. (Source: Nate News)</p>
         <a class="rl-source" href="https://news.nate.com/view/20231228n26946" rel="nofollow noopener noreferrer" target="_blank">📺 Source</a>
         <button type="button" class="heart-btn sm" data-heart="b:창조적 행위" aria-pressed="false" aria-label="Heart this book" title="Heart this book" hidden><span class="heart-ico" aria-hidden="true">♡</span><span class="heart-n"></span></button>
+        <div class="rl-shared"><span class="rl-shared-label">👥 Also recommended by 12:</span> <a class="rl-celeb-chip" href="https://favorbook.co.kr/en/share/geonho-cortis.html">Geonho (CORTIS)</a><a class="rl-celeb-chip" href="https://favorbook.co.kr/en/share/kim-min-ha.html">Kim Min-ha</a><a class="rl-celeb-chip" href="https://favorbook.co.kr/en/share/dino-seventeen.html">Dino (SEVENTEEN)</a><a class="rl-celeb-chip" href="https://favorbook.co.kr/en/share/martin-cortis.html">Martin (CORTIS)</a><a class="rl-celeb-chip" href="https://favorbook.co.kr/en/share/vernon-seventeen.html">Vernon (SEVENTEEN)</a><a class="rl-celeb-chip" href="https://favorbook.co.kr/en/share/choi-jung-hoon-jannabi.html">Choi Jung-hoon (Jannabi)</a><a class="rl-celeb-chip" href="https://favorbook.co.kr/en/share/theo-p1harmony.html">Theo (P1Harmony)</a><a class="rl-celeb-chip" href="https://favorbook.co.kr/en/share/huh-yunjin-le-sserafim.html">Huh Yunjin (LE SSERAFIM)</a><a class="rl-celeb-chip" href="https://favorbook.co.kr/en/share/sumin.html">Sumin</a><a class="rl-celeb-chip" href="https://favorbook.co.kr/en/share/g-dragon-bigbang.html">G-Dragon (BIGBANG)</a><a class="rl-celeb-chip" href="https://favorbook.co.kr/en/share/ha-hyun-sang.html">Ha Hyun Sang</a><a class="rl-celeb-chip" href="https://favorbook.co.kr/en/share/jiung-p1harmony.html">JIUNG (P1Harmony)</a> <a class="rl-book-link" href="https://favorbook.co.kr/en/share/book/the-creative-act-a-way-of-being.html">All readers →</a></div>
       </div>
     </li>
     <li class="rl-item" id="b7">
@@ -530,6 +574,22 @@
     </ol>
     </div>
   </section>
+  <script>
+  (function () {
+    var area = document.getElementById("shelf-area");
+    var tabs = document.querySelectorAll(".view-tabs .vt");
+    if (!area || !tabs.length) return;
+    function set(v, save) {
+      area.classList.toggle("show-covers", v === "cover");
+      tabs.forEach(function (t) { t.setAttribute("aria-pressed", String(t.dataset.view === v)); });
+      if (save) { try { localStorage.setItem("shelfView", v); } catch (e) {} }
+    }
+    var saved = null;
+    try { saved = localStorage.getItem("shelfView"); } catch (e) {}
+    if (saved === "cover") set("cover", false);
+    tabs.forEach(function (t) { t.addEventListener("click", function () { set(t.dataset.view, true); }); });
+  })();
+  </script>
   <script>
   (function () {
     var btns = [document.getElementById("shelf-cap"), document.getElementById("shelf-cap-clear")]
@@ -742,6 +802,28 @@
   })();
   </script>
   <p class="tr-note">Book titles and author names marked with an asterisk (<strong>*</strong>) are machine-translated from Korean. No official English edition was confirmed for them, so read them as approximations of the Korean original shown next to them.</p>
+  <section>
+    <h2>📝 Kim Yoo-jung's reading taste</h2>
+    <p>Authors that come up most often in Kim Yoo-jung's list: Choi Jin-young, Ernest Becker, Kwon Bi-Young.</p>
+  </section>
+  <section class="related-celebs">
+    <h2>🤝 Celebrities with similar reading taste</h2>
+    <p class="muted">They recommended some of the same books. The number is how many books they share.</p>
+    <div class="related-celeb-list">
+      <a class="related-celeb" href="https://favorbook.co.kr/en/share/jiung-p1harmony.html">JIUNG (P1Harmony) <span class="rc-count">2</span></a>
+      <a class="related-celeb" href="https://favorbook.co.kr/en/share/gaeul-ive.html">Gaeul (IVE) <span class="rc-count">1</span></a>
+      <a class="related-celeb" href="https://favorbook.co.kr/en/share/geonho-cortis.html">Geonho (CORTIS) <span class="rc-count">1</span></a>
+      <a class="related-celeb" href="https://favorbook.co.kr/en/share/kim-min-ha.html">Kim Min-ha <span class="rc-count">1</span></a>
+      <a class="related-celeb" href="https://favorbook.co.kr/en/share/nam-joo-hyuk.html">Nam Joo-hyuk <span class="rc-count">1</span></a>
+      <a class="related-celeb" href="https://favorbook.co.kr/en/share/dino-seventeen.html">Dino (SEVENTEEN) <span class="rc-count">1</span></a>
+      <a class="related-celeb" href="https://favorbook.co.kr/en/share/martin-cortis.html">Martin (CORTIS) <span class="rc-count">1</span></a>
+      <a class="related-celeb" href="https://favorbook.co.kr/en/share/mingyuseventeen.html">Mingyu(SEVENTEEN) <span class="rc-count">1</span></a>
+      <a class="related-celeb" href="https://favorbook.co.kr/en/share/vernon-seventeen.html">Vernon (SEVENTEEN) <span class="rc-count">1</span></a>
+      <a class="related-celeb" href="https://favorbook.co.kr/en/share/sehun-exo.html">Sehun (EXO) <span class="rc-count">1</span></a>
+      <a class="related-celeb" href="https://favorbook.co.kr/en/share/sumin.html">Sumin <span class="rc-count">1</span></a>
+      <a class="related-celeb" href="https://favorbook.co.kr/en/share/ong-seong-wu.html">Ong Seong-wu <span class="rc-count">1</span></a>
+    </div>
+  </section>
   <section class="pfaq">
     <h2>Kim Yoo-jung book recommendations — FAQ</h2>
     <div class="pfaq-q">
@@ -757,6 +839,10 @@
       <p>Public sources only — interviews, YouTube clips, variety shows, fan-cafe posts and SNS. A book is added to this reading list only when the mention can be linked, and the link stays on the entry so you can check it yourself.</p>
     </div>
   </section>
+  <nav class="celeb-pager" aria-label="Browse celebrities">
+      <a class="pager-link pager-prev" rel="prev" href="https://favorbook.co.kr/en/share/kim-tae-ri.html">← Kim Tae-ri's books</a>
+      <a class="pager-link pager-next" rel="next" href="https://favorbook.co.kr/en/share/kim-yoon-ah-jaurim.html">Kim Yoon-ah (Jaurim)'s books →</a>
+  </nav>
   <footer>
     <p>Curated from public Korean-language sources. Korean original page: <a href="https://favorbook.co.kr/share/%EA%B9%80%EC%9C%A0%EC%A0%95.html" hreflang="ko">김유정</a>.</p>
     <p><a href="https://favorbook.co.kr/en/">Browse more Korean celebrity book lists →</a></p>

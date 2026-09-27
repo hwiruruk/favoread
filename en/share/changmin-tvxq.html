@@ -51,7 +51,6 @@
     "description": "K-pop idol — Korean music. Reading list and book recommendations.",
     "image": "https://upload.wikimedia.org/wikipedia/commons/f/ff/190927_%EC%B5%9C%EA%B0%95%EC%B0%BD%EB%AF%BC.jpg"
   },
-  "mainEntityOfPage": "https://favorbook.co.kr/en/share/changmin-tvxq.html",
   "hasPart": {
     "@type": "ItemList",
     "name": "Books read by Changmin (TVXQ!)",
@@ -436,6 +435,9 @@
     nav { margin: 50px 0 16px; font-size: 13px; }
     .celeb-header { display: flex; align-items: center; gap: 20px; margin-bottom: 16px; flex-wrap: wrap; }
     .celeb-img { width: 120px; height: 120px; border-radius: 50%; object-fit: cover; border: 2px solid #000; }
+    .celeb-photo-wrap { position: relative; flex-shrink: 0; }
+    .img-credit { position: absolute; bottom: 0; right: 0; font-size: 10px; line-height: 1; padding: 2px 4px; background: rgba(255,255,255,0.85); border: 1px solid #ccc; border-radius: 999px; text-decoration: none; color: #555; opacity: 0.55; transition: opacity .15s; }
+    .img-credit:hover { opacity: 1; text-decoration: none; }
     h1 { font-size: 28px; margin: 0 0 8px; font-weight: 900; }
     h2 { font-size: 19px; margin: 32px 0 12px; padding-bottom: 4px; border-bottom: 2px solid #000; font-weight: 800; }
     .intro { background: #fff; border: 2px solid #000; box-shadow: 4px 4px 0 0 #000; padding: 14px 16px; margin: 16px 0 24px; font-size: 15px; }
@@ -446,6 +448,17 @@
     .pfaq-q h3 { font-size: 15px; font-weight: 800; margin: 0 0 6px; }
     .pfaq-q p { font-size: 14px; margin: 0; color: #333; }
     .grp-link { margin: 10px 0 0; padding: 8px 12px; background: #fff8e7; border: 2px solid #000; box-shadow: 3px 3px 0 0 #000; font-size: 14px; }
+    .rl-shared { clear: both; margin-top: 12px; padding-top: 10px; border-top: 1.5px dashed #ccc; display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
+    .rl-shared-label { font-size: 12px; color: #666; font-weight: 700; }
+    .rl-celeb-chip { font-size: 12px; padding: 2px 8px; background: #fff; border: 1.5px solid #000; border-radius: 999px; color: #000; }
+    .rl-book-link { font-size: 12px; font-weight: 700; }
+    .muted { color: #666; font-size: 13px; }
+    .related-celebs { margin: 24px 0; }
+    .related-celeb-list { display: flex; flex-wrap: wrap; gap: 8px; }
+    .related-celeb { padding: 6px 12px; background: #fff; border: 2px solid #000; box-shadow: 2px 2px 0 0 #000; font-size: 13px; font-weight: 700; color: #000; }
+    .rc-count { display: inline-block; min-width: 18px; padding: 0 5px; margin-left: 4px; background: #fde047; border: 1.5px solid #000; border-radius: 999px; font-size: 11px; text-align: center; }
+    .celeb-pager { margin: 32px 0 16px; display: flex; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
+    .pager-link { padding: 8px 12px; background: #fff; border: 2px solid #000; box-shadow: 3px 3px 0 0 #000; font-size: 13px; font-weight: 700; color: #000; }
     .shelf-head { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
     .shelf-head h2 { margin-bottom: 0; border-bottom: none; padding-bottom: 0; }
     .shelf-tabs { display: flex; gap: 6px; flex-wrap: wrap; }
@@ -453,6 +466,19 @@
               background: #fff; color: #000; border: 2px solid #000; box-shadow: 2px 2px 0 0 #000; }
     .sh-cap:hover { background: #fde047; }
     .sh-cap[disabled] { opacity: .55; cursor: default; }
+    .view-tabs { display: inline-flex; border: 2px solid #000; box-shadow: 2px 2px 0 0 #000; background: #fff; }
+    .vt { font: inherit; font-size: 12px; font-weight: 700; padding: 5px 10px; background: #fff; color: #000; border: 0; cursor: pointer; }
+    .vt + .vt { border-left: 2px solid #000; }
+    .vt[aria-pressed="true"] { background: #000; color: #fff; }
+    .covers { display: none; grid-template-columns: repeat(auto-fill, minmax(84px, 1fr)); gap: 14px 12px; margin: 14px 0 22px; }
+    .show-covers .covers { display: grid; }
+    .show-covers .shelf { display: none; }
+    .cv { position: relative; display: block; aspect-ratio: 2/3; border: 1.5px solid #000; box-shadow: 2px 2px 0 0 #000;
+          background: #f4f4f0; overflow: hidden; color: #000; text-decoration: none; transition: transform .12s; }
+    .cv:hover { transform: translateY(-3px); text-decoration: none; }
+    .cv img { width: 100%; height: 100%; object-fit: cover; display: block; }
+    .cv-no { display: flex; height: 100%; align-items: center; justify-content: center; padding: 6px;
+             font-size: 11px; font-weight: 700; line-height: 1.3; text-align: center; word-break: keep-all; }
     .shelf { --sh-h: 270px; --plank: 7px; --row: calc(var(--sh-h) + 18px);
              display: flex; flex-wrap: wrap; align-items: flex-end; gap: 11px 2px;
              margin: 14px 0 22px; padding: 0 8px 7px;
@@ -530,13 +556,16 @@
 </head>
 <body>
   <div class="lang-toggle">
-    <button class="lang-btn copy-btn" type="button" data-url="https://favorbook.co.kr/en/share/changmin-tvxq.html" data-done="Copied!">🔗 Copy link</button>
+    <button class="lang-btn copy-btn" type="button" data-url="https://favorbook.co.kr/s/e/changmin-tvxq.html" data-done="Copied!">🔗 Copy link</button>
     <a class="lang-btn" href="https://favorbook.co.kr/share/%EC%B5%9C%EA%B0%95%EC%B0%BD%EB%AF%BC%28%EB%8F%99%EB%B0%A9%EC%8B%A0%EA%B8%B0%29.html" hreflang="ko">한국어</a>
     <span class="lang-btn active">EN</span>
   </div>
-  <nav><a href="https://favorbook.co.kr/en/">← Favorbook Home</a></nav>
+  <nav><a href="https://favorbook.co.kr/en/">← Favorbook Home</a> · <a href="https://favorbook.co.kr/en/share/ranking.html">Most-read books ranking</a></nav>
   <header class="celeb-header">
+    <div class="celeb-photo-wrap">
     <img class="celeb-img" src="https://upload.wikimedia.org/wikipedia/commons/f/ff/190927_%EC%B5%9C%EA%B0%95%EC%B0%BD%EB%AF%BC.jpg" alt="Changmin (TVXQ!) profile photo" width="120" height="120">
+      <a class="img-credit" href="https://upload.wikimedia.org/wikipedia/commons/f/ff/190927_%EC%B5%9C%EA%B0%95%EC%B0%BD%EB%AF%BC.jpg" target="_blank" rel="nofollow noopener noreferrer" title="Image source">📷</a>
+    </div>
     <div>
       <h1>Changmin (TVXQ!) Books<span style="font-weight:400;color:#666;font-size:18px"> · 최강창민(동방신기) 책</span></h1>
       <p class="celeb-bio">K-pop idol — Korean music</p>
@@ -553,6 +582,7 @@
     <div class="shelf-head">
       <h2>Books Changmin (TVXQ!) has read (17)</h2>
       <div class="shelf-tabs">
+        <span class="view-tabs" role="group"><button type="button" class="vt" data-view="spine" aria-pressed="true">📚 Spines</button><button type="button" class="vt" data-view="cover" aria-pressed="false">🖼 Covers</button></span>
         <button type="button" class="sh-cap" id="shelf-cap" title="Download the bookshelf as an image">⤓ Save image</button>
         <button type="button" class="sh-cap" id="shelf-cap-clear" title="Download as a PNG with a transparent background">⤓ Transparent</button>
       </div>
@@ -599,6 +629,25 @@
     <a class="sp is-new" style="--c:hsl(117,41%,36%);--w:43px;--fs:15px" href="https://www.yes24.com/product/goods/116922356" rel="nofollow noopener noreferrer" target="_blank" title="Twelve Footsteps"><span class="sp-t"><i>Twelve Footsteps</i></span><img class="sp-i" src="https://image.yes24.com/goods/116922356/side" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.parentNode.classList.add('sp-fail');this.remove()" onload="if(this.naturalWidth/this.naturalHeight>0.4){this.parentNode.classList.add('sp-fail');this.remove()}"><span class="sp-new" data-added="2026-09-22">NEW</span></a>
     <a class="sp is-new" style="--c:hsl(207,37%,41%);--w:44px;--fs:15px" href="https://www.yes24.com/product/goods/182624787" rel="nofollow noopener noreferrer" target="_blank" title="What Makes a City Live"><span class="sp-t"><i>What Makes a City Live</i></span><img class="sp-i" src="https://image.yes24.com/goods/182624787/side" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.parentNode.classList.add('sp-fail');this.remove()" onload="if(this.naturalWidth/this.naturalHeight>0.4){this.parentNode.classList.add('sp-fail');this.remove()}"><span class="sp-new" data-added="2026-09-22">NEW</span></a>
     </div>
+    <div class="covers" id="covers">
+    <a class="cv" href="https://www.yes24.com/product/goods/18360997" rel="nofollow noopener noreferrer" target="_blank" title="Brave New World"><span class="rl-new" data-added="2026-09-22">NEW</span><img src="https://image.yes24.com/goods/18360997/L" alt="Brave New World by Aldous Huxley — book cover" loading="lazy"></a>
+    <a class="cv" href="https://www.yes24.com/product/goods/39441749" rel="nofollow noopener noreferrer" target="_blank" title="Dignity of Words"><span class="rl-new" data-added="2026-09-22">NEW</span><img src="https://image.yes24.com/goods/39441749/L" alt="Dignity of Words by Lee Ki-ju — book cover" loading="lazy"></a>
+    <a class="cv" href="https://www.yes24.com/product/goods/132226737" rel="nofollow noopener noreferrer" target="_blank" title="Factfulness"><span class="rl-new" data-added="2026-09-22">NEW</span><img src="https://image.yes24.com/goods/132226737/L" alt="Factfulness by Hans Rosling — book cover" loading="lazy"></a>
+    <a class="cv" href="https://www.yes24.com/product/goods/22712338" rel="nofollow noopener noreferrer" target="_blank" title="Food Is Common Sense"><span class="rl-new" data-added="2026-09-22">NEW</span><img src="https://image.yes24.com/goods/22712338/L" alt="Food Is Common Sense by Yoon Deok-no — book cover" loading="lazy"></a>
+    <a class="cv" href="https://www.yes24.com/product/goods/79297023" rel="nofollow noopener noreferrer" target="_blank" title="How to Win Friends &amp; Influence People"><span class="rl-new" data-added="2026-09-22">NEW</span><img src="https://image.yes24.com/goods/79297023/L" alt="How to Win Friends &amp; Influence People by Dale Carnegie — book cover" loading="lazy"></a>
+    <a class="cv" href="https://www.yes24.com/product/goods/73162329" rel="nofollow noopener noreferrer" target="_blank" title="If Reborn, Would You Live in Korea?"><span class="rl-new" data-added="2026-09-22">NEW</span><img src="https://image.yes24.com/goods/73162329/L" alt="If Reborn, Would You Live in Korea? by Lee Jae-yeol — book cover" loading="lazy"></a>
+    <a class="cv" href="https://www.yes24.com/product/goods/22862876" rel="nofollow noopener noreferrer" target="_blank" title="Intellectual Capital Theory"><span class="rl-new" data-added="2026-09-22">NEW</span><img src="https://image.yes24.com/goods/22862876/L" alt="Intellectual Capital Theory by Muneaki Masuda — book cover" loading="lazy"></a>
+    <a class="cv" href="https://www.yes24.com/product/goods/79296230" rel="nofollow noopener noreferrer" target="_blank" title="Liberal Arts on the Way Home from Work"><span class="rl-new" data-added="2026-09-22">NEW</span><img src="https://image.yes24.com/goods/79296230/L" alt="Liberal Arts on the Way Home from Work by Baeksang Economic Research Institute — book cover" loading="lazy"></a>
+    <a class="cv" href="https://www.yes24.com/product/goods/118805757" rel="nofollow noopener noreferrer" target="_blank" title="Living, Loving, Learning"><span class="rl-new" data-added="2026-09-22">NEW</span><img src="https://image.yes24.com/goods/118805757/L" alt="Living, Loving, Learning by Leo Buscaglia — book cover" loading="lazy"></a>
+    <a class="cv" href="https://www.yes24.com/product/goods/110157236" rel="nofollow noopener noreferrer" target="_blank" title="Nudge"><span class="rl-new" data-added="2026-09-22">NEW</span><img src="https://image.yes24.com/goods/110157236/L" alt="Nudge by Richard Thaler — book cover" loading="lazy"></a>
+    <a class="cv" href="https://www.yes24.com/product/goods/125905365" rel="nofollow noopener noreferrer" target="_blank" title="Reason for Travel"><span class="rl-new" data-added="2026-09-22">NEW</span><img src="https://image.yes24.com/goods/125905365/L" alt="Reason for Travel by Kim Young-ha — book cover" loading="lazy"></a>
+    <a class="cv" href="https://www.yes24.com/product/goods/125753838" rel="nofollow noopener noreferrer" target="_blank" title="The 90s Generation Is Coming"><span class="rl-new" data-added="2026-09-22">NEW</span><img src="https://image.yes24.com/goods/125753838/L" alt="The 90s Generation Is Coming by Lim Hong-taek — book cover" loading="lazy"></a>
+    <a class="cv" href="https://www.yes24.com/product/goods/38296798" rel="nofollow noopener noreferrer" target="_blank" title="The Harm in Hate Speech"><span class="rl-new" data-added="2026-09-22">NEW</span><img src="https://image.yes24.com/goods/38296798/L" alt="The Harm in Hate Speech by Jeremy Waldron — book cover" loading="lazy"></a>
+    <a class="cv" href="https://www.yes24.com/product/goods/4614945" rel="nofollow noopener noreferrer" target="_blank" title="Time When Philosophy Is Needed"><span class="rl-new" data-added="2026-09-22">NEW</span><img src="https://image.yes24.com/goods/4614945/L" alt="Time When Philosophy Is Needed by Kang Shin-ju — book cover" loading="lazy"></a>
+    <a class="cv" href="https://www.yes24.com/product/goods/56789708" rel="nofollow noopener noreferrer" target="_blank" title="Tsutaya, a Place Where Tastes Are Designed"><span class="rl-new" data-added="2026-09-22">NEW</span><img src="https://image.yes24.com/goods/56789708/L" alt="Tsutaya, a Place Where Tastes Are Designed by Muneaki Masuda — book cover" loading="lazy"></a>
+    <a class="cv" href="https://www.yes24.com/product/goods/116922356" rel="nofollow noopener noreferrer" target="_blank" title="Twelve Footsteps"><span class="rl-new" data-added="2026-09-22">NEW</span><img src="https://image.yes24.com/goods/116922356/L" alt="Twelve Footsteps by Jeong Jae-seung — book cover" loading="lazy"></a>
+    <a class="cv" href="https://www.yes24.com/product/goods/182624787" rel="nofollow noopener noreferrer" target="_blank" title="What Makes a City Live"><span class="rl-new" data-added="2026-09-22">NEW</span><img src="https://image.yes24.com/goods/182624787/L" alt="What Makes a City Live by Yoo Hyun-joon — book cover" loading="lazy"></a>
+    </div>
     <ol class="reading-list" id="rlist">
     <li class="rl-item" id="b1">
       <span class="rl-num">1</span>
@@ -608,6 +657,7 @@
         <div class="rl-byline">Aldous Huxley</div>
         <a class="rl-source" href="https://www.instagram.com/p/Bphjg43gB8T/" rel="nofollow noopener noreferrer" target="_blank">📺 Source</a>
         <button type="button" class="heart-btn sm" data-heart="b:멋진 신세계" aria-pressed="false" aria-label="Heart this book" title="Heart this book" hidden><span class="heart-ico" aria-hidden="true">♡</span><span class="heart-n"></span></button>
+        <div class="rl-shared"><span class="rl-shared-label">👥 Also recommended by 1:</span> <a class="rl-celeb-chip" href="https://favorbook.co.kr/en/share/lady-jane.html">Lady Jane</a> <a class="rl-book-link" href="https://favorbook.co.kr/en/share/book/brave-new-world.html">All readers →</a></div>
       </div>
     </li>
     <li class="rl-item" id="b2">
@@ -628,6 +678,7 @@
         <div class="rl-byline">Hans Rosling</div>
         <a class="rl-source" href="https://www.instagram.com/p/B4d_aerAr7d/" rel="nofollow noopener noreferrer" target="_blank">📺 Source</a>
         <button type="button" class="heart-btn sm" data-heart="b:팩트풀니스" aria-pressed="false" aria-label="Heart this book" title="Heart this book" hidden><span class="heart-ico" aria-hidden="true">♡</span><span class="heart-n"></span></button>
+        <div class="rl-shared"><span class="rl-shared-label">👥 Also recommended by 1:</span> <a class="rl-celeb-chip" href="https://favorbook.co.kr/en/share/faker.html">Faker</a> <a class="rl-book-link" href="https://favorbook.co.kr/en/share/book/factfulness.html">All readers →</a></div>
       </div>
     </li>
     <li class="rl-item" id="b4">
@@ -650,6 +701,7 @@
         <p class="rl-comment">Recommended for Auction&#x27;s Star Bookstore campaign, where sales funded books for a children&#x27;s rehabilitation hospital. (Source: Asia Economy)</p>
         <a class="rl-source" href="https://view.asiae.co.kr/article/2018062009021020052?idxno=2018062009021020052" rel="nofollow noopener noreferrer" target="_blank">📺 Source</a>
         <button type="button" class="heart-btn sm" data-heart="b:데일 카네기 인간 관계론" aria-pressed="false" aria-label="Heart this book" title="Heart this book" hidden><span class="heart-ico" aria-hidden="true">♡</span><span class="heart-n"></span></button>
+        <div class="rl-shared"><span class="rl-shared-label">👥 Also recommended by 1:</span> <a class="rl-celeb-chip" href="https://favorbook.co.kr/en/share/narin-meovv.html">Narin (MEOVV)</a> <a class="rl-book-link" href="https://favorbook.co.kr/en/share/book/how-to-win-friends-influence-people.html">All readers →</a></div>
       </div>
     </li>
     <li class="rl-item" id="b6">
@@ -711,6 +763,7 @@
         <p class="rl-comment">A recent read shared on social media; it brought back solo trips swinging between excitement and caution, anxiety and ease. (Source: Elle Korea)</p>
         <a class="rl-source" href="https://www.elle.co.kr/article/42162?utm_source=twitter&amp;utm_medium=other&amp;utm_campaign=twitter" rel="nofollow noopener noreferrer" target="_blank">📺 Source</a>
         <button type="button" class="heart-btn sm" data-heart="b:여행의 이유" aria-pressed="false" aria-label="Heart this book" title="Heart this book" hidden><span class="heart-ico" aria-hidden="true">♡</span><span class="heart-n"></span></button>
+        <div class="rl-shared"><span class="rl-shared-label">👥 Also recommended by 2:</span> <a class="rl-celeb-chip" href="https://favorbook.co.kr/en/share/go-ah-sung.html">Go Ah-sung</a><a class="rl-celeb-chip" href="https://favorbook.co.kr/en/share/park-ji-hoon.html">Park Ji-hoon</a> <a class="rl-book-link" href="https://favorbook.co.kr/en/share/book/reason-for-travel.html">All readers →</a></div>
       </div>
     </li>
     <li class="rl-item" id="b12">
@@ -721,6 +774,7 @@
         <div class="rl-byline">Lim Hong-taek</div>
         <a class="rl-source" href="https://www.instagram.com/p/B0zf5yzgzKN/" rel="nofollow noopener noreferrer" target="_blank">📺 Source</a>
         <button type="button" class="heart-btn sm" data-heart="b:90년생이 온다" aria-pressed="false" aria-label="Heart this book" title="Heart this book" hidden><span class="heart-ico" aria-hidden="true">♡</span><span class="heart-n"></span></button>
+        <div class="rl-shared"><span class="rl-shared-label">👥 Also recommended by 2:</span> <a class="rl-celeb-chip" href="https://favorbook.co.kr/en/share/wonwoo-seventeen.html">Wonwoo (SEVENTEEN)</a><a class="rl-celeb-chip" href="https://favorbook.co.kr/en/share/chanmi-aoa.html">Chanmi (AOA)</a> <a class="rl-book-link" href="https://favorbook.co.kr/en/share/book/the-90s-generation-is-coming.html">All readers →</a></div>
       </div>
     </li>
     <li class="rl-item" id="b13">
@@ -761,6 +815,7 @@
         <div class="rl-byline">Jeong Jae-seung</div>
         <a class="rl-source" href="https://www.instagram.com/p/Bn1R0_ql-gl/" rel="nofollow noopener noreferrer" target="_blank">📺 Source</a>
         <button type="button" class="heart-btn sm" data-heart="b:열두 발자국" aria-pressed="false" aria-label="Heart this book" title="Heart this book" hidden><span class="heart-ico" aria-hidden="true">♡</span><span class="heart-n"></span></button>
+        <div class="rl-shared"><span class="rl-shared-label">👥 Also recommended by 2:</span> <a class="rl-celeb-chip" href="https://favorbook.co.kr/en/share/byun-yo-han.html">Byun Yo-han</a><a class="rl-celeb-chip" href="https://favorbook.co.kr/en/share/seolhyun.html">Seolhyun</a> <a class="rl-book-link" href="https://favorbook.co.kr/en/share/book/twelve-footsteps.html">All readers →</a></div>
       </div>
     </li>
     <li class="rl-item" id="b17">
@@ -777,6 +832,22 @@
     </ol>
     </div>
   </section>
+  <script>
+  (function () {
+    var area = document.getElementById("shelf-area");
+    var tabs = document.querySelectorAll(".view-tabs .vt");
+    if (!area || !tabs.length) return;
+    function set(v, save) {
+      area.classList.toggle("show-covers", v === "cover");
+      tabs.forEach(function (t) { t.setAttribute("aria-pressed", String(t.dataset.view === v)); });
+      if (save) { try { localStorage.setItem("shelfView", v); } catch (e) {} }
+    }
+    var saved = null;
+    try { saved = localStorage.getItem("shelfView"); } catch (e) {}
+    if (saved === "cover") set("cover", false);
+    tabs.forEach(function (t) { t.addEventListener("click", function () { set(t.dataset.view, true); }); });
+  })();
+  </script>
   <script>
   (function () {
     var btns = [document.getElementById("shelf-cap"), document.getElementById("shelf-cap-clear")]
@@ -989,6 +1060,25 @@
   })();
   </script>
   <p class="tr-note">Book titles and author names marked with an asterisk (<strong>*</strong>) are machine-translated from Korean. No official English edition was confirmed for them, so read them as approximations of the Korean original shown next to them.</p>
+  <section>
+    <h2>📝 Changmin (TVXQ!)'s reading taste</h2>
+    <p>Authors that come up most often in Changmin (TVXQ!)'s list: Muneaki Masuda (2 books), Aldous Huxley, Baeksang Economic Research Institute.</p>
+  </section>
+  <section class="related-celebs">
+    <h2>🤝 Celebrities with similar reading taste</h2>
+    <p class="muted">They recommended some of the same books. The number is how many books they share.</p>
+    <div class="related-celeb-list">
+      <a class="related-celeb" href="https://favorbook.co.kr/en/share/go-ah-sung.html">Go Ah-sung <span class="rc-count">1</span></a>
+      <a class="related-celeb" href="https://favorbook.co.kr/en/share/seolhyun.html">Seolhyun <span class="rc-count">1</span></a>
+      <a class="related-celeb" href="https://favorbook.co.kr/en/share/narin-meovv.html">Narin (MEOVV) <span class="rc-count">1</span></a>
+      <a class="related-celeb" href="https://favorbook.co.kr/en/share/lady-jane.html">Lady Jane <span class="rc-count">1</span></a>
+      <a class="related-celeb" href="https://favorbook.co.kr/en/share/park-ji-hoon.html">Park Ji-hoon <span class="rc-count">1</span></a>
+      <a class="related-celeb" href="https://favorbook.co.kr/en/share/byun-yo-han.html">Byun Yo-han <span class="rc-count">1</span></a>
+      <a class="related-celeb" href="https://favorbook.co.kr/en/share/wonwoo-seventeen.html">Wonwoo (SEVENTEEN) <span class="rc-count">1</span></a>
+      <a class="related-celeb" href="https://favorbook.co.kr/en/share/chanmi-aoa.html">Chanmi (AOA) <span class="rc-count">1</span></a>
+      <a class="related-celeb" href="https://favorbook.co.kr/en/share/faker.html">Faker <span class="rc-count">1</span></a>
+    </div>
+  </section>
   <section class="pfaq">
     <h2>Changmin (TVXQ!) book recommendations — FAQ</h2>
     <div class="pfaq-q">
@@ -1004,6 +1094,10 @@
       <p>Public sources only — interviews, YouTube clips, variety shows, fan-cafe posts and SNS. A book is added to this reading list only when the mention can be linked, and the link stays on the entry so you can check it yourself.</p>
     </div>
   </section>
+  <nav class="celeb-pager" aria-label="Browse celebrities">
+      <a class="pager-link pager-prev" rel="prev" href="https://favorbook.co.kr/en/share/chang-kiha.html">← Chang Kiha's books</a>
+      <a class="pager-link pager-next" rel="next" href="https://favorbook.co.kr/en/share/chanmi-aoa.html">Chanmi (AOA)'s books →</a>
+  </nav>
   <footer>
     <p>Curated from public Korean-language sources. Korean original page: <a href="https://favorbook.co.kr/share/%EC%B5%9C%EA%B0%95%EC%B0%BD%EB%AF%BC%28%EB%8F%99%EB%B0%A9%EC%8B%A0%EA%B8%B0%29.html" hreflang="ko">최강창민(동방신기)</a>.</p>
     <p><a href="https://favorbook.co.kr/en/">Browse more Korean celebrity book lists →</a></p>

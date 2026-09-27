@@ -51,7 +51,6 @@
     "description": "South Korean pro gamer. Legendary mid laner for T1 in League of Legends, multi-time World Champion.",
     "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/1/1a/Faker_2020_interview.jpg/500px-Faker_2020_interview.jpg"
   },
-  "mainEntityOfPage": "https://favorbook.co.kr/en/share/faker.html",
   "hasPart": {
     "@type": "ItemList",
     "name": "Books read by Faker",
@@ -598,6 +597,9 @@
     nav { margin: 50px 0 16px; font-size: 13px; }
     .celeb-header { display: flex; align-items: center; gap: 20px; margin-bottom: 16px; flex-wrap: wrap; }
     .celeb-img { width: 120px; height: 120px; border-radius: 50%; object-fit: cover; border: 2px solid #000; }
+    .celeb-photo-wrap { position: relative; flex-shrink: 0; }
+    .img-credit { position: absolute; bottom: 0; right: 0; font-size: 10px; line-height: 1; padding: 2px 4px; background: rgba(255,255,255,0.85); border: 1px solid #ccc; border-radius: 999px; text-decoration: none; color: #555; opacity: 0.55; transition: opacity .15s; }
+    .img-credit:hover { opacity: 1; text-decoration: none; }
     h1 { font-size: 28px; margin: 0 0 8px; font-weight: 900; }
     h2 { font-size: 19px; margin: 32px 0 12px; padding-bottom: 4px; border-bottom: 2px solid #000; font-weight: 800; }
     .intro { background: #fff; border: 2px solid #000; box-shadow: 4px 4px 0 0 #000; padding: 14px 16px; margin: 16px 0 24px; font-size: 15px; }
@@ -608,6 +610,17 @@
     .pfaq-q h3 { font-size: 15px; font-weight: 800; margin: 0 0 6px; }
     .pfaq-q p { font-size: 14px; margin: 0; color: #333; }
     .grp-link { margin: 10px 0 0; padding: 8px 12px; background: #fff8e7; border: 2px solid #000; box-shadow: 3px 3px 0 0 #000; font-size: 14px; }
+    .rl-shared { clear: both; margin-top: 12px; padding-top: 10px; border-top: 1.5px dashed #ccc; display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
+    .rl-shared-label { font-size: 12px; color: #666; font-weight: 700; }
+    .rl-celeb-chip { font-size: 12px; padding: 2px 8px; background: #fff; border: 1.5px solid #000; border-radius: 999px; color: #000; }
+    .rl-book-link { font-size: 12px; font-weight: 700; }
+    .muted { color: #666; font-size: 13px; }
+    .related-celebs { margin: 24px 0; }
+    .related-celeb-list { display: flex; flex-wrap: wrap; gap: 8px; }
+    .related-celeb { padding: 6px 12px; background: #fff; border: 2px solid #000; box-shadow: 2px 2px 0 0 #000; font-size: 13px; font-weight: 700; color: #000; }
+    .rc-count { display: inline-block; min-width: 18px; padding: 0 5px; margin-left: 4px; background: #fde047; border: 1.5px solid #000; border-radius: 999px; font-size: 11px; text-align: center; }
+    .celeb-pager { margin: 32px 0 16px; display: flex; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
+    .pager-link { padding: 8px 12px; background: #fff; border: 2px solid #000; box-shadow: 3px 3px 0 0 #000; font-size: 13px; font-weight: 700; color: #000; }
     .shelf-head { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
     .shelf-head h2 { margin-bottom: 0; border-bottom: none; padding-bottom: 0; }
     .shelf-tabs { display: flex; gap: 6px; flex-wrap: wrap; }
@@ -615,6 +628,19 @@
               background: #fff; color: #000; border: 2px solid #000; box-shadow: 2px 2px 0 0 #000; }
     .sh-cap:hover { background: #fde047; }
     .sh-cap[disabled] { opacity: .55; cursor: default; }
+    .view-tabs { display: inline-flex; border: 2px solid #000; box-shadow: 2px 2px 0 0 #000; background: #fff; }
+    .vt { font: inherit; font-size: 12px; font-weight: 700; padding: 5px 10px; background: #fff; color: #000; border: 0; cursor: pointer; }
+    .vt + .vt { border-left: 2px solid #000; }
+    .vt[aria-pressed="true"] { background: #000; color: #fff; }
+    .covers { display: none; grid-template-columns: repeat(auto-fill, minmax(84px, 1fr)); gap: 14px 12px; margin: 14px 0 22px; }
+    .show-covers .covers { display: grid; }
+    .show-covers .shelf { display: none; }
+    .cv { position: relative; display: block; aspect-ratio: 2/3; border: 1.5px solid #000; box-shadow: 2px 2px 0 0 #000;
+          background: #f4f4f0; overflow: hidden; color: #000; text-decoration: none; transition: transform .12s; }
+    .cv:hover { transform: translateY(-3px); text-decoration: none; }
+    .cv img { width: 100%; height: 100%; object-fit: cover; display: block; }
+    .cv-no { display: flex; height: 100%; align-items: center; justify-content: center; padding: 6px;
+             font-size: 11px; font-weight: 700; line-height: 1.3; text-align: center; word-break: keep-all; }
     .shelf { --sh-h: 270px; --plank: 7px; --row: calc(var(--sh-h) + 18px);
              display: flex; flex-wrap: wrap; align-items: flex-end; gap: 11px 2px;
              margin: 14px 0 22px; padding: 0 8px 7px;
@@ -692,13 +718,16 @@
 </head>
 <body>
   <div class="lang-toggle">
-    <button class="lang-btn copy-btn" type="button" data-url="https://favorbook.co.kr/en/share/faker.html" data-done="Copied!">🔗 Copy link</button>
+    <button class="lang-btn copy-btn" type="button" data-url="https://favorbook.co.kr/s/e/faker.html" data-done="Copied!">🔗 Copy link</button>
     <a class="lang-btn" href="https://favorbook.co.kr/share/%ED%8E%98%EC%9D%B4%EC%BB%A4.html" hreflang="ko">한국어</a>
     <span class="lang-btn active">EN</span>
   </div>
-  <nav><a href="https://favorbook.co.kr/en/">← Favorbook Home</a></nav>
+  <nav><a href="https://favorbook.co.kr/en/">← Favorbook Home</a> · <a href="https://favorbook.co.kr/en/share/ranking.html">Most-read books ranking</a></nav>
   <header class="celeb-header">
+    <div class="celeb-photo-wrap">
     <img class="celeb-img" src="https://upload.wikimedia.org/wikipedia/commons/thumb/1/1a/Faker_2020_interview.jpg/500px-Faker_2020_interview.jpg" alt="Faker profile photo" width="120" height="120">
+      <a class="img-credit" href="https://upload.wikimedia.org/wikipedia/commons/thumb/1/1a/Faker_2020_interview.jpg/500px-Faker_2020_interview.jpg" target="_blank" rel="nofollow noopener noreferrer" title="Image source">📷</a>
+    </div>
     <div>
       <h1>Faker Books<span style="font-weight:400;color:#666;font-size:18px"> · 페이커 책</span></h1>
       <p class="celeb-bio">South Korean pro gamer. Legendary mid laner for T1 in League of Legends, multi-time World Champion.</p>
@@ -713,6 +742,7 @@
     <div class="shelf-head">
       <h2>Books Faker has read (26)</h2>
       <div class="shelf-tabs">
+        <span class="view-tabs" role="group"><button type="button" class="vt" data-view="spine" aria-pressed="true">📚 Spines</button><button type="button" class="vt" data-view="cover" aria-pressed="false">🖼 Covers</button></span>
         <button type="button" class="sh-cap" id="shelf-cap" title="Download the bookshelf as an image">⤓ Save image</button>
         <button type="button" class="sh-cap" id="shelf-cap-clear" title="Download as a PNG with a transparent background">⤓ Transparent</button>
       </div>
@@ -746,6 +776,34 @@
     <a class="sp no-img" style="--c:hsl(217,54%,29%);--w:30px;--fs:8px" href="https://www.yes24.com/product/goods/44302269" rel="nofollow noopener noreferrer" target="_blank" title="We Have the Technology: How Biohackers, Foodies, Physicians, and Scientists Are Transforming Human Perception, One Sense at a Time"><span class="sp-t"><i>We Have the Technology: How Biohackers, Foodies, Physicians, and Scientists Are Transforming Human Perception, One Sense at a Time</i></span></a>
     <a class="sp" style="--c:hsl(104,38%,28%);--w:31px;--fs:12px" href="https://www.yes24.com/product/goods/90225942" rel="nofollow noopener noreferrer" target="_blank" title="When Einstein Walked with Gödel"><span class="sp-t"><i>When Einstein Walked with Gödel</i></span><img class="sp-i" src="https://image.yes24.com/goods/90225942/side" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.parentNode.classList.add('sp-fail');this.remove()" onload="if(this.naturalWidth/this.naturalHeight>0.4){this.parentNode.classList.add('sp-fail');this.remove()}"></a>
     </div>
+    <div class="covers" id="covers">
+    <a class="cv" href="https://www.yes24.com/product/goods/3489078" rel="nofollow noopener noreferrer" target="_blank" title="1Q84"><img src="https://image.yes24.com/goods/3489078/L" alt="1Q84 by Haruki Murakami — book cover" loading="lazy"></a>
+    <a class="cv" href="https://www.yes24.com/product/goods/82936937" rel="nofollow noopener noreferrer" target="_blank" title="Apologia Sokratous, Kriton, Phaidon, Symposion"><img src="https://image.yes24.com/goods/82936937/L" alt="Apologia Sokratous, Kriton, Phaidon, Symposion by 플라톤 — book cover" loading="lazy"></a>
+    <a class="cv" href="https://www.yes24.com/product/goods/59006530" rel="nofollow noopener noreferrer" target="_blank" title="Astrophysics for People in a Hurry"><img src="https://image.yes24.com/goods/59006530/L" alt="Astrophysics for People in a Hurry by 닐 디그래스 타이슨 — book cover" loading="lazy"></a>
+    <a class="cv" href="https://www.yes24.com/product/goods/37335066" rel="nofollow noopener noreferrer" target="_blank" title="A Theory of Fun for Game Design"><img src="https://image.yes24.com/goods/37335066/L" alt="A Theory of Fun for Game Design by 라프 코스터 — book cover" loading="lazy"></a>
+    <a class="cv" href="https://www.yes24.com/product/goods/2312211" rel="nofollow noopener noreferrer" target="_blank" title="Cosmos"><img src="https://image.yes24.com/goods/2312211/L" alt="Cosmos by 칼 세이건 — book cover" loading="lazy"></a>
+    <a class="cv" href="https://www.yes24.com/product/goods/3315954" rel="nofollow noopener noreferrer" target="_blank" title="Fahrenheit 451"><img src="https://image.yes24.com/goods/3315954/L" alt="Fahrenheit 451 by 레이 브래드버리 — book cover" loading="lazy"></a>
+    <a class="cv" href="https://www.yes24.com/product/goods/26035944" rel="nofollow noopener noreferrer" target="_blank" title="How Not to Be Wrong: The Power of Mathematical Thinking"><img src="https://image.yes24.com/goods/26035944/L" alt="How Not to Be Wrong: The Power of Mathematical Thinking by 조던 엘렌버그 — book cover" loading="lazy"></a>
+    <a class="cv" href="https://www.yes24.com/product/goods/117643865" rel="nofollow noopener noreferrer" target="_blank" title="Inner Communication"><img src="https://image.yes24.com/goods/117643865/L" alt="Inner Communication by Kim Ju-hwan — book cover" loading="lazy"></a>
+    <a class="cv" href="https://www.yes24.com/product/goods/108850617" rel="nofollow noopener noreferrer" target="_blank" title="Jag kan ha fel och andra visdomar fran mitt liv som buddhistmunk"><img src="https://image.yes24.com/goods/108850617/L" alt="Jag kan ha fel och andra visdomar fran mitt liv som buddhistmunk by Björn Natthiko Lindeblad — book cover" loading="lazy"></a>
+    <a class="cv" href="https://www.yes24.com/product/goods/15156691" rel="nofollow noopener noreferrer" target="_blank" title="Justice: What&#x27;s the Right Thing to Do?"><img src="https://image.yes24.com/goods/15156691/L" alt="Justice: What&#x27;s the Right Thing to Do? by Michael Sandel — book cover" loading="lazy"></a>
+    <a class="cv" href="https://www.yes24.com/product/goods/23630397" rel="nofollow noopener noreferrer" target="_blank" title="Laplace&#x27;s Witch"><img src="https://image.yes24.com/goods/23630397/L" alt="Laplace&#x27;s Witch by 히가시노 게이고 — book cover" loading="lazy"></a>
+    <a class="cv" href="https://www.yes24.com/product/goods/129367072" rel="nofollow noopener noreferrer" target="_blank" title="Le sixième sommeil"><img src="https://image.yes24.com/goods/129367072/L" alt="Le sixième sommeil by 베르나르 베르베르 — book cover" loading="lazy"></a>
+    <a class="cv" href="https://www.yes24.com/product/goods/101375809" rel="nofollow noopener noreferrer" target="_blank" title="Martian"><img src="https://image.yes24.com/goods/101375809/L" alt="Martian by 앤디 위어 — book cover" loading="lazy"></a>
+    <a class="cv" href="https://www.yes24.com/product/goods/32400671" rel="nofollow noopener noreferrer" target="_blank" title="Memory Man"><img src="https://image.yes24.com/goods/32400671/L" alt="Memory Man by 데이비드 발다치 — book cover" loading="lazy"></a>
+    <a class="cv" href="https://www.yes24.com/product/goods/44499829" rel="nofollow noopener noreferrer" target="_blank" title="Norwegian Wood"><img src="https://image.yes24.com/goods/44499829/L" alt="Norwegian Wood by 무라카미 하루키 — book cover" loading="lazy"></a>
+    <a class="cv" href="https://www.yes24.com/product/goods/126181478" rel="nofollow noopener noreferrer" target="_blank" title="Silent Spring"><img src="https://image.yes24.com/goods/126181478/L" alt="Silent Spring by Rachel Carson — book cover" loading="lazy"></a>
+    <a class="cv" href="https://www.yes24.com/product/goods/1511432" rel="nofollow noopener noreferrer" target="_blank" title="The Fabric of the Cosmos"><img src="https://image.yes24.com/goods/1511432/L" alt="The Fabric of the Cosmos by 브라이언 그린 — book cover" loading="lazy"></a>
+    <a class="cv" href="https://www.yes24.com/product/goods/124574978" rel="nofollow noopener noreferrer" target="_blank" title="The Miracle Morning"><img src="https://image.yes24.com/goods/124574978/L" alt="The Miracle Morning by 할 엘로드 — book cover" loading="lazy"></a>
+    <a class="cv" href="https://www.yes24.com/product/goods/116586056" rel="nofollow noopener noreferrer" target="_blank" title="The Miracles of the Namiya General Store"><img src="https://image.yes24.com/goods/116586056/L" alt="The Miracles of the Namiya General Store by 히가시노 게이고 — book cover" loading="lazy"></a>
+    <a class="cv" href="https://www.yes24.com/product/goods/195804435" rel="nofollow noopener noreferrer" target="_blank" title="The Selfish Gene"><img src="https://image.yes24.com/goods/195804435/L" alt="The Selfish Gene by Richard Dawkins — book cover" loading="lazy"></a>
+    <a class="cv" href="https://www.yes24.com/product/goods/54233937" rel="nofollow noopener noreferrer" target="_blank" title="The Subtle Art of Not Giving a F*ck"><img src="https://image.yes24.com/goods/54233937/L" alt="The Subtle Art of Not Giving a F*ck by 마크 맨슨 — book cover" loading="lazy"></a>
+    <a class="cv" href="https://www.yes24.com/product/goods/58787793" rel="nofollow noopener noreferrer" target="_blank" title="The Upward Spiral"><img src="https://image.yes24.com/goods/58787793/L" alt="The Upward Spiral by 앨릭스 코브 — book cover" loading="lazy"></a>
+    <a class="cv" href="https://www.yes24.com/product/goods/58816202" rel="nofollow noopener noreferrer" target="_blank" title="Voice of Sin"><img src="https://image.yes24.com/goods/58816202/L" alt="Voice of Sin by Takeshi Shiota — book cover" loading="lazy"></a>
+    <a class="cv" href="https://www.yes24.com/product/goods/5531156" rel="nofollow noopener noreferrer" target="_blank" title="Walden"><img src="https://image.yes24.com/goods/5531156/L" alt="Walden by Henry David Thoreau — book cover" loading="lazy"></a>
+    <a class="cv" href="https://www.yes24.com/product/goods/44302269" rel="nofollow noopener noreferrer" target="_blank" title="We Have the Technology: How Biohackers, Foodies, Physicians, and Scientists Are Transforming Human Perception, One Sense at a Time"><img src="https://image.yes24.com/goods/44302269/L" alt="We Have the Technology: How Biohackers, Foodies, Physicians, and Scientists Are Transforming Human Perception, One Sense at a Time by 카라 플라토니 — book cover" loading="lazy"></a>
+    <a class="cv" href="https://www.yes24.com/product/goods/90225942" rel="nofollow noopener noreferrer" target="_blank" title="When Einstein Walked with Gödel"><img src="https://image.yes24.com/goods/90225942/L" alt="When Einstein Walked with Gödel by 짐 홀트 — book cover" loading="lazy"></a>
+    </div>
     <ol class="reading-list" id="rlist">
     <li class="rl-item" id="b1">
       <span class="rl-num">1</span>
@@ -754,6 +812,7 @@
         <div class="rl-title"><a href="https://www.yes24.com/product/goods/3489078" rel="nofollow noopener noreferrer" target="_blank">1Q84</a> <span style="color:#888;font-size:12px;font-weight:400">(1Q84)</span></div>
         <div class="rl-byline">Haruki Murakami</div>
         <button type="button" class="heart-btn sm" data-heart="b:1Q84" aria-pressed="false" aria-label="Heart this book" title="Heart this book" hidden><span class="heart-ico" aria-hidden="true">♡</span><span class="heart-n"></span></button>
+        <div class="rl-shared"><span class="rl-shared-label">👥 Also recommended by 2:</span> <a class="rl-celeb-chip" href="https://favorbook.co.kr/en/share/lee-jun-hyuk.html">Lee Jun-hyuk</a><a class="rl-celeb-chip" href="https://favorbook.co.kr/en/share/ha-ji-won.html">Ha Ji-won</a> <a class="rl-book-link" href="https://favorbook.co.kr/en/share/book/1q84.html">All readers →</a></div>
       </div>
     </li>
     <li class="rl-item" id="b2">
@@ -797,6 +856,7 @@
         <p class="rl-comment">On a fan-compiled list of books on Faker&#x27;s shelf. (Source: theqoo)</p>
         <a class="rl-source" href="https://theqoo.net/square/2116866085" rel="nofollow noopener noreferrer" target="_blank">📺 Source</a>
         <button type="button" class="heart-btn sm" data-heart="b:코스모스" aria-pressed="false" aria-label="Heart this book" title="Heart this book" hidden><span class="heart-ico" aria-hidden="true">♡</span><span class="heart-n"></span></button>
+        <div class="rl-shared"><span class="rl-shared-label">👥 Also recommended by 2:</span> <a class="rl-celeb-chip" href="https://favorbook.co.kr/en/share/noze.html">NO:ZE</a><a class="rl-celeb-chip" href="https://favorbook.co.kr/en/share/park-ji-hoon.html">Park Ji-hoon</a> <a class="rl-book-link" href="https://favorbook.co.kr/en/share/book/cosmos.html">All readers →</a></div>
       </div>
     </li>
     <li class="rl-item" id="b6">
@@ -808,6 +868,7 @@
         <p class="rl-comment">Listed among the books on Faker&#x27;s shelf, as compiled by fans. (Source: theqoo)</p>
         <a class="rl-source" href="https://theqoo.net/square/2116866085" rel="nofollow noopener noreferrer" target="_blank">📺 Source</a>
         <button type="button" class="heart-btn sm" data-heart="b:화씨 451" aria-pressed="false" aria-label="Heart this book" title="Heart this book" hidden><span class="heart-ico" aria-hidden="true">♡</span><span class="heart-n"></span></button>
+        <div class="rl-shared"><span class="rl-shared-label">👥 Also recommended by 1:</span> <a class="rl-celeb-chip" href="https://favorbook.co.kr/en/share/ella-meovv.html">Ella (MEOVV)</a> <a class="rl-book-link" href="https://favorbook.co.kr/en/share/book/fahrenheit-451.html">All readers →</a></div>
       </div>
     </li>
     <li class="rl-item" id="b7">
@@ -841,6 +902,7 @@
         <p class="rl-comment">Introduced by Faker in a conversation with the prime minister; it helped a lot with mental control as a pro gamer. (Source: Chosun Ilbo)</p>
         <a class="rl-source" href="https://www.chosun.com/politics/politics_general/2025/12/20/D6PIVQAP6ZAUVLIWADLS3MV4XE/?utm_source=naver&amp;utm_medium=referral&amp;utm_campaign=naver-news" rel="nofollow noopener noreferrer" target="_blank">📺 Source</a>
         <button type="button" class="heart-btn sm" data-heart="b:내가 틀릴 수도 있습니다" aria-pressed="false" aria-label="Heart this book" title="Heart this book" hidden><span class="heart-ico" aria-hidden="true">♡</span><span class="heart-n"></span></button>
+        <div class="rl-shared"><span class="rl-shared-label">👥 Also recommended by 1:</span> <a class="rl-celeb-chip" href="https://favorbook.co.kr/en/share/karina-aespa.html">Karina (aespa)</a> <a class="rl-book-link" href="https://favorbook.co.kr/en/share/book/jag-kan-ha-fel-och-andra-visdomar-fran-mitt-liv-som-buddhistmunk.html">All readers →</a></div>
       </div>
     </li>
     <li class="rl-item" id="b10">
@@ -852,6 +914,7 @@
         <p class="rl-comment">A current read. Reading has widened Faker&#x27;s view by offering many perspectives. (Source: Chosun Ilbo)</p>
         <a class="rl-source" href="https://www.chosun.com/topclass/topclass_issue/2025/11/08/B7G3BLQY4ZEGFHI5YV7UVF2NYQ/" rel="nofollow noopener noreferrer" target="_blank">📺 Source</a>
         <button type="button" class="heart-btn sm" data-heart="b:정의란 무엇인가" aria-pressed="false" aria-label="Heart this book" title="Heart this book" hidden><span class="heart-ico" aria-hidden="true">♡</span><span class="heart-n"></span></button>
+        <div class="rl-shared"><span class="rl-shared-label">👥 Also recommended by 3:</span> <a class="rl-celeb-chip" href="https://favorbook.co.kr/en/share/kino-pentagon.html">Kino (PENTAGON)</a><a class="rl-celeb-chip" href="https://favorbook.co.kr/en/share/heo-seong-beom.html">Heo Seong-beom</a><a class="rl-celeb-chip" href="https://favorbook.co.kr/en/share/jo-yu-ri.html">Jo Yu-ri</a> <a class="rl-book-link" href="https://favorbook.co.kr/en/share/book/justice-whats-the-right-thing-to-do.html">All readers →</a></div>
       </div>
     </li>
     <li class="rl-item" id="b11">
@@ -863,6 +926,7 @@
         <p class="rl-comment">Named by Faker as an easy, fun Higashino Keigo read. (Source: theqoo)</p>
         <a class="rl-source" href="https://theqoo.net/square/2116866085" rel="nofollow noopener noreferrer" target="_blank">📺 Source</a>
         <button type="button" class="heart-btn sm" data-heart="b:라플라스의 마녀" aria-pressed="false" aria-label="Heart this book" title="Heart this book" hidden><span class="heart-ico" aria-hidden="true">♡</span><span class="heart-n"></span></button>
+        <div class="rl-shared"><span class="rl-shared-label">👥 Also recommended by 1:</span> <a class="rl-celeb-chip" href="https://favorbook.co.kr/en/share/minji-newjeans.html">Minji (NewJeans)</a> <a class="rl-book-link" href="https://favorbook.co.kr/en/share/book/laplaces-witch.html">All readers →</a></div>
       </div>
     </li>
     <li class="rl-item" id="b12">
@@ -873,6 +937,7 @@
         <div class="rl-byline">베르나르 베르베르</div>
         <a class="rl-source" href="https://theqoo.net/square/2116866085" rel="nofollow noopener noreferrer" target="_blank">📺 Source</a>
         <button type="button" class="heart-btn sm" data-heart="b:잠" aria-pressed="false" aria-label="Heart this book" title="Heart this book" hidden><span class="heart-ico" aria-hidden="true">♡</span><span class="heart-n"></span></button>
+        <div class="rl-shared"><span class="rl-shared-label">👥 Also recommended by 1:</span> <a class="rl-celeb-chip" href="https://favorbook.co.kr/en/share/seolhyun.html">Seolhyun</a> <a class="rl-book-link" href="https://favorbook.co.kr/en/share/book/le-sixieme-sommeil.html">All readers →</a></div>
       </div>
     </li>
     <li class="rl-item" id="b13">
@@ -884,6 +949,7 @@
         <p class="rl-comment">On a fan-compiled list of books on Faker&#x27;s shelf. (Source: theqoo)</p>
         <a class="rl-source" href="https://theqoo.net/square/2116866085" rel="nofollow noopener noreferrer" target="_blank">📺 Source</a>
         <button type="button" class="heart-btn sm" data-heart="b:마션" aria-pressed="false" aria-label="Heart this book" title="Heart this book" hidden><span class="heart-ico" aria-hidden="true">♡</span><span class="heart-n"></span></button>
+        <div class="rl-shared"><span class="rl-shared-label">👥 Also recommended by 1:</span> <a class="rl-celeb-chip" href="https://favorbook.co.kr/en/share/lily-nmixx.html">LILY (NMIXX)</a> <a class="rl-book-link" href="https://favorbook.co.kr/en/share/book/martian.html">All readers →</a></div>
       </div>
     </li>
     <li class="rl-item" id="b14">
@@ -905,6 +971,7 @@
         <div class="rl-byline">무라카미 하루키</div>
         <a class="rl-source" href="https://theqoo.net/square/2116866085" rel="nofollow noopener noreferrer" target="_blank">📺 Source</a>
         <button type="button" class="heart-btn sm" data-heart="b:노르웨이의 숲" aria-pressed="false" aria-label="Heart this book" title="Heart this book" hidden><span class="heart-ico" aria-hidden="true">♡</span><span class="heart-n"></span></button>
+        <div class="rl-shared"><span class="rl-shared-label">👥 Also recommended by 12:</span> <a class="rl-celeb-chip" href="https://favorbook.co.kr/en/share/gawon-meovv.html">Gawon (MEOVV)</a><a class="rl-celeb-chip" href="https://favorbook.co.kr/en/share/gaeul-ive.html">Gaeul (IVE)</a><a class="rl-celeb-chip" href="https://favorbook.co.kr/en/share/geonho-cortis.html">Geonho (CORTIS)</a><a class="rl-celeb-chip" href="https://favorbook.co.kr/en/share/go-min-si.html">Go Min-si</a><a class="rl-celeb-chip" href="https://favorbook.co.kr/en/share/lily-nmixx.html">LILY (NMIXX)</a><a class="rl-celeb-chip" href="https://favorbook.co.kr/en/share/son-jong-won.html">Son Jong-won</a><a class="rl-celeb-chip" href="https://favorbook.co.kr/en/share/yeri-red-velvet.html">Yeri (Red Velvet)</a><a class="rl-celeb-chip" href="https://favorbook.co.kr/en/share/lee-je-hoon.html">Lee Je-hoon</a><a class="rl-celeb-chip" href="https://favorbook.co.kr/en/share/heo-seong-beom.html">Heo Seong-beom</a><a class="rl-celeb-chip" href="https://favorbook.co.kr/en/share/kim-do-wan.html">Kim Do-wan</a><a class="rl-celeb-chip" href="https://favorbook.co.kr/en/share/sunghoboynextdoor.html">SUNGHO(BOYNEXTDOOR)</a><a class="rl-celeb-chip" href="https://favorbook.co.kr/en/share/taesanboynextdoor.html">TAESAN((BOYNEXTDOOR)</a> <a class="rl-book-link" href="https://favorbook.co.kr/en/share/book/norwegian-wood.html">All readers →</a></div>
       </div>
     </li>
     <li class="rl-item" id="b16">
@@ -914,6 +981,7 @@
         <div class="rl-title"><a href="https://www.yes24.com/product/goods/126181478" rel="nofollow noopener noreferrer" target="_blank">Silent Spring</a> <span style="color:#888;font-size:12px;font-weight:400">(침묵의 봄)</span></div>
         <div class="rl-byline">Rachel Carson</div>
         <button type="button" class="heart-btn sm" data-heart="b:침묵의 봄" aria-pressed="false" aria-label="Heart this book" title="Heart this book" hidden><span class="heart-ico" aria-hidden="true">♡</span><span class="heart-n"></span></button>
+        <div class="rl-shared"><span class="rl-shared-label">👥 Also recommended by 1:</span> <a class="rl-celeb-chip" href="https://favorbook.co.kr/en/share/kim-sin-rock.html">Kim Sin-rock</a> <a class="rl-book-link" href="https://favorbook.co.kr/en/share/book/silent-spring.html">All readers →</a></div>
       </div>
     </li>
     <li class="rl-item" id="b17">
@@ -925,6 +993,7 @@
         <p class="rl-comment">On a fan-compiled list of books on Faker&#x27;s shelf. (Source: theqoo)</p>
         <a class="rl-source" href="https://theqoo.net/square/2116866085" rel="nofollow noopener noreferrer" target="_blank">📺 Source</a>
         <button type="button" class="heart-btn sm" data-heart="b:우주의 구조" aria-pressed="false" aria-label="Heart this book" title="Heart this book" hidden><span class="heart-ico" aria-hidden="true">♡</span><span class="heart-n"></span></button>
+        <div class="rl-shared"><span class="rl-shared-label">👥 Also recommended by 1:</span> <a class="rl-celeb-chip" href="https://favorbook.co.kr/en/share/lee-ji-ah.html">Lee Ji-ah</a> <a class="rl-book-link" href="https://favorbook.co.kr/en/share/book/the-fabric-of-the-cosmos.html">All readers →</a></div>
       </div>
     </li>
     <li class="rl-item" id="b18">
@@ -946,6 +1015,7 @@
         <p class="rl-comment">Named by Faker as an easy, fun Higashino Keigo read. (Source: theqoo)</p>
         <a class="rl-source" href="https://theqoo.net/square/2116866085" rel="nofollow noopener noreferrer" target="_blank">📺 Source</a>
         <button type="button" class="heart-btn sm" data-heart="b:나미야 잡화점의 기적" aria-pressed="false" aria-label="Heart this book" title="Heart this book" hidden><span class="heart-ico" aria-hidden="true">♡</span><span class="heart-n"></span></button>
+        <div class="rl-shared"><span class="rl-shared-label">👥 Also recommended by 8:</span> <a class="rl-celeb-chip" href="https://favorbook.co.kr/en/share/kim-tae-ha.html">Kim Tae-Ha</a><a class="rl-celeb-chip" href="https://favorbook.co.kr/en/share/ningning-aespa.html">Ningning (aespa)</a><a class="rl-celeb-chip" href="https://favorbook.co.kr/en/share/park-ji-hoon.html">Park Ji-hoon</a><a class="rl-celeb-chip" href="https://favorbook.co.kr/en/share/wonwoo-seventeen.html">Wonwoo (SEVENTEEN)</a><a class="rl-celeb-chip" href="https://favorbook.co.kr/en/share/jin-bts.html">Jin (BTS)</a><a class="rl-celeb-chip" href="https://favorbook.co.kr/en/share/karina-aespa.html">Karina (aespa)</a><a class="rl-celeb-chip" href="https://favorbook.co.kr/en/share/ha-yeon-joo.html">Ha Yeon-joo</a><a class="rl-celeb-chip" href="https://favorbook.co.kr/en/share/park-se-wan.html">Park Se-wan</a> <a class="rl-book-link" href="https://favorbook.co.kr/en/share/book/the-miracles-of-the-namiya-general-store.html">All readers →</a></div>
       </div>
     </li>
     <li class="rl-item" id="b20">
@@ -957,6 +1027,7 @@
         <p class="rl-comment">A current read. Reading has widened Faker&#x27;s view by offering many perspectives. (Source: Chosun Ilbo)</p>
         <a class="rl-source" href="https://www.chosun.com/topclass/topclass_issue/2025/11/08/B7G3BLQY4ZEGFHI5YV7UVF2NYQ/" rel="nofollow noopener noreferrer" target="_blank">📺 Source</a>
         <button type="button" class="heart-btn sm" data-heart="b:이기적 유전자" aria-pressed="false" aria-label="Heart this book" title="Heart this book" hidden><span class="heart-ico" aria-hidden="true">♡</span><span class="heart-n"></span></button>
+        <div class="rl-shared"><span class="rl-shared-label">👥 Also recommended by 2:</span> <a class="rl-celeb-chip" href="https://favorbook.co.kr/en/share/song-kang.html">Song Kang</a><a class="rl-celeb-chip" href="https://favorbook.co.kr/en/share/hong-kyung.html">Hong Kyung</a> <a class="rl-book-link" href="https://favorbook.co.kr/en/share/book/the-selfish-gene.html">All readers →</a></div>
       </div>
     </li>
     <li class="rl-item" id="b21">
@@ -968,6 +1039,7 @@
         <p class="rl-comment">On a fan-compiled list of books on Faker&#x27;s shelf. (Source: theqoo)</p>
         <a class="rl-source" href="https://theqoo.net/square/2116866085" rel="nofollow noopener noreferrer" target="_blank">📺 Source</a>
         <button type="button" class="heart-btn sm" data-heart="b:신경 끄기의 기술" aria-pressed="false" aria-label="Heart this book" title="Heart this book" hidden><span class="heart-ico" aria-hidden="true">♡</span><span class="heart-n"></span></button>
+        <div class="rl-shared"><span class="rl-shared-label">👥 Also recommended by 5:</span> <a class="rl-celeb-chip" href="https://favorbook.co.kr/en/share/rose-blackpink.html">Rosé (BLACKPINK)</a><a class="rl-celeb-chip" href="https://favorbook.co.kr/en/share/martin-cortis.html">Martin (CORTIS)</a><a class="rl-celeb-chip" href="https://favorbook.co.kr/en/share/jung-hae-in.html">Jung Hae-in</a><a class="rl-celeb-chip" href="https://favorbook.co.kr/en/share/juhoon-cortis.html">Juhoon (CORTIS)</a><a class="rl-celeb-chip" href="https://favorbook.co.kr/en/share/soyou.html">SOYOU</a> <a class="rl-book-link" href="https://favorbook.co.kr/en/share/book/the-subtle-art-of-not-giving-a-fck.html">All readers →</a></div>
       </div>
     </li>
     <li class="rl-item" id="b22">
@@ -996,6 +1068,7 @@
         <div class="rl-title"><a href="https://www.yes24.com/product/goods/5531156" rel="nofollow noopener noreferrer" target="_blank">Walden</a> <span style="color:#888;font-size:12px;font-weight:400">(월든)</span></div>
         <div class="rl-byline">Henry David Thoreau</div>
         <button type="button" class="heart-btn sm" data-heart="b:월든" aria-pressed="false" aria-label="Heart this book" title="Heart this book" hidden><span class="heart-ico" aria-hidden="true">♡</span><span class="heart-n"></span></button>
+        <div class="rl-shared"><span class="rl-shared-label">👥 Also recommended by 2:</span> <a class="rl-celeb-chip" href="https://favorbook.co.kr/en/share/noze.html">NO:ZE</a><a class="rl-celeb-chip" href="https://favorbook.co.kr/en/share/cha-woo-min.html">Cha Woo-min</a> <a class="rl-book-link" href="https://favorbook.co.kr/en/share/book/walden.html">All readers →</a></div>
       </div>
     </li>
     <li class="rl-item" id="b25">
@@ -1023,6 +1096,22 @@
     </ol>
     </div>
   </section>
+  <script>
+  (function () {
+    var area = document.getElementById("shelf-area");
+    var tabs = document.querySelectorAll(".view-tabs .vt");
+    if (!area || !tabs.length) return;
+    function set(v, save) {
+      area.classList.toggle("show-covers", v === "cover");
+      tabs.forEach(function (t) { t.setAttribute("aria-pressed", String(t.dataset.view === v)); });
+      if (save) { try { localStorage.setItem("shelfView", v); } catch (e) {} }
+    }
+    var saved = null;
+    try { saved = localStorage.getItem("shelfView"); } catch (e) {}
+    if (saved === "cover") set("cover", false);
+    tabs.forEach(function (t) { t.addEventListener("click", function () { set(t.dataset.view, true); }); });
+  })();
+  </script>
   <script>
   (function () {
     var btns = [document.getElementById("shelf-cap"), document.getElementById("shelf-cap-clear")]
@@ -1235,6 +1324,28 @@
   })();
   </script>
   <p class="tr-note">Book titles and author names marked with an asterisk (<strong>*</strong>) are machine-translated from Korean. No official English edition was confirmed for them, so read them as approximations of the Korean original shown next to them.</p>
+  <section>
+    <h2>📝 Faker's reading taste</h2>
+    <p>Authors that come up most often in Faker's list: 히가시노 게이고 (2 books), Björn Natthiko Lindeblad, Haruki Murakami.</p>
+  </section>
+  <section class="related-celebs">
+    <h2>🤝 Celebrities with similar reading taste</h2>
+    <p class="muted">They recommended some of the same books. The number is how many books they share.</p>
+    <div class="related-celeb-list">
+      <a class="related-celeb" href="https://favorbook.co.kr/en/share/noze.html">NO:ZE <span class="rc-count">2</span></a>
+      <a class="related-celeb" href="https://favorbook.co.kr/en/share/lily-nmixx.html">LILY (NMIXX) <span class="rc-count">2</span></a>
+      <a class="related-celeb" href="https://favorbook.co.kr/en/share/park-ji-hoon.html">Park Ji-hoon <span class="rc-count">2</span></a>
+      <a class="related-celeb" href="https://favorbook.co.kr/en/share/karina-aespa.html">Karina (aespa) <span class="rc-count">2</span></a>
+      <a class="related-celeb" href="https://favorbook.co.kr/en/share/heo-seong-beom.html">Heo Seong-beom <span class="rc-count">2</span></a>
+      <a class="related-celeb" href="https://favorbook.co.kr/en/share/gawon-meovv.html">Gawon (MEOVV) <span class="rc-count">1</span></a>
+      <a class="related-celeb" href="https://favorbook.co.kr/en/share/gaeul-ive.html">Gaeul (IVE) <span class="rc-count">1</span></a>
+      <a class="related-celeb" href="https://favorbook.co.kr/en/share/geonho-cortis.html">Geonho (CORTIS) <span class="rc-count">1</span></a>
+      <a class="related-celeb" href="https://favorbook.co.kr/en/share/go-min-si.html">Go Min-si <span class="rc-count">1</span></a>
+      <a class="related-celeb" href="https://favorbook.co.kr/en/share/kim-do-wan.html">Kim Do-wan <span class="rc-count">1</span></a>
+      <a class="related-celeb" href="https://favorbook.co.kr/en/share/seolhyun.html">Seolhyun <span class="rc-count">1</span></a>
+      <a class="related-celeb" href="https://favorbook.co.kr/en/share/kim-sin-rock.html">Kim Sin-rock <span class="rc-count">1</span></a>
+    </div>
+  </section>
   <section class="pfaq">
     <h2>Faker book recommendations — FAQ</h2>
     <div class="pfaq-q">
@@ -1250,6 +1361,10 @@
       <p>Public sources only — interviews, YouTube clips, variety shows, fan-cafe posts and SNS. A book is added to this reading list only when the mention can be linked, and the link stays on the entry so you can check it yourself.</p>
     </div>
   </section>
+  <nav class="celeb-pager" aria-label="Browse celebrities">
+      <a class="pager-link pager-prev" rel="prev" href="https://favorbook.co.kr/en/share/eunseo-wjsn.html">← Eunseo (WJSN)'s books</a>
+      <a class="pager-link pager-next" rel="next" href="https://favorbook.co.kr/en/share/g-dragon-bigbang.html">G-Dragon (BIGBANG)'s books →</a>
+  </nav>
   <footer>
     <p>Curated from public Korean-language sources. Korean original page: <a href="https://favorbook.co.kr/share/%ED%8E%98%EC%9D%B4%EC%BB%A4.html" hreflang="ko">페이커</a>.</p>
     <p><a href="https://favorbook.co.kr/en/">Browse more Korean celebrity book lists →</a></p>

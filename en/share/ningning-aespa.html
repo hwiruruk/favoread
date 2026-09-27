@@ -51,7 +51,6 @@
     "description": "Chinese main vocalist of SM Entertainment's K-pop girl group aespa.",
     "image": "https://upload.wikimedia.org/wikipedia/commons/a/a2/Aespa_Ningning_2024_MMA.jpg"
   },
-  "mainEntityOfPage": "https://favorbook.co.kr/en/share/ningning-aespa.html",
   "hasPart": {
     "@type": "ItemList",
     "name": "Books read by Ningning (aespa)",
@@ -256,6 +255,9 @@
     nav { margin: 50px 0 16px; font-size: 13px; }
     .celeb-header { display: flex; align-items: center; gap: 20px; margin-bottom: 16px; flex-wrap: wrap; }
     .celeb-img { width: 120px; height: 120px; border-radius: 50%; object-fit: cover; border: 2px solid #000; }
+    .celeb-photo-wrap { position: relative; flex-shrink: 0; }
+    .img-credit { position: absolute; bottom: 0; right: 0; font-size: 10px; line-height: 1; padding: 2px 4px; background: rgba(255,255,255,0.85); border: 1px solid #ccc; border-radius: 999px; text-decoration: none; color: #555; opacity: 0.55; transition: opacity .15s; }
+    .img-credit:hover { opacity: 1; text-decoration: none; }
     h1 { font-size: 28px; margin: 0 0 8px; font-weight: 900; }
     h2 { font-size: 19px; margin: 32px 0 12px; padding-bottom: 4px; border-bottom: 2px solid #000; font-weight: 800; }
     .intro { background: #fff; border: 2px solid #000; box-shadow: 4px 4px 0 0 #000; padding: 14px 16px; margin: 16px 0 24px; font-size: 15px; }
@@ -266,6 +268,17 @@
     .pfaq-q h3 { font-size: 15px; font-weight: 800; margin: 0 0 6px; }
     .pfaq-q p { font-size: 14px; margin: 0; color: #333; }
     .grp-link { margin: 10px 0 0; padding: 8px 12px; background: #fff8e7; border: 2px solid #000; box-shadow: 3px 3px 0 0 #000; font-size: 14px; }
+    .rl-shared { clear: both; margin-top: 12px; padding-top: 10px; border-top: 1.5px dashed #ccc; display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
+    .rl-shared-label { font-size: 12px; color: #666; font-weight: 700; }
+    .rl-celeb-chip { font-size: 12px; padding: 2px 8px; background: #fff; border: 1.5px solid #000; border-radius: 999px; color: #000; }
+    .rl-book-link { font-size: 12px; font-weight: 700; }
+    .muted { color: #666; font-size: 13px; }
+    .related-celebs { margin: 24px 0; }
+    .related-celeb-list { display: flex; flex-wrap: wrap; gap: 8px; }
+    .related-celeb { padding: 6px 12px; background: #fff; border: 2px solid #000; box-shadow: 2px 2px 0 0 #000; font-size: 13px; font-weight: 700; color: #000; }
+    .rc-count { display: inline-block; min-width: 18px; padding: 0 5px; margin-left: 4px; background: #fde047; border: 1.5px solid #000; border-radius: 999px; font-size: 11px; text-align: center; }
+    .celeb-pager { margin: 32px 0 16px; display: flex; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
+    .pager-link { padding: 8px 12px; background: #fff; border: 2px solid #000; box-shadow: 3px 3px 0 0 #000; font-size: 13px; font-weight: 700; color: #000; }
     .shelf-head { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
     .shelf-head h2 { margin-bottom: 0; border-bottom: none; padding-bottom: 0; }
     .shelf-tabs { display: flex; gap: 6px; flex-wrap: wrap; }
@@ -273,6 +286,19 @@
               background: #fff; color: #000; border: 2px solid #000; box-shadow: 2px 2px 0 0 #000; }
     .sh-cap:hover { background: #fde047; }
     .sh-cap[disabled] { opacity: .55; cursor: default; }
+    .view-tabs { display: inline-flex; border: 2px solid #000; box-shadow: 2px 2px 0 0 #000; background: #fff; }
+    .vt { font: inherit; font-size: 12px; font-weight: 700; padding: 5px 10px; background: #fff; color: #000; border: 0; cursor: pointer; }
+    .vt + .vt { border-left: 2px solid #000; }
+    .vt[aria-pressed="true"] { background: #000; color: #fff; }
+    .covers { display: none; grid-template-columns: repeat(auto-fill, minmax(84px, 1fr)); gap: 14px 12px; margin: 14px 0 22px; }
+    .show-covers .covers { display: grid; }
+    .show-covers .shelf { display: none; }
+    .cv { position: relative; display: block; aspect-ratio: 2/3; border: 1.5px solid #000; box-shadow: 2px 2px 0 0 #000;
+          background: #f4f4f0; overflow: hidden; color: #000; text-decoration: none; transition: transform .12s; }
+    .cv:hover { transform: translateY(-3px); text-decoration: none; }
+    .cv img { width: 100%; height: 100%; object-fit: cover; display: block; }
+    .cv-no { display: flex; height: 100%; align-items: center; justify-content: center; padding: 6px;
+             font-size: 11px; font-weight: 700; line-height: 1.3; text-align: center; word-break: keep-all; }
     .shelf { --sh-h: 270px; --plank: 7px; --row: calc(var(--sh-h) + 18px);
              display: flex; flex-wrap: wrap; align-items: flex-end; gap: 11px 2px;
              margin: 14px 0 22px; padding: 0 8px 7px;
@@ -349,13 +375,16 @@
 </head>
 <body>
   <div class="lang-toggle">
-    <button class="lang-btn copy-btn" type="button" data-url="https://favorbook.co.kr/en/share/ningning-aespa.html" data-done="Copied!">🔗 Copy link</button>
+    <button class="lang-btn copy-btn" type="button" data-url="https://favorbook.co.kr/s/e/ningning-aespa.html" data-done="Copied!">🔗 Copy link</button>
     <a class="lang-btn" href="https://favorbook.co.kr/share/%EB%8B%9D%EB%8B%9D%28%EC%97%90%EC%8A%A4%ED%8C%8C%29.html" hreflang="ko">한국어</a>
     <span class="lang-btn active">EN</span>
   </div>
-  <nav><a href="https://favorbook.co.kr/en/">← Favorbook Home</a></nav>
+  <nav><a href="https://favorbook.co.kr/en/">← Favorbook Home</a> · <a href="https://favorbook.co.kr/en/share/ranking.html">Most-read books ranking</a></nav>
   <header class="celeb-header">
+    <div class="celeb-photo-wrap">
     <img class="celeb-img" src="https://upload.wikimedia.org/wikipedia/commons/a/a2/Aespa_Ningning_2024_MMA.jpg" alt="Ningning (aespa) profile photo" width="120" height="120">
+      <a class="img-credit" href="https://upload.wikimedia.org/wikipedia/commons/a/a2/Aespa_Ningning_2024_MMA.jpg" target="_blank" rel="nofollow noopener noreferrer" title="Image source">📷</a>
+    </div>
     <div>
       <h1>Ningning (aespa) Books<span style="font-weight:400;color:#666;font-size:18px"> · 닝닝(에스파) 책</span></h1>
       <p class="celeb-bio">Chinese main vocalist of SM Entertainment&#x27;s K-pop girl group aespa.</p>
@@ -372,6 +401,7 @@
     <div class="shelf-head">
       <h2>Books Ningning (aespa) has read (7)</h2>
       <div class="shelf-tabs">
+        <span class="view-tabs" role="group"><button type="button" class="vt" data-view="spine" aria-pressed="true">📚 Spines</button><button type="button" class="vt" data-view="cover" aria-pressed="false">🖼 Covers</button></span>
         <button type="button" class="sh-cap" id="shelf-cap" title="Download the bookshelf as an image">⤓ Save image</button>
         <button type="button" class="sh-cap" id="shelf-cap-clear" title="Download as a PNG with a transparent background">⤓ Transparent</button>
       </div>
@@ -396,6 +426,15 @@
     <a class="sp" style="--c:hsl(232,36%,47%);--w:42px;--fs:13px" href="https://www.yes24.com/product/goods/30387696" rel="nofollow noopener noreferrer" target="_blank" title="The Temperature of Language"><span class="sp-t"><i>The Temperature of Language</i></span><img class="sp-i" src="https://image.yes24.com/goods/30387696/side" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.parentNode.classList.add('sp-fail');this.remove()" onload="if(this.naturalWidth/this.naturalHeight>0.4){this.parentNode.classList.add('sp-fail');this.remove()}"></a>
     <a class="sp is-new" style="--c:hsl(117,48%,38%);--w:30px;--fs:15px" href="https://www.yes24.com/product/goods/122280138" rel="nofollow noopener noreferrer" target="_blank" title="To Live"><span class="sp-t"><i>To Live</i></span><img class="sp-i" src="https://image.yes24.com/goods/122280138/side" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.parentNode.classList.add('sp-fail');this.remove()" onload="if(this.naturalWidth/this.naturalHeight>0.4){this.parentNode.classList.add('sp-fail');this.remove()}"><span class="sp-new" data-added="2026-09-22">NEW</span></a>
     </div>
+    <div class="covers" id="covers">
+    <a class="cv" href="https://www.yes24.com/product/goods/1387488" rel="nofollow noopener noreferrer" target="_blank" title="No Longer Human"><span class="rl-new" data-added="2026-09-22">NEW</span><img src="https://image.yes24.com/goods/1387488/L" alt="No Longer Human by Osamu Dazai — book cover" loading="lazy"></a>
+    <a class="cv" href="https://www.yes24.com/product/goods/402246" rel="nofollow noopener noreferrer" target="_blank" title="Pride and Prejudice"><span class="rl-new" data-added="2026-09-22">NEW</span><img src="https://image.yes24.com/goods/402246/L" alt="Pride and Prejudice by Jane Austen — book cover" loading="lazy"></a>
+    <a class="cv" href="https://www.yes24.com/product/goods/85951807" rel="nofollow noopener noreferrer" target="_blank" title="Resurrection"><span class="rl-new" data-added="2026-09-22">NEW</span><img src="https://image.yes24.com/goods/85951807/L" alt="Resurrection by Leo Tolstoy — book cover" loading="lazy"></a>
+    <a class="cv" href="https://www.yes24.com/product/goods/116586056" rel="nofollow noopener noreferrer" target="_blank" title="The Miracles of the Namiya General Store"><span class="rl-new" data-added="2026-09-22">NEW</span><img src="https://image.yes24.com/goods/116586056/L" alt="The Miracles of the Namiya General Store by Keigo Higashino — book cover" loading="lazy"></a>
+    <a class="cv" href="https://www.yes24.com/product/goods/135880" rel="nofollow noopener noreferrer" target="_blank" title="The Moon and Sixpence"><img src="https://image.yes24.com/goods/135880/L" alt="The Moon and Sixpence by W. Somerset Maugham — book cover" loading="lazy"></a>
+    <a class="cv" href="https://www.yes24.com/product/goods/30387696" rel="nofollow noopener noreferrer" target="_blank" title="The Temperature of Language"><img src="https://image.yes24.com/goods/30387696/L" alt="The Temperature of Language by Lee Ki-ju — book cover" loading="lazy"></a>
+    <a class="cv" href="https://www.yes24.com/product/goods/122280138" rel="nofollow noopener noreferrer" target="_blank" title="To Live"><span class="rl-new" data-added="2026-09-22">NEW</span><img src="https://image.yes24.com/goods/122280138/L" alt="To Live by Yu Hwa — book cover" loading="lazy"></a>
+    </div>
     <ol class="reading-list" id="rlist">
     <li class="rl-item" id="b1">
       <span class="rl-num">1</span>
@@ -405,6 +444,7 @@
         <div class="rl-byline">Osamu Dazai</div>
         <a class="rl-source" href="https://x.com/ningsite/status/1409398422440873988?s=20" rel="nofollow noopener noreferrer" target="_blank">📺 Source</a>
         <button type="button" class="heart-btn sm" data-heart="b:인간 실격" aria-pressed="false" aria-label="Heart this book" title="Heart this book" hidden><span class="heart-ico" aria-hidden="true">♡</span><span class="heart-n"></span></button>
+        <div class="rl-shared"><span class="rl-shared-label">👥 Also recommended by 10:</span> <a class="rl-celeb-chip" href="https://favorbook.co.kr/en/share/minzy.html">Minzy</a><a class="rl-celeb-chip" href="https://favorbook.co.kr/en/share/narin-meovv.html">Narin (MEOVV)</a><a class="rl-celeb-chip" href="https://favorbook.co.kr/en/share/sunghyun-cortis.html">Sunghyun (CORTIS)</a><a class="rl-celeb-chip" href="https://favorbook.co.kr/en/share/shin-si-a.html">Shin Si-a</a><a class="rl-celeb-chip" href="https://favorbook.co.kr/en/share/iu.html">IU</a><a class="rl-celeb-chip" href="https://favorbook.co.kr/en/share/jinyoung-got7.html">Jinyoung (GOT7)</a><a class="rl-celeb-chip" href="https://favorbook.co.kr/en/share/theo-p1harmony.html">Theo (P1Harmony)</a><a class="rl-celeb-chip" href="https://favorbook.co.kr/en/share/huh-yunjin-le-sserafim.html">Huh Yunjin (LE SSERAFIM)</a><a class="rl-celeb-chip" href="https://favorbook.co.kr/en/share/hong-kyung.html">Hong Kyung</a><a class="rl-celeb-chip" href="https://favorbook.co.kr/en/share/kim-minju.html">Kim Minju</a> <a class="rl-book-link" href="https://favorbook.co.kr/en/share/book/no-longer-human.html">All readers →</a></div>
       </div>
     </li>
     <li class="rl-item" id="b2">
@@ -415,6 +455,7 @@
         <div class="rl-byline">Jane Austen</div>
         <a class="rl-source" href="https://x.com/ningsite/status/1409398422440873988?s=20" rel="nofollow noopener noreferrer" target="_blank">📺 Source</a>
         <button type="button" class="heart-btn sm" data-heart="b:오만과 편견" aria-pressed="false" aria-label="Heart this book" title="Heart this book" hidden><span class="heart-ico" aria-hidden="true">♡</span><span class="heart-n"></span></button>
+        <div class="rl-shared"><span class="rl-shared-label">👥 Also recommended by 4:</span> <a class="rl-celeb-chip" href="https://favorbook.co.kr/en/share/heo-seong-beom.html">Heo Seong-beom</a><a class="rl-celeb-chip" href="https://favorbook.co.kr/en/share/huh-yunjin-le-sserafim.html">Huh Yunjin (LE SSERAFIM)</a><a class="rl-celeb-chip" href="https://favorbook.co.kr/share/%EB%89%B4%28%EB%8D%94%EB%B3%B4%EC%9D%B4%EC%A6%88%29.html" hreflang="ko">뉴(더보이즈)</a><a class="rl-celeb-chip" href="https://favorbook.co.kr/en/share/reiive.html">REI(IVE)</a> <a class="rl-book-link" href="https://favorbook.co.kr/en/share/book/pride-and-prejudice.html">All readers →</a></div>
       </div>
     </li>
     <li class="rl-item" id="b3">
@@ -435,6 +476,7 @@
         <div class="rl-byline">Keigo Higashino</div>
         <a class="rl-source" href="https://x.com/ningsite/status/1409398422440873988?s=20" rel="nofollow noopener noreferrer" target="_blank">📺 Source</a>
         <button type="button" class="heart-btn sm" data-heart="b:나미야 잡화점의 기적" aria-pressed="false" aria-label="Heart this book" title="Heart this book" hidden><span class="heart-ico" aria-hidden="true">♡</span><span class="heart-n"></span></button>
+        <div class="rl-shared"><span class="rl-shared-label">👥 Also recommended by 8:</span> <a class="rl-celeb-chip" href="https://favorbook.co.kr/en/share/kim-tae-ha.html">Kim Tae-Ha</a><a class="rl-celeb-chip" href="https://favorbook.co.kr/en/share/park-ji-hoon.html">Park Ji-hoon</a><a class="rl-celeb-chip" href="https://favorbook.co.kr/en/share/wonwoo-seventeen.html">Wonwoo (SEVENTEEN)</a><a class="rl-celeb-chip" href="https://favorbook.co.kr/en/share/jin-bts.html">Jin (BTS)</a><a class="rl-celeb-chip" href="https://favorbook.co.kr/en/share/karina-aespa.html">Karina (aespa)</a><a class="rl-celeb-chip" href="https://favorbook.co.kr/en/share/faker.html">Faker</a><a class="rl-celeb-chip" href="https://favorbook.co.kr/en/share/ha-yeon-joo.html">Ha Yeon-joo</a><a class="rl-celeb-chip" href="https://favorbook.co.kr/en/share/park-se-wan.html">Park Se-wan</a> <a class="rl-book-link" href="https://favorbook.co.kr/en/share/book/the-miracles-of-the-namiya-general-store.html">All readers →</a></div>
       </div>
     </li>
     <li class="rl-item" id="b5">
@@ -446,6 +488,7 @@
         <p class="rl-comment">Read by Ningning along with Karina, and seen in an aespa magazine interview video. (Source: Brunch)</p>
         <a class="rl-source" href="https://x.com/bemyae201117/status/1591010461583314944?s=20" rel="nofollow noopener noreferrer" target="_blank">📺 Source</a>
         <button type="button" class="heart-btn sm" data-heart="b:달과 6펜스" aria-pressed="false" aria-label="Heart this book" title="Heart this book" hidden><span class="heart-ico" aria-hidden="true">♡</span><span class="heart-n"></span></button>
+        <div class="rl-shared"><span class="rl-shared-label">👥 Also recommended by 4:</span> <a class="rl-celeb-chip" href="https://favorbook.co.kr/en/share/kim-ji-won.html">Kim Ji-won</a><a class="rl-celeb-chip" href="https://favorbook.co.kr/en/share/jinyoung-got7.html">Jinyoung (GOT7)</a><a class="rl-celeb-chip" href="https://favorbook.co.kr/en/share/karina-aespa.html">Karina (aespa)</a><a class="rl-celeb-chip" href="https://favorbook.co.kr/en/share/cha-woo-min.html">Cha Woo-min</a> <a class="rl-book-link" href="https://favorbook.co.kr/en/share/book/the-moon-and-sixpence.html">All readers →</a></div>
       </div>
     </li>
     <li class="rl-item" id="b6">
@@ -457,6 +500,7 @@
         <p class="rl-comment">Borrowed from roommate Karina, then recommended on Bubble. Karina suggested it when Ningning wanted to learn Korean. (Source: Brunch)</p>
         <a class="rl-source" href="https://brunch.co.kr/@parkaezey/82" rel="nofollow noopener noreferrer" target="_blank">📺 Source</a>
         <button type="button" class="heart-btn sm" data-heart="b:언어의 온도" aria-pressed="false" aria-label="Heart this book" title="Heart this book" hidden><span class="heart-ico" aria-hidden="true">♡</span><span class="heart-n"></span></button>
+        <div class="rl-shared"><span class="rl-shared-label">👥 Also recommended by 7:</span> <a class="rl-celeb-chip" href="https://favorbook.co.kr/en/share/rowoon.html">Rowoon</a><a class="rl-celeb-chip" href="https://favorbook.co.kr/en/share/park-bo-gum.html">Park Bo-gum</a><a class="rl-celeb-chip" href="https://favorbook.co.kr/en/share/chung-ha.html">CHUNG HA</a><a class="rl-celeb-chip" href="https://favorbook.co.kr/en/share/karina-aespa.html">Karina (aespa)</a><a class="rl-celeb-chip" href="https://favorbook.co.kr/en/share/hwasa-mamamoo.html">Hwasa (MAMAMOO)</a><a class="rl-celeb-chip" href="https://favorbook.co.kr/en/share/nayeon-twice.html">Nayeon (TWICE)</a><a class="rl-celeb-chip" href="https://favorbook.co.kr/en/share/wooyoungateez.html">WOOYOUNG(ATEEZ)</a> <a class="rl-book-link" href="https://favorbook.co.kr/en/share/book/the-temperature-of-language.html">All readers →</a></div>
       </div>
     </li>
     <li class="rl-item" id="b7">
@@ -472,6 +516,22 @@
     </ol>
     </div>
   </section>
+  <script>
+  (function () {
+    var area = document.getElementById("shelf-area");
+    var tabs = document.querySelectorAll(".view-tabs .vt");
+    if (!area || !tabs.length) return;
+    function set(v, save) {
+      area.classList.toggle("show-covers", v === "cover");
+      tabs.forEach(function (t) { t.setAttribute("aria-pressed", String(t.dataset.view === v)); });
+      if (save) { try { localStorage.setItem("shelfView", v); } catch (e) {} }
+    }
+    var saved = null;
+    try { saved = localStorage.getItem("shelfView"); } catch (e) {}
+    if (saved === "cover") set("cover", false);
+    tabs.forEach(function (t) { t.addEventListener("click", function () { set(t.dataset.view, true); }); });
+  })();
+  </script>
   <script>
   (function () {
     var btns = [document.getElementById("shelf-cap"), document.getElementById("shelf-cap-clear")]
@@ -683,6 +743,28 @@
     });
   })();
   </script>
+  <section>
+    <h2>📝 Ningning (aespa)'s reading taste</h2>
+    <p>Authors that come up most often in Ningning (aespa)'s list: Jane Austen, Keigo Higashino, Lee Ki-ju.</p>
+  </section>
+  <section class="related-celebs">
+    <h2>🤝 Celebrities with similar reading taste</h2>
+    <p class="muted">They recommended some of the same books. The number is how many books they share.</p>
+    <div class="related-celeb-list">
+      <a class="related-celeb" href="https://favorbook.co.kr/en/share/karina-aespa.html">Karina (aespa) <span class="rc-count">3</span></a>
+      <a class="related-celeb" href="https://favorbook.co.kr/en/share/jinyoung-got7.html">Jinyoung (GOT7) <span class="rc-count">2</span></a>
+      <a class="related-celeb" href="https://favorbook.co.kr/en/share/huh-yunjin-le-sserafim.html">Huh Yunjin (LE SSERAFIM) <span class="rc-count">2</span></a>
+      <a class="related-celeb" href="https://favorbook.co.kr/en/share/minzy.html">Minzy <span class="rc-count">1</span></a>
+      <a class="related-celeb" href="https://favorbook.co.kr/en/share/kim-minju.html">Kim Minju <span class="rc-count">1</span></a>
+      <a class="related-celeb" href="https://favorbook.co.kr/en/share/kim-ji-won.html">Kim Ji-won <span class="rc-count">1</span></a>
+      <a class="related-celeb" href="https://favorbook.co.kr/en/share/kim-tae-ha.html">Kim Tae-Ha <span class="rc-count">1</span></a>
+      <a class="related-celeb" href="https://favorbook.co.kr/en/share/narin-meovv.html">Narin (MEOVV) <span class="rc-count">1</span></a>
+      <a class="related-celeb" href="https://favorbook.co.kr/en/share/nayeon-twice.html">Nayeon (TWICE) <span class="rc-count">1</span></a>
+      <a class="related-celeb" href="https://favorbook.co.kr/share/%EB%89%B4%28%EB%8D%94%EB%B3%B4%EC%9D%B4%EC%A6%88%29.html" hreflang="ko">뉴(더보이즈) <span class="rc-count">1</span></a>
+      <a class="related-celeb" href="https://favorbook.co.kr/en/share/reiive.html">REI(IVE) <span class="rc-count">1</span></a>
+      <a class="related-celeb" href="https://favorbook.co.kr/en/share/rowoon.html">Rowoon <span class="rc-count">1</span></a>
+    </div>
+  </section>
   <section class="pfaq">
     <h2>Ningning (aespa) book recommendations — FAQ</h2>
     <div class="pfaq-q">
@@ -698,6 +780,10 @@
       <p>Public sources only — interviews, YouTube clips, variety shows, fan-cafe posts and SNS. A book is added to this reading list only when the mention can be linked, and the link stays on the entry so you can check it yourself.</p>
     </div>
   </section>
+  <nav class="celeb-pager" aria-label="Browse celebrities">
+      <a class="pager-link pager-prev" rel="prev" href="https://favorbook.co.kr/en/share/nayun-momoland.html">← Nayun (MOMOLAND)'s books</a>
+      <a class="pager-link pager-next" rel="next" href="https://favorbook.co.kr/en/share/noze.html">NO:ZE's books →</a>
+  </nav>
   <footer>
     <p>Curated from public Korean-language sources. Korean original page: <a href="https://favorbook.co.kr/share/%EB%8B%9D%EB%8B%9D%28%EC%97%90%EC%8A%A4%ED%8C%8C%29.html" hreflang="ko">닝닝(에스파)</a>.</p>
     <p><a href="https://favorbook.co.kr/en/">Browse more Korean celebrity book lists →</a></p>

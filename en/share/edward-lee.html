@@ -51,7 +51,6 @@
     "description": "Korean-American chef, winner of Netflix's 'Culinary Class Wars'. Owner of 610 Magnolia in Kentucky.",
     "image": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcS34phk9g1eXF0qIqX0L7-1bCdIiq_G_W8Iyw&s"
   },
-  "mainEntityOfPage": "https://favorbook.co.kr/en/share/edward-lee.html",
   "hasPart": {
     "@type": "ItemList",
     "name": "Books read by Edward Lee",
@@ -292,6 +291,9 @@
     nav { margin: 50px 0 16px; font-size: 13px; }
     .celeb-header { display: flex; align-items: center; gap: 20px; margin-bottom: 16px; flex-wrap: wrap; }
     .celeb-img { width: 120px; height: 120px; border-radius: 50%; object-fit: cover; border: 2px solid #000; }
+    .celeb-photo-wrap { position: relative; flex-shrink: 0; }
+    .img-credit { position: absolute; bottom: 0; right: 0; font-size: 10px; line-height: 1; padding: 2px 4px; background: rgba(255,255,255,0.85); border: 1px solid #ccc; border-radius: 999px; text-decoration: none; color: #555; opacity: 0.55; transition: opacity .15s; }
+    .img-credit:hover { opacity: 1; text-decoration: none; }
     h1 { font-size: 28px; margin: 0 0 8px; font-weight: 900; }
     h2 { font-size: 19px; margin: 32px 0 12px; padding-bottom: 4px; border-bottom: 2px solid #000; font-weight: 800; }
     .intro { background: #fff; border: 2px solid #000; box-shadow: 4px 4px 0 0 #000; padding: 14px 16px; margin: 16px 0 24px; font-size: 15px; }
@@ -302,6 +304,17 @@
     .pfaq-q h3 { font-size: 15px; font-weight: 800; margin: 0 0 6px; }
     .pfaq-q p { font-size: 14px; margin: 0; color: #333; }
     .grp-link { margin: 10px 0 0; padding: 8px 12px; background: #fff8e7; border: 2px solid #000; box-shadow: 3px 3px 0 0 #000; font-size: 14px; }
+    .rl-shared { clear: both; margin-top: 12px; padding-top: 10px; border-top: 1.5px dashed #ccc; display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
+    .rl-shared-label { font-size: 12px; color: #666; font-weight: 700; }
+    .rl-celeb-chip { font-size: 12px; padding: 2px 8px; background: #fff; border: 1.5px solid #000; border-radius: 999px; color: #000; }
+    .rl-book-link { font-size: 12px; font-weight: 700; }
+    .muted { color: #666; font-size: 13px; }
+    .related-celebs { margin: 24px 0; }
+    .related-celeb-list { display: flex; flex-wrap: wrap; gap: 8px; }
+    .related-celeb { padding: 6px 12px; background: #fff; border: 2px solid #000; box-shadow: 2px 2px 0 0 #000; font-size: 13px; font-weight: 700; color: #000; }
+    .rc-count { display: inline-block; min-width: 18px; padding: 0 5px; margin-left: 4px; background: #fde047; border: 1.5px solid #000; border-radius: 999px; font-size: 11px; text-align: center; }
+    .celeb-pager { margin: 32px 0 16px; display: flex; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
+    .pager-link { padding: 8px 12px; background: #fff; border: 2px solid #000; box-shadow: 3px 3px 0 0 #000; font-size: 13px; font-weight: 700; color: #000; }
     .shelf-head { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
     .shelf-head h2 { margin-bottom: 0; border-bottom: none; padding-bottom: 0; }
     .shelf-tabs { display: flex; gap: 6px; flex-wrap: wrap; }
@@ -309,6 +322,19 @@
               background: #fff; color: #000; border: 2px solid #000; box-shadow: 2px 2px 0 0 #000; }
     .sh-cap:hover { background: #fde047; }
     .sh-cap[disabled] { opacity: .55; cursor: default; }
+    .view-tabs { display: inline-flex; border: 2px solid #000; box-shadow: 2px 2px 0 0 #000; background: #fff; }
+    .vt { font: inherit; font-size: 12px; font-weight: 700; padding: 5px 10px; background: #fff; color: #000; border: 0; cursor: pointer; }
+    .vt + .vt { border-left: 2px solid #000; }
+    .vt[aria-pressed="true"] { background: #000; color: #fff; }
+    .covers { display: none; grid-template-columns: repeat(auto-fill, minmax(84px, 1fr)); gap: 14px 12px; margin: 14px 0 22px; }
+    .show-covers .covers { display: grid; }
+    .show-covers .shelf { display: none; }
+    .cv { position: relative; display: block; aspect-ratio: 2/3; border: 1.5px solid #000; box-shadow: 2px 2px 0 0 #000;
+          background: #f4f4f0; overflow: hidden; color: #000; text-decoration: none; transition: transform .12s; }
+    .cv:hover { transform: translateY(-3px); text-decoration: none; }
+    .cv img { width: 100%; height: 100%; object-fit: cover; display: block; }
+    .cv-no { display: flex; height: 100%; align-items: center; justify-content: center; padding: 6px;
+             font-size: 11px; font-weight: 700; line-height: 1.3; text-align: center; word-break: keep-all; }
     .shelf { --sh-h: 270px; --plank: 7px; --row: calc(var(--sh-h) + 18px);
              display: flex; flex-wrap: wrap; align-items: flex-end; gap: 11px 2px;
              margin: 14px 0 22px; padding: 0 8px 7px;
@@ -385,13 +411,16 @@
 </head>
 <body>
   <div class="lang-toggle">
-    <button class="lang-btn copy-btn" type="button" data-url="https://favorbook.co.kr/en/share/edward-lee.html" data-done="Copied!">🔗 Copy link</button>
+    <button class="lang-btn copy-btn" type="button" data-url="https://favorbook.co.kr/s/e/edward-lee.html" data-done="Copied!">🔗 Copy link</button>
     <a class="lang-btn" href="https://favorbook.co.kr/share/%EC%97%90%EB%93%9C%EC%9B%8C%EB%93%9C%20%EB%A6%AC.html" hreflang="ko">한국어</a>
     <span class="lang-btn active">EN</span>
   </div>
-  <nav><a href="https://favorbook.co.kr/en/">← Favorbook Home</a></nav>
+  <nav><a href="https://favorbook.co.kr/en/">← Favorbook Home</a> · <a href="https://favorbook.co.kr/en/share/ranking.html">Most-read books ranking</a></nav>
   <header class="celeb-header">
+    <div class="celeb-photo-wrap">
     <img class="celeb-img" src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcS34phk9g1eXF0qIqX0L7-1bCdIiq_G_W8Iyw&amp;s" alt="Edward Lee profile photo" width="120" height="120">
+      <a class="img-credit" href="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcS34phk9g1eXF0qIqX0L7-1bCdIiq_G_W8Iyw&amp;s" target="_blank" rel="nofollow noopener noreferrer" title="Image source">📷</a>
+    </div>
     <div>
       <h1>Edward Lee Books<span style="font-weight:400;color:#666;font-size:18px"> · 에드워드 리 책</span></h1>
       <p class="celeb-bio">Korean-American chef, winner of Netflix&#x27;s &#x27;Culinary Class Wars&#x27;. Owner of 610 Magnolia in Kentucky.</p>
@@ -406,6 +435,7 @@
     <div class="shelf-head">
       <h2>Books Edward Lee has read (9)</h2>
       <div class="shelf-tabs">
+        <span class="view-tabs" role="group"><button type="button" class="vt" data-view="spine" aria-pressed="true">📚 Spines</button><button type="button" class="vt" data-view="cover" aria-pressed="false">🖼 Covers</button></span>
         <button type="button" class="sh-cap" id="shelf-cap" title="Download the bookshelf as an image">⤓ Save image</button>
         <button type="button" class="sh-cap" id="shelf-cap-clear" title="Download as a PNG with a transparent background">⤓ Transparent</button>
       </div>
@@ -421,6 +451,17 @@
     <a class="sp" style="--c:hsl(92,40%,39%);--w:32px;--fs:15px" href="https://www.yes24.com/product/goods/110641272" rel="nofollow noopener noreferrer" target="_blank" title="Pachinko"><span class="sp-t"><i>Pachinko</i></span><img class="sp-i" src="https://image.yes24.com/goods/110641272/side" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.parentNode.classList.add('sp-fail');this.remove()" onload="if(this.naturalWidth/this.naturalHeight>0.4){this.parentNode.classList.add('sp-fail');this.remove()}"></a>
     <a class="sp" style="--c:hsl(200,40%,36%);--w:34px;--fs:15px" href="https://www.yes24.com/product/goods/370331" rel="nofollow noopener noreferrer" target="_blank" title="The Great Gatsby"><span class="sp-t"><i>The Great Gatsby</i></span><img class="sp-i" src="https://image.yes24.com/goods/370331/side" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.parentNode.classList.add('sp-fail');this.remove()" onload="if(this.naturalWidth/this.naturalHeight>0.4){this.parentNode.classList.add('sp-fail');this.remove()}"></a>
     <a class="sp" style="--c:hsl(159,44%,35%);--w:42px;--fs:13px" href="https://www.yes24.com/product/goods/12013160" rel="nofollow noopener noreferrer" target="_blank" title="The Heart Is a Lonely Hunter"><span class="sp-t"><i>The Heart Is a Lonely Hunter</i></span><img class="sp-i" src="https://image.yes24.com/goods/12013160/side" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.parentNode.classList.add('sp-fail');this.remove()" onload="if(this.naturalWidth/this.naturalHeight>0.4){this.parentNode.classList.add('sp-fail');this.remove()}"></a>
+    </div>
+    <div class="covers" id="covers">
+    <a class="cv" href="https://www.yes24.com/product/goods/130160864" rel="nofollow noopener noreferrer" target="_blank" title="Heart of Darkness"><img src="https://image.yes24.com/goods/130160864/L" alt="Heart of Darkness by 조지프 콘래드 — book cover" loading="lazy"></a>
+    <a class="cv" href="https://www.yes24.com/product/goods/108569727" rel="nofollow noopener noreferrer" target="_blank" title="La comedia di Dante Alighieri"><img src="https://image.yes24.com/goods/108569727/L" alt="La comedia di Dante Alighieri by 단테 알리기에리 — book cover" loading="lazy"></a>
+    <a class="cv" href="https://www.yes24.com/product/goods/92901787" rel="nofollow noopener noreferrer" target="_blank" title="Le Petit Prince"><img src="https://image.yes24.com/goods/92901787/L" alt="Le Petit Prince by 앙투안 드 생텍쥐페리 — book cover" loading="lazy"></a>
+    <a class="cv" href="https://www.yes24.com/product/goods/123166502" rel="nofollow noopener noreferrer" target="_blank" title="My Year Abroad"><img src="https://image.yes24.com/goods/123166502/L" alt="My Year Abroad by 이창래 — book cover" loading="lazy"></a>
+    <a class="cv" href="https://www.yes24.com/product/goods/17894904" rel="nofollow noopener noreferrer" target="_blank" title="Native Speaker"><img src="https://image.yes24.com/goods/17894904/L" alt="Native Speaker by 이창래 — book cover" loading="lazy"></a>
+    <a class="cv" href="https://www.yes24.com/product/goods/3729147" rel="nofollow noopener noreferrer" target="_blank" title="Notes from Underground"><img src="https://image.yes24.com/goods/3729147/L" alt="Notes from Underground by 표도르 도스토옙스키 — book cover" loading="lazy"></a>
+    <a class="cv" href="https://www.yes24.com/product/goods/110641272" rel="nofollow noopener noreferrer" target="_blank" title="Pachinko"><img src="https://image.yes24.com/goods/110641272/L" alt="Pachinko by 이민진 — book cover" loading="lazy"></a>
+    <a class="cv" href="https://www.yes24.com/product/goods/370331" rel="nofollow noopener noreferrer" target="_blank" title="The Great Gatsby"><img src="https://image.yes24.com/goods/370331/L" alt="The Great Gatsby by 프랜시스 스콧 피츠제럴드 — book cover" loading="lazy"></a>
+    <a class="cv" href="https://www.yes24.com/product/goods/12013160" rel="nofollow noopener noreferrer" target="_blank" title="The Heart Is a Lonely Hunter"><img src="https://image.yes24.com/goods/12013160/L" alt="The Heart Is a Lonely Hunter by 카슨 매컬러스 — book cover" loading="lazy"></a>
     </div>
     <ol class="reading-list" id="rlist">
     <li class="rl-item" id="b1">
@@ -443,6 +484,7 @@
         <p class="rl-comment">Ordered in middle school thinking it was a comic, then shelved as too hard, until a summer sickbed brought it back. It made Edward Lee&#x27;s top ten too. (Source: Hankyung)</p>
         <a class="rl-source" href="https://www.hankyung.com/article/202505167643i" rel="nofollow noopener noreferrer" target="_blank">📺 Source</a>
         <button type="button" class="heart-btn sm" data-heart="b:신곡" aria-pressed="false" aria-label="Heart this book" title="Heart this book" hidden><span class="heart-ico" aria-hidden="true">♡</span><span class="heart-n"></span></button>
+        <div class="rl-shared"><span class="rl-shared-label">👥 Also recommended by 3:</span> <a class="rl-celeb-chip" href="https://favorbook.co.kr/en/share/mun-ka-young.html">Mun Ka-young</a><a class="rl-celeb-chip" href="https://favorbook.co.kr/en/share/lim-yunchan.html">Lim Yunchan</a><a class="rl-celeb-chip" href="https://favorbook.co.kr/en/share/g-dragon-bigbang.html">G-Dragon (BIGBANG)</a> <a class="rl-book-link" href="https://favorbook.co.kr/en/share/book/la-comedia-di-dante-alighieri.html">All readers →</a></div>
       </div>
     </li>
     <li class="rl-item" id="b3">
@@ -454,6 +496,7 @@
         <p class="rl-comment">Edward Lee&#x27;s favorite book as a child, and still one of the all-time favorites. (Source: Hankyung)</p>
         <a class="rl-source" href="https://www.hankyung.com/article/202505167643i" rel="nofollow noopener noreferrer" target="_blank">📺 Source</a>
         <button type="button" class="heart-btn sm" data-heart="b:어린왕자" aria-pressed="false" aria-label="Heart this book" title="Heart this book" hidden><span class="heart-ico" aria-hidden="true">♡</span><span class="heart-n"></span></button>
+        <div class="rl-shared"><span class="rl-shared-label">👥 Also recommended by 8:</span> <a class="rl-celeb-chip" href="https://favorbook.co.kr/en/share/kim-hyo-jin.html">Kim Hyo-jin</a><a class="rl-celeb-chip" href="https://favorbook.co.kr/en/share/lee-bo-young.html">Lee Bo-young</a><a class="rl-celeb-chip" href="https://favorbook.co.kr/en/share/lee-se-young.html">Lee Se-young</a><a class="rl-celeb-chip" href="https://favorbook.co.kr/en/share/jung-so-min.html">Jung So-min</a><a class="rl-celeb-chip" href="https://favorbook.co.kr/en/share/kino-pentagon.html">Kino (PENTAGON)</a><a class="rl-celeb-chip" href="https://favorbook.co.kr/en/share/paul-kim.html">Paul Kim</a><a class="rl-celeb-chip" href="https://favorbook.co.kr/en/share/han-ji-min.html">Han Ji-min</a><a class="rl-celeb-chip" href="https://favorbook.co.kr/en/share/park-hye-soo.html">Park Hye-soo</a> <a class="rl-book-link" href="https://favorbook.co.kr/en/share/book/le-petit-prince.html">All readers →</a></div>
       </div>
     </li>
     <li class="rl-item" id="b4">
@@ -487,6 +530,7 @@
         <p class="rl-comment">One of Edward Lee&#x27;s ten recommendations in Korea Economic Daily. A book that explains every tragedy of modern life. (Source: Hankyung)</p>
         <a class="rl-source" href="https://www.hankyung.com/article/202505167643i" rel="nofollow noopener noreferrer" target="_blank">📺 Source</a>
         <button type="button" class="heart-btn sm" data-heart="b:지하로부터의 수기" aria-pressed="false" aria-label="Heart this book" title="Heart this book" hidden><span class="heart-ico" aria-hidden="true">♡</span><span class="heart-n"></span></button>
+        <div class="rl-shared"><span class="rl-shared-label">👥 Also recommended by 1:</span> <a class="rl-celeb-chip" href="https://favorbook.co.kr/en/share/cha-woo-min.html">Cha Woo-min</a> <a class="rl-book-link" href="https://favorbook.co.kr/en/share/book/notes-from-underground.html">All readers →</a></div>
       </div>
     </li>
     <li class="rl-item" id="b7">
@@ -498,6 +542,7 @@
         <p class="rl-comment">One of Edward Lee&#x27;s ten recommendations in Korea Economic Daily. A saga spanning generations. (Source: Hankyung)</p>
         <a class="rl-source" href="https://www.hankyung.com/article/202505167643i" rel="nofollow noopener noreferrer" target="_blank">📺 Source</a>
         <button type="button" class="heart-btn sm" data-heart="b:파친코" aria-pressed="false" aria-label="Heart this book" title="Heart this book" hidden><span class="heart-ico" aria-hidden="true">♡</span><span class="heart-n"></span></button>
+        <div class="rl-shared"><span class="rl-shared-label">👥 Also recommended by 3:</span> <a class="rl-celeb-chip" href="https://favorbook.co.kr/en/share/huh-yunjin-le-sserafim.html">Huh Yunjin (LE SSERAFIM)</a><a class="rl-celeb-chip" href="https://favorbook.co.kr/en/share/rm-bts.html">RM (BTS)</a><a class="rl-celeb-chip" href="https://favorbook.co.kr/en/share/lady-jane.html">Lady Jane</a> <a class="rl-book-link" href="https://favorbook.co.kr/en/share/book/pachinko.html">All readers →</a></div>
       </div>
     </li>
     <li class="rl-item" id="b8">
@@ -509,6 +554,7 @@
         <p class="rl-comment">A recent reread that Edward Lee loves even more now than in college; it made the top-ten list too. (Source: Hankyung)</p>
         <a class="rl-source" href="https://www.hankyung.com/article/202505167643i" rel="nofollow noopener noreferrer" target="_blank">📺 Source</a>
         <button type="button" class="heart-btn sm" data-heart="b:위대한 개츠비" aria-pressed="false" aria-label="Heart this book" title="Heart this book" hidden><span class="heart-ico" aria-hidden="true">♡</span><span class="heart-n"></span></button>
+        <div class="rl-shared"><span class="rl-shared-label">👥 Also recommended by 4:</span> <a class="rl-celeb-chip" href="https://favorbook.co.kr/en/share/park-hoon.html">Park Hoon</a><a class="rl-celeb-chip" href="https://favorbook.co.kr/en/share/son-jong-won.html">Son Jong-won</a><a class="rl-celeb-chip" href="https://favorbook.co.kr/en/share/lee-jun-hyuk.html">Lee Jun-hyuk</a><a class="rl-celeb-chip" href="https://favorbook.co.kr/en/share/hong-kyung.html">Hong Kyung</a> <a class="rl-book-link" href="https://favorbook.co.kr/en/share/book/the-great-gatsby.html">All readers →</a></div>
       </div>
     </li>
     <li class="rl-item" id="b9">
@@ -525,6 +571,22 @@
     </ol>
     </div>
   </section>
+  <script>
+  (function () {
+    var area = document.getElementById("shelf-area");
+    var tabs = document.querySelectorAll(".view-tabs .vt");
+    if (!area || !tabs.length) return;
+    function set(v, save) {
+      area.classList.toggle("show-covers", v === "cover");
+      tabs.forEach(function (t) { t.setAttribute("aria-pressed", String(t.dataset.view === v)); });
+      if (save) { try { localStorage.setItem("shelfView", v); } catch (e) {} }
+    }
+    var saved = null;
+    try { saved = localStorage.getItem("shelfView"); } catch (e) {}
+    if (saved === "cover") set("cover", false);
+    tabs.forEach(function (t) { t.addEventListener("click", function () { set(t.dataset.view, true); }); });
+  })();
+  </script>
   <script>
   (function () {
     var btns = [document.getElementById("shelf-cap"), document.getElementById("shelf-cap-clear")]
@@ -736,6 +798,28 @@
     });
   })();
   </script>
+  <section>
+    <h2>📝 Edward Lee's reading taste</h2>
+    <p>Authors that come up most often in Edward Lee's list: 이창래 (2 books), 단테 알리기에리, 앙투안 드 생텍쥐페리.</p>
+  </section>
+  <section class="related-celebs">
+    <h2>🤝 Celebrities with similar reading taste</h2>
+    <p class="muted">They recommended some of the same books. The number is how many books they share.</p>
+    <div class="related-celeb-list">
+      <a class="related-celeb" href="https://favorbook.co.kr/en/share/rm-bts.html">RM (BTS) <span class="rc-count">1</span></a>
+      <a class="related-celeb" href="https://favorbook.co.kr/en/share/kim-hyo-jin.html">Kim Hyo-jin <span class="rc-count">1</span></a>
+      <a class="related-celeb" href="https://favorbook.co.kr/en/share/lady-jane.html">Lady Jane <span class="rc-count">1</span></a>
+      <a class="related-celeb" href="https://favorbook.co.kr/en/share/mun-ka-young.html">Mun Ka-young <span class="rc-count">1</span></a>
+      <a class="related-celeb" href="https://favorbook.co.kr/en/share/park-hye-soo.html">Park Hye-soo <span class="rc-count">1</span></a>
+      <a class="related-celeb" href="https://favorbook.co.kr/en/share/park-hoon.html">Park Hoon <span class="rc-count">1</span></a>
+      <a class="related-celeb" href="https://favorbook.co.kr/en/share/son-jong-won.html">Son Jong-won <span class="rc-count">1</span></a>
+      <a class="related-celeb" href="https://favorbook.co.kr/en/share/lee-bo-young.html">Lee Bo-young <span class="rc-count">1</span></a>
+      <a class="related-celeb" href="https://favorbook.co.kr/en/share/lee-se-young.html">Lee Se-young <span class="rc-count">1</span></a>
+      <a class="related-celeb" href="https://favorbook.co.kr/en/share/lee-jun-hyuk.html">Lee Jun-hyuk <span class="rc-count">1</span></a>
+      <a class="related-celeb" href="https://favorbook.co.kr/en/share/lim-yunchan.html">Lim Yunchan <span class="rc-count">1</span></a>
+      <a class="related-celeb" href="https://favorbook.co.kr/en/share/jung-so-min.html">Jung So-min <span class="rc-count">1</span></a>
+    </div>
+  </section>
   <section class="pfaq">
     <h2>Edward Lee book recommendations — FAQ</h2>
     <div class="pfaq-q">
@@ -751,6 +835,10 @@
       <p>Public sources only — interviews, YouTube clips, variety shows, fan-cafe posts and SNS. A book is added to this reading list only when the mention can be linked, and the link stays on the entry so you can check it yourself.</p>
     </div>
   </section>
+  <nav class="celeb-pager" aria-label="Browse celebrities">
+      <a class="pager-link pager-prev" rel="prev" href="https://favorbook.co.kr/en/share/donghyeonkickflip.html">← DONGHYEON(KickFlip)'s books</a>
+      <a class="pager-link pager-next" rel="next" href="https://favorbook.co.kr/en/share/el.html">EL's books →</a>
+  </nav>
   <footer>
     <p>Curated from public Korean-language sources. Korean original page: <a href="https://favorbook.co.kr/share/%EC%97%90%EB%93%9C%EC%9B%8C%EB%93%9C%20%EB%A6%AC.html" hreflang="ko">에드워드 리</a>.</p>
     <p><a href="https://favorbook.co.kr/en/">Browse more Korean celebrity book lists →</a></p>

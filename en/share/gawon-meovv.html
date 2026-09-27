@@ -51,7 +51,6 @@
     "description": "Main vocalist of K-pop girl group MEOVV under THEBLACKLABEL, debuted September 2024.",
     "image": "https://talkimg.imbc.com/TVianUpload/tvian/TViews/image/2025/06/11/33abb8af-32eb-4863-b891-a8cdc82930c1.jpg"
   },
-  "mainEntityOfPage": "https://favorbook.co.kr/en/share/gawon-meovv.html",
   "hasPart": {
     "@type": "ItemList",
     "name": "Books read by Gawon (MEOVV)",
@@ -432,6 +431,9 @@
     nav { margin: 50px 0 16px; font-size: 13px; }
     .celeb-header { display: flex; align-items: center; gap: 20px; margin-bottom: 16px; flex-wrap: wrap; }
     .celeb-img { width: 120px; height: 120px; border-radius: 50%; object-fit: cover; border: 2px solid #000; }
+    .celeb-photo-wrap { position: relative; flex-shrink: 0; }
+    .img-credit { position: absolute; bottom: 0; right: 0; font-size: 10px; line-height: 1; padding: 2px 4px; background: rgba(255,255,255,0.85); border: 1px solid #ccc; border-radius: 999px; text-decoration: none; color: #555; opacity: 0.55; transition: opacity .15s; }
+    .img-credit:hover { opacity: 1; text-decoration: none; }
     h1 { font-size: 28px; margin: 0 0 8px; font-weight: 900; }
     h2 { font-size: 19px; margin: 32px 0 12px; padding-bottom: 4px; border-bottom: 2px solid #000; font-weight: 800; }
     .intro { background: #fff; border: 2px solid #000; box-shadow: 4px 4px 0 0 #000; padding: 14px 16px; margin: 16px 0 24px; font-size: 15px; }
@@ -442,6 +444,17 @@
     .pfaq-q h3 { font-size: 15px; font-weight: 800; margin: 0 0 6px; }
     .pfaq-q p { font-size: 14px; margin: 0; color: #333; }
     .grp-link { margin: 10px 0 0; padding: 8px 12px; background: #fff8e7; border: 2px solid #000; box-shadow: 3px 3px 0 0 #000; font-size: 14px; }
+    .rl-shared { clear: both; margin-top: 12px; padding-top: 10px; border-top: 1.5px dashed #ccc; display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
+    .rl-shared-label { font-size: 12px; color: #666; font-weight: 700; }
+    .rl-celeb-chip { font-size: 12px; padding: 2px 8px; background: #fff; border: 1.5px solid #000; border-radius: 999px; color: #000; }
+    .rl-book-link { font-size: 12px; font-weight: 700; }
+    .muted { color: #666; font-size: 13px; }
+    .related-celebs { margin: 24px 0; }
+    .related-celeb-list { display: flex; flex-wrap: wrap; gap: 8px; }
+    .related-celeb { padding: 6px 12px; background: #fff; border: 2px solid #000; box-shadow: 2px 2px 0 0 #000; font-size: 13px; font-weight: 700; color: #000; }
+    .rc-count { display: inline-block; min-width: 18px; padding: 0 5px; margin-left: 4px; background: #fde047; border: 1.5px solid #000; border-radius: 999px; font-size: 11px; text-align: center; }
+    .celeb-pager { margin: 32px 0 16px; display: flex; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
+    .pager-link { padding: 8px 12px; background: #fff; border: 2px solid #000; box-shadow: 3px 3px 0 0 #000; font-size: 13px; font-weight: 700; color: #000; }
     .shelf-head { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
     .shelf-head h2 { margin-bottom: 0; border-bottom: none; padding-bottom: 0; }
     .shelf-tabs { display: flex; gap: 6px; flex-wrap: wrap; }
@@ -449,6 +462,19 @@
               background: #fff; color: #000; border: 2px solid #000; box-shadow: 2px 2px 0 0 #000; }
     .sh-cap:hover { background: #fde047; }
     .sh-cap[disabled] { opacity: .55; cursor: default; }
+    .view-tabs { display: inline-flex; border: 2px solid #000; box-shadow: 2px 2px 0 0 #000; background: #fff; }
+    .vt { font: inherit; font-size: 12px; font-weight: 700; padding: 5px 10px; background: #fff; color: #000; border: 0; cursor: pointer; }
+    .vt + .vt { border-left: 2px solid #000; }
+    .vt[aria-pressed="true"] { background: #000; color: #fff; }
+    .covers { display: none; grid-template-columns: repeat(auto-fill, minmax(84px, 1fr)); gap: 14px 12px; margin: 14px 0 22px; }
+    .show-covers .covers { display: grid; }
+    .show-covers .shelf { display: none; }
+    .cv { position: relative; display: block; aspect-ratio: 2/3; border: 1.5px solid #000; box-shadow: 2px 2px 0 0 #000;
+          background: #f4f4f0; overflow: hidden; color: #000; text-decoration: none; transition: transform .12s; }
+    .cv:hover { transform: translateY(-3px); text-decoration: none; }
+    .cv img { width: 100%; height: 100%; object-fit: cover; display: block; }
+    .cv-no { display: flex; height: 100%; align-items: center; justify-content: center; padding: 6px;
+             font-size: 11px; font-weight: 700; line-height: 1.3; text-align: center; word-break: keep-all; }
     .shelf { --sh-h: 270px; --plank: 7px; --row: calc(var(--sh-h) + 18px);
              display: flex; flex-wrap: wrap; align-items: flex-end; gap: 11px 2px;
              margin: 14px 0 22px; padding: 0 8px 7px;
@@ -526,13 +552,16 @@
 </head>
 <body>
   <div class="lang-toggle">
-    <button class="lang-btn copy-btn" type="button" data-url="https://favorbook.co.kr/en/share/gawon-meovv.html" data-done="Copied!">🔗 Copy link</button>
+    <button class="lang-btn copy-btn" type="button" data-url="https://favorbook.co.kr/s/e/gawon-meovv.html" data-done="Copied!">🔗 Copy link</button>
     <a class="lang-btn" href="https://favorbook.co.kr/share/%EA%B0%80%EC%9B%90%28%EB%AF%B8%EC%95%BC%EC%98%A4%29.html" hreflang="ko">한국어</a>
     <span class="lang-btn active">EN</span>
   </div>
-  <nav><a href="https://favorbook.co.kr/en/">← Favorbook Home</a></nav>
+  <nav><a href="https://favorbook.co.kr/en/">← Favorbook Home</a> · <a href="https://favorbook.co.kr/en/share/ranking.html">Most-read books ranking</a></nav>
   <header class="celeb-header">
+    <div class="celeb-photo-wrap">
     <img class="celeb-img" src="https://talkimg.imbc.com/TVianUpload/tvian/TViews/image/2025/06/11/33abb8af-32eb-4863-b891-a8cdc82930c1.jpg" alt="Gawon (MEOVV) profile photo" width="120" height="120">
+      <a class="img-credit" href="https://talkimg.imbc.com/TVianUpload/tvian/TViews/image/2025/06/11/33abb8af-32eb-4863-b891-a8cdc82930c1.jpg" target="_blank" rel="nofollow noopener noreferrer" title="Image source">📷</a>
+    </div>
     <div>
       <h1>Gawon (MEOVV) Books<span style="font-weight:400;color:#666;font-size:18px"> · 가원(미야오) 책</span></h1>
       <p class="celeb-bio">Main vocalist of K-pop girl group MEOVV under THEBLACKLABEL, debuted September 2024.</p>
@@ -549,6 +578,7 @@
     <div class="shelf-head">
       <h2>Books Gawon (MEOVV) has read (17)</h2>
       <div class="shelf-tabs">
+        <span class="view-tabs" role="group"><button type="button" class="vt" data-view="spine" aria-pressed="true">📚 Spines</button><button type="button" class="vt" data-view="cover" aria-pressed="false">🖼 Covers</button></span>
         <button type="button" class="sh-cap" id="shelf-cap" title="Download the bookshelf as an image">⤓ Save image</button>
         <button type="button" class="sh-cap" id="shelf-cap-clear" title="Download as a PNG with a transparent background">⤓ Transparent</button>
       </div>
@@ -573,6 +603,25 @@
     <a class="sp no-img" style="--c:hsl(119,53%,38%);--w:38px;--fs:15px" href="https://www.yes24.com/product/goods/1442299" rel="nofollow noopener noreferrer" target="_blank" title="The Tale of Despereaux"><span class="sp-t"><i>The Tale of Despereaux</i></span></a>
     <a class="sp" style="--c:hsl(72,35%,26%);--w:42px;--fs:15px" href="https://www.yes24.com/product/goods/143896198" rel="nofollow noopener noreferrer" target="_blank" title="The White Book"><span class="sp-t"><i>The White Book</i></span><img class="sp-i" src="https://image.yes24.com/goods/143896198/side" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.parentNode.classList.add('sp-fail');this.remove()" onload="if(this.naturalWidth/this.naturalHeight>0.4){this.parentNode.classList.add('sp-fail');this.remove()}"></a>
     </div>
+    <div class="covers" id="covers">
+    <a class="cv" href="https://www.yes24.com/product/goods/131930939" rel="nofollow noopener noreferrer" target="_blank" title="Classics Answered"><img src="https://image.yes24.com/goods/131930939/L" alt="Classics Answered by Ko Myeong-hwan — book cover" loading="lazy"></a>
+    <a class="cv" href="https://www.yes24.com/product/goods/8759796" rel="nofollow noopener noreferrer" target="_blank" title="Contradictions"><img src="https://image.yes24.com/goods/8759796/L" alt="Contradictions by Yang Gui-ja — book cover" loading="lazy"></a>
+    <a class="cv" href="https://www.yes24.com/product/goods/6712992" rel="nofollow noopener noreferrer" target="_blank" title="Crime and Punishment"><img src="https://image.yes24.com/goods/6712992/L" alt="Crime and Punishment by Fyodor Dostoevsky — book cover" loading="lazy"></a>
+    <a class="cv" href="https://www.yes24.com/product/goods/95746166" rel="nofollow noopener noreferrer" target="_blank" title="Elementary Korean"><img src="https://image.yes24.com/goods/95746166/L" alt="Elementary Korean by Moon Ji-hyuk — book cover" loading="lazy"></a>
+    <a class="cv" href="https://www.yes24.com/product/goods/118578901" rel="nofollow noopener noreferrer" target="_blank" title="Hunger"><img src="https://image.yes24.com/goods/118578901/L" alt="Hunger by Jinyoung Choi — book cover" loading="lazy"></a>
+    <a class="cv" href="https://www.yes24.com/product/goods/14943878" rel="nofollow noopener noreferrer" target="_blank" title="If Cats Disappeared from the World"><img src="https://image.yes24.com/goods/14943878/L" alt="If Cats Disappeared from the World by Genki Kawamura — book cover" loading="lazy"></a>
+    <a class="cv" href="https://www.yes24.com/product/goods/108669858" rel="nofollow noopener noreferrer" target="_blank" title="Mythology (Edith Hamilton&#x27;s)"><img src="https://image.yes24.com/goods/108669858/L" alt="Mythology (Edith Hamilton&#x27;s) by Edith Hamilton — book cover" loading="lazy"></a>
+    <a class="cv" href="https://www.yes24.com/product/goods/44499829" rel="nofollow noopener noreferrer" target="_blank" title="Norwegian Wood"><img src="https://image.yes24.com/goods/44499829/L" alt="Norwegian Wood by Haruki Murakami — book cover" loading="lazy"></a>
+    <a class="cv" href="https://www.yes24.com/product/goods/124106315" rel="nofollow noopener noreferrer" target="_blank" title="Please Be My Summer"><img src="https://image.yes24.com/goods/124106315/L" alt="Please Be My Summer by Seo Deok-jun — book cover" loading="lazy"></a>
+    <a class="cv" href="https://www.yes24.com/product/goods/122883845" rel="nofollow noopener noreferrer" target="_blank" title="Shower Gel and Soda Water"><img src="https://image.yes24.com/goods/122883845/L" alt="Shower Gel and Soda Water by Ko Sun-kyung — book cover" loading="lazy"></a>
+    <a class="cv" href="https://www.yes24.com/product/goods/146810656" rel="nofollow noopener noreferrer" target="_blank" title="The Definition of Love Is a Cat"><img src="https://image.yes24.com/goods/146810656/L" alt="The Definition of Love Is a Cat by Hyunwoo Lim — book cover" loading="lazy"></a>
+    <a class="cv" href="https://www.yes24.com/product/goods/2131169" rel="nofollow noopener noreferrer" target="_blank" title="The Old Kingdom (Series)"><img src="https://image.yes24.com/goods/2131169/L" alt="The Old Kingdom (Series) by Garth Nix — book cover" loading="lazy"></a>
+    <a class="cv" href="https://www.yes24.com/product/goods/4486713" rel="nofollow noopener noreferrer" target="_blank" title="The Picture of Dorian Gray"><img src="https://image.yes24.com/goods/4486713/L" alt="The Picture of Dorian Gray by Oscar Wilde — book cover" loading="lazy"></a>
+    <a class="cv" href="https://www.yes24.com/product/goods/109145050" rel="nofollow noopener noreferrer" target="_blank" title="The Picture of Dorian Gray 1890"><img src="https://image.yes24.com/goods/109145050/L" alt="The Picture of Dorian Gray 1890 by Oscar Wilde — book cover" loading="lazy"></a>
+    <a class="cv" href="https://www.yes24.com/product/goods/19021240" rel="nofollow noopener noreferrer" target="_blank" title="The Secret History"><img src="https://image.yes24.com/goods/19021240/L" alt="The Secret History by Donna Tartt — book cover" loading="lazy"></a>
+    <a class="cv" href="https://www.yes24.com/product/goods/1442299" rel="nofollow noopener noreferrer" target="_blank" title="The Tale of Despereaux"><img src="https://image.yes24.com/goods/1442299/L" alt="The Tale of Despereaux by Kate DiCamillo — book cover" loading="lazy"></a>
+    <a class="cv" href="https://www.yes24.com/product/goods/143896198" rel="nofollow noopener noreferrer" target="_blank" title="The White Book"><img src="https://image.yes24.com/goods/143896198/L" alt="The White Book by Han Kang — book cover" loading="lazy"></a>
+    </div>
     <ol class="reading-list" id="rlist">
     <li class="rl-item" id="b1">
       <span class="rl-num">1</span>
@@ -593,6 +642,7 @@
         <p class="rl-comment">Mentioned in a W Korea interview as a current read, along with The Picture of Dorian Gray. (Source: W Korea)</p>
         <a class="rl-source" href="https://www.wkorea.com/2026/04/20/%eb%af%b8%ec%95%bc%ec%98%a4-%ea%b0%80%ec%9b%90%ec%9d%b4-%eb%a7%8c%eb%82%9c-%eb%b4%84%eb%82%a0/" rel="nofollow noopener noreferrer" target="_blank">📺 Source</a>
         <button type="button" class="heart-btn sm" data-heart="b:모순" aria-pressed="false" aria-label="Heart this book" title="Heart this book" hidden><span class="heart-ico" aria-hidden="true">♡</span><span class="heart-n"></span></button>
+        <div class="rl-shared"><span class="rl-shared-label">👥 Also recommended by 14:</span> <a class="rl-celeb-chip" href="https://favorbook.co.kr/en/share/v-bts.html">V (BTS)</a><a class="rl-celeb-chip" href="https://favorbook.co.kr/en/share/seolhyun.html">Seolhyun</a><a class="rl-celeb-chip" href="https://favorbook.co.kr/en/share/iu.html">IU</a><a class="rl-celeb-chip" href="https://favorbook.co.kr/en/share/ahn-hyeong-seop.html">Ahn Hyeong-seop</a><a class="rl-celeb-chip" href="https://favorbook.co.kr/en/share/yozoh.html">Yozoh</a><a class="rl-celeb-chip" href="https://favorbook.co.kr/en/share/charles-enter.html">Charles Enter</a><a class="rl-celeb-chip" href="https://favorbook.co.kr/en/share/karina-aespa.html">Karina (aespa)</a><a class="rl-celeb-chip" href="https://favorbook.co.kr/en/share/theo-p1harmony.html">Theo (P1Harmony)</a><a class="rl-celeb-chip" href="https://favorbook.co.kr/en/share/huh-yunjin-le-sserafim.html">Huh Yunjin (LE SSERAFIM)</a><a class="rl-celeb-chip" href="https://favorbook.co.kr/en/share/george.html">george</a><a class="rl-celeb-chip" href="https://favorbook.co.kr/en/share/lady-jane.html">Lady Jane</a><a class="rl-celeb-chip" href="https://favorbook.co.kr/en/share/lim-kim.html">LIM KIM</a><a class="rl-celeb-chip" href="https://favorbook.co.kr/en/share/jo-yu-ri.html">Jo Yu-ri</a><a class="rl-celeb-chip" href="https://favorbook.co.kr/en/share/ryujinitzy.html">RYUJIN(ITZY)</a> <a class="rl-book-link" href="https://favorbook.co.kr/en/share/book/contradictions.html">All readers →</a></div>
       </div>
     </li>
     <li class="rl-item" id="b3">
@@ -626,6 +676,7 @@
         <p class="rl-comment">In a W Korea interview, Gawon named this as a book enjoyed this year. (Source: W Korea)</p>
         <a class="rl-source" href="https://www.wkorea.com/2026/04/20/%eb%af%b8%ec%95%bc%ec%98%a4-%ea%b0%80%ec%9b%90%ec%9d%b4-%eb%a7%8c%eb%82%9c-%eb%b4%84%eb%82%a0/" rel="nofollow noopener noreferrer" target="_blank">📺 Source</a>
         <button type="button" class="heart-btn sm" data-heart="b:구의 증명" aria-pressed="false" aria-label="Heart this book" title="Heart this book" hidden><span class="heart-ico" aria-hidden="true">♡</span><span class="heart-n"></span></button>
+        <div class="rl-shared"><span class="rl-shared-label">👥 Also recommended by 9:</span> <a class="rl-celeb-chip" href="https://favorbook.co.kr/en/share/kim-min-ha.html">Kim Min-ha</a><a class="rl-celeb-chip" href="https://favorbook.co.kr/en/share/martin-cortis.html">Martin (CORTIS)</a><a class="rl-celeb-chip" href="https://favorbook.co.kr/en/share/mun-ka-young.html">Mun Ka-young</a><a class="rl-celeb-chip" href="https://favorbook.co.kr/en/share/juhoon-cortis.html">Juhoon (CORTIS)</a><a class="rl-celeb-chip" href="https://favorbook.co.kr/en/share/hanroro.html">Hanroro</a><a class="rl-celeb-chip" href="https://favorbook.co.kr/en/share/kim-minju.html">Kim Minju</a><a class="rl-celeb-chip" href="https://favorbook.co.kr/en/share/leoalpha-drive-one.html">LEO(ALPHA DRIVE ONE)</a><a class="rl-celeb-chip" href="https://favorbook.co.kr/en/share/g-dragon-bigbang.html">G-Dragon (BIGBANG)</a><a class="rl-celeb-chip" href="https://favorbook.co.kr/en/share/jo-yu-ri.html">Jo Yu-ri</a> <a class="rl-book-link" href="https://favorbook.co.kr/en/share/book/hunger.html">All readers →</a></div>
       </div>
     </li>
     <li class="rl-item" id="b6">
@@ -636,6 +687,7 @@
         <div class="rl-byline">Genki Kawamura</div>
         <a class="rl-source" href="https://theqoo.net/square/3693718898" rel="nofollow noopener noreferrer" target="_blank">📺 Source</a>
         <button type="button" class="heart-btn sm" data-heart="b:세상에서 고양이가 사라진다면" aria-pressed="false" aria-label="Heart this book" title="Heart this book" hidden><span class="heart-ico" aria-hidden="true">♡</span><span class="heart-n"></span></button>
+        <div class="rl-shared"><span class="rl-shared-label">👥 Also recommended by 1:</span> <a class="rl-celeb-chip" href="https://favorbook.co.kr/en/share/dahyun-twice.html">Dahyun (TWICE)</a> <a class="rl-book-link" href="https://favorbook.co.kr/en/share/book/if-cats-disappeared-from-the-world.html">All readers →</a></div>
       </div>
     </li>
     <li class="rl-item" id="b7">
@@ -656,6 +708,7 @@
         <div class="rl-byline">Haruki Murakami</div>
         <a class="rl-source" href="https://theqoo.net/square/3693718898" rel="nofollow noopener noreferrer" target="_blank">📺 Source</a>
         <button type="button" class="heart-btn sm" data-heart="b:노르웨이의 숲" aria-pressed="false" aria-label="Heart this book" title="Heart this book" hidden><span class="heart-ico" aria-hidden="true">♡</span><span class="heart-n"></span></button>
+        <div class="rl-shared"><span class="rl-shared-label">👥 Also recommended by 12:</span> <a class="rl-celeb-chip" href="https://favorbook.co.kr/en/share/gaeul-ive.html">Gaeul (IVE)</a><a class="rl-celeb-chip" href="https://favorbook.co.kr/en/share/geonho-cortis.html">Geonho (CORTIS)</a><a class="rl-celeb-chip" href="https://favorbook.co.kr/en/share/go-min-si.html">Go Min-si</a><a class="rl-celeb-chip" href="https://favorbook.co.kr/en/share/lily-nmixx.html">LILY (NMIXX)</a><a class="rl-celeb-chip" href="https://favorbook.co.kr/en/share/son-jong-won.html">Son Jong-won</a><a class="rl-celeb-chip" href="https://favorbook.co.kr/en/share/yeri-red-velvet.html">Yeri (Red Velvet)</a><a class="rl-celeb-chip" href="https://favorbook.co.kr/en/share/lee-je-hoon.html">Lee Je-hoon</a><a class="rl-celeb-chip" href="https://favorbook.co.kr/en/share/faker.html">Faker</a><a class="rl-celeb-chip" href="https://favorbook.co.kr/en/share/heo-seong-beom.html">Heo Seong-beom</a><a class="rl-celeb-chip" href="https://favorbook.co.kr/en/share/kim-do-wan.html">Kim Do-wan</a><a class="rl-celeb-chip" href="https://favorbook.co.kr/en/share/sunghoboynextdoor.html">SUNGHO(BOYNEXTDOOR)</a><a class="rl-celeb-chip" href="https://favorbook.co.kr/en/share/taesanboynextdoor.html">TAESAN((BOYNEXTDOOR)</a> <a class="rl-book-link" href="https://favorbook.co.kr/en/share/book/norwegian-wood.html">All readers →</a></div>
       </div>
     </li>
     <li class="rl-item" id="b9">
@@ -750,11 +803,28 @@
         <div class="rl-byline">Han Kang</div>
         <a class="rl-source" href="https://theqoo.net/square/3693718898" rel="nofollow noopener noreferrer" target="_blank">📺 Source</a>
         <button type="button" class="heart-btn sm" data-heart="b:흰" aria-pressed="false" aria-label="Heart this book" title="Heart this book" hidden><span class="heart-ico" aria-hidden="true">♡</span><span class="heart-n"></span></button>
+        <div class="rl-shared"><span class="rl-shared-label">👥 Also recommended by 7:</span> <a class="rl-celeb-chip" href="https://favorbook.co.kr/en/share/yeri-red-velvet.html">Yeri (Red Velvet)</a><a class="rl-celeb-chip" href="https://favorbook.co.kr/en/share/jisooblackpink.html">Jisoo(BLACKPINK)</a><a class="rl-celeb-chip" href="https://favorbook.co.kr/en/share/karina-aespa.html">Karina (aespa)</a><a class="rl-celeb-chip" href="https://favorbook.co.kr/en/share/ha-yeon-joo.html">Ha Yeon-joo</a><a class="rl-celeb-chip" href="https://favorbook.co.kr/en/share/hanroro.html">Hanroro</a><a class="rl-celeb-chip" href="https://favorbook.co.kr/en/share/hong-kyung.html">Hong Kyung</a><a class="rl-celeb-chip" href="https://favorbook.co.kr/en/share/yerin-ha.html">Yerin Ha</a> <a class="rl-book-link" href="https://favorbook.co.kr/en/share/book/the-white-book.html">All readers →</a></div>
       </div>
     </li>
     </ol>
     </div>
   </section>
+  <script>
+  (function () {
+    var area = document.getElementById("shelf-area");
+    var tabs = document.querySelectorAll(".view-tabs .vt");
+    if (!area || !tabs.length) return;
+    function set(v, save) {
+      area.classList.toggle("show-covers", v === "cover");
+      tabs.forEach(function (t) { t.setAttribute("aria-pressed", String(t.dataset.view === v)); });
+      if (save) { try { localStorage.setItem("shelfView", v); } catch (e) {} }
+    }
+    var saved = null;
+    try { saved = localStorage.getItem("shelfView"); } catch (e) {}
+    if (saved === "cover") set("cover", false);
+    tabs.forEach(function (t) { t.addEventListener("click", function () { set(t.dataset.view, true); }); });
+  })();
+  </script>
   <script>
   (function () {
     var btns = [document.getElementById("shelf-cap"), document.getElementById("shelf-cap-clear")]
@@ -967,6 +1037,28 @@
   })();
   </script>
   <p class="tr-note">Book titles and author names marked with an asterisk (<strong>*</strong>) are machine-translated from Korean. No official English edition was confirmed for them, so read them as approximations of the Korean original shown next to them.</p>
+  <section>
+    <h2>📝 Gawon (MEOVV)'s reading taste</h2>
+    <p>Authors that come up most often in Gawon (MEOVV)'s list: Oscar Wilde (2 books), Donna Tartt, Edith Hamilton.</p>
+  </section>
+  <section class="related-celebs">
+    <h2>🤝 Celebrities with similar reading taste</h2>
+    <p class="muted">They recommended some of the same books. The number is how many books they share.</p>
+    <div class="related-celeb-list">
+      <a class="related-celeb" href="https://favorbook.co.kr/en/share/yeri-red-velvet.html">Yeri (Red Velvet) <span class="rc-count">2</span></a>
+      <a class="related-celeb" href="https://favorbook.co.kr/en/share/jo-yu-ri.html">Jo Yu-ri <span class="rc-count">2</span></a>
+      <a class="related-celeb" href="https://favorbook.co.kr/en/share/karina-aespa.html">Karina (aespa) <span class="rc-count">2</span></a>
+      <a class="related-celeb" href="https://favorbook.co.kr/en/share/hanroro.html">Hanroro <span class="rc-count">2</span></a>
+      <a class="related-celeb" href="https://favorbook.co.kr/en/share/gaeul-ive.html">Gaeul (IVE) <span class="rc-count">1</span></a>
+      <a class="related-celeb" href="https://favorbook.co.kr/en/share/geonho-cortis.html">Geonho (CORTIS) <span class="rc-count">1</span></a>
+      <a class="related-celeb" href="https://favorbook.co.kr/en/share/go-min-si.html">Go Min-si <span class="rc-count">1</span></a>
+      <a class="related-celeb" href="https://favorbook.co.kr/en/share/kim-do-wan.html">Kim Do-wan <span class="rc-count">1</span></a>
+      <a class="related-celeb" href="https://favorbook.co.kr/en/share/kim-minju.html">Kim Minju <span class="rc-count">1</span></a>
+      <a class="related-celeb" href="https://favorbook.co.kr/en/share/kim-min-ha.html">Kim Min-ha <span class="rc-count">1</span></a>
+      <a class="related-celeb" href="https://favorbook.co.kr/en/share/seolhyun.html">Seolhyun <span class="rc-count">1</span></a>
+      <a class="related-celeb" href="https://favorbook.co.kr/en/share/dahyun-twice.html">Dahyun (TWICE) <span class="rc-count">1</span></a>
+    </div>
+  </section>
   <section class="pfaq">
     <h2>Gawon (MEOVV) book recommendations — FAQ</h2>
     <div class="pfaq-q">
@@ -982,6 +1074,10 @@
       <p>Public sources only — interviews, YouTube clips, variety shows, fan-cafe posts and SNS. A book is added to this reading list only when the mention can be linked, and the link stays on the entry so you can check it yourself.</p>
     </div>
   </section>
+  <nav class="celeb-pager" aria-label="Browse celebrities">
+      <a class="pager-link pager-prev" rel="prev" href="https://favorbook.co.kr/en/share/gang-dong-won.html">← Gang Dong-won's books</a>
+      <a class="pager-link pager-next" rel="next" href="https://favorbook.co.kr/en/share/geonho-cortis.html">Geonho (CORTIS)'s books →</a>
+  </nav>
   <footer>
     <p>Curated from public Korean-language sources. Korean original page: <a href="https://favorbook.co.kr/share/%EA%B0%80%EC%9B%90%28%EB%AF%B8%EC%95%BC%EC%98%A4%29.html" hreflang="ko">가원(미야오)</a>.</p>
     <p><a href="https://favorbook.co.kr/en/">Browse more Korean celebrity book lists →</a></p>

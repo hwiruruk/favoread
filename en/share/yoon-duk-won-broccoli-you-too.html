@@ -53,7 +53,6 @@
     "description": "Lead vocalist and songwriter of Korean indie band Broccoli, you too?",
     "image": "https://image.genie.co.kr/Y/IMAGE/IMG_ARTIST/080/277/353/80277353_1607910911798_5_600x600.JPG"
   },
-  "mainEntityOfPage": "https://favorbook.co.kr/en/share/yoon-duk-won-broccoli-you-too.html",
   "hasPart": {
     "@type": "ItemList",
     "name": "Books read by Yoon Duk-won (Broccoli, you too?)",
@@ -492,6 +491,9 @@
     nav { margin: 50px 0 16px; font-size: 13px; }
     .celeb-header { display: flex; align-items: center; gap: 20px; margin-bottom: 16px; flex-wrap: wrap; }
     .celeb-img { width: 120px; height: 120px; border-radius: 50%; object-fit: cover; border: 2px solid #000; }
+    .celeb-photo-wrap { position: relative; flex-shrink: 0; }
+    .img-credit { position: absolute; bottom: 0; right: 0; font-size: 10px; line-height: 1; padding: 2px 4px; background: rgba(255,255,255,0.85); border: 1px solid #ccc; border-radius: 999px; text-decoration: none; color: #555; opacity: 0.55; transition: opacity .15s; }
+    .img-credit:hover { opacity: 1; text-decoration: none; }
     h1 { font-size: 28px; margin: 0 0 8px; font-weight: 900; }
     h2 { font-size: 19px; margin: 32px 0 12px; padding-bottom: 4px; border-bottom: 2px solid #000; font-weight: 800; }
     .intro { background: #fff; border: 2px solid #000; box-shadow: 4px 4px 0 0 #000; padding: 14px 16px; margin: 16px 0 24px; font-size: 15px; }
@@ -502,6 +504,17 @@
     .pfaq-q h3 { font-size: 15px; font-weight: 800; margin: 0 0 6px; }
     .pfaq-q p { font-size: 14px; margin: 0; color: #333; }
     .grp-link { margin: 10px 0 0; padding: 8px 12px; background: #fff8e7; border: 2px solid #000; box-shadow: 3px 3px 0 0 #000; font-size: 14px; }
+    .rl-shared { clear: both; margin-top: 12px; padding-top: 10px; border-top: 1.5px dashed #ccc; display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
+    .rl-shared-label { font-size: 12px; color: #666; font-weight: 700; }
+    .rl-celeb-chip { font-size: 12px; padding: 2px 8px; background: #fff; border: 1.5px solid #000; border-radius: 999px; color: #000; }
+    .rl-book-link { font-size: 12px; font-weight: 700; }
+    .muted { color: #666; font-size: 13px; }
+    .related-celebs { margin: 24px 0; }
+    .related-celeb-list { display: flex; flex-wrap: wrap; gap: 8px; }
+    .related-celeb { padding: 6px 12px; background: #fff; border: 2px solid #000; box-shadow: 2px 2px 0 0 #000; font-size: 13px; font-weight: 700; color: #000; }
+    .rc-count { display: inline-block; min-width: 18px; padding: 0 5px; margin-left: 4px; background: #fde047; border: 1.5px solid #000; border-radius: 999px; font-size: 11px; text-align: center; }
+    .celeb-pager { margin: 32px 0 16px; display: flex; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
+    .pager-link { padding: 8px 12px; background: #fff; border: 2px solid #000; box-shadow: 3px 3px 0 0 #000; font-size: 13px; font-weight: 700; color: #000; }
     .shelf-head { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
     .shelf-head h2 { margin-bottom: 0; border-bottom: none; padding-bottom: 0; }
     .shelf-tabs { display: flex; gap: 6px; flex-wrap: wrap; }
@@ -509,6 +522,19 @@
               background: #fff; color: #000; border: 2px solid #000; box-shadow: 2px 2px 0 0 #000; }
     .sh-cap:hover { background: #fde047; }
     .sh-cap[disabled] { opacity: .55; cursor: default; }
+    .view-tabs { display: inline-flex; border: 2px solid #000; box-shadow: 2px 2px 0 0 #000; background: #fff; }
+    .vt { font: inherit; font-size: 12px; font-weight: 700; padding: 5px 10px; background: #fff; color: #000; border: 0; cursor: pointer; }
+    .vt + .vt { border-left: 2px solid #000; }
+    .vt[aria-pressed="true"] { background: #000; color: #fff; }
+    .covers { display: none; grid-template-columns: repeat(auto-fill, minmax(84px, 1fr)); gap: 14px 12px; margin: 14px 0 22px; }
+    .show-covers .covers { display: grid; }
+    .show-covers .shelf { display: none; }
+    .cv { position: relative; display: block; aspect-ratio: 2/3; border: 1.5px solid #000; box-shadow: 2px 2px 0 0 #000;
+          background: #f4f4f0; overflow: hidden; color: #000; text-decoration: none; transition: transform .12s; }
+    .cv:hover { transform: translateY(-3px); text-decoration: none; }
+    .cv img { width: 100%; height: 100%; object-fit: cover; display: block; }
+    .cv-no { display: flex; height: 100%; align-items: center; justify-content: center; padding: 6px;
+             font-size: 11px; font-weight: 700; line-height: 1.3; text-align: center; word-break: keep-all; }
     .shelf { --sh-h: 270px; --plank: 7px; --row: calc(var(--sh-h) + 18px);
              display: flex; flex-wrap: wrap; align-items: flex-end; gap: 11px 2px;
              margin: 14px 0 22px; padding: 0 8px 7px;
@@ -586,13 +612,16 @@
 </head>
 <body>
   <div class="lang-toggle">
-    <button class="lang-btn copy-btn" type="button" data-url="https://favorbook.co.kr/en/share/yoon-duk-won-broccoli-you-too.html" data-done="Copied!">🔗 Copy link</button>
+    <button class="lang-btn copy-btn" type="button" data-url="https://favorbook.co.kr/s/e/yoon-duk-won-broccoli-you.html" data-done="Copied!">🔗 Copy link</button>
     <a class="lang-btn" href="https://favorbook.co.kr/share/%EC%9C%A4%EB%8D%95%EC%9B%90%28%EB%B8%8C%EB%A1%9C%EC%BD%9C%EB%A6%AC%EB%84%88%EB%A7%88%EC%A0%80%29.html" hreflang="ko">한국어</a>
     <span class="lang-btn active">EN</span>
   </div>
-  <nav><a href="https://favorbook.co.kr/en/">← Favorbook Home</a></nav>
+  <nav><a href="https://favorbook.co.kr/en/">← Favorbook Home</a> · <a href="https://favorbook.co.kr/en/share/ranking.html">Most-read books ranking</a></nav>
   <header class="celeb-header">
+    <div class="celeb-photo-wrap">
     <img class="celeb-img" src="https://image.genie.co.kr/Y/IMAGE/IMG_ARTIST/080/277/353/80277353_1607910911798_5_600x600.JPG" alt="Yoon Duk-won (Broccoli, you too?) profile photo" width="120" height="120">
+      <a class="img-credit" href="https://image.genie.co.kr/Y/IMAGE/IMG_ARTIST/080/277/353/80277353_1607910911798_5_600x600.JPG" target="_blank" rel="nofollow noopener noreferrer" title="Image source">📷</a>
+    </div>
     <div>
       <h1>Yoon Duk-won (Broccoli, you too?) Books<span style="font-weight:400;color:#666;font-size:18px"> · 윤덕원(브로콜리너마저) 책</span></h1>
       <p class="celeb-bio">Lead vocalist and songwriter of Korean indie band Broccoli, you too?</p>
@@ -609,6 +638,7 @@
     <div class="shelf-head">
       <h2>Books Yoon Duk-won (Broccoli, you too?) has read (20)</h2>
       <div class="shelf-tabs">
+        <span class="view-tabs" role="group"><button type="button" class="vt" data-view="spine" aria-pressed="true">📚 Spines</button><button type="button" class="vt" data-view="cover" aria-pressed="false">🖼 Covers</button></span>
         <button type="button" class="sh-cap" id="shelf-cap" title="Download the bookshelf as an image">⤓ Save image</button>
         <button type="button" class="sh-cap" id="shelf-cap-clear" title="Download as a PNG with a transparent background">⤓ Transparent</button>
       </div>
@@ -641,6 +671,28 @@
     <a class="sp no-img" style="--c:hsl(120,56%,30%);--w:34px;--fs:15px" href="https://www.yes24.com/product/goods/57602704" rel="nofollow noopener noreferrer" target="_blank" title="The Devil&#x27;s Sentences"><span class="sp-t"><i>The Devil&#x27;s Sentences</i></span></a>
     <a class="sp no-img" style="--c:hsl(194,52%,31%);--w:38px;--fs:12px" href="https://www.yes24.com/product/goods/35049446" rel="nofollow noopener noreferrer" target="_blank" title="The First Sentence of a Novel"><span class="sp-t"><i>The First Sentence of a Novel</i></span></a>
     <a class="sp no-img" style="--c:hsl(357,43%,35%);--w:32px;--fs:12px" href="https://www.yes24.com/product/goods/85011474" rel="nofollow noopener noreferrer" target="_blank" title="What Remains After Punishment"><span class="sp-t"><i>What Remains After Punishment</i></span></a>
+    </div>
+    <div class="covers" id="covers">
+    <a class="cv" href="https://www.yes24.com/product/goods/85743647" rel="nofollow noopener noreferrer" target="_blank" title="Bandage"><img src="https://image.yes24.com/goods/85743647/L" alt="Bandage by Yoon I-hyeong — book cover" loading="lazy"></a>
+    <a class="cv" href="https://www.yes24.com/product/goods/92455793" rel="nofollow noopener noreferrer" target="_blank" title="Book, What Is It"><img src="https://image.yes24.com/goods/92455793/L" alt="Book, What Is It by Chang Kang-myoung — book cover" loading="lazy"></a>
+    <a class="cv" href="https://www.yes24.com/product/goods/90405058" rel="nofollow noopener noreferrer" target="_blank" title="Earth in Crisis, No Place to Retreat"><img src="https://image.yes24.com/goods/90405058/L" alt="Earth in Crisis, No Place to Retreat by Nam Sung-hyun — book cover" loading="lazy"></a>
+    <a class="cv" href="https://www.yes24.com/product/goods/117012879" rel="nofollow noopener noreferrer" target="_blank" title="Even If It Takes A Little Time"><span class="rl-new" data-added="2026-09-26">NEW</span><img src="https://image.yes24.com/goods/117012879/L" alt="Even If It Takes A Little Time by Lee Yunyeop — book cover" loading="lazy"></a>
+    <a class="cv" href="https://www.yes24.com/product/goods/73615347" rel="nofollow noopener noreferrer" target="_blank" title="Happy Apocalypse!"><img src="https://image.yes24.com/goods/73615347/L" alt="Happy Apocalypse! by Baek Min-seok — book cover" loading="lazy"></a>
+    <a class="cv" href="https://www.yes24.com/product/goods/64496500" rel="nofollow noopener noreferrer" target="_blank" title="History of Battles That Shook the World"><img src="https://image.yes24.com/goods/64496500/L" alt="History of Battles That Shook the World by Yu Pil-ha — book cover" loading="lazy"></a>
+    <a class="cv" href="https://www.yes24.com/product/goods/74261416" rel="nofollow noopener noreferrer" target="_blank" title="If We Can&#x27;t Go at the Speed of Light"><img src="https://image.yes24.com/goods/74261416/L" alt="If We Can&#x27;t Go at the Speed of Light by Kim Choyeop — book cover" loading="lazy"></a>
+    <a class="cv" href="https://www.yes24.com/product/goods/77251711" rel="nofollow noopener noreferrer" target="_blank" title="I Thought It Was Just Me (but It Isn&#x27;t): Making the Journey from &quot;What Will People Think?&quot; to &quot;I Am Enough&quot;"><img src="https://image.yes24.com/goods/77251711/L" alt="I Thought It Was Just Me (but It Isn&#x27;t): Making the Journey from &quot;What Will People Think?&quot; to &quot;I Am Enough&quot; by Brené Brown — book cover" loading="lazy"></a>
+    <a class="cv" href="https://www.yes24.com/product/goods/86899775" rel="nofollow noopener noreferrer" target="_blank" title="Jupiter Has Rings"><img src="https://image.yes24.com/goods/86899775/L" alt="Jupiter Has Rings by Kim Eun-woo — book cover" loading="lazy"></a>
+    <a class="cv" href="https://www.yes24.com/product/goods/79411194" rel="nofollow noopener noreferrer" target="_blank" title="Lakes of the World"><img src="https://image.yes24.com/goods/79411194/L" alt="Lakes of the World by Chung Yong-jun — book cover" loading="lazy"></a>
+    <a class="cv" href="https://www.yes24.com/product/goods/88915152" rel="nofollow noopener noreferrer" target="_blank" title="La vraie vie"><img src="https://image.yes24.com/goods/88915152/L" alt="La vraie vie by Adeline Dieudonné — book cover" loading="lazy"></a>
+    <a class="cv" href="https://www.yes24.com/product/goods/84639666" rel="nofollow noopener noreferrer" target="_blank" title="Living Like a Human"><img src="https://image.yes24.com/goods/84639666/L" alt="Living Like a Human by Jeong Yak-yong — book cover" loading="lazy"></a>
+    <a class="cv" href="https://www.yes24.com/product/goods/78234055" rel="nofollow noopener noreferrer" target="_blank" title="Microbial War"><img src="https://image.yes24.com/goods/78234055/L" alt="Microbial War by Ailsa Wild, Jeremy Barr — book cover" loading="lazy"></a>
+    <a class="cv" href="https://www.yes24.com/product/goods/29190285" rel="nofollow noopener noreferrer" target="_blank" title="People Who Deserve to Die"><img src="https://image.yes24.com/goods/29190285/L" alt="People Who Deserve to Die by Peter Swanson — book cover" loading="lazy"></a>
+    <a class="cv" href="https://www.yes24.com/product/goods/68811285" rel="nofollow noopener noreferrer" target="_blank" title="Ping-Pong King Seo Young"><img src="https://image.yes24.com/goods/68811285/L" alt="Ping-Pong King Seo Young by Hwang Yu-mi — book cover" loading="lazy"></a>
+    <a class="cv" href="https://www.yes24.com/product/goods/89574522" rel="nofollow noopener noreferrer" target="_blank" title="Stories Embroidered on the Heart"><img src="https://image.yes24.com/goods/89574522/L" alt="Stories Embroidered on the Heart by Gu Byeong-mo — book cover" loading="lazy"></a>
+    <a class="cv" href="https://www.yes24.com/product/goods/87005254" rel="nofollow noopener noreferrer" target="_blank" title="Thanks God It&#x27;s Friday"><img src="https://image.yes24.com/goods/87005254/L" alt="Thanks God It&#x27;s Friday by Shim Neoul — book cover" loading="lazy"></a>
+    <a class="cv" href="https://www.yes24.com/product/goods/57602704" rel="nofollow noopener noreferrer" target="_blank" title="The Devil&#x27;s Sentences"><img src="https://image.yes24.com/goods/57602704/L" alt="The Devil&#x27;s Sentences by Edogawa Ranpo — book cover" loading="lazy"></a>
+    <a class="cv" href="https://www.yes24.com/product/goods/35049446" rel="nofollow noopener noreferrer" target="_blank" title="The First Sentence of a Novel"><img src="https://image.yes24.com/goods/35049446/L" alt="The First Sentence of a Novel by Kim Jeong-seon — book cover" loading="lazy"></a>
+    <a class="cv" href="https://www.yes24.com/product/goods/85011474" rel="nofollow noopener noreferrer" target="_blank" title="What Remains After Punishment"><img src="https://image.yes24.com/goods/85011474/L" alt="What Remains After Punishment by Lim Su-hee — book cover" loading="lazy"></a>
     </div>
     <ol class="reading-list" id="rlist">
     <li class="rl-item" id="b1">
@@ -682,6 +734,7 @@
         <div class="rl-byline">Lee Yunyeop *</div>
         <a class="rl-source" href="https://x.com/yes24_official/status/1616284387426930691?s=20" rel="nofollow noopener noreferrer" target="_blank">📺 Source</a>
         <button type="button" class="heart-btn sm" data-heart="b:시간이 조금 걸리더라도" aria-pressed="false" aria-label="Heart this book" title="Heart this book" hidden><span class="heart-ico" aria-hidden="true">♡</span><span class="heart-n"></span></button>
+        <div class="rl-shared"><span class="rl-shared-label">👥 Also recommended by 1:</span> <a class="rl-celeb-chip" href="https://favorbook.co.kr/en/share/moon-so-ri.html">Moon So-ri</a> <a class="rl-book-link" href="https://favorbook.co.kr/en/share/book/even-if-it-takes-a-little-time.html">All readers →</a></div>
       </div>
     </li>
     <li class="rl-item" id="b5">
@@ -714,6 +767,7 @@
         <p class="rl-comment">He said this SF collection was the very first e-book he ever read. (Source: Channel Yes column)</p>
         <a class="rl-source" href="https://ch.yes24.com/article/details/41626" rel="nofollow noopener noreferrer" target="_blank">📺 Source</a>
         <button type="button" class="heart-btn sm" data-heart="b:우리가 빛의 속도로 갈 수 없다면" aria-pressed="false" aria-label="Heart this book" title="Heart this book" hidden><span class="heart-ico" aria-hidden="true">♡</span><span class="heart-n"></span></button>
+        <div class="rl-shared"><span class="rl-shared-label">👥 Also recommended by 5:</span> <a class="rl-celeb-chip" href="https://favorbook.co.kr/en/share/kim-se-jeong.html">Kim Se-jeong</a><a class="rl-celeb-chip" href="https://favorbook.co.kr/en/share/yeri-red-velvet.html">Yeri (Red Velvet)</a><a class="rl-celeb-chip" href="https://favorbook.co.kr/en/share/huh-yunjin-le-sserafim.html">Huh Yunjin (LE SSERAFIM)</a><a class="rl-celeb-chip" href="https://favorbook.co.kr/en/share/ahn-hyun-mo.html">Ahn Hyun-mo</a><a class="rl-celeb-chip" href="https://favorbook.co.kr/en/share/junseo-alpha-drive-one.html">JunSeo (Alpha Drive One)</a> <a class="rl-book-link" href="https://favorbook.co.kr/en/share/book/if-we-cant-go-at-the-speed-of-light.html">All readers →</a></div>
       </div>
     </li>
     <li class="rl-item" id="b8">
@@ -747,6 +801,7 @@
         <p class="rl-comment">He introduced it as the story of someone who wanted to be a good person and ends up facing their own problems. (Source: Channel Yes column)</p>
         <a class="rl-source" href="https://ch.yes24.com/article/details/41834" rel="nofollow noopener noreferrer" target="_blank">📺 Source</a>
         <button type="button" class="heart-btn sm" data-heart="b:세계의 호수" aria-pressed="false" aria-label="Heart this book" title="Heart this book" hidden><span class="heart-ico" aria-hidden="true">♡</span><span class="heart-n"></span></button>
+        <div class="rl-shared"><span class="rl-shared-label">👥 Also recommended by 1:</span> <a class="rl-celeb-chip" href="https://favorbook.co.kr/en/share/kim-dae-myung.html">Kim Dae-myung</a> <a class="rl-book-link" href="https://favorbook.co.kr/en/share/book/lakes-of-the-world.html">All readers →</a></div>
       </div>
     </li>
     <li class="rl-item" id="b11">
@@ -856,6 +911,22 @@
     </ol>
     </div>
   </section>
+  <script>
+  (function () {
+    var area = document.getElementById("shelf-area");
+    var tabs = document.querySelectorAll(".view-tabs .vt");
+    if (!area || !tabs.length) return;
+    function set(v, save) {
+      area.classList.toggle("show-covers", v === "cover");
+      tabs.forEach(function (t) { t.setAttribute("aria-pressed", String(t.dataset.view === v)); });
+      if (save) { try { localStorage.setItem("shelfView", v); } catch (e) {} }
+    }
+    var saved = null;
+    try { saved = localStorage.getItem("shelfView"); } catch (e) {}
+    if (saved === "cover") set("cover", false);
+    tabs.forEach(function (t) { t.addEventListener("click", function () { set(t.dataset.view, true); }); });
+  })();
+  </script>
   <script>
   (function () {
     var btns = [document.getElementById("shelf-cap"), document.getElementById("shelf-cap-clear")]
@@ -1068,6 +1139,23 @@
   })();
   </script>
   <p class="tr-note">Book titles and author names marked with an asterisk (<strong>*</strong>) are machine-translated from Korean. No official English edition was confirmed for them, so read them as approximations of the Korean original shown next to them.</p>
+  <section>
+    <h2>📝 Yoon Duk-won (Broccoli, you too?)'s reading taste</h2>
+    <p>Authors that come up most often in Yoon Duk-won (Broccoli, you too?)'s list: Adeline Dieudonné, Ailsa Wild, Jeremy Barr, Baek Min-seok.</p>
+  </section>
+  <section class="related-celebs">
+    <h2>🤝 Celebrities with similar reading taste</h2>
+    <p class="muted">They recommended some of the same books. The number is how many books they share.</p>
+    <div class="related-celeb-list">
+      <a class="related-celeb" href="https://favorbook.co.kr/en/share/kim-dae-myung.html">Kim Dae-myung <span class="rc-count">1</span></a>
+      <a class="related-celeb" href="https://favorbook.co.kr/en/share/kim-se-jeong.html">Kim Se-jeong <span class="rc-count">1</span></a>
+      <a class="related-celeb" href="https://favorbook.co.kr/en/share/junseo-alpha-drive-one.html">JunSeo (Alpha Drive One) <span class="rc-count">1</span></a>
+      <a class="related-celeb" href="https://favorbook.co.kr/en/share/moon-so-ri.html">Moon So-ri <span class="rc-count">1</span></a>
+      <a class="related-celeb" href="https://favorbook.co.kr/en/share/ahn-hyun-mo.html">Ahn Hyun-mo <span class="rc-count">1</span></a>
+      <a class="related-celeb" href="https://favorbook.co.kr/en/share/yeri-red-velvet.html">Yeri (Red Velvet) <span class="rc-count">1</span></a>
+      <a class="related-celeb" href="https://favorbook.co.kr/en/share/huh-yunjin-le-sserafim.html">Huh Yunjin (LE SSERAFIM) <span class="rc-count">1</span></a>
+    </div>
+  </section>
   <section class="pfaq">
     <h2>Yoon Duk-won (Broccoli, you too?) book recommendations — FAQ</h2>
     <div class="pfaq-q">
@@ -1083,6 +1171,10 @@
       <p>Public sources only — interviews, YouTube clips, variety shows, fan-cafe posts and SNS. A book is added to this reading list only when the mention can be linked, and the link stays on the entry so you can check it yourself.</p>
     </div>
   </section>
+  <nav class="celeb-pager" aria-label="Browse celebrities">
+      <a class="pager-link pager-prev" rel="prev" href="https://favorbook.co.kr/en/share/yoon-bo-ra.html">← Yoon Bo-ra's books</a>
+      <a class="pager-link pager-next" rel="next" href="https://favorbook.co.kr/en/share/yoon-hoateez.html">YOON HO(ATEEZ)'s books →</a>
+  </nav>
   <footer>
     <p>Curated from public Korean-language sources. Korean original page: <a href="https://favorbook.co.kr/share/%EC%9C%A4%EB%8D%95%EC%9B%90%28%EB%B8%8C%EB%A1%9C%EC%BD%9C%EB%A6%AC%EB%84%88%EB%A7%88%EC%A0%80%29.html" hreflang="ko">윤덕원(브로콜리너마저)</a>.</p>
     <p><a href="https://favorbook.co.kr/en/">Browse more Korean celebrity book lists →</a></p>

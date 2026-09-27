@@ -53,7 +53,6 @@
     "description": "South Korean actress known for Oscar-nominated film 'Minari' and K-drama 'Signal'.",
     "image": "https://image.tmdb.org/t/p/w500/ukEY6AV2EjeGDjMayDj5rpo8pHw.jpg"
   },
-  "mainEntityOfPage": "https://favorbook.co.kr/en/share/han-ye-ri.html",
   "hasPart": {
     "@type": "ItemList",
     "name": "Books read by Han Ye-ri",
@@ -240,6 +239,9 @@
     nav { margin: 50px 0 16px; font-size: 13px; }
     .celeb-header { display: flex; align-items: center; gap: 20px; margin-bottom: 16px; flex-wrap: wrap; }
     .celeb-img { width: 120px; height: 120px; border-radius: 50%; object-fit: cover; border: 2px solid #000; }
+    .celeb-photo-wrap { position: relative; flex-shrink: 0; }
+    .img-credit { position: absolute; bottom: 0; right: 0; font-size: 10px; line-height: 1; padding: 2px 4px; background: rgba(255,255,255,0.85); border: 1px solid #ccc; border-radius: 999px; text-decoration: none; color: #555; opacity: 0.55; transition: opacity .15s; }
+    .img-credit:hover { opacity: 1; text-decoration: none; }
     h1 { font-size: 28px; margin: 0 0 8px; font-weight: 900; }
     h2 { font-size: 19px; margin: 32px 0 12px; padding-bottom: 4px; border-bottom: 2px solid #000; font-weight: 800; }
     .intro { background: #fff; border: 2px solid #000; box-shadow: 4px 4px 0 0 #000; padding: 14px 16px; margin: 16px 0 24px; font-size: 15px; }
@@ -250,6 +252,17 @@
     .pfaq-q h3 { font-size: 15px; font-weight: 800; margin: 0 0 6px; }
     .pfaq-q p { font-size: 14px; margin: 0; color: #333; }
     .grp-link { margin: 10px 0 0; padding: 8px 12px; background: #fff8e7; border: 2px solid #000; box-shadow: 3px 3px 0 0 #000; font-size: 14px; }
+    .rl-shared { clear: both; margin-top: 12px; padding-top: 10px; border-top: 1.5px dashed #ccc; display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
+    .rl-shared-label { font-size: 12px; color: #666; font-weight: 700; }
+    .rl-celeb-chip { font-size: 12px; padding: 2px 8px; background: #fff; border: 1.5px solid #000; border-radius: 999px; color: #000; }
+    .rl-book-link { font-size: 12px; font-weight: 700; }
+    .muted { color: #666; font-size: 13px; }
+    .related-celebs { margin: 24px 0; }
+    .related-celeb-list { display: flex; flex-wrap: wrap; gap: 8px; }
+    .related-celeb { padding: 6px 12px; background: #fff; border: 2px solid #000; box-shadow: 2px 2px 0 0 #000; font-size: 13px; font-weight: 700; color: #000; }
+    .rc-count { display: inline-block; min-width: 18px; padding: 0 5px; margin-left: 4px; background: #fde047; border: 1.5px solid #000; border-radius: 999px; font-size: 11px; text-align: center; }
+    .celeb-pager { margin: 32px 0 16px; display: flex; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
+    .pager-link { padding: 8px 12px; background: #fff; border: 2px solid #000; box-shadow: 3px 3px 0 0 #000; font-size: 13px; font-weight: 700; color: #000; }
     .shelf-head { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
     .shelf-head h2 { margin-bottom: 0; border-bottom: none; padding-bottom: 0; }
     .shelf-tabs { display: flex; gap: 6px; flex-wrap: wrap; }
@@ -257,6 +270,19 @@
               background: #fff; color: #000; border: 2px solid #000; box-shadow: 2px 2px 0 0 #000; }
     .sh-cap:hover { background: #fde047; }
     .sh-cap[disabled] { opacity: .55; cursor: default; }
+    .view-tabs { display: inline-flex; border: 2px solid #000; box-shadow: 2px 2px 0 0 #000; background: #fff; }
+    .vt { font: inherit; font-size: 12px; font-weight: 700; padding: 5px 10px; background: #fff; color: #000; border: 0; cursor: pointer; }
+    .vt + .vt { border-left: 2px solid #000; }
+    .vt[aria-pressed="true"] { background: #000; color: #fff; }
+    .covers { display: none; grid-template-columns: repeat(auto-fill, minmax(84px, 1fr)); gap: 14px 12px; margin: 14px 0 22px; }
+    .show-covers .covers { display: grid; }
+    .show-covers .shelf { display: none; }
+    .cv { position: relative; display: block; aspect-ratio: 2/3; border: 1.5px solid #000; box-shadow: 2px 2px 0 0 #000;
+          background: #f4f4f0; overflow: hidden; color: #000; text-decoration: none; transition: transform .12s; }
+    .cv:hover { transform: translateY(-3px); text-decoration: none; }
+    .cv img { width: 100%; height: 100%; object-fit: cover; display: block; }
+    .cv-no { display: flex; height: 100%; align-items: center; justify-content: center; padding: 6px;
+             font-size: 11px; font-weight: 700; line-height: 1.3; text-align: center; word-break: keep-all; }
     .shelf { --sh-h: 270px; --plank: 7px; --row: calc(var(--sh-h) + 18px);
              display: flex; flex-wrap: wrap; align-items: flex-end; gap: 11px 2px;
              margin: 14px 0 22px; padding: 0 8px 7px;
@@ -334,13 +360,16 @@
 </head>
 <body>
   <div class="lang-toggle">
-    <button class="lang-btn copy-btn" type="button" data-url="https://favorbook.co.kr/en/share/han-ye-ri.html" data-done="Copied!">🔗 Copy link</button>
+    <button class="lang-btn copy-btn" type="button" data-url="https://favorbook.co.kr/s/e/han-ye-ri.html" data-done="Copied!">🔗 Copy link</button>
     <a class="lang-btn" href="https://favorbook.co.kr/share/%ED%95%9C%EC%98%88%EB%A6%AC.html" hreflang="ko">한국어</a>
     <span class="lang-btn active">EN</span>
   </div>
-  <nav><a href="https://favorbook.co.kr/en/">← Favorbook Home</a></nav>
+  <nav><a href="https://favorbook.co.kr/en/">← Favorbook Home</a> · <a href="https://favorbook.co.kr/en/share/ranking.html">Most-read books ranking</a></nav>
   <header class="celeb-header">
+    <div class="celeb-photo-wrap">
     <img class="celeb-img" src="https://image.tmdb.org/t/p/w500/ukEY6AV2EjeGDjMayDj5rpo8pHw.jpg" alt="Han Ye-ri profile photo" width="120" height="120">
+      <a class="img-credit" href="https://image.tmdb.org/t/p/w500/ukEY6AV2EjeGDjMayDj5rpo8pHw.jpg" target="_blank" rel="nofollow noopener noreferrer" title="Image source">📷</a>
+    </div>
     <div>
       <h1>Han Ye-ri Books<span style="font-weight:400;color:#666;font-size:18px"> · 한예리 책</span></h1>
       <p class="celeb-bio">South Korean actress known for Oscar-nominated film &#x27;Minari&#x27; and K-drama &#x27;Signal&#x27;.</p>
@@ -357,6 +386,7 @@
     <div class="shelf-head">
       <h2>Books Han Ye-ri has read (6)</h2>
       <div class="shelf-tabs">
+        <span class="view-tabs" role="group"><button type="button" class="vt" data-view="spine" aria-pressed="true">📚 Spines</button><button type="button" class="vt" data-view="cover" aria-pressed="false">🖼 Covers</button></span>
         <button type="button" class="sh-cap" id="shelf-cap" title="Download the bookshelf as an image">⤓ Save image</button>
         <button type="button" class="sh-cap" id="shelf-cap-clear" title="Download as a PNG with a transparent background">⤓ Transparent</button>
       </div>
@@ -375,6 +405,14 @@
     <a class="sp" style="--c:hsl(109,38%,32%);--w:39px;--fs:15px" href="https://www.yes24.com/product/goods/123400303" rel="nofollow noopener noreferrer" target="_blank" title="Small Things Like These"><span class="sp-t"><i>Small Things Like These</i></span><img class="sp-i" src="https://image.yes24.com/goods/123400303/side" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.parentNode.classList.add('sp-fail');this.remove()" onload="if(this.naturalWidth/this.naturalHeight>0.4){this.parentNode.classList.add('sp-fail');this.remove()}"></a>
     <a class="sp" style="--c:hsl(355,48%,31%);--w:44px;--fs:10px" href="https://www.yes24.com/product/goods/30435587" rel="nofollow noopener noreferrer" target="_blank" title="Summer Stays There for a Long Time"><span class="sp-t"><i>Summer Stays There for a Long Time</i></span><img class="sp-i" src="https://image.yes24.com/goods/30435587/side" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.parentNode.classList.add('sp-fail');this.remove()" onload="if(this.naturalWidth/this.naturalHeight>0.4){this.parentNode.classList.add('sp-fail');this.remove()}"></a>
     <a class="sp" style="--c:hsl(229,32%,45%);--w:30px;--fs:12px" href="https://www.yes24.com/product/goods/103026125" rel="nofollow noopener noreferrer" target="_blank" title="The End of the Earth Greenhouse"><span class="sp-t"><i>The End of the Earth Greenhouse</i></span><img class="sp-i" src="https://image.yes24.com/goods/103026125/side" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.parentNode.classList.add('sp-fail');this.remove()" onload="if(this.naturalWidth/this.naturalHeight>0.4){this.parentNode.classList.add('sp-fail');this.remove()}"></a>
+    </div>
+    <div class="covers" id="covers">
+    <a class="cv" href="https://www.yes24.com/product/goods/112373505" rel="nofollow noopener noreferrer" target="_blank" title="And I Heard the News of Happiness"><img src="https://image.yes24.com/goods/112373505/L" alt="And I Heard the News of Happiness by Lee Byung-ryul — book cover" loading="lazy"></a>
+    <a class="cv" href="https://www.yes24.com/product/goods/67453439" rel="nofollow noopener noreferrer" target="_blank" title="Comfort"><img src="https://image.yes24.com/goods/67453439/L" alt="Comfort by Eun Modeun — book cover" loading="lazy"></a>
+    <a class="cv" href="https://www.yes24.com/product/goods/97255028" rel="nofollow noopener noreferrer" target="_blank" title="Long Night"><span class="rl-new" data-added="2026-09-26">NEW</span><img src="https://image.yes24.com/goods/97255028/L" alt="Long Night by 루리 — book cover" loading="lazy"></a>
+    <a class="cv" href="https://www.yes24.com/product/goods/123400303" rel="nofollow noopener noreferrer" target="_blank" title="Small Things Like These"><img src="https://image.yes24.com/goods/123400303/L" alt="Small Things Like These by Claire Keegan — book cover" loading="lazy"></a>
+    <a class="cv" href="https://www.yes24.com/product/goods/30435587" rel="nofollow noopener noreferrer" target="_blank" title="Summer Stays There for a Long Time"><img src="https://image.yes24.com/goods/30435587/L" alt="Summer Stays There for a Long Time by Masashi Matsui — book cover" loading="lazy"></a>
+    <a class="cv" href="https://www.yes24.com/product/goods/103026125" rel="nofollow noopener noreferrer" target="_blank" title="The End of the Earth Greenhouse"><img src="https://image.yes24.com/goods/103026125/L" alt="The End of the Earth Greenhouse by Kim Choyeop — book cover" loading="lazy"></a>
     </div>
     <ol class="reading-list" id="rlist">
     <li class="rl-item" id="b1">
@@ -405,6 +443,7 @@
         <div class="rl-byline">루리</div>
         <a class="rl-source" href="https://x.com/munhakdongne/status/1385093505760911361?s=20" rel="nofollow noopener noreferrer" target="_blank">📺 Source</a>
         <button type="button" class="heart-btn sm" data-heart="b:긴긴밤" aria-pressed="false" aria-label="Heart this book" title="Heart this book" hidden><span class="heart-ico" aria-hidden="true">♡</span><span class="heart-n"></span></button>
+        <div class="rl-shared"><span class="rl-shared-label">👥 Also recommended by 5:</span> <a class="rl-celeb-chip" href="https://favorbook.co.kr/en/share/park-bo-gum.html">Park Bo-gum</a><a class="rl-celeb-chip" href="https://favorbook.co.kr/en/share/seolhyun.html">Seolhyun</a><a class="rl-celeb-chip" href="https://favorbook.co.kr/en/share/suzy.html">Suzy</a><a class="rl-celeb-chip" href="https://favorbook.co.kr/en/share/karina-aespa.html">Karina (aespa)</a><a class="rl-celeb-chip" href="https://favorbook.co.kr/en/share/kim-minkyung.html">Kim Minkyung</a> <a class="rl-book-link" href="https://favorbook.co.kr/en/share/book/long-night.html">All readers →</a></div>
       </div>
     </li>
     <li class="rl-item" id="b4">
@@ -416,6 +455,7 @@
         <p class="rl-comment">Picked as a novel already adapted to film, about how small acts can change the world. (Source: Millie)</p>
         <a class="rl-source" href="https://www.millie.co.kr/v3/today/more/allTime/64?nav_hidden=y" rel="nofollow noopener noreferrer" target="_blank">📺 Source</a>
         <button type="button" class="heart-btn sm" data-heart="b:이처럼 사소한 것들" aria-pressed="false" aria-label="Heart this book" title="Heart this book" hidden><span class="heart-ico" aria-hidden="true">♡</span><span class="heart-n"></span></button>
+        <div class="rl-shared"><span class="rl-shared-label">👥 Also recommended by 4:</span> <a class="rl-celeb-chip" href="https://favorbook.co.kr/en/share/lee-jun-hyuk.html">Lee Jun-hyuk</a><a class="rl-celeb-chip" href="https://favorbook.co.kr/en/share/jung-woo.html">Jung Woo</a><a class="rl-celeb-chip" href="https://favorbook.co.kr/en/share/kim-do-yeon.html">Kim Do-yeon</a><a class="rl-celeb-chip" href="https://favorbook.co.kr/en/share/hyun-jin-stray-kids.html">Hyun-jin (Stray Kids)</a> <a class="rl-book-link" href="https://favorbook.co.kr/en/share/book/small-things-like-these.html">All readers →</a></div>
       </div>
     </li>
     <li class="rl-item" id="b5">
@@ -427,6 +467,7 @@
         <p class="rl-comment">Han Ye-ri picked this novel as one worth adapting; reading it felt like watching a film. (Source: Millie)</p>
         <a class="rl-source" href="https://www.millie.co.kr/v3/today/more/allTime/64?nav_hidden=y" rel="nofollow noopener noreferrer" target="_blank">📺 Source</a>
         <button type="button" class="heart-btn sm" data-heart="b:여름은 오래 그곳에 남아" aria-pressed="false" aria-label="Heart this book" title="Heart this book" hidden><span class="heart-ico" aria-hidden="true">♡</span><span class="heart-n"></span></button>
+        <div class="rl-shared"><span class="rl-shared-label">👥 Also recommended by 1:</span> <a class="rl-celeb-chip" href="https://favorbook.co.kr/en/share/hong-kyung.html">Hong Kyung</a> <a class="rl-book-link" href="https://favorbook.co.kr/en/share/book/summer-stays-there-for-a-long-time.html">All readers →</a></div>
       </div>
     </li>
     <li class="rl-item" id="b6">
@@ -442,6 +483,22 @@
     </ol>
     </div>
   </section>
+  <script>
+  (function () {
+    var area = document.getElementById("shelf-area");
+    var tabs = document.querySelectorAll(".view-tabs .vt");
+    if (!area || !tabs.length) return;
+    function set(v, save) {
+      area.classList.toggle("show-covers", v === "cover");
+      tabs.forEach(function (t) { t.setAttribute("aria-pressed", String(t.dataset.view === v)); });
+      if (save) { try { localStorage.setItem("shelfView", v); } catch (e) {} }
+    }
+    var saved = null;
+    try { saved = localStorage.getItem("shelfView"); } catch (e) {}
+    if (saved === "cover") set("cover", false);
+    tabs.forEach(function (t) { t.addEventListener("click", function () { set(t.dataset.view, true); }); });
+  })();
+  </script>
   <script>
   (function () {
     var btns = [document.getElementById("shelf-cap"), document.getElementById("shelf-cap-clear")]
@@ -654,6 +711,26 @@
   })();
   </script>
   <p class="tr-note">Book titles and author names marked with an asterisk (<strong>*</strong>) are machine-translated from Korean. No official English edition was confirmed for them, so read them as approximations of the Korean original shown next to them.</p>
+  <section>
+    <h2>📝 Han Ye-ri's reading taste</h2>
+    <p>Authors that come up most often in Han Ye-ri's list: Claire Keegan, Eun Modeun, Kim Choyeop.</p>
+  </section>
+  <section class="related-celebs">
+    <h2>🤝 Celebrities with similar reading taste</h2>
+    <p class="muted">They recommended some of the same books. The number is how many books they share.</p>
+    <div class="related-celeb-list">
+      <a class="related-celeb" href="https://favorbook.co.kr/en/share/kim-do-yeon.html">Kim Do-yeon <span class="rc-count">1</span></a>
+      <a class="related-celeb" href="https://favorbook.co.kr/en/share/kim-minkyung.html">Kim Minkyung <span class="rc-count">1</span></a>
+      <a class="related-celeb" href="https://favorbook.co.kr/en/share/seolhyun.html">Seolhyun <span class="rc-count">1</span></a>
+      <a class="related-celeb" href="https://favorbook.co.kr/en/share/park-bo-gum.html">Park Bo-gum <span class="rc-count">1</span></a>
+      <a class="related-celeb" href="https://favorbook.co.kr/en/share/suzy.html">Suzy <span class="rc-count">1</span></a>
+      <a class="related-celeb" href="https://favorbook.co.kr/en/share/lee-jun-hyuk.html">Lee Jun-hyuk <span class="rc-count">1</span></a>
+      <a class="related-celeb" href="https://favorbook.co.kr/en/share/jung-woo.html">Jung Woo <span class="rc-count">1</span></a>
+      <a class="related-celeb" href="https://favorbook.co.kr/en/share/karina-aespa.html">Karina (aespa) <span class="rc-count">1</span></a>
+      <a class="related-celeb" href="https://favorbook.co.kr/en/share/hyun-jin-stray-kids.html">Hyun-jin (Stray Kids) <span class="rc-count">1</span></a>
+      <a class="related-celeb" href="https://favorbook.co.kr/en/share/hong-kyung.html">Hong Kyung <span class="rc-count">1</span></a>
+    </div>
+  </section>
   <section class="pfaq">
     <h2>Han Ye-ri book recommendations — FAQ</h2>
     <div class="pfaq-q">
@@ -669,6 +746,10 @@
       <p>Public sources only — interviews, YouTube clips, variety shows, fan-cafe posts and SNS. A book is added to this reading list only when the mention can be linked, and the link stays on the entry so you can check it yourself.</p>
     </div>
   </section>
+  <nav class="celeb-pager" aria-label="Browse celebrities">
+      <a class="pager-link pager-prev" rel="prev" href="https://favorbook.co.kr/en/share/han-so-hee.html">← Han So-hee's books</a>
+      <a class="pager-link pager-next" rel="next" href="https://favorbook.co.kr/en/share/hani-exid.html">Hani (EXID)'s books →</a>
+  </nav>
   <footer>
     <p>Curated from public Korean-language sources. Korean original page: <a href="https://favorbook.co.kr/share/%ED%95%9C%EC%98%88%EB%A6%AC.html" hreflang="ko">한예리</a>.</p>
     <p><a href="https://favorbook.co.kr/en/">Browse more Korean celebrity book lists →</a></p>

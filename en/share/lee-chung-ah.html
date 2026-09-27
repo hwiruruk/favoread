@@ -53,7 +53,6 @@
     "description": "South Korean actress known for K-dramas 'Dream High 2' and 'Flower Boy Ramyun Shop'.",
     "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/7/70/Lee_Chung-ah_20260126.png/960px-Lee_Chung-ah_20260126.png"
   },
-  "mainEntityOfPage": "https://favorbook.co.kr/en/share/lee-chung-ah.html",
   "hasPart": {
     "@type": "ItemList",
     "name": "Books read by Lee Chung-ah",
@@ -510,6 +509,9 @@
     nav { margin: 50px 0 16px; font-size: 13px; }
     .celeb-header { display: flex; align-items: center; gap: 20px; margin-bottom: 16px; flex-wrap: wrap; }
     .celeb-img { width: 120px; height: 120px; border-radius: 50%; object-fit: cover; border: 2px solid #000; }
+    .celeb-photo-wrap { position: relative; flex-shrink: 0; }
+    .img-credit { position: absolute; bottom: 0; right: 0; font-size: 10px; line-height: 1; padding: 2px 4px; background: rgba(255,255,255,0.85); border: 1px solid #ccc; border-radius: 999px; text-decoration: none; color: #555; opacity: 0.55; transition: opacity .15s; }
+    .img-credit:hover { opacity: 1; text-decoration: none; }
     h1 { font-size: 28px; margin: 0 0 8px; font-weight: 900; }
     h2 { font-size: 19px; margin: 32px 0 12px; padding-bottom: 4px; border-bottom: 2px solid #000; font-weight: 800; }
     .intro { background: #fff; border: 2px solid #000; box-shadow: 4px 4px 0 0 #000; padding: 14px 16px; margin: 16px 0 24px; font-size: 15px; }
@@ -520,6 +522,17 @@
     .pfaq-q h3 { font-size: 15px; font-weight: 800; margin: 0 0 6px; }
     .pfaq-q p { font-size: 14px; margin: 0; color: #333; }
     .grp-link { margin: 10px 0 0; padding: 8px 12px; background: #fff8e7; border: 2px solid #000; box-shadow: 3px 3px 0 0 #000; font-size: 14px; }
+    .rl-shared { clear: both; margin-top: 12px; padding-top: 10px; border-top: 1.5px dashed #ccc; display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
+    .rl-shared-label { font-size: 12px; color: #666; font-weight: 700; }
+    .rl-celeb-chip { font-size: 12px; padding: 2px 8px; background: #fff; border: 1.5px solid #000; border-radius: 999px; color: #000; }
+    .rl-book-link { font-size: 12px; font-weight: 700; }
+    .muted { color: #666; font-size: 13px; }
+    .related-celebs { margin: 24px 0; }
+    .related-celeb-list { display: flex; flex-wrap: wrap; gap: 8px; }
+    .related-celeb { padding: 6px 12px; background: #fff; border: 2px solid #000; box-shadow: 2px 2px 0 0 #000; font-size: 13px; font-weight: 700; color: #000; }
+    .rc-count { display: inline-block; min-width: 18px; padding: 0 5px; margin-left: 4px; background: #fde047; border: 1.5px solid #000; border-radius: 999px; font-size: 11px; text-align: center; }
+    .celeb-pager { margin: 32px 0 16px; display: flex; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
+    .pager-link { padding: 8px 12px; background: #fff; border: 2px solid #000; box-shadow: 3px 3px 0 0 #000; font-size: 13px; font-weight: 700; color: #000; }
     .shelf-head { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
     .shelf-head h2 { margin-bottom: 0; border-bottom: none; padding-bottom: 0; }
     .shelf-tabs { display: flex; gap: 6px; flex-wrap: wrap; }
@@ -527,6 +540,19 @@
               background: #fff; color: #000; border: 2px solid #000; box-shadow: 2px 2px 0 0 #000; }
     .sh-cap:hover { background: #fde047; }
     .sh-cap[disabled] { opacity: .55; cursor: default; }
+    .view-tabs { display: inline-flex; border: 2px solid #000; box-shadow: 2px 2px 0 0 #000; background: #fff; }
+    .vt { font: inherit; font-size: 12px; font-weight: 700; padding: 5px 10px; background: #fff; color: #000; border: 0; cursor: pointer; }
+    .vt + .vt { border-left: 2px solid #000; }
+    .vt[aria-pressed="true"] { background: #000; color: #fff; }
+    .covers { display: none; grid-template-columns: repeat(auto-fill, minmax(84px, 1fr)); gap: 14px 12px; margin: 14px 0 22px; }
+    .show-covers .covers { display: grid; }
+    .show-covers .shelf { display: none; }
+    .cv { position: relative; display: block; aspect-ratio: 2/3; border: 1.5px solid #000; box-shadow: 2px 2px 0 0 #000;
+          background: #f4f4f0; overflow: hidden; color: #000; text-decoration: none; transition: transform .12s; }
+    .cv:hover { transform: translateY(-3px); text-decoration: none; }
+    .cv img { width: 100%; height: 100%; object-fit: cover; display: block; }
+    .cv-no { display: flex; height: 100%; align-items: center; justify-content: center; padding: 6px;
+             font-size: 11px; font-weight: 700; line-height: 1.3; text-align: center; word-break: keep-all; }
     .shelf { --sh-h: 270px; --plank: 7px; --row: calc(var(--sh-h) + 18px);
              display: flex; flex-wrap: wrap; align-items: flex-end; gap: 11px 2px;
              margin: 14px 0 22px; padding: 0 8px 7px;
@@ -604,13 +630,16 @@
 </head>
 <body>
   <div class="lang-toggle">
-    <button class="lang-btn copy-btn" type="button" data-url="https://favorbook.co.kr/en/share/lee-chung-ah.html" data-done="Copied!">🔗 Copy link</button>
+    <button class="lang-btn copy-btn" type="button" data-url="https://favorbook.co.kr/s/e/lee-chung-ah.html" data-done="Copied!">🔗 Copy link</button>
     <a class="lang-btn" href="https://favorbook.co.kr/share/%EC%9D%B4%EC%B2%AD%EC%95%84.html" hreflang="ko">한국어</a>
     <span class="lang-btn active">EN</span>
   </div>
-  <nav><a href="https://favorbook.co.kr/en/">← Favorbook Home</a></nav>
+  <nav><a href="https://favorbook.co.kr/en/">← Favorbook Home</a> · <a href="https://favorbook.co.kr/en/share/ranking.html">Most-read books ranking</a></nav>
   <header class="celeb-header">
+    <div class="celeb-photo-wrap">
     <img class="celeb-img" src="https://upload.wikimedia.org/wikipedia/commons/thumb/7/70/Lee_Chung-ah_20260126.png/960px-Lee_Chung-ah_20260126.png" alt="Lee Chung-ah profile photo" width="120" height="120">
+      <a class="img-credit" href="https://upload.wikimedia.org/wikipedia/commons/thumb/7/70/Lee_Chung-ah_20260126.png/960px-Lee_Chung-ah_20260126.png" target="_blank" rel="nofollow noopener noreferrer" title="Image source">📷</a>
+    </div>
     <div>
       <h1>Lee Chung-ah Books<span style="font-weight:400;color:#666;font-size:18px"> · 이청아 책</span></h1>
       <p class="celeb-bio">South Korean actress known for K-dramas &#x27;Dream High 2&#x27; and &#x27;Flower Boy Ramyun Shop&#x27;.</p>
@@ -627,6 +656,7 @@
     <div class="shelf-head">
       <h2>Books Lee Chung-ah has read (21)</h2>
       <div class="shelf-tabs">
+        <span class="view-tabs" role="group"><button type="button" class="vt" data-view="spine" aria-pressed="true">📚 Spines</button><button type="button" class="vt" data-view="cover" aria-pressed="false">🖼 Covers</button></span>
         <button type="button" class="sh-cap" id="shelf-cap" title="Download the bookshelf as an image">⤓ Save image</button>
         <button type="button" class="sh-cap" id="shelf-cap-clear" title="Download as a PNG with a transparent background">⤓ Transparent</button>
       </div>
@@ -660,6 +690,29 @@
     <a class="sp" style="--c:hsl(224,36%,28%);--w:30px;--fs:15px" href="https://www.yes24.com/product/goods/103096216" rel="nofollow noopener noreferrer" target="_blank" title="Thought Economics"><span class="sp-t"><i>Thought Economics</i></span><img class="sp-i" src="https://image.yes24.com/goods/103096216/side" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.parentNode.classList.add('sp-fail');this.remove()" onload="if(this.naturalWidth/this.naturalHeight>0.4){this.parentNode.classList.add('sp-fail');this.remove()}"></a>
     <a class="sp no-img" style="--c:hsl(42,49%,39%);--w:37px;--fs:15px" href="https://www.yes24.com/product/goods/31170" rel="nofollow noopener noreferrer" target="_blank" title="To Kill a Mockingbird"><span class="sp-t"><i>To Kill a Mockingbird</i></span></a>
     <a class="sp" style="--c:hsl(275,53%,45%);--w:31px;--fs:15px" href="https://www.yes24.com/product/goods/112198235" rel="nofollow noopener noreferrer" target="_blank" title="Whisky A Tasting Course"><span class="sp-t"><i>Whisky A Tasting Course</i></span><img class="sp-i" src="https://image.yes24.com/goods/112198235/side" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.parentNode.classList.add('sp-fail');this.remove()" onload="if(this.naturalWidth/this.naturalHeight>0.4){this.parentNode.classList.add('sp-fail');this.remove()}"></a>
+    </div>
+    <div class="covers" id="covers">
+    <a class="cv" href="https://www.yes24.com/product/goods/154168402" rel="nofollow noopener noreferrer" target="_blank" title="All the Beauty in the World: The Metropolitan Museum of Art and Me"><img src="https://image.yes24.com/goods/154168402/L" alt="All the Beauty in the World: The Metropolitan Museum of Art and Me by 패트릭 브링리 — book cover" loading="lazy"></a>
+    <a class="cv" href="https://www.yes24.com/product/goods/145217021" rel="nofollow noopener noreferrer" target="_blank" title="Baumgartner"><img src="https://image.yes24.com/goods/145217021/L" alt="Baumgartner by Paul Auster — book cover" loading="lazy"></a>
+    <a class="cv" href="https://www.yes24.com/product/goods/6072784" rel="nofollow noopener noreferrer" target="_blank" title="Diego et Frida"><img src="https://image.yes24.com/goods/6072784/L" alt="Diego et Frida by J. M. G. Le Clézio — book cover" loading="lazy"></a>
+    <a class="cv" href="https://www.yes24.com/product/goods/12466017" rel="nofollow noopener noreferrer" target="_blank" title="Dust Child"><img src="https://image.yes24.com/goods/12466017/L" alt="Dust Child by Jung Yu-mi — book cover" loading="lazy"></a>
+    <a class="cv" href="https://www.yes24.com/product/goods/235166" rel="nofollow noopener noreferrer" target="_blank" title="Freude Am Garten"><img src="https://image.yes24.com/goods/235166/L" alt="Freude Am Garten by Hermann Hesse — book cover" loading="lazy"></a>
+    <a class="cv" href="https://www.yes24.com/product/goods/61778623" rel="nofollow noopener noreferrer" target="_blank" title="Innocent People"><img src="https://image.yes24.com/goods/61778623/L" alt="Innocent People by Choi Eun-young — book cover" loading="lazy"></a>
+    <a class="cv" href="https://www.yes24.com/product/goods/89761901" rel="nofollow noopener noreferrer" target="_blank" title="Le Noir: Éclats d&#x27;une non-couleur"><img src="https://image.yes24.com/goods/89761901/L" alt="Le Noir: Éclats d&#x27;une non-couleur by Alain Badiou — book cover" loading="lazy"></a>
+    <a class="cv" href="https://www.yes24.com/product/goods/147069400" rel="nofollow noopener noreferrer" target="_blank" title="Morning Piano"><span class="rl-new" data-added="2026-09-26">NEW</span><img src="https://image.yes24.com/goods/147069400/L" alt="Morning Piano by Kim Jinyoung — book cover" loading="lazy"></a>
+    <a class="cv" href="https://www.yes24.com/product/goods/101347574" rel="nofollow noopener noreferrer" target="_blank" title="Murakami T"><img src="https://image.yes24.com/goods/101347574/L" alt="Murakami T by Haruki Murakami — book cover" loading="lazy"></a>
+    <a class="cv" href="https://www.yes24.com/product/goods/122141152" rel="nofollow noopener noreferrer" target="_blank" title="Parade"><img src="https://image.yes24.com/goods/122141152/L" alt="Parade by Shuichi Yoshida — book cover" loading="lazy"></a>
+    <a class="cv" href="https://www.yes24.com/product/goods/9154438" rel="nofollow noopener noreferrer" target="_blank" title="Paradise Kiss"><img src="https://image.yes24.com/goods/9154438/L" alt="Paradise Kiss by Ai Yazawa — book cover" loading="lazy"></a>
+    <a class="cv" href="https://www.yes24.com/product/goods/118785759" rel="nofollow noopener noreferrer" target="_blank" title="Pronoun for None"><img src="https://image.yes24.com/goods/118785759/L" alt="Pronoun for None by Oh Eun — book cover" loading="lazy"></a>
+    <a class="cv" href="https://www.yes24.com/product/goods/136549439" rel="nofollow noopener noreferrer" target="_blank" title="Solo Leveling"><img src="https://image.yes24.com/goods/136549439/L" alt="Solo Leveling by Chugong — book cover" loading="lazy"></a>
+    <a class="cv" href="https://www.yes24.com/product/goods/130200909" rel="nofollow noopener noreferrer" target="_blank" title="Steadily, Long, Without Getting Tired"><img src="https://image.yes24.com/goods/130200909/L" alt="Steadily, Long, Without Getting Tired by Ha Ji-hyun — book cover" loading="lazy"></a>
+    <a class="cv" href="https://www.yes24.com/product/goods/387046" rel="nofollow noopener noreferrer" target="_blank" title="Subaru"><img src="https://image.yes24.com/goods/387046/L" alt="Subaru by Masahito Soda — book cover" loading="lazy"></a>
+    <a class="cv" href="https://www.yes24.com/product/goods/124517887" rel="nofollow noopener noreferrer" target="_blank" title="The Disappeared"><img src="https://image.yes24.com/goods/124517887/L" alt="The Disappeared by 앤드루 포터 — book cover" loading="lazy"></a>
+    <a class="cv" href="https://www.yes24.com/product/goods/69618792" rel="nofollow noopener noreferrer" target="_blank" title="The Essays (Montaigne)"><img src="https://image.yes24.com/goods/69618792/L" alt="The Essays (Montaigne) by Michel de Montaigne — book cover" loading="lazy"></a>
+    <a class="cv" href="https://www.yes24.com/product/goods/154728697" rel="nofollow noopener noreferrer" target="_blank" title="The Fire Keeper"><img src="https://image.yes24.com/goods/154728697/L" alt="The Fire Keeper by Liu Cixin — book cover" loading="lazy"></a>
+    <a class="cv" href="https://www.yes24.com/product/goods/103096216" rel="nofollow noopener noreferrer" target="_blank" title="Thought Economics"><img src="https://image.yes24.com/goods/103096216/L" alt="Thought Economics by Vikas Shah — book cover" loading="lazy"></a>
+    <a class="cv" href="https://www.yes24.com/product/goods/31170" rel="nofollow noopener noreferrer" target="_blank" title="To Kill a Mockingbird"><img src="https://image.yes24.com/goods/31170/L" alt="To Kill a Mockingbird by Harper Lee — book cover" loading="lazy"></a>
+    <a class="cv" href="https://www.yes24.com/product/goods/112198235" rel="nofollow noopener noreferrer" target="_blank" title="Whisky A Tasting Course"><img src="https://image.yes24.com/goods/112198235/L" alt="Whisky A Tasting Course by Eddie Ludlow — book cover" loading="lazy"></a>
     </div>
     <ol class="reading-list" id="rlist">
     <li class="rl-item" id="b1">
@@ -721,6 +774,7 @@
         <div class="rl-byline">Choi Eun-young</div>
         <a class="rl-source" href="https://www.youtube.com/watch?v=UF2BsG6p-aQ" rel="nofollow noopener noreferrer" target="_blank">📺 Source</a>
         <button type="button" class="heart-btn sm" data-heart="b:내게 무해한 사람" aria-pressed="false" aria-label="Heart this book" title="Heart this book" hidden><span class="heart-ico" aria-hidden="true">♡</span><span class="heart-n"></span></button>
+        <div class="rl-shared"><span class="rl-shared-label">👥 Also recommended by 2:</span> <a class="rl-celeb-chip" href="https://favorbook.co.kr/en/share/dino-seventeen.html">Dino (SEVENTEEN)</a><a class="rl-celeb-chip" href="https://favorbook.co.kr/en/share/karina-aespa.html">Karina (aespa)</a> <a class="rl-book-link" href="https://favorbook.co.kr/en/share/book/a-person-who-is-harmless-to-me.html">All readers →</a></div>
       </div>
     </li>
     <li class="rl-item" id="b7">
@@ -740,6 +794,7 @@
         <div class="rl-byline">Kim Jinyoung *</div>
         <a class="rl-source" href="https://x.com/hani_book/status/1288654043275866112?s=20" rel="nofollow noopener noreferrer" target="_blank">📺 Source</a>
         <button type="button" class="heart-btn sm" data-heart="b:아침의 피아노" aria-pressed="false" aria-label="Heart this book" title="Heart this book" hidden><span class="heart-ico" aria-hidden="true">♡</span><span class="heart-n"></span></button>
+        <div class="rl-shared"><span class="rl-shared-label">👥 Also recommended by 2:</span> <a class="rl-celeb-chip" href="https://favorbook.co.kr/en/share/jeon-yeo-been.html">Jeon Yeo-been</a><a class="rl-celeb-chip" href="https://favorbook.co.kr/en/share/hong-kyung.html">Hong Kyung</a> <a class="rl-book-link" href="https://favorbook.co.kr/en/share/book/morning-piano.html">All readers →</a></div>
       </div>
     </li>
     <li class="rl-item" id="b9">
@@ -760,6 +815,7 @@
         <div class="rl-byline">Shuichi Yoshida</div>
         <a class="rl-source" href="https://www.youtube.com/watch?v=UF2BsG6p-aQ" rel="nofollow noopener noreferrer" target="_blank">📺 Source</a>
         <button type="button" class="heart-btn sm" data-heart="b:퍼레이드" aria-pressed="false" aria-label="Heart this book" title="Heart this book" hidden><span class="heart-ico" aria-hidden="true">♡</span><span class="heart-n"></span></button>
+        <div class="rl-shared"><span class="rl-shared-label">👥 Also recommended by 1:</span> <a class="rl-celeb-chip" href="https://favorbook.co.kr/en/share/park-jung-min.html">Park Jung-min</a> <a class="rl-book-link" href="https://favorbook.co.kr/en/share/book/parade.html">All readers →</a></div>
       </div>
     </li>
     <li class="rl-item" id="b11">
@@ -860,6 +916,7 @@
         <div class="rl-byline">Harper Lee</div>
         <a class="rl-source" href="https://www.youtube.com/watch?v=UF2BsG6p-aQ" rel="nofollow noopener noreferrer" target="_blank">📺 Source</a>
         <button type="button" class="heart-btn sm" data-heart="b:앵무새 죽이기" aria-pressed="false" aria-label="Heart this book" title="Heart this book" hidden><span class="heart-ico" aria-hidden="true">♡</span><span class="heart-n"></span></button>
+        <div class="rl-shared"><span class="rl-shared-label">👥 Also recommended by 2:</span> <a class="rl-celeb-chip" href="https://favorbook.co.kr/en/share/lee-jun-hyuk.html">Lee Jun-hyuk</a><a class="rl-celeb-chip" href="https://favorbook.co.kr/en/share/huh-yunjin-le-sserafim.html">Huh Yunjin (LE SSERAFIM)</a> <a class="rl-book-link" href="https://favorbook.co.kr/en/share/book/to-kill-a-mockingbird.html">All readers →</a></div>
       </div>
     </li>
     <li class="rl-item" id="b21">
@@ -875,6 +932,22 @@
     </ol>
     </div>
   </section>
+  <script>
+  (function () {
+    var area = document.getElementById("shelf-area");
+    var tabs = document.querySelectorAll(".view-tabs .vt");
+    if (!area || !tabs.length) return;
+    function set(v, save) {
+      area.classList.toggle("show-covers", v === "cover");
+      tabs.forEach(function (t) { t.setAttribute("aria-pressed", String(t.dataset.view === v)); });
+      if (save) { try { localStorage.setItem("shelfView", v); } catch (e) {} }
+    }
+    var saved = null;
+    try { saved = localStorage.getItem("shelfView"); } catch (e) {}
+    if (saved === "cover") set("cover", false);
+    tabs.forEach(function (t) { t.addEventListener("click", function () { set(t.dataset.view, true); }); });
+  })();
+  </script>
   <script>
   (function () {
     var btns = [document.getElementById("shelf-cap"), document.getElementById("shelf-cap-clear")]
@@ -1087,6 +1160,23 @@
   })();
   </script>
   <p class="tr-note">Book titles and author names marked with an asterisk (<strong>*</strong>) are machine-translated from Korean. No official English edition was confirmed for them, so read them as approximations of the Korean original shown next to them.</p>
+  <section>
+    <h2>📝 Lee Chung-ah's reading taste</h2>
+    <p>Authors that come up most often in Lee Chung-ah's list: Ai Yazawa, Alain Badiou, Choi Eun-young.</p>
+  </section>
+  <section class="related-celebs">
+    <h2>🤝 Celebrities with similar reading taste</h2>
+    <p class="muted">They recommended some of the same books. The number is how many books they share.</p>
+    <div class="related-celeb-list">
+      <a class="related-celeb" href="https://favorbook.co.kr/en/share/dino-seventeen.html">Dino (SEVENTEEN) <span class="rc-count">1</span></a>
+      <a class="related-celeb" href="https://favorbook.co.kr/en/share/park-jung-min.html">Park Jung-min <span class="rc-count">1</span></a>
+      <a class="related-celeb" href="https://favorbook.co.kr/en/share/lee-jun-hyuk.html">Lee Jun-hyuk <span class="rc-count">1</span></a>
+      <a class="related-celeb" href="https://favorbook.co.kr/en/share/jeon-yeo-been.html">Jeon Yeo-been <span class="rc-count">1</span></a>
+      <a class="related-celeb" href="https://favorbook.co.kr/en/share/karina-aespa.html">Karina (aespa) <span class="rc-count">1</span></a>
+      <a class="related-celeb" href="https://favorbook.co.kr/en/share/huh-yunjin-le-sserafim.html">Huh Yunjin (LE SSERAFIM) <span class="rc-count">1</span></a>
+      <a class="related-celeb" href="https://favorbook.co.kr/en/share/hong-kyung.html">Hong Kyung <span class="rc-count">1</span></a>
+    </div>
+  </section>
   <section class="pfaq">
     <h2>Lee Chung-ah book recommendations — FAQ</h2>
     <div class="pfaq-q">
@@ -1102,6 +1192,10 @@
       <p>Public sources only — interviews, YouTube clips, variety shows, fan-cafe posts and SNS. A book is added to this reading list only when the mention can be linked, and the link stays on the entry so you can check it yourself.</p>
     </div>
   </section>
+  <nav class="celeb-pager" aria-label="Browse celebrities">
+      <a class="pager-link pager-prev" rel="prev" href="https://favorbook.co.kr/en/share/lee-changsubbtob.html">← LEE CHANGSUB(BTOB)'s books</a>
+      <a class="pager-link pager-next" rel="next" href="https://favorbook.co.kr/en/share/lee-dong-hwi.html">Lee Dong-hwi's books →</a>
+  </nav>
   <footer>
     <p>Curated from public Korean-language sources. Korean original page: <a href="https://favorbook.co.kr/share/%EC%9D%B4%EC%B2%AD%EC%95%84.html" hreflang="ko">이청아</a>.</p>
     <p><a href="https://favorbook.co.kr/en/">Browse more Korean celebrity book lists →</a></p>

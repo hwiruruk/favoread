@@ -51,7 +51,6 @@
     "description": "Lead vocalist of SM Entertainment's K-pop girl group aespa.",
     "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/3/36/250315-16_aespa_Winter_06.jpg/960px-250315-16_aespa_Winter_06.jpg"
   },
-  "mainEntityOfPage": "https://favorbook.co.kr/en/share/winter-aespa.html",
   "hasPart": {
     "@type": "ItemList",
     "name": "Books read by Winter (aespa)",
@@ -310,6 +309,9 @@
     nav { margin: 50px 0 16px; font-size: 13px; }
     .celeb-header { display: flex; align-items: center; gap: 20px; margin-bottom: 16px; flex-wrap: wrap; }
     .celeb-img { width: 120px; height: 120px; border-radius: 50%; object-fit: cover; border: 2px solid #000; }
+    .celeb-photo-wrap { position: relative; flex-shrink: 0; }
+    .img-credit { position: absolute; bottom: 0; right: 0; font-size: 10px; line-height: 1; padding: 2px 4px; background: rgba(255,255,255,0.85); border: 1px solid #ccc; border-radius: 999px; text-decoration: none; color: #555; opacity: 0.55; transition: opacity .15s; }
+    .img-credit:hover { opacity: 1; text-decoration: none; }
     h1 { font-size: 28px; margin: 0 0 8px; font-weight: 900; }
     h2 { font-size: 19px; margin: 32px 0 12px; padding-bottom: 4px; border-bottom: 2px solid #000; font-weight: 800; }
     .intro { background: #fff; border: 2px solid #000; box-shadow: 4px 4px 0 0 #000; padding: 14px 16px; margin: 16px 0 24px; font-size: 15px; }
@@ -320,6 +322,17 @@
     .pfaq-q h3 { font-size: 15px; font-weight: 800; margin: 0 0 6px; }
     .pfaq-q p { font-size: 14px; margin: 0; color: #333; }
     .grp-link { margin: 10px 0 0; padding: 8px 12px; background: #fff8e7; border: 2px solid #000; box-shadow: 3px 3px 0 0 #000; font-size: 14px; }
+    .rl-shared { clear: both; margin-top: 12px; padding-top: 10px; border-top: 1.5px dashed #ccc; display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
+    .rl-shared-label { font-size: 12px; color: #666; font-weight: 700; }
+    .rl-celeb-chip { font-size: 12px; padding: 2px 8px; background: #fff; border: 1.5px solid #000; border-radius: 999px; color: #000; }
+    .rl-book-link { font-size: 12px; font-weight: 700; }
+    .muted { color: #666; font-size: 13px; }
+    .related-celebs { margin: 24px 0; }
+    .related-celeb-list { display: flex; flex-wrap: wrap; gap: 8px; }
+    .related-celeb { padding: 6px 12px; background: #fff; border: 2px solid #000; box-shadow: 2px 2px 0 0 #000; font-size: 13px; font-weight: 700; color: #000; }
+    .rc-count { display: inline-block; min-width: 18px; padding: 0 5px; margin-left: 4px; background: #fde047; border: 1.5px solid #000; border-radius: 999px; font-size: 11px; text-align: center; }
+    .celeb-pager { margin: 32px 0 16px; display: flex; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
+    .pager-link { padding: 8px 12px; background: #fff; border: 2px solid #000; box-shadow: 3px 3px 0 0 #000; font-size: 13px; font-weight: 700; color: #000; }
     .shelf-head { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
     .shelf-head h2 { margin-bottom: 0; border-bottom: none; padding-bottom: 0; }
     .shelf-tabs { display: flex; gap: 6px; flex-wrap: wrap; }
@@ -327,6 +340,19 @@
               background: #fff; color: #000; border: 2px solid #000; box-shadow: 2px 2px 0 0 #000; }
     .sh-cap:hover { background: #fde047; }
     .sh-cap[disabled] { opacity: .55; cursor: default; }
+    .view-tabs { display: inline-flex; border: 2px solid #000; box-shadow: 2px 2px 0 0 #000; background: #fff; }
+    .vt { font: inherit; font-size: 12px; font-weight: 700; padding: 5px 10px; background: #fff; color: #000; border: 0; cursor: pointer; }
+    .vt + .vt { border-left: 2px solid #000; }
+    .vt[aria-pressed="true"] { background: #000; color: #fff; }
+    .covers { display: none; grid-template-columns: repeat(auto-fill, minmax(84px, 1fr)); gap: 14px 12px; margin: 14px 0 22px; }
+    .show-covers .covers { display: grid; }
+    .show-covers .shelf { display: none; }
+    .cv { position: relative; display: block; aspect-ratio: 2/3; border: 1.5px solid #000; box-shadow: 2px 2px 0 0 #000;
+          background: #f4f4f0; overflow: hidden; color: #000; text-decoration: none; transition: transform .12s; }
+    .cv:hover { transform: translateY(-3px); text-decoration: none; }
+    .cv img { width: 100%; height: 100%; object-fit: cover; display: block; }
+    .cv-no { display: flex; height: 100%; align-items: center; justify-content: center; padding: 6px;
+             font-size: 11px; font-weight: 700; line-height: 1.3; text-align: center; word-break: keep-all; }
     .shelf { --sh-h: 270px; --plank: 7px; --row: calc(var(--sh-h) + 18px);
              display: flex; flex-wrap: wrap; align-items: flex-end; gap: 11px 2px;
              margin: 14px 0 22px; padding: 0 8px 7px;
@@ -404,13 +430,16 @@
 </head>
 <body>
   <div class="lang-toggle">
-    <button class="lang-btn copy-btn" type="button" data-url="https://favorbook.co.kr/en/share/winter-aespa.html" data-done="Copied!">🔗 Copy link</button>
+    <button class="lang-btn copy-btn" type="button" data-url="https://favorbook.co.kr/s/e/winter-aespa.html" data-done="Copied!">🔗 Copy link</button>
     <a class="lang-btn" href="https://favorbook.co.kr/share/%EC%9C%88%ED%84%B0%28%EC%97%90%EC%8A%A4%ED%8C%8C%29.html" hreflang="ko">한국어</a>
     <span class="lang-btn active">EN</span>
   </div>
-  <nav><a href="https://favorbook.co.kr/en/">← Favorbook Home</a></nav>
+  <nav><a href="https://favorbook.co.kr/en/">← Favorbook Home</a> · <a href="https://favorbook.co.kr/en/share/ranking.html">Most-read books ranking</a></nav>
   <header class="celeb-header">
+    <div class="celeb-photo-wrap">
     <img class="celeb-img" src="https://upload.wikimedia.org/wikipedia/commons/thumb/3/36/250315-16_aespa_Winter_06.jpg/960px-250315-16_aespa_Winter_06.jpg" alt="Winter (aespa) profile photo" width="120" height="120">
+      <a class="img-credit" href="https://upload.wikimedia.org/wikipedia/commons/thumb/3/36/250315-16_aespa_Winter_06.jpg/960px-250315-16_aespa_Winter_06.jpg" target="_blank" rel="nofollow noopener noreferrer" title="Image source">📷</a>
+    </div>
     <div>
       <h1>Winter (aespa) Books<span style="font-weight:400;color:#666;font-size:18px"> · 윈터(에스파) 책</span></h1>
       <p class="celeb-bio">Lead vocalist of SM Entertainment&#x27;s K-pop girl group aespa.</p>
@@ -427,6 +456,7 @@
     <div class="shelf-head">
       <h2>Books Winter (aespa) has read (10)</h2>
       <div class="shelf-tabs">
+        <span class="view-tabs" role="group"><button type="button" class="vt" data-view="spine" aria-pressed="true">📚 Spines</button><button type="button" class="vt" data-view="cover" aria-pressed="false">🖼 Covers</button></span>
         <button type="button" class="sh-cap" id="shelf-cap" title="Download the bookshelf as an image">⤓ Save image</button>
         <button type="button" class="sh-cap" id="shelf-cap-clear" title="Download as a PNG with a transparent background">⤓ Transparent</button>
       </div>
@@ -453,6 +483,18 @@
     <a class="sp" style="--c:hsl(308,43%,31%);--w:38px;--fs:15px" href="https://www.yes24.com/product/goods/94978691" rel="nofollow noopener noreferrer" target="_blank" title="The World of Children"><span class="sp-t"><i>The World of Children</i></span><img class="sp-i" src="https://image.yes24.com/goods/94978691/side" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.parentNode.classList.add('sp-fail');this.remove()" onload="if(this.naturalWidth/this.naturalHeight>0.4){this.parentNode.classList.add('sp-fail');this.remove()}"></a>
     <a class="sp is-new" style="--c:hsl(0,57%,43%);--w:44px;--fs:15px" href="https://www.yes24.com/product/goods/161401496" rel="nofollow noopener noreferrer" target="_blank" title="Übermensch"><span class="sp-t"><i>Übermensch</i></span><img class="sp-i" src="https://image.yes24.com/goods/161401496/side" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.parentNode.classList.add('sp-fail');this.remove()" onload="if(this.naturalWidth/this.naturalHeight>0.4){this.parentNode.classList.add('sp-fail');this.remove()}"><span class="sp-new" data-added="2026-09-22">NEW</span></a>
     </div>
+    <div class="covers" id="covers">
+    <a class="cv" href="https://www.yes24.com/product/goods/15862005" rel="nofollow noopener noreferrer" target="_blank" title="A Bowl of Udon"><span class="rl-new" data-added="2026-09-26">NEW</span><img src="https://image.yes24.com/goods/15862005/L" alt="A Bowl of Udon by Ryohei Guri, Konosuke Takemodo — book cover" loading="lazy"></a>
+    <a class="cv" href="https://www.yes24.com/product/goods/127914251" rel="nofollow noopener noreferrer" target="_blank" title="Hear the Wind Sing"><img src="https://image.yes24.com/goods/127914251/L" alt="Hear the Wind Sing by Haruki Murakami — book cover" loading="lazy"></a>
+    <a class="cv" href="https://www.yes24.com/product/goods/93961269" rel="nofollow noopener noreferrer" target="_blank" title="Killing Commendatore (Wait, Duplicate; or on the Death of a Cat)"><img src="https://image.yes24.com/goods/93961269/L" alt="Killing Commendatore (Wait, Duplicate; or on the Death of a Cat) by Haruki Murakami — book cover" loading="lazy"></a>
+    <a class="cv" href="https://www.yes24.com/product/goods/1812070" rel="nofollow noopener noreferrer" target="_blank" title="Meditations"><span class="rl-new" data-added="2026-09-19">NEW</span><img src="https://image.yes24.com/goods/1812070/L" alt="Meditations by Marcus Aurelius — book cover" loading="lazy"></a>
+    <a class="cv" href="https://www.yes24.com/product/goods/63797637" rel="nofollow noopener noreferrer" target="_blank" title="My Private Painting"><img src="https://image.yes24.com/goods/63797637/L" alt="My Private Painting by Woo Ji-hyun — book cover" loading="lazy"></a>
+    <a class="cv" href="https://www.yes24.com/product/goods/98799362" rel="nofollow noopener noreferrer" target="_blank" title="Small Star, but Shining"><img src="https://image.yes24.com/goods/98799362/L" alt="Small Star, but Shining by Soyoon — book cover" loading="lazy"></a>
+    <a class="cv" href="https://www.yes24.com/product/goods/96183483" rel="nofollow noopener noreferrer" target="_blank" title="The Direction of Love"><img src="https://image.yes24.com/goods/96183483/L" alt="The Direction of Love by Keigo Higashino — book cover" loading="lazy"></a>
+    <a class="cv" href="https://www.yes24.com/product/goods/59704029" rel="nofollow noopener noreferrer" target="_blank" title="The Sun and Her Flowers"><span class="rl-new" data-added="2026-09-26">NEW</span><img src="https://image.yes24.com/goods/59704029/L" alt="The Sun and Her Flowers by Rupi Kaur — book cover" loading="lazy"></a>
+    <a class="cv" href="https://www.yes24.com/product/goods/94978691" rel="nofollow noopener noreferrer" target="_blank" title="The World of Children"><img src="https://image.yes24.com/goods/94978691/L" alt="The World of Children by Kim 소영 — book cover" loading="lazy"></a>
+    <a class="cv" href="https://www.yes24.com/product/goods/161401496" rel="nofollow noopener noreferrer" target="_blank" title="Übermensch"><span class="rl-new" data-added="2026-09-22">NEW</span><img src="https://image.yes24.com/goods/161401496/L" alt="Übermensch by Friedrich Nietzsche — book cover" loading="lazy"></a>
+    </div>
     <ol class="reading-list" id="rlist">
     <li class="rl-item" id="b1">
       <span class="rl-num">1</span>
@@ -472,6 +514,7 @@
         <div class="rl-byline">Haruki Murakami</div>
         <a class="rl-source" href="https://gall.dcinside.com/mgallery/board/view/?id=aespa&amp;no=132978" rel="nofollow noopener noreferrer" target="_blank">📺 Source</a>
         <button type="button" class="heart-btn sm" data-heart="b:바람의 노래를 들어라" aria-pressed="false" aria-label="Heart this book" title="Heart this book" hidden><span class="heart-ico" aria-hidden="true">♡</span><span class="heart-n"></span></button>
+        <div class="rl-shared"><span class="rl-shared-label">👥 Also recommended by 2:</span> <a class="rl-celeb-chip" href="https://favorbook.co.kr/en/share/iu.html">IU</a><a class="rl-celeb-chip" href="https://favorbook.co.kr/en/share/cha-woo-min.html">Cha Woo-min</a> <a class="rl-book-link" href="https://favorbook.co.kr/en/share/book/hear-the-wind-sing.html">All readers →</a></div>
       </div>
     </li>
     <li class="rl-item" id="b3">
@@ -502,6 +545,7 @@
         <div class="rl-byline">Woo Ji-hyun</div>
         <a class="rl-source" href="https://gall.dcinside.com/mgallery/board/view/?id=smwinter&amp;no=4793" rel="nofollow noopener noreferrer" target="_blank">📺 Source</a>
         <button type="button" class="heart-btn sm" data-heart="b:나의 사적인 그림" aria-pressed="false" aria-label="Heart this book" title="Heart this book" hidden><span class="heart-ico" aria-hidden="true">♡</span><span class="heart-n"></span></button>
+        <div class="rl-shared"><span class="rl-shared-label">👥 Also recommended by 1:</span> <a class="rl-celeb-chip" href="https://favorbook.co.kr/en/share/hyerim.html">Hyerim</a> <a class="rl-book-link" href="https://favorbook.co.kr/en/share/book/my-private-painting.html">All readers →</a></div>
       </div>
     </li>
     <li class="rl-item" id="b6">
@@ -512,6 +556,7 @@
         <div class="rl-byline">Soyoon</div>
         <a class="rl-source" href="https://m.dcinside.com/board/aespa/132978" rel="nofollow noopener noreferrer" target="_blank">📺 Source</a>
         <button type="button" class="heart-btn sm" data-heart="b:작은 별이지만 빛나고 있어" aria-pressed="false" aria-label="Heart this book" title="Heart this book" hidden><span class="heart-ico" aria-hidden="true">♡</span><span class="heart-n"></span></button>
+        <div class="rl-shared"><span class="rl-shared-label">👥 Also recommended by 2:</span> <a class="rl-celeb-chip" href="https://favorbook.co.kr/en/share/sanateez.html">SAN(ATEEZ)</a><a class="rl-celeb-chip" href="https://favorbook.co.kr/en/share/scoupsseventeen.html">S.COUPS(SEVENTEEN)</a> <a class="rl-book-link" href="https://favorbook.co.kr/en/share/book/small-star-but-shining.html">All readers →</a></div>
       </div>
     </li>
     <li class="rl-item" id="b7">
@@ -542,6 +587,7 @@
         <div class="rl-byline">Kim 소영</div>
         <a class="rl-source" href="https://gall.dcinside.com/mgallery/board/view/?id=aespa&amp;no=132978" rel="nofollow noopener noreferrer" target="_blank">📺 Source</a>
         <button type="button" class="heart-btn sm" data-heart="b:어린이라는 세계" aria-pressed="false" aria-label="Heart this book" title="Heart this book" hidden><span class="heart-ico" aria-hidden="true">♡</span><span class="heart-n"></span></button>
+        <div class="rl-shared"><span class="rl-shared-label">👥 Also recommended by 4:</span> <a class="rl-celeb-chip" href="https://favorbook.co.kr/en/share/rowoon.html">Rowoon</a><a class="rl-celeb-chip" href="https://favorbook.co.kr/en/share/theo-p1harmony.html">Theo (P1Harmony)</a><a class="rl-celeb-chip" href="https://favorbook.co.kr/en/share/hatfelt.html">HA:TFELT</a><a class="rl-celeb-chip" href="https://favorbook.co.kr/en/share/kim-jun-han.html">Kim Jun-han</a> <a class="rl-book-link" href="https://favorbook.co.kr/en/share/book/the-world-of-children.html">All readers →</a></div>
       </div>
     </li>
     <li class="rl-item" id="b10">
@@ -551,11 +597,28 @@
         <div class="rl-title"><a href="https://www.yes24.com/product/goods/161401496" rel="nofollow noopener noreferrer" target="_blank">Übermensch</a> <span style="color:#888;font-size:12px;font-weight:400">(니체의 초월자)</span></div>
         <div class="rl-byline">Friedrich Nietzsche *</div>
         <button type="button" class="heart-btn sm" data-heart="b:니체의 초월자" aria-pressed="false" aria-label="Heart this book" title="Heart this book" hidden><span class="heart-ico" aria-hidden="true">♡</span><span class="heart-n"></span></button>
+        <div class="rl-shared"><span class="rl-shared-label">👥 Also recommended by 1:</span> <a class="rl-celeb-chip" href="https://favorbook.co.kr/en/share/g-dragon-bigbang.html">G-Dragon (BIGBANG)</a> <a class="rl-book-link" href="https://favorbook.co.kr/en/share/book/ubermensch.html">All readers →</a></div>
       </div>
     </li>
     </ol>
     </div>
   </section>
+  <script>
+  (function () {
+    var area = document.getElementById("shelf-area");
+    var tabs = document.querySelectorAll(".view-tabs .vt");
+    if (!area || !tabs.length) return;
+    function set(v, save) {
+      area.classList.toggle("show-covers", v === "cover");
+      tabs.forEach(function (t) { t.setAttribute("aria-pressed", String(t.dataset.view === v)); });
+      if (save) { try { localStorage.setItem("shelfView", v); } catch (e) {} }
+    }
+    var saved = null;
+    try { saved = localStorage.getItem("shelfView"); } catch (e) {}
+    if (saved === "cover") set("cover", false);
+    tabs.forEach(function (t) { t.addEventListener("click", function () { set(t.dataset.view, true); }); });
+  })();
+  </script>
   <script>
   (function () {
     var btns = [document.getElementById("shelf-cap"), document.getElementById("shelf-cap-clear")]
@@ -768,6 +831,26 @@
   })();
   </script>
   <p class="tr-note">Book titles and author names marked with an asterisk (<strong>*</strong>) are machine-translated from Korean. No official English edition was confirmed for them, so read them as approximations of the Korean original shown next to them.</p>
+  <section>
+    <h2>📝 Winter (aespa)'s reading taste</h2>
+    <p>Authors that come up most often in Winter (aespa)'s list: Haruki Murakami (2 books), Friedrich Nietzsche, Keigo Higashino.</p>
+  </section>
+  <section class="related-celebs">
+    <h2>🤝 Celebrities with similar reading taste</h2>
+    <p class="muted">They recommended some of the same books. The number is how many books they share.</p>
+    <div class="related-celeb-list">
+      <a class="related-celeb" href="https://favorbook.co.kr/en/share/kim-jun-han.html">Kim Jun-han <span class="rc-count">1</span></a>
+      <a class="related-celeb" href="https://favorbook.co.kr/en/share/rowoon.html">Rowoon <span class="rc-count">1</span></a>
+      <a class="related-celeb" href="https://favorbook.co.kr/en/share/sanateez.html">SAN(ATEEZ) <span class="rc-count">1</span></a>
+      <a class="related-celeb" href="https://favorbook.co.kr/en/share/iu.html">IU <span class="rc-count">1</span></a>
+      <a class="related-celeb" href="https://favorbook.co.kr/en/share/scoupsseventeen.html">S.COUPS(SEVENTEEN) <span class="rc-count">1</span></a>
+      <a class="related-celeb" href="https://favorbook.co.kr/en/share/g-dragon-bigbang.html">G-Dragon (BIGBANG) <span class="rc-count">1</span></a>
+      <a class="related-celeb" href="https://favorbook.co.kr/en/share/cha-woo-min.html">Cha Woo-min <span class="rc-count">1</span></a>
+      <a class="related-celeb" href="https://favorbook.co.kr/en/share/theo-p1harmony.html">Theo (P1Harmony) <span class="rc-count">1</span></a>
+      <a class="related-celeb" href="https://favorbook.co.kr/en/share/hatfelt.html">HA:TFELT <span class="rc-count">1</span></a>
+      <a class="related-celeb" href="https://favorbook.co.kr/en/share/hyerim.html">Hyerim <span class="rc-count">1</span></a>
+    </div>
+  </section>
   <section class="pfaq">
     <h2>Winter (aespa) book recommendations — FAQ</h2>
     <div class="pfaq-q">
@@ -783,6 +866,10 @@
       <p>Public sources only — interviews, YouTube clips, variety shows, fan-cafe posts and SNS. A book is added to this reading list only when the mention can be linked, and the link stays on the entry so you can check it yourself.</p>
     </div>
   </section>
+  <nav class="celeb-pager" aria-label="Browse celebrities">
+      <a class="pager-link pager-prev" rel="prev" href="https://favorbook.co.kr/en/share/wheein-mamamoo.html">← Wheein (MAMAMOO)'s books</a>
+      <a class="pager-link pager-next" rel="next" href="https://favorbook.co.kr/en/share/won-ji-an.html">Won Ji-an's books →</a>
+  </nav>
   <footer>
     <p>Curated from public Korean-language sources. Korean original page: <a href="https://favorbook.co.kr/share/%EC%9C%88%ED%84%B0%28%EC%97%90%EC%8A%A4%ED%8C%8C%29.html" hreflang="ko">윈터(에스파)</a>.</p>
     <p><a href="https://favorbook.co.kr/en/">Browse more Korean celebrity book lists →</a></p>
