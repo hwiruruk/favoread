@@ -2748,6 +2748,54 @@ async function saveTitles() {
   }
 }
 
+/* 직역 한꺼번에 채우기 — 코멘트 검수의 '문장 한꺼번에 채우기'와 같은 방식.
+ * 공식판이 없는 책은 사람이 직역을 적어야 하는데 한 권씩 치기엔 많다.
+ * 지금 필터의 목록을 통째로 복사해 AI에 맡기고, '키 ⇥ 영문' 결과를 붙여넣는다. */
+$('#ttlCopyBtn').addEventListener('click', async () => {
+  const rows = ttlRows().map(([k, v]) => {
+    const { author_en } = bookLinkFor(v.title);
+    return [k, v.title, v.author || '', author_en || '', v.original || '', v.csv || '']
+      .map(x => String(x).replace(/[\t\n]+/g, ' ')).join('\t');
+  });
+  if (!rows.length) { toast('목록이 비어 있습니다', 'err'); return; }
+  const tsv = ['키\t도서명\t저자\t저자영문\t원제\t지금CSV', ...rows].join('\n');
+  try { await copyToClipboard(tsv); toast(`${rows.length}건 복사됨`, 'ok'); }
+  catch (e) { toast('복사 실패: ' + e.message, 'err'); }
+});
+
+$('#ttlApplyPasteBtn').addEventListener('click', () => {
+  // 키에 '|' 가 들어 있어 탭만 구분자로 본다
+  const lines = $('#ttlPaste').value.split(/\r?\n/)
+    .map(l => l.trim()).filter(Boolean)
+    .map(l => l.split('\t').map(c => c.trim()))
+    .filter(c => c[0] && c[0] !== '키');
+  const asNone = $('#ttlPasteAsNone').checked;
+  const today = new Date().toISOString().slice(0, 10);
+  const keys = new Set();
+  let miss = 0, bad = 0;
+  for (const cols of lines) {
+    const it = Ttl.items.get(cols[0]);
+    // 영문은 둘째 칸. AI가 칸을 더 붙여 오면 마지막 칸을 쓴다
+    const en = stripStar(cols.length > 2 ? cols[cols.length - 1] : cols[1]);
+    if (!it || !en) { miss++; continue; }
+    if (ttlProblem(it.title, en)) { bad++; continue; }
+    it.value = enTitleCase(en);
+    if (asNone) { it.status = 'none'; it.reviewed = today; delete it.auto; }
+    markTtlDirty(cols[0]);
+    keys.add(cols[0]);
+  }
+  if (!keys.size) {
+    toast('채운 게 없습니다 (첫 칸이 "도서명|저자" 키, 둘째 칸이 영문이어야 합니다)', 'err');
+    return;
+  }
+  if (asNone && applyTitlesToBooks(keys)) { renderSidebar(); renderDetail(); }
+  renderTitlesList();
+  $('#ttlPaste').value = '';
+  toast(`${keys.size}건 채움` + (asNone ? ' (공식판 없음 · 직역*)' : ' — 확인 후 버튼을 눌러 주세요')
+        + (miss ? ` · ${miss}건은 키를 못 찾음` : '')
+        + (bad ? ` · ${bad}건은 설명 문구·한글이 섞여 뺌` : ''), 'ok');
+});
+
 $('#titlesBtn').addEventListener('click', openTitlesDialog);
 $('#ttlSaveBtn').addEventListener('click', saveTitles);
 $('#ttlFilter').addEventListener('change', () => { Ttl.shown = 60; renderTitlesList(); });
