@@ -2803,9 +2803,20 @@ function uniEnGroups(byTitle) {
       v.get(en).push(r);
     }
     if (v.size < 2) continue;
-    const variants = [...v.entries()].map(([en, rs]) => ({ en, rows: rs }))
-      .sort((a, b) => (a.en.endsWith('*') - b.en.endsWith('*')) || b.rows.length - a.rows.length);
-    out.push({ kind: 'en', key: 'en|' + title, title, rows, variants });
+    const info = uniTtlInfo(title);
+    const score = (en) => {
+      if ([...info.approved].some(x => uniSame(x, en))) return 0;          // 검수 승인
+      const c = [...info.cands.values()].find(x => uniSame(x.title, en));
+      if (c && c.verified) return 1;                                      // 영어판 확인된 후보
+      if (c) return 2;                                                    // 후보
+      return en.endsWith('*') ? 4 : 3;                                    // CSV에만 / 직역
+    };
+    const variants = [...v.entries()].map(([en, rs]) => ({ en, rows: rs, score: score(en) }))
+      .sort((a, b) => a.score - b.score || b.rows.length - a.rows.length);
+    // 지금 쓰인 값에는 없지만 근거가 있는 후보도 고를 수 있게 붙인다
+    const extra = [...info.cands.values()].filter(c => !variants.some(x => uniSame(x.en, c.title)))
+      .sort((a, b) => b.verified - a.verified);
+    out.push({ kind: 'en', key: 'en|' + title, title, rows, variants, extra, info });
   }
   return out;
 }
@@ -2864,6 +2875,63 @@ function uniGroups() {
   return gs;
 }
 
+// 영문 제목 검수 파일(titles_en.json)에서 이 도서명의 검수 상태·후보·메모를 모은다.
+// 같은 도서명이 저자 표기만 달리 여러 칸일 수 있어 모두 합친다.
+function uniTtlInfo(title) {
+  const info = { approved: new Set(), none: new Set(), cands: new Map(), notes: [], original: '' };
+  for (const [k, v] of Ttl.items) {
+    if (k.slice(0, k.lastIndexOf('|')) !== title) continue;
+    const val = stripStar(v.value);
+    if (val && v.status === 'approved') info.approved.add(enTitleCase(val));
+    if (val && v.status === 'none') info.none.add(enTitleCase(val) + ' *');
+    for (const c of v.candidates || []) {
+      const t = enTitleCase(c.title);
+      const cur = info.cands.get(t) || { title: t, sources: new Set(), urls: new Set(), verified: false };
+      (c.sources || []).forEach(x => cur.sources.add(x));
+      (c.urls || []).forEach(x => cur.urls.add(x));
+      cur.verified = cur.verified || !!c.verified;
+      info.cands.set(t, cur);
+    }
+    (v.notes || []).forEach(n => { if (!info.notes.includes(n)) info.notes.push(n); });
+    if (v.original && !info.original) info.original = v.original;
+  }
+  return info;
+}
+
+const uniSame = (a, b) => stripStar(a).toLowerCase() === stripStar(b).toLowerCase();
+
+// 한 영문 제목 값에 붙일 근거 배지
+function uniEnBadges(value, info) {
+  const out = [];
+  if ([...info.approved].some(v => uniSame(v, value)) && !/\*\s*$/.test(value))
+    out.push('<span class="ttl-conf c-high" title="🔤 영문 제목 검수에서 승인한 값">검수 승인</span>');
+  if ([...info.none].some(v => uniSame(v, value)))
+    out.push('<span class="ttl-flag" title="공식 영문판이 없다고 검수한 직역">검수: 공식판 없음</span>');
+  const c = [...info.cands.values()].find(x => uniSame(x.title, value));
+  if (c) {
+    out.push(`<span class="src">${[...c.sources].map(x => TTL_SRC[x] || x).join(' + ')}</span>`);
+    if (c.verified) out.push('<span class="ok" title="Open Library에 같은 제목·저자의 영어판이 있음">✓ 확인</span>');
+    [...c.urls].forEach(u => out.push(`<a href="${esc(u)}" target="_blank" rel="noopener">근거 ↗</a>`));
+  } else if (/\*\s*$/.test(value)) {
+    out.push('<span class="ttl-flag" title="끝의 *는 공식판이 없어 직역했다는 표시">직역*</span>');
+  } else if (!out.length) {
+    out.push('<span class="uni-why">근거 없음 (data.csv에만 있는 값)</span>');
+  }
+  return out.join(' ');
+}
+
+// 예스24 상품 번호 — 같은 번호면 같은 판, 다르면 다른 판(개정판·다른 출판사)일 수 있다
+const uniGoodsId = (link) => (String(link || '').match(/goods\/(\d+)/) || [])[1] || '';
+
+function uniBookLinks(title, b) {
+  const q = encodeURIComponent(`${stripStar(b.author_en) || b.author || ''} "${title}" English translation`);
+  return `<div class="ttl-links">
+    ${b.link ? `<a href="${esc(b.link)}" target="_blank" rel="noopener">예스24 상품 ↗</a>` : ''}
+    <a href="https://www.google.com/search?q=${q}" target="_blank" rel="noopener">Google 검색 ↗</a>
+    <a href="https://www.goodreads.com/search?q=${encodeURIComponent(title + ' ' + (b.author || ''))}" target="_blank" rel="noopener">Goodreads ↗</a>
+  </div>`;
+}
+
 const uniWho = (rows) => {
   const names = [...new Set(rows.map(r => r.celeb))];
   return esc(names.slice(0, 6).join(', ')) + (names.length > 6 ? ` 외 ${names.length - 6}명` : '');
@@ -2882,25 +2950,47 @@ function renderUnifyList() {
       const b0 = g.rows[0].b;
       return `<div class="cmt-card" data-g="${gi}" data-key="${esc(g.key)}">
         <div><b>${esc(g.title)}</b> <span class="uni-why">· ${esc(b0.author || '')} · ${g.rows.length}줄</span></div>
+        ${g.info.original ? `<p class="ttl-csv">원제 <b>${esc(g.info.original)}</b></p>` : ''}
         <div class="uni-opts">${g.variants.map((v, i) => `
           <label class="uni-opt"><input type="radio" name="uni${gi}" value="${esc(v.en)}" ${i === 0 ? 'checked' : ''}>
-            <span><b>${esc(v.en)}</b> <span class="uni-why">${v.rows.length}줄</span>
+            <span><b>${esc(v.en)}</b> <span class="uni-why">지금 ${v.rows.length}줄</span>
+            <span class="uni-ev">${uniEnBadges(v.en, g.info)}</span>
             <span class="who">${uniWho(v.rows)}</span></span></label>`).join('')}
+          ${g.extra.map(c => `
+          <label class="uni-opt cand"><input type="radio" name="uni${gi}" value="${esc(c.title)}">
+            <span><b>${esc(c.title)}</b> <span class="uni-why">후보 (지금 쓰는 줄 없음)</span>
+            <span class="uni-ev">${uniEnBadges(c.title, g.info)}</span></span></label>`).join('')}
           <input class="uni-custom" type="text" placeholder="직접 고쳐 쓰기 (비우면 위에서 고른 제목)" value="">
         </div>
+        ${g.info.notes.length ? `<p class="cmt-note">⚠ ${esc(g.info.notes.join(' · '))}</p>` : ''}
+        ${uniBookLinks(g.title, b0)}
         <div class="uni-actions">
           <button type="button" class="btn small" data-act="ignore">다른 책임</button>
           <button type="button" class="btn small primary" data-act="apply-en">이걸로 통일</button>
         </div></div>`;
     }
+    const firsts = g.titles.map(t => g.byTitle.get(t)[0].b);
+    const uniq = (f) => new Set(firsts.map(f).filter(Boolean)).size;
+    const authors = uniq(b => (b.author || '').replace(/\s/g, ''));
+    const pubs = uniq(b => (b.publisher || '').replace(/\s/g, ''));
+    const goods = uniq(b => uniGoodsId(b.link));
+    const allGoods = firsts.every(b => uniGoodsId(b.link));
+    const ev = [
+      authors <= 1 ? '<span class="ok">저자 같음</span>' : '<span class="ttl-flag bad">저자 다름</span>',
+      pubs <= 1 ? '<span class="ok">출판사 같음</span>' : '<span class="ttl-flag">출판사 다름 (다른 판일 수 있음)</span>',
+      allGoods ? (goods === 1 ? '<span class="ok">예스24 상품 번호 같음</span>'
+                              : '<span class="ttl-flag">예스24 상품 번호 다름</span>') : '',
+    ].filter(Boolean).join(' ');
     return `<div class="cmt-card" data-g="${gi}" data-key="${esc(g.key)}">
       <div class="uni-why">${g.reason === 'ko' ? '띄어쓰기·부호만 다름' : '영문 제목이 같음 — 다른 책일 수도 있으니 확인하세요'}</div>
+      <div class="uni-ev" style="margin-top:4px">근거: ${ev}</div>
       <div class="uni-opts">${g.titles.map((t, i) => {
         const rows = g.byTitle.get(t), b = rows[0].b;
         return `<label class="uni-opt"><input type="radio" name="uni${gi}" value="${esc(t)}" ${i === 0 ? 'checked' : ''}>
           ${b.cover ? `<img src="${esc(b.cover)}" alt="" loading="lazy" referrerpolicy="no-referrer">` : ''}
           <span><b>${esc(t)}</b> <span class="uni-why">${esc(b.author || '')}${b.publisher ? ' · ' + esc(b.publisher) : ''} · ${rows.length}줄</span>
-          <span class="who">${esc(b.title_en || '')}${b.title_en ? ' — ' : ''}${uniWho(rows)}</span></span></label>`;
+          <span class="who">${esc(b.title_en || '')}${b.title_en ? ' — ' : ''}${uniWho(rows)}</span>
+          <span class="who">${b.link ? `<a href="${esc(b.link)}" target="_blank" rel="noopener">예스24 상품${uniGoodsId(b.link) ? ' #' + uniGoodsId(b.link) : ''} ↗</a>` : '상품 링크 없음'}</span></span></label>`;
       }).join('')}</div>
       <div class="uni-actions">
         <button type="button" class="btn small" data-act="ignore">다른 책임</button>
