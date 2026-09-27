@@ -701,6 +701,46 @@ SHELF_CAPTURE_JS_TEMPLATE = (
 )
 
 
+def cover_tile(title, cover_url, link, added, alt):
+    """표지 보기의 한 칸. 표지가 없으면 제목을 적은 빈 표지."""
+    inner = (('<img src="' + esc(cover_url) + '" alt="' + esc(alt) + '" loading="lazy">')
+             if (cover_url or '').startswith('http')
+             else '<span class="cv-no">' + esc(title) + '</span>')
+    inner = cover_new_badge(added) + inner
+    if link:
+        return ('    <a class="cv" href="' + link + '" rel="nofollow noopener noreferrer" target="_blank" title="'
+                + esc(title) + '">' + inner + '</a>\n')
+    return '    <span class="cv" title="' + esc(title) + '">' + inner + '</span>\n'
+
+
+def shelf_view_tabs(spine_label, cover_label):
+    """책장 보기 전환 — 책등 / 표지. 누른 쪽은 다음 방문에도 기억한다."""
+    return ('        <span class="view-tabs" role="group">'
+            '<button type="button" class="vt" data-view="spine" aria-pressed="true">' + spine_label + '</button>'
+            '<button type="button" class="vt" data-view="cover" aria-pressed="false">' + cover_label + '</button>'
+            '</span>\n')
+
+
+SHELF_VIEW_JS = (
+    '  <script>\n'
+    '  (function () {\n'
+    '    var area = document.getElementById("shelf-area");\n'
+    '    var tabs = document.querySelectorAll(".view-tabs .vt");\n'
+    '    if (!area || !tabs.length) return;\n'
+    '    function set(v, save) {\n'
+    '      area.classList.toggle("show-covers", v === "cover");\n'
+    '      tabs.forEach(function (t) { t.setAttribute("aria-pressed", String(t.dataset.view === v)); });\n'
+    '      if (save) { try { localStorage.setItem("shelfView", v); } catch (e) {} }\n'
+    '    }\n'
+    '    var saved = null;\n'
+    '    try { saved = localStorage.getItem("shelfView"); } catch (e) {}\n'
+    '    if (saved === "cover") set("cover", false);\n'
+    '    tabs.forEach(function (t) { t.addEventListener("click", function () { set(t.dataset.view, true); }); });\n'
+    '  })();\n'
+    '  </script>\n'
+)
+
+
 def shelf_capture_js(busy, filename, fail, headline, clear_suffix='_투명'):
     """언어별 문구만 갈아 끼운다. clear_suffix 는 투명 배경 파일 이름 끝에 붙는다."""
     j = lambda v: json.dumps(v, ensure_ascii=False)
@@ -722,6 +762,21 @@ SHELF_CSS = (
     '              background: #fff; color: #000; border: 2px solid #000; box-shadow: 2px 2px 0 0 #000; }\n'
     '    .sh-cap:hover { background: #fde047; }\n'
     '    .sh-cap[disabled] { opacity: .55; cursor: default; }\n'
+    # 보기 전환 (책등 / 표지)
+    '    .view-tabs { display: inline-flex; border: 2px solid #000; box-shadow: 2px 2px 0 0 #000; background: #fff; }\n'
+    '    .vt { font: inherit; font-size: 12px; font-weight: 700; padding: 5px 10px; background: #fff; color: #000; border: 0; cursor: pointer; }\n'
+    '    .vt + .vt { border-left: 2px solid #000; }\n'
+    '    .vt[aria-pressed="true"] { background: #000; color: #fff; }\n'
+    # 표지 보기 — 책등 대신 표지를 격자로 늘어놓는다
+    '    .covers { display: none; grid-template-columns: repeat(auto-fill, minmax(84px, 1fr)); gap: 14px 12px; margin: 14px 0 22px; }\n'
+    '    .show-covers .covers { display: grid; }\n'
+    '    .show-covers .shelf { display: none; }\n'
+    '    .cv { position: relative; display: block; aspect-ratio: 2/3; border: 1.5px solid #000; box-shadow: 2px 2px 0 0 #000;\n'
+    '          background: #f4f4f0; overflow: hidden; color: #000; text-decoration: none; transition: transform .12s; }\n'
+    '    .cv:hover { transform: translateY(-3px); text-decoration: none; }\n'
+    '    .cv img { width: 100%; height: 100%; object-fit: cover; display: block; }\n'
+    '    .cv-no { display: flex; height: 100%; align-items: center; justify-content: center; padding: 6px;\n'
+    '             font-size: 11px; font-weight: 700; line-height: 1.3; text-align: center; word-break: keep-all; }\n'
     # 책장 — 책등을 같은 높이로 세워 바닥에 붙여 늘어놓는다.
     # 줄이 넘어가도 줄마다 선반 판이 받치도록, 선반 판을 줄 간격(--row)마다
     # 되풀이되는 배경으로 그린다. 판은 책등 바로 아래(--sh-h)에 온다.
@@ -2013,6 +2068,7 @@ for name, info in celebs.items():
     # 책 테이블 행 (표지·도서명은 알라딘 외부 링크, 출처는 별도 외부링크)
     book_cards_html = ''   # 카드 그리드 (표 대체)
     spine_html = ''        # 책등 보기
+    cover_grid_html = ''   # 표지 보기
     shared_count = 0       # 다른 셀럽과 공유된 책 권수 (섹션 헤더용)
     # 책장·목록은 가나다 순. 최근 추가된 책은 위쪽 NEW 칸에 따로 모은다.
     list_books = sorted(books, key=lambda x: title_sort_key(x['title']))
@@ -2109,6 +2165,7 @@ for name, info in celebs.items():
         else:
             spine_html += ('    <span class="' + _sp_cls + '" style="' + _spine_style + '" title="'
                            + esc(b['title']) + '">' + _spine_inner + '</span>\n')
+        cover_grid_html += cover_tile(b['title'], b['coverUrl'], aladin_url, _added, b['title'] + ' 표지')
 
         _card = (
             '    <li class="rl-item" id="b' + str(i+1) + '">\n'
@@ -2393,6 +2450,7 @@ for name, info in celebs.items():
         '    <div class="shelf-head">\n'
         '      <h2>📚 ' + esc(sname) + '의 독서 리스트 (' + str(n_books) + '권)</h2>\n'
         '      <div class="shelf-tabs">\n'
+        + shelf_view_tabs('📚 책등', '🖼 표지') +
         '        <button type="button" class="sh-cap" id="shelf-cap" title="책장을 그림으로 내려받아요">⤓ 이미지 저장</button>\n'
         '        <button type="button" class="sh-cap" id="shelf-cap-clear" title="배경 없이 투명한 PNG로 내려받아요">⤓ 투명 배경</button>\n'
         '      </div>\n'
@@ -2404,11 +2462,15 @@ for name, info in celebs.items():
         '    <div class="shelf" id="shelf">\n'
         + spine_html +
         '    </div>\n'
+        '    <div class="covers" id="covers">\n'
+        + cover_grid_html +
+        '    </div>\n'
         '    <ol class="reading-list" id="rlist">\n'
         + book_cards_html +
         '    </ol>\n'
         '    </div>\n'
         '  </section>\n'
+        + SHELF_VIEW_JS
         + shelf_capture_js('저장 중…', '책장_' + safe_filename(sname) + '.png',
                            '이미지를 만들지 못했어요. 잠시 뒤 다시 눌러 주세요.',
                            sname + '의 독서 리스트 ' + str(n_books) + '권')
@@ -3157,6 +3219,7 @@ for name, info in celebs.items():
     # 책 행 (영문 제목 + 한국어 원제 부기)
     rows = ''
     en_spine_html = ''
+    en_cover_grid_html = ''
     # 영문 페이지는 영문 제목 알파벳 순
     en_list_books = sorted(en_books, key=lambda x: title_sort_key(plain_en(x['title_en'])))
     en_new_items = []
@@ -3242,6 +3305,7 @@ for name, info in celebs.items():
         else:
             en_spine_html += ('    <span class="' + _sp_cls + '" style="' + _sp_style + '" title="'
                               + esc(t_plain) + '">' + _sp_inner + '</span>\n')
+        en_cover_grid_html += cover_tile(t_plain, b['coverUrl'], aladin_url, _added, alt_text)
 
         _card = (
             '    <li class="rl-item" id="b' + str(i+1) + '">\n'
@@ -3604,6 +3668,7 @@ for name, info in celebs.items():
         '    <div class="shelf-head">\n'
         '      <h2>Books ' + esc(_name_pl) + ' has read (' + str(n) + ')</h2>\n'
         '      <div class="shelf-tabs">\n'
+        + shelf_view_tabs('📚 Spines', '🖼 Covers') +
         '        <button type="button" class="sh-cap" id="shelf-cap" title="Download the bookshelf as an image">\u2913 Save image</button>\n'
         '        <button type="button" class="sh-cap" id="shelf-cap-clear" title="Download as a PNG with a transparent background">\u2913 Transparent</button>\n'
         '      </div>\n'
@@ -3612,10 +3677,13 @@ for name, info in celebs.items():
         + '    <div id="shelf-area">\n'
         '    <div class="shelf" id="shelf">\n' + en_spine_html +
         '    </div>\n'
+        '    <div class="covers" id="covers">\n' + en_cover_grid_html +
+        '    </div>\n'
         '    <ol class="reading-list" id="rlist">\n' + rows +
         '    </ol>\n'
         '    </div>\n'
         '  </section>\n'
+        + SHELF_VIEW_JS
         + shelf_capture_js('Saving…', 'bookshelf_' + slug + '.png',
                            'Could not create the image. Please try again.',
                            _name_pl + ' — ' + str(n) + ' books', '_transparent')
