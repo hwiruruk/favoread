@@ -494,6 +494,19 @@
               background: #fff; color: #000; border: 2px solid #000; box-shadow: 2px 2px 0 0 #000; }
     .sh-cap:hover { background: #fde047; }
     .sh-cap[disabled] { opacity: .55; cursor: default; }
+    .view-tabs { display: inline-flex; border: 2px solid #000; box-shadow: 2px 2px 0 0 #000; background: #fff; }
+    .vt { font: inherit; font-size: 12px; font-weight: 700; padding: 5px 10px; background: #fff; color: #000; border: 0; cursor: pointer; }
+    .vt + .vt { border-left: 2px solid #000; }
+    .vt[aria-pressed="true"] { background: #000; color: #fff; }
+    .covers { display: none; grid-template-columns: repeat(auto-fill, minmax(84px, 1fr)); gap: 14px 12px; margin: 14px 0 22px; }
+    .show-covers .covers { display: grid; }
+    .show-covers .shelf { display: none; }
+    .cv { position: relative; display: block; aspect-ratio: 2/3; border: 1.5px solid #000; box-shadow: 2px 2px 0 0 #000;
+          background: #f4f4f0; overflow: hidden; color: #000; text-decoration: none; transition: transform .12s; }
+    .cv:hover { transform: translateY(-3px); text-decoration: none; }
+    .cv img { width: 100%; height: 100%; object-fit: cover; display: block; }
+    .cv-no { display: flex; height: 100%; align-items: center; justify-content: center; padding: 6px;
+             font-size: 11px; font-weight: 700; line-height: 1.3; text-align: center; word-break: keep-all; }
     .shelf { --sh-h: 270px; --plank: 7px; --row: calc(var(--sh-h) + 18px);
              display: flex; flex-wrap: wrap; align-items: flex-end; gap: 11px 2px;
              margin: 14px 0 22px; padding: 0 8px 7px;
@@ -596,6 +609,7 @@
     <div class="shelf-head">
       <h2>Books Narin (MEOVV) has read (19)</h2>
       <div class="shelf-tabs">
+        <span class="view-tabs" role="group"><button type="button" class="vt" data-view="spine" aria-pressed="true">📚 Spines</button><button type="button" class="vt" data-view="cover" aria-pressed="false">🖼 Covers</button></span>
         <button type="button" class="sh-cap" id="shelf-cap" title="Download the bookshelf as an image">⤓ Save image</button>
         <button type="button" class="sh-cap" id="shelf-cap-clear" title="Download as a PNG with a transparent background">⤓ Transparent</button>
       </div>
@@ -621,6 +635,27 @@
     <a class="sp" style="--c:hsl(264,46%,29%);--w:40px;--fs:15px" href="https://www.yes24.com/product/goods/154932319" rel="nofollow noopener noreferrer" target="_blank" title="The Secret Garden"><span class="sp-t"><i>The Secret Garden</i></span><img class="sp-i" src="https://image.yes24.com/goods/154932319/side" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.parentNode.classList.add('sp-fail');this.remove()" onload="if(this.naturalWidth/this.naturalHeight>0.4){this.parentNode.classList.add('sp-fail');this.remove()}"></a>
     <a class="sp" style="--c:hsl(143,55%,41%);--w:31px;--fs:15px" href="https://www.yes24.com/product/goods/123748149" rel="nofollow noopener noreferrer" target="_blank" title="What Is an Image?"><span class="sp-t"><i>What Is an Image?</i></span><img class="sp-i" src="https://image.yes24.com/goods/123748149/side" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.parentNode.classList.add('sp-fail');this.remove()" onload="if(this.naturalWidth/this.naturalHeight>0.4){this.parentNode.classList.add('sp-fail');this.remove()}"></a>
     <a class="sp" style="--c:hsl(2,39%,26%);--w:43px;--fs:15px" href="https://www.yes24.com/product/goods/105526047" rel="nofollow noopener noreferrer" target="_blank" title="Why Fish Don&#x27;t Exist"><span class="sp-t"><i>Why Fish Don&#x27;t Exist</i></span><img class="sp-i" src="https://image.yes24.com/goods/105526047/side" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.parentNode.classList.add('sp-fail');this.remove()" onload="if(this.naturalWidth/this.naturalHeight>0.4){this.parentNode.classList.add('sp-fail');this.remove()}"></a>
+    </div>
+    <div class="covers" id="covers">
+    <a class="cv" href="https://www.yes24.com/product/goods/125761510" rel="nofollow noopener noreferrer" target="_blank" title="Agami"><img src="https://image.yes24.com/goods/125761510/L" alt="Agami by Gu Byeong-mo — book cover" loading="lazy"></a>
+    <a class="cv" href="https://www.yes24.com/product/goods/118417842" rel="nofollow noopener noreferrer" target="_blank" title="A Good Day for Bread, Soup, and Cats"><img src="https://image.yes24.com/goods/118417842/L" alt="A Good Day for Bread, Soup, and Cats by Yoko Mure — book cover" loading="lazy"></a>
+    <a class="cv" href="https://www.yes24.com/product/goods/102687133" rel="nofollow noopener noreferrer" target="_blank" title="Bright Night"><img src="https://image.yes24.com/goods/102687133/L" alt="Bright Night by Choi Eun-young — book cover" loading="lazy"></a>
+    <a class="cv" href="https://www.yes24.com/product/goods/4303969" rel="nofollow noopener noreferrer" target="_blank" title="Daddy-Long-Legs"><img src="https://image.yes24.com/goods/4303969/L" alt="Daddy-Long-Legs by Jean Webster — book cover" loading="lazy"></a>
+    <a class="cv" href="https://www.yes24.com/product/goods/176787" rel="nofollow noopener noreferrer" target="_blank" title="Demian"><img src="https://image.yes24.com/goods/176787/L" alt="Demian by Hermann Hesse — book cover" loading="lazy"></a>
+    <a class="cv" href="https://www.yes24.com/product/goods/145567095" rel="nofollow noopener noreferrer" target="_blank" title="First Summer, Wanju"><img src="https://image.yes24.com/goods/145567095/L" alt="First Summer, Wanju by Kim Kum-hee — book cover" loading="lazy"></a>
+    <a class="cv" href="https://www.yes24.com/product/goods/79297023" rel="nofollow noopener noreferrer" target="_blank" title="How to Win Friends &amp; Influence People"><img src="https://image.yes24.com/goods/79297023/L" alt="How to Win Friends &amp; Influence People by Dale Carnegie — book cover" loading="lazy"></a>
+    <a class="cv" href="https://www.yes24.com/product/goods/153497469" rel="nofollow noopener noreferrer" target="_blank" title="Incised Wound"><img src="https://image.yes24.com/goods/153497469/L" alt="Incised Wound by Gu Byeong-mo — book cover" loading="lazy"></a>
+    <a class="cv" href="https://www.yes24.com/product/goods/1482999" rel="nofollow noopener noreferrer" target="_blank" title="Mouse and Pancake"><img src="https://image.yes24.com/goods/1482999/L" alt="Mouse and Pancake by Yoshio Nakae, Noriko Ueno — book cover" loading="lazy"></a>
+    <a class="cv" href="https://www.yes24.com/product/goods/90225118" rel="nofollow noopener noreferrer" target="_blank" title="Nine-Year-Old Life"><img src="https://image.yes24.com/goods/90225118/L" alt="Nine-Year-Old Life by Wi Ki-cheol — book cover" loading="lazy"></a>
+    <a class="cv" href="https://www.yes24.com/product/goods/1387488" rel="nofollow noopener noreferrer" target="_blank" title="No Longer Human"><img src="https://image.yes24.com/goods/1387488/L" alt="No Longer Human by Osamu Dazai — book cover" loading="lazy"></a>
+    <a class="cv" href="https://www.yes24.com/product/goods/124408815" rel="nofollow noopener noreferrer" target="_blank" title="Philosophy Changes the Weather"><img src="https://image.yes24.com/goods/124408815/L" alt="Philosophy Changes the Weather by Seo Dong-wook — book cover" loading="lazy"></a>
+    <a class="cv" href="https://www.yes24.com/product/goods/116586303" rel="nofollow noopener noreferrer" target="_blank" title="Rapid Currents"><img src="https://image.yes24.com/goods/116586303/L" alt="Rapid Currents by Jung Dae-gun — book cover" loading="lazy"></a>
+    <a class="cv" href="https://www.yes24.com/product/goods/257435" rel="nofollow noopener noreferrer" target="_blank" title="Siddhartha"><img src="https://image.yes24.com/goods/257435/L" alt="Siddhartha by Hermann Hesse — book cover" loading="lazy"></a>
+    <a class="cv" href="https://www.yes24.com/product/goods/133339464" rel="nofollow noopener noreferrer" target="_blank" title="The Great Greenhouse Repair Report"><img src="https://image.yes24.com/goods/133339464/L" alt="The Great Greenhouse Repair Report by Kim Kum-hee — book cover" loading="lazy"></a>
+    <a class="cv" href="https://www.yes24.com/product/goods/99308021" rel="nofollow noopener noreferrer" target="_blank" title="The Inconvenient Convenience Store"><img src="https://image.yes24.com/goods/99308021/L" alt="The Inconvenient Convenience Store by Kim Ho-yeon — book cover" loading="lazy"></a>
+    <a class="cv" href="https://www.yes24.com/product/goods/154932319" rel="nofollow noopener noreferrer" target="_blank" title="The Secret Garden"><img src="https://image.yes24.com/goods/154932319/L" alt="The Secret Garden by Frances Hodgson Burnett — book cover" loading="lazy"></a>
+    <a class="cv" href="https://www.yes24.com/product/goods/123748149" rel="nofollow noopener noreferrer" target="_blank" title="What Is an Image?"><img src="https://image.yes24.com/goods/123748149/L" alt="What Is an Image? by Lee Sol — book cover" loading="lazy"></a>
+    <a class="cv" href="https://www.yes24.com/product/goods/105526047" rel="nofollow noopener noreferrer" target="_blank" title="Why Fish Don&#x27;t Exist"><img src="https://image.yes24.com/goods/105526047/L" alt="Why Fish Don&#x27;t Exist by Lulu Miller — book cover" loading="lazy"></a>
     </div>
     <ol class="reading-list" id="rlist">
     <li class="rl-item" id="b1">
@@ -840,6 +875,22 @@
     </ol>
     </div>
   </section>
+  <script>
+  (function () {
+    var area = document.getElementById("shelf-area");
+    var tabs = document.querySelectorAll(".view-tabs .vt");
+    if (!area || !tabs.length) return;
+    function set(v, save) {
+      area.classList.toggle("show-covers", v === "cover");
+      tabs.forEach(function (t) { t.setAttribute("aria-pressed", String(t.dataset.view === v)); });
+      if (save) { try { localStorage.setItem("shelfView", v); } catch (e) {} }
+    }
+    var saved = null;
+    try { saved = localStorage.getItem("shelfView"); } catch (e) {}
+    if (saved === "cover") set("cover", false);
+    tabs.forEach(function (t) { t.addEventListener("click", function () { set(t.dataset.view, true); }); });
+  })();
+  </script>
   <script>
   (function () {
     var btns = [document.getElementById("shelf-cap"), document.getElementById("shelf-cap-clear")]

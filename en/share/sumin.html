@@ -340,6 +340,19 @@
               background: #fff; color: #000; border: 2px solid #000; box-shadow: 2px 2px 0 0 #000; }
     .sh-cap:hover { background: #fde047; }
     .sh-cap[disabled] { opacity: .55; cursor: default; }
+    .view-tabs { display: inline-flex; border: 2px solid #000; box-shadow: 2px 2px 0 0 #000; background: #fff; }
+    .vt { font: inherit; font-size: 12px; font-weight: 700; padding: 5px 10px; background: #fff; color: #000; border: 0; cursor: pointer; }
+    .vt + .vt { border-left: 2px solid #000; }
+    .vt[aria-pressed="true"] { background: #000; color: #fff; }
+    .covers { display: none; grid-template-columns: repeat(auto-fill, minmax(84px, 1fr)); gap: 14px 12px; margin: 14px 0 22px; }
+    .show-covers .covers { display: grid; }
+    .show-covers .shelf { display: none; }
+    .cv { position: relative; display: block; aspect-ratio: 2/3; border: 1.5px solid #000; box-shadow: 2px 2px 0 0 #000;
+          background: #f4f4f0; overflow: hidden; color: #000; text-decoration: none; transition: transform .12s; }
+    .cv:hover { transform: translateY(-3px); text-decoration: none; }
+    .cv img { width: 100%; height: 100%; object-fit: cover; display: block; }
+    .cv-no { display: flex; height: 100%; align-items: center; justify-content: center; padding: 6px;
+             font-size: 11px; font-weight: 700; line-height: 1.3; text-align: center; word-break: keep-all; }
     .shelf { --sh-h: 270px; --plank: 7px; --row: calc(var(--sh-h) + 18px);
              display: flex; flex-wrap: wrap; align-items: flex-end; gap: 11px 2px;
              margin: 14px 0 22px; padding: 0 8px 7px;
@@ -442,6 +455,7 @@
     <div class="shelf-head">
       <h2>Books Sumin has read (10)</h2>
       <div class="shelf-tabs">
+        <span class="view-tabs" role="group"><button type="button" class="vt" data-view="spine" aria-pressed="true">📚 Spines</button><button type="button" class="vt" data-view="cover" aria-pressed="false">🖼 Covers</button></span>
         <button type="button" class="sh-cap" id="shelf-cap" title="Download the bookshelf as an image">⤓ Save image</button>
         <button type="button" class="sh-cap" id="shelf-cap-clear" title="Download as a PNG with a transparent background">⤓ Transparent</button>
       </div>
@@ -458,6 +472,18 @@
     <a class="sp" style="--c:hsl(184,57%,29%);--w:36px;--fs:15px" href="https://www.yes24.com/product/goods/25666436" rel="nofollow noopener noreferrer" target="_blank" title="Novelist by Profession"><span class="sp-t"><i>Novelist by Profession</i></span><img class="sp-i" src="https://image.yes24.com/goods/25666436/side" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.parentNode.classList.add('sp-fail');this.remove()" onload="if(this.naturalWidth/this.naturalHeight>0.4){this.parentNode.classList.add('sp-fail');this.remove()}"></a>
     <a class="sp" style="--c:hsl(29,32%,33%);--w:36px;--fs:11px" href="https://www.yes24.com/product/goods/119886818" rel="nofollow noopener noreferrer" target="_blank" title="The Creative Act: A Way of Being"><span class="sp-t"><i>The Creative Act: A Way of Being</i></span><img class="sp-i" src="https://image.yes24.com/goods/119886818/side" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.parentNode.classList.add('sp-fail');this.remove()" onload="if(this.naturalWidth/this.naturalHeight>0.4){this.parentNode.classList.add('sp-fail');this.remove()}"></a>
     <a class="sp" style="--c:hsl(198,40%,39%);--w:35px;--fs:8px" href="https://www.yes24.com/product/goods/3239082" rel="nofollow noopener noreferrer" target="_blank" title="What I Talk About When I Talk About Running"><span class="sp-t"><i>What I Talk About When I Talk About Running</i></span><img class="sp-i" src="https://image.yes24.com/goods/3239082/side" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.parentNode.classList.add('sp-fail');this.remove()" onload="if(this.naturalWidth/this.naturalHeight>0.4){this.parentNode.classList.add('sp-fail');this.remove()}"></a>
+    </div>
+    <div class="covers" id="covers">
+    <a class="cv" href="https://www.yes24.com/product/goods/124094319" rel="nofollow noopener noreferrer" target="_blank" title="Adult Way of Thinking"><img src="https://image.yes24.com/goods/124094319/L" alt="Adult Way of Thinking by Shigehiko Toyama — book cover" loading="lazy"></a>
+    <a class="cv" href="https://www.yes24.com/product/goods/24767309" rel="nofollow noopener noreferrer" target="_blank" title="Black Hole"><img src="https://image.yes24.com/goods/24767309/L" alt="Black Hole by Charles Burns — book cover" loading="lazy"></a>
+    <a class="cv" href="https://www.yes24.com/product/goods/61358471" rel="nofollow noopener noreferrer" target="_blank" title="Body Book"><img src="https://image.yes24.com/goods/61358471/L" alt="Body Book by Editorial Department — book cover" loading="lazy"></a>
+    <a class="cv" href="https://www.yes24.com/product/goods/12011321" rel="nofollow noopener noreferrer" target="_blank" title="Create a Secret Base"><img src="https://image.yes24.com/goods/12011321/L" alt="Create a Secret Base by Takahiro Ogata — book cover" loading="lazy"></a>
+    <a class="cv" href="https://www.yes24.com/product/goods/380508" rel="nofollow noopener noreferrer" target="_blank" title="From Meeting to Companionship"><img src="https://image.yes24.com/goods/380508/L" alt="From Meeting to Companionship by Park Ryeol — book cover" loading="lazy"></a>
+    <a class="cv" href="https://www.yes24.com/product/goods/96018196" rel="nofollow noopener noreferrer" target="_blank" title="Josee, the Tiger and the Fish"><img src="https://image.yes24.com/goods/96018196/L" alt="Josee, the Tiger and the Fish by Seiko Tanabe — book cover" loading="lazy"></a>
+    <a class="cv" href="https://www.yes24.com/product/goods/112036545" rel="nofollow noopener noreferrer" target="_blank" title="Mimi&#x27;s Ghost Story Complete Edition"><img src="https://image.yes24.com/goods/112036545/L" alt="Mimi&#x27;s Ghost Story Complete Edition by Junji Itō — book cover" loading="lazy"></a>
+    <a class="cv" href="https://www.yes24.com/product/goods/25666436" rel="nofollow noopener noreferrer" target="_blank" title="Novelist by Profession"><img src="https://image.yes24.com/goods/25666436/L" alt="Novelist by Profession by Haruki Murakami — book cover" loading="lazy"></a>
+    <a class="cv" href="https://www.yes24.com/product/goods/119886818" rel="nofollow noopener noreferrer" target="_blank" title="The Creative Act: A Way of Being"><img src="https://image.yes24.com/goods/119886818/L" alt="The Creative Act: A Way of Being by Rick Rubin — book cover" loading="lazy"></a>
+    <a class="cv" href="https://www.yes24.com/product/goods/3239082" rel="nofollow noopener noreferrer" target="_blank" title="What I Talk About When I Talk About Running"><img src="https://image.yes24.com/goods/3239082/L" alt="What I Talk About When I Talk About Running by Haruki Murakami — book cover" loading="lazy"></a>
     </div>
     <ol class="reading-list" id="rlist">
     <li class="rl-item" id="b1">
@@ -568,6 +594,22 @@
     </ol>
     </div>
   </section>
+  <script>
+  (function () {
+    var area = document.getElementById("shelf-area");
+    var tabs = document.querySelectorAll(".view-tabs .vt");
+    if (!area || !tabs.length) return;
+    function set(v, save) {
+      area.classList.toggle("show-covers", v === "cover");
+      tabs.forEach(function (t) { t.setAttribute("aria-pressed", String(t.dataset.view === v)); });
+      if (save) { try { localStorage.setItem("shelfView", v); } catch (e) {} }
+    }
+    var saved = null;
+    try { saved = localStorage.getItem("shelfView"); } catch (e) {}
+    if (saved === "cover") set("cover", false);
+    tabs.forEach(function (t) { t.addEventListener("click", function () { set(t.dataset.view, true); }); });
+  })();
+  </script>
   <script>
   (function () {
     var btns = [document.getElementById("shelf-cap"), document.getElementById("shelf-cap-clear")]

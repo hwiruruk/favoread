@@ -324,6 +324,19 @@
               background: #fff; color: #000; border: 2px solid #000; box-shadow: 2px 2px 0 0 #000; }
     .sh-cap:hover { background: #fde047; }
     .sh-cap[disabled] { opacity: .55; cursor: default; }
+    .view-tabs { display: inline-flex; border: 2px solid #000; box-shadow: 2px 2px 0 0 #000; background: #fff; }
+    .vt { font: inherit; font-size: 12px; font-weight: 700; padding: 5px 10px; background: #fff; color: #000; border: 0; cursor: pointer; }
+    .vt + .vt { border-left: 2px solid #000; }
+    .vt[aria-pressed="true"] { background: #000; color: #fff; }
+    .covers { display: none; grid-template-columns: repeat(auto-fill, minmax(84px, 1fr)); gap: 14px 12px; margin: 14px 0 22px; }
+    .show-covers .covers { display: grid; }
+    .show-covers .shelf { display: none; }
+    .cv { position: relative; display: block; aspect-ratio: 2/3; border: 1.5px solid #000; box-shadow: 2px 2px 0 0 #000;
+          background: #f4f4f0; overflow: hidden; color: #000; text-decoration: none; transition: transform .12s; }
+    .cv:hover { transform: translateY(-3px); text-decoration: none; }
+    .cv img { width: 100%; height: 100%; object-fit: cover; display: block; }
+    .cv-no { display: flex; height: 100%; align-items: center; justify-content: center; padding: 6px;
+             font-size: 11px; font-weight: 700; line-height: 1.3; text-align: center; word-break: keep-all; }
     .shelf { --sh-h: 270px; --plank: 7px; --row: calc(var(--sh-h) + 18px);
              display: flex; flex-wrap: wrap; align-items: flex-end; gap: 11px 2px;
              margin: 14px 0 22px; padding: 0 8px 7px;
@@ -426,6 +439,7 @@
     <div class="shelf-head">
       <h2>Books Ahn Hyun-mo has read (9)</h2>
       <div class="shelf-tabs">
+        <span class="view-tabs" role="group"><button type="button" class="vt" data-view="spine" aria-pressed="true">📚 Spines</button><button type="button" class="vt" data-view="cover" aria-pressed="false">🖼 Covers</button></span>
         <button type="button" class="sh-cap" id="shelf-cap" title="Download the bookshelf as an image">⤓ Save image</button>
         <button type="button" class="sh-cap" id="shelf-cap-clear" title="Download as a PNG with a transparent background">⤓ Transparent</button>
       </div>
@@ -441,6 +455,17 @@
     <a class="sp" style="--c:hsl(113,56%,29%);--w:35px;--fs:13px" href="https://www.yes24.com/product/goods/105851069" rel="nofollow noopener noreferrer" target="_blank" title="What Caesar Did for My Salad"><span class="sp-t"><i>What Caesar Did for My Salad</i></span><img class="sp-i" src="https://image.yes24.com/goods/105851069/side" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.parentNode.classList.add('sp-fail');this.remove()" onload="if(this.naturalWidth/this.naturalHeight>0.4){this.parentNode.classList.add('sp-fail');this.remove()}"></a>
     <a class="sp" style="--c:hsl(272,33%,40%);--w:31px;--fs:8px" href="https://www.yes24.com/product/goods/11611521" rel="nofollow noopener noreferrer" target="_blank" title="Who Ordered This Truckload of Dung?: Inspiring Stories for Welcoming Life&#x27;s Difficulties"><span class="sp-t"><i>Who Ordered This Truckload of Dung?: Inspiring Stories for Welcoming Life&#x27;s Difficulties</i></span><img class="sp-i" src="https://image.yes24.com/goods/11611521/side" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.parentNode.classList.add('sp-fail');this.remove()" onload="if(this.naturalWidth/this.naturalHeight>0.4){this.parentNode.classList.add('sp-fail');this.remove()}"></a>
     <a class="sp" style="--c:hsl(88,45%,46%);--w:35px;--fs:8px" href="https://www.yes24.com/product/goods/120495905" rel="nofollow noopener noreferrer" target="_blank" title="Yours Truly: An Obituary Writer&#x27;s Guide to Telling Your Story"><span class="sp-t"><i>Yours Truly: An Obituary Writer&#x27;s Guide to Telling Your Story</i></span><img class="sp-i" src="https://image.yes24.com/goods/120495905/side" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.parentNode.classList.add('sp-fail');this.remove()" onload="if(this.naturalWidth/this.naturalHeight>0.4){this.parentNode.classList.add('sp-fail');this.remove()}"></a>
+    </div>
+    <div class="covers" id="covers">
+    <a class="cv" href="https://www.yes24.com/product/goods/129059963" rel="nofollow noopener noreferrer" target="_blank" title="Anne of Green Gables"><img src="https://image.yes24.com/goods/129059963/L" alt="Anne of Green Gables by 루시 모드 몽고메리 — book cover" loading="lazy"></a>
+    <a class="cv" href="https://www.yes24.com/product/goods/57884775" rel="nofollow noopener noreferrer" target="_blank" title="Eat Pray Love"><img src="https://image.yes24.com/goods/57884775/L" alt="Eat Pray Love by 엘리자베스 길버트 — book cover" loading="lazy"></a>
+    <a class="cv" href="https://www.yes24.com/product/goods/88430059" rel="nofollow noopener noreferrer" target="_blank" title="Figuring"><img src="https://image.yes24.com/goods/88430059/L" alt="Figuring by 마리아 포포바 — book cover" loading="lazy"></a>
+    <a class="cv" href="https://www.yes24.com/product/goods/74261416" rel="nofollow noopener noreferrer" target="_blank" title="If We Can&#x27;t Go at the Speed of Light"><img src="https://image.yes24.com/goods/74261416/L" alt="If We Can&#x27;t Go at the Speed of Light by 김초엽 — book cover" loading="lazy"></a>
+    <a class="cv" href="https://www.yes24.com/product/goods/126646941" rel="nofollow noopener noreferrer" target="_blank" title="Origins of Happiness"><img src="https://image.yes24.com/goods/126646941/L" alt="Origins of Happiness by 서은국 — book cover" loading="lazy"></a>
+    <a class="cv" href="https://www.yes24.com/product/goods/75223524" rel="nofollow noopener noreferrer" target="_blank" title="The Earth Traveler"><img src="https://image.yes24.com/goods/75223524/L" alt="The Earth Traveler by 류시화 — book cover" loading="lazy"></a>
+    <a class="cv" href="https://www.yes24.com/product/goods/105851069" rel="nofollow noopener noreferrer" target="_blank" title="What Caesar Did for My Salad"><img src="https://image.yes24.com/goods/105851069/L" alt="What Caesar Did for My Salad by 앨버트 잭 — book cover" loading="lazy"></a>
+    <a class="cv" href="https://www.yes24.com/product/goods/11611521" rel="nofollow noopener noreferrer" target="_blank" title="Who Ordered This Truckload of Dung?: Inspiring Stories for Welcoming Life&#x27;s Difficulties"><img src="https://image.yes24.com/goods/11611521/L" alt="Who Ordered This Truckload of Dung?: Inspiring Stories for Welcoming Life&#x27;s Difficulties by 아잔 브람 — book cover" loading="lazy"></a>
+    <a class="cv" href="https://www.yes24.com/product/goods/120495905" rel="nofollow noopener noreferrer" target="_blank" title="Yours Truly: An Obituary Writer&#x27;s Guide to Telling Your Story"><img src="https://image.yes24.com/goods/120495905/L" alt="Yours Truly: An Obituary Writer&#x27;s Guide to Telling Your Story by 제임스 R. 해거티 — book cover" loading="lazy"></a>
     </div>
     <ol class="reading-list" id="rlist">
     <li class="rl-item" id="b1">
@@ -546,6 +571,22 @@
     </ol>
     </div>
   </section>
+  <script>
+  (function () {
+    var area = document.getElementById("shelf-area");
+    var tabs = document.querySelectorAll(".view-tabs .vt");
+    if (!area || !tabs.length) return;
+    function set(v, save) {
+      area.classList.toggle("show-covers", v === "cover");
+      tabs.forEach(function (t) { t.setAttribute("aria-pressed", String(t.dataset.view === v)); });
+      if (save) { try { localStorage.setItem("shelfView", v); } catch (e) {} }
+    }
+    var saved = null;
+    try { saved = localStorage.getItem("shelfView"); } catch (e) {}
+    if (saved === "cover") set("cover", false);
+    tabs.forEach(function (t) { t.addEventListener("click", function () { set(t.dataset.view, true); }); });
+  })();
+  </script>
   <script>
   (function () {
     var btns = [document.getElementById("shelf-cap"), document.getElementById("shelf-cap-clear")]

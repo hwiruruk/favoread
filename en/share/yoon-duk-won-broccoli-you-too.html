@@ -522,6 +522,19 @@
               background: #fff; color: #000; border: 2px solid #000; box-shadow: 2px 2px 0 0 #000; }
     .sh-cap:hover { background: #fde047; }
     .sh-cap[disabled] { opacity: .55; cursor: default; }
+    .view-tabs { display: inline-flex; border: 2px solid #000; box-shadow: 2px 2px 0 0 #000; background: #fff; }
+    .vt { font: inherit; font-size: 12px; font-weight: 700; padding: 5px 10px; background: #fff; color: #000; border: 0; cursor: pointer; }
+    .vt + .vt { border-left: 2px solid #000; }
+    .vt[aria-pressed="true"] { background: #000; color: #fff; }
+    .covers { display: none; grid-template-columns: repeat(auto-fill, minmax(84px, 1fr)); gap: 14px 12px; margin: 14px 0 22px; }
+    .show-covers .covers { display: grid; }
+    .show-covers .shelf { display: none; }
+    .cv { position: relative; display: block; aspect-ratio: 2/3; border: 1.5px solid #000; box-shadow: 2px 2px 0 0 #000;
+          background: #f4f4f0; overflow: hidden; color: #000; text-decoration: none; transition: transform .12s; }
+    .cv:hover { transform: translateY(-3px); text-decoration: none; }
+    .cv img { width: 100%; height: 100%; object-fit: cover; display: block; }
+    .cv-no { display: flex; height: 100%; align-items: center; justify-content: center; padding: 6px;
+             font-size: 11px; font-weight: 700; line-height: 1.3; text-align: center; word-break: keep-all; }
     .shelf { --sh-h: 270px; --plank: 7px; --row: calc(var(--sh-h) + 18px);
              display: flex; flex-wrap: wrap; align-items: flex-end; gap: 11px 2px;
              margin: 14px 0 22px; padding: 0 8px 7px;
@@ -625,6 +638,7 @@
     <div class="shelf-head">
       <h2>Books Yoon Duk-won (Broccoli, you too?) has read (20)</h2>
       <div class="shelf-tabs">
+        <span class="view-tabs" role="group"><button type="button" class="vt" data-view="spine" aria-pressed="true">📚 Spines</button><button type="button" class="vt" data-view="cover" aria-pressed="false">🖼 Covers</button></span>
         <button type="button" class="sh-cap" id="shelf-cap" title="Download the bookshelf as an image">⤓ Save image</button>
         <button type="button" class="sh-cap" id="shelf-cap-clear" title="Download as a PNG with a transparent background">⤓ Transparent</button>
       </div>
@@ -657,6 +671,28 @@
     <a class="sp no-img" style="--c:hsl(120,56%,30%);--w:34px;--fs:15px" href="https://www.yes24.com/product/goods/57602704" rel="nofollow noopener noreferrer" target="_blank" title="The Devil&#x27;s Sentences"><span class="sp-t"><i>The Devil&#x27;s Sentences</i></span></a>
     <a class="sp no-img" style="--c:hsl(194,52%,31%);--w:38px;--fs:12px" href="https://www.yes24.com/product/goods/35049446" rel="nofollow noopener noreferrer" target="_blank" title="The First Sentence of a Novel"><span class="sp-t"><i>The First Sentence of a Novel</i></span></a>
     <a class="sp no-img" style="--c:hsl(357,43%,35%);--w:32px;--fs:12px" href="https://www.yes24.com/product/goods/85011474" rel="nofollow noopener noreferrer" target="_blank" title="What Remains After Punishment"><span class="sp-t"><i>What Remains After Punishment</i></span></a>
+    </div>
+    <div class="covers" id="covers">
+    <a class="cv" href="https://www.yes24.com/product/goods/85743647" rel="nofollow noopener noreferrer" target="_blank" title="Bandage"><img src="https://image.yes24.com/goods/85743647/L" alt="Bandage by Yoon I-hyeong — book cover" loading="lazy"></a>
+    <a class="cv" href="https://www.yes24.com/product/goods/92455793" rel="nofollow noopener noreferrer" target="_blank" title="Book, What Is It"><img src="https://image.yes24.com/goods/92455793/L" alt="Book, What Is It by Chang Kang-myoung — book cover" loading="lazy"></a>
+    <a class="cv" href="https://www.yes24.com/product/goods/90405058" rel="nofollow noopener noreferrer" target="_blank" title="Earth in Crisis, No Place to Retreat"><img src="https://image.yes24.com/goods/90405058/L" alt="Earth in Crisis, No Place to Retreat by Nam Sung-hyun — book cover" loading="lazy"></a>
+    <a class="cv" href="https://www.yes24.com/product/goods/117012879" rel="nofollow noopener noreferrer" target="_blank" title="Even If It Takes A Little Time"><span class="rl-new" data-added="2026-09-26">NEW</span><img src="https://image.yes24.com/goods/117012879/L" alt="Even If It Takes A Little Time by Lee Yunyeop — book cover" loading="lazy"></a>
+    <a class="cv" href="https://www.yes24.com/product/goods/73615347" rel="nofollow noopener noreferrer" target="_blank" title="Happy Apocalypse!"><img src="https://image.yes24.com/goods/73615347/L" alt="Happy Apocalypse! by Baek Min-seok — book cover" loading="lazy"></a>
+    <a class="cv" href="https://www.yes24.com/product/goods/64496500" rel="nofollow noopener noreferrer" target="_blank" title="History of Battles That Shook the World"><img src="https://image.yes24.com/goods/64496500/L" alt="History of Battles That Shook the World by Yu Pil-ha — book cover" loading="lazy"></a>
+    <a class="cv" href="https://www.yes24.com/product/goods/74261416" rel="nofollow noopener noreferrer" target="_blank" title="If We Can&#x27;t Go at the Speed of Light"><img src="https://image.yes24.com/goods/74261416/L" alt="If We Can&#x27;t Go at the Speed of Light by Kim Choyeop — book cover" loading="lazy"></a>
+    <a class="cv" href="https://www.yes24.com/product/goods/77251711" rel="nofollow noopener noreferrer" target="_blank" title="I Thought It Was Just Me (but It Isn&#x27;t): Making the Journey from &quot;What Will People Think?&quot; to &quot;I Am Enough&quot;"><img src="https://image.yes24.com/goods/77251711/L" alt="I Thought It Was Just Me (but It Isn&#x27;t): Making the Journey from &quot;What Will People Think?&quot; to &quot;I Am Enough&quot; by Brené Brown — book cover" loading="lazy"></a>
+    <a class="cv" href="https://www.yes24.com/product/goods/86899775" rel="nofollow noopener noreferrer" target="_blank" title="Jupiter Has Rings"><img src="https://image.yes24.com/goods/86899775/L" alt="Jupiter Has Rings by Kim Eun-woo — book cover" loading="lazy"></a>
+    <a class="cv" href="https://www.yes24.com/product/goods/79411194" rel="nofollow noopener noreferrer" target="_blank" title="Lakes of the World"><img src="https://image.yes24.com/goods/79411194/L" alt="Lakes of the World by Chung Yong-jun — book cover" loading="lazy"></a>
+    <a class="cv" href="https://www.yes24.com/product/goods/88915152" rel="nofollow noopener noreferrer" target="_blank" title="La vraie vie"><img src="https://image.yes24.com/goods/88915152/L" alt="La vraie vie by Adeline Dieudonné — book cover" loading="lazy"></a>
+    <a class="cv" href="https://www.yes24.com/product/goods/84639666" rel="nofollow noopener noreferrer" target="_blank" title="Living Like a Human"><img src="https://image.yes24.com/goods/84639666/L" alt="Living Like a Human by Jeong Yak-yong — book cover" loading="lazy"></a>
+    <a class="cv" href="https://www.yes24.com/product/goods/78234055" rel="nofollow noopener noreferrer" target="_blank" title="Microbial War"><img src="https://image.yes24.com/goods/78234055/L" alt="Microbial War by Ailsa Wild, Jeremy Barr — book cover" loading="lazy"></a>
+    <a class="cv" href="https://www.yes24.com/product/goods/29190285" rel="nofollow noopener noreferrer" target="_blank" title="People Who Deserve to Die"><img src="https://image.yes24.com/goods/29190285/L" alt="People Who Deserve to Die by Peter Swanson — book cover" loading="lazy"></a>
+    <a class="cv" href="https://www.yes24.com/product/goods/68811285" rel="nofollow noopener noreferrer" target="_blank" title="Ping-Pong King Seo Young"><img src="https://image.yes24.com/goods/68811285/L" alt="Ping-Pong King Seo Young by Hwang Yu-mi — book cover" loading="lazy"></a>
+    <a class="cv" href="https://www.yes24.com/product/goods/89574522" rel="nofollow noopener noreferrer" target="_blank" title="Stories Embroidered on the Heart"><img src="https://image.yes24.com/goods/89574522/L" alt="Stories Embroidered on the Heart by Gu Byeong-mo — book cover" loading="lazy"></a>
+    <a class="cv" href="https://www.yes24.com/product/goods/87005254" rel="nofollow noopener noreferrer" target="_blank" title="Thanks God It&#x27;s Friday"><img src="https://image.yes24.com/goods/87005254/L" alt="Thanks God It&#x27;s Friday by Shim Neoul — book cover" loading="lazy"></a>
+    <a class="cv" href="https://www.yes24.com/product/goods/57602704" rel="nofollow noopener noreferrer" target="_blank" title="The Devil&#x27;s Sentences"><img src="https://image.yes24.com/goods/57602704/L" alt="The Devil&#x27;s Sentences by Edogawa Ranpo — book cover" loading="lazy"></a>
+    <a class="cv" href="https://www.yes24.com/product/goods/35049446" rel="nofollow noopener noreferrer" target="_blank" title="The First Sentence of a Novel"><img src="https://image.yes24.com/goods/35049446/L" alt="The First Sentence of a Novel by Kim Jeong-seon — book cover" loading="lazy"></a>
+    <a class="cv" href="https://www.yes24.com/product/goods/85011474" rel="nofollow noopener noreferrer" target="_blank" title="What Remains After Punishment"><img src="https://image.yes24.com/goods/85011474/L" alt="What Remains After Punishment by Lim Su-hee — book cover" loading="lazy"></a>
     </div>
     <ol class="reading-list" id="rlist">
     <li class="rl-item" id="b1">
@@ -875,6 +911,22 @@
     </ol>
     </div>
   </section>
+  <script>
+  (function () {
+    var area = document.getElementById("shelf-area");
+    var tabs = document.querySelectorAll(".view-tabs .vt");
+    if (!area || !tabs.length) return;
+    function set(v, save) {
+      area.classList.toggle("show-covers", v === "cover");
+      tabs.forEach(function (t) { t.setAttribute("aria-pressed", String(t.dataset.view === v)); });
+      if (save) { try { localStorage.setItem("shelfView", v); } catch (e) {} }
+    }
+    var saved = null;
+    try { saved = localStorage.getItem("shelfView"); } catch (e) {}
+    if (saved === "cover") set("cover", false);
+    tabs.forEach(function (t) { t.addEventListener("click", function () { set(t.dataset.view, true); }); });
+  })();
+  </script>
   <script>
   (function () {
     var btns = [document.getElementById("shelf-cap"), document.getElementById("shelf-cap-clear")]

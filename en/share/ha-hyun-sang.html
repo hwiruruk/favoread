@@ -844,6 +844,19 @@
               background: #fff; color: #000; border: 2px solid #000; box-shadow: 2px 2px 0 0 #000; }
     .sh-cap:hover { background: #fde047; }
     .sh-cap[disabled] { opacity: .55; cursor: default; }
+    .view-tabs { display: inline-flex; border: 2px solid #000; box-shadow: 2px 2px 0 0 #000; background: #fff; }
+    .vt { font: inherit; font-size: 12px; font-weight: 700; padding: 5px 10px; background: #fff; color: #000; border: 0; cursor: pointer; }
+    .vt + .vt { border-left: 2px solid #000; }
+    .vt[aria-pressed="true"] { background: #000; color: #fff; }
+    .covers { display: none; grid-template-columns: repeat(auto-fill, minmax(84px, 1fr)); gap: 14px 12px; margin: 14px 0 22px; }
+    .show-covers .covers { display: grid; }
+    .show-covers .shelf { display: none; }
+    .cv { position: relative; display: block; aspect-ratio: 2/3; border: 1.5px solid #000; box-shadow: 2px 2px 0 0 #000;
+          background: #f4f4f0; overflow: hidden; color: #000; text-decoration: none; transition: transform .12s; }
+    .cv:hover { transform: translateY(-3px); text-decoration: none; }
+    .cv img { width: 100%; height: 100%; object-fit: cover; display: block; }
+    .cv-no { display: flex; height: 100%; align-items: center; justify-content: center; padding: 6px;
+             font-size: 11px; font-weight: 700; line-height: 1.3; text-align: center; word-break: keep-all; }
     .shelf { --sh-h: 270px; --plank: 7px; --row: calc(var(--sh-h) + 18px);
              display: flex; flex-wrap: wrap; align-items: flex-end; gap: 11px 2px;
              margin: 14px 0 22px; padding: 0 8px 7px;
@@ -946,6 +959,7 @@
     <div class="shelf-head">
       <h2>Books Ha Hyun Sang has read (38)</h2>
       <div class="shelf-tabs">
+        <span class="view-tabs" role="group"><button type="button" class="vt" data-view="spine" aria-pressed="true">📚 Spines</button><button type="button" class="vt" data-view="cover" aria-pressed="false">🖼 Covers</button></span>
         <button type="button" class="sh-cap" id="shelf-cap" title="Download the bookshelf as an image">⤓ Save image</button>
         <button type="button" class="sh-cap" id="shelf-cap-clear" title="Download as a PNG with a transparent background">⤓ Transparent</button>
       </div>
@@ -1033,6 +1047,46 @@
     <a class="sp is-new" style="--c:hsl(130,54%,26%);--w:36px;--fs:12px" href="https://www.yes24.com/product/goods/58790374" rel="nofollow noopener noreferrer" target="_blank" title="Unhappy Even Though I Love You"><span class="sp-t"><i>Unhappy Even Though I Love You</i></span><img class="sp-i" src="https://image.yes24.com/goods/58790374/side" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.parentNode.classList.add('sp-fail');this.remove()" onload="if(this.naturalWidth/this.naturalHeight>0.4){this.parentNode.classList.add('sp-fail');this.remove()}"><span class="sp-new" data-added="2026-09-18">NEW</span></a>
     <a class="sp is-new" style="--c:hsl(314,55%,40%);--w:37px;--fs:14px" href="https://www.yes24.com/product/goods/150534670" rel="nofollow noopener noreferrer" target="_blank" title="Who Ate up All the Shinga?"><span class="sp-t"><i>Who Ate up All the Shinga?</i></span><img class="sp-i" src="https://image.yes24.com/goods/6259976/side" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.parentNode.classList.add('sp-fail');this.remove()" onload="if(this.naturalWidth/this.naturalHeight>0.4){this.parentNode.classList.add('sp-fail');this.remove()}"><span class="sp-new" data-added="2026-09-18">NEW</span></a>
     <a class="sp is-new" style="--c:hsl(222,33%,34%);--w:44px;--fs:15px" href="https://www.yes24.com/product/goods/66538865" rel="nofollow noopener noreferrer" target="_blank" title="Writing Down the Bones"><span class="sp-t"><i>Writing Down the Bones</i></span><img class="sp-i" src="https://image.yes24.com/goods/66538865/side" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.parentNode.classList.add('sp-fail');this.remove()" onload="if(this.naturalWidth/this.naturalHeight>0.4){this.parentNode.classList.add('sp-fail');this.remove()}"><span class="sp-new" data-added="2026-09-18">NEW</span></a>
+    </div>
+    <div class="covers" id="covers">
+    <a class="cv" href="https://www.yes24.com/product/goods/372300" rel="nofollow noopener noreferrer" target="_blank" title="1984"><span class="rl-new" data-added="2026-09-18">NEW</span><img src="https://image.yes24.com/goods/372300/L" alt="1984 by George Orwell — book cover" loading="lazy"></a>
+    <a class="cv" href="https://www.yes24.com/product/goods/108192527" rel="nofollow noopener noreferrer" target="_blank" title="All of Us"><span class="rl-new" data-added="2026-09-18">NEW</span><img src="https://image.yes24.com/goods/108192527/L" alt="All of Us by Raymond Carver — book cover" loading="lazy"></a>
+    <a class="cv" href="https://www.yes24.com/product/goods/118785491" rel="nofollow noopener noreferrer" target="_blank" title="Bamboo Sword Samurai 1"><span class="rl-new" data-added="2026-09-18">NEW</span><img src="https://image.yes24.com/goods/118785491/L" alt="Bamboo Sword Samurai 1 by Taiyo Matsumoto — book cover" loading="lazy"></a>
+    <a class="cv" href="https://www.yes24.com/product/goods/177092068" rel="nofollow noopener noreferrer" target="_blank" title="Beck"><span class="rl-new" data-added="2026-09-18">NEW</span><img src="https://image.yes24.com/goods/177092068/L" alt="Beck by Harold Sakuishi — book cover" loading="lazy"></a>
+    <a class="cv" href="https://www.yes24.com/product/goods/35877927" rel="nofollow noopener noreferrer" target="_blank" title="Birds Don&#x27;t Look Back as They Fly"><span class="rl-new" data-added="2026-09-18">NEW</span><img src="https://image.yes24.com/goods/35877927/L" alt="Birds Don&#x27;t Look Back as They Fly by Ryu Sihwa — book cover" loading="lazy"></a>
+    <a class="cv" href="https://www.yes24.com/product/goods/3204469" rel="nofollow noopener noreferrer" target="_blank" title="Catching the Big Fish"><span class="rl-new" data-added="2026-09-18">NEW</span><img src="https://image.yes24.com/goods/3204469/L" alt="Catching the Big Fish by David Lynch — book cover" loading="lazy"></a>
+    <a class="cv" href="https://www.yes24.com/product/goods/12991848" rel="nofollow noopener noreferrer" target="_blank" title="Cathedral"><span class="rl-new" data-added="2026-09-18">NEW</span><img src="https://image.yes24.com/goods/12991848/L" alt="Cathedral by Raymond Carver — book cover" loading="lazy"></a>
+    <a class="cv" href="https://www.yes24.com/product/goods/33730931" rel="nofollow noopener noreferrer" target="_blank" title="Childhood&#x27;s End"><span class="rl-new" data-added="2026-09-18">NEW</span><img src="https://image.yes24.com/goods/33730931/L" alt="Childhood&#x27;s End by Arthur C. Clarke — book cover" loading="lazy"></a>
+    <a class="cv" href="https://www.yes24.com/product/goods/17359" rel="nofollow noopener noreferrer" target="_blank" title="Die Verwandlung  Ein Landarzt"><span class="rl-new" data-added="2026-09-18">NEW</span><img src="https://image.yes24.com/goods/17359/L" alt="Die Verwandlung  Ein Landarzt by 프란츠 카프카 — book cover" loading="lazy"></a>
+    <a class="cv" href="https://www.yes24.com/product/goods/103389506" rel="nofollow noopener noreferrer" target="_blank" title="Everyone Who Arrives in the Rain Is on Time"><span class="rl-new" data-added="2026-09-18">NEW</span><img src="https://image.yes24.com/goods/103389506/L" alt="Everyone Who Arrives in the Rain Is on Time by Credit Tree — book cover" loading="lazy"></a>
+    <a class="cv" href="https://www.yes24.com/product/goods/27752500" rel="nofollow noopener noreferrer" target="_blank" title="Gratitude"><span class="rl-new" data-added="2026-09-18">NEW</span><img src="https://image.yes24.com/goods/27752500/L" alt="Gratitude by Oliver Sacks — book cover" loading="lazy"></a>
+    <a class="cv" href="https://www.yes24.com/product/goods/8905156" rel="nofollow noopener noreferrer" target="_blank" title="Hermann Hesse Poetry Collection"><span class="rl-new" data-added="2026-09-18">NEW</span><img src="https://image.yes24.com/goods/8905156/L" alt="Hermann Hesse Poetry Collection by Hermann Hesse — book cover" loading="lazy"></a>
+    <a class="cv" href="https://www.yes24.com/product/goods/61274473" rel="nofollow noopener noreferrer" target="_blank" title="Hunterxhunter"><span class="rl-new" data-added="2026-09-18">NEW</span><img src="https://image.yes24.com/goods/61274473/L" alt="Hunterxhunter by Yoshihiro Togashi — book cover" loading="lazy"></a>
+    <a class="cv" href="https://www.yes24.com/product/goods/143666403" rel="nofollow noopener noreferrer" target="_blank" title="I Can Finally See It Now"><span class="rl-new" data-added="2026-09-18">NEW</span><img src="https://image.yes24.com/goods/143666403/L" alt="I Can Finally See It Now by Kim Changwan — book cover" loading="lazy"></a>
+    <a class="cv" href="https://www.yes24.com/product/goods/120482063" rel="nofollow noopener noreferrer" target="_blank" title="Iron Concrete Concrete 1"><span class="rl-new" data-added="2026-09-18">NEW</span><img src="https://image.yes24.com/goods/120482063/L" alt="Iron Concrete Concrete 1 by Taiyo Matsumoto — book cover" loading="lazy"></a>
+    <a class="cv" href="https://www.yes24.com/product/goods/107461633" rel="nofollow noopener noreferrer" target="_blank" title="It&#x27;s Not Far"><span class="rl-new" data-added="2026-09-18">NEW</span><img src="https://image.yes24.com/goods/107461633/L" alt="It&#x27;s Not Far by Na Hee-Deok — book cover" loading="lazy"></a>
+    <a class="cv" href="https://www.yes24.com/product/goods/124157362" rel="nofollow noopener noreferrer" target="_blank" title="It&#x27;s Not the Life I Thought It Would Be"><span class="rl-new" data-added="2026-09-18">NEW</span><img src="https://image.yes24.com/goods/124157362/L" alt="It&#x27;s Not the Life I Thought It Would Be by Ryu Sihwa — book cover" loading="lazy"></a>
+    <a class="cv" href="https://www.yes24.com/product/goods/126795598" rel="nofollow noopener noreferrer" target="_blank" title="Kafka on the Shore"><span class="rl-new" data-added="2026-09-18">NEW</span><img src="https://image.yes24.com/goods/126795598/L" alt="Kafka on the Shore by Haruki Murakami — book cover" loading="lazy"></a>
+    <a class="cv" href="https://www.yes24.com/product/goods/1433435" rel="nofollow noopener noreferrer" target="_blank" title="Lectures"><span class="rl-new" data-added="2026-09-18">NEW</span><img src="https://image.yes24.com/goods/1433435/L" alt="Lectures by Shin Youngbok — book cover" loading="lazy"></a>
+    <a class="cv" href="https://www.yes24.com/product/goods/112029792" rel="nofollow noopener noreferrer" target="_blank" title="Nether Tsugai 1"><span class="rl-new" data-added="2026-09-18">NEW</span><img src="https://image.yes24.com/goods/112029792/L" alt="Nether Tsugai 1 by Hiromu Arakawa — book cover" loading="lazy"></a>
+    <a class="cv" href="https://www.yes24.com/product/goods/25666436" rel="nofollow noopener noreferrer" target="_blank" title="Novelist by Profession"><span class="rl-new" data-added="2026-09-18">NEW</span><img src="https://image.yes24.com/goods/25666436/L" alt="Novelist by Profession by Haruki Murakami — book cover" loading="lazy"></a>
+    <a class="cv" href="https://www.yes24.com/product/goods/32518510" rel="nofollow noopener noreferrer" target="_blank" title="Pacific War 1"><span class="rl-new" data-added="2026-09-18">NEW</span><img src="https://image.yes24.com/goods/32518510/L" alt="Pacific War 1 by Cheon Tingi — book cover" loading="lazy"></a>
+    <a class="cv" href="https://www.yes24.com/product/goods/97156035" rel="nofollow noopener noreferrer" target="_blank" title="Ping Pong 1"><span class="rl-new" data-added="2026-09-18">NEW</span><img src="https://image.yes24.com/goods/97156035/L" alt="Ping Pong 1 by Taiyo Matsumoto — book cover" loading="lazy"></a>
+    <a class="cv" href="https://www.yes24.com/product/goods/14863283" rel="nofollow noopener noreferrer" target="_blank" title="Rashomon (Disambiguation)"><span class="rl-new" data-added="2026-09-18">NEW</span><img src="https://image.yes24.com/goods/14863283/L" alt="Rashomon (Disambiguation) by Ryūnosuke Akutagawa — book cover" loading="lazy"></a>
+    <a class="cv" href="https://www.yes24.com/product/goods/17721470" rel="nofollow noopener noreferrer" target="_blank" title="Road to Hesse"><span class="rl-new" data-added="2026-09-18">NEW</span><img src="https://image.yes24.com/goods/17721470/L" alt="Road to Hesse by Jeong Yeo-Ul — book cover" loading="lazy"></a>
+    <a class="cv" href="https://www.yes24.com/product/goods/140042426" rel="nofollow noopener noreferrer" target="_blank" title="Sky, Wind, Star and Poem"><span class="rl-new" data-added="2026-09-18">NEW</span><img src="https://image.yes24.com/goods/140042426/L" alt="Sky, Wind, Star and Poem by Yoon Dongju — book cover" loading="lazy"></a>
+    <a class="cv" href="https://www.yes24.com/product/goods/139592172" rel="nofollow noopener noreferrer" target="_blank" title="Soranin Kidney Plate"><span class="rl-new" data-added="2026-09-18">NEW</span><img src="https://image.yes24.com/goods/139592172/L" alt="Soranin Kidney Plate by Inio Asano — book cover" loading="lazy"></a>
+    <a class="cv" href="https://www.yes24.com/product/goods/32685521" rel="nofollow noopener noreferrer" target="_blank" title="Stories of Your Life and Others"><span class="rl-new" data-added="2026-09-18">NEW</span><img src="https://image.yes24.com/goods/32685521/L" alt="Stories of Your Life and Others by Ted Window — book cover" loading="lazy"></a>
+    <a class="cv" href="https://www.yes24.com/product/goods/118710921" rel="nofollow noopener noreferrer" target="_blank" title="Sunny"><span class="rl-new" data-added="2026-09-18">NEW</span><img src="https://image.yes24.com/goods/118710921/L" alt="Sunny by Taiyo Matsumoto — book cover" loading="lazy"></a>
+    <a class="cv" href="https://www.yes24.com/product/goods/192649322" rel="nofollow noopener noreferrer" target="_blank" title="The Art of Loving"><span class="rl-new" data-added="2026-09-18">NEW</span><img src="https://image.yes24.com/goods/192649322/L" alt="The Art of Loving by Erich Fromm — book cover" loading="lazy"></a>
+    <a class="cv" href="https://www.yes24.com/product/goods/119886818" rel="nofollow noopener noreferrer" target="_blank" title="The Creative Act: A Way of Being"><span class="rl-new" data-added="2026-09-18">NEW</span><img src="https://image.yes24.com/goods/119886818/L" alt="The Creative Act: A Way of Being by Rick Rubin — book cover" loading="lazy"></a>
+    <a class="cv" href="https://www.yes24.com/product/goods/9295916" rel="nofollow noopener noreferrer" target="_blank" title="The Hundred-Year-Old Man Who Climbed Out the Window and Disappeared"><span class="rl-new" data-added="2026-09-18">NEW</span><img src="https://image.yes24.com/goods/9295916/L" alt="The Hundred-Year-Old Man Who Climbed Out the Window and Disappeared by Jonas Jonasson — book cover" loading="lazy"></a>
+    <a class="cv" href="https://www.yes24.com/product/goods/190398522" rel="nofollow noopener noreferrer" target="_blank" title="The Music Lesson"><span class="rl-new" data-added="2026-09-18">NEW</span><img src="https://image.yes24.com/goods/190398522/L" alt="The Music Lesson by Victor Wooten — book cover" loading="lazy"></a>
+    <a class="cv" href="https://www.yes24.com/product/goods/123800385" rel="nofollow noopener noreferrer" target="_blank" title="Tokyo These Days"><span class="rl-new" data-added="2026-09-18">NEW</span><img src="https://image.yes24.com/goods/123800385/L" alt="Tokyo These Days by Taiyo Matsumoto — book cover" loading="lazy"></a>
+    <a class="cv" href="https://www.yes24.com/product/goods/73267452" rel="nofollow noopener noreferrer" target="_blank" title="Tokyo Tower"><span class="rl-new" data-added="2026-09-18">NEW</span><img src="https://image.yes24.com/goods/73267452/L" alt="Tokyo Tower by Lily Frankie — book cover" loading="lazy"></a>
+    <a class="cv" href="https://www.yes24.com/product/goods/58790374" rel="nofollow noopener noreferrer" target="_blank" title="Unhappy Even Though I Love You"><span class="rl-new" data-added="2026-09-18">NEW</span><img src="https://image.yes24.com/goods/58790374/L" alt="Unhappy Even Though I Love You by Kim Eunbi — book cover" loading="lazy"></a>
+    <a class="cv" href="https://www.yes24.com/product/goods/150534670" rel="nofollow noopener noreferrer" target="_blank" title="Who Ate up All the Shinga?"><span class="rl-new" data-added="2026-09-18">NEW</span><img src="https://image.yes24.com/goods/150534670/L" alt="Who Ate up All the Shinga? by Park Wan-suh — book cover" loading="lazy"></a>
+    <a class="cv" href="https://www.yes24.com/product/goods/66538865" rel="nofollow noopener noreferrer" target="_blank" title="Writing Down the Bones"><span class="rl-new" data-added="2026-09-18">NEW</span><img src="https://image.yes24.com/goods/66538865/L" alt="Writing Down the Bones by Natalie Goldberg — book cover" loading="lazy"></a>
     </div>
     <ol class="reading-list" id="rlist">
     <li class="rl-item" id="b1">
@@ -1433,6 +1487,22 @@
     </ol>
     </div>
   </section>
+  <script>
+  (function () {
+    var area = document.getElementById("shelf-area");
+    var tabs = document.querySelectorAll(".view-tabs .vt");
+    if (!area || !tabs.length) return;
+    function set(v, save) {
+      area.classList.toggle("show-covers", v === "cover");
+      tabs.forEach(function (t) { t.setAttribute("aria-pressed", String(t.dataset.view === v)); });
+      if (save) { try { localStorage.setItem("shelfView", v); } catch (e) {} }
+    }
+    var saved = null;
+    try { saved = localStorage.getItem("shelfView"); } catch (e) {}
+    if (saved === "cover") set("cover", false);
+    tabs.forEach(function (t) { t.addEventListener("click", function () { set(t.dataset.view, true); }); });
+  })();
+  </script>
   <script>
   (function () {
     var btns = [document.getElementById("shelf-cap"), document.getElementById("shelf-cap-clear")]

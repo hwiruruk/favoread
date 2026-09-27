@@ -286,6 +286,19 @@
               background: #fff; color: #000; border: 2px solid #000; box-shadow: 2px 2px 0 0 #000; }
     .sh-cap:hover { background: #fde047; }
     .sh-cap[disabled] { opacity: .55; cursor: default; }
+    .view-tabs { display: inline-flex; border: 2px solid #000; box-shadow: 2px 2px 0 0 #000; background: #fff; }
+    .vt { font: inherit; font-size: 12px; font-weight: 700; padding: 5px 10px; background: #fff; color: #000; border: 0; cursor: pointer; }
+    .vt + .vt { border-left: 2px solid #000; }
+    .vt[aria-pressed="true"] { background: #000; color: #fff; }
+    .covers { display: none; grid-template-columns: repeat(auto-fill, minmax(84px, 1fr)); gap: 14px 12px; margin: 14px 0 22px; }
+    .show-covers .covers { display: grid; }
+    .show-covers .shelf { display: none; }
+    .cv { position: relative; display: block; aspect-ratio: 2/3; border: 1.5px solid #000; box-shadow: 2px 2px 0 0 #000;
+          background: #f4f4f0; overflow: hidden; color: #000; text-decoration: none; transition: transform .12s; }
+    .cv:hover { transform: translateY(-3px); text-decoration: none; }
+    .cv img { width: 100%; height: 100%; object-fit: cover; display: block; }
+    .cv-no { display: flex; height: 100%; align-items: center; justify-content: center; padding: 6px;
+             font-size: 11px; font-weight: 700; line-height: 1.3; text-align: center; word-break: keep-all; }
     .shelf { --sh-h: 270px; --plank: 7px; --row: calc(var(--sh-h) + 18px);
              display: flex; flex-wrap: wrap; align-items: flex-end; gap: 11px 2px;
              margin: 14px 0 22px; padding: 0 8px 7px;
@@ -388,6 +401,7 @@
     <div class="shelf-head">
       <h2>Books LIM KIM has read (7)</h2>
       <div class="shelf-tabs">
+        <span class="view-tabs" role="group"><button type="button" class="vt" data-view="spine" aria-pressed="true">📚 Spines</button><button type="button" class="vt" data-view="cover" aria-pressed="false">🖼 Covers</button></span>
         <button type="button" class="sh-cap" id="shelf-cap" title="Download the bookshelf as an image">⤓ Save image</button>
         <button type="button" class="sh-cap" id="shelf-cap-clear" title="Download as a PNG with a transparent background">⤓ Transparent</button>
       </div>
@@ -401,6 +415,15 @@
     <a class="sp" style="--c:hsl(250,38%,29%);--w:36px;--fs:15px" href="https://www.yes24.com/product/goods/20465137" rel="nofollow noopener noreferrer" target="_blank" title="Korean Aesthetics"><span class="sp-t"><i>Korean Aesthetics</i></span><img class="sp-i" src="https://image.yes24.com/goods/20465137/side" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.parentNode.classList.add('sp-fail');this.remove()" onload="if(this.naturalWidth/this.naturalHeight>0.4){this.parentNode.classList.add('sp-fail');this.remove()}"></a>
     <a class="sp" style="--c:hsl(166,48%,31%);--w:44px;--fs:15px" href="https://www.yes24.com/product/goods/29861154" rel="nofollow noopener noreferrer" target="_blank" title="My Love Nam June Paik"><span class="sp-t"><i>My Love Nam June Paik</i></span><img class="sp-i" src="https://image.yes24.com/goods/29861154/side" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.parentNode.classList.add('sp-fail');this.remove()" onload="if(this.naturalWidth/this.naturalHeight>0.4){this.parentNode.classList.add('sp-fail');this.remove()}"></a>
     <a class="sp" style="--c:hsl(267,49%,38%);--w:42px;--fs:13px" href="https://www.yes24.com/product/goods/124124466" rel="nofollow noopener noreferrer" target="_blank" title="The Year of Magical Thinking"><span class="sp-t"><i>The Year of Magical Thinking</i></span><img class="sp-i" src="https://image.yes24.com/goods/124124466/side" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.parentNode.classList.add('sp-fail');this.remove()" onload="if(this.naturalWidth/this.naturalHeight>0.4){this.parentNode.classList.add('sp-fail');this.remove()}"></a>
+    </div>
+    <div class="covers" id="covers">
+    <a class="cv" href="https://www.yes24.com/product/goods/8759796" rel="nofollow noopener noreferrer" target="_blank" title="Contradictions"><img src="https://image.yes24.com/goods/8759796/L" alt="Contradictions by Yang Gui-ja — book cover" loading="lazy"></a>
+    <a class="cv" href="https://www.yes24.com/product/goods/117183665" rel="nofollow noopener noreferrer" target="_blank" title="Dance Dance Dance"><img src="https://image.yes24.com/goods/117183665/L" alt="Dance Dance Dance by Haruki Murakami — book cover" loading="lazy"></a>
+    <a class="cv" href="https://www.yes24.com/product/goods/1974952" rel="nofollow noopener noreferrer" target="_blank" title="Digilog"><img src="https://image.yes24.com/goods/1974952/L" alt="Digilog by Lee O-young — book cover" loading="lazy"></a>
+    <a class="cv" href="https://www.yes24.com/product/goods/72127217" rel="nofollow noopener noreferrer" target="_blank" title="I Wish for What Is Forbidden to Me"><img src="https://image.yes24.com/goods/72127217/L" alt="I Wish for What Is Forbidden to Me by Yang Gui-ja — book cover" loading="lazy"></a>
+    <a class="cv" href="https://www.yes24.com/product/goods/20465137" rel="nofollow noopener noreferrer" target="_blank" title="Korean Aesthetics"><img src="https://image.yes24.com/goods/20465137/L" alt="Korean Aesthetics by Choi Gwangjin — book cover" loading="lazy"></a>
+    <a class="cv" href="https://www.yes24.com/product/goods/29861154" rel="nofollow noopener noreferrer" target="_blank" title="My Love Nam June Paik"><img src="https://image.yes24.com/goods/29861154/L" alt="My Love Nam June Paik by Shigeko Kubota, Nam Jeong-Ho — book cover" loading="lazy"></a>
+    <a class="cv" href="https://www.yes24.com/product/goods/124124466" rel="nofollow noopener noreferrer" target="_blank" title="The Year of Magical Thinking"><img src="https://image.yes24.com/goods/124124466/L" alt="The Year of Magical Thinking by Joel Didion — book cover" loading="lazy"></a>
     </div>
     <ol class="reading-list" id="rlist">
     <li class="rl-item" id="b1">
@@ -478,6 +501,22 @@
     </ol>
     </div>
   </section>
+  <script>
+  (function () {
+    var area = document.getElementById("shelf-area");
+    var tabs = document.querySelectorAll(".view-tabs .vt");
+    if (!area || !tabs.length) return;
+    function set(v, save) {
+      area.classList.toggle("show-covers", v === "cover");
+      tabs.forEach(function (t) { t.setAttribute("aria-pressed", String(t.dataset.view === v)); });
+      if (save) { try { localStorage.setItem("shelfView", v); } catch (e) {} }
+    }
+    var saved = null;
+    try { saved = localStorage.getItem("shelfView"); } catch (e) {}
+    if (saved === "cover") set("cover", false);
+    tabs.forEach(function (t) { t.addEventListener("click", function () { set(t.dataset.view, true); }); });
+  })();
+  </script>
   <script>
   (function () {
     var btns = [document.getElementById("shelf-cap"), document.getElementById("shelf-cap-clear")]

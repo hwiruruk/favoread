@@ -466,6 +466,19 @@
               background: #fff; color: #000; border: 2px solid #000; box-shadow: 2px 2px 0 0 #000; }
     .sh-cap:hover { background: #fde047; }
     .sh-cap[disabled] { opacity: .55; cursor: default; }
+    .view-tabs { display: inline-flex; border: 2px solid #000; box-shadow: 2px 2px 0 0 #000; background: #fff; }
+    .vt { font: inherit; font-size: 12px; font-weight: 700; padding: 5px 10px; background: #fff; color: #000; border: 0; cursor: pointer; }
+    .vt + .vt { border-left: 2px solid #000; }
+    .vt[aria-pressed="true"] { background: #000; color: #fff; }
+    .covers { display: none; grid-template-columns: repeat(auto-fill, minmax(84px, 1fr)); gap: 14px 12px; margin: 14px 0 22px; }
+    .show-covers .covers { display: grid; }
+    .show-covers .shelf { display: none; }
+    .cv { position: relative; display: block; aspect-ratio: 2/3; border: 1.5px solid #000; box-shadow: 2px 2px 0 0 #000;
+          background: #f4f4f0; overflow: hidden; color: #000; text-decoration: none; transition: transform .12s; }
+    .cv:hover { transform: translateY(-3px); text-decoration: none; }
+    .cv img { width: 100%; height: 100%; object-fit: cover; display: block; }
+    .cv-no { display: flex; height: 100%; align-items: center; justify-content: center; padding: 6px;
+             font-size: 11px; font-weight: 700; line-height: 1.3; text-align: center; word-break: keep-all; }
     .shelf { --sh-h: 270px; --plank: 7px; --row: calc(var(--sh-h) + 18px);
              display: flex; flex-wrap: wrap; align-items: flex-end; gap: 11px 2px;
              margin: 14px 0 22px; padding: 0 8px 7px;
@@ -568,6 +581,7 @@
     <div class="shelf-head">
       <h2>Books Yerin Ha has read (17)</h2>
       <div class="shelf-tabs">
+        <span class="view-tabs" role="group"><button type="button" class="vt" data-view="spine" aria-pressed="true">📚 Spines</button><button type="button" class="vt" data-view="cover" aria-pressed="false">🖼 Covers</button></span>
         <button type="button" class="sh-cap" id="shelf-cap" title="Download the bookshelf as an image">⤓ Save image</button>
         <button type="button" class="sh-cap" id="shelf-cap-clear" title="Download as a PNG with a transparent background">⤓ Transparent</button>
       </div>
@@ -613,6 +627,25 @@
     <a class="sp is-new" style="--c:hsl(31,42%,26%);--w:43px;--fs:15px" href="https://www.yes24.com/product/goods/108914731" rel="nofollow noopener noreferrer" target="_blank" title="Violet"><span class="sp-t"><i>Violet</i></span><img class="sp-i" src="https://image.yes24.com/goods/108914731/side" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.parentNode.classList.add('sp-fail');this.remove()" onload="if(this.naturalWidth/this.naturalHeight>0.4){this.parentNode.classList.add('sp-fail');this.remove()}"><span class="sp-new" data-added="2026-09-22">NEW</span></a>
     <a class="sp is-new" style="--c:hsl(3,57%,37%);--w:42px;--fs:15px" href="https://www.yes24.com/product/goods/195254819" rel="nofollow noopener noreferrer" target="_blank" title="White Nights"><span class="sp-t"><i>White Nights</i></span><img class="sp-i" src="https://image.yes24.com/goods/195254819/side" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.parentNode.classList.add('sp-fail');this.remove()" onload="if(this.naturalWidth/this.naturalHeight>0.4){this.parentNode.classList.add('sp-fail');this.remove()}"><span class="sp-new" data-added="2026-09-22">NEW</span></a>
     <a class="sp is-new" style="--c:hsl(272,42%,38%);--w:44px;--fs:15px" href="https://www.yes24.com/product/goods/120761595" rel="nofollow noopener noreferrer" target="_blank" title="Yolk"><span class="sp-t"><i>Yolk</i></span><img class="sp-i" src="https://image.yes24.com/goods/120761595/side" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.parentNode.classList.add('sp-fail');this.remove()" onload="if(this.naturalWidth/this.naturalHeight>0.4){this.parentNode.classList.add('sp-fail');this.remove()}"><span class="sp-new" data-added="2026-09-22">NEW</span></a>
+    </div>
+    <div class="covers" id="covers">
+    <a class="cv" href="https://www.yes24.com/product/goods/119691521" rel="nofollow noopener noreferrer" target="_blank" title="Agua Viva"><span class="rl-new" data-added="2026-09-22">NEW</span><img src="https://image.yes24.com/goods/119691521/L" alt="Agua Viva by Clarice Lispector — book cover" loading="lazy"></a>
+    <a class="cv" href="https://www.yes24.com/product/goods/92323121" rel="nofollow noopener noreferrer" target="_blank" title="A Letter to a Young Poet"><span class="rl-new" data-added="2026-09-22">NEW</span><img src="https://image.yes24.com/goods/92323121/L" alt="A Letter to a Young Poet by Rainer Maria Rilke — book cover" loading="lazy"></a>
+    <a class="cv" href="https://www.yes24.com/product/goods/190375223" rel="nofollow noopener noreferrer" target="_blank" title="A Little Princess"><span class="rl-new" data-added="2026-09-22">NEW</span><img src="https://image.yes24.com/goods/190375223/L" alt="A Little Princess by Frances Hodgson Burnett — book cover" loading="lazy"></a>
+    <a class="cv" href="https://www.yes24.com/product/goods/103390694" rel="nofollow noopener noreferrer" target="_blank" title="Butter"><span class="rl-new" data-added="2026-09-22">NEW</span><img src="https://image.yes24.com/goods/103390694/L" alt="Butter by Yuzuki Asako — book cover" loading="lazy"></a>
+    <a class="cv" href="https://www.yes24.com/product/goods/17359" rel="nofollow noopener noreferrer" target="_blank" title="Die Verwandlung  Ein Landarzt"><span class="rl-new" data-added="2026-09-22">NEW</span><img src="https://image.yes24.com/goods/17359/L" alt="Die Verwandlung  Ein Landarzt by Franz Kafka — book cover" loading="lazy"></a>
+    <a class="cv" href="https://www.yes24.com/product/goods/127934853" rel="nofollow noopener noreferrer" target="_blank" title="Fourth Wing"><span class="rl-new" data-added="2026-09-22">NEW</span><img src="https://image.yes24.com/goods/127934853/L" alt="Fourth Wing by Rebecca Jaros — book cover" loading="lazy"></a>
+    <a class="cv" href="https://www.yes24.com/product/goods/5926713" rel="nofollow noopener noreferrer" target="_blank" title="Greek Lessons"><span class="rl-new" data-added="2026-09-22">NEW</span><img src="https://image.yes24.com/goods/5926713/L" alt="Greek Lessons by Han Kang — book cover" loading="lazy"></a>
+    <a class="cv" href="https://www.yes24.com/product/goods/13137546" rel="nofollow noopener noreferrer" target="_blank" title="Human Acts"><span class="rl-new" data-added="2026-09-22">NEW</span><img src="https://image.yes24.com/goods/13137546/L" alt="Human Acts by Han Kang — book cover" loading="lazy"></a>
+    <a class="cv" href="https://www.yes24.com/product/goods/73365713" rel="nofollow noopener noreferrer" target="_blank" title="La Vita Nuova"><span class="rl-new" data-added="2026-09-22">NEW</span><img src="https://image.yes24.com/goods/73365713/L" alt="La Vita Nuova by Dante Alighieri — book cover" loading="lazy"></a>
+    <a class="cv" href="https://www.yes24.com/product/goods/334877" rel="nofollow noopener noreferrer" target="_blank" title="Of Mice and Men"><span class="rl-new" data-added="2026-09-22">NEW</span><img src="https://image.yes24.com/goods/334877/L" alt="Of Mice and Men by John Steinbeck — book cover" loading="lazy"></a>
+    <a class="cv" href="https://www.yes24.com/product/goods/93974955" rel="nofollow noopener noreferrer" target="_blank" title="The Body Keeps the Score"><span class="rl-new" data-added="2026-09-22">NEW</span><img src="https://image.yes24.com/goods/93974955/L" alt="The Body Keeps the Score by Wessel Van Der Kolk — book cover" loading="lazy"></a>
+    <a class="cv" href="https://www.yes24.com/product/goods/66885227" rel="nofollow noopener noreferrer" target="_blank" title="The Courage to Live as My True Self"><span class="rl-new" data-added="2026-09-22">NEW</span><img src="https://image.yes24.com/goods/66885227/L" alt="The Courage to Live as My True Self by Brené Brown — book cover" loading="lazy"></a>
+    <a class="cv" href="https://www.yes24.com/product/goods/108422348" rel="nofollow noopener noreferrer" target="_blank" title="The Vegetarian"><span class="rl-new" data-added="2026-09-22">NEW</span><img src="https://image.yes24.com/goods/108422348/L" alt="The Vegetarian by Han Kang — book cover" loading="lazy"></a>
+    <a class="cv" href="https://www.yes24.com/product/goods/143896198" rel="nofollow noopener noreferrer" target="_blank" title="The White Book"><span class="rl-new" data-added="2026-09-22">NEW</span><img src="https://image.yes24.com/goods/143896198/L" alt="The White Book by Han Kang — book cover" loading="lazy"></a>
+    <a class="cv" href="https://www.yes24.com/product/goods/108914731" rel="nofollow noopener noreferrer" target="_blank" title="Violet"><span class="rl-new" data-added="2026-09-22">NEW</span><img src="https://image.yes24.com/goods/108914731/L" alt="Violet by Shin Kyeong-Sook — book cover" loading="lazy"></a>
+    <a class="cv" href="https://www.yes24.com/product/goods/195254819" rel="nofollow noopener noreferrer" target="_blank" title="White Nights"><span class="rl-new" data-added="2026-09-22">NEW</span><img src="https://image.yes24.com/goods/195254819/L" alt="White Nights by Fyodor Dostoyevsky — book cover" loading="lazy"></a>
+    <a class="cv" href="https://www.yes24.com/product/goods/120761595" rel="nofollow noopener noreferrer" target="_blank" title="Yolk"><span class="rl-new" data-added="2026-09-22">NEW</span><img src="https://image.yes24.com/goods/120761595/L" alt="Yolk by Choi Hyun-Kyung — book cover" loading="lazy"></a>
     </div>
     <ol class="reading-list" id="rlist">
     <li class="rl-item" id="b1">
@@ -794,6 +827,22 @@
     </ol>
     </div>
   </section>
+  <script>
+  (function () {
+    var area = document.getElementById("shelf-area");
+    var tabs = document.querySelectorAll(".view-tabs .vt");
+    if (!area || !tabs.length) return;
+    function set(v, save) {
+      area.classList.toggle("show-covers", v === "cover");
+      tabs.forEach(function (t) { t.setAttribute("aria-pressed", String(t.dataset.view === v)); });
+      if (save) { try { localStorage.setItem("shelfView", v); } catch (e) {} }
+    }
+    var saved = null;
+    try { saved = localStorage.getItem("shelfView"); } catch (e) {}
+    if (saved === "cover") set("cover", false);
+    tabs.forEach(function (t) { t.addEventListener("click", function () { set(t.dataset.view, true); }); });
+  })();
+  </script>
   <script>
   (function () {
     var btns = [document.getElementById("shelf-cap"), document.getElementById("shelf-cap-clear")]

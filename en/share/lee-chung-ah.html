@@ -540,6 +540,19 @@
               background: #fff; color: #000; border: 2px solid #000; box-shadow: 2px 2px 0 0 #000; }
     .sh-cap:hover { background: #fde047; }
     .sh-cap[disabled] { opacity: .55; cursor: default; }
+    .view-tabs { display: inline-flex; border: 2px solid #000; box-shadow: 2px 2px 0 0 #000; background: #fff; }
+    .vt { font: inherit; font-size: 12px; font-weight: 700; padding: 5px 10px; background: #fff; color: #000; border: 0; cursor: pointer; }
+    .vt + .vt { border-left: 2px solid #000; }
+    .vt[aria-pressed="true"] { background: #000; color: #fff; }
+    .covers { display: none; grid-template-columns: repeat(auto-fill, minmax(84px, 1fr)); gap: 14px 12px; margin: 14px 0 22px; }
+    .show-covers .covers { display: grid; }
+    .show-covers .shelf { display: none; }
+    .cv { position: relative; display: block; aspect-ratio: 2/3; border: 1.5px solid #000; box-shadow: 2px 2px 0 0 #000;
+          background: #f4f4f0; overflow: hidden; color: #000; text-decoration: none; transition: transform .12s; }
+    .cv:hover { transform: translateY(-3px); text-decoration: none; }
+    .cv img { width: 100%; height: 100%; object-fit: cover; display: block; }
+    .cv-no { display: flex; height: 100%; align-items: center; justify-content: center; padding: 6px;
+             font-size: 11px; font-weight: 700; line-height: 1.3; text-align: center; word-break: keep-all; }
     .shelf { --sh-h: 270px; --plank: 7px; --row: calc(var(--sh-h) + 18px);
              display: flex; flex-wrap: wrap; align-items: flex-end; gap: 11px 2px;
              margin: 14px 0 22px; padding: 0 8px 7px;
@@ -643,6 +656,7 @@
     <div class="shelf-head">
       <h2>Books Lee Chung-ah has read (21)</h2>
       <div class="shelf-tabs">
+        <span class="view-tabs" role="group"><button type="button" class="vt" data-view="spine" aria-pressed="true">📚 Spines</button><button type="button" class="vt" data-view="cover" aria-pressed="false">🖼 Covers</button></span>
         <button type="button" class="sh-cap" id="shelf-cap" title="Download the bookshelf as an image">⤓ Save image</button>
         <button type="button" class="sh-cap" id="shelf-cap-clear" title="Download as a PNG with a transparent background">⤓ Transparent</button>
       </div>
@@ -676,6 +690,29 @@
     <a class="sp" style="--c:hsl(224,36%,28%);--w:30px;--fs:15px" href="https://www.yes24.com/product/goods/103096216" rel="nofollow noopener noreferrer" target="_blank" title="Thought Economics"><span class="sp-t"><i>Thought Economics</i></span><img class="sp-i" src="https://image.yes24.com/goods/103096216/side" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.parentNode.classList.add('sp-fail');this.remove()" onload="if(this.naturalWidth/this.naturalHeight>0.4){this.parentNode.classList.add('sp-fail');this.remove()}"></a>
     <a class="sp no-img" style="--c:hsl(42,49%,39%);--w:37px;--fs:15px" href="https://www.yes24.com/product/goods/31170" rel="nofollow noopener noreferrer" target="_blank" title="To Kill a Mockingbird"><span class="sp-t"><i>To Kill a Mockingbird</i></span></a>
     <a class="sp" style="--c:hsl(275,53%,45%);--w:31px;--fs:15px" href="https://www.yes24.com/product/goods/112198235" rel="nofollow noopener noreferrer" target="_blank" title="Whisky A Tasting Course"><span class="sp-t"><i>Whisky A Tasting Course</i></span><img class="sp-i" src="https://image.yes24.com/goods/112198235/side" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.parentNode.classList.add('sp-fail');this.remove()" onload="if(this.naturalWidth/this.naturalHeight>0.4){this.parentNode.classList.add('sp-fail');this.remove()}"></a>
+    </div>
+    <div class="covers" id="covers">
+    <a class="cv" href="https://www.yes24.com/product/goods/154168402" rel="nofollow noopener noreferrer" target="_blank" title="All the Beauty in the World: The Metropolitan Museum of Art and Me"><img src="https://image.yes24.com/goods/154168402/L" alt="All the Beauty in the World: The Metropolitan Museum of Art and Me by 패트릭 브링리 — book cover" loading="lazy"></a>
+    <a class="cv" href="https://www.yes24.com/product/goods/145217021" rel="nofollow noopener noreferrer" target="_blank" title="Baumgartner"><img src="https://image.yes24.com/goods/145217021/L" alt="Baumgartner by Paul Auster — book cover" loading="lazy"></a>
+    <a class="cv" href="https://www.yes24.com/product/goods/6072784" rel="nofollow noopener noreferrer" target="_blank" title="Diego et Frida"><img src="https://image.yes24.com/goods/6072784/L" alt="Diego et Frida by J. M. G. Le Clézio — book cover" loading="lazy"></a>
+    <a class="cv" href="https://www.yes24.com/product/goods/12466017" rel="nofollow noopener noreferrer" target="_blank" title="Dust Child"><img src="https://image.yes24.com/goods/12466017/L" alt="Dust Child by Jung Yu-mi — book cover" loading="lazy"></a>
+    <a class="cv" href="https://www.yes24.com/product/goods/235166" rel="nofollow noopener noreferrer" target="_blank" title="Freude Am Garten"><img src="https://image.yes24.com/goods/235166/L" alt="Freude Am Garten by Hermann Hesse — book cover" loading="lazy"></a>
+    <a class="cv" href="https://www.yes24.com/product/goods/61778623" rel="nofollow noopener noreferrer" target="_blank" title="Innocent People"><img src="https://image.yes24.com/goods/61778623/L" alt="Innocent People by Choi Eun-young — book cover" loading="lazy"></a>
+    <a class="cv" href="https://www.yes24.com/product/goods/89761901" rel="nofollow noopener noreferrer" target="_blank" title="Le Noir: Éclats d&#x27;une non-couleur"><img src="https://image.yes24.com/goods/89761901/L" alt="Le Noir: Éclats d&#x27;une non-couleur by Alain Badiou — book cover" loading="lazy"></a>
+    <a class="cv" href="https://www.yes24.com/product/goods/147069400" rel="nofollow noopener noreferrer" target="_blank" title="Morning Piano"><span class="rl-new" data-added="2026-09-26">NEW</span><img src="https://image.yes24.com/goods/147069400/L" alt="Morning Piano by Kim Jinyoung — book cover" loading="lazy"></a>
+    <a class="cv" href="https://www.yes24.com/product/goods/101347574" rel="nofollow noopener noreferrer" target="_blank" title="Murakami T"><img src="https://image.yes24.com/goods/101347574/L" alt="Murakami T by Haruki Murakami — book cover" loading="lazy"></a>
+    <a class="cv" href="https://www.yes24.com/product/goods/122141152" rel="nofollow noopener noreferrer" target="_blank" title="Parade"><img src="https://image.yes24.com/goods/122141152/L" alt="Parade by Shuichi Yoshida — book cover" loading="lazy"></a>
+    <a class="cv" href="https://www.yes24.com/product/goods/9154438" rel="nofollow noopener noreferrer" target="_blank" title="Paradise Kiss"><img src="https://image.yes24.com/goods/9154438/L" alt="Paradise Kiss by Ai Yazawa — book cover" loading="lazy"></a>
+    <a class="cv" href="https://www.yes24.com/product/goods/118785759" rel="nofollow noopener noreferrer" target="_blank" title="Pronoun for None"><img src="https://image.yes24.com/goods/118785759/L" alt="Pronoun for None by Oh Eun — book cover" loading="lazy"></a>
+    <a class="cv" href="https://www.yes24.com/product/goods/136549439" rel="nofollow noopener noreferrer" target="_blank" title="Solo Leveling"><img src="https://image.yes24.com/goods/136549439/L" alt="Solo Leveling by Chugong — book cover" loading="lazy"></a>
+    <a class="cv" href="https://www.yes24.com/product/goods/130200909" rel="nofollow noopener noreferrer" target="_blank" title="Steadily, Long, Without Getting Tired"><img src="https://image.yes24.com/goods/130200909/L" alt="Steadily, Long, Without Getting Tired by Ha Ji-hyun — book cover" loading="lazy"></a>
+    <a class="cv" href="https://www.yes24.com/product/goods/387046" rel="nofollow noopener noreferrer" target="_blank" title="Subaru"><img src="https://image.yes24.com/goods/387046/L" alt="Subaru by Masahito Soda — book cover" loading="lazy"></a>
+    <a class="cv" href="https://www.yes24.com/product/goods/124517887" rel="nofollow noopener noreferrer" target="_blank" title="The Disappeared"><img src="https://image.yes24.com/goods/124517887/L" alt="The Disappeared by 앤드루 포터 — book cover" loading="lazy"></a>
+    <a class="cv" href="https://www.yes24.com/product/goods/69618792" rel="nofollow noopener noreferrer" target="_blank" title="The Essays (Montaigne)"><img src="https://image.yes24.com/goods/69618792/L" alt="The Essays (Montaigne) by Michel de Montaigne — book cover" loading="lazy"></a>
+    <a class="cv" href="https://www.yes24.com/product/goods/154728697" rel="nofollow noopener noreferrer" target="_blank" title="The Fire Keeper"><img src="https://image.yes24.com/goods/154728697/L" alt="The Fire Keeper by Liu Cixin — book cover" loading="lazy"></a>
+    <a class="cv" href="https://www.yes24.com/product/goods/103096216" rel="nofollow noopener noreferrer" target="_blank" title="Thought Economics"><img src="https://image.yes24.com/goods/103096216/L" alt="Thought Economics by Vikas Shah — book cover" loading="lazy"></a>
+    <a class="cv" href="https://www.yes24.com/product/goods/31170" rel="nofollow noopener noreferrer" target="_blank" title="To Kill a Mockingbird"><img src="https://image.yes24.com/goods/31170/L" alt="To Kill a Mockingbird by Harper Lee — book cover" loading="lazy"></a>
+    <a class="cv" href="https://www.yes24.com/product/goods/112198235" rel="nofollow noopener noreferrer" target="_blank" title="Whisky A Tasting Course"><img src="https://image.yes24.com/goods/112198235/L" alt="Whisky A Tasting Course by Eddie Ludlow — book cover" loading="lazy"></a>
     </div>
     <ol class="reading-list" id="rlist">
     <li class="rl-item" id="b1">
@@ -895,6 +932,22 @@
     </ol>
     </div>
   </section>
+  <script>
+  (function () {
+    var area = document.getElementById("shelf-area");
+    var tabs = document.querySelectorAll(".view-tabs .vt");
+    if (!area || !tabs.length) return;
+    function set(v, save) {
+      area.classList.toggle("show-covers", v === "cover");
+      tabs.forEach(function (t) { t.setAttribute("aria-pressed", String(t.dataset.view === v)); });
+      if (save) { try { localStorage.setItem("shelfView", v); } catch (e) {} }
+    }
+    var saved = null;
+    try { saved = localStorage.getItem("shelfView"); } catch (e) {}
+    if (saved === "cover") set("cover", false);
+    tabs.forEach(function (t) { t.addEventListener("click", function () { set(t.dataset.view, true); }); });
+  })();
+  </script>
   <script>
   (function () {
     var btns = [document.getElementById("shelf-cap"), document.getElementById("shelf-cap-clear")]

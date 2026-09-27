@@ -268,6 +268,19 @@
               background: #fff; color: #000; border: 2px solid #000; box-shadow: 2px 2px 0 0 #000; }
     .sh-cap:hover { background: #fde047; }
     .sh-cap[disabled] { opacity: .55; cursor: default; }
+    .view-tabs { display: inline-flex; border: 2px solid #000; box-shadow: 2px 2px 0 0 #000; background: #fff; }
+    .vt { font: inherit; font-size: 12px; font-weight: 700; padding: 5px 10px; background: #fff; color: #000; border: 0; cursor: pointer; }
+    .vt + .vt { border-left: 2px solid #000; }
+    .vt[aria-pressed="true"] { background: #000; color: #fff; }
+    .covers { display: none; grid-template-columns: repeat(auto-fill, minmax(84px, 1fr)); gap: 14px 12px; margin: 14px 0 22px; }
+    .show-covers .covers { display: grid; }
+    .show-covers .shelf { display: none; }
+    .cv { position: relative; display: block; aspect-ratio: 2/3; border: 1.5px solid #000; box-shadow: 2px 2px 0 0 #000;
+          background: #f4f4f0; overflow: hidden; color: #000; text-decoration: none; transition: transform .12s; }
+    .cv:hover { transform: translateY(-3px); text-decoration: none; }
+    .cv img { width: 100%; height: 100%; object-fit: cover; display: block; }
+    .cv-no { display: flex; height: 100%; align-items: center; justify-content: center; padding: 6px;
+             font-size: 11px; font-weight: 700; line-height: 1.3; text-align: center; word-break: keep-all; }
     .shelf { --sh-h: 270px; --plank: 7px; --row: calc(var(--sh-h) + 18px);
              display: flex; flex-wrap: wrap; align-items: flex-end; gap: 11px 2px;
              margin: 14px 0 22px; padding: 0 8px 7px;
@@ -371,6 +384,7 @@
     <div class="shelf-head">
       <h2>Books Irene (Red Velvet) has read (6)</h2>
       <div class="shelf-tabs">
+        <span class="view-tabs" role="group"><button type="button" class="vt" data-view="spine" aria-pressed="true">📚 Spines</button><button type="button" class="vt" data-view="cover" aria-pressed="false">🖼 Covers</button></span>
         <button type="button" class="sh-cap" id="shelf-cap" title="Download the bookshelf as an image">⤓ Save image</button>
         <button type="button" class="sh-cap" id="shelf-cap-clear" title="Download as a PNG with a transparent background">⤓ Transparent</button>
       </div>
@@ -393,6 +407,14 @@
     <a class="sp is-new" style="--c:hsl(355,40%,43%);--w:40px;--fs:15px" href="https://www.yes24.com/product/goods/105277080" rel="nofollow noopener noreferrer" target="_blank" title="Nuance"><span class="sp-t"><i>Nuance</i></span><img class="sp-i" src="https://image.yes24.com/goods/105277080/side" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.parentNode.classList.add('sp-fail');this.remove()" onload="if(this.naturalWidth/this.naturalHeight>0.4){this.parentNode.classList.add('sp-fail');this.remove()}"><span class="sp-new" data-added="2026-09-22">NEW</span></a>
     <a class="sp is-new" style="--c:hsl(57,41%,47%);--w:41px;--fs:15px" href="https://www.yes24.com/product/goods/110561651" rel="nofollow noopener noreferrer" target="_blank" title="Save Me and Love Me"><span class="sp-t"><i>Save Me and Love Me</i></span><img class="sp-i" src="https://image.yes24.com/goods/110561651/side" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.parentNode.classList.add('sp-fail');this.remove()" onload="if(this.naturalWidth/this.naturalHeight>0.4){this.parentNode.classList.add('sp-fail');this.remove()}"><span class="sp-new" data-added="2026-09-22">NEW</span></a>
     <a class="sp is-new" style="--c:hsl(11,33%,34%);--w:39px;--fs:12px" href="https://www.yes24.com/product/goods/75216410" rel="nofollow noopener noreferrer" target="_blank" title="Still Young, the Little Prince"><span class="sp-t"><i>Still Young, the Little Prince</i></span><img class="sp-i" src="https://image.yes24.com/goods/75216410/side" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.parentNode.classList.add('sp-fail');this.remove()" onload="if(this.naturalWidth/this.naturalHeight>0.4){this.parentNode.classList.add('sp-fail');this.remove()}"><span class="sp-new" data-added="2026-09-22">NEW</span></a>
+    </div>
+    <div class="covers" id="covers">
+    <a class="cv" href="https://www.yes24.com/product/goods/125384202" rel="nofollow noopener noreferrer" target="_blank" title="Even If It&#x27;s Distorted, It&#x27;s Still a Circle."><span class="rl-new" data-added="2026-09-22">NEW</span><img src="https://image.yes24.com/goods/125384202/L" alt="Even If It&#x27;s Distorted, It&#x27;s Still a Circle. by Kim Changwan — book cover" loading="lazy"></a>
+    <a class="cv" href="https://www.yes24.com/product/goods/130174593" rel="nofollow noopener noreferrer" target="_blank" title="Grey"><span class="rl-new" data-added="2026-09-22">NEW</span><img src="https://image.yes24.com/goods/130174593/L" alt="Grey by Laura Docrill — book cover" loading="lazy"></a>
+    <a class="cv" href="https://www.yes24.com/product/goods/32972572" rel="nofollow noopener noreferrer" target="_blank" title="Kim Ji-young, Born 1982"><img src="https://image.yes24.com/goods/32972572/L" alt="Kim Ji-young, Born 1982 by Cho Nam-joo — book cover" loading="lazy"></a>
+    <a class="cv" href="https://www.yes24.com/product/goods/105277080" rel="nofollow noopener noreferrer" target="_blank" title="Nuance"><span class="rl-new" data-added="2026-09-22">NEW</span><img src="https://image.yes24.com/goods/105277080/L" alt="Nuance by Seong Donghyuk — book cover" loading="lazy"></a>
+    <a class="cv" href="https://www.yes24.com/product/goods/110561651" rel="nofollow noopener noreferrer" target="_blank" title="Save Me and Love Me"><span class="rl-new" data-added="2026-09-22">NEW</span><img src="https://image.yes24.com/goods/110561651/L" alt="Save Me and Love Me by Hyunyoah — book cover" loading="lazy"></a>
+    <a class="cv" href="https://www.yes24.com/product/goods/75216410" rel="nofollow noopener noreferrer" target="_blank" title="Still Young, the Little Prince"><span class="rl-new" data-added="2026-09-22">NEW</span><img src="https://image.yes24.com/goods/75216410/L" alt="Still Young, the Little Prince by The Little Prince — book cover" loading="lazy"></a>
     </div>
     <ol class="reading-list" id="rlist">
     <li class="rl-item" id="b1">
@@ -461,6 +483,22 @@
     </ol>
     </div>
   </section>
+  <script>
+  (function () {
+    var area = document.getElementById("shelf-area");
+    var tabs = document.querySelectorAll(".view-tabs .vt");
+    if (!area || !tabs.length) return;
+    function set(v, save) {
+      area.classList.toggle("show-covers", v === "cover");
+      tabs.forEach(function (t) { t.setAttribute("aria-pressed", String(t.dataset.view === v)); });
+      if (save) { try { localStorage.setItem("shelfView", v); } catch (e) {} }
+    }
+    var saved = null;
+    try { saved = localStorage.getItem("shelfView"); } catch (e) {}
+    if (saved === "cover") set("cover", false);
+    tabs.forEach(function (t) { t.addEventListener("click", function () { set(t.dataset.view, true); }); });
+  })();
+  </script>
   <script>
   (function () {
     var btns = [document.getElementById("shelf-cap"), document.getElementById("shelf-cap-clear")]
