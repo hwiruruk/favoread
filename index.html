@@ -1273,6 +1273,11 @@
   const FEATURED_URL = 'data/featured.json';
   const WIKI_API  = 'https://ko.wikipedia.org/w/api.php';
   const BASE_PATH = window.location.pathname;
+  // 카드의 href는 정적 셀럽 페이지(/share/*.html)로 둔다. 클릭은 모달이 가로채고,
+  // 새 탭·크롤러만 이 주소를 따라간다. 예전처럼 ?celeb= 를 href에 두면 구글이
+  // 홈의 변형 주소 수백 개를 크롤링해 "크롤링됨 - 색인 미생성"으로 쌓인다.
+  const celebShareUrl = (name) =>
+    `https://favorbook.co.kr/share/${encodeURIComponent(name.replace(/\//g, '_').replace(/\\/g, '_'))}.html`;
   const SITE_URL  = (() => {
     try { if (document.referrer?.includes('sites.google.com')) return document.referrer.split('?')[0]; } catch {}
     return location.origin + BASE_PATH;
@@ -1718,7 +1723,7 @@
     slice.forEach(([name, data]) => {
       const card = document.createElement('a');
       const celebUrl = `${BASE_PATH}?celeb=${encodeURIComponent(name)}`;
-      card.href = celebUrl;
+      card.href = celebShareUrl(name);
       card.dataset.name = name;
 
       if (viewMode === 'grid') {
@@ -2054,7 +2059,7 @@
       const note = pick.note || data.books.slice(0, 2).map(b => b.title).join(' · ');
 
       const card = document.createElement('a');
-      card.href = celebUrl;
+      card.href = celebShareUrl(name);
       card.dataset.name = name;
       card.className = 'top-celeb-card group flex flex-col border-2 border-ink bg-white shadow-neo hover:shadow-neo-lg hover:-translate-y-1 transition-all overflow-hidden cursor-pointer no-underline text-ink';
 
