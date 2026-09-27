@@ -69,3 +69,18 @@ jobs:
             commit
           done
           exit 1
+
+      # 내용이 바뀐 셀럽·책 페이지를 빙·네이버 등에 IndexNow로 알린다 (구글은 미참여).
+      # 사이트가 올라가는 main에서만, 이번에 생성 커밋을 올렸을 때만 보낸다.
+      # 실패해도 사이트 갱신에는 영향이 없다.
+      - name: Notify IndexNow
+        if: github.ref == 'refs/heads/main'
+        continue-on-error: true
+        run: |
+          if [ "$(git log -1 --format=%ae)" = "github-actions[bot]@users.noreply.github.com" ]; then
+            # GitHub Pages에 새 페이지가 올라갈 시간을 준다
+            sleep 90
+            python3 tools/indexnow_ping.py HEAD^ HEAD
+          else
+            echo "생성 커밋이 없어 건너뜀"
+          fi
