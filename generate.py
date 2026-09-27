@@ -1,4 +1,4 @@
-import csv, datetime, os, json, re, html, subprocess, io
+import csv, datetime, os, json, re, html, subprocess, io, hashlib
 from urllib.parse import quote
 
 BASE = "https://favorbook.co.kr/"
@@ -53,6 +53,41 @@ def lastmod_for(path):
     if changed_files.get(path, False):
         return TODAY
     return git_lastmod(path)
+
+# 셀럽·책 페이지의 lastmod는 파일이 아니라 '내용'이 바뀐 날로 적는다.
+# 디자인·CSS만 고쳐도 파일이 모두 바뀌어 sitemap의 lastmod가 거의 전부
+# 오늘이 되면, 구글은 lastmod를 믿지 않고 무시한다. 그러면 새 책이 들어온
+# 페이지를 먼저 가져갈 신호가 사라진다. 그래서 페이지에 들어가는 데이터
+# (책·코멘트·소개 등)의 지문과 그 지문이 처음 나온 날을 따로 적어 둔다.
+PAGE_LASTMOD_FILE = 'data/page_lastmod.json'
+try:
+    with open(PAGE_LASTMOD_FILE, encoding='utf-8') as f:
+        _page_lastmod = json.load(f)
+except (FileNotFoundError, json.JSONDecodeError):
+    _page_lastmod = {}
+_page_lastmod_used = set()
+
+def content_lastmod(path, data, seed=''):
+    """data(페이지 내용을 결정하는 값)가 지난번과 같으면 적어 둔 날짜를,
+    바뀌었으면 TODAY를 돌려준다. 처음 보는 페이지는 seed(모르면 git 날짜)."""
+    fp = hashlib.sha1(json.dumps(data, ensure_ascii=False, sort_keys=True)
+                      .encode('utf-8')).hexdigest()[:16]
+    _page_lastmod_used.add(path)
+    prev = _page_lastmod.get(path)
+    if prev and prev.get('fp') == fp and prev.get('date'):
+        return prev['date']
+    if prev:
+        date = TODAY
+    else:
+        date = (seed() if callable(seed) else seed) or git_lastmod(path)
+    _page_lastmod[path] = {'fp': fp, 'date': date}
+    return date
+
+def save_page_lastmod():
+    # 없어진 페이지는 지운다 — 같은 이름으로 다시 생기면 새 페이지로 본다
+    kept = {p: v for p, v in _page_lastmod.items() if p in _page_lastmod_used}
+    write_if_changed(PAGE_LASTMOD_FILE,
+                     json.dumps(kept, ensure_ascii=False, indent=1, sort_keys=True) + '\n')
 
 LINK_CLASS = (
     'inline-block px-3 py-1.5 border-2 border-ink rounded-none '
@@ -5633,6 +5668,46 @@ IMAGE_NS = 'xmlns:image="http://www.google.com/schemas/sitemap-image/1.1"'
 home_lastmod    = lastmod_for('index.html')
 ranking_lastmod = lastmod_for('share/ranking.html')
 
+# 셀럽·책 페이지 lastmod용 데이터 지문 (content_lastmod 참고).
+# 처음 적을 때의 날짜: data.csv 전체 이력에서 그 페이지 책이 마지막으로
+# 들어온 날. 이력을 다 훑는 건 느리므로 처음 보는 페이지가 있을 때만 한 번 한다.
+_all_book_dates = None
+
+def _seed_date(pairs):
+    global _all_book_dates
+    if _all_book_dates is None:
+        _all_book_dates = {}
+        for _e in build_updates_entries(limit=5000):   # 최신순
+            for _c, _ts in _e['celebs'].items():
+                for _t in _ts:
+                    _all_book_dates.setdefault((_c, (_t or '').strip()), _e['date_iso'])
+    ds = [_all_book_dates.get((c, (t or '').strip())) for c, t in pairs]
+    ds = [d for d in ds if d]
+    return max(ds) if ds else ''
+
+def celeb_page_data(name):
+    info = celebs[name]
+    return {
+        'name': name, 'img': info['img'], 'name_en': info.get('name_en'),
+        'bio': [get_bio(name, 'ko'), get_bio(name, 'en')],
+        # 함께 추천한 셀럽도 페이지에 보이므로 넣는다
+        'books': sorted(([b, sorted(book_celebs.get(b['title'].strip(), {}).get('celebs', []))]
+                         for b in info['books']),
+                        key=lambda x: json.dumps(x, ensure_ascii=False, sort_keys=True)),
+    }
+
+def celeb_page_lastmod(path, name):
+    return content_lastmod(path, celeb_page_data(name),
+                           lambda: _seed_date((name, b['title']) for b in celebs[name]['books']))
+
+def book_page_lastmod(path, title):
+    rows = []
+    for c in sorted(book_celebs.get(title, {}).get('celebs', [])):
+        rows += [[c, b] for b in celebs[c]['books'] if b['title'].strip() == title]
+    return content_lastmod(path, {'title': title, 'rows': rows,
+                                  'title_en': book_title_en.get(title, '')},
+                           lambda: _seed_date((c, title) for c, _b in rows))
+
 lines = [
     '<?xml version="1.0" encoding="UTF-8"?>',
     '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9" ' + IMAGE_NS + '>',
@@ -5672,7 +5747,7 @@ for name in sorted(celebs.keys()):
     fn = safe_filename(name)
     url = BASE + 'share/' + quote(fn, safe='') + '.html'
     img_url = celebs[name]['img']
-    page_lastmod = lastmod_for('share/' + fn + '.html')
+    page_lastmod = celeb_page_lastmod('share/' + fn + '.html', name)
 
     lines += [
         '  <url>',
@@ -5723,7 +5798,7 @@ for fn, title in book_pages:
     if title not in ko_book_indexed:
         continue
     url = BASE + 'share/book/' + quote(fn, safe='') + '.html'
-    book_lastmod = lastmod_for('share/book/' + fn + '.html')
+    book_lastmod = book_page_lastmod('share/book/' + fn + '.html', title)
     lines += [
         '  <url>',
         '    <loc>' + esc_xml(url) + '</loc>',
@@ -5787,7 +5862,7 @@ if en_celeb_pages or en_book_pages:
         lines += [
             '  <url>',
             '    <loc>' + esc_xml(url) + '</loc>',
-            '    <lastmod>' + lastmod_for('en/share/' + slug + '.html') + '</lastmod>',
+            '    <lastmod>' + celeb_page_lastmod('en/share/' + slug + '.html', name_ko) + '</lastmod>',
             '    <changefreq>weekly</changefreq>',
             '    <priority>0.6</priority>',
             '  </url>',
@@ -5799,13 +5874,14 @@ if en_celeb_pages or en_book_pages:
         lines += [
             '  <url>',
             '    <loc>' + esc_xml(url) + '</loc>',
-            '    <lastmod>' + lastmod_for('en/share/book/' + slug + '.html') + '</lastmod>',
+            '    <lastmod>' + book_page_lastmod('en/share/book/' + slug + '.html', t_ko) + '</lastmod>',
             '    <changefreq>weekly</changefreq>',
             '    <priority>0.5</priority>',
             '  </url>',
         ]
 
 lines.append('</urlset>')
+save_page_lastmod()
 
 write_if_changed('sitemap.xml', '\n'.join(lines) + '\n')
 
