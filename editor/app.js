@@ -2757,6 +2757,253 @@ titlesDlg.addEventListener('close', () => {
   if (Ttl.dirty) toast('영문 제목 검수 결과가 아직 저장되지 않았습니다', 'err');
 });
 
+/* -------------------- 책 이름 통일 --------------------
+ *
+ * 같은 책인데 줄마다 이름이 갈린 경우를 찾아 하나로 맞춘다.
+ *  · 영문 제목이 갈린 책: 도서명(한국어)은 같은데 도서명_en이 줄마다 다르다.
+ *    영문 셀럽 페이지는 줄마다 제 값을 쓰므로 같은 책이 사람마다 다른 이름으로 나간다.
+ *    generate.py 는 검수 완료(🔤 영문 제목 검수)된 값을 CSV보다 먼저 쓰므로 그것도 함께 맞춘다.
+ *  · 한국어 제목이 다른 같은 책: '어린왕자'/'어린 왕자'처럼 띄어쓰기·부호만 다르거나
+ *    영문 제목이 같은 경우. 책 페이지가 둘로 쪼개지고 '여러 명이 읽은 책'에서 빠진다.
+ * '다른 책임'으로 뺀 묶음은 이 브라우저에 기억한다.
+ */
+const uniDlg = $('#unifyDialog');
+const Uni = {
+  ignored: new Set(JSON.parse(LS.get('unifyIgnore', '[]') || '[]')),
+  changed: 0,
+};
+const uniNormKo = (t) => String(t || '').replace(/\s*[\(\[][^)\]]*[\)\]]\s*$/, '')
+  .replace(/[\s·.,:;!?'"“”‘’\-–—~…]/g, '').toLowerCase();
+const uniNormEn = (t) => stripStar(t).toLowerCase().normalize('NFKD')
+  .replace(/[̀-ͯ]/g, '').replace(/[^\p{L}\p{N}]/gu, '');
+
+function uniRows() {
+  const byTitle = new Map();   // 도서명 -> [{celeb, b}]
+  for (const name of State.order) {
+    const c = State.celebs.get(name);
+    if (!c) continue;
+    for (const b of c.books) {
+      const t = (b.title || '').trim();
+      if (!t) continue;
+      if (!byTitle.has(t)) byTitle.set(t, []);
+      byTitle.get(t).push({ celeb: name, b });
+    }
+  }
+  return byTitle;
+}
+
+function uniEnGroups(byTitle) {
+  const out = [];
+  for (const [title, rows] of byTitle) {
+    const v = new Map();
+    for (const r of rows) {
+      const en = (r.b.title_en || '').trim();
+      if (!en) continue;
+      if (!v.has(en)) v.set(en, []);
+      v.get(en).push(r);
+    }
+    if (v.size < 2) continue;
+    const variants = [...v.entries()].map(([en, rs]) => ({ en, rows: rs }))
+      .sort((a, b) => (a.en.endsWith('*') - b.en.endsWith('*')) || b.rows.length - a.rows.length);
+    out.push({ kind: 'en', key: 'en|' + title, title, rows, variants });
+  }
+  return out;
+}
+
+function uniKoGroups(byTitle) {
+  // 띄어쓰기·부호만 다른 것, 영문 제목이 같은 것을 한 묶음으로 (union-find)
+  const titles = [...byTitle.keys()];
+  const parent = new Map(titles.map(t => [t, t]));
+  const find = (t) => { while (parent.get(t) !== t) t = parent.get(t); return t; };
+  const why = new Map();
+  const join = (a, b, reason) => {
+    const ra = find(a), rb = find(b);
+    if (ra !== rb) parent.set(rb, ra);
+    why.set(a, why.get(a) || reason); why.set(b, why.get(b) || reason);
+  };
+  const byKo = new Map(), byEn = new Map();
+  for (const t of titles) {
+    const k = uniNormKo(t);
+    if (k) { if (byKo.has(k)) join(byKo.get(k), t, 'ko'); else byKo.set(k, t); }
+    for (const r of byTitle.get(t)) {
+      const e = uniNormEn(r.b.title_en);
+      if (e.length < 4) continue;
+      if (byEn.has(e) && byEn.get(e) !== t) join(byEn.get(e), t, 'en'); else byEn.set(e, t);
+    }
+  }
+  const groups = new Map();
+  for (const t of titles) {
+    const r = find(t);
+    if (!groups.has(r)) groups.set(r, []);
+    groups.get(r).push(t);
+  }
+  const out = [];
+  for (const ts of groups.values()) {
+    if (ts.length < 2) continue;
+    ts.sort((a, b) => byTitle.get(b).length - byTitle.get(a).length || a.length - b.length);
+    const key = 'ko|' + [...ts].sort().join('|');
+    const sameKo = new Set(ts.map(uniNormKo)).size === 1;
+    out.push({ kind: 'ko', key, titles: ts, byTitle, reason: sameKo ? 'ko' : 'en' });
+  }
+  return out;
+}
+
+function uniGroups() {
+  const byTitle = uniRows();
+  const f = $('#uniFilter').value;
+  let gs = f === 'en' ? uniEnGroups(byTitle) : uniKoGroups(byTitle);
+  gs = gs.filter(g => !Uni.ignored.has(g.key));
+  const q = $('#uniSearch').value.trim().toLowerCase();
+  if (q) {
+    gs = gs.filter(g => {
+      const rows = g.kind === 'en' ? g.rows : g.titles.flatMap(t => g.byTitle.get(t));
+      const hay = rows.map(r => [r.celeb, r.b.title, r.b.title_en, r.b.author, r.b.author_en].join(' ')).join(' ');
+      return hay.toLowerCase().includes(q);
+    });
+  }
+  return gs;
+}
+
+const uniWho = (rows) => {
+  const names = [...new Set(rows.map(r => r.celeb))];
+  return esc(names.slice(0, 6).join(', ')) + (names.length > 6 ? ` 외 ${names.length - 6}명` : '');
+};
+
+function renderUnifyList() {
+  const gs = uniGroups();
+  const f = $('#uniFilter').value;
+  $('#uniCount').textContent = `${gs.length}건`;
+  if (!gs.length) {
+    $('#uniList').innerHTML = '<p class="muted small" style="padding:18px 4px;">맞출 것이 없습니다 👍</p>';
+    return;
+  }
+  $('#uniList').innerHTML = gs.map((g, gi) => {
+    if (g.kind === 'en') {
+      const b0 = g.rows[0].b;
+      return `<div class="cmt-card" data-g="${gi}" data-key="${esc(g.key)}">
+        <div><b>${esc(g.title)}</b> <span class="uni-why">· ${esc(b0.author || '')} · ${g.rows.length}줄</span></div>
+        <div class="uni-opts">${g.variants.map((v, i) => `
+          <label class="uni-opt"><input type="radio" name="uni${gi}" value="${esc(v.en)}" ${i === 0 ? 'checked' : ''}>
+            <span><b>${esc(v.en)}</b> <span class="uni-why">${v.rows.length}줄</span>
+            <span class="who">${uniWho(v.rows)}</span></span></label>`).join('')}
+          <input class="uni-custom" type="text" placeholder="직접 고쳐 쓰기 (비우면 위에서 고른 제목)" value="">
+        </div>
+        <div class="uni-actions">
+          <button type="button" class="btn small" data-act="ignore">다른 책임</button>
+          <button type="button" class="btn small primary" data-act="apply-en">이걸로 통일</button>
+        </div></div>`;
+    }
+    return `<div class="cmt-card" data-g="${gi}" data-key="${esc(g.key)}">
+      <div class="uni-why">${g.reason === 'ko' ? '띄어쓰기·부호만 다름' : '영문 제목이 같음 — 다른 책일 수도 있으니 확인하세요'}</div>
+      <div class="uni-opts">${g.titles.map((t, i) => {
+        const rows = g.byTitle.get(t), b = rows[0].b;
+        return `<label class="uni-opt"><input type="radio" name="uni${gi}" value="${esc(t)}" ${i === 0 ? 'checked' : ''}>
+          ${b.cover ? `<img src="${esc(b.cover)}" alt="" loading="lazy" referrerpolicy="no-referrer">` : ''}
+          <span><b>${esc(t)}</b> <span class="uni-why">${esc(b.author || '')}${b.publisher ? ' · ' + esc(b.publisher) : ''} · ${rows.length}줄</span>
+          <span class="who">${esc(b.title_en || '')}${b.title_en ? ' — ' : ''}${uniWho(rows)}</span></span></label>`;
+      }).join('')}</div>
+      <div class="uni-actions">
+        <button type="button" class="btn small" data-act="ignore">다른 책임</button>
+        <button type="button" class="btn small primary" data-act="apply-ko">고른 제목으로 합치기</button>
+      </div></div>`;
+  }).join('');
+  uniDlg._groups = gs;
+}
+
+function uniMarkChanged(n, msg) {
+  Uni.changed += n;
+  setDirty(true);
+  $('#uniSaveBtn').disabled = false;
+  $('#uniStatus').textContent = `미저장 변경 ${Uni.changed}줄`;
+  toast(msg, 'ok');
+  renderSidebar(); renderDetail(); renderUnifyList();
+}
+
+function uniApplyEn(g, value) {
+  const today = new Date().toISOString().slice(0, 10);
+  let n = 0;
+  for (const r of g.rows) {
+    if ((r.b.title_en || '') !== value) { r.b.title_en = value; n++; }
+    // 검수 완료된 값은 CSV보다 먼저 나가므로 그것도 맞춘다
+    const k = `${r.b.title}|${r.b.author || ''}`;
+    const ent = Ttl.items.get(k);
+    if (ent && (ent.status === 'approved' || ent.status === 'none')) {
+      const star = /\*\s*$/.test(value);
+      const nv = stripStar(value);
+      if (ent.value !== nv || ent.status !== (star ? 'none' : 'approved')) {
+        ent.value = nv; ent.status = star ? 'none' : 'approved'; ent.reviewed = today;
+        markTtlDirty(k);
+      }
+    }
+  }
+  uniMarkChanged(n, `영문 제목을 "${value}"(으)로 맞췄습니다 (${n}줄)`);
+}
+
+function uniApplyKo(g, keep) {
+  let n = 0, dup = 0;
+  for (const t of g.titles) {
+    if (t === keep) continue;
+    for (const r of g.byTitle.get(t)) {
+      const c = State.celebs.get(r.celeb);
+      if (c && c.books.some(x => x !== r.b && x.title === keep)) dup++;
+      r.b.title = keep; n++;
+    }
+  }
+  uniMarkChanged(n, `도서명을 "${keep}"(으)로 합쳤습니다 (${n}줄)` +
+    (dup ? ` — ${dup}명은 같은 책이 두 번 들어가 있어요. '중복 도서' 필터로 확인하세요` : ''));
+}
+
+async function openUnifyDialog() {
+  if (!State.celebs.size) { toast('먼저 ↻ 불러오기로 데이터를 가져오세요', 'err'); return; }
+  uniDlg.showModal();
+  // 검수 완료된 영문 제목도 함께 맞춰야 해서 검수 파일을 읽어 둔다
+  if (!Ttl.loaded && Config.token) {
+    try {
+      const doc = await fetchTitlesDoc();
+      if (doc) { for (const [k, v] of Object.entries(doc.titles || {})) Ttl.items.set(k, v); Ttl.loaded = true; }
+    } catch (err) { console.warn('영문 제목 검수 파일 읽기 실패', err); }
+  }
+  $('#uniSaveBtn').disabled = !(State.dirty || Ttl.dirty);
+  renderUnifyList();
+}
+
+$('#uniList').addEventListener('click', (e) => {
+  const btn = e.target.closest('button[data-act]');
+  if (!btn) return;
+  const card = btn.closest('.cmt-card');
+  const g = uniDlg._groups[+card.dataset.g];
+  if (btn.dataset.act === 'ignore') {
+    Uni.ignored.add(g.key);
+    LS.set('unifyIgnore', JSON.stringify([...Uni.ignored]));
+    renderUnifyList();
+    return;
+  }
+  const picked = card.querySelector('input[type="radio"]:checked')?.value || '';
+  if (btn.dataset.act === 'apply-en') {
+    const custom = card.querySelector('.uni-custom').value.trim();
+    const v = custom ? enTitleCase(custom) : picked;
+    if (!v) return;
+    uniApplyEn(g, v);
+  } else {
+    if (!picked) return;
+    uniApplyKo(g, picked);
+  }
+});
+
+// 저장: data.csv 와 (바뀐 게 있으면) 영문 제목 검수 파일을 차례로 커밋한다
+$('#uniSaveBtn').addEventListener('click', async () => {
+  if (State.dirty) await saveToGithub();
+  if (Ttl.dirty) await saveTitles();
+  if (!State.dirty && !Ttl.dirty) {
+    Uni.changed = 0;
+    $('#uniSaveBtn').disabled = true;
+    $('#uniStatus').textContent = '저장 완료 — 사이트는 몇 분 뒤 다시 빌드됩니다';
+  }
+});
+$('#unifyBtn').addEventListener('click', openUnifyDialog);
+$('#uniFilter').addEventListener('change', renderUnifyList);
+$('#uniSearch').addEventListener('input', renderUnifyList);
+
 (function init() {
   $('#branchTag').textContent = `${Config.repo} @ ${Config.branch}`;
   if (!Config.token || !Config.ttb) {
