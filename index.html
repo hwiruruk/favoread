@@ -2129,36 +2129,41 @@
       .sort((a, b) => b[1].books.length - a[1].books.length)
       .slice(0, 12);
     
-    let topHtml = '';
+    // 누르면 검색창 필터가 아니라 그 셀럽 창이 바로 열린다 (추천 셀럽 카드와 같은 동작).
+    // href는 셀럽 페이지라 새 탭으로 열거나 크롤러가 따라갈 수 있다.
+    D.topReaders.innerHTML = '';
     topCelebs.forEach(([name, data]) => {
       const firstBook = data.books.length > 0 ? data.books[0].title : '';
       const secondBook = data.books.length > 1 ? ` · ${data.books[1].title}` : '';
       const bookSummary = `${firstBook}${secondBook} 외`;
 
       const imgHtml = data.imageUrl
-        ? `<img src="${data.imageUrl}" alt="${name}" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" onerror="this.style.display='none'">`
+        ? `<img src="${escHtml(data.imageUrl)}" alt="${escHtml(name)}" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" onerror="this.style.display='none'">`
         : `<div class="w-full h-full flex items-center justify-center font-sans font-bold text-[10px] text-muted">PHOTO</div>`;
 
-      topHtml += `
-        <div class="top-celeb-card border-2 border-ink bg-white shadow-neo flex flex-col group overflow-hidden cursor-pointer" onclick="searchBook('${name}')" data-name="${name}">
+      const card = document.createElement('a');
+      card.href = celebShareUrl(name);
+      card.dataset.name = name;
+      card.className = 'top-celeb-card border-2 border-ink bg-white shadow-neo flex flex-col group overflow-hidden cursor-pointer no-underline text-ink';
+      card.innerHTML = `
           <div class="celeb-photo-wrap w-full aspect-square bg-paper-dark border-b-2 border-ink overflow-hidden relative">
             ${imgHtml}
           </div>
           <div class="p-3 text-center flex-1 flex flex-col justify-center bg-white z-10 relative">
-            <p class="font-black text-sm mb-1 truncate">${name}</p>
+            <p class="font-black text-sm mb-1 truncate">${escHtml(name)}</p>
             <p class="font-sans font-bold text-[10px] bg-neo-yellow border border-ink px-1.5 py-0.5 inline-block mx-auto mb-2 shadow-neo-sm">${data.books.length} records</p>
-            <p class="text-[10px] text-muted truncate">${bookSummary}</p>
-          </div>
-        </div>
-      `;
-    });
-    D.topReaders.innerHTML = topHtml;
+            <p class="text-[10px] text-muted truncate">${escHtml(bookSummary)}</p>
+          </div>`;
 
-    D.topReaders.querySelectorAll('.top-celeb-card').forEach(card => {
-      const name = card.dataset.name;
-      if (name && !celebMap[name].imageUrl) {
-        imgObserver.observe(card);
-      }
+      card.addEventListener('click', (e) => {
+        if (e.ctrlKey || e.metaKey || e.shiftKey) return;
+        e.preventDefault();
+        openModal(name);
+        history.pushState({ celeb: name }, '', `${BASE_PATH}?celeb=${encodeURIComponent(name)}`);
+      });
+
+      D.topReaders.appendChild(card);
+      if (!data.imageUrl) imgObserver.observe(card);
     });
 
     // 2. 여러 명이 읽은 책 (2명 이상)
