@@ -224,8 +224,14 @@
              background-image: linear-gradient(to bottom, transparent var(--sh-h), #000 var(--sh-h),
                #000 calc(var(--sh-h) + var(--plank)), transparent calc(var(--sh-h) + var(--plank)));
              background-size: 100% var(--row); background-repeat: repeat-y; }
-    .new-sec { margin: 16px 0 6px; padding: 12px 12px 2px; background: #fffbe6; border: 2px dashed #000; }
-    .new-sec-h { display: flex; align-items: center; gap: 8px; margin: 0 0 10px; font-size: 15px; font-weight: 800; }
+    .new-sec { margin: 12px 0 6px; padding: 8px 12px; background: #fffbe6; border: 1.5px dashed #000; }
+    .new-sec[open] { padding-bottom: 2px; }
+    .new-sec-h { display: flex; align-items: center; gap: 8px; margin: 0; font-size: 13px; font-weight: 700; cursor: pointer; list-style: none; }
+    .new-sec-h::-webkit-details-marker { display: none; }
+    .new-sec[open] .new-sec-h { margin-bottom: 10px; }
+    .new-sec-more { margin-left: auto; font-size: 12px; text-decoration: underline; }
+    .new-sec-more::after { content: attr(data-show) " ▾"; }
+    .new-sec[open] .new-sec-more::after { content: attr(data-hide) " ▴"; }
     .rl-item { scroll-margin-top: 16px; }
     .rl-item:target { outline: 3px solid #fde047; outline-offset: 2px; }
     .new-tiles { display: flex; flex-wrap: wrap; gap: 12px; padding-bottom: 10px; }
@@ -342,14 +348,14 @@
         <button type="button" class="sh-cap" id="shelf-cap-clear" title="배경 없이 투명한 PNG로 내려받아요">⤓ 투명 배경</button>
       </div>
     </div>
-    <div class="new-sec">
-      <h3 class="new-sec-h"><span class="rl-new-tag">NEW</span> 최근 10일 새로 추가된 책 (3권)</h3>
+    <details class="new-sec">
+      <summary class="new-sec-h"><span class="rl-new-tag">NEW</span> 최근 10일 새로 추가된 책 (3권) <span class="new-sec-more" data-show="보기" data-hide="접기"></span></summary>
       <div class="new-tiles">
         <a class="new-tile" href="#b1"><span class="nt-cover"><img src="https://image.yes24.com/goods/8150462/L" alt="당신의 이름을 지어다가 며칠은 먹었다 표지" loading="lazy"></span><span class="nt-title">당신의 이름을 지어다가 며칠은 먹었다</span></a>
         <a class="new-tile" href="#b2"><span class="nt-cover"><img src="https://image.yes24.com/goods/110437947/L" alt="베로니카 죽기로 결심하다 표지" loading="lazy"></span><span class="nt-title">베로니카 죽기로 결심하다</span></a>
         <a class="new-tile" href="#b3"><span class="nt-cover"><img src="https://image.yes24.com/goods/24724164/L" alt="삶의 끝에서 표지" loading="lazy"></span><span class="nt-title">삶의 끝에서</span></a>
       </div>
-    </div>
+    </details>
     <p class="muted">1권은 다른 셀럽도 함께 추천한 책이에요. 아래 목록에서 함께 추천한 셀럽 이름을 볼 수 있어요.</p>
     <div id="shelf-area">
     <div class="shelf" id="shelf">
@@ -359,9 +365,9 @@
     <a class="sp" style="--c:hsl(184,32%,27%);--w:36px;--fs:15px" href="https://www.yes24.com/product/goods/109080671" rel="nofollow noopener noreferrer" target="_blank" title="차 한 잔"><span class="sp-t"><i>차 한 잔</i></span><img class="sp-i" src="https://image.yes24.com/goods/109080671/side" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.parentNode.classList.add('sp-fail');this.remove()" onload="if(this.naturalWidth/this.naturalHeight>0.4){this.parentNode.classList.add('sp-fail');this.remove()}"></a>
     </div>
     <div class="covers" id="covers">
-    <a class="cv" href="https://www.yes24.com/product/goods/8150462" rel="nofollow noopener noreferrer" target="_blank" title="당신의 이름을 지어다가 며칠은 먹었다"><span class="rl-new" data-added="2026-09-26">NEW</span><img src="https://image.yes24.com/goods/8150462/L" alt="당신의 이름을 지어다가 며칠은 먹었다 표지" loading="lazy"></a>
-    <a class="cv" href="https://www.yes24.com/product/goods/110437947" rel="nofollow noopener noreferrer" target="_blank" title="베로니카 죽기로 결심하다"><span class="rl-new" data-added="2026-09-26">NEW</span><img src="https://image.yes24.com/goods/110437947/L" alt="베로니카 죽기로 결심하다 표지" loading="lazy"></a>
-    <a class="cv" href="https://www.yes24.com/product/goods/24724164" rel="nofollow noopener noreferrer" target="_blank" title="삶의 끝에서"><span class="rl-new" data-added="2026-09-26">NEW</span><img src="https://image.yes24.com/goods/24724164/L" alt="삶의 끝에서 표지" loading="lazy"></a>
+    <a class="cv" href="https://www.yes24.com/product/goods/8150462" rel="nofollow noopener noreferrer" target="_blank" title="당신의 이름을 지어다가 며칠은 먹었다"><img src="https://image.yes24.com/goods/8150462/L" alt="당신의 이름을 지어다가 며칠은 먹었다 표지" loading="lazy"></a>
+    <a class="cv" href="https://www.yes24.com/product/goods/110437947" rel="nofollow noopener noreferrer" target="_blank" title="베로니카 죽기로 결심하다"><img src="https://image.yes24.com/goods/110437947/L" alt="베로니카 죽기로 결심하다 표지" loading="lazy"></a>
+    <a class="cv" href="https://www.yes24.com/product/goods/24724164" rel="nofollow noopener noreferrer" target="_blank" title="삶의 끝에서"><img src="https://image.yes24.com/goods/24724164/L" alt="삶의 끝에서 표지" loading="lazy"></a>
     <a class="cv" href="https://www.yes24.com/product/goods/109080671" rel="nofollow noopener noreferrer" target="_blank" title="차 한 잔"><img src="https://image.yes24.com/goods/109080671/L" alt="차 한 잔 표지" loading="lazy"></a>
     </div>
     <ol class="reading-list" id="rlist">

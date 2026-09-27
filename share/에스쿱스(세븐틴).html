@@ -240,8 +240,14 @@
              background-image: linear-gradient(to bottom, transparent var(--sh-h), #000 var(--sh-h),
                #000 calc(var(--sh-h) + var(--plank)), transparent calc(var(--sh-h) + var(--plank)));
              background-size: 100% var(--row); background-repeat: repeat-y; }
-    .new-sec { margin: 16px 0 6px; padding: 12px 12px 2px; background: #fffbe6; border: 2px dashed #000; }
-    .new-sec-h { display: flex; align-items: center; gap: 8px; margin: 0 0 10px; font-size: 15px; font-weight: 800; }
+    .new-sec { margin: 12px 0 6px; padding: 8px 12px; background: #fffbe6; border: 1.5px dashed #000; }
+    .new-sec[open] { padding-bottom: 2px; }
+    .new-sec-h { display: flex; align-items: center; gap: 8px; margin: 0; font-size: 13px; font-weight: 700; cursor: pointer; list-style: none; }
+    .new-sec-h::-webkit-details-marker { display: none; }
+    .new-sec[open] .new-sec-h { margin-bottom: 10px; }
+    .new-sec-more { margin-left: auto; font-size: 12px; text-decoration: underline; }
+    .new-sec-more::after { content: attr(data-show) " ▾"; }
+    .new-sec[open] .new-sec-more::after { content: attr(data-hide) " ▴"; }
     .rl-item { scroll-margin-top: 16px; }
     .rl-item:target { outline: 3px solid #fde047; outline-offset: 2px; }
     .new-tiles { display: flex; flex-wrap: wrap; gap: 12px; padding-bottom: 10px; }
@@ -358,12 +364,12 @@
         <button type="button" class="sh-cap" id="shelf-cap-clear" title="배경 없이 투명한 PNG로 내려받아요">⤓ 투명 배경</button>
       </div>
     </div>
-    <div class="new-sec">
-      <h3 class="new-sec-h"><span class="rl-new-tag">NEW</span> 최근 10일 새로 추가된 책 (1권)</h3>
+    <details class="new-sec">
+      <summary class="new-sec-h"><span class="rl-new-tag">NEW</span> 최근 10일 새로 추가된 책 (1권) <span class="new-sec-more" data-show="보기" data-hide="접기"></span></summary>
       <div class="new-tiles">
         <a class="new-tile" href="#b4"><span class="nt-cover"><img src="https://image.yes24.com/goods/98799362/L" alt="작은 별이지만 빛나고 있어 표지" loading="lazy"></span><span class="nt-title">작은 별이지만 빛나고 있어</span></a>
       </div>
-    </div>
+    </details>
     <p class="muted">3권은 다른 셀럽도 함께 추천한 책이에요. 아래 목록에서 함께 추천한 셀럽 이름을 볼 수 있어요.</p>
     <div id="shelf-area">
     <div class="shelf" id="shelf">
@@ -377,7 +383,7 @@
     <a class="cv" href="https://www.yes24.com/product/goods/89583119" rel="nofollow noopener noreferrer" target="_blank" title="슬픔의 위로"><img src="https://image.yes24.com/goods/89583119/L" alt="슬픔의 위로 표지" loading="lazy"></a>
     <a class="cv" href="https://www.yes24.com/product/goods/90266627" rel="nofollow noopener noreferrer" target="_blank" title="애쓰지 않고 편안하게"><img src="https://image.yes24.com/goods/90266627/L" alt="애쓰지 않고 편안하게 표지" loading="lazy"></a>
     <a class="cv" href="https://www.yes24.com/product/goods/13108339" rel="nofollow noopener noreferrer" target="_blank" title="어떤 사람이 최고의 자리에 오르는가"><img src="https://image.yes24.com/goods/13108339/L" alt="어떤 사람이 최고의 자리에 오르는가 표지" loading="lazy"></a>
-    <a class="cv" href="https://www.yes24.com/product/goods/98799362" rel="nofollow noopener noreferrer" target="_blank" title="작은 별이지만 빛나고 있어"><span class="rl-new" data-added="2026-09-26">NEW</span><img src="https://image.yes24.com/goods/98799362/L" alt="작은 별이지만 빛나고 있어 표지" loading="lazy"></a>
+    <a class="cv" href="https://www.yes24.com/product/goods/98799362" rel="nofollow noopener noreferrer" target="_blank" title="작은 별이지만 빛나고 있어"><img src="https://image.yes24.com/goods/98799362/L" alt="작은 별이지만 빛나고 있어 표지" loading="lazy"></a>
     <a class="cv" href="https://www.yes24.com/product/goods/61779464" rel="nofollow noopener noreferrer" target="_blank" title="죽고 싶지만 떡볶이는 먹고 싶어"><img src="https://image.yes24.com/goods/61779464/L" alt="죽고 싶지만 떡볶이는 먹고 싶어 표지" loading="lazy"></a>
     </div>
     <ol class="reading-list" id="rlist">

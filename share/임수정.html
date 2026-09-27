@@ -256,8 +256,14 @@
              background-image: linear-gradient(to bottom, transparent var(--sh-h), #000 var(--sh-h),
                #000 calc(var(--sh-h) + var(--plank)), transparent calc(var(--sh-h) + var(--plank)));
              background-size: 100% var(--row); background-repeat: repeat-y; }
-    .new-sec { margin: 16px 0 6px; padding: 12px 12px 2px; background: #fffbe6; border: 2px dashed #000; }
-    .new-sec-h { display: flex; align-items: center; gap: 8px; margin: 0 0 10px; font-size: 15px; font-weight: 800; }
+    .new-sec { margin: 12px 0 6px; padding: 8px 12px; background: #fffbe6; border: 1.5px dashed #000; }
+    .new-sec[open] { padding-bottom: 2px; }
+    .new-sec-h { display: flex; align-items: center; gap: 8px; margin: 0; font-size: 13px; font-weight: 700; cursor: pointer; list-style: none; }
+    .new-sec-h::-webkit-details-marker { display: none; }
+    .new-sec[open] .new-sec-h { margin-bottom: 10px; }
+    .new-sec-more { margin-left: auto; font-size: 12px; text-decoration: underline; }
+    .new-sec-more::after { content: attr(data-show) " ▾"; }
+    .new-sec[open] .new-sec-more::after { content: attr(data-hide) " ▴"; }
     .rl-item { scroll-margin-top: 16px; }
     .rl-item:target { outline: 3px solid #fde047; outline-offset: 2px; }
     .new-tiles { display: flex; flex-wrap: wrap; gap: 12px; padding-bottom: 10px; }
@@ -375,14 +381,14 @@
         <button type="button" class="sh-cap" id="shelf-cap-clear" title="배경 없이 투명한 PNG로 내려받아요">⤓ 투명 배경</button>
       </div>
     </div>
-    <div class="new-sec">
-      <h3 class="new-sec-h"><span class="rl-new-tag">NEW</span> 최근 10일 새로 추가된 책 (3권)</h3>
+    <details class="new-sec">
+      <summary class="new-sec-h"><span class="rl-new-tag">NEW</span> 최근 10일 새로 추가된 책 (3권) <span class="new-sec-more" data-show="보기" data-hide="접기"></span></summary>
       <div class="new-tiles">
         <a class="new-tile" href="#b1"><span class="nt-cover"><img src="https://image.yes24.com/goods/33406347/L" alt="못다 한 사랑이 너무 많아서 표지" loading="lazy"></span><span class="nt-title">못다 한 사랑이 너무 많아서</span></a>
         <a class="new-tile" href="#b2"><span class="nt-cover"><img src="https://image.yes24.com/goods/123906272/L" alt="사랑할까, 먹을까 표지" loading="lazy"></span><span class="nt-title">사랑할까, 먹을까</span></a>
         <a class="new-tile" href="#b3"><span class="nt-cover"><img src="https://image.yes24.com/goods/80740520/L" alt="여자로 살아가는 우리들에게 표지" loading="lazy"></span><span class="nt-title">여자로 살아가는 우리들에게</span></a>
       </div>
-    </div>
+    </details>
     <div id="shelf-area">
     <div class="shelf" id="shelf">
     <a class="sp is-new" style="--c:hsl(302,52%,35%);--w:42px;--fs:12px" href="https://www.yes24.com/product/goods/33406347" rel="nofollow noopener noreferrer" target="_blank" title="못다 한 사랑이 너무 많아서"><span class="sp-t"><i>못다 한 사랑이 너무 많아서</i></span><img class="sp-i" src="https://image.yes24.com/goods/33406347/side" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.parentNode.classList.add('sp-fail');this.remove()" onload="if(this.naturalWidth/this.naturalHeight>0.4){this.parentNode.classList.add('sp-fail');this.remove()}"><span class="sp-new" data-added="2026-09-26">NEW</span></a>
@@ -393,9 +399,9 @@
     <a class="sp" style="--c:hsl(4,38%,26%);--w:33px;--fs:13px" href="https://www.yes24.com/product/goods/118680704" rel="nofollow noopener noreferrer" target="_blank" title="하늘과 바람과 별과 인간"><span class="sp-t"><i>하늘과 바람과 별과 인간</i></span><img class="sp-i" src="https://image.yes24.com/goods/118680704/side" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.parentNode.classList.add('sp-fail');this.remove()" onload="if(this.naturalWidth/this.naturalHeight>0.4){this.parentNode.classList.add('sp-fail');this.remove()}"></a>
     </div>
     <div class="covers" id="covers">
-    <a class="cv" href="https://www.yes24.com/product/goods/33406347" rel="nofollow noopener noreferrer" target="_blank" title="못다 한 사랑이 너무 많아서"><span class="rl-new" data-added="2026-09-26">NEW</span><img src="https://image.yes24.com/goods/33406347/L" alt="못다 한 사랑이 너무 많아서 표지" loading="lazy"></a>
-    <a class="cv" href="https://www.yes24.com/product/goods/123906272" rel="nofollow noopener noreferrer" target="_blank" title="사랑할까, 먹을까"><span class="rl-new" data-added="2026-09-26">NEW</span><img src="https://image.yes24.com/goods/123906272/L" alt="사랑할까, 먹을까 표지" loading="lazy"></a>
-    <a class="cv" href="https://www.yes24.com/product/goods/80740520" rel="nofollow noopener noreferrer" target="_blank" title="여자로 살아가는 우리들에게"><span class="rl-new" data-added="2026-09-26">NEW</span><img src="https://image.yes24.com/goods/80740520/L" alt="여자로 살아가는 우리들에게 표지" loading="lazy"></a>
+    <a class="cv" href="https://www.yes24.com/product/goods/33406347" rel="nofollow noopener noreferrer" target="_blank" title="못다 한 사랑이 너무 많아서"><img src="https://image.yes24.com/goods/33406347/L" alt="못다 한 사랑이 너무 많아서 표지" loading="lazy"></a>
+    <a class="cv" href="https://www.yes24.com/product/goods/123906272" rel="nofollow noopener noreferrer" target="_blank" title="사랑할까, 먹을까"><img src="https://image.yes24.com/goods/123906272/L" alt="사랑할까, 먹을까 표지" loading="lazy"></a>
+    <a class="cv" href="https://www.yes24.com/product/goods/80740520" rel="nofollow noopener noreferrer" target="_blank" title="여자로 살아가는 우리들에게"><img src="https://image.yes24.com/goods/80740520/L" alt="여자로 살아가는 우리들에게 표지" loading="lazy"></a>
     <a class="cv" href="https://www.yes24.com/product/goods/84888254" rel="nofollow noopener noreferrer" target="_blank" title="우리의 사랑은 언제 불행해질까"><img src="https://image.yes24.com/goods/84888254/L" alt="우리의 사랑은 언제 불행해질까 표지" loading="lazy"></a>
     <a class="cv" href="https://www.yes24.com/product/goods/97587008" rel="nofollow noopener noreferrer" target="_blank" title="천문학자는 별을 보지 않는다"><img src="https://image.yes24.com/goods/97587008/L" alt="천문학자는 별을 보지 않는다 표지" loading="lazy"></a>
     <a class="cv" href="https://www.yes24.com/product/goods/118680704" rel="nofollow noopener noreferrer" target="_blank" title="하늘과 바람과 별과 인간"><img src="https://image.yes24.com/goods/118680704/L" alt="하늘과 바람과 별과 인간 표지" loading="lazy"></a>

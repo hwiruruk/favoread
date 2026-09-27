@@ -706,7 +706,6 @@ def cover_tile(title, cover_url, link, added, alt):
     inner = (('<img src="' + esc(cover_url) + '" alt="' + esc(alt) + '" loading="lazy">')
              if (cover_url or '').startswith('http')
              else '<span class="cv-no">' + esc(title) + '</span>')
-    inner = cover_new_badge(added) + inner
     if link:
         return ('    <a class="cv" href="' + link + '" rel="nofollow noopener noreferrer" target="_blank" title="'
                 + esc(title) + '">' + inner + '</a>\n')
@@ -787,8 +786,14 @@ SHELF_CSS = (
     '               #000 calc(var(--sh-h) + var(--plank)), transparent calc(var(--sh-h) + var(--plank)));\n'
     '             background-size: 100% var(--row); background-repeat: repeat-y; }\n'
     # 최근 추가된 책 칸 — 본 목록 위에 따로 모은다
-    '    .new-sec { margin: 16px 0 6px; padding: 12px 12px 2px; background: #fffbe6; border: 2px dashed #000; }\n'
-    '    .new-sec-h { display: flex; align-items: center; gap: 8px; margin: 0 0 10px; font-size: 15px; font-weight: 800; }\n'
+    '    .new-sec { margin: 12px 0 6px; padding: 8px 12px; background: #fffbe6; border: 1.5px dashed #000; }\n'
+    '    .new-sec[open] { padding-bottom: 2px; }\n'
+    '    .new-sec-h { display: flex; align-items: center; gap: 8px; margin: 0; font-size: 13px; font-weight: 700; cursor: pointer; list-style: none; }\n'
+    '    .new-sec-h::-webkit-details-marker { display: none; }\n'
+    '    .new-sec[open] .new-sec-h { margin-bottom: 10px; }\n'
+    '    .new-sec-more { margin-left: auto; font-size: 12px; text-decoration: underline; }\n'
+    '    .new-sec-more::after { content: attr(data-show) " ▾"; }\n'
+    '    .new-sec[open] .new-sec-more::after { content: attr(data-hide) " ▴"; }\n'
     '    .rl-item { scroll-margin-top: 16px; }\n'
     '    .rl-item:target { outline: 3px solid #fde047; outline-offset: 2px; }\n'
     '    .new-tiles { display: flex; flex-wrap: wrap; gap: 12px; padding-bottom: 10px; }\n'
@@ -1506,12 +1511,16 @@ def new_block(items, lang='ko'):
                 + (' book' if n == 1 else ' books') + ')')
     else:
         head = '최근 ' + str(NEW_BADGE_DAYS) + '일 새로 추가된 책 (' + str(n) + '권)'
-    return ('    <div class="new-sec">\n'
-            '      <h3 class="new-sec-h"><span class="rl-new-tag">NEW</span> ' + esc(head) + '</h3>\n'
+    # 늘 펼쳐 두면 같은 책이 NEW 칸·책장·목록에 세 번씩 떠서 어지럽다.
+    # 한 줄로 접어 두고, 누르면 펼쳐 보게 한다.
+    return ('    <details class="new-sec">\n'
+            '      <summary class="new-sec-h"><span class="rl-new-tag">NEW</span> ' + esc(head)
+            + ' <span class="new-sec-more" data-show="' + ('Show' if lang == 'en' else '보기')
+            + '" data-hide="' + ('Hide' if lang == 'en' else '접기') + '"></span></summary>\n'
             '      <div class="new-tiles">\n'
             + ''.join(tile for _, tile in items) +
             '      </div>\n'
-            '    </div>\n')
+            '    </details>\n')
 
 
 def new_tile(num, title, cover_url, alt):

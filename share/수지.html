@@ -208,8 +208,14 @@
              background-image: linear-gradient(to bottom, transparent var(--sh-h), #000 var(--sh-h),
                #000 calc(var(--sh-h) + var(--plank)), transparent calc(var(--sh-h) + var(--plank)));
              background-size: 100% var(--row); background-repeat: repeat-y; }
-    .new-sec { margin: 16px 0 6px; padding: 12px 12px 2px; background: #fffbe6; border: 2px dashed #000; }
-    .new-sec-h { display: flex; align-items: center; gap: 8px; margin: 0 0 10px; font-size: 15px; font-weight: 800; }
+    .new-sec { margin: 12px 0 6px; padding: 8px 12px; background: #fffbe6; border: 1.5px dashed #000; }
+    .new-sec[open] { padding-bottom: 2px; }
+    .new-sec-h { display: flex; align-items: center; gap: 8px; margin: 0; font-size: 13px; font-weight: 700; cursor: pointer; list-style: none; }
+    .new-sec-h::-webkit-details-marker { display: none; }
+    .new-sec[open] .new-sec-h { margin-bottom: 10px; }
+    .new-sec-more { margin-left: auto; font-size: 12px; text-decoration: underline; }
+    .new-sec-more::after { content: attr(data-show) " ▾"; }
+    .new-sec[open] .new-sec-more::after { content: attr(data-hide) " ▴"; }
     .rl-item { scroll-margin-top: 16px; }
     .rl-item:target { outline: 3px solid #fde047; outline-offset: 2px; }
     .new-tiles { display: flex; flex-wrap: wrap; gap: 12px; padding-bottom: 10px; }
@@ -327,12 +333,12 @@
         <button type="button" class="sh-cap" id="shelf-cap-clear" title="배경 없이 투명한 PNG로 내려받아요">⤓ 투명 배경</button>
       </div>
     </div>
-    <div class="new-sec">
-      <h3 class="new-sec-h"><span class="rl-new-tag">NEW</span> 최근 10일 새로 추가된 책 (1권)</h3>
+    <details class="new-sec">
+      <summary class="new-sec-h"><span class="rl-new-tag">NEW</span> 최근 10일 새로 추가된 책 (1권) <span class="new-sec-more" data-show="보기" data-hide="접기"></span></summary>
       <div class="new-tiles">
         <a class="new-tile" href="#b1"><span class="nt-cover"><img src="https://image.yes24.com/goods/97255028/L" alt="긴긴밤 표지" loading="lazy"></span><span class="nt-title">긴긴밤</span></a>
       </div>
-    </div>
+    </details>
     <p class="muted">1권은 다른 셀럽도 함께 추천한 책이에요. 아래 목록에서 함께 추천한 셀럽 이름을 볼 수 있어요.</p>
     <div id="shelf-area">
     <div class="shelf" id="shelf">
@@ -341,7 +347,7 @@
     <a class="sp no-img" style="--c:hsl(216,48%,32%);--w:41px;--fs:8px" href="https://www.yes24.com/product/goods/6155476" rel="nofollow noopener noreferrer" target="_blank" title="왜 똑똑한 사람들이 헛소리를 믿게 될까"><span class="sp-t"><i>왜 똑똑한 사람들이 헛소리를 믿게 될까</i></span></a>
     </div>
     <div class="covers" id="covers">
-    <a class="cv" href="https://www.yes24.com/product/goods/97255028" rel="nofollow noopener noreferrer" target="_blank" title="긴긴밤"><span class="rl-new" data-added="2026-09-26">NEW</span><img src="https://image.yes24.com/goods/97255028/L" alt="긴긴밤 표지" loading="lazy"></a>
+    <a class="cv" href="https://www.yes24.com/product/goods/97255028" rel="nofollow noopener noreferrer" target="_blank" title="긴긴밤"><img src="https://image.yes24.com/goods/97255028/L" alt="긴긴밤 표지" loading="lazy"></a>
     <a class="cv" href="https://www.yes24.com/product/goods/27611402" rel="nofollow noopener noreferrer" target="_blank" title="반응하지 않는 연습"><img src="https://image.yes24.com/goods/27611402/L" alt="반응하지 않는 연습 표지" loading="lazy"></a>
     <a class="cv" href="https://www.yes24.com/product/goods/6155476" rel="nofollow noopener noreferrer" target="_blank" title="왜 똑똑한 사람들이 헛소리를 믿게 될까"><img src="https://image.yes24.com/goods/6155476/L" alt="왜 똑똑한 사람들이 헛소리를 믿게 될까 표지" loading="lazy"></a>
     </div>
