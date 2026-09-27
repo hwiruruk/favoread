@@ -976,8 +976,14 @@
              background-image: linear-gradient(to bottom, transparent var(--sh-h), #000 var(--sh-h),
                #000 calc(var(--sh-h) + var(--plank)), transparent calc(var(--sh-h) + var(--plank)));
              background-size: 100% var(--row); background-repeat: repeat-y; }
-    .new-sec { margin: 16px 0 6px; padding: 12px 12px 2px; background: #fffbe6; border: 2px dashed #000; }
-    .new-sec-h { display: flex; align-items: center; gap: 8px; margin: 0 0 10px; font-size: 15px; font-weight: 800; }
+    .new-sec { margin: 12px 0 6px; padding: 8px 12px; background: #fffbe6; border: 1.5px dashed #000; }
+    .new-sec[open] { padding-bottom: 2px; }
+    .new-sec-h { display: flex; align-items: center; gap: 8px; margin: 0; font-size: 13px; font-weight: 700; cursor: pointer; list-style: none; }
+    .new-sec-h::-webkit-details-marker { display: none; }
+    .new-sec[open] .new-sec-h { margin-bottom: 10px; }
+    .new-sec-more { margin-left: auto; font-size: 12px; text-decoration: underline; }
+    .new-sec-more::after { content: attr(data-show) " ▾"; }
+    .new-sec[open] .new-sec-more::after { content: attr(data-hide) " ▴"; }
     .rl-item { scroll-margin-top: 16px; }
     .rl-item:target { outline: 3px solid #fde047; outline-offset: 2px; }
     .new-tiles { display: flex; flex-wrap: wrap; gap: 12px; padding-bottom: 10px; }
@@ -1095,8 +1101,8 @@
         <button type="button" class="sh-cap" id="shelf-cap-clear" title="배경 없이 투명한 PNG로 내려받아요">⤓ 투명 배경</button>
       </div>
     </div>
-    <div class="new-sec">
-      <h3 class="new-sec-h"><span class="rl-new-tag">NEW</span> 최근 10일 새로 추가된 책 (31권)</h3>
+    <details class="new-sec">
+      <summary class="new-sec-h"><span class="rl-new-tag">NEW</span> 최근 10일 새로 추가된 책 (31권) <span class="new-sec-more" data-show="보기" data-hide="접기"></span></summary>
       <div class="new-tiles">
         <a class="new-tile" href="#b2"><span class="nt-cover"><img src="https://image.yes24.com/goods/124028064/L" alt="광인 표지" loading="lazy"></span><span class="nt-title">광인</span></a>
         <a class="new-tile" href="#b3"><span class="nt-cover"><img src="https://image.yes24.com/goods/55245370/L" alt="그레이스 표지" loading="lazy"></span><span class="nt-title">그레이스</span></a>
@@ -1130,7 +1136,7 @@
         <a class="new-tile" href="#b51"><span class="nt-cover"><img src="https://image.yes24.com/goods/121912568/L" alt="흔들릴 줄 알아야 부러지지 않는다 표지" loading="lazy"></span><span class="nt-title">흔들릴 줄 알아야 부러지지 않는다</span></a>
         <a class="new-tile" href="#b26"><span class="nt-cover"><img src="https://image.yes24.com/goods/402246/L" alt="오만과 편견 표지" loading="lazy"></span><span class="nt-title">오만과 편견</span></a>
       </div>
-    </div>
+    </details>
     <p class="muted">25권은 다른 셀럽도 함께 추천한 책이에요. 아래 목록에서 함께 추천한 셀럽 이름을 볼 수 있어요.</p>
     <div id="shelf-area">
     <div class="shelf" id="shelf">
@@ -1188,56 +1194,56 @@
     </div>
     <div class="covers" id="covers">
     <a class="cv" href="https://www.yes24.com/product/goods/144248311" rel="nofollow noopener noreferrer" target="_blank" title="2025 제16회 젊은작가상 수상작품집"><img src="https://image.yes24.com/goods/144248311/L" alt="2025 제16회 젊은작가상 수상작품집 표지" loading="lazy"></a>
-    <a class="cv" href="https://www.yes24.com/product/goods/124028064" rel="nofollow noopener noreferrer" target="_blank" title="광인"><span class="rl-new" data-added="2026-09-22">NEW</span><img src="https://image.yes24.com/goods/124028064/L" alt="광인 표지" loading="lazy"></a>
-    <a class="cv" href="https://www.yes24.com/product/goods/55245370" rel="nofollow noopener noreferrer" target="_blank" title="그레이스"><span class="rl-new" data-added="2026-09-22">NEW</span><img src="https://image.yes24.com/goods/55245370/L" alt="그레이스 표지" loading="lazy"></a>
+    <a class="cv" href="https://www.yes24.com/product/goods/124028064" rel="nofollow noopener noreferrer" target="_blank" title="광인"><img src="https://image.yes24.com/goods/124028064/L" alt="광인 표지" loading="lazy"></a>
+    <a class="cv" href="https://www.yes24.com/product/goods/55245370" rel="nofollow noopener noreferrer" target="_blank" title="그레이스"><img src="https://image.yes24.com/goods/55245370/L" alt="그레이스 표지" loading="lazy"></a>
     <a class="cv" href="https://www.yes24.com/product/goods/115633204" rel="nofollow noopener noreferrer" target="_blank" title="기분이 태도가 되지 말자 (30만 부 기념 최신 개정판)"><img src="https://image.yes24.com/goods/115633204/L" alt="기분이 태도가 되지 말자 (30만 부 기념 최신 개정판) 표지" loading="lazy"></a>
     <a class="cv" href="https://www.yes24.com/product/goods/112220926" rel="nofollow noopener noreferrer" target="_blank" title="나는 오래된 거리처럼 너를 사랑하고"><img src="https://image.yes24.com/goods/112220926/L" alt="나는 오래된 거리처럼 너를 사랑하고 표지" loading="lazy"></a>
     <a class="cv" href="https://www.yes24.com/product/goods/122944685" rel="nofollow noopener noreferrer" target="_blank" title="남에게 보여주려고 인생을 낭비하지 마라"><img src="https://image.yes24.com/goods/122944685/L" alt="남에게 보여주려고 인생을 낭비하지 마라 표지" loading="lazy"></a>
     <a class="cv" href="https://www.yes24.com/product/goods/6157159" rel="nofollow noopener noreferrer" target="_blank" title="노인과 바다"><img src="https://image.yes24.com/goods/6157159/L" alt="노인과 바다 표지" loading="lazy"></a>
     <a class="cv" href="https://www.yes24.com/product/goods/7389996" rel="nofollow noopener noreferrer" target="_blank" title="다른 방식으로 보기"><img src="https://image.yes24.com/goods/7389996/L" alt="다른 방식으로 보기 표지" loading="lazy"></a>
-    <a class="cv" href="https://www.yes24.com/product/goods/102805515" rel="nofollow noopener noreferrer" target="_blank" title="당신들은 이렇게 시간 전쟁에서 패배한다"><span class="rl-new" data-added="2026-09-22">NEW</span><img src="https://image.yes24.com/goods/102805515/L" alt="당신들은 이렇게 시간 전쟁에서 패배한다 표지" loading="lazy"></a>
-    <a class="cv" href="https://www.yes24.com/product/goods/117978006" rel="nofollow noopener noreferrer" target="_blank" title="당신이 우주다"><span class="rl-new" data-added="2026-09-22">NEW</span><img src="https://image.yes24.com/goods/117978006/L" alt="당신이 우주다 표지" loading="lazy"></a>
-    <a class="cv" href="https://www.yes24.com/product/goods/122090075" rel="nofollow noopener noreferrer" target="_blank" title="도시와 그 불확실한 벽"><span class="rl-new" data-added="2026-09-22">NEW</span><img src="https://image.yes24.com/goods/122090075/L" alt="도시와 그 불확실한 벽 표지" loading="lazy"></a>
-    <a class="cv" href="https://www.yes24.com/product/goods/139558087" rel="nofollow noopener noreferrer" target="_blank" title="레드 헬리콥터"><span class="rl-new" data-added="2026-09-22">NEW</span><img src="https://image.yes24.com/goods/139558087/L" alt="레드 헬리콥터 표지" loading="lazy"></a>
-    <a class="cv" href="https://www.yes24.com/product/goods/8759796" rel="nofollow noopener noreferrer" target="_blank" title="모순"><span class="rl-new" data-added="2026-09-22">NEW</span><img src="https://image.yes24.com/goods/8759796/L" alt="모순 표지" loading="lazy"></a>
-    <a class="cv" href="https://www.yes24.com/product/goods/128262651" rel="nofollow noopener noreferrer" target="_blank" title="무의미의 축제"><span class="rl-new" data-added="2026-09-22">NEW</span><img src="https://image.yes24.com/goods/128262651/L" alt="무의미의 축제 표지" loading="lazy"></a>
-    <a class="cv" href="https://www.yes24.com/product/goods/9464711" rel="nofollow noopener noreferrer" target="_blank" title="벨 자"><span class="rl-new" data-added="2026-09-22">NEW</span><img src="https://image.yes24.com/goods/9464711/L" alt="벨 자 표지" loading="lazy"></a>
+    <a class="cv" href="https://www.yes24.com/product/goods/102805515" rel="nofollow noopener noreferrer" target="_blank" title="당신들은 이렇게 시간 전쟁에서 패배한다"><img src="https://image.yes24.com/goods/102805515/L" alt="당신들은 이렇게 시간 전쟁에서 패배한다 표지" loading="lazy"></a>
+    <a class="cv" href="https://www.yes24.com/product/goods/117978006" rel="nofollow noopener noreferrer" target="_blank" title="당신이 우주다"><img src="https://image.yes24.com/goods/117978006/L" alt="당신이 우주다 표지" loading="lazy"></a>
+    <a class="cv" href="https://www.yes24.com/product/goods/122090075" rel="nofollow noopener noreferrer" target="_blank" title="도시와 그 불확실한 벽"><img src="https://image.yes24.com/goods/122090075/L" alt="도시와 그 불확실한 벽 표지" loading="lazy"></a>
+    <a class="cv" href="https://www.yes24.com/product/goods/139558087" rel="nofollow noopener noreferrer" target="_blank" title="레드 헬리콥터"><img src="https://image.yes24.com/goods/139558087/L" alt="레드 헬리콥터 표지" loading="lazy"></a>
+    <a class="cv" href="https://www.yes24.com/product/goods/8759796" rel="nofollow noopener noreferrer" target="_blank" title="모순"><img src="https://image.yes24.com/goods/8759796/L" alt="모순 표지" loading="lazy"></a>
+    <a class="cv" href="https://www.yes24.com/product/goods/128262651" rel="nofollow noopener noreferrer" target="_blank" title="무의미의 축제"><img src="https://image.yes24.com/goods/128262651/L" alt="무의미의 축제 표지" loading="lazy"></a>
+    <a class="cv" href="https://www.yes24.com/product/goods/9464711" rel="nofollow noopener noreferrer" target="_blank" title="벨 자"><img src="https://image.yes24.com/goods/9464711/L" alt="벨 자 표지" loading="lazy"></a>
     <a class="cv" href="https://www.yes24.com/product/goods/134605179" rel="nofollow noopener noreferrer" target="_blank" title="사랑에 대해 내가 아는 모든 것"><img src="https://image.yes24.com/goods/134605179/L" alt="사랑에 대해 내가 아는 모든 것 표지" loading="lazy"></a>
-    <a class="cv" href="https://www.yes24.com/product/goods/128138011" rel="nofollow noopener noreferrer" target="_blank" title="상처받은 내면아이 치유"><span class="rl-new" data-added="2026-09-22">NEW</span><img src="https://image.yes24.com/goods/128138011/L" alt="상처받은 내면아이 치유 표지" loading="lazy"></a>
-    <a class="cv" href="https://www.yes24.com/product/goods/54216131" rel="nofollow noopener noreferrer" target="_blank" title="성실함의 배신"><span class="rl-new" data-added="2026-09-22">NEW</span><img src="https://image.yes24.com/goods/54216131/L" alt="성실함의 배신 표지" loading="lazy"></a>
+    <a class="cv" href="https://www.yes24.com/product/goods/128138011" rel="nofollow noopener noreferrer" target="_blank" title="상처받은 내면아이 치유"><img src="https://image.yes24.com/goods/128138011/L" alt="상처받은 내면아이 치유 표지" loading="lazy"></a>
+    <a class="cv" href="https://www.yes24.com/product/goods/54216131" rel="nofollow noopener noreferrer" target="_blank" title="성실함의 배신"><img src="https://image.yes24.com/goods/54216131/L" alt="성실함의 배신 표지" loading="lazy"></a>
     <a class="cv" href="https://www.yes24.com/product/goods/69049851" rel="nofollow noopener noreferrer" target="_blank" title="세상을 어떻게 이해할 것인가"><img src="https://image.yes24.com/goods/69049851/L" alt="세상을 어떻게 이해할 것인가 표지" loading="lazy"></a>
     <a class="cv" href="https://www.yes24.com/product/goods/30555650" rel="nofollow noopener noreferrer" target="_blank" title="숨결이 바람 될 때"><img src="https://image.yes24.com/goods/30555650/L" alt="숨결이 바람 될 때 표지" loading="lazy"></a>
     <a class="cv" href="https://www.yes24.com/product/goods/257435" rel="nofollow noopener noreferrer" target="_blank" title="싯다르타"><img src="https://image.yes24.com/goods/257435/L" alt="싯다르타 표지" loading="lazy"></a>
-    <a class="cv" href="https://www.yes24.com/product/goods/119697570" rel="nofollow noopener noreferrer" target="_blank" title="아몬드"><span class="rl-new" data-added="2026-09-22">NEW</span><img src="https://image.yes24.com/goods/119697570/L" alt="아몬드 표지" loading="lazy"></a>
-    <a class="cv" href="https://www.yes24.com/product/goods/18757278" rel="nofollow noopener noreferrer" target="_blank" title="앵무새 죽이기"><span class="rl-new" data-added="2026-09-22">NEW</span><img src="https://image.yes24.com/goods/18757278/L" alt="앵무새 죽이기 표지" loading="lazy"></a>
+    <a class="cv" href="https://www.yes24.com/product/goods/119697570" rel="nofollow noopener noreferrer" target="_blank" title="아몬드"><img src="https://image.yes24.com/goods/119697570/L" alt="아몬드 표지" loading="lazy"></a>
+    <a class="cv" href="https://www.yes24.com/product/goods/18757278" rel="nofollow noopener noreferrer" target="_blank" title="앵무새 죽이기"><img src="https://image.yes24.com/goods/18757278/L" alt="앵무새 죽이기 표지" loading="lazy"></a>
     <a class="cv" href="https://www.yes24.com/product/goods/105105382" rel="nofollow noopener noreferrer" target="_blank" title="여섯 밤의 애도"><img src="https://image.yes24.com/goods/105105382/L" alt="여섯 밤의 애도 표지" loading="lazy"></a>
-    <a class="cv" href="https://www.yes24.com/product/goods/5818940" rel="nofollow noopener noreferrer" target="_blank" title="영혼들의 여행"><span class="rl-new" data-added="2026-09-22">NEW</span><img src="https://image.yes24.com/goods/5818940/L" alt="영혼들의 여행 표지" loading="lazy"></a>
-    <a class="cv" href="https://www.yes24.com/product/goods/402246" rel="nofollow noopener noreferrer" target="_blank" title="오만과 편견"><span class="rl-new" data-added="2026-09-19">NEW</span><img src="https://image.yes24.com/goods/402246/L" alt="오만과 편견 표지" loading="lazy"></a>
+    <a class="cv" href="https://www.yes24.com/product/goods/5818940" rel="nofollow noopener noreferrer" target="_blank" title="영혼들의 여행"><img src="https://image.yes24.com/goods/5818940/L" alt="영혼들의 여행 표지" loading="lazy"></a>
+    <a class="cv" href="https://www.yes24.com/product/goods/402246" rel="nofollow noopener noreferrer" target="_blank" title="오만과 편견"><img src="https://image.yes24.com/goods/402246/L" alt="오만과 편견 표지" loading="lazy"></a>
     <a class="cv" href="https://www.yes24.com/product/goods/7874947" rel="nofollow noopener noreferrer" target="_blank" title="올 어바웃 러브 All about Love"><img src="https://image.yes24.com/goods/7874947/L" alt="올 어바웃 러브 All about Love 표지" loading="lazy"></a>
-    <a class="cv" href="https://www.yes24.com/product/goods/115275383" rel="nofollow noopener noreferrer" target="_blank" title="왜 나는 너를 사랑하는가"><span class="rl-new" data-added="2026-09-22">NEW</span><img src="https://image.yes24.com/goods/115275383/L" alt="왜 나는 너를 사랑하는가 표지" loading="lazy"></a>
-    <a class="cv" href="https://www.yes24.com/product/goods/74261416" rel="nofollow noopener noreferrer" target="_blank" title="우리가 빛의 속도로 갈 수 없다면"><span class="rl-new" data-added="2026-09-22">NEW</span><img src="https://image.yes24.com/goods/74261416/L" alt="우리가 빛의 속도로 갈 수 없다면 표지" loading="lazy"></a>
-    <a class="cv" href="https://www.yes24.com/product/goods/9349031" rel="nofollow noopener noreferrer" target="_blank" title="원씽"><span class="rl-new" data-added="2026-09-22">NEW</span><img src="https://image.yes24.com/goods/9349031/L" alt="원씽 표지" loading="lazy"></a>
+    <a class="cv" href="https://www.yes24.com/product/goods/115275383" rel="nofollow noopener noreferrer" target="_blank" title="왜 나는 너를 사랑하는가"><img src="https://image.yes24.com/goods/115275383/L" alt="왜 나는 너를 사랑하는가 표지" loading="lazy"></a>
+    <a class="cv" href="https://www.yes24.com/product/goods/74261416" rel="nofollow noopener noreferrer" target="_blank" title="우리가 빛의 속도로 갈 수 없다면"><img src="https://image.yes24.com/goods/74261416/L" alt="우리가 빛의 속도로 갈 수 없다면 표지" loading="lazy"></a>
+    <a class="cv" href="https://www.yes24.com/product/goods/9349031" rel="nofollow noopener noreferrer" target="_blank" title="원씽"><img src="https://image.yes24.com/goods/9349031/L" alt="원씽 표지" loading="lazy"></a>
     <a class="cv" href="https://www.yes24.com/product/goods/108464855" rel="nofollow noopener noreferrer" target="_blank" title="유령의 마음으로"><img src="https://image.yes24.com/goods/108464855/L" alt="유령의 마음으로 표지" loading="lazy"></a>
     <a class="cv" href="https://www.yes24.com/product/goods/4827613" rel="nofollow noopener noreferrer" target="_blank" title="이방인"><img src="https://image.yes24.com/goods/4827613/L" alt="이방인 표지" loading="lazy"></a>
-    <a class="cv" href="https://www.yes24.com/product/goods/1387488" rel="nofollow noopener noreferrer" target="_blank" title="인간 실격"><span class="rl-new" data-added="2026-09-22">NEW</span><img src="https://image.yes24.com/goods/1387488/L" alt="인간 실격 표지" loading="lazy"></a>
-    <a class="cv" href="https://www.yes24.com/product/goods/103495056" rel="nofollow noopener noreferrer" target="_blank" title="작별하지 않는다"><span class="rl-new" data-added="2026-09-22">NEW</span><img src="https://image.yes24.com/goods/103495056/L" alt="작별하지 않는다 표지" loading="lazy"></a>
+    <a class="cv" href="https://www.yes24.com/product/goods/1387488" rel="nofollow noopener noreferrer" target="_blank" title="인간 실격"><img src="https://image.yes24.com/goods/1387488/L" alt="인간 실격 표지" loading="lazy"></a>
+    <a class="cv" href="https://www.yes24.com/product/goods/103495056" rel="nofollow noopener noreferrer" target="_blank" title="작별하지 않는다"><img src="https://image.yes24.com/goods/103495056/L" alt="작별하지 않는다 표지" loading="lazy"></a>
     <a class="cv" href="https://www.yes24.com/product/goods/101965629" rel="nofollow noopener noreferrer" target="_blank" title="재와 물거품"><img src="https://image.yes24.com/goods/101965629/L" alt="재와 물거품 표지" loading="lazy"></a>
-    <a class="cv" href="https://www.yes24.com/product/goods/7746470" rel="nofollow noopener noreferrer" target="_blank" title="저스트 키즈"><span class="rl-new" data-added="2026-09-22">NEW</span><img src="https://image.yes24.com/goods/7746470/L" alt="저스트 키즈 표지" loading="lazy"></a>
-    <a class="cv" href="https://www.yes24.com/product/goods/92323121" rel="nofollow noopener noreferrer" target="_blank" title="젊은 시인에게 보내는 편지"><span class="rl-new" data-added="2026-09-22">NEW</span><img src="https://image.yes24.com/goods/92323121/L" alt="젊은 시인에게 보내는 편지 표지" loading="lazy"></a>
+    <a class="cv" href="https://www.yes24.com/product/goods/7746470" rel="nofollow noopener noreferrer" target="_blank" title="저스트 키즈"><img src="https://image.yes24.com/goods/7746470/L" alt="저스트 키즈 표지" loading="lazy"></a>
+    <a class="cv" href="https://www.yes24.com/product/goods/92323121" rel="nofollow noopener noreferrer" target="_blank" title="젊은 시인에게 보내는 편지"><img src="https://image.yes24.com/goods/92323121/L" alt="젊은 시인에게 보내는 편지 표지" loading="lazy"></a>
     <a class="cv" href="https://www.yes24.com/product/goods/3093183" rel="nofollow noopener noreferrer" target="_blank" title="젖과 알"><img src="https://image.yes24.com/goods/3093183/L" alt="젖과 알 표지" loading="lazy"></a>
-    <a class="cv" href="https://www.yes24.com/product/goods/145384857" rel="nofollow noopener noreferrer" target="_blank" title="지금 이 순간을 살아라"><span class="rl-new" data-added="2026-09-22">NEW</span><img src="https://image.yes24.com/goods/145384857/L" alt="지금 이 순간을 살아라 표지" loading="lazy"></a>
+    <a class="cv" href="https://www.yes24.com/product/goods/145384857" rel="nofollow noopener noreferrer" target="_blank" title="지금 이 순간을 살아라"><img src="https://image.yes24.com/goods/145384857/L" alt="지금 이 순간을 살아라 표지" loading="lazy"></a>
     <a class="cv" href="https://www.yes24.com/product/goods/182634442" rel="nofollow noopener noreferrer" target="_blank" title="참을 수 없는 존재의 가벼움"><img src="https://image.yes24.com/goods/182634442/L" alt="참을 수 없는 존재의 가벼움 표지" loading="lazy"></a>
-    <a class="cv" href="https://www.yes24.com/product/goods/119886818" rel="nofollow noopener noreferrer" target="_blank" title="창조적 행위"><span class="rl-new" data-added="2026-09-22">NEW</span><img src="https://image.yes24.com/goods/119886818/L" alt="창조적 행위 표지" loading="lazy"></a>
-    <a class="cv" href="https://www.yes24.com/product/goods/2821212" rel="nofollow noopener noreferrer" target="_blank" title="책도둑"><span class="rl-new" data-added="2026-09-22">NEW</span><img src="https://image.yes24.com/goods/2821212/L" alt="책도둑 표지" loading="lazy"></a>
-    <a class="cv" href="https://www.yes24.com/product/goods/98349603" rel="nofollow noopener noreferrer" target="_blank" title="클라라와 태양"><span class="rl-new" data-added="2026-09-22">NEW</span><img src="https://image.yes24.com/goods/98349603/L" alt="클라라와 태양 표지" loading="lazy"></a>
-    <a class="cv" href="https://www.yes24.com/product/goods/110641272" rel="nofollow noopener noreferrer" target="_blank" title="파친코"><span class="rl-new" data-added="2026-09-22">NEW</span><img src="https://image.yes24.com/goods/110641272/L" alt="파친코 표지" loading="lazy"></a>
+    <a class="cv" href="https://www.yes24.com/product/goods/119886818" rel="nofollow noopener noreferrer" target="_blank" title="창조적 행위"><img src="https://image.yes24.com/goods/119886818/L" alt="창조적 행위 표지" loading="lazy"></a>
+    <a class="cv" href="https://www.yes24.com/product/goods/2821212" rel="nofollow noopener noreferrer" target="_blank" title="책도둑"><img src="https://image.yes24.com/goods/2821212/L" alt="책도둑 표지" loading="lazy"></a>
+    <a class="cv" href="https://www.yes24.com/product/goods/98349603" rel="nofollow noopener noreferrer" target="_blank" title="클라라와 태양"><img src="https://image.yes24.com/goods/98349603/L" alt="클라라와 태양 표지" loading="lazy"></a>
+    <a class="cv" href="https://www.yes24.com/product/goods/110641272" rel="nofollow noopener noreferrer" target="_blank" title="파친코"><img src="https://image.yes24.com/goods/110641272/L" alt="파친코 표지" loading="lazy"></a>
     <a class="cv" href="https://www.yes24.com/product/goods/7178617" rel="nofollow noopener noreferrer" target="_blank" title="프랑켄슈타인"><img src="https://image.yes24.com/goods/7178617/L" alt="프랑켄슈타인 표지" loading="lazy"></a>
     <a class="cv" href="https://www.yes24.com/product/goods/43504366" rel="nofollow noopener noreferrer" target="_blank" title="해가 지는 곳으로"><img src="https://image.yes24.com/goods/43504366/L" alt="해가 지는 곳으로 표지" loading="lazy"></a>
-    <a class="cv" href="https://www.yes24.com/product/goods/125295963" rel="nofollow noopener noreferrer" target="_blank" title="헝거"><span class="rl-new" data-added="2026-09-22">NEW</span><img src="https://image.yes24.com/goods/125295963/L" alt="헝거 표지" loading="lazy"></a>
+    <a class="cv" href="https://www.yes24.com/product/goods/125295963" rel="nofollow noopener noreferrer" target="_blank" title="헝거"><img src="https://image.yes24.com/goods/125295963/L" alt="헝거 표지" loading="lazy"></a>
     <a class="cv" href="https://www.yes24.com/product/goods/143911524" rel="nofollow noopener noreferrer" target="_blank" title="혼모노"><img src="https://image.yes24.com/goods/143911524/L" alt="혼모노 표지" loading="lazy"></a>
-    <a class="cv" href="https://www.yes24.com/product/goods/125580378" rel="nofollow noopener noreferrer" target="_blank" title="혼종의 나라"><span class="rl-new" data-added="2026-09-22">NEW</span><img src="https://image.yes24.com/goods/125580378/L" alt="혼종의 나라 표지" loading="lazy"></a>
-    <a class="cv" href="https://www.yes24.com/product/goods/57799398" rel="nofollow noopener noreferrer" target="_blank" title="회색 인간"><span class="rl-new" data-added="2026-09-22">NEW</span><img src="https://image.yes24.com/goods/57799398/L" alt="회색 인간 표지" loading="lazy"></a>
-    <a class="cv" href="https://www.yes24.com/product/goods/121912568" rel="nofollow noopener noreferrer" target="_blank" title="흔들릴 줄 알아야 부러지지 않는다"><span class="rl-new" data-added="2026-09-22">NEW</span><img src="https://image.yes24.com/goods/121912568/L" alt="흔들릴 줄 알아야 부러지지 않는다 표지" loading="lazy"></a>
+    <a class="cv" href="https://www.yes24.com/product/goods/125580378" rel="nofollow noopener noreferrer" target="_blank" title="혼종의 나라"><img src="https://image.yes24.com/goods/125580378/L" alt="혼종의 나라 표지" loading="lazy"></a>
+    <a class="cv" href="https://www.yes24.com/product/goods/57799398" rel="nofollow noopener noreferrer" target="_blank" title="회색 인간"><img src="https://image.yes24.com/goods/57799398/L" alt="회색 인간 표지" loading="lazy"></a>
+    <a class="cv" href="https://www.yes24.com/product/goods/121912568" rel="nofollow noopener noreferrer" target="_blank" title="흔들릴 줄 알아야 부러지지 않는다"><img src="https://image.yes24.com/goods/121912568/L" alt="흔들릴 줄 알아야 부러지지 않는다 표지" loading="lazy"></a>
     </div>
     <ol class="reading-list" id="rlist">
     <li class="rl-item" id="b1">

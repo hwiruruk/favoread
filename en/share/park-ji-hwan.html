@@ -217,8 +217,14 @@
              background-image: linear-gradient(to bottom, transparent var(--sh-h), #000 var(--sh-h),
                #000 calc(var(--sh-h) + var(--plank)), transparent calc(var(--sh-h) + var(--plank)));
              background-size: 100% var(--row); background-repeat: repeat-y; }
-    .new-sec { margin: 16px 0 6px; padding: 12px 12px 2px; background: #fffbe6; border: 2px dashed #000; }
-    .new-sec-h { display: flex; align-items: center; gap: 8px; margin: 0 0 10px; font-size: 15px; font-weight: 800; }
+    .new-sec { margin: 12px 0 6px; padding: 8px 12px; background: #fffbe6; border: 1.5px dashed #000; }
+    .new-sec[open] { padding-bottom: 2px; }
+    .new-sec-h { display: flex; align-items: center; gap: 8px; margin: 0; font-size: 13px; font-weight: 700; cursor: pointer; list-style: none; }
+    .new-sec-h::-webkit-details-marker { display: none; }
+    .new-sec[open] .new-sec-h { margin-bottom: 10px; }
+    .new-sec-more { margin-left: auto; font-size: 12px; text-decoration: underline; }
+    .new-sec-more::after { content: attr(data-show) " ▾"; }
+    .new-sec[open] .new-sec-more::after { content: attr(data-hide) " ▴"; }
     .rl-item { scroll-margin-top: 16px; }
     .rl-item:target { outline: 3px solid #fde047; outline-offset: 2px; }
     .new-tiles { display: flex; flex-wrap: wrap; gap: 12px; padding-bottom: 10px; }
@@ -319,12 +325,12 @@
         <button type="button" class="sh-cap" id="shelf-cap-clear" title="Download as a PNG with a transparent background">⤓ Transparent</button>
       </div>
     </div>
-    <div class="new-sec">
-      <h3 class="new-sec-h"><span class="rl-new-tag">NEW</span> New in the last 10 days (1 book)</h3>
+    <details class="new-sec">
+      <summary class="new-sec-h"><span class="rl-new-tag">NEW</span> New in the last 10 days (1 book) <span class="new-sec-more" data-show="Show" data-hide="Hide"></span></summary>
       <div class="new-tiles">
         <a class="new-tile" href="#b2"><span class="nt-cover"><img src="https://image.yes24.com/goods/59014015/L" alt="The Complete Works of Kim Soo-young by Kim Sooyoung — book cover" loading="lazy"></span><span class="nt-title">The Complete Works of Kim Soo-young</span></a>
       </div>
-    </div>
+    </details>
     <div id="shelf-area">
     <div class="shelf" id="shelf">
     <a class="sp no-img" style="--c:hsl(37,51%,27%);--w:35px;--fs:15px" href="https://www.yes24.com/product/goods/8386443" rel="nofollow noopener noreferrer" target="_blank" title="La Vie Intellectuelle"><span class="sp-t"><i>La Vie Intellectuelle</i></span></a>
@@ -332,7 +338,7 @@
     </div>
     <div class="covers" id="covers">
     <a class="cv" href="https://www.yes24.com/product/goods/8386443" rel="nofollow noopener noreferrer" target="_blank" title="La Vie Intellectuelle"><img src="https://image.yes24.com/goods/8386443/L" alt="La Vie Intellectuelle by 앙토냉 질베르 세르티양주 — book cover" loading="lazy"></a>
-    <a class="cv" href="https://www.yes24.com/product/goods/59014015" rel="nofollow noopener noreferrer" target="_blank" title="The Complete Works of Kim Soo-young"><span class="rl-new" data-added="2026-09-26">NEW</span><img src="https://image.yes24.com/goods/59014015/L" alt="The Complete Works of Kim Soo-young by Kim Sooyoung — book cover" loading="lazy"></a>
+    <a class="cv" href="https://www.yes24.com/product/goods/59014015" rel="nofollow noopener noreferrer" target="_blank" title="The Complete Works of Kim Soo-young"><img src="https://image.yes24.com/goods/59014015/L" alt="The Complete Works of Kim Soo-young by Kim Sooyoung — book cover" loading="lazy"></a>
     </div>
     <ol class="reading-list" id="rlist">
     <li class="rl-item" id="b1">

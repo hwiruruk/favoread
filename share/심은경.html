@@ -272,8 +272,14 @@
              background-image: linear-gradient(to bottom, transparent var(--sh-h), #000 var(--sh-h),
                #000 calc(var(--sh-h) + var(--plank)), transparent calc(var(--sh-h) + var(--plank)));
              background-size: 100% var(--row); background-repeat: repeat-y; }
-    .new-sec { margin: 16px 0 6px; padding: 12px 12px 2px; background: #fffbe6; border: 2px dashed #000; }
-    .new-sec-h { display: flex; align-items: center; gap: 8px; margin: 0 0 10px; font-size: 15px; font-weight: 800; }
+    .new-sec { margin: 12px 0 6px; padding: 8px 12px; background: #fffbe6; border: 1.5px dashed #000; }
+    .new-sec[open] { padding-bottom: 2px; }
+    .new-sec-h { display: flex; align-items: center; gap: 8px; margin: 0; font-size: 13px; font-weight: 700; cursor: pointer; list-style: none; }
+    .new-sec-h::-webkit-details-marker { display: none; }
+    .new-sec[open] .new-sec-h { margin-bottom: 10px; }
+    .new-sec-more { margin-left: auto; font-size: 12px; text-decoration: underline; }
+    .new-sec-more::after { content: attr(data-show) " ▾"; }
+    .new-sec[open] .new-sec-more::after { content: attr(data-hide) " ▴"; }
     .rl-item { scroll-margin-top: 16px; }
     .rl-item:target { outline: 3px solid #fde047; outline-offset: 2px; }
     .new-tiles { display: flex; flex-wrap: wrap; gap: 12px; padding-bottom: 10px; }
@@ -391,15 +397,15 @@
         <button type="button" class="sh-cap" id="shelf-cap-clear" title="배경 없이 투명한 PNG로 내려받아요">⤓ 투명 배경</button>
       </div>
     </div>
-    <div class="new-sec">
-      <h3 class="new-sec-h"><span class="rl-new-tag">NEW</span> 최근 10일 새로 추가된 책 (4권)</h3>
+    <details class="new-sec">
+      <summary class="new-sec-h"><span class="rl-new-tag">NEW</span> 최근 10일 새로 추가된 책 (4권) <span class="new-sec-more" data-show="보기" data-hide="접기"></span></summary>
       <div class="new-tiles">
         <a class="new-tile" href="#b1"><span class="nt-cover"><img src="https://image.yes24.com/goods/3460995/L" alt="렛미인 표지" loading="lazy"></span><span class="nt-title">렛미인</span></a>
         <a class="new-tile" href="#b3"><span class="nt-cover"><img src="https://image.yes24.com/goods/167453139/L" alt="모텔과 나방 표지" loading="lazy"></span><span class="nt-title">모텔과 나방</span></a>
         <a class="new-tile" href="#b4"><span class="nt-cover"><img src="https://image.yes24.com/goods/20475549/L" alt="불안의 책 표지" loading="lazy"></span><span class="nt-title">불안의 책</span></a>
         <a class="new-tile" href="#b6"><span class="nt-cover"><img src="https://image.yes24.com/goods/193851551/L" alt="지푸라기 왕관을 쓴 여자 표지" loading="lazy"></span><span class="nt-title">지푸라기 왕관을 쓴 여자</span></a>
       </div>
-    </div>
+    </details>
     <p class="muted">3권은 다른 셀럽도 함께 추천한 책이에요. 아래 목록에서 함께 추천한 셀럽 이름을 볼 수 있어요.</p>
     <div id="shelf-area">
     <div class="shelf" id="shelf">
@@ -412,12 +418,12 @@
     <a class="sp" style="--c:hsl(105,42%,41%);--w:39px;--fs:15px" href="https://www.yes24.com/product/goods/23599602" rel="nofollow noopener noreferrer" target="_blank" title="하늘과 바람과 별과 詩"><span class="sp-t"><i>하늘과 바람과 별과 詩</i></span><img class="sp-i" src="https://image.yes24.com/goods/23599602/side" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.parentNode.classList.add('sp-fail');this.remove()" onload="if(this.naturalWidth/this.naturalHeight>0.4){this.parentNode.classList.add('sp-fail');this.remove()}"></a>
     </div>
     <div class="covers" id="covers">
-    <a class="cv" href="https://www.yes24.com/product/goods/3460995" rel="nofollow noopener noreferrer" target="_blank" title="렛미인"><span class="rl-new" data-added="2026-09-26">NEW</span><img src="https://image.yes24.com/goods/3460995/L" alt="렛미인 표지" loading="lazy"></a>
+    <a class="cv" href="https://www.yes24.com/product/goods/3460995" rel="nofollow noopener noreferrer" target="_blank" title="렛미인"><img src="https://image.yes24.com/goods/3460995/L" alt="렛미인 표지" loading="lazy"></a>
     <a class="cv" href="https://www.yes24.com/product/goods/29172898" rel="nofollow noopener noreferrer" target="_blank" title="마음"><img src="https://image.yes24.com/goods/29172898/L" alt="마음 표지" loading="lazy"></a>
-    <a class="cv" href="https://www.yes24.com/product/goods/167453139" rel="nofollow noopener noreferrer" target="_blank" title="모텔과 나방"><span class="rl-new" data-added="2026-09-26">NEW</span><img src="https://image.yes24.com/goods/167453139/L" alt="모텔과 나방 표지" loading="lazy"></a>
-    <a class="cv" href="https://www.yes24.com/product/goods/20475549" rel="nofollow noopener noreferrer" target="_blank" title="불안의 책"><span class="rl-new" data-added="2026-09-26">NEW</span><img src="https://image.yes24.com/goods/20475549/L" alt="불안의 책 표지" loading="lazy"></a>
+    <a class="cv" href="https://www.yes24.com/product/goods/167453139" rel="nofollow noopener noreferrer" target="_blank" title="모텔과 나방"><img src="https://image.yes24.com/goods/167453139/L" alt="모텔과 나방 표지" loading="lazy"></a>
+    <a class="cv" href="https://www.yes24.com/product/goods/20475549" rel="nofollow noopener noreferrer" target="_blank" title="불안의 책"><img src="https://image.yes24.com/goods/20475549/L" alt="불안의 책 표지" loading="lazy"></a>
     <a class="cv" href="https://www.yes24.com/product/goods/252513" rel="nofollow noopener noreferrer" target="_blank" title="설국"><img src="https://image.yes24.com/goods/252513/L" alt="설국 표지" loading="lazy"></a>
-    <a class="cv" href="https://www.yes24.com/product/goods/193851551" rel="nofollow noopener noreferrer" target="_blank" title="지푸라기 왕관을 쓴 여자"><span class="rl-new" data-added="2026-09-26">NEW</span><img src="https://image.yes24.com/goods/193851551/L" alt="지푸라기 왕관을 쓴 여자 표지" loading="lazy"></a>
+    <a class="cv" href="https://www.yes24.com/product/goods/193851551" rel="nofollow noopener noreferrer" target="_blank" title="지푸라기 왕관을 쓴 여자"><img src="https://image.yes24.com/goods/193851551/L" alt="지푸라기 왕관을 쓴 여자 표지" loading="lazy"></a>
     <a class="cv" href="https://www.yes24.com/product/goods/23599602" rel="nofollow noopener noreferrer" target="_blank" title="하늘과 바람과 별과 詩"><img src="https://image.yes24.com/goods/23599602/L" alt="하늘과 바람과 별과 詩 표지" loading="lazy"></a>
     </div>
     <ol class="reading-list" id="rlist">

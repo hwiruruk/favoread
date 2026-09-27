@@ -271,8 +271,14 @@
              background-image: linear-gradient(to bottom, transparent var(--sh-h), #000 var(--sh-h),
                #000 calc(var(--sh-h) + var(--plank)), transparent calc(var(--sh-h) + var(--plank)));
              background-size: 100% var(--row); background-repeat: repeat-y; }
-    .new-sec { margin: 16px 0 6px; padding: 12px 12px 2px; background: #fffbe6; border: 2px dashed #000; }
-    .new-sec-h { display: flex; align-items: center; gap: 8px; margin: 0 0 10px; font-size: 15px; font-weight: 800; }
+    .new-sec { margin: 12px 0 6px; padding: 8px 12px; background: #fffbe6; border: 1.5px dashed #000; }
+    .new-sec[open] { padding-bottom: 2px; }
+    .new-sec-h { display: flex; align-items: center; gap: 8px; margin: 0; font-size: 13px; font-weight: 700; cursor: pointer; list-style: none; }
+    .new-sec-h::-webkit-details-marker { display: none; }
+    .new-sec[open] .new-sec-h { margin-bottom: 10px; }
+    .new-sec-more { margin-left: auto; font-size: 12px; text-decoration: underline; }
+    .new-sec-more::after { content: attr(data-show) " ▾"; }
+    .new-sec[open] .new-sec-more::after { content: attr(data-hide) " ▴"; }
     .rl-item { scroll-margin-top: 16px; }
     .rl-item:target { outline: 3px solid #fde047; outline-offset: 2px; }
     .new-tiles { display: flex; flex-wrap: wrap; gap: 12px; padding-bottom: 10px; }
@@ -372,15 +378,15 @@
         <button type="button" class="sh-cap" id="shelf-cap-clear" title="Download as a PNG with a transparent background">⤓ Transparent</button>
       </div>
     </div>
-    <div class="new-sec">
-      <h3 class="new-sec-h"><span class="rl-new-tag">NEW</span> New in the last 10 days (4 books)</h3>
+    <details class="new-sec">
+      <summary class="new-sec-h"><span class="rl-new-tag">NEW</span> New in the last 10 days (4 books) <span class="new-sec-more" data-show="Show" data-hide="Hide"></span></summary>
       <div class="new-tiles">
         <a class="new-tile" href="#b2"><span class="nt-cover"><img src="https://image.yes24.com/goods/196342642/L" alt="Follow Your Heart by Susanna Tamaro — book cover" loading="lazy"></span><span class="nt-title">Follow Your Heart</span></a>
         <a class="new-tile" href="#b3"><span class="nt-cover"><img src="https://image.yes24.com/goods/2355817/L" alt="Humans and Animals by Choe Jae-chun — book cover" loading="lazy"></span><span class="nt-title">Humans and Animals</span></a>
         <a class="new-tile" href="#b4"><span class="nt-cover"><img src="https://image.yes24.com/goods/196678683/L" alt="Please Look After Mom by Kyung-Sook Shin — book cover" loading="lazy"></span><span class="nt-title">Please Look After Mom</span></a>
         <a class="new-tile" href="#b5"><span class="nt-cover"><img src="https://image.yes24.com/goods/195804435/L" alt="The Selfish Gene by Richard Dawkins — book cover" loading="lazy"></span><span class="nt-title">The Selfish Gene</span></a>
       </div>
-    </div>
+    </details>
     <div id="shelf-area">
     <div class="shelf" id="shelf">
     <a class="sp no-img" style="--c:hsl(112,52%,31%);--w:37px;--fs:15px" href="https://www.yes24.com/product/goods/3299575" rel="nofollow noopener noreferrer" target="_blank" title="Acting in Film"><span class="sp-t"><i>Acting in Film</i></span></a>
@@ -391,10 +397,10 @@
     </div>
     <div class="covers" id="covers">
     <a class="cv" href="https://www.yes24.com/product/goods/3299575" rel="nofollow noopener noreferrer" target="_blank" title="Acting in Film"><img src="https://image.yes24.com/goods/3299575/L" alt="Acting in Film by Michael Caine — book cover" loading="lazy"></a>
-    <a class="cv" href="https://www.yes24.com/product/goods/196342642" rel="nofollow noopener noreferrer" target="_blank" title="Follow Your Heart"><span class="rl-new" data-added="2026-09-17">NEW</span><img src="https://image.yes24.com/goods/196342642/L" alt="Follow Your Heart by Susanna Tamaro — book cover" loading="lazy"></a>
-    <a class="cv" href="https://www.yes24.com/product/goods/2355817" rel="nofollow noopener noreferrer" target="_blank" title="Humans and Animals"><span class="rl-new" data-added="2026-09-17">NEW</span><img src="https://image.yes24.com/goods/2355817/L" alt="Humans and Animals by Choe Jae-chun — book cover" loading="lazy"></a>
-    <a class="cv" href="https://www.yes24.com/product/goods/196678683" rel="nofollow noopener noreferrer" target="_blank" title="Please Look After Mom"><span class="rl-new" data-added="2026-09-17">NEW</span><img src="https://image.yes24.com/goods/196678683/L" alt="Please Look After Mom by Kyung-Sook Shin — book cover" loading="lazy"></a>
-    <a class="cv" href="https://www.yes24.com/product/goods/195804435" rel="nofollow noopener noreferrer" target="_blank" title="The Selfish Gene"><span class="rl-new" data-added="2026-09-17">NEW</span><img src="https://image.yes24.com/goods/195804435/L" alt="The Selfish Gene by Richard Dawkins — book cover" loading="lazy"></a>
+    <a class="cv" href="https://www.yes24.com/product/goods/196342642" rel="nofollow noopener noreferrer" target="_blank" title="Follow Your Heart"><img src="https://image.yes24.com/goods/196342642/L" alt="Follow Your Heart by Susanna Tamaro — book cover" loading="lazy"></a>
+    <a class="cv" href="https://www.yes24.com/product/goods/2355817" rel="nofollow noopener noreferrer" target="_blank" title="Humans and Animals"><img src="https://image.yes24.com/goods/2355817/L" alt="Humans and Animals by Choe Jae-chun — book cover" loading="lazy"></a>
+    <a class="cv" href="https://www.yes24.com/product/goods/196678683" rel="nofollow noopener noreferrer" target="_blank" title="Please Look After Mom"><img src="https://image.yes24.com/goods/196678683/L" alt="Please Look After Mom by Kyung-Sook Shin — book cover" loading="lazy"></a>
+    <a class="cv" href="https://www.yes24.com/product/goods/195804435" rel="nofollow noopener noreferrer" target="_blank" title="The Selfish Gene"><img src="https://image.yes24.com/goods/195804435/L" alt="The Selfish Gene by Richard Dawkins — book cover" loading="lazy"></a>
     </div>
     <ol class="reading-list" id="rlist">
     <li class="rl-item" id="b1">
