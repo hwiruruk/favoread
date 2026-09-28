@@ -1549,6 +1549,7 @@
   const PUB_BOOK_STEP  = 12;
   const PUB_CELEB_STEP = 16;
   const pubView = { kw: '', books: PUB_BOOK_STEP, celebsOpen: false };
+  let pubMoreAt = -Infinity;  // 마지막으로 더보기를 누른 시각
 
   function renderPublisherHits(kw, hits) {
     if (pubView.kw !== kw) Object.assign(pubView, { kw, books: PUB_BOOK_STEP, celebsOpen: false });
@@ -2272,13 +2273,23 @@
       const b = e.target.closest('button[data-celeb]');
       if (b) { openModal(b.dataset.celeb); return; }
       // 출판사 모드: 표지를 누르면 그 책 제목으로 다시 검색해 읽은 셀럽을 전부 보여 준다
+      // 더보기를 누르면 버튼 자리에 새 표지가 바로 들어온다. 모바일에서 탭 뒤에
+      // 클릭이 한 번 더 들어오면(키보드가 닫히며 화면이 밀릴 때 등) 그 표지가
+      // 눌려 엉뚱한 책으로 넘어가므로, 더보기 직후 잠깐은 표지 클릭을 무시한다.
       const book = e.target.closest('button[data-book]');
-      if (book) { searchBook(book.dataset.book); return; }
+      if (book) {
+        if (performance.now() - pubMoreAt < 700) return;
+        searchBook(book.dataset.book); return;
+      }
       const more = e.target.closest('button[data-pub-more]');
       if (more) {
+        pubMoreAt = performance.now();
         if (more.dataset.pubMore === 'books') pubView.books += PUB_BOOK_STEP;
         else pubView.celebsOpen = !pubView.celebsOpen;
+        // 목록을 통째로 다시 그려도 보던 자리는 그대로 둔다
+        const y = window.scrollY;
         filterEntries(D.search.value);
+        window.scrollTo({ top: y, behavior: 'instant' });
       }
     });
     D.closeBtn.addEventListener('click', () => closeModal(false));
