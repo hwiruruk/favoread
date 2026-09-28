@@ -11,6 +11,7 @@ data/detail/*.json 에 들어 있는 모든 출처(source) URL을 모은 뒤
   archive/web/<도메인>/<해시>.txt   같은 페이지의 본문 텍스트 (첫 줄은 URL)
   archive/web/index.csv             URL ↔ PDF 파일 ↔ 셀럽·책 대응표, 성공 여부
   archive/youtube/youtube.csv       유튜브 출처 목록 (셀럽·책·영상 제목·채널·시작 시각)
+  archive/youtube/<영상ID>.txt      영상 제목·설명·자막 (자막이 없으면 제목·설명만)
 
 X·인스타그램·페이스북은 로그인 벽이 있어 대부분 로그인 화면이 찍힌다.
 index.csv 의 note 칸에 login-wall 로 표시해 두니 따로 확인하면 된다.
@@ -29,8 +30,12 @@ import hashlib
 import json
 import os
 import re
+import sys
 import urllib.request
 from urllib.parse import parse_qs, urlparse
+
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+from fetch_comments import youtube_text  # noqa: E402
 
 YOUTUBE_HOSTS = ('youtube.com', 'youtu.be')
 LOGIN_WALL_HOSTS = ('x.com', 'twitter.com', 'instagram.com', 'facebook.com',
@@ -93,16 +98,31 @@ def youtube_start(url):
     return '%d:%02d:%02d' % (sec // 3600, sec % 3600 // 60, sec % 60)
 
 
+def save_youtube_text(url, out_dir):
+    """제목·설명·자막을 <영상ID>.txt 로 남긴다. 돌려주는 값은 youtube.csv 의 자막 칸."""
+    try:
+        text = youtube_text(url)
+    except Exception as e:  # 네트워크 오류·비공개 영상
+        return 'failed: %s' % str(e).splitlines()[0][:100]
+    if not text:
+        return 'no-text'
+    vid = re.search(r'(?:v=|youtu\.be/|/shorts/|/embed/)([\w-]{11})', url).group(1)
+    with open(os.path.join(out_dir, vid + '.txt'), 'w', encoding='utf-8') as fp:
+        fp.write(url + '\n\n' + text)
+    return 'captions' if '[자막]' in text else 'no-captions'
+
+
 def write_youtube(items, out_dir, fetch_meta):
     os.makedirs(out_dir, exist_ok=True)
     path = os.path.join(out_dir, 'youtube.csv')
     with open(path, 'w', encoding='utf-8-sig', newline='') as fp:
         w = csv.writer(fp)
-        w.writerow(['url', '셀럽', '책', '영상 제목', '채널', '시작 시각', 'note'])
+        w.writerow(['url', '셀럽', '책', '영상 제목', '채널', '시작 시각', 'note', '자막'])
         for i, (url, pairs) in enumerate(items, 1):
             title, channel, note = youtube_meta(url) if fetch_meta else ('', '', '')
             celebs, books = who(pairs)
-            w.writerow([url, celebs, books, title, channel, youtube_start(url), note])
+            text = save_youtube_text(url, out_dir) if fetch_meta else ''
+            w.writerow([url, celebs, books, title, channel, youtube_start(url), note, text])
             if i % 20 == 0:
                 print('  유튜브 %d/%d' % (i, len(items)))
     print('✅ 유튜브 %d개 → %s' % (len(items), path))
@@ -110,10 +130,16 @@ def write_youtube(items, out_dir, fetch_meta):
 
 # ── 웹페이지 → PDF ──────────────────────────────────────────────
 
+def fetch_url(url):
+    """네이버 블로그 PC 주소는 본문이 iframe 안에 있어 innerText 가 비므로 모바일 주소로 연다."""
+    m = re.match(r'https?://blog\.naver\.com/([\w-]+)/(\d+)', url)
+    return 'https://m.blog.naver.com/%s/%s' % m.groups() if m else url
+
+
 async def save_pdf(ctx, url, dest, timeout_ms):
     page = await ctx.new_page()
     try:
-        resp = await page.goto(url, wait_until='domcontentloaded', timeout=timeout_ms)
+        resp = await page.goto(fetch_url(url), wait_until='domcontentloaded', timeout=timeout_ms)
         try:
             await page.wait_for_load_state('networkidle', timeout=8000)
         except Exception:
