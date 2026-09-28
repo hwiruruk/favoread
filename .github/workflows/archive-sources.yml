@@ -6,7 +6,7 @@ name: Archive Source Pages
 #
 # 결과는 저장소에 커밋하지 않고, 실행 화면 맨 아래 Artifacts 에 zip으로 올라온다 (90일 보관).
 #   source-pdfs    웹페이지 PDF + index.csv (URL ↔ PDF ↔ 셀럽·책 대응표)
-#   source-texts   같은 페이지의 본문 텍스트(.txt) + index.csv, 유튜브 자막(.txt) — 가벼워서 코멘트 작업에 쓴다
+#   source-texts   같은 페이지의 본문 텍스트(.txt) + index.csv, 유튜브 자막·X 트윗 글(.txt) — 가벼워서 코멘트 작업에 쓴다
 #   youtube-list   유튜브 출처 목록 youtube.csv (영상 제목·채널·시작 시각 포함)
 
 on:
@@ -21,7 +21,7 @@ on:
         required: false
         default: ''
       skip_social:
-        description: 'X·인스타그램·페이스북 등 로그인 벽 출처 건너뛰기'
+        description: 'X·인스타그램·페이스북 등 로그인 벽 출처 건너뛰기 (X 트윗 글은 이와 상관없이 따로 받는다)'
         required: false
         default: false
         type: boolean
@@ -76,6 +76,7 @@ jobs:
             archive/web/**/*.txt
             archive/web/index.csv
             archive/youtube/
+            archive/x/
           retention-days: 90
           if-no-files-found: warn
 

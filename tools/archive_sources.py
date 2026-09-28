@@ -12,6 +12,8 @@ data/detail/*.json 에 들어 있는 모든 출처(source) URL을 모은 뒤
   archive/web/index.csv             URL ↔ PDF 파일 ↔ 셀럽·책 대응표, 성공 여부
   archive/youtube/youtube.csv       유튜브 출처 목록 (셀럽·책·영상 제목·채널·시작 시각)
   archive/youtube/<영상ID>.txt      영상 제목·설명·자막 (자막이 없으면 제목·설명만)
+  archive/x/x.csv                   X 출처 목록 (셀럽·책·작성자·결과)
+  archive/x/<트윗ID>.txt            트윗 글 (oEmbed로 받아 로그인 없이 된다. 이미지 속 글자는 없음)
 
 X·인스타그램·페이스북은 로그인 벽이 있어 대부분 로그인 화면이 찍힌다.
 index.csv 의 note 칸에 login-wall 로 표시해 두니 따로 확인하면 된다.
@@ -35,7 +37,7 @@ import urllib.request
 from urllib.parse import parse_qs, urlparse
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
-from fetch_comments import youtube_text  # noqa: E402
+from fetch_comments import html_to_text, youtube_text  # noqa: E402
 
 YOUTUBE_HOSTS = ('youtube.com', 'youtu.be')
 LOGIN_WALL_HOSTS = ('x.com', 'twitter.com', 'instagram.com', 'facebook.com',
@@ -126,6 +128,46 @@ def write_youtube(items, out_dir, fetch_meta):
             if i % 20 == 0:
                 print('  유튜브 %d/%d' % (i, len(items)))
     print('✅ 유튜브 %d개 → %s' % (len(items), path))
+
+
+# ── X(트위터) ─────────────────────────────────────────────────
+
+_TWEET_RE = re.compile(r'(?:x|twitter)\.com/([\w]+)/status(?:es)?/(\d+)')
+
+
+def tweet_text(url):
+    """공개 트윗의 작성자와 글. 로그인 벽 없이 publish.twitter.com oEmbed 로 받는다."""
+    m = _TWEET_RE.search(url)
+    if not m:
+        return '', '', 'not-a-tweet'
+    q = ('https://publish.twitter.com/oembed?omit_script=true&dnt=true&url='
+         + urllib.request.quote('https://twitter.com/%s/status/%s' % m.groups(), safe=''))
+    try:
+        with urllib.request.urlopen(urllib.request.Request(q, headers={'User-Agent': UA}), timeout=15) as r:
+            d = json.load(r)
+    except Exception as e:  # 삭제·비공개 트윗이면 404, 보호 계정이면 403
+        return '', '', 'oembed-failed: %s' % str(e).splitlines()[0][:100]
+    return d.get('author_name', ''), html_to_text(d.get('html', '')), 'ok'
+
+
+def write_x(items, out_dir):
+    os.makedirs(out_dir, exist_ok=True)
+    path = os.path.join(out_dir, 'x.csv')
+    ok = 0
+    with open(path, 'w', encoding='utf-8-sig', newline='') as fp:
+        w = csv.writer(fp)
+        w.writerow(['url', '셀럽', '책', '작성자', 'result'])
+        for i, (url, pairs) in enumerate(items, 1):
+            author, text, res = tweet_text(url)
+            celebs, books = who(pairs)
+            if res == 'ok':
+                ok += 1
+                with open(os.path.join(out_dir, _TWEET_RE.search(url).group(2) + '.txt'), 'w', encoding='utf-8') as t:
+                    t.write(url + '\n\n[작성자] ' + author + '\n\n' + text)
+            w.writerow([url, celebs, books, author, res])
+            if i % 50 == 0:
+                print('  X %d/%d' % (i, len(items)))
+    print('✅ X %d/%d개 글 저장 → %s' % (ok, len(items), path))
 
 
 # ── 웹페이지 → PDF ──────────────────────────────────────────────
@@ -230,6 +272,7 @@ def main():
     if a.host:
         yt = [x for x in yt if host_matches(x[0], (a.host,))]
         web = [x for x in web if host_matches(x[0], (a.host,))]
+    xs = [x for x in web if host_matches(x[0], ('x.com', 'twitter.com'))]
     if a.skip_social:
         web = [x for x in web if not host_matches(x[0], LOGIN_WALL_HOSTS)]
     if a.limit:
@@ -237,6 +280,7 @@ def main():
     print('출처 %d개 — 웹페이지 %d개, 유튜브 %d개' % (len(urls), len(web), len(yt)))
 
     write_youtube(yt, os.path.join(a.out, 'youtube'), not a.no_youtube_meta)
+    write_x(xs, os.path.join(a.out, 'x'))
     if web:
         asyncio.run(archive_web(web, os.path.join(a.out, 'web'), a.workers, a.timeout * 1000, a.resume))
 
