@@ -5346,7 +5346,11 @@ en_index = (
     '    <p class="text-ink font-sans font-bold text-xs sm:text-sm tracking-[.15em] mb-6 uppercase bg-neo-yellow border-2 border-ink px-4 py-1 shadow-neo-sm">Archive of their reads</p>\n'
     '    <div class="flex items-center gap-2 text-[10px] sm:text-xs font-sans font-bold tracking-wider text-ink border-2 border-ink bg-white px-3 py-1.5 shadow-neo-sm">\n'
     '      <span class="w-2 h-2 rounded-full bg-ink"></span>\n'
-    '      <span>' + str(len(en_celeb_pages)) + ' RECORDS</span>\n'
+    '      <span>' + format(len(en_celeb_pages), ',') + ' STARS ⭐ · '
+    + format(len({re.sub(r'\s+', '', b['title']).lower()
+                  for _, _, n in en_celeb_pages
+                  for b in celebs[n]['books'] if b.get('title_en')}), ',')
+    + ' BOOKS 📚</span>\n'
     '    </div>\n'
     '    <div class="flex gap-2 mt-5">\n'
     '      <a href="' + BASE + '" hreflang="ko" class="px-4 py-1.5 bg-white border-2 border-ink shadow-neo-sm hover:bg-neo-yellow hover:-translate-y-0.5 transition-all font-sans font-bold text-xs tracking-widest text-ink">KOR</a>\n'
