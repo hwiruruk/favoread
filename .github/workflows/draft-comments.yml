@@ -1,0 +1,114 @@
+name: Draft Comments with AI
+
+# 편집기(/editor/)의 💬 코멘트 검수 창에서 '내 메모'를 적고 저장하면 자동으로 돈다.
+# 메모는 초안이고, 이 워크플로가 출처 링크를 PDF로 떠서 Claude 에 넘기고
+# 메모를 참고해 한국어·영어 한 줄을 써서 data/comments.json 에 바로 커밋한다.
+# 결과는 미검수(pending) 그대로 들어가므로, 편집기에서 읽어보고 승인해야 사이트에 나간다.
+#
+# 필요한 Secret: ANTHROPIC_API_KEY (Settings → Secrets and variables → Actions)
+# 자세한 설명은 tools/COMMENTS.md 참고.
+
+on:
+  push:
+    paths:
+      - data/comments.json
+    branches-ignore:
+      - 'chore/**'
+  workflow_dispatch:
+    inputs:
+      limit:
+        description: '이번에 쓸 항목 수 (0 = 전부)'
+        required: false
+        default: '20'
+      key:
+        description: '이 항목만 ("연예인|도서명", 비우면 대상 전부)'
+        required: false
+        default: ''
+      force:
+        description: '메모가 그대로여도 다시 쓰기 (미검수 항목만)'
+        required: false
+        default: false
+        type: boolean
+      dry_run:
+        description: '연습 모드 — 결과만 보고 파일은 안 바꿈'
+        required: false
+        default: false
+        type: boolean
+
+# 편집기에서 연달아 저장해도 한 번에 하나씩, 앞의 것이 끝난 뒤 돈다
+concurrency:
+  group: draft-comments-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  draft:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    permissions:
+      contents: write
+
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: actions/setup-python@v6
+        with:
+          python-version: '3.12'
+
+      - name: 쓸 항목이 있는지 확인
+        id: targets
+        env:
+          KEY: ${{ github.event.inputs.key }}
+          FORCE: ${{ github.event.inputs.force }}
+        run: |
+          set -- --list
+          if [ -n "$KEY" ]; then set -- "$@" --key "$KEY"; fi
+          if [ "$FORCE" = "true" ]; then set -- "$@" --force; fi
+          python3 tools/draft_comments.py "$@"
+
+      - name: 브라우저·한글 글꼴·Anthropic SDK 설치
+        if: steps.targets.outputs.targets != '0'
+        run: |
+          sudo apt-get update -q
+          sudo apt-get install -y -q fonts-noto-cjk fonts-noto-color-emoji
+          pip install -q anthropic playwright
+          python3 -m playwright install --with-deps chromium
+
+      - name: 출처 PDF + 메모 → 한국어·영어 문장
+        if: steps.targets.outputs.targets != '0'
+        env:
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+          LIMIT: ${{ github.event.inputs.limit || '20' }}
+          KEY: ${{ github.event.inputs.key }}
+          FORCE: ${{ github.event.inputs.force }}
+          DRY_RUN: ${{ github.event.inputs.dry_run }}
+        run: |
+          if [ -z "$ANTHROPIC_API_KEY" ]; then
+            echo "::warning::ANTHROPIC_API_KEY Secret 이 없어 건너뜁니다. Settings → Secrets and variables → Actions 에 넣어주세요."
+            exit 0
+          fi
+          set --
+          if [ -n "$LIMIT" ] && [ "$LIMIT" != "0" ]; then set -- "$@" --limit "$LIMIT"; fi
+          if [ -n "$KEY" ]; then set -- "$@" --key "$KEY"; fi
+          if [ "$FORCE" = "true" ]; then set -- "$@" --force; fi
+          if [ "$DRY_RUN" = "true" ]; then set -- "$@" --dry-run; fi
+          echo "실행: python3 tools/draft_comments.py $*"
+          python3 tools/draft_comments.py "$@"
+
+      - name: 커밋·푸시
+        if: steps.targets.outputs.targets != '0'
+        run: |
+          if git diff --quiet -- data/comments.json; then
+            echo "바뀐 내용이 없습니다."
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898333+github-actions[bot]@users.noreply.github.com"
+          git add data/comments.json
+          git commit -q -m "chore: 메모로 코멘트 문장 AI 작성 [$(date +%F)]"
+          # 그새 편집기에서 또 저장했으면 그 위에 얹는다. 같은 줄이 부딪히면 포기한다 —
+          # 그 저장이 이 워크플로를 다시 돌리므로 다음 실행이 이어서 쓴다.
+          for i in 1 2 3; do
+            if git push origin "HEAD:${GITHUB_REF_NAME}"; then exit 0; fi
+            git pull --rebase origin "${GITHUB_REF_NAME}" || { git rebase --abort; echo "::warning::편집기 저장과 겹쳐 이번 결과는 올리지 않았습니다. 다음 실행이 이어서 씁니다."; exit 0; }
+          done
+          exit 1

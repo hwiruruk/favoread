@@ -51,14 +51,61 @@ python3 tools/fetch_comments.py --limit 10 --dry-run
 카드의 **출처 열기**로 원문을 확인하고, **내 메모**에 편한 말투로 적어둡니다.
 인용은 어디를 볼지 짚어주는 용도라 메모를 쓸 때 참고만 하면 됩니다.
 
-메모가 쌓이면 필터를 **메모만 있음**으로 바꾸고 **지금 목록 TSV 복사**를 누릅니다.
-그걸 AI에 맡기고 돌아온 결과를 `키 ⇥ 한국어 ⇥ English` 로 붙여넣으면 한 번에 들어갑니다.
-문장을 읽어보고 **승인**하면 끝입니다.
+메모를 저장하면 AI가 문장을 써서 커밋합니다(아래 **3단계 자동화**).
+1~3분 뒤 **↻ 새로 불러오기**를 누르고 필터를 **AI 초안 (승인 전)**으로 두면
+AI가 쓴 것만 뜹니다. 읽어보고 **승인**하면 끝입니다.
+
+자동 작성을 쓰지 않을 때는 필터를 **AI 작성 대기**로 두고 **지금 목록 TSV 복사** →
+AI에 맡긴 결과를 `키 ⇥ 한국어 ⇥ English` 로 붙여넣어도 됩니다.
 
 메모는 지워지지 않고 `memo` 칸에 남습니다. 나중에 문장을 다시 뽑고 싶을 때
 근거가 되고, 누가 무엇을 보고 썼는지도 남습니다.
 
 키는 `연예인|도서명` 그대로여야 합니다.
+
+## 3단계 자동화 — 메모를 저장하면 AI가 문장을 쓴다
+
+편집기에서 **내 메모**(초안)를 적고 저장하면 GitHub Actions의
+**Draft Comments with AI** 워크플로(`.github/workflows/draft-comments.yml`)가 자동으로 돕니다.
+
+```
+메모 저장(편집기) → data/comments.json 커밋
+  → 워크플로: 출처 링크를 Chromium 으로 열어 PDF로 뜸
+  → Claude 에 PDF + 메모 + 인용을 넘김
+  → 한국어·영어 한 줄을 받아 ko·en 에 채우고 바로 커밋 (status 는 pending 그대로)
+→ 편집기에서 ↻ 새로 불러오기 → 읽어보고 승인
+```
+
+- 준비: 저장소 Settings → Secrets and variables → Actions 에 `ANTHROPIC_API_KEY` 를 넣습니다.
+  없으면 경고만 남기고 건너뜁니다
+- 대상: `memo` 가 있고 미검수(pending)이면서
+  `ko` 가 비었거나, AI가 쓴 뒤 메모를 고친 항목(`ai_memo` ≠ `memo`)
+- 문장을 손으로 고치면 사람 것으로 봅니다(`ai_memo` 삭제). 메모를 바꿔도 덮어쓰지 않습니다.
+  다시 쓰게 하려면 한국어 칸을 비우고 저장하세요
+- 출처를 PDF로 못 뜨면(유튜브·로그인 벽·20MB 초과·오류) 본문 텍스트나 자막으로,
+  그것도 없으면 메모와 인용만으로 쓰고 `ai_note` 에 그렇게 적습니다
+- 한 번에 최대 20건. 수동 실행(Run workflow)에서 `limit`·`key`·`force`·`dry_run` 을 고를 수 있습니다
+- 모델은 `claude-opus-5` 가 기본이고, 환경 변수 `COMMENT_MODEL` 로 바꿀 수 있습니다
+
+AI가 쓴 항목에 붙는 칸
+
+| 칸 | 뜻 |
+|----|----|
+| `evidence` | `ai-pdf` 출처 PDF를 읽음 / `ai-text` 본문·자막을 읽음 / `ai-memo` 출처를 못 읽어 메모만 봄 |
+| `ai_memo` | AI가 문장을 쓸 때 본 메모. 지금 메모와 다르면 다시 씁니다 |
+| `ai_note` | AI가 남긴 검수 참고 (메모와 출처가 어긋남, 출처 확인 못 함 등) |
+
+편집기 저장은 최신 파일을 받아 **이번에 손댄 항목만** 덮어쓰므로,
+워크플로가 그새 커밋한 다른 항목의 문장이 지워지지 않습니다.
+
+로컬에서 돌리려면:
+
+```bash
+pip install anthropic playwright && python3 -m playwright install chromium
+export ANTHROPIC_API_KEY=...
+python3 tools/draft_comments.py --list               # 대상만 보기
+python3 tools/draft_comments.py --limit 3 --dry-run  # 결과만 찍기
+```
 
 ## 무엇을 뽑아 오나
 

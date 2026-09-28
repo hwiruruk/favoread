@@ -42,6 +42,7 @@ const Cmt = {
   sha: null,
   loaded: false,
   dirty: false,
+  touched: new Set(),   // 이번에 손댄 키 — 저장할 때 최신 파일 위에 이것만 덮는다 (AI 워크플로가 그새 커밋하므로)
   key: (celeb, title) => `${celeb}|${title}`,
   get(celeb, title) { return this.loaded ? this.items.get(this.key(celeb, title)) : null; },
 };
@@ -2099,6 +2100,11 @@ const commentsDlg = $('#commentsDialog');
 let _cmtDoc = {};
 
 const CMT_LABEL = { pending: '미검수', approved: '승인', rejected: '반려' };
+const CMT_AI_SRC = {
+  'ai-pdf': '출처를 PDF로 떠서 읽고 메모를 참고해 AI가 씀',
+  'ai-text': '출처 본문(또는 유튜브 자막)을 읽고 메모를 참고해 AI가 씀',
+  'ai-memo': '출처를 못 읽어 메모와 인용만 보고 AI가 씀',
+};
 
 function setCmtStatus(msg) { $('#cmtStatus').textContent = msg || ''; }
 
@@ -2125,34 +2131,53 @@ function cmtCounts() {
   return { pending, approved, rejected, total: Cmt.items.size };
 }
 
+async function loadComments() {
+  setCmtStatus('불러오는 중…');
+  try {
+    const { content, sha } = await Gh.getFile(COMMENTS_PATH, { allowMissing: true });
+    Cmt.items.clear();
+    _cmtDoc = {};
+    if (content) {
+      const j = JSON.parse(content);
+      _cmtDoc = j;
+      for (const [k, v] of Object.entries(j.comments || {})) {
+        // 수집기가 쓴 칸(context·score·outlet)까지 그대로 들고 있는다
+        Cmt.items.set(k, Object.assign({}, v, {
+          ko: v.ko || '', en: v.en || '', status: v.status || 'pending',
+        }));
+      }
+    }
+    Cmt.sha = sha;
+    Cmt.loaded = true;
+    Cmt.dirty = false;
+    Cmt.touched.clear();
+    $('#cmtSaveBtn').disabled = true;
+    setCmtStatus(sha ? `sha ${sha.slice(0, 7)}` : '아직 파일이 없습니다 (저장하면 새로 만듭니다)');
+    renderDetail();   // 책 카드에 검수 뱃지를 붙인다
+    return true;
+  } catch (err) {
+    setCmtStatus('');
+    toast('코멘트 불러오기 실패: ' + err.message, 'err');
+    return false;
+  }
+}
+
+// AI 워크플로(draft-comments.yml)가 이 메모로 문장을 쓸 차례인지.
+// tools/draft_comments.py 의 needs_draft() 와 같은 규칙.
+function cmtAwaitsAi(v) {
+  const memo = (v.memo || '').trim();
+  if (!memo || (v.status || 'pending') !== 'pending') return false;
+  if (!(v.ko || '').trim()) return true;
+  return 'ai_memo' in v && v.ai_memo !== memo;
+}
+
 async function openCommentsDialog() {
   if (!Config.token) { toast('GitHub Token을 먼저 설정하세요', 'err'); settingsDlg.showModal(); return; }
   if (!State.celebs.size) { toast('먼저 ↻ 불러오기로 CSV를 가져오세요', 'err'); return; }
 
   if (!Cmt.loaded) {
-    setCmtStatus('불러오는 중…');
     commentsDlg.showModal();
-    try {
-      const { content, sha } = await Gh.getFile(COMMENTS_PATH, { allowMissing: true });
-      if (content) {
-        const j = JSON.parse(content);
-        _cmtDoc = j;
-        for (const [k, v] of Object.entries(j.comments || {})) {
-          // 수집기가 쓴 칸(context·score·outlet)까지 그대로 들고 있는다
-          Cmt.items.set(k, Object.assign({}, v, {
-            ko: v.ko || '', en: v.en || '', status: v.status || 'pending',
-          }));
-        }
-      }
-      Cmt.sha = sha;
-      Cmt.loaded = true;
-      setCmtStatus(sha ? `sha ${sha.slice(0, 7)}` : '아직 파일이 없습니다 (저장하면 새로 만듭니다)');
-      renderDetail();   // 책 카드에 검수 뱃지를 붙인다
-    } catch (err) {
-      setCmtStatus('');
-      toast('코멘트 불러오기 실패: ' + err.message, 'err');
-      return;
-    }
+    if (!(await loadComments())) return;
   } else {
     commentsDlg.showModal();
   }
@@ -2169,8 +2194,11 @@ function cmtRows() {
     if (f === 'unwritten') {
       if (status !== 'pending' || (v.ko || '').trim()) continue;
     } else if (f === 'memo') {
-      // 내가 메모는 해뒀고 아직 문장이 안 된 것 — Claude 에게 넘길 줄
-      if (status !== 'pending' || (v.ko || '').trim() || !(v.memo || '').trim()) continue;
+      // 내가 메모는 해뒀고 아직 문장이 안 된 것 — AI 워크플로가 쓸 줄
+      if (!cmtAwaitsAi(v)) continue;
+    } else if (f === 'ai') {
+      // AI가 써 넣었고 아직 승인 전인 것 — 읽어보고 승인할 줄
+      if (status !== 'pending' || !String(v.evidence || '').startsWith('ai-')) continue;
     } else if (f !== 'all' && status !== f) continue;
     if (q && !k.toLowerCase().includes(q)) continue;
     rows.push([k, v]);
@@ -2205,7 +2233,8 @@ function renderCommentsList() {
         <b>${esc(celeb)}</b><span class="muted"> · </span>${esc(title)}
         <span class="cmt-state s-${status}">${CMT_LABEL[status]}</span>
         ${(v.ko || '').trim() ? '' : '<span class="cmt-state s-unwritten">문장 미작성</span>'}
-        ${(v.memo || '').trim() && !(v.ko || '').trim() ? '<span class="cmt-state s-memo">메모 있음</span>' : ''}
+        ${cmtAwaitsAi(v) ? '<span class="cmt-state s-memo" title="저장하면 AI 워크플로가 출처 PDF와 메모로 문장을 씁니다">AI 작성 대기</span>' : ''}
+        ${String(v.evidence || '').startsWith('ai-') && !cmtAwaitsAi(v) ? `<span class="cmt-state s-ai" title="${esc(CMT_AI_SRC[v.evidence] || '')}">AI 초안</span>` : ''}
         ${v.score != null ? `<span class="muted small" title="추천 이유가 담겼을 법한 정도">점수 ${v.score}</span>` : ''}
         ${v.date ? `<span class="muted small" title="${esc(v.date_type || '게재일')}">${esc(v.date_type || '게재일')} ${esc(v.date)}</span>` : ''}
         ${known ? '' : '<span class="badge">데이터에 없는 항목</span>'}
@@ -2215,9 +2244,10 @@ function renderCommentsList() {
           : '<span class="flag warn">출처 없음</span>'}
       </div>
       ${v.note ? `<p class="cmt-note">⚠ ${esc(v.note)}</p>` : ''}
+      ${v.ai_note && String(v.evidence || '').startsWith('ai-') ? `<p class="cmt-note">🤖 ${esc(v.ai_note)}</p>` : ''}
       ${v.quote ? `<blockquote class="cmt-quote">${v.quote_type ? `<span class="muted small">원문 ${esc(v.quote_type)} · </span>` : ''}${esc(v.quote)}</blockquote>` : ''}
       ${v.context ? `<details class="cmt-ctx"><summary>앞뒤 문단</summary><p>${esc(v.context)}</p></details>` : ''}
-      <label class="small cmt-memo">내 메모 — 출처를 보고 편한 말투로 적어두면 됩니다
+      <label class="small cmt-memo">내 메모 (초안) — 출처를 보고 편한 말투로 적어두면, 저장 후 AI가 출처를 읽고 문장으로 다듬습니다
         <textarea data-f="memo" rows="2" placeholder="예: 헌책방에서 우연히 샀는데 그때 찾던 주제라 방향을 잡아줬다고 함"></textarea>
       </label>
       <div class="cmt-body">
@@ -2254,6 +2284,7 @@ function setCmtState(key, status) {
     return;
   }
   it.status = status;
+  Cmt.touched.add(key);
   markCmtDirty();
   renderCommentsList();
   renderDetail();
@@ -2266,6 +2297,9 @@ $('#cmtList').addEventListener('input', (e) => {
   const it = Cmt.items.get(card.dataset.key);
   if (!it) return;
   it[f] = e.target.value;
+  // 문장을 손으로 고치면 사람이 쓴 것으로 본다 — 메모를 바꿔도 AI가 덮어쓰지 않는다
+  if ((f === 'ko' || f === 'en') && 'ai_memo' in it) { delete it.ai_memo; it.evidence = 'manual'; }
+  Cmt.touched.add(card.dataset.key);
   markCmtDirty();
 });
 
@@ -2285,22 +2319,6 @@ $('#cmtList').addEventListener('keydown', (e) => {
 });
 
 async function saveComments() {
-  const comments = {};
-  for (const [k, v] of Cmt.items) {
-    comments[k] = Object.assign({}, v, {
-      ko: (v.ko || '').trim(),
-      en: (v.en || '').trim(),
-      status: v.status || 'pending',
-    });
-  }
-  const payload = {
-    ..._cmtDoc,                 // 편집기가 모르는 칸(misses 등)은 그대로 둔다
-    _comment: _cmtDoc._comment || CMT_NOTE_DEFAULT,
-    _updated: new Date().toISOString().slice(0, 10),
-    comments,
-  };
-  const content = JSON.stringify(payload, null, 2) + '\n';
-
   const n = cmtCounts();
   const message = prompt('커밋 메시지',
     `코멘트 검수 — 승인 ${n.approved} / 반려 ${n.rejected} / 미검수 ${n.pending}`);
@@ -2310,12 +2328,40 @@ async function saveComments() {
   btn.disabled = true;
   setCmtStatus('저장 중…');
   try {
-    const { sha } = await Gh.putFile({ content, sha: Cmt.sha, message, path: COMMENTS_PATH });
+    // AI 워크플로(draft-comments.yml)가 그새 문장을 커밋했을 수 있다.
+    // 최신 파일을 받아 이번에 손댄 항목만 덮는다 — 다른 항목의 AI 결과를 지우지 않도록.
+    const { content: latest, sha: latestSha } = await Gh.getFile(COMMENTS_PATH, { allowMissing: true });
+    const doc = latest ? JSON.parse(latest) : { ..._cmtDoc };
+    doc.comments = doc.comments || {};
+    for (const k of Cmt.touched) {
+      const v = Cmt.items.get(k);
+      if (!v) continue;
+      doc.comments[k] = Object.assign({}, v, {
+        ko: (v.ko || '').trim(),
+        en: (v.en || '').trim(),
+        status: v.status || 'pending',
+      });
+    }
+    doc._comment = doc._comment || CMT_NOTE_DEFAULT;
+    doc._updated = new Date().toISOString().slice(0, 10);
+    const content = JSON.stringify(doc, null, 2) + '\n';
+
+    const { sha } = await Gh.putFile({ content, sha: latestSha, message, path: COMMENTS_PATH });
+    // 받아온 최신 내용으로 목록을 맞춘다
+    _cmtDoc = doc;
+    for (const [k, v] of Object.entries(doc.comments)) {
+      Cmt.items.set(k, Object.assign({}, v, { ko: v.ko || '', en: v.en || '', status: v.status || 'pending' }));
+    }
     Cmt.sha = sha;
     Cmt.dirty = false;
+    Cmt.touched.clear();
     if (!State.dirty) window.onbeforeunload = null;
     setCmtStatus(sha ? `저장 완료 · sha ${sha.slice(0, 7)}` : '저장 완료');
-    toast(`코멘트 저장됨 — 승인 ${n.approved}건`, 'ok');
+    const waiting = [...Cmt.items.values()].filter(cmtAwaitsAi).length;
+    toast(`코멘트 저장됨 — 승인 ${n.approved}건` +
+      (waiting ? ` · 메모 ${waiting}건은 AI가 문장을 씁니다 (1~3분 뒤 ↻ 새로 불러오기)` : ''), 'ok');
+    renderCommentsList();
+    renderDetail();
   } catch (err) {
     setCmtStatus('');
     toast(err.message, 'err');
@@ -2326,7 +2372,7 @@ async function saveComments() {
 /* 문장 한꺼번에 채우기 — 누락 영문 창과 같은 방식.
  * 수집기는 인용까지만 모으고, 그걸 한국어·영어 한 줄로 옮기는 건 여기서 한다. */
 $('#cmtCopyBtn').addEventListener('click', async () => {
-  // 지금 목록에 보이는 것만 복사한다 — 필터를 '메모만 있음'에 두면 넘길 줄만 담긴다
+  // 지금 목록에 보이는 것만 복사한다 — 필터를 'AI 작성 대기'에 두면 넘길 줄만 담긴다
   const rows = cmtRows().map(([k, v]) => {
     const [celeb, title] = splitCmtKey(k);
     return [k, celeb, title, v.outlet || '', v.source || '',
@@ -2352,6 +2398,7 @@ $('#cmtApplyPasteBtn').addEventListener('click', () => {
     if (!it) { miss++; continue; }
     if (ko) it.ko = ko.trim();
     if (en) it.en = en.trim();
+    Cmt.touched.add(key.trim());
     hit++;
   }
   if (!hit) { toast('맞는 키가 없습니다 (첫 칸이 "연예인|도서명" 이어야 합니다)', 'err'); return; }
@@ -2362,6 +2409,10 @@ $('#cmtApplyPasteBtn').addEventListener('click', () => {
 });
 
 $('#commentsBtn').addEventListener('click', openCommentsDialog);
+$('#cmtReloadBtn').addEventListener('click', async () => {
+  if (Cmt.dirty && !confirm('저장하지 않은 변경이 사라집니다. 새로 불러올까요?')) return;
+  if (await loadComments()) renderCommentsList();
+});
 $('#cmtSaveBtn').addEventListener('click', saveComments);
 $('#cmtFilter').addEventListener('change', renderCommentsList);
 $('#cmtSearch').addEventListener('input', renderCommentsList);
