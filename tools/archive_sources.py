@@ -69,6 +69,16 @@ def collect_sources(detail_dir):
     return urls
 
 
+def drop_approved(urls, comments_path):
+    """책이 전부 코멘트 승인된 출처는 뺀다. 이미 검수 끝난 걸 다시 뜰 필요가 없다."""
+    try:
+        with open(comments_path, encoding='utf-8') as fp:
+            done = {k for k, v in json.load(fp).get('comments', {}).items() if v.get('status') == 'approved'}
+    except (OSError, ValueError):
+        return urls
+    return {u: p for u, p in urls.items() if any('%s|%s' % cb not in done for cb in p)}
+
+
 def pdf_name(url):
     h = re.sub(r'[^a-z0-9.-]', '_', host_of(url)) or 'unknown'
     return os.path.join(h, hashlib.sha1(url.encode('utf-8')).hexdigest()[:12] + '.pdf')
@@ -264,9 +274,16 @@ def main():
     ap.add_argument('--skip-social', action='store_true', help='X·인스타·페이스북 등 로그인 벽 출처 건너뛰기')
     ap.add_argument('--no-youtube-meta', action='store_true', help='유튜브 제목·채널 조회 생략')
     ap.add_argument('--resume', action='store_true', help='이미 PDF가 있는 출처는 건너뛰기')
+    ap.add_argument('--include-approved', action='store_true',
+                    help='코멘트가 전부 승인된 출처도 다시 뜨기 (기본은 건너뜀)')
+    ap.add_argument('--comments', default='data/comments.json')
     a = ap.parse_args()
 
     urls = collect_sources(a.detail_dir)
+    if not a.include_approved:
+        n = len(urls)
+        urls = drop_approved(urls, a.comments)
+        print('코멘트가 모두 승인된 출처 %d개 건너뜀' % (n - len(urls)))
     yt = [(u, p) for u, p in urls.items() if host_matches(u, YOUTUBE_HOSTS)]
     web = [(u, p) for u, p in urls.items() if not host_matches(u, YOUTUBE_HOSTS)]
     if a.host:

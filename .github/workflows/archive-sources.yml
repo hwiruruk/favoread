@@ -20,6 +20,11 @@ on:
         description: '이 도메인만 (비우면 전부, 예: cine21.com)'
         required: false
         default: ''
+      include_approved:
+        description: '코멘트가 전부 승인된 출처도 다시 뜨기 (기본은 건너뜀)'
+        required: false
+        default: false
+        type: boolean
       skip_social:
         description: 'X·인스타그램·페이스북 등 로그인 벽 출처 건너뛰기 (X 트윗 글은 이와 상관없이 따로 받는다)'
         required: false
@@ -52,11 +57,13 @@ jobs:
           LIMIT: ${{ github.event.inputs.limit }}
           HOST: ${{ github.event.inputs.host }}
           SKIP_SOCIAL: ${{ github.event.inputs.skip_social }}
+          INCLUDE_APPROVED: ${{ github.event.inputs.include_approved }}
         run: |
           set -- 
           if [ -n "$LIMIT" ] && [ "$LIMIT" != "0" ]; then set -- "$@" --limit "$LIMIT"; fi
           if [ -n "$HOST" ]; then set -- "$@" --host "$HOST"; fi
           if [ "$SKIP_SOCIAL" = "true" ]; then set -- "$@" --skip-social; fi
+          if [ "$INCLUDE_APPROVED" = "true" ]; then set -- "$@" --include-approved; fi
           echo "실행: python3 tools/archive_sources.py $*"
           python3 tools/archive_sources.py "$@"
 
