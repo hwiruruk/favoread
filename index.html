@@ -2284,12 +2284,17 @@
       const more = e.target.closest('button[data-pub-more]');
       if (more) {
         pubMoreAt = performance.now();
-        if (more.dataset.pubMore === 'books') pubView.books += PUB_BOOK_STEP;
+        const kind = more.dataset.pubMore;
+        if (kind === 'books') pubView.books += PUB_BOOK_STEP;
         else pubView.celebsOpen = !pubView.celebsOpen;
-        // 목록을 통째로 다시 그려도 보던 자리는 그대로 둔다
+        // 책 더보기는 누른 버튼이 마우스 밑에 그대로 남게 한다. 새 책이 버튼 위로
+        // 끼어들어 버튼만 두어 줄 아래로 밀려나면, 한 번 더 누를 때 방금 들어온
+        // 책이 눌려 버린다. 셀럽 펼치기는 보던 자리만 지킨다.
         const y = window.scrollY;
+        const top = more.getBoundingClientRect().top;
         filterEntries(D.search.value);
-        window.scrollTo({ top: y, behavior: 'instant' });
+        const moved = kind === 'books' && D.bookHitsList.querySelector('button[data-pub-more="books"]');
+        window.scrollTo({ top: moved ? y + moved.getBoundingClientRect().top - top : y, behavior: 'instant' });
       }
     });
     D.closeBtn.addEventListener('click', () => closeModal(false));
