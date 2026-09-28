@@ -1415,6 +1415,19 @@ def group_box_style(group_en):
 _GROUP_SUFFIX_RE = re.compile(r'\(([^)]+)\)\s*$')
 _NOT_GROUP = {'영화감독', '배우', '가수', '감독', '작가', '모델', '방송인', '셰프'}
 
+# 괄호 안 이름이 그룹이어도 아이돌이 아닌 밴드·듀오
+_NON_IDOL_ACTS = {'다이나믹 듀오', '디어클라우드', '브로콜리너마저', '새소년', '술탄오브더디스코',
+                  '실리카겔', '안녕하신가영', '어반자카파', '자우림', '잔나비', '제이래빗', '크라잉넛'}
+
+
+def is_idol(name):
+    m = _GROUP_SUFFIX_RE.search(name)
+    if not m:
+        return False
+    g = m.group(1).strip()
+    return bool(g) and not g.isdigit() and g not in _NOT_GROUP and g not in _NON_IDOL_ACTS
+
+
 # 한글 그룹명 → 영문 그룹명 (영문명이 적힌 멤버에게서 배운다)
 _ko2en = {}
 for _n in celebs:
@@ -2469,7 +2482,9 @@ for name, info in celebs.items():
         + (('    <span class="lang-btn active">한국어</span>\n'
             '    <a class="lang-btn" href="' + esc(make_en_celeb_url(name_en)) + '" hreflang="en">EN</a>\n') if name_en else '')
         + '  </div>\n'
-        + '  <nav><a href="' + BASE + '">← 최애의 독서 홈</a> · <a href="' + BASE + 'share/ranking.html">셀럽 독서 랭킹</a></nav>\n'
+        + '  <nav><a href="' + BASE + '">← 최애의 독서 홈</a> · <a href="' + BASE + 'share/ranking.html">셀럽 독서 랭킹</a>'
+        + (' · <a href="' + BASE + 'recommend/idol.html">아이돌 추천책 모음</a>' if is_idol(name)
+           else ' · <a href="' + BASE + 'recommend/celeb.html">연예인 추천책 모음</a>') + '</nav>\n'
         '\n'
         '  <header class="celeb-header">\n'
         '    <div class="celeb-photo-wrap">\n'
@@ -2886,7 +2901,8 @@ for _g in sorted(ko_groups.values(), key=lambda g: g['ko']):
         '  </style>\n'
         '</head>\n'
         '<body>\n'
-        '  <nav><a href="' + BASE + '">← 최애의 독서</a> · <a href="' + BASE + '#groups">그룹 전체 보기</a></nav>\n'
+        '  <nav><a href="' + BASE + '">← 최애의 독서</a> · <a href="' + BASE + '#groups">그룹 전체 보기</a>'
+        ' · <a href="' + BASE + 'recommend/idol.html">아이돌 추천책 모음</a></nav>\n'
         '  <div class="hero"' + ((' style="' + style + '"') if style else '') + '>\n'
         '    <h1>' + esc(name) + ' 멤버들이 읽은 책</h1>\n'
         '    <p>' + esc(name) + ' 멤버 ' + str(n_members) + '명이 읽거나 추천한 책 <strong>'
@@ -2921,6 +2937,200 @@ for _f in os.listdir('group'):
     if _f.endswith('.html') and _f not in _ko_group_files:
         os.remove(os.path.join('group', _f))
 print(f"✅ /group/ 그룹 페이지: {len(ko_group_pages)}개")
+
+# ── 5.4. /recommend/ 아이돌·연예인 추천책 모음 ──────────────────────
+# "아이돌 추천책", "연예인 추천책"처럼 인물 이름 없이 찾는 검색어는 셀럽·그룹
+# 페이지로는 잡히지 않는다. 홈은 제목·본문이 브랜드 위주라 약하다.
+# 그래서 이 검색어를 제목·h1에 그대로 담은 모음 페이지를 따로 둔다.
+
+idol_names = sorted((n for n in celebs if is_idol(n)), key=lambda x: x.lower())
+celeb_names = sorted((n for n in celebs if not is_idol(n)), key=lambda x: x.lower())
+IDOL_HUB_URL = BASE + 'recommend/idol.html'
+CELEB_HUB_URL = BASE + 'recommend/celeb.html'
+os.makedirs('recommend', exist_ok=True)
+
+
+def _hub_books(names):
+    """names가 읽은 책을 읽은 사람 수 순으로"""
+    hub = {}
+    for _n in names:
+        for b in celebs[_n]['books']:
+            t = b['title'].strip()
+            hit = hub.setdefault(t, {'readers': [], 'author': b['author']})
+            if _n not in hit['readers']:
+                hit['readers'].append(_n)
+    return sorted(hub.items(), key=lambda kv: (-len(kv[1]['readers']), title_sort_key(kv[0])))
+
+
+def _hub_page(url, path, title, desc, h1, intro, ranked, list_title, people, people_title,
+              extra_html, faq):
+    LIMIT = 80
+    rows = ''
+    for i, (t, info) in enumerate(ranked[:LIMIT]):
+        who = ', '.join('<a href="' + esc(make_celeb_url(r)) + '">' + esc(r) + '</a>'
+                        for r in info['readers'])
+        t_html = ('<a href="' + esc(make_book_url(t)) + '">' + esc(t) + '</a>') if t in books_with_pages else esc(t)
+        rows += (
+            '    <li class="gb">\n'
+            '      <span class="gb-t">' + str(i + 1) + '. ' + t_html + '</span>\n'
+            + (('      <span class="gb-a">' + esc(info['author']) + '</span>\n') if info['author'] else '')
+            + '      <span class="gb-w">' + str(len(info['readers'])) + '명 · ' + who + '</span>\n'
+            '    </li>\n'
+        )
+    people_html = ' · '.join(
+        '<a href="' + esc(make_celeb_url(n)) + '">' + esc(n) + '</a> <span class="cnt">'
+        + str(len(celebs[n]['books'])) + '권</span>' for n in people)
+    faq_html = ''.join('    <h3>' + esc(q) + '</h3>\n    <p>' + esc(a) + '</p>\n' for q, a in faq)
+    ld = [
+        {
+            '@context': 'https://schema.org',
+            '@type': 'CollectionPage',
+            'name': title,
+            'url': url,
+            'inLanguage': 'ko',
+            'description': desc,
+            'isPartOf': {'@type': 'WebSite', 'name': '최애의 독서', 'url': BASE},
+            'mainEntity': {
+                '@type': 'ItemList',
+                'name': list_title,
+                'numberOfItems': min(len(ranked), LIMIT),
+                'itemListElement': [
+                    {'@type': 'ListItem', 'position': i + 1, 'name': t,
+                     **({'url': make_book_url(t)} if t in books_with_pages else {})}
+                    for i, (t, _) in enumerate(ranked[:LIMIT])
+                ],
+            },
+        },
+        {
+            '@context': 'https://schema.org',
+            '@type': 'BreadcrumbList',
+            'itemListElement': [
+                {'@type': 'ListItem', 'position': 1, 'name': '홈', 'item': BASE},
+                {'@type': 'ListItem', 'position': 2, 'name': h1, 'item': url},
+            ],
+        },
+    ]
+    page = (
+        '<!DOCTYPE html>\n'
+        '<html lang="ko">\n'
+        '<head>\n' + GA_TAG +
+        '  <meta charset="utf-8">\n'
+        '  <meta name="viewport" content="width=device-width, initial-scale=1">\n'
+        '  <title>' + esc(title) + ' | 최애의 독서</title>\n'
+        '  <meta name="description" content="' + esc(desc) + '">\n'
+        '  <meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1">\n'
+        '  <meta property="og:title" content="' + esc(title) + '">\n'
+        '  <meta property="og:description" content="' + esc(desc) + '">\n'
+        '  <meta property="og:url" content="' + esc(url) + '">\n'
+        '  <meta property="og:type" content="website">\n'
+        '  <meta property="og:locale" content="ko_KR">\n'
+        '  <meta property="og:site_name" content="최애의 독서">\n'
+        '  <meta property="og:image" content="' + BASE + 'og-image.jpg">\n'
+        '  <meta name="twitter:card" content="summary_large_image">\n'
+        '  <link rel="canonical" href="' + esc(url) + '">\n'
+        '  <link rel="icon" href="' + BASE + 'favicon.svg" type="image/svg+xml">\n'
+        '  <script type="application/ld+json">\n  '
+        + json.dumps(ld, ensure_ascii=False, indent=2) + '\n  </script>\n'
+        '  <style>\n'
+        '    body { font-family: -apple-system, BlinkMacSystemFont, "Apple SD Gothic Neo", "Segoe UI", sans-serif; max-width: 860px; margin: 0 auto; padding: 20px; color: #222; line-height: 1.6; background: #fcfaf5; word-break: keep-all; }\n'
+        '    a { color: #2563eb; text-decoration: none; }\n'
+        '    a:hover { text-decoration: underline; }\n'
+        '    nav { margin: 8px 0 16px; font-size: 13px; }\n'
+        '    .hero { border: 3px solid #000; box-shadow: 5px 5px 0 0 #000; padding: 18px 18px 14px; background: #fff; }\n'
+        '    .hero h1 { font-size: 26px; margin: 0 0 8px; font-weight: 900; line-height: 1.3; }\n'
+        '    .hero p { margin: 0 0 6px; font-size: 15px; }\n'
+        '    h2 { font-size: 19px; margin: 32px 0 12px; padding-bottom: 4px; border-bottom: 2px solid #000; font-weight: 800; }\n'
+        '    h3 { font-size: 15px; margin: 16px 0 4px; font-weight: 800; }\n'
+        '    .books { padding: 0; margin: 0; }\n'
+        '    .gb { background: #fff; border: 2px solid #000; box-shadow: 3px 3px 0 0 #000; padding: 10px 12px; margin-bottom: 10px; list-style: none; }\n'
+        '    .gb-t { display: block; font-weight: 800; font-size: 15px; line-height: 1.3; }\n'
+        '    .gb-a { display: block; font-size: 12px; color: #555; }\n'
+        '    .gb-w { display: block; font-size: 12px; margin-top: 3px; }\n'
+        '    .people { font-size: 14px; line-height: 2; }\n'
+        '    .cnt { font-size: 11px; color: #777; }\n'
+        '    footer { margin-top: 40px; padding-top: 16px; border-top: 2px solid #000; font-size: 12px; color: #666; }\n'
+        '  </style>\n'
+        '</head>\n'
+        '<body>\n'
+        '  <nav><a href="' + BASE + '">← 최애의 독서</a> · <a href="' + IDOL_HUB_URL + '">아이돌 추천책</a>'
+        ' · <a href="' + CELEB_HUB_URL + '">연예인 추천책</a> · <a href="' + BASE + 'share/ranking.html">셀럽 독서 랭킹</a></nav>\n'
+        '  <div class="hero">\n'
+        '    <h1>' + esc(h1) + '</h1>\n'
+        + ''.join('    <p>' + p + '</p>\n' for p in intro) +
+        '  </div>\n'
+        '  <h2>' + esc(list_title) + '</h2>\n'
+        '  <ul class="books">\n' + rows + '  </ul>\n'
+        + extra_html +
+        '  <h2>' + esc(people_title) + '</h2>\n'
+        '  <p class="people">' + people_html + '</p>\n'
+        '  <h2>자주 묻는 질문</h2>\n' + faq_html +
+        '  <footer>\n'
+        '    <p>공개된 인터뷰·방송·SNS를 바탕으로 정리했어요. 빠진 책이 있다면 '
+        '<a href="https://forms.gle/Sd3ZQTahZNbUjbdz7">제보해 주세요</a>. '
+        '<a href="' + BASE + '">최애의 독서 홈 →</a></p>\n'
+        '  </footer>\n'
+        '</body>\n'
+        '</html>'
+    )
+    write_if_changed(path, page)
+
+
+# 아이돌 추천책
+_idol_ranked = _hub_books(idol_names)
+_idol_picks = [t for t, _ in _idol_ranked[:3]]
+_group_links = ''.join(
+    '    <li class="gb"><span class="gb-t"><a href="' + esc(make_group_url(g)) + '">'
+    + esc(g['ko']) + ' 멤버들이 읽은 책</a></span><span class="gb-w">' + str(len(g['members']))
+    + '명 · ' + str(g['n_books']) + '권</span></li>\n'
+    for g in sorted(ko_groups.values(), key=lambda g: (-g['n_books'], g['ko']))
+    if g['members'][0] in idol_names
+)
+_hub_page(
+    IDOL_HUB_URL, 'recommend/idol.html',
+    '아이돌 추천책 모음 · 아이돌이 읽은 책 ' + str(len(_idol_ranked)) + '권',
+    '아이돌 추천책 한눈에 보기. K-POP 아이돌 ' + str(len(idol_names)) + '명이 읽고 추천한 책 '
+    + str(len(_idol_ranked)) + '권' + ((' — ' + ', '.join(_idol_picks)) if _idol_picks else '')
+    + '. 여러 아이돌이 함께 추천한 책부터 그룹별 추천 도서까지 출처와 함께 정리했어요.',
+    '아이돌 추천책 모음',
+    ['K-POP 아이돌 <strong>' + str(len(idol_names)) + '명</strong>이 인터뷰·유튜브·SNS에서 읽었다고 밝히거나 '
+     '추천한 책 <strong>' + str(len(_idol_ranked)) + '권</strong>을 모았어요.',
+     '여러 아이돌이 함께 추천한 책부터 순서대로 보여드려요. 그룹별 추천 도서와 멤버별 인생책도 바로 찾아볼 수 있어요.'],
+    _idol_ranked, '아이돌이 가장 많이 추천한 책',
+    idol_names, '책을 추천한 아이돌 ' + str(len(idol_names)) + '명',
+    '  <h2>그룹별 아이돌 추천 도서</h2>\n  <ul class="books">\n' + _group_links + '  </ul>\n',
+    [('아이돌 추천책은 어떤 기준으로 모았나요?',
+      '아이돌이 방송·인터뷰·유튜브·위버스·인스타그램 등에서 읽었다고 말하거나 추천한 책을 출처와 함께 모았어요. 책마다 인물 페이지에서 출처를 확인할 수 있어요.'),
+     ('아이돌이 가장 많이 추천한 책은 무엇인가요?',
+      ('지금 기준으로 ' + ', '.join(_idol_picks) + ' 순으로 많이 언급됐어요.') if _idol_picks else '아직 집계 중이에요.'),
+     ('배우나 다른 연예인 추천책도 볼 수 있나요?',
+      '연예인 추천책 모음 페이지에서 배우·가수·방송인이 추천한 책을 함께 볼 수 있어요.')],
+)
+
+# 연예인 추천책 (아이돌 포함 전체)
+_all_ranked = _hub_books(list(celebs))
+_all_picks = [t for t, _ in _all_ranked[:3]]
+_hub_page(
+    CELEB_HUB_URL, 'recommend/celeb.html',
+    '연예인 추천책 모음 · 배우·가수·셀럽이 읽은 책 ' + str(len(_all_ranked)) + '권',
+    '연예인 추천책 한눈에 보기. 배우·가수·아이돌·방송인 ' + str(len(celebs)) + '명이 읽고 추천한 책 '
+    + str(len(_all_ranked)) + '권' + ((' — ' + ', '.join(_all_picks)) if _all_picks else '')
+    + '. 연예인 인생책과 추천 도서를 출처와 함께 정리했어요.',
+    '연예인 추천책 모음',
+    ['배우·가수·아이돌·방송인 등 연예인 <strong>' + str(len(celebs)) + '명</strong>이 읽었다고 밝히거나 '
+     '추천한 책 <strong>' + str(len(_all_ranked)) + '권</strong>을 모았어요.',
+     '여러 연예인이 함께 추천한 책부터 순서대로 보여드려요. 아이돌 추천책만 따로 보고 싶다면 '
+     '<a href="' + IDOL_HUB_URL + '">아이돌 추천책 모음</a>으로 가 보세요.'],
+    _all_ranked, '연예인이 가장 많이 추천한 책',
+    celeb_names, '책을 추천한 배우·가수·방송인 ' + str(len(celeb_names)) + '명',
+    '  <p><a href="' + IDOL_HUB_URL + '">아이돌 ' + str(len(idol_names)) + '명의 추천책은 아이돌 추천책 모음에서 →</a></p>\n',
+    [('연예인 추천책은 어떤 기준으로 모았나요?',
+      '연예인이 방송·인터뷰·유튜브·SNS 등에서 읽었다고 말하거나 추천한 책을 출처와 함께 모았어요. 책마다 인물 페이지에서 출처를 확인할 수 있어요.'),
+     ('연예인이 가장 많이 추천한 책은 무엇인가요?',
+      ('지금 기준으로 ' + ', '.join(_all_picks) + ' 순으로 많이 언급됐어요.') if _all_picks else '아직 집계 중이에요.'),
+     ('내가 아는 연예인 추천책이 없어요.',
+      '출처 링크와 함께 제보해 주시면 확인 후 추가해 둘게요.')],
+)
+print(f"✅ /recommend/ 추천책 모음: 아이돌 {len(idol_names)}명, 연예인 {len(celebs)}명")
 
 # ── 5.5. /en/ 영문 페이지 생성 ──────────────────────────────────────
 # 영문 메타데이터(검수 완료된 `연예인_en`, `도서명_en`)가 있는 행만 노출.
@@ -5730,6 +5940,17 @@ lines = [
     '    <priority>0.6</priority>',
     '  </url>',
 ]
+
+# 아이돌·연예인 추천책 모음
+for _hub in ('recommend/idol.html', 'recommend/celeb.html'):
+    lines += [
+        '  <url>',
+        '    <loc>' + BASE + _hub + '</loc>',
+        '    <lastmod>' + lastmod_for(_hub) + '</lastmod>',
+        '    <changefreq>weekly</changefreq>',
+        '    <priority>0.8</priority>',
+        '  </url>',
+    ]
 
 # 그룹 페이지
 for _gslug, _gname in ko_group_pages:
