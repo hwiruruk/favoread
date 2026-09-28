@@ -181,9 +181,10 @@ JSON만 바꾸면 사이트에 바로 반영되고, `generate.py`는 정적 마�
 ### 메모를 문장으로 — 자동 (AI 워크플로)
 
 메모는 초안입니다. 저장하면 GitHub Actions **Draft Comments with AI**가 출처 링크를
-PDF로 떠서 Claude에 넘기고, 메모를 참고해 한국어·영어 한 줄을 써서 커밋합니다.
+PDF로 떠서 Claude Code에 읽히고, 메모를 참고해 한국어·영어 한 줄을 써서 커밋합니다.
 1~3분 뒤 **↻ 새로 불러오기**로 받아와 승인하면 됩니다. 카드에 `AI 초안` 뱃지가 붙고,
-AI가 남긴 참고는 🤖 줄로 보입니다. 저장소 Secret `ANTHROPIC_API_KEY`가 필요합니다.
+AI가 남긴 참고는 🤖 줄로 보입니다. API 요금 없이 Claude 구독 토큰으로 돌며,
+저장소 Secret `CLAUDE_CODE_OAUTH_TOKEN`이 필요합니다(`claude setup-token`으로 발급).
 자세한 건 [`tools/COMMENTS.md`](../tools/COMMENTS.md)의 **3단계 자동화** 참고.
 
 - 한국어·영어 칸을 직접 고치면 사람이 쓴 것으로 보고 AI가 덮어쓰지 않습니다

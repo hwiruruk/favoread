@@ -71,13 +71,18 @@ AI에 맡긴 결과를 `키 ⇥ 한국어 ⇥ English` 로 붙여넣어도 됩�
 ```
 메모 저장(편집기) → data/comments.json 커밋
   → 워크플로: 출처 링크를 Chromium 으로 열어 PDF로 뜸
-  → Claude 에 PDF + 메모 + 인용을 넘김
-  → 한국어·영어 한 줄을 받아 ko·en 에 채우고 바로 커밋 (status 는 pending 그대로)
+  → Claude Code(구독 토큰)가 PDF + 메모 + 인용을 읽고 한국어·영어 한 줄을 씀
+  → ko·en 에 채우고 바로 커밋 (status 는 pending 그대로)
 → 편집기에서 ↻ 새로 불러오기 → 읽어보고 승인
 ```
 
-- 준비: 저장소 Settings → Secrets and variables → Actions 에 `ANTHROPIC_API_KEY` 를 넣습니다.
-  없으면 경고만 남기고 건너뜁니다
+- API 요금은 들지 않습니다. Claude 구독(Pro/Max) 토큰으로 돌고, 사용량은 구독 한도에서 빠집니다
+- 준비 (한 번만)
+  1. 내 컴퓨터 터미널에서 `claude setup-token` 을 실행하고 브라우저에서 로그인합니다
+  2. 화면에 나온 토큰(`sk-ant-oat…`)을 복사합니다
+  3. 저장소 Settings → Secrets and variables → Actions → New repository secret,
+     이름은 `CLAUDE_CODE_OAUTH_TOKEN`, 값에 토큰을 붙여넣습니다
+  - 없으면 경고만 남기고 건너뜁니다
 - 대상: `memo` 가 있고 미검수(pending)이면서
   `ko` 가 비었거나, AI가 쓴 뒤 메모를 고친 항목(`ai_memo` ≠ `memo`)
 - 문장을 손으로 고치면 사람 것으로 봅니다(`ai_memo` 삭제). 메모를 바꿔도 덮어쓰지 않습니다.
@@ -85,7 +90,10 @@ AI에 맡긴 결과를 `키 ⇥ 한국어 ⇥ English` 로 붙여넣어도 됩�
 - 출처를 PDF로 못 뜨면(유튜브·로그인 벽·20MB 초과·오류) 본문 텍스트나 자막으로,
   그것도 없으면 메모와 인용만으로 쓰고 `ai_note` 에 그렇게 적습니다
 - 한 번에 최대 20건. 수동 실행(Run workflow)에서 `limit`·`key`·`force`·`dry_run` 을 고를 수 있습니다
-- 모델은 `claude-opus-5` 가 기본이고, 환경 변수 `COMMENT_MODEL` 로 바꿀 수 있습니다
+- 워크플로 안에서는 세 단계로 나뉩니다. `draft_comments.py prepare` 가 PDF와 지시문
+  (`.draft-work/INSTRUCTIONS.md`)을 만들고, Claude Code 가 그걸 읽어 `results.json` 을 쓰고,
+  `draft_comments.py apply` 가 검사해서 comments.json 에 넣습니다.
+  준비한 사이에 편집기에서 메모를 또 고쳤거나 승인·반려한 항목은 반영하지 않습니다
 
 AI가 쓴 항목에 붙는 칸
 
@@ -98,13 +106,15 @@ AI가 쓴 항목에 붙는 칸
 편집기 저장은 최신 파일을 받아 **이번에 손댄 항목만** 덮어쓰므로,
 워크플로가 그새 커밋한 다른 항목의 문장이 지워지지 않습니다.
 
-로컬에서 돌리려면:
+로컬에서 돌리려면 (Claude Code 가 있으면 추가 비용 없음):
 
 ```bash
-pip install anthropic playwright && python3 -m playwright install chromium
-export ANTHROPIC_API_KEY=...
-python3 tools/draft_comments.py --list               # 대상만 보기
-python3 tools/draft_comments.py --limit 3 --dry-run  # 결과만 찍기
+pip install playwright && python3 -m playwright install chromium
+python3 tools/draft_comments.py prepare --list     # 대상만 보기
+python3 tools/draft_comments.py prepare --limit 3  # .draft-work/ 에 PDF·지시문 준비
+claude ".draft-work/INSTRUCTIONS.md 를 읽고 그대로 해줘"
+python3 tools/draft_comments.py apply --dry-run    # 결과만 찍기
+python3 tools/draft_comments.py apply              # comments.json 에 반영
 ```
 
 ## 무엇을 뽑아 오나

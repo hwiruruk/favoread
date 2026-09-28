@@ -1,11 +1,14 @@
 name: Draft Comments with AI
 
 # 편집기(/editor/)의 💬 코멘트 검수 창에서 '내 메모'를 적고 저장하면 자동으로 돈다.
-# 메모는 초안이고, 이 워크플로가 출처 링크를 PDF로 떠서 Claude 에 넘기고
+# 메모는 초안이고, 이 워크플로가 출처 링크를 PDF로 떠서 Claude Code 에 읽히고
 # 메모를 참고해 한국어·영어 한 줄을 써서 data/comments.json 에 바로 커밋한다.
 # 결과는 미검수(pending) 그대로 들어가므로, 편집기에서 읽어보고 승인해야 사이트에 나간다.
 #
-# 필요한 Secret: ANTHROPIC_API_KEY (Settings → Secrets and variables → Actions)
+# API 요금이 들지 않도록 Claude 구독(Pro/Max) 토큰으로 돈다. 사용량은 구독 한도에서 빠진다.
+# 필요한 Secret: CLAUDE_CODE_OAUTH_TOKEN
+#   내 컴퓨터 터미널에서 `claude setup-token` → 나온 토큰을
+#   Settings → Secrets and variables → Actions → New repository secret 에 넣는다.
 # 자세한 설명은 tools/COMMENTS.md 참고.
 
 on:
@@ -59,40 +62,63 @@ jobs:
         env:
           KEY: ${{ github.event.inputs.key }}
           FORCE: ${{ github.event.inputs.force }}
+          HAS_TOKEN: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN != '' }}
         run: |
+          if [ "$HAS_TOKEN" != "true" ]; then
+            echo "::warning::CLAUDE_CODE_OAUTH_TOKEN Secret 이 없어 건너뜁니다. 터미널에서 'claude setup-token' 으로 만든 토큰을 Settings → Secrets and variables → Actions 에 넣어주세요."
+            echo "targets=0" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
           set -- --list
           if [ -n "$KEY" ]; then set -- "$@" --key "$KEY"; fi
           if [ "$FORCE" = "true" ]; then set -- "$@" --force; fi
-          python3 tools/draft_comments.py "$@"
+          python3 tools/draft_comments.py prepare "$@"
 
-      - name: 브라우저·한글 글꼴·Anthropic SDK 설치
+      - name: 브라우저·한글 글꼴 설치
         if: steps.targets.outputs.targets != '0'
         run: |
           sudo apt-get update -q
           sudo apt-get install -y -q fonts-noto-cjk fonts-noto-color-emoji
-          pip install -q anthropic playwright
+          pip install -q playwright
           python3 -m playwright install --with-deps chromium
 
-      - name: 출처 PDF + 메모 → 한국어·영어 문장
+      - name: 출처 PDF 뜨고 지시문 준비
         if: steps.targets.outputs.targets != '0'
         env:
-          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
           LIMIT: ${{ github.event.inputs.limit || '20' }}
           KEY: ${{ github.event.inputs.key }}
           FORCE: ${{ github.event.inputs.force }}
-          DRY_RUN: ${{ github.event.inputs.dry_run }}
         run: |
-          if [ -z "$ANTHROPIC_API_KEY" ]; then
-            echo "::warning::ANTHROPIC_API_KEY Secret 이 없어 건너뜁니다. Settings → Secrets and variables → Actions 에 넣어주세요."
-            exit 0
-          fi
           set --
           if [ -n "$LIMIT" ] && [ "$LIMIT" != "0" ]; then set -- "$@" --limit "$LIMIT"; fi
           if [ -n "$KEY" ]; then set -- "$@" --key "$KEY"; fi
           if [ "$FORCE" = "true" ]; then set -- "$@" --force; fi
-          if [ "$DRY_RUN" = "true" ]; then set -- "$@" --dry-run; fi
-          echo "실행: python3 tools/draft_comments.py $*"
-          python3 tools/draft_comments.py "$@"
+          python3 tools/draft_comments.py prepare "$@"
+
+      - name: Claude 가 PDF와 메모를 읽고 문장 작성 (구독 토큰)
+        if: steps.targets.outputs.targets != '0'
+        uses: anthropics/claude-code-action@v1
+        with:
+          claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          prompt: |
+            .draft-work/INSTRUCTIONS.md 를 읽고 그대로 해주세요.
+            결과는 .draft-work/results.json 한 파일에만 쓰고, 다른 파일은 고치지 마세요.
+            git 커밋이나 푸시는 하지 마세요.
+          claude_args: |
+            --allowedTools Read,Write,Glob,Grep
+            --max-turns 80
+
+      - name: 결과를 comments.json 에 반영
+        if: steps.targets.outputs.targets != '0'
+        env:
+          DRY_RUN: ${{ github.event.inputs.dry_run }}
+        run: |
+          if [ "$DRY_RUN" = "true" ]; then
+            python3 tools/draft_comments.py apply --dry-run
+          else
+            python3 tools/draft_comments.py apply
+          fi
 
       - name: 커밋·푸시
         if: steps.targets.outputs.targets != '0'
