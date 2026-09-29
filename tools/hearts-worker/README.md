@@ -12,7 +12,8 @@
 2. D1 데이터베이스 만들기
    - 좌측 **Storage & Databases → D1 SQL Database → Create**
    - 이름: `favorbook-hearts`
-   - 만든 데이터베이스의 **Console** 탭에 [`schema.sql`](./schema.sql) 내용을 통째로 붙여 넣고 **Execute**
+   - 만든 데이터베이스의 **Console** 탭에서 [`schema.sql`](./schema.sql)의 `CREATE` 문 3개를 하나씩 붙여 넣고 각각 **Execute**
+     (통째로 붙여 넣으면 줄바꿈이 사라져 `--` 설명 줄이 뒤를 모두 가려 "Requests without any query are not supported" 오류가 난다)
 3. Worker 만들기
    - **Workers & Pages → Create → Create Worker**, 이름: `favorbook-hearts` → **Deploy**
    - **Edit code** → 기존 코드를 지우고 [`worker.js`](./worker.js) 내용을 붙여 넣기 → **Deploy**

@@ -12,7 +12,7 @@
   'use strict';
 
   // 배포한 하트 Worker 주소를 여기에 넣는다 (예: https://favorbook-hearts.<계정>.workers.dev)
-  var HEARTS_API = '';
+  var HEARTS_API = 'https://favorbook-hearts.twinwhee.workers.dev';
 
   var API = window.FAVOR_HEARTS_API || HEARTS_API;
   if (!API) return;
