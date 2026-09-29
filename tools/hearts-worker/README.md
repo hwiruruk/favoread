@@ -38,6 +38,22 @@
 - `data.json`에 있는 셀럽·책만 하트를 받습니다(1시간마다 다시 읽음).
 - 하트를 넣고 빼는 요청은 `ALLOWED_ORIGIN`(기본 favorbook.co.kr)과 localhost에서만 받습니다.
 - IP 하나당 1분에 40번까지로 연타를 막습니다.
+- 같은 IP에서 같은 셀럽·책에 넣을 수 있는 하트는 하루 10개까지입니다(한국 시간 기준).
+  시크릿 창이나 저장소 삭제로 몰아서 누르는 것을 막는 장치입니다. 이미 누른 하트를 빼는 것은 언제든 됩니다.
+- 메인 카드의 하트 숫자는 `GET /celebs` 한 번으로 받습니다. 결과를 1분 캐시하므로 방문자가 많아도 D1은 1분에 한 번 정도만 읽습니다.
+
+### 2026-09 이전에 만든 데이터베이스 업데이트
+
+IP당 하루 제한을 켜려면 D1 **Console**에서 아래 두 줄을 하나씩 실행한 뒤, 새 `worker.js`를 다시 배포합니다.
+실행하지 않아도 하트는 예전처럼 작동하고 제한만 꺼져 있습니다.
+
+```sql
+ALTER TABLE hearts ADD COLUMN ip TEXT;
+```
+
+```sql
+CREATE INDEX IF NOT EXISTS hearts_item_ip ON hearts (item, ip, created);
+```
 
 ## 하트 통계 보기 (운영자 전용)
 

@@ -5,6 +5,9 @@
  * 이 스크립트가 하트 수를 불러와 보여 주고, 누르면 하트를 넣거나 뺀다.
  * 키는 셀럽이면 "c:" + 한국어 이름, 책이면 "b:" + 한국어 제목.
  *
+ * 누를 수 없는 숫자만 보여 줄 때는 <span class="heart-count" data-heart-count="c:이름" hidden>
+ * 을 둔다 (메인 카드). 셀럽 숫자는 /celebs 한 번으로 전부 받아 온다.
+ *
  * 서버는 tools/hearts-worker/ 의 Cloudflare Worker다.
  * 아래 API가 비어 있으면 아무것도 하지 않고 버튼도 숨긴 채로 둔다.
  */
@@ -66,6 +69,10 @@
     + '.heart-btn.sm{padding:3px 8px;font-size:12px;box-shadow:1px 1px 0 0 #000;border-width:1.5px}'
     + '.heart-btn.sm .heart-ico{font-size:13px}'
     + '.heart-btn.pop .heart-ico{animation:heart-pop .35s ease-out}'
+    + '.heart-count{display:inline-flex;align-items:center;gap:2px;font:800 10px/1 -apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;'
+    + 'color:#e11d48;font-variant-numeric:tabular-nums;white-space:nowrap}'
+    + '.heart-count[hidden]{display:none}'
+    + '.heart-count::before{content:"\\2665"}'
     + '@keyframes heart-pop{0%{transform:scale(1)}40%{transform:scale(1.45)}100%{transform:scale(1)}}'
     // 책장 이미지 저장 중에는 그림에 찍히지 않게 숨긴다
     + '.is-capturing .heart-btn{display:none!important}'
@@ -84,7 +91,8 @@
   function render(btn) {
     var key = btn.getAttribute('data-heart');
     var on = !!mine[key];
-    var n = counts[key] || 0;
+    // 캐시된 숫자가 내 하트를 아직 못 셌을 수 있다
+    var n = Math.max(counts[key] || 0, on ? 1 : 0);
     var ico = btn.querySelector('.heart-ico');
     var num = btn.querySelector('.heart-n');
     if (ico) ico.textContent = on ? '♥' : '♡';
@@ -93,13 +101,22 @@
     btn.setAttribute('aria-pressed', on ? 'true' : 'false');
   }
 
-  function buttonsFor(key) {
-    return Array.prototype.filter.call(
-      document.querySelectorAll('.heart-btn[data-heart]'),
-      function (b) { return b.getAttribute('data-heart') === key; });
+  function renderCount(el) {
+    var key = el.getAttribute('data-heart-count');
+    var n = Math.max(counts[key] || 0, mine[key] ? 1 : 0);
+    el.textContent = fmt(n);
+    el.hidden = !n;
+    el.setAttribute('aria-label', (EN ? 'Hearts ' : '하트 ') + n);
   }
 
-  function renderKey(key) { buttonsFor(key).forEach(render); }
+  function renderKey(key) {
+    Array.prototype.forEach.call(document.querySelectorAll('.heart-btn[data-heart]'), function (b) {
+      if (b.getAttribute('data-heart') === key) render(b);
+    });
+    Array.prototype.forEach.call(document.querySelectorAll('.heart-count[data-heart-count]'), function (el) {
+      if (el.getAttribute('data-heart-count') === key) renderCount(el);
+    });
+  }
 
   function post(path, body) {
     return fetch(API + path, {
@@ -112,9 +129,39 @@
     });
   }
 
+  // 모든 셀럽의 하트 수. 서버와 브라우저에서 잠깐 캐시되므로 방문자가 많아도 가볍다.
+  var celebsLoaded = null;
+  function loadCelebs() {
+    if (!celebsLoaded) {
+      celebsLoaded = fetch(API + '/celebs').then(function (r) {
+        if (!r.ok) throw new Error('hearts ' + r.status);
+        return r.json();
+      }).then(function (d) {
+        var c = d.counts || {};
+        Object.keys(c).forEach(function (k) { if (!pending[k]) counts[k] = c[k]; });
+        return true;
+      }).catch(function () { celebsLoaded = null; return false; });
+    }
+    return celebsLoaded;
+  }
+
+  // 숫자만 보여 주는 칸을 채운다. 셀럽 목록에 없는(하트 0) 셀럽은 0으로 둔다.
+  function scanCounts(root) {
+    var els = (root || document).querySelectorAll('.heart-count[data-heart-count]');
+    if (!els.length) return;
+    loadCelebs().then(function (ok) {
+      Array.prototype.forEach.call(els, function (el) {
+        var key = el.getAttribute('data-heart-count');
+        if (ok && !(key in counts)) counts[key] = 0;
+        renderCount(el);
+      });
+    });
+  }
+
   // root 안의 하트 버튼을 보이게 하고 하트 수를 불러온다.
   // 모달처럼 나중에 data-heart가 바뀌는 곳에서도 다시 부르면 된다.
   function scan(root) {
+    scanCounts(root);
     var btns = (root || document).querySelectorAll('.heart-btn[data-heart]');
     var ask = {};
     Array.prototype.forEach.call(btns, function (b) {
