@@ -69,9 +69,10 @@
     + '.heart-btn.sm{padding:3px 8px;font-size:12px;box-shadow:1px 1px 0 0 #000;border-width:1.5px}'
     + '.heart-btn.sm .heart-ico{font-size:13px}'
     + '.heart-btn.pop .heart-ico{animation:heart-pop .35s ease-out}'
-    + '.heart-count{display:inline-flex;align-items:center;gap:2px;font:800 10px/1 -apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;'
+    + '.heart-count{display:inline-flex;align-items:center;gap:3px;font:800 12px/1 -apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;'
     + 'color:#e11d48;font-variant-numeric:tabular-nums;white-space:nowrap}'
     + '.heart-count[hidden]{display:none}'
+    + '@media (min-width:640px){.heart-count{font-size:14px}}'
     + '.heart-count::before{content:"\\2665"}'
     + '@keyframes heart-pop{0%{transform:scale(1)}40%{transform:scale(1.45)}100%{transform:scale(1)}}'
     // 책장 이미지 저장 중에는 그림에 찍히지 않게 숨긴다
