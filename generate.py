@@ -3099,7 +3099,7 @@ _hub_page(
     idol_names, '책을 추천한 아이돌 ' + str(len(idol_names)) + '명',
     '  <h2>그룹별 아이돌 추천 도서</h2>\n  <ul class="books">\n' + _group_links + '  </ul>\n',
     [('아이돌 추천책은 어떤 기준으로 모았나요?',
-      '아이돌이 방송·인터뷰·유튜브·위버스·인스타그램 등에서 읽었다고 말하거나 추천한 책을 출처와 함께 모았어요. 책마다 인물 페이지에서 출처를 확인할 수 있어요.'),
+      '아이돌이 직접 추천한 책은 물론, 방송·인터뷰·유튜브·위버스·인스타그램 등에서 읽었다고 말하거나 언급한 책, 화보나 일상 사진에 포착된 책까지 출처와 함께 모았어요. 본인이 쓴 책이나 출연작의 원작 도서는 넣지 않았어요. 책마다 인물 페이지에서 출처를 확인할 수 있어요.'),
      ('아이돌이 가장 많이 추천한 책은 무엇인가요?',
       ('지금 기준으로 ' + ', '.join(_idol_picks) + ' 순으로 많이 언급됐어요.') if _idol_picks else '아직 집계 중이에요.'),
      ('배우나 다른 연예인 추천책도 볼 수 있나요?',
@@ -3124,7 +3124,7 @@ _hub_page(
     celeb_names, '책을 추천한 배우·가수·방송인 ' + str(len(celeb_names)) + '명',
     '  <p><a href="' + IDOL_HUB_URL + '">아이돌 ' + str(len(idol_names)) + '명의 추천책은 아이돌 추천책 모음에서 →</a></p>\n',
     [('연예인 추천책은 어떤 기준으로 모았나요?',
-      '연예인이 방송·인터뷰·유튜브·SNS 등에서 읽었다고 말하거나 추천한 책을 출처와 함께 모았어요. 책마다 인물 페이지에서 출처를 확인할 수 있어요.'),
+      '연예인이 직접 추천한 책은 물론, 방송·인터뷰·유튜브·SNS 등에서 읽었다고 말하거나 언급한 책, 화보나 일상 사진에 포착된 책까지 출처와 함께 모았어요. 본인이 쓴 책이나 출연작의 원작 도서는 넣지 않았어요. 책마다 인물 페이지에서 출처를 확인할 수 있어요.'),
      ('연예인이 가장 많이 추천한 책은 무엇인가요?',
       ('지금 기준으로 ' + ', '.join(_all_picks) + ' 순으로 많이 언급됐어요.') if _all_picks else '아직 집계 중이에요.'),
      ('내가 아는 연예인 추천책이 없어요.',
@@ -3640,8 +3640,8 @@ for name, info in celebs.items():
         en_faq_items.append((
             'What books does ' + _name_pl + ' recommend?',
             _name_pl + "'s book recommendations in this archive: " + _picks_txt
-            + '. Every book on this page is linked to the interview, YouTube video or SNS post '
-              'where ' + _name_pl + ' talked about it.'))
+            + '. Every book on this page is linked to the interview, YouTube video, SNS post '
+              'or photo where it came up.'))
     en_faq_items.append((
         'How many books has ' + _name_pl + ' read?',
         _name_pl + ' has ' + str(n) + ' book' + ('s' if n != 1 else '')
@@ -3649,9 +3649,11 @@ for name, info in celebs.items():
           'The list grows whenever a new book mention turns up.'))
     en_faq_items.append((
         'Where do these ' + _name_pl + ' book recommendations come from?',
-        'Public sources only — interviews, YouTube clips, variety shows, fan-cafe posts and SNS. '
-        'A book is added to this reading list only when the mention can be linked, and the link '
-        'stays on the entry so you can check it yourself.'))
+        'Book recommendations are only part of it. This reading list also includes books '
+        + _name_pl + ' said they were reading or mentioned in interviews, YouTube clips, variety '
+        'shows, fan-cafe posts and SNS, as well as books spotted in photo shoots and everyday photos. '
+        'Books ' + _name_pl + ' wrote, and the original books behind works they starred in, are left out. '
+        'Everything comes from public sources, and each entry keeps its link so you can check it yourself.'))
 
     # 자주 등장한 작가 — 한국어 페이지 '📝 책 취향'과 같은 요약
     _en_auth = {}
@@ -4817,12 +4819,15 @@ EN_FAQ = [
      'Korean actors turn up here as often as idols — '
      + str(sum(n_p for _c, r, n_p, _b in en_category_pages if r == 'actor'))
      + ' of them so far. Their picks lean towards Korean literary fiction, essays and '
-     'scripts, and each one is linked to the interview or video where they talked about it. '
+     'scripts, and each one is linked to the interview, video or photo where it came up. '
      'The K-Drama & K-Movie Actors page collects every one of those reading lists in one place.'),
     ('Where do these book recommendations come from?',
-     'From public Korean-language sources only: interviews, YouTube and V Live clips, variety shows, '
-     'fan-cafe posts and Instagram stories. A book is added only when the mention can be linked, '
-     'and each entry keeps that link. Nothing is inferred from rumours or fan speculation.'),
+     'Book recommendations are only part of it. The archive also includes books idols and actors '
+     'said they were reading or mentioned in interviews, YouTube and V Live clips, variety shows, '
+     'fan-cafe posts and Instagram stories, as well as books spotted in photo shoots and everyday photos. '
+     'Books they wrote themselves, and the original books behind dramas or films they starred in, '
+     'are not included. Every entry comes from a public Korean-language source and keeps its link. '
+     'Nothing is inferred from rumours or fan speculation.'),
     ('Can I see the books by group instead of by person?',
      'Yes. The Browse by Group section above opens a page per group — '
      + ', '.join(g for _, g, _, _ in sorted(en_group_pages, key=lambda g: -g[2])[:4])
