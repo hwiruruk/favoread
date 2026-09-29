@@ -297,7 +297,10 @@ const Gh = {
       'X-GitHub-Api-Version': '2022-11-28',
     }, init.headers || {});
     if (Config.token) headers['Authorization'] = 'Bearer ' + Config.token;
-    return fetch('https://api.github.com' + path, { ...init, headers });
+    // GitHub API의 GET 응답은 Cache-Control: max-age=60 이라, 기본값으로 부르면 브라우저가
+    // 60초 전의 브랜치 끝·파일 sha를 돌려준다. 저장 직후 봇이 커밋을 연달아 올리는 이
+    // 저장소에서는 그 낡은 값 때문에 '원격이 변경됨'이 거짓으로 뜨므로 캐시를 쓰지 않는다.
+    return fetch('https://api.github.com' + path, { cache: 'no-store', ...init, headers });
   },
   async apiJson(path, init) {
     const r = await this.api(path, init);
@@ -360,37 +363,50 @@ const Gh = {
     }
 
     try {
-      // 1. 브랜치 끝 커밋
-      const ref = await this.apiJson(`/repos/${repo}/git/ref/heads/${encodeURIComponent(branch)}`);
-      const headSha = ref.object.sha;
-      const headCommit = await this.apiJson(`/repos/${repo}/git/commits/${headSha}`);
+      // 저장 도중 봇(사이트 재생성·영문 제목 후보)이 브랜치를 먼저 옮길 수 있다. 그건 파일
+      // 충돌이 아니므로 최신 끝 커밋을 받아 처음부터 다시 만든다. 진짜 충돌(내가 불러온 뒤
+      // 이 파일이 바뀜)은 아래 sha 비교에서 걸러지고 재시도하지 않는다.
+      for (let attempt = 0; ; attempt++) {
+        try {
+          // 1. 브랜치 끝 커밋
+          const ref = await this.apiJson(`/repos/${repo}/git/ref/heads/${encodeURIComponent(branch)}`);
+          const headSha = ref.object.sha;
+          const headCommit = await this.apiJson(`/repos/${repo}/git/commits/${headSha}`);
 
-      // 2. 내가 불러온 뒤로 남이 이 파일을 바꿨는지 확인
-      if (sha) {
-        const cur = await this.api(
-          `/repos/${repo}/contents/${encodeURIComponent(path)}?ref=${encodeURIComponent(headSha)}`
-        );
-        if (cur.ok) {
-          const curJson = await cur.json();
-          if (curJson.sha && curJson.sha !== sha) {
-            throw new Error('저장 실패: 원격 파일이 변경되었습니다. ↻ 불러오기로 동기화 후 다시 시도하세요.');
+          // 2. 내가 불러온 뒤로 남이 이 파일을 바꿨는지 확인
+          if (sha) {
+            const cur = await this.api(
+              `/repos/${repo}/contents/${encodeURIComponent(path)}?ref=${encodeURIComponent(headSha)}`
+            );
+            if (cur.ok) {
+              const curJson = await cur.json();
+              if (curJson.sha && curJson.sha !== sha) {
+                const e = new Error('저장 실패: 원격 파일이 변경되었습니다. ↻ 불러오기로 동기화 후 다시 시도하세요.');
+                e.conflict = true;
+                throw e;
+              }
+            }
           }
+
+          // 3. 내용을 blob으로 올리고 트리·커밋을 만든 뒤 브랜치를 옮긴다
+          const blob = await json(`/repos/${repo}/git/blobs`, { content, encoding: 'utf-8' });
+          const tree = await json(`/repos/${repo}/git/trees`, {
+            base_tree: headCommit.tree.sha,
+            tree: [{ path, mode: '100644', type: 'blob', sha: blob.sha }],
+          });
+          const commitBody = { message, tree: tree.sha, parents: [headSha] };
+          if (who) { commitBody.author = who; commitBody.committer = who; }
+          const commit = await json(`/repos/${repo}/git/commits`, commitBody);
+          await json(`/repos/${repo}/git/refs/heads/${encodeURIComponent(branch)}`,
+            { sha: commit.sha, force: false }, 'PATCH');
+
+          return { sha: blob.sha };
+        } catch (e) {
+          const raced = e && !e.conflict && (e.status === 409 || e.status === 422);
+          if (!raced || attempt >= 3) throw e;
+          await new Promise(r => setTimeout(r, 600 * (attempt + 1)));
         }
       }
-
-      // 3. 내용을 blob으로 올리고 트리·커밋을 만든 뒤 브랜치를 옮긴다
-      const blob = await json(`/repos/${repo}/git/blobs`, { content, encoding: 'utf-8' });
-      const tree = await json(`/repos/${repo}/git/trees`, {
-        base_tree: headCommit.tree.sha,
-        tree: [{ path, mode: '100644', type: 'blob', sha: blob.sha }],
-      });
-      const commitBody = { message, tree: tree.sha, parents: [headSha] };
-      if (who) { commitBody.author = who; commitBody.committer = who; }
-      const commit = await json(`/repos/${repo}/git/commits`, commitBody);
-      await json(`/repos/${repo}/git/refs/heads/${encodeURIComponent(branch)}`,
-        { sha: commit.sha, force: false }, 'PATCH');
-
-      return { sha: blob.sha };
     } catch (err) {
       if (err && err.status === 403) {
         throw new Error(
