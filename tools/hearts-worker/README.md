@@ -39,9 +39,22 @@
 - 하트를 넣고 빼는 요청은 `ALLOWED_ORIGIN`(기본 favorbook.co.kr)과 localhost에서만 받습니다.
 - IP 하나당 1분에 40번까지로 연타를 막습니다.
 
-## 하트 순위 보기
+## 하트 통계 보기 (운영자 전용)
 
-`GET /top?type=c&limit=20` 은 하트가 많은 셀럽, `type=b` 는 책 순위를 돌려줍니다.
+하트 순위와 기록은 운영자만 볼 수 있습니다.
+
+1. Worker의 **Settings → Variables and Secrets → Add**, 종류 Secret
+   - 이름 `ADMIN_KEY`, 값은 남이 짐작할 수 없는 긴 비밀번호 (20자 이상 권장)
+2. 새 [`worker.js`](./worker.js)를 **Edit code**에 다시 붙여 넣고 **Deploy**
+3. https://favorbook.co.kr/editor/hearts.html 을 열고 그 비밀번호를 넣기
+   (편집기 위쪽의 **❤️ 하트 통계** 버튼으로도 갈 수 있습니다)
+
+전체 하트 수, 오늘·최근 7일 하트, 최근 30일 그래프, 셀럽·책 순위(각 100위), 최근 하트 100건을 보여 줍니다.
+누가 눌렀는지는 서버에도 남지 않으므로 통계에도 나오지 않습니다.
+
+`ADMIN_KEY`가 없으면 통계 주소(`/admin/stats`, `/top`)는 꺼져 있습니다.
+API로 직접 부를 때는 `Authorization: Bearer <ADMIN_KEY>` 헤더를 붙입니다.
+
 D1 Console에서 바로 보려면:
 
 ```sql

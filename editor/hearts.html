@@ -1,0 +1,267 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex,nofollow">
+<title>하트 통계 · Favorbook</title>
+<link rel="icon" href="../favicon.svg">
+<style>
+  :root {
+    --bg: #fbfaf6; --panel: #fff; --ink: #000; --muted: #666;
+    --pink: #fbcfe8; --heart: #e11d48; --yellow: #ffe14d; --mint: #a7f3d0;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; background: var(--bg); color: var(--ink);
+    font: 14px/1.5 -apple-system, BlinkMacSystemFont, "Segoe UI", "Apple SD Gothic Neo", sans-serif;
+  }
+  .wrap { max-width: 960px; margin: 0 auto; padding: 24px 16px 60px; }
+  h1 { font-size: 24px; margin: 0 0 4px; font-weight: 900; }
+  .sub { color: var(--muted); margin: 0 0 20px; font-size: 13px; }
+  .sub a { color: inherit; }
+  .box {
+    background: var(--panel); border: 2px solid var(--ink); box-shadow: 4px 4px 0 0 var(--ink);
+    padding: 16px; margin-bottom: 20px;
+  }
+  .btn {
+    font: 800 13px/1 inherit; font-family: inherit; padding: 9px 14px; border: 2px solid var(--ink);
+    background: #fff; box-shadow: 2px 2px 0 0 var(--ink); cursor: pointer; color: var(--ink);
+  }
+  .btn:hover { background: var(--mint); }
+  .btn.primary { background: var(--yellow); }
+  .btn.sel { background: var(--ink); color: #fff; }
+  input[type=password] {
+    font: inherit; padding: 8px 10px; border: 2px solid var(--ink); width: 100%; max-width: 320px;
+  }
+  .login-row { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+  .login-row label { font-size: 13px; color: var(--muted); display: flex; gap: 4px; align-items: center; }
+  .msg { margin: 10px 0 0; font-size: 13px; }
+  .msg.err { color: var(--heart); font-weight: 700; }
+  .hidden { display: none !important; }
+
+  .tiles { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 12px; margin-bottom: 20px; }
+  .tile { background: #fff; border: 2px solid var(--ink); box-shadow: 3px 3px 0 0 var(--ink); padding: 12px 14px; }
+  .tile .k { font-size: 12px; color: var(--muted); font-weight: 700; }
+  .tile .v { font-size: 26px; font-weight: 900; font-variant-numeric: tabular-nums; }
+  .tile.hl { background: var(--pink); }
+
+  h2 { font-size: 16px; font-weight: 900; margin: 0 0 12px; }
+  .chart { display: flex; align-items: flex-end; gap: 3px; height: 140px; padding-top: 16px; }
+  .bar { flex: 1; min-width: 0; position: relative; display: flex; flex-direction: column; justify-content: flex-end; height: 100%; }
+  .bar i { display: block; background: var(--heart); min-height: 1px; }
+  .bar.zero i { background: #ddd; }
+  .bar span { position: absolute; left: 50%; transform: translateX(-50%); font-size: 10px; color: var(--muted); white-space: nowrap; }
+  .bar .n { top: auto; }
+  @media (max-width: 600px) { .bar .n { display: none; } }
+  .axis { display: flex; justify-content: space-between; font-size: 11px; color: var(--muted); margin-top: 6px; }
+
+  .tabs { display: flex; gap: 8px; margin-bottom: 12px; flex-wrap: wrap; }
+  table { width: 100%; border-collapse: collapse; }
+  th, td { text-align: left; padding: 7px 6px; border-bottom: 1px solid #e5e5e5; vertical-align: top; }
+  th { font-size: 12px; color: var(--muted); border-bottom: 2px solid var(--ink); }
+  td.num, th.num { text-align: right; font-variant-numeric: tabular-nums; white-space: nowrap; }
+  td.rank { width: 36px; color: var(--muted); font-variant-numeric: tabular-nums; }
+  td a { color: inherit; }
+  .type { display: inline-block; font-size: 11px; font-weight: 800; padding: 1px 6px; border: 1.5px solid var(--ink); margin-right: 6px; }
+  .type.c { background: var(--yellow); }
+  .type.b { background: var(--mint); }
+  .empty { color: var(--muted); padding: 12px 0; }
+  .foot { font-size: 12px; color: var(--muted); }
+  .top-actions { display: flex; gap: 8px; margin-bottom: 20px; flex-wrap: wrap; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>❤️ 하트 통계</h1>
+  <p class="sub">운영자 전용 페이지입니다. 하트 서버의 ADMIN_KEY 비밀번호가 있어야 볼 수 있어요. · <a href="./">편집기로</a></p>
+
+  <section id="login" class="box">
+    <h2>비밀번호</h2>
+    <form id="loginForm" class="login-row">
+      <input id="keyInput" type="password" autocomplete="current-password" placeholder="ADMIN_KEY" required>
+      <button class="btn primary" type="submit">보기</button>
+      <label><input id="remember" type="checkbox" checked> 이 브라우저에 기억</label>
+    </form>
+    <p id="loginMsg" class="msg"></p>
+  </section>
+
+  <section id="stats" class="hidden">
+    <div class="top-actions">
+      <button id="refreshBtn" class="btn" type="button">↻ 새로고침</button>
+      <button id="logoutBtn" class="btn" type="button">로그아웃</button>
+    </div>
+
+    <div class="tiles">
+      <div class="tile hl"><div class="k">전체 하트</div><div class="v" id="tTotal">-</div></div>
+      <div class="tile"><div class="k">오늘</div><div class="v" id="tToday">-</div></div>
+      <div class="tile"><div class="k">최근 7일</div><div class="v" id="tWeek">-</div></div>
+      <div class="tile"><div class="k">누른 사람(브라우저)</div><div class="v" id="tVoters">-</div></div>
+      <div class="tile"><div class="k">하트 받은 셀럽·책</div><div class="v" id="tItems">-</div></div>
+    </div>
+
+    <div class="box">
+      <h2>최근 30일 일별 하트</h2>
+      <div id="chart" class="chart"></div>
+      <div class="axis"><span id="axisFrom"></span><span id="axisTo"></span></div>
+    </div>
+
+    <div class="box">
+      <div class="tabs">
+        <button class="btn sel" type="button" data-tab="celebs">셀럽 순위</button>
+        <button class="btn" type="button" data-tab="books">책 순위</button>
+        <button class="btn" type="button" data-tab="recent">최근 기록</button>
+      </div>
+      <div id="tabBody"></div>
+    </div>
+
+    <p class="foot">
+      하트를 취소하면 기록에서 빠지므로, 일별·최근 기록은 지금까지 남아 있는 하트 기준입니다.
+      누른 사람은 브라우저 단위로 세며, 누가 눌렀는지는 서버에도 남지 않습니다.
+      <span id="genAt"></span>
+    </p>
+  </section>
+</div>
+
+<script>
+(function () {
+  'use strict';
+
+  // assets/hearts.js 의 HEARTS_API 와 같은 주소
+  var API = 'https://favorbook-hearts.twinwhee.workers.dev';
+  var STORE = 'favorbook-hearts-admin';
+
+  var $ = function (id) { return document.getElementById(id); };
+  var data = null;
+  var tab = 'celebs';
+
+  function load() { try { return localStorage.getItem(STORE) || sessionStorage.getItem(STORE) || ''; } catch (e) { return ''; } }
+  function save(k, remember) {
+    try {
+      localStorage.removeItem(STORE); sessionStorage.removeItem(STORE);
+      if (k) (remember ? localStorage : sessionStorage).setItem(STORE, k);
+    } catch (e) {}
+  }
+
+  function esc(s) {
+    return String(s).replace(/[&<>"']/g, function (c) {
+      return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c];
+    });
+  }
+  function fmt(n) { return Number(n || 0).toLocaleString('ko-KR'); }
+
+  function label(key) {
+    var type = key.slice(0, 1), name = key.slice(2);
+    var tag = '<span class="type ' + type + '">' + (type === 'c' ? '셀럽' : '책') + '</span>';
+    if (type === 'c') {
+      return tag + '<a href="../share/' + encodeURIComponent(name) + '.html" target="_blank" rel="noopener">' + esc(name) + '</a>';
+    }
+    return tag + esc(name);
+  }
+
+  function when(t) {
+    var d = new Date(t);
+    var diff = (Date.now() - t) / 1000;
+    var rel = diff < 60 ? '방금' : diff < 3600 ? Math.floor(diff / 60) + '분 전'
+            : diff < 86400 ? Math.floor(diff / 3600) + '시간 전' : Math.floor(diff / 86400) + '일 전';
+    var abs = d.toLocaleString('ko-KR', { timeZone: 'Asia/Seoul', month: 'numeric', day: 'numeric', hour: '2-digit', minute: '2-digit' });
+    return abs + ' <span style="color:#999">(' + rel + ')</span>';
+  }
+
+  function fetchStats(key) {
+    return fetch(API + '/admin/stats', { headers: { Authorization: 'Bearer ' + key }, cache: 'no-store' })
+      .then(function (r) {
+        if (r.status === 401) throw new Error('비밀번호가 맞지 않아요.');
+        if (r.status === 404) throw new Error('하트 서버에 ADMIN_KEY가 아직 설정되지 않았거나, 새 worker.js가 배포되지 않았어요.');
+        if (r.status === 429) throw new Error('시도가 너무 많아요. 1분 뒤에 다시 해 주세요.');
+        if (!r.ok) throw new Error('서버 오류 (' + r.status + ')');
+        return r.json();
+      });
+  }
+
+  function show(key, remember) {
+    $('loginMsg').className = 'msg';
+    $('loginMsg').textContent = '불러오는 중…';
+    return fetchStats(key).then(function (d) {
+      data = d;
+      if (remember !== undefined) save(key, remember);
+      $('login').classList.add('hidden');
+      $('stats').classList.remove('hidden');
+      render();
+    }).catch(function (e) {
+      $('login').classList.remove('hidden');
+      $('stats').classList.add('hidden');
+      $('loginMsg').className = 'msg err';
+      $('loginMsg').textContent = e.message || '불러오지 못했어요.';
+    });
+  }
+
+  function render() {
+    $('tTotal').textContent = fmt(data.total);
+    $('tToday').textContent = fmt(data.today);
+    $('tWeek').textContent = fmt(data.week);
+    $('tVoters').textContent = fmt(data.voters);
+    $('tItems').textContent = fmt(data.items);
+    $('genAt').textContent = '(' + new Date(data.generated).toLocaleString('ko-KR', { timeZone: 'Asia/Seoul' }) + ' 기준)';
+
+    var days = data.days || [];
+    var max = Math.max.apply(null, days.map(function (x) { return x.n; }).concat([1]));
+    $('chart').innerHTML = days.map(function (x) {
+      var h = Math.round(x.n / max * 100);
+      return '<div class="bar' + (x.n ? '' : ' zero') + '" title="' + x.date + ' · ' + x.n + '개">'
+        + (x.n ? '<span class="n" style="bottom:calc(' + h + '% + 2px)">' + x.n + '</span>' : '')
+        + '<i style="height:' + h + '%"></i></div>';
+    }).join('');
+    $('axisFrom').textContent = days.length ? days[0].date.slice(5).replace('-', '/') : '';
+    $('axisTo').textContent = days.length ? '오늘 ' + days[days.length - 1].date.slice(5).replace('-', '/') : '';
+
+    renderTab();
+  }
+
+  function renderTab() {
+    Array.prototype.forEach.call(document.querySelectorAll('[data-tab]'), function (b) {
+      b.classList.toggle('sel', b.getAttribute('data-tab') === tab);
+    });
+    var html;
+    if (tab === 'recent') {
+      var rows = data.recent || [];
+      html = rows.length
+        ? '<table><thead><tr><th>시간 (한국)</th><th>대상</th></tr></thead><tbody>'
+          + rows.map(function (r) { return '<tr><td style="white-space:nowrap">' + when(r.t) + '</td><td>' + label(r.key) + '</td></tr>'; }).join('')
+          + '</tbody></table>'
+        : '<p class="empty">아직 하트 기록이 없어요.</p>';
+    } else {
+      var list = (tab === 'celebs' ? data.topCelebs : data.topBooks) || [];
+      html = list.length
+        ? '<table><thead><tr><th>#</th><th>' + (tab === 'celebs' ? '셀럽' : '책') + '</th><th class="num">하트</th></tr></thead><tbody>'
+          + list.map(function (r, i) { return '<tr><td class="rank">' + (i + 1) + '</td><td>' + label(r.key) + '</td><td class="num">' + fmt(r.n) + '</td></tr>'; }).join('')
+          + '</tbody></table>'
+        : '<p class="empty">아직 하트 받은 ' + (tab === 'celebs' ? '셀럽이' : '책이') + ' 없어요.</p>';
+    }
+    $('tabBody').innerHTML = html;
+  }
+
+  $('loginForm').addEventListener('submit', function (e) {
+    e.preventDefault();
+    var k = $('keyInput').value.trim();
+    if (k) show(k, $('remember').checked);
+  });
+  $('refreshBtn').addEventListener('click', function () { var k = load(); if (k) show(k); });
+  $('logoutBtn').addEventListener('click', function () {
+    save('');
+    data = null;
+    $('keyInput').value = '';
+    $('stats').classList.add('hidden');
+    $('login').classList.remove('hidden');
+    $('loginMsg').textContent = '';
+  });
+  Array.prototype.forEach.call(document.querySelectorAll('[data-tab]'), function (b) {
+    b.addEventListener('click', function () { tab = b.getAttribute('data-tab'); renderTab(); });
+  });
+
+  var saved = load();
+  if (saved) show(saved);
+})();
+</script>
+</body>
+</html>
