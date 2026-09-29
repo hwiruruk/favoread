@@ -10,12 +10,15 @@
  *   SALT             투표자 id를 해시할 때 섞는 비밀 문자열
  *   ALLOWED_ORIGIN   하트를 누를 수 있는 출처, 콤마 구분
  *                    (기본: https://favorbook.co.kr,https://www.favorbook.co.kr)
+ *   ADMIN_KEY        운영자 통계용 비밀번호. 없으면 /admin/*, /top 이 꺼진다.
  *
  * 엔드포인트
  *   POST /counts  {"keys":["c:이름","b:책 제목",...]}  → {"counts":{"c:이름":3,...}}
  *   POST /heart   {"key":"c:이름","voter":"<브라우저 id>","on":true}
  *                 → {"key":"c:이름","n":4,"on":true}
- *   GET  /top?type=c|b&limit=20  → {"items":[{"key":"c:이름","n":12},...]}
+ *   GET  /top?type=c|b&limit=20  → {"items":[{"key":"c:이름","n":12},...]}   (운영자 전용)
+ *   GET  /admin/stats            → 합계·일별·순위·최근 기록                  (운영자 전용)
+ *        운영자 전용은 Authorization: Bearer <ADMIN_KEY> 헤더가 있어야 한다.
  *
  * 키는 셀럽이면 "c:" + 한국어 이름, 책이면 "b:" + 한국어 제목이다.
  * 한국어·영문 페이지가 같은 키를 쓰므로 하트 수가 합쳐진다.
@@ -53,7 +56,12 @@ export default {
         return json(await heart(request, env), cors);
       }
       if (url.pathname === '/top' && request.method === 'GET') {
-        return json(await top(url, env), cors, 200, 'public, max-age=300');
+        await requireAdmin(request, env);
+        return json(await top(url, env), cors);
+      }
+      if (url.pathname === '/admin/stats' && request.method === 'GET') {
+        await requireAdmin(request, env);
+        return json(await adminStats(env), cors);
       }
       if (url.pathname === '/') {
         return json({ ok: true, service: 'favorbook-hearts' }, cors);
@@ -142,6 +150,50 @@ async function top(url, env) {
   return { items: results.map(r => ({ key: r.item, n: r.n })) };
 }
 
+const DAY = 86400 * 1000;
+const KST = 9 * 3600 * 1000;
+
+// 운영자 통계. 하트를 뺀 기록은 hearts에서 지워지므로 일별 수는
+// "그날 눌러서 지금까지 남아 있는 하트"다. 누른 사람 id는 돌려주지 않는다.
+async function adminStats(env) {
+  const now = Date.now();
+  const todayStart = Math.floor((now + KST) / DAY) * DAY - KST;
+  const since30 = todayStart - 29 * DAY;
+
+  const [sum, items, today, week, daily, topC, topB, recent] = await env.DB.batch([
+    env.DB.prepare('SELECT COUNT(*) AS n, COUNT(DISTINCT voter) AS v FROM hearts'),
+    env.DB.prepare('SELECT COUNT(*) AS n FROM counts WHERE n > 0'),
+    env.DB.prepare('SELECT COUNT(*) AS n FROM hearts WHERE created >= ?1').bind(todayStart),
+    env.DB.prepare('SELECT COUNT(*) AS n FROM hearts WHERE created >= ?1').bind(todayStart - 6 * DAY),
+    env.DB.prepare('SELECT CAST((created + ?1) / ?2 AS INTEGER) AS d, COUNT(*) AS n FROM hearts '
+                 + 'WHERE created >= ?3 GROUP BY d ORDER BY d').bind(KST, DAY, since30),
+    env.DB.prepare("SELECT item, n FROM counts WHERE item LIKE 'c:%' AND n > 0 ORDER BY n DESC LIMIT 100"),
+    env.DB.prepare("SELECT item, n FROM counts WHERE item LIKE 'b:%' AND n > 0 ORDER BY n DESC LIMIT 100"),
+    env.DB.prepare('SELECT item, created FROM hearts ORDER BY created DESC LIMIT 100'),
+  ]);
+
+  const byDay = new Map(daily.results.map(r => [Number(r.d), r.n]));
+  const days = [];
+  for (let t = since30; t <= todayStart; t += DAY) {
+    const d = Math.floor((t + KST) / DAY);
+    days.push({ date: new Date(d * DAY).toISOString().slice(0, 10), n: byDay.get(d) || 0 });
+  }
+  const pair = r => ({ key: r.item, n: r.n });
+
+  return {
+    generated: now,
+    total: sum.results[0].n,
+    voters: sum.results[0].v,
+    items: items.results[0].n,
+    today: today.results[0].n,
+    week: week.results[0].n,
+    days,
+    topCelebs: topC.results.map(pair),
+    topBooks: topB.results.map(pair),
+    recent: recent.results.map(r => ({ key: r.item, t: r.created })),
+  };
+}
+
 // ── 검증 ───────────────────────────────────────────────────────────
 
 function validKeyFormat(k) {
@@ -191,6 +243,22 @@ function rateOk(ip) {
   return h.c <= RATE_LIMIT;
 }
 
+async function requireAdmin(request, env) {
+  if (!env.ADMIN_KEY) throw new HttpError(404, 'not found');
+  const ip = request.headers.get('CF-Connecting-IP') || '';
+  const auth = request.headers.get('Authorization') || '';
+  const given = auth.startsWith('Bearer ') ? auth.slice(7) : '';
+  // 비밀번호를 길이·내용과 상관없이 같은 시간에 비교하려고 해시끼리 맞춘다
+  const [a, b] = await Promise.all([sha256(given), sha256(env.ADMIN_KEY)]);
+  let diff = 0;
+  for (let i = 0; i < a.length; i++) diff |= a.charCodeAt(i) ^ b.charCodeAt(i);
+  if (diff !== 0 || !given) {
+    // 틀린 비밀번호를 연달아 넣어 보는 것을 늦춘다
+    if (!rateOk('admin|' + ip)) throw new HttpError(429, 'too many requests');
+    throw new HttpError(401, 'unauthorized');
+  }
+}
+
 // ── 공통 ───────────────────────────────────────────────────────────
 
 function allowedOrigin(origin, env) {
@@ -203,7 +271,7 @@ function allowedOrigin(origin, env) {
 function corsHeaders(origin) {
   const h = {
     'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
-    'Access-Control-Allow-Headers': 'Content-Type',
+    'Access-Control-Allow-Headers': 'Content-Type, Authorization',
     'Access-Control-Max-Age': '86400',
     'Vary': 'Origin',
   };
