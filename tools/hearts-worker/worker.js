@@ -16,6 +16,7 @@
  *   POST /counts  {"keys":["c:이름","b:책 제목",...]}  → {"counts":{"c:이름":3,...}}
  *   POST /heart   {"key":"c:이름","voter":"<브라우저 id>","on":true}
  *                 → {"key":"c:이름","n":4,"on":true}
+ *   GET  /celebs  → {"counts":{"c:이름":3,...}}  하트가 1개 이상인 모든 셀럽 (1분 캐시)
  *   GET  /top?type=c|b&limit=20  → {"items":[{"key":"c:이름","n":12},...]}   (운영자 전용)
  *   GET  /admin/stats            → 합계·일별·순위·최근 기록                  (운영자 전용)
  *        운영자 전용은 Authorization: Bearer <ADMIN_KEY> 헤더가 있어야 한다.
@@ -31,13 +32,15 @@ const MAX_KEYS = 300;        // /counts 한 번에 물을 수 있는 키 수
 const MAX_KEY_LEN = 200;
 const RATE_LIMIT = 40;       // IP 하나가 1분에 누를 수 있는 횟수
 const KNOWN_TTL = 3600 * 1000;
+const IP_DAILY_PER_ITEM = 10; // IP 하나가 같은 셀럽·책에 하루 넣을 수 있는 하트 수
+const CELEBS_TTL = 60;        // /celebs 캐시 초
 
 class HttpError extends Error {
   constructor(status, message) { super(message); this.status = status; }
 }
 
 export default {
-  async fetch(request, env) {
+  async fetch(request, env, ctx) {
     const origin = request.headers.get('Origin') || '';
     const allowed = allowedOrigin(origin, env);
     const cors = corsHeaders(allowed ? origin : '');
@@ -48,6 +51,9 @@ export default {
 
     const url = new URL(request.url);
     try {
+      if (url.pathname === '/celebs' && request.method === 'GET') {
+        return await celebs(request, env, cors, ctx);
+      }
       if (url.pathname === '/counts' && request.method === 'POST') {
         return json(await counts(request, env), cors);
       }
@@ -93,6 +99,32 @@ async function counts(request, env) {
   return { counts: out };
 }
 
+// 메인 카드처럼 셀럽 수백 명의 숫자를 한꺼번에 보여 줄 때 쓴다.
+// 결과를 데이터센터 캐시에 1분 넣어 두어, 방문자가 많아도 D1은 1분에 한 번만 읽는다.
+async function celebs(request, env, cors, ctx) {
+  const cache = caches.default;
+  const cacheKey = new Request(new URL('/celebs', request.url).toString(), { method: 'GET' });
+  let res = await cache.match(cacheKey);
+  if (!res) {
+    const { results } = await env.DB
+      .prepare("SELECT item, n FROM counts WHERE item >= 'c:' AND item < 'c;' AND n > 0")
+      .all();
+    const out = {};
+    for (const r of results) out[r.item] = r.n;
+    res = new Response(JSON.stringify({ counts: out }), {
+      headers: {
+        'Content-Type': 'application/json; charset=utf-8',
+        'Cache-Control': 'public, max-age=' + CELEBS_TTL,
+      },
+    });
+    ctx.waitUntil(cache.put(cacheKey, res.clone()));
+  }
+  const h = new Headers(res.headers);
+  for (const [k, v] of Object.entries(cors)) h.set(k, v);
+  h.set('Cache-Control', 'public, max-age=30');
+  return new Response(res.body, { status: 200, headers: h });
+}
+
 async function heart(request, env) {
   const ip = request.headers.get('CF-Connecting-IP') || '';
   if (!rateOk(ip)) throw new HttpError(429, 'too many requests');
@@ -109,10 +141,9 @@ async function heart(request, env) {
   const voter = await sha256(voterRaw + '|' + (env.SALT || ''));
 
   if (on) {
-    const r = await env.DB
-      .prepare('INSERT OR IGNORE INTO hearts (item, voter, created) VALUES (?1, ?2, ?3)')
-      .bind(key, voter, Date.now())
-      .run();
+    const now = Date.now();
+    const ipHash = await sha256('ip|' + ip + '|' + (env.SALT || ''));
+    const r = await insertHeart(env, key, voter, ipHash, now);
     if (r.meta.changes > 0) {
       await env.DB
         .prepare('INSERT INTO counts (item, n) VALUES (?1, 1) '
@@ -192,6 +223,44 @@ async function adminStats(env) {
     topBooks: topB.results.map(pair),
     recent: recent.results.map(r => ({ key: r.item, t: r.created })),
   };
+}
+
+// hearts.ip 칸이 있으면 IP당 하루 제한을 걸고 IP 해시를 함께 적는다.
+// 칸이 없는 예전 데이터베이스에서는 제한 없이 예전처럼 넣는다 (README의 ALTER TABLE 참고).
+let hasIpCol = null;
+
+async function insertHeart(env, key, voter, ipHash, now) {
+  if (hasIpCol !== false) {
+    try {
+      const todayStart = Math.floor((now + KST) / DAY) * DAY - KST;
+      const row = await env.DB
+        .prepare('SELECT COUNT(*) AS c FROM hearts WHERE item = ?1 AND ip = ?2 AND created >= ?3')
+        .bind(key, ipHash, todayStart)
+        .first();
+      hasIpCol = true;
+      if (row && row.c >= IP_DAILY_PER_ITEM) {
+        // 이미 이 브라우저가 누른 하트라면 제한과 상관없이 그대로 둔다
+        const mine = await env.DB
+          .prepare('SELECT 1 AS x FROM hearts WHERE item = ?1 AND voter = ?2')
+          .bind(key, voter)
+          .first();
+        if (!mine) throw new HttpError(429, 'daily limit');
+        return { meta: { changes: 0 } };
+      }
+      return await env.DB
+        .prepare('INSERT OR IGNORE INTO hearts (item, voter, created, ip) VALUES (?1, ?2, ?3, ?4)')
+        .bind(key, voter, now, ipHash)
+        .run();
+    } catch (e) {
+      if (e instanceof HttpError) throw e;
+      if (!/no such column/i.test(String(e && e.message))) throw e;
+      hasIpCol = false;
+    }
+  }
+  return env.DB
+    .prepare('INSERT OR IGNORE INTO hearts (item, voter, created) VALUES (?1, ?2, ?3)')
+    .bind(key, voter, now)
+    .run();
 }
 
 // ── 검증 ───────────────────────────────────────────────────────────

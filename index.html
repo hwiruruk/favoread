@@ -1741,6 +1741,8 @@
       const celebUrl = `${BASE_PATH}?celeb=${encodeURIComponent(name)}`;
       card.href = celebShareUrl(name);
       card.dataset.name = name;
+      // 누를 수 없는 하트 수 (hearts.js가 채운다. 하트 0이면 숨김)
+      const heartCount = `<span class="heart-count" data-heart-count="c:${name.replace(/&/g, '&amp;').replace(/"/g, '&quot;')}" hidden></span>`;
 
       if (viewMode === 'grid') {
         card.className = 'group cursor-pointer flex flex-col bg-white border-2 border-ink shadow-neo hover:shadow-neo-lg hover:-translate-y-1 transition-all duration-200 opacity-0 animate-fade-in-fast block';
@@ -1754,7 +1756,10 @@
           <div class="celeb-photo-wrap w-full aspect-[3/4] overflow-hidden border-b-2 border-ink bg-paper-dark relative">${img}</div>
           <div class="p-3 sm:p-5 flex flex-col items-center group-hover:bg-neo-mint transition-colors duration-200">
             <h3 class="text-base sm:text-xl font-bold tracking-tight mb-1 sm:mb-2 text-ink text-center line-clamp-1">${name}</h3>
-            <p class="text-[8px] sm:text-[10px] tracking-widest text-ink uppercase font-sans font-bold bg-white border border-ink px-1.5 sm:px-2 py-0.5">${data.books.length} records</p>
+            <div class="flex items-center justify-center gap-1.5">
+              <p class="text-[8px] sm:text-[10px] tracking-widest text-ink uppercase font-sans font-bold bg-white border border-ink px-1.5 sm:px-2 py-0.5">${data.books.length} records</p>
+              ${heartCount}
+            </div>
             <p class="text-[9px] sm:text-[10px] text-muted mt-1.5 sm:mt-2 text-center line-clamp-1 w-full px-1">${bookPreview}${moreCount}</p>
           </div>`;
           
@@ -1763,7 +1768,10 @@
         card.className = 'group cursor-pointer flex justify-between items-center bg-white border-2 border-ink shadow-neo-sm hover:shadow-neo hover:bg-neo-mint hover:-translate-y-0.5 transition-all duration-200 opacity-0 animate-fade-in-fast block px-4 py-3 sm:px-6 sm:py-4';
         card.innerHTML = `
           <h3 class="text-base sm:text-lg font-bold tracking-tight text-ink group-hover:underline decoration-2 underline-offset-4">${name}</h3>
-          <p class="text-[9px] sm:text-xs tracking-widest text-ink uppercase font-sans font-bold bg-neo-yellow border border-ink px-2 py-1 flex-shrink-0">${data.books.length} records</p>
+          <div class="flex items-center gap-2 flex-shrink-0">
+            ${heartCount}
+            <p class="text-[9px] sm:text-xs tracking-widest text-ink uppercase font-sans font-bold bg-neo-yellow border border-ink px-2 py-1">${data.books.length} records</p>
+          </div>
         `;
       }
       
@@ -1778,6 +1786,7 @@
     });
 
     renderIndex += CHUNK_SIZE;
+    if (window.FavorHearts) window.FavorHearts.scan(D.grid);
     
     if (renderIndex < filteredEntries.length) {
       D.loadWrap.classList.remove('hidden');
