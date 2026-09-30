@@ -747,11 +747,38 @@ def cover_tile(title, cover_url, link, added, alt):
     return '    <span class="cv" title="' + esc(title) + '">' + inner + '</span>\n'
 
 
+COVER_COLS = 4                       # 표지 보기: 한 줄 4권
+COVER_ROWS = 3                       # 한 쪽 3줄 = 12권
+COVER_PAGE = COVER_COLS * COVER_ROWS
+
+
+def cover_shelf_html(tiles):
+    """표지를 4열 선반으로 늘어놓는다. 12권을 넘으면 12권씩 쪽으로 나눈다.
+
+    쪽 버튼은 12권을 넘을 때만 나온다. 쪽 넘김은 SHELF_VIEW_JS가 맡는다.
+    """
+    pages = [tiles[i:i + COVER_PAGE] for i in range(0, len(tiles), COVER_PAGE)] or [[]]
+    out = ''
+    for pi, pg in enumerate(pages):
+        out += '    <div class="cv-page' + (' on' if pi == 0 else '') + '">\n'
+        for r in range(0, len(pg), COVER_COLS):
+            out += '    <div class="cv-row">\n' + ''.join(pg[r:r + COVER_COLS]) + '    </div>\n'
+        out += '    </div>\n'
+    if len(pages) > 1:
+        out += ('    <div class="cv-pager" data-total="' + str(len(tiles)) + '" data-per="' + str(COVER_PAGE) + '">'
+                '<button type="button" class="pg" data-go="prev" aria-label="prev">◀</button>'
+                + ''.join('<button type="button" class="pg" data-go="' + str(i) + '">' + str(i + 1) + '</button>'
+                          for i in range(len(pages)))
+                + '<button type="button" class="pg" data-go="next" aria-label="next">▶</button>'
+                '<span class="pg-count"></span></div>\n')
+    return out
+
+
 def shelf_view_tabs(spine_label, cover_label):
-    """책장 보기 전환 — 책등 / 표지. 누른 쪽은 다음 방문에도 기억한다."""
+    """책장 보기 전환 — 표지 / 책등. 표지가 기본이고, 누른 쪽은 다음 방문에도 기억한다."""
     return ('        <span class="view-tabs" role="group">'
-            '<button type="button" class="vt" data-view="spine" aria-pressed="true">' + spine_label + '</button>'
-            '<button type="button" class="vt" data-view="cover" aria-pressed="false">' + cover_label + '</button>'
+            '<button type="button" class="vt" data-view="cover" aria-pressed="true">' + cover_label + '</button>'
+            '<button type="button" class="vt" data-view="spine" aria-pressed="false">' + spine_label + '</button>'
             '</span>\n')
 
 
@@ -764,12 +791,40 @@ SHELF_VIEW_JS = (
     '    function set(v, save) {\n'
     '      area.classList.toggle("show-covers", v === "cover");\n'
     '      tabs.forEach(function (t) { t.setAttribute("aria-pressed", String(t.dataset.view === v)); });\n'
-    '      if (save) { try { localStorage.setItem("shelfView", v); } catch (e) {} }\n'
+    '      if (save) { try { localStorage.setItem("shelfView2", v); } catch (e) {} }\n'
     '    }\n'
     '    var saved = null;\n'
-    '    try { saved = localStorage.getItem("shelfView"); } catch (e) {}\n'
-    '    if (saved === "cover") set("cover", false);\n'
+    '    try { saved = localStorage.getItem("shelfView2"); } catch (e) {}\n'
+    '    if (saved === "spine") set("spine", false);\n'
     '    tabs.forEach(function (t) { t.addEventListener("click", function () { set(t.dataset.view, true); }); });\n'
+    '    // 표지 보기 쪽 넘김 (12권을 넘는 책장만)\n'
+    '    var pager = document.querySelector(".cv-pager");\n'
+    '    var pages = document.querySelectorAll(".cv-page");\n'
+    '    if (pager && pages.length > 1) {\n'
+    '      var cur = 0, ko = (document.documentElement.lang || "ko").indexOf("ko") === 0;\n'
+    '      var total = +pager.dataset.total, per = +pager.dataset.per;\n'
+    '      var nums = pager.querySelectorAll("[data-go]");\n'
+    '      var show = function (n) {\n'
+    '        cur = Math.max(0, Math.min(pages.length - 1, n));\n'
+    '        pages.forEach(function (p, i) { p.classList.toggle("on", i === cur); });\n'
+    '        nums.forEach(function (b) {\n'
+    '          var g = b.dataset.go;\n'
+    '          b.classList.toggle("on", g === String(cur));\n'
+    '          b.disabled = (g === "prev" && cur === 0) || (g === "next" && cur === pages.length - 1);\n'
+    '        });\n'
+    '        var from = cur * per + 1, to = Math.min(total, (cur + 1) * per);\n'
+    '        pager.querySelector(".pg-count").textContent = ko\n'
+    '          ? from + "–" + to + "권 · 총 " + total + "권 · " + (cur + 1) + "/" + pages.length + "쪽"\n'
+    '          : "Books " + from + "–" + to + " of " + total;\n'
+    '      };\n'
+    '      pager.addEventListener("click", function (e) {\n'
+    '        var b = e.target.closest("[data-go]");\n'
+    '        if (!b || b.disabled) return;\n'
+    '        var g = b.dataset.go;\n'
+    '        show(g === "prev" ? cur - 1 : g === "next" ? cur + 1 : +g);\n'
+    '      });\n'
+    '      show(0);\n'
+    '    }\n'
     '  })();\n'
     '  </script>\n'
 )
@@ -801,16 +856,30 @@ SHELF_CSS = (
     '    .vt { font: inherit; font-size: 12px; font-weight: 700; padding: 5px 10px; background: #fff; color: #000; border: 0; cursor: pointer; }\n'
     '    .vt + .vt { border-left: 2px solid #000; }\n'
     '    .vt[aria-pressed="true"] { background: #000; color: #fff; }\n'
-    # 표지 보기 — 책등 대신 표지를 격자로 늘어놓는다
-    '    .covers { display: none; grid-template-columns: repeat(auto-fill, minmax(84px, 1fr)); gap: 14px 12px; margin: 14px 0 22px; }\n'
-    '    .show-covers .covers { display: grid; }\n'
-    '    .show-covers .shelf { display: none; }\n'
-    '    .cv { position: relative; display: block; aspect-ratio: 2/3; border: 1.5px solid #000; box-shadow: 2px 2px 0 0 #000;\n'
-    '          background: #f4f4f0; overflow: hidden; color: #000; text-decoration: none; transition: transform .12s; }\n'
-    '    .cv:hover { transform: translateY(-3px); text-decoration: none; }\n'
-    '    .cv img { width: 100%; height: 100%; object-fit: cover; display: block; }\n'
-    '    .cv-no { display: flex; height: 100%; align-items: center; justify-content: center; padding: 6px;\n'
-    '             font-size: 11px; font-weight: 700; line-height: 1.3; text-align: center; word-break: keep-all; }\n'
+    # 표지 보기 — 4열 선반. 줄마다 선반 판이 받치고, 12권을 넘으면 쪽으로 나뉜다.
+    "    .covers { display: none; margin: 14px 0 22px; border: 2px solid #000; background: #f7f2e4; }\n"
+    "    .show-covers .covers { display: block; }\n"
+    "    .show-covers .shelf { display: none; }\n"
+    "    .cv-page { display: none; }\n"
+    "    .cv-page.on { display: block; }\n"
+    "    .cv-row { display: grid; grid-template-columns: repeat(" + str(COVER_COLS) + ", minmax(0, 1fr)); gap: 0 18px;\n"
+    "              padding: 20px 18px 16px; border-bottom: 12px solid #d9a066; }\n"
+    "    .cv-row + .cv-row { border-top: 2px solid #000; }\n"
+    "    .cv { position: relative; display: block; aspect-ratio: 2/3; border: 2px solid #000; box-shadow: 4px 4px 0 0 #000;\n"
+    "          background: #f4f4f0; overflow: hidden; color: #000; text-decoration: none; transition: transform .12s, box-shadow .12s; }\n"
+    "    .cv:hover { transform: translate(-2px, -4px); box-shadow: 6px 8px 0 0 #000; text-decoration: none; }\n"
+    "    .cv img { width: 100%; height: 100%; object-fit: cover; display: block; }\n"
+    "    .cv-no { display: flex; height: 100%; align-items: center; justify-content: center; padding: 6px;\n"
+    "             font-size: 11px; font-weight: 700; line-height: 1.3; text-align: center; word-break: keep-all; }\n"
+    "    .cv-pager { display: flex; align-items: center; justify-content: center; gap: 6px; flex-wrap: wrap;\n"
+    "                padding: 12px 8px; border-top: 2px solid #000; background: #fff; }\n"
+    "    .cv-pager .pg { font: inherit; font-size: 13px; font-weight: 800; min-width: 34px; height: 34px; cursor: pointer;\n"
+    "                    background: #fff; color: #000; border: 2px solid #000; box-shadow: 2px 2px 0 0 #000; }\n"
+    "    .cv-pager .pg:hover { background: #fde047; }\n"
+    "    .cv-pager .pg.on { background: #fde047; }\n"
+    "    .cv-pager .pg[disabled] { opacity: .35; cursor: default; background: #fff; }\n"
+    "    .cv-pager .pg-count { flex-basis: 100%; text-align: center; font-size: 12px; font-weight: 700; color: #555; margin-top: 4px; }\n"
+    "    @media (max-width: 480px) { .cv-row { gap: 0 10px; padding: 16px 10px 12px; } }\n"
     # 책장 — 책등을 같은 높이로 세워 바닥에 붙여 늘어놓는다.
     # 줄이 넘어가도 줄마다 선반 판이 받치도록, 선반 판을 줄 간격(--row)마다
     # 되풀이되는 배경으로 그린다. 판은 책등 바로 아래(--sh-h)에 온다.
@@ -863,6 +932,14 @@ SHELF_CSS = (
     '            height: 100%; width: auto; max-width: 80px; object-fit: fill; }\n'
     # 책등 이미지가 없거나 못 불러오면 색 책등 폭으로 돌아간다
     '    .sp.no-img, .sp.sp-fail { width: var(--w, 38px); }\n'
+    # 책등 사진이 없는 책은 표지를 잘라 책등으로 쓴다. 그림자는 은은하게, 제목은 세로로 얹는다.
+    "    .sp-c { position: absolute; inset: 0; z-index: 0; width: 100%; height: 100%; object-fit: cover; object-position: 50% 50%; }\n"
+    "    .sp.no-img { box-shadow: inset -2px 0 5px rgba(0,0,0,.14), inset 2px 0 4px rgba(255,255,255,.1); }\n"
+    "    .sp.no-img.has-cut::after { content: ''; position: absolute; inset: 0; z-index: 1; pointer-events: none;\n"
+    "        background: linear-gradient(90deg, rgba(255,255,255,.12), rgba(255,255,255,0) 25%, rgba(0,0,0,0) 65%, rgba(0,0,0,.14)),\n"
+    "                    rgba(0,0,0,.16); }\n"
+    "    .sp.no-img.has-cut .sp-t { z-index: 2; }\n"
+    "    .sp.no-img.has-cut.sp-fail::after, .sp.no-img.has-cut.sp-fail .sp-c { display: none; }\n"
     # 최근 추가된 책 — 책등 위쪽을 띠로 두른다. 제목이 가리지 않게 여백을 준다.
     '    .sp-new { position: absolute; top: 0; left: 0; right: 0; z-index: 3; text-align: center;\n'
     '              font-size: 8px; line-height: 1; padding: 3px 0 2px;\n'
@@ -2125,7 +2202,7 @@ for name, info in celebs.items():
     # 책 테이블 행 (표지·도서명은 알라딘 외부 링크, 출처는 별도 외부링크)
     book_cards_html = ''   # 카드 그리드 (표 대체)
     spine_html = ''        # 책등 보기
-    cover_grid_html = ''   # 표지 보기
+    cover_tiles = []       # 표지 보기
     shared_count = 0       # 다른 셀럽과 공유된 책 권수 (섹션 헤더용)
     # 책장·목록은 가나다 순. 최근 추가된 책은 위쪽 NEW 칸에 따로 모은다.
     list_books = sorted(books, key=lambda x: title_sort_key(x['title']))
@@ -2204,8 +2281,12 @@ for name, info in celebs.items():
         # 이미지를 색 책등 위에 덮어두고 못 불러오면 스스로 사라지게 해서,
         # 자바스크립트 없이도 자연스럽게 색 책등으로 떨어진다.
         _spine_url = spine_image_url(b['title'], b['coverUrl'])
+        # 책등 사진이 없는 책은 표지를 잘라 책등으로 쓴다(제목은 그 위에 세로로).
+        _cut = (not _spine_url) and (b['coverUrl'] or '').startswith('http')
         _spine_inner = (
-            '<span class="sp-t"><i>' + esc(spine_title(b['title'])) + '</i></span>'
+            ('<img class="sp-c" src="' + esc(b['coverUrl']) + '" alt="" loading="lazy" referrerpolicy="no-referrer">'
+             if _cut else '')
+            + '<span class="sp-t"><i>' + esc(spine_title(b['title'])) + '</i></span>'
             + ('<img class="sp-i" src="' + esc(_spine_url) + '" alt="" loading="lazy" '
                'referrerpolicy="no-referrer"' + SPINE_IMG_GUARD + '>'
                if _spine_url else '')
@@ -2214,7 +2295,7 @@ for name, info in celebs.items():
         _spine_style = ('--c:' + spine_tint(b['title'])
                         + ';--w:' + str(spine_width(b['title'])) + 'px'
                         + ';--fs:' + str(spine_font_size(spine_title(b['title']))) + 'px')
-        _sp_cls = ('sp' if _spine_url else 'sp no-img') + (' is-new' if _added else '')
+        _sp_cls = ('sp' if _spine_url else 'sp no-img') + (' has-cut' if _cut else '') + (' is-new' if _added else '')
         if aladin_url:
             spine_html += ('    <a class="' + _sp_cls + '" style="' + _spine_style + '" href="' + aladin_url
                            + '" rel="nofollow noopener noreferrer" target="_blank" title="'
@@ -2222,7 +2303,7 @@ for name, info in celebs.items():
         else:
             spine_html += ('    <span class="' + _sp_cls + '" style="' + _spine_style + '" title="'
                            + esc(b['title']) + '">' + _spine_inner + '</span>\n')
-        cover_grid_html += cover_tile(b['title'], b['coverUrl'], aladin_url, _added, b['title'] + ' 표지')
+        cover_tiles.append(cover_tile(b['title'], b['coverUrl'], aladin_url, _added, b['title'] + ' 표지'))
 
         _card = (
             '    <li class="rl-item" id="b' + str(i+1) + '">\n'
@@ -2517,12 +2598,12 @@ for name, info in celebs.items():
         + new_block(new_items)
         + (('    <p class="muted">' + str(shared_count) + '권은 다른 셀럽도 함께 추천한 책이에요. 아래 목록에서 함께 추천한 셀럽 이름을 볼 수 있어요.</p>\n')
            if shared_count else '')
-        + '    <div id="shelf-area">\n'
+        + '    <div id="shelf-area" class="show-covers">\n'
         '    <div class="shelf" id="shelf">\n'
         + spine_html +
         '    </div>\n'
         '    <div class="covers" id="covers">\n'
-        + cover_grid_html +
+        + cover_shelf_html(cover_tiles) +
         '    </div>\n'
         '    <ol class="reading-list" id="rlist">\n'
         + book_cards_html +
@@ -3473,7 +3554,7 @@ for name, info in celebs.items():
     # 책 행 (영문 제목 + 한국어 원제 부기)
     rows = ''
     en_spine_html = ''
-    en_cover_grid_html = ''
+    en_cover_tiles = []
     # 영문 페이지는 영문 제목 알파벳 순
     en_list_books = sorted(en_books, key=lambda x: title_sort_key(plain_en(x['title_en'])))
     en_new_items = []
@@ -3541,8 +3622,11 @@ for name, info in celebs.items():
         # 책등 한 칸 — 한국어 페이지와 같은 규칙. 예스24 책등이 있으면 그 이미지를,
         # 없으면 제목에서 만든 색 책등을 쓴다. 제목은 영문으로 적는다.
         _sp_url = spine_image_url(b['title'], b['coverUrl'])
+        _cut = (not _sp_url) and (b['coverUrl'] or '').startswith('http')
         _sp_inner = (
-            '<span class="sp-t"><i>' + esc(spine_title(t_plain)) + '</i></span>'
+            ('<img class="sp-c" src="' + esc(b['coverUrl']) + '" alt="" loading="lazy" referrerpolicy="no-referrer">'
+             if _cut else '')
+            + '<span class="sp-t"><i>' + esc(spine_title(t_plain)) + '</i></span>'
             + ('<img class="sp-i" src="' + esc(_sp_url) + '" alt="" loading="lazy" '
                'referrerpolicy="no-referrer"' + SPINE_IMG_GUARD + '>'
                if _sp_url else '')
@@ -3551,7 +3635,7 @@ for name, info in celebs.items():
         _sp_style = ('--c:' + spine_tint(b['title'])
                      + ';--w:' + str(spine_width(b['title'])) + 'px'
                      + ';--fs:' + str(spine_font_size(spine_title(t_plain))) + 'px')
-        _sp_cls = ('sp' if _sp_url else 'sp no-img') + (' is-new' if _added else '')
+        _sp_cls = ('sp' if _sp_url else 'sp no-img') + (' has-cut' if _cut else '') + (' is-new' if _added else '')
         if aladin_url:
             en_spine_html += ('    <a class="' + _sp_cls + '" style="' + _sp_style + '" href="' + aladin_url
                               + '" rel="nofollow noopener noreferrer" target="_blank" title="'
@@ -3559,7 +3643,7 @@ for name, info in celebs.items():
         else:
             en_spine_html += ('    <span class="' + _sp_cls + '" style="' + _sp_style + '" title="'
                               + esc(t_plain) + '">' + _sp_inner + '</span>\n')
-        en_cover_grid_html += cover_tile(t_plain, b['coverUrl'], aladin_url, _added, alt_text)
+        en_cover_tiles.append(cover_tile(t_plain, b['coverUrl'], aladin_url, _added, alt_text))
 
         _card = (
             '    <li class="rl-item" id="b' + str(i+1) + '">\n'
@@ -3930,10 +4014,10 @@ for name, info in celebs.items():
         '      </div>\n'
         '    </div>\n'
         + new_block(en_new_items, 'en')
-        + '    <div id="shelf-area">\n'
+        + '    <div id="shelf-area" class="show-covers">\n'
         '    <div class="shelf" id="shelf">\n' + en_spine_html +
         '    </div>\n'
-        '    <div class="covers" id="covers">\n' + en_cover_grid_html +
+        '    <div class="covers" id="covers">\n' + cover_shelf_html(en_cover_tiles) +
         '    </div>\n'
         '    <ol class="reading-list" id="rlist">\n' + rows +
         '    </ol>\n'
