@@ -1275,23 +1275,25 @@ for _name, _info in celebs.items():
 print(f"💬 검수 승인된 자동 코멘트 {_auto_comment_count}건 반영")
 
 # ── 책 취향 통계 ─────────────────────────────────────────────────────
-# 분야는 data/genres.json(tools/fetch_genres.py), 작가는 data.csv 에서 센다.
-# 기준은 tools/taste.py 맨 위에 있다. 믿을 만한 것만 내고, 모자라면 아무것도 안 낸다.
+# 책 정보(번역서·출간일·쪽수·시리즈)는 data/bookinfo.json(tools/fetch_bookinfo.py),
+# 작가·출판사는 data.csv 에서 센다. 기준은 tools/taste.py 맨 위에 있다.
+# 믿을 만한 것만 내고, 모자라면 아무것도 안 낸다.
 import sys as _sys
 _sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), 'tools'))
 import taste as _taste
 try:
-    with open('data/genres.json', encoding='utf-8') as f:
-        _genres_db = json.load(f).get('genres', {})
+    with open('data/bookinfo.json', encoding='utf-8') as f:
+        _bookinfo_db = json.load(f).get('books', {})
 except (FileNotFoundError, json.JSONDecodeError):
-    _genres_db = {}
-_taste_base = _taste.site_field_share(celebs, _genres_db)
+    _bookinfo_db = {}
+_taste_year = datetime.date.today().year
+_taste_base = _taste.site_baseline(celebs, _bookinfo_db, _taste_year)
 TASTE = {}
 for _name, _info in celebs.items():
-    _t = _taste.compute(_info['books'], _genres_db, _taste_base)
+    _t = _taste.compute(_info['books'], _bookinfo_db, _taste_base, _taste_year)
     if _t:
         TASTE[_name] = _t
-print(f"📊 책 취향 통계 {len(TASTE)}명 / {len(celebs)}명 (분야 확인 {len(_genres_db)}권)")
+print(f"📊 책 취향 통계 {len(TASTE)}명 / {len(celebs)}명 (책 정보 확인 {len(_bookinfo_db)}권)")
 
 def taste_html(name, lang='ko'):
     t = TASTE.get(name)

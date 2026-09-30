@@ -1,14 +1,14 @@
-name: Fetch Book Genres
+name: Fetch Book Info
 
-# '책 취향' 통계(셀럽 페이지의 📊 독서 취향)에 쓸 책 분야를 알라딘에서 찾아
-# data/genres.json 에 채운다. 설명은 tools/TASTE.md.
+# '책 취향' 통계(셀럽 페이지의 📊 독서 취향)에 쓸 책 정보(번역서 여부·출간일·쪽수·시리즈)를
+# 예스24 API에서 받아 data/bookinfo.json 에 채운다. 설명은 tools/TASTE.md.
 #
-# 자동으로 돈다 — 새 책이 들어와 분야를 모르는 책이 10권 넘게 쌓였을 때만 조회한다.
+# 자동으로 돈다 — 새 책이 들어와 정보를 모르는 책이 10권 넘게 쌓였을 때만 조회한다.
 # (한두 권 때문에 매번 PR이 올라오지 않게.) 손으로 돌리면 권수와 상관없이 조회한다.
-# 새 셀럽도 마찬가지다: 그 사람 책의 분야가 채워지면 다음 빌드에서 취향이 저절로 붙는다
+# 새 셀럽도 마찬가지다: 그 사람 책의 정보가 채워지면 다음 빌드에서 취향이 저절로 붙는다
 # (책 5권 미만이면 붙지 않는다 — tools/taste.py).
 #
-# 미리 넣어둘 Secret: ALADIN_TTB_KEY (책등 워크플로와 같은 값)
+# 미리 넣어둘 Secret: YES24_PROXY 또는 YES24_API_KEY (책등 워크플로와 같은 값)
 
 on:
   workflow_dispatch:
@@ -27,10 +27,10 @@ on:
     - cron: '17 3 * * *'
 
 env:
-  MIN_BATCH: 10   # 분야를 모르는 책이 이 권수 이상 모이면 자동 실행
+  MIN_BATCH: 10   # 정보를 모르는 책이 이 권수 이상 모이면 자동 실행
 
 jobs:
-  genres:
+  bookinfo:
     runs-on: ubuntu-latest
     permissions:
       contents: write
@@ -48,8 +48,8 @@ jobs:
         run: |
           ARGS=""
           if [ "${{ github.event.inputs.refresh }}" = "true" ]; then ARGS="--refresh"; fi
-          N=$(python3 tools/fetch_genres.py --count $ARGS)
-          echo "분야를 모르는 책: ${N}권 (자동 실행 기준 ${MIN_BATCH}권)"
+          N=$(python3 tools/fetch_bookinfo.py --count $ARGS)
+          echo "정보를 모르는 책: ${N}권 (자동 실행 기준 ${MIN_BATCH}권)"
           if [ "${{ github.event_name }}" = "workflow_dispatch" ] && [ "$N" -gt 0 ]; then
             echo "run=true" >> $GITHUB_OUTPUT
           elif [ "$N" -ge "$MIN_BATCH" ]; then
@@ -59,26 +59,27 @@ jobs:
             echo "기준 미달 — 이번엔 건너뜁니다."
           fi
 
-      - name: 분야 찾기
+      - name: 책 정보 받기
         if: steps.gate.outputs.run == 'true'
         env:
-          ALADIN_TTB_KEY: ${{ secrets.ALADIN_TTB_KEY }}
+          YES24_PROXY: ${{ secrets.YES24_PROXY }}
+          YES24_API_KEY: ${{ secrets.YES24_API_KEY }}
         run: |
-          if [ -z "$ALADIN_TTB_KEY" ]; then
-            echo "::error::ALADIN_TTB_KEY Secret이 없습니다. (Settings → Secrets and variables → Actions)"
+          if [ -z "$YES24_PROXY" ] && [ -z "$YES24_API_KEY" ]; then
+            echo "::error::YES24_PROXY 또는 YES24_API_KEY Secret이 없습니다. (Settings → Secrets and variables → Actions)"
             exit 1
           fi
           ARGS=""
           LIMIT="${{ github.event.inputs.limit }}"
           if [ -n "$LIMIT" ] && [ "$LIMIT" != "0" ]; then ARGS="$ARGS --limit $LIMIT"; fi
           if [ "${{ github.event.inputs.refresh }}" = "true" ]; then ARGS="$ARGS --refresh"; fi
-          python3 tools/fetch_genres.py $ARGS
+          python3 tools/fetch_bookinfo.py $ARGS
 
       - name: 바뀐 게 있는지 확인
         if: steps.gate.outputs.run == 'true'
         id: diff
         run: |
-          if git diff --quiet -- data/genres.json && [ -z "$(git ls-files --others --exclude-standard data/genres.json)" ]; then
+          if git diff --quiet -- data/bookinfo.json && [ -z "$(git ls-files --others --exclude-standard data/bookinfo.json)" ]; then
             echo "changed=false" >> $GITHUB_OUTPUT
           else
             echo "changed=true" >> $GITHUB_OUTPUT
@@ -88,21 +89,24 @@ jobs:
         if: steps.diff.outputs.changed == 'true'
         uses: peter-evans/create-pull-request@v8
         with:
-          commit-message: "chore: 책 분야 수집 (독서 취향 통계용)"
-          title: "chore: 책 분야 수집 (독서 취향 통계용)"
+          commit-message: "chore: 책 정보 수집 (독서 취향 통계용)"
+          title: "chore: 책 정보 수집 (독서 취향 통계용)"
           body: |
-            ## 책 분야 수집
+            ## 책 정보 수집
 
-            `tools/fetch_genres.py` 가 알라딘에서 찾은 분야입니다. 바뀐 파일은 `data/genres.json` 하나예요.
+            `tools/fetch_bookinfo.py` 가 예스24에서 받은 책 정보(번역서 여부·출간일·쪽수·시리즈)입니다.
+            바뀐 파일은 `data/bookinfo.json` 하나예요.
             머지하면 사이트 갱신 워크플로가 돌면서 조건을 채운 셀럽 페이지에 📊 독서 취향이 붙습니다.
 
             ### 확인할 것
-            - `misses` — 못 찾았거나 제목이 안 맞아 비워둔 책. 그 책은 통계에서 빠집니다
-            - 분야가 이상한 책은 `genres.json` 에서 `field` 를 직접 고치세요 (다시 덮어쓰지 않습니다)
+            - 처음 돌린 PR이라면 `translated` 판정을 훑어보세요. 판정에 쓴 원값(`original_title`,
+              `original_translation`)이 같이 들어 있습니다. 국내서인데 `true` 이거나 번역서인데 `false` 가
+              많으면 `to_info()` 의 판정식을 고쳐야 합니다
+            - `misses` — 예스24에 없거나 표지가 예스24가 아니라 조회하지 못한 책. 그 책은 통계에서 빠집니다
 
             ### 취향이 붙는 기준 (`tools/taste.py`)
-            책 5권 이상 · 분야 확인 70% 이상 · 분야는 3권 이상이면서 비중 30% 이상이고 사이트 평균보다 높을 때 ·
-            작가는 서로 다른 작품 2권 이상일 때
-          branch: chore/genres
+            책 5권 이상 · 정보 확인 70% 이상 · 번역서·최근 출간·분량은 사이트 평균보다 눈에 띄게 다를 때 ·
+            작가는 서로 다른 작품 2권 이상 · 출판사는 3권 이상이면서 비중 30% 이상
+          branch: chore/bookinfo
           delete-branch: true
           base: ${{ github.ref_name }}
