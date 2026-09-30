@@ -530,6 +530,29 @@ SHELF_CAPTURE_JS_TEMPLATE = (
     '    var H2C = "https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js";\n'
     '    var PROXY = "https://images.weserv.nl/?url=";\n'
     '    var PAPER = "#fcfaf5";\n'
+    '    var PER = 12;\n'
+    '    // 표지 보기에서 책이 12권을 넘으면 어느 12권을 저장할지 고르는 칸을 붙인다\n'
+    '    (function () {\n'
+    '      var area = document.getElementById("shelf-area");\n'
+    '      var n = area ? area.querySelectorAll(".cv").length : 0;\n'
+    '      if (n <= PER) return;\n'
+    '      var ko = (document.documentElement.lang || "ko").indexOf("ko") === 0;\n'
+    '      var sel = document.createElement("select");\n'
+    '      sel.id = "shelf-range"; sel.className = "sh-range";\n'
+    '      sel.setAttribute("aria-label", ko ? "저장할 책 범위" : "Books to save");\n'
+    '      for (var p = 0; p * PER < n; p++) {\n'
+    '        var o = document.createElement("option");\n'
+    '        o.value = p;\n'
+    '        var a = p * PER + 1, b = Math.min(n, (p + 1) * PER);\n'
+    '        o.textContent = ko ? a + "–" + b + "권 (표지 12권씩)" : "Books " + a + "–" + b;\n'
+    '        sel.appendChild(o);\n'
+    '      }\n'
+    '      var first = btns[0];\n'
+    '      first.parentNode.insertBefore(sel, first);\n'
+    '      var sync = function () { sel.style.display = area.classList.contains("show-covers") ? "" : "none"; };\n'
+    '      new MutationObserver(sync).observe(area, { attributes: true, attributeFilter: ["class"] });\n'
+    '      sync();\n'
+    '    })();\n'
     '    var FONT = \'-apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif\';\n'
     '    // 캔버스 한계. 넘기면 빈 그림이 나오거나 아예 실패한다. 사파리는 한 변보다\n'
     '    // 넓이를 먼저 막는다(약 1677만 픽셀). 제목·여백을 얹을 몫을 빼고 잡는다.\n'
@@ -693,6 +716,15 @@ SHELF_CAPTURE_JS_TEMPLATE = (
     '      // 저장하는 그림에는 NEW 표시와 함께 추천한 셀럽 목록을 넣지 않는다.\n'
     '      // html2canvas가 문서를 복사할 때 이 클래스도 따라가서 복사본에서만 빠진 채 그려진다.\n'
     '      view.classList.add("is-capturing");\n'
+    '      // 표지 보기에서 책이 12권을 넘으면 고른 12권만 4열 3줄로 담는다\n'
+    '      var capTiles = [], capSel = document.getElementById("shelf-range");\n'
+    '      if (capSel && capSel.value !== "" && view.classList.contains("show-covers")) {\n'
+    '        var from = +capSel.value * PER;\n'
+    '        [].forEach.call(view.querySelectorAll(".cv"), function (t, i) {\n'
+    '          if (i < from || i >= from + PER) { t.classList.add("cap-off"); capTiles.push(t); }\n'
+    '        });\n'
+    '        view.classList.add("cap-12");\n'
+    '      }\n'
     '      guard(loadH2C(), 15000, "html2canvas").then(function () {\n'
     '        swap = swapImages(view);\n'
     '        return swap.ready;\n'
@@ -723,7 +755,8 @@ SHELF_CAPTURE_JS_TEMPLATE = (
     '      }).then(function () {\n'
     '        if (swap) swap.undo.forEach(function (f) { f(); });\n'
     '        if (muted) unmute(muted);\n'
-    '        view.classList.remove("is-capturing");\n'
+    '        view.classList.remove("is-capturing", "cap-12");\n'
+    '        capTiles.forEach(function (t) { t.classList.remove("cap-off"); });\n'
     '        btns.forEach(function (b) { b.disabled = false; });\n'
     '        btn.textContent = was;\n'
     '      });\n'
@@ -747,31 +780,13 @@ def cover_tile(title, cover_url, link, added, alt):
     return '    <span class="cv" title="' + esc(title) + '">' + inner + '</span>\n'
 
 
-COVER_COLS = 4                       # 표지 보기: 한 줄 4권
-COVER_ROWS = 3                       # 한 쪽 3줄 = 12권
-COVER_PAGE = COVER_COLS * COVER_ROWS
+COVER_COLS = 4                       # 이미지 저장: 표지 한 줄 4권
+COVER_PAGE = 12                      # 이미지 저장: 한 장 12권 (4열 3줄)
 
 
 def cover_shelf_html(tiles):
-    """표지를 4열 선반으로 늘어놓는다. 12권을 넘으면 12권씩 쪽으로 나눈다.
-
-    쪽 버튼은 12권을 넘을 때만 나온다. 쪽 넘김은 SHELF_VIEW_JS가 맡는다.
-    """
-    pages = [tiles[i:i + COVER_PAGE] for i in range(0, len(tiles), COVER_PAGE)] or [[]]
-    out = ''
-    for pi, pg in enumerate(pages):
-        out += '    <div class="cv-page' + (' on' if pi == 0 else '') + '">\n'
-        for r in range(0, len(pg), COVER_COLS):
-            out += '    <div class="cv-row">\n' + ''.join(pg[r:r + COVER_COLS]) + '    </div>\n'
-        out += '    </div>\n'
-    if len(pages) > 1:
-        out += ('    <div class="cv-pager" data-total="' + str(len(tiles)) + '" data-per="' + str(COVER_PAGE) + '">'
-                '<button type="button" class="pg" data-go="prev" aria-label="prev">◀</button>'
-                + ''.join('<button type="button" class="pg" data-go="' + str(i) + '">' + str(i + 1) + '</button>'
-                          for i in range(len(pages)))
-                + '<button type="button" class="pg" data-go="next" aria-label="next">▶</button>'
-                '<span class="pg-count"></span></div>\n')
-    return out
+    """표지 보기 — 책 전체를 격자로 늘어놓는다. 12권 나누기는 이미지 저장에서만 쓴다."""
+    return ''.join(tiles)
 
 
 def shelf_view_tabs(spine_label, cover_label):
@@ -797,34 +812,6 @@ SHELF_VIEW_JS = (
     '    try { saved = localStorage.getItem("shelfView2"); } catch (e) {}\n'
     '    if (saved === "spine") set("spine", false);\n'
     '    tabs.forEach(function (t) { t.addEventListener("click", function () { set(t.dataset.view, true); }); });\n'
-    '    // 표지 보기 쪽 넘김 (12권을 넘는 책장만)\n'
-    '    var pager = document.querySelector(".cv-pager");\n'
-    '    var pages = document.querySelectorAll(".cv-page");\n'
-    '    if (pager && pages.length > 1) {\n'
-    '      var cur = 0, ko = (document.documentElement.lang || "ko").indexOf("ko") === 0;\n'
-    '      var total = +pager.dataset.total, per = +pager.dataset.per;\n'
-    '      var nums = pager.querySelectorAll("[data-go]");\n'
-    '      var show = function (n) {\n'
-    '        cur = Math.max(0, Math.min(pages.length - 1, n));\n'
-    '        pages.forEach(function (p, i) { p.classList.toggle("on", i === cur); });\n'
-    '        nums.forEach(function (b) {\n'
-    '          var g = b.dataset.go;\n'
-    '          b.classList.toggle("on", g === String(cur));\n'
-    '          b.disabled = (g === "prev" && cur === 0) || (g === "next" && cur === pages.length - 1);\n'
-    '        });\n'
-    '        var from = cur * per + 1, to = Math.min(total, (cur + 1) * per);\n'
-    '        pager.querySelector(".pg-count").textContent = ko\n'
-    '          ? from + "–" + to + "권 · 총 " + total + "권 · " + (cur + 1) + "/" + pages.length + "쪽"\n'
-    '          : "Books " + from + "–" + to + " of " + total;\n'
-    '      };\n'
-    '      pager.addEventListener("click", function (e) {\n'
-    '        var b = e.target.closest("[data-go]");\n'
-    '        if (!b || b.disabled) return;\n'
-    '        var g = b.dataset.go;\n'
-    '        show(g === "prev" ? cur - 1 : g === "next" ? cur + 1 : +g);\n'
-    '      });\n'
-    '      show(0);\n'
-    '    }\n'
     '  })();\n'
     '  </script>\n'
 )
@@ -856,30 +843,21 @@ SHELF_CSS = (
     '    .vt { font: inherit; font-size: 12px; font-weight: 700; padding: 5px 10px; background: #fff; color: #000; border: 0; cursor: pointer; }\n'
     '    .vt + .vt { border-left: 2px solid #000; }\n'
     '    .vt[aria-pressed="true"] { background: #000; color: #fff; }\n'
-    # 표지 보기 — 4열 선반. 줄마다 선반 판이 받치고, 12권을 넘으면 쪽으로 나뉜다.
-    "    .covers { display: none; margin: 14px 0 22px; border: 2px solid #000; background: #f7f2e4; }\n"
-    "    .show-covers .covers { display: block; }\n"
-    "    .show-covers .shelf { display: none; }\n"
-    "    .cv-page { display: none; }\n"
-    "    .cv-page.on { display: block; }\n"
-    "    .cv-row { display: grid; grid-template-columns: repeat(" + str(COVER_COLS) + ", minmax(0, 1fr)); gap: 0 18px;\n"
-    "              padding: 20px 18px 16px; border-bottom: 12px solid #d9a066; }\n"
-    "    .cv-row + .cv-row { border-top: 2px solid #000; }\n"
-    "    .cv { position: relative; display: block; aspect-ratio: 2/3; border: 2px solid #000; box-shadow: 4px 4px 0 0 #000;\n"
-    "          background: #f4f4f0; overflow: hidden; color: #000; text-decoration: none; transition: transform .12s, box-shadow .12s; }\n"
-    "    .cv:hover { transform: translate(-2px, -4px); box-shadow: 6px 8px 0 0 #000; text-decoration: none; }\n"
-    "    .cv img { width: 100%; height: 100%; object-fit: cover; display: block; }\n"
-    "    .cv-no { display: flex; height: 100%; align-items: center; justify-content: center; padding: 6px;\n"
-    "             font-size: 11px; font-weight: 700; line-height: 1.3; text-align: center; word-break: keep-all; }\n"
-    "    .cv-pager { display: flex; align-items: center; justify-content: center; gap: 6px; flex-wrap: wrap;\n"
-    "                padding: 12px 8px; border-top: 2px solid #000; background: #fff; }\n"
-    "    .cv-pager .pg { font: inherit; font-size: 13px; font-weight: 800; min-width: 34px; height: 34px; cursor: pointer;\n"
-    "                    background: #fff; color: #000; border: 2px solid #000; box-shadow: 2px 2px 0 0 #000; }\n"
-    "    .cv-pager .pg:hover { background: #fde047; }\n"
-    "    .cv-pager .pg.on { background: #fde047; }\n"
-    "    .cv-pager .pg[disabled] { opacity: .35; cursor: default; background: #fff; }\n"
-    "    .cv-pager .pg-count { flex-basis: 100%; text-align: center; font-size: 12px; font-weight: 700; color: #555; margin-top: 4px; }\n"
-    "    @media (max-width: 480px) { .cv-row { gap: 0 10px; padding: 16px 10px 12px; } }\n"
+    # 표지 보기 — 책등 대신 표지를 격자로 늘어놓는다
+    '    .covers { display: none; grid-template-columns: repeat(auto-fill, minmax(84px, 1fr)); gap: 14px 12px; margin: 14px 0 22px; }\n'
+    '    .show-covers .covers { display: grid; }\n'
+    '    .show-covers .shelf { display: none; }\n'
+    '    .cv { position: relative; display: block; aspect-ratio: 2/3; border: 1.5px solid #000; box-shadow: 2px 2px 0 0 #000;\n'
+    '          background: #f4f4f0; overflow: hidden; color: #000; text-decoration: none; transition: transform .12s; }\n'
+    '    .cv:hover { transform: translateY(-3px); text-decoration: none; }\n'
+    '    .cv img { width: 100%; height: 100%; object-fit: cover; display: block; }\n'
+    '    .cv-no { display: flex; height: 100%; align-items: center; justify-content: center; padding: 6px;\n'
+    '             font-size: 11px; font-weight: 700; line-height: 1.3; text-align: center; word-break: keep-all; }\n'
+    # 이미지 저장 — 표지 보기에서 고른 12권만 4열 3줄로 담는다
+    '    .sh-range { font: inherit; font-size: 12px; font-weight: 700; padding: 5px 6px; background: #fff; color: #000;\n'
+    '                border: 2px solid #000; box-shadow: 2px 2px 0 0 #000; }\n'
+    '    .is-capturing.cap-12 .covers { grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 16px 14px; }\n'
+    '    .is-capturing .cv.cap-off { display: none; }\n'
     # 책장 — 책등을 같은 높이로 세워 바닥에 붙여 늘어놓는다.
     # 줄이 넘어가도 줄마다 선반 판이 받치도록, 선반 판을 줄 간격(--row)마다
     # 되풀이되는 배경으로 그린다. 판은 책등 바로 아래(--sh-h)에 온다.

@@ -1154,29 +1154,19 @@
     .vt { font: inherit; font-size: 12px; font-weight: 700; padding: 5px 10px; background: #fff; color: #000; border: 0; cursor: pointer; }
     .vt + .vt { border-left: 2px solid #000; }
     .vt[aria-pressed="true"] { background: #000; color: #fff; }
-    .covers { display: none; margin: 14px 0 22px; border: 2px solid #000; background: #f7f2e4; }
-    .show-covers .covers { display: block; }
+    .covers { display: none; grid-template-columns: repeat(auto-fill, minmax(84px, 1fr)); gap: 14px 12px; margin: 14px 0 22px; }
+    .show-covers .covers { display: grid; }
     .show-covers .shelf { display: none; }
-    .cv-page { display: none; }
-    .cv-page.on { display: block; }
-    .cv-row { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 0 18px;
-              padding: 20px 18px 16px; border-bottom: 12px solid #d9a066; }
-    .cv-row + .cv-row { border-top: 2px solid #000; }
-    .cv { position: relative; display: block; aspect-ratio: 2/3; border: 2px solid #000; box-shadow: 4px 4px 0 0 #000;
-          background: #f4f4f0; overflow: hidden; color: #000; text-decoration: none; transition: transform .12s, box-shadow .12s; }
-    .cv:hover { transform: translate(-2px, -4px); box-shadow: 6px 8px 0 0 #000; text-decoration: none; }
+    .cv { position: relative; display: block; aspect-ratio: 2/3; border: 1.5px solid #000; box-shadow: 2px 2px 0 0 #000;
+          background: #f4f4f0; overflow: hidden; color: #000; text-decoration: none; transition: transform .12s; }
+    .cv:hover { transform: translateY(-3px); text-decoration: none; }
     .cv img { width: 100%; height: 100%; object-fit: cover; display: block; }
     .cv-no { display: flex; height: 100%; align-items: center; justify-content: center; padding: 6px;
              font-size: 11px; font-weight: 700; line-height: 1.3; text-align: center; word-break: keep-all; }
-    .cv-pager { display: flex; align-items: center; justify-content: center; gap: 6px; flex-wrap: wrap;
-                padding: 12px 8px; border-top: 2px solid #000; background: #fff; }
-    .cv-pager .pg { font: inherit; font-size: 13px; font-weight: 800; min-width: 34px; height: 34px; cursor: pointer;
-                    background: #fff; color: #000; border: 2px solid #000; box-shadow: 2px 2px 0 0 #000; }
-    .cv-pager .pg:hover { background: #fde047; }
-    .cv-pager .pg.on { background: #fde047; }
-    .cv-pager .pg[disabled] { opacity: .35; cursor: default; background: #fff; }
-    .cv-pager .pg-count { flex-basis: 100%; text-align: center; font-size: 12px; font-weight: 700; color: #555; margin-top: 4px; }
-    @media (max-width: 480px) { .cv-row { gap: 0 10px; padding: 16px 10px 12px; } }
+    .sh-range { font: inherit; font-size: 12px; font-weight: 700; padding: 5px 6px; background: #fff; color: #000;
+                border: 2px solid #000; box-shadow: 2px 2px 0 0 #000; }
+    .is-capturing.cap-12 .covers { grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 16px 14px; }
+    .is-capturing .cv.cap-off { display: none; }
     .shelf { --sh-h: 270px; --plank: 7px; --row: calc(var(--sh-h) + 18px);
              display: flex; flex-wrap: wrap; align-items: flex-end; gap: 11px 2px;
              margin: 14px 0 22px; padding: 0 8px 7px;
@@ -1403,100 +1393,61 @@
     <a class="sp is-new" style="--c:hsl(4,49%,27%);--w:38px;--fs:15px" href="https://www.yes24.com/product/goods/108233533" rel="nofollow noopener noreferrer" target="_blank" title="Wizard Bakery"><span class="sp-t"><i>Wizard Bakery</i></span><img class="sp-i" src="https://image.yes24.com/goods/108233519/side" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.parentNode.classList.add('sp-fail');this.remove()" onload="if(this.naturalWidth/this.naturalHeight>0.4){this.parentNode.classList.add('sp-fail');this.remove()}"><span class="sp-new" data-added="2026-09-22">NEW</span></a>
     </div>
     <div class="covers" id="covers">
-    <div class="cv-page on">
-    <div class="cv-row">
     <a class="cv" href="https://www.yes24.com/product/goods/71537238" rel="nofollow noopener noreferrer" target="_blank" title="About Grief"><img src="https://image.yes24.com/goods/71537238/L" alt="About Grief by Ron Marasco, Brian Schaff — book cover" loading="lazy"></a>
     <a class="cv" href="https://www.yes24.com/product/goods/135819576" rel="nofollow noopener noreferrer" target="_blank" title="A Little Ruined Love"><img src="https://image.yes24.com/goods/135819576/L" alt="A Little Ruined Love by Kim Jiyeon — book cover" loading="lazy"></a>
     <a class="cv" href="https://www.yes24.com/product/goods/17932082" rel="nofollow noopener noreferrer" target="_blank" title="A Man Som Heter Ove"><img src="https://image.yes24.com/goods/17932082/L" alt="A Man Som Heter Ove by Frederick Backman — book cover" loading="lazy"></a>
     <a class="cv" href="https://www.yes24.com/product/goods/57655115" rel="nofollow noopener noreferrer" target="_blank" title="Anything Can Be Written"><img src="https://image.yes24.com/goods/57655115/L" alt="Anything Can Be Written by Kim Junghyuk — book cover" loading="lazy"></a>
-    </div>
-    <div class="cv-row">
     <a class="cv" href="https://www.yes24.com/product/goods/149239252" rel="nofollow noopener noreferrer" target="_blank" title="Beautyland"><img src="https://image.yes24.com/goods/149239252/L" alt="Beautyland by Marie Herlin Bertino — book cover" loading="lazy"></a>
     <a class="cv" href="https://www.yes24.com/product/goods/124807864" rel="nofollow noopener noreferrer" target="_blank" title="Between Coldness and Passion Blu"><img src="https://image.yes24.com/goods/124807864/L" alt="Between Coldness and Passion Blu by Hitonari Tsuji — book cover" loading="lazy"></a>
     <a class="cv" href="https://www.yes24.com/product/goods/102687133" rel="nofollow noopener noreferrer" target="_blank" title="Bright Night"><img src="https://image.yes24.com/goods/102687133/L" alt="Bright Night by Choi Eunyoung — book cover" loading="lazy"></a>
     <a class="cv" href="https://www.yes24.com/product/goods/89913383" rel="nofollow noopener noreferrer" target="_blank" title="Cocktail, Love, Zombie"><img src="https://image.yes24.com/goods/89913383/L" alt="Cocktail, Love, Zombie by Jo Ye-Eun — book cover" loading="lazy"></a>
-    </div>
-    <div class="cv-row">
     <a class="cv" href="https://www.yes24.com/product/goods/8759796" rel="nofollow noopener noreferrer" target="_blank" title="Contradictions"><img src="https://image.yes24.com/goods/8759796/L" alt="Contradictions by Yang Gui-ja — book cover" loading="lazy"></a>
     <a class="cv" href="https://www.yes24.com/product/goods/1980158" rel="nofollow noopener noreferrer" target="_blank" title="Deep Sorrow"><img src="https://image.yes24.com/goods/1980158/L" alt="Deep Sorrow by Shin Kyeong-Sook — book cover" loading="lazy"></a>
     <a class="cv" href="https://www.yes24.com/product/goods/115275383" rel="nofollow noopener noreferrer" target="_blank" title="Essays in Love"><img src="https://image.yes24.com/goods/115275383/L" alt="Essays in Love by Alain de Botton — book cover" loading="lazy"></a>
     <a class="cv" href="https://www.yes24.com/product/goods/132560712" rel="nofollow noopener noreferrer" target="_blank" title="Eternal Heaven"><img src="https://image.yes24.com/goods/132560712/L" alt="Eternal Heaven by Jeong Yoo-Jeong — book cover" loading="lazy"></a>
-    </div>
-    </div>
-    <div class="cv-page">
-    <div class="cv-row">
     <a class="cv" href="https://www.yes24.com/product/goods/145567095" rel="nofollow noopener noreferrer" target="_blank" title="First Summer, Wanju"><img src="https://image.yes24.com/goods/145567095/L" alt="First Summer, Wanju by Kim Geumhee — book cover" loading="lazy"></a>
     <a class="cv" href="https://www.yes24.com/product/goods/102791425" rel="nofollow noopener noreferrer" target="_blank" title="Flamingo&#x27;s Seat"><img src="https://image.yes24.com/goods/102791425/L" alt="Flamingo&#x27;s Seat by Jeong Hae-Yeon — book cover" loading="lazy"></a>
     <a class="cv" href="https://www.yes24.com/product/goods/118597564" rel="nofollow noopener noreferrer" target="_blank" title="Forest of Moss"><img src="https://image.yes24.com/goods/118597564/L" alt="Forest of Moss by Cheon Seonran — book cover" loading="lazy"></a>
     <a class="cv" href="https://www.yes24.com/product/goods/90004865" rel="nofollow noopener noreferrer" target="_blank" title="Gv Villain Go Tae-Kyung"><img src="https://image.yes24.com/goods/90004865/L" alt="Gv Villain Go Tae-Kyung by Jeong Dae-Geon — book cover" loading="lazy"></a>
-    </div>
-    <div class="cv-row">
     <a class="cv" href="https://www.yes24.com/product/goods/143911524" rel="nofollow noopener noreferrer" target="_blank" title="Honmono"><img src="https://image.yes24.com/goods/143911524/L" alt="Honmono by Seong Hae-Na — book cover" loading="lazy"></a>
     <a class="cv" href="https://www.yes24.com/product/goods/13137546" rel="nofollow noopener noreferrer" target="_blank" title="Human Acts"><img src="https://image.yes24.com/goods/13137546/L" alt="Human Acts by Han Kang — book cover" loading="lazy"></a>
     <a class="cv" href="https://www.yes24.com/product/goods/14940652" rel="nofollow noopener noreferrer" target="_blank" title="I&#x27;ll Go On"><img src="https://image.yes24.com/goods/14940652/L" alt="I&#x27;ll Go On by Hwang Jeong-Eun — book cover" loading="lazy"></a>
     <a class="cv" href="https://www.yes24.com/product/goods/20536907" rel="nofollow noopener noreferrer" target="_blank" title="Individualist Manifesto"><img src="https://image.yes24.com/goods/20536907/L" alt="Individualist Manifesto by Moon Yuseok — book cover" loading="lazy"></a>
-    </div>
-    <div class="cv-row">
     <a class="cv" href="https://www.yes24.com/product/goods/80095561" rel="nofollow noopener noreferrer" target="_blank" title="Inside the Police Officer"><img src="https://image.yes24.com/goods/80095561/L" alt="Inside the Police Officer by Won Do — book cover" loading="lazy"></a>
     <a class="cv" href="https://www.yes24.com/product/goods/147560984" rel="nofollow noopener noreferrer" target="_blank" title="I Said Goodbye"><img src="https://image.yes24.com/goods/147560984/L" alt="I Said Goodbye by Kim Ae-ran — book cover" loading="lazy"></a>
     <a class="cv" href="https://www.yes24.com/product/goods/62230893" rel="nofollow noopener noreferrer" target="_blank" title="Knife Marks"><img src="https://image.yes24.com/goods/62230893/L" alt="Knife Marks by Kim Ae-Ran — book cover" loading="lazy"></a>
     <a class="cv" href="https://www.yes24.com/product/goods/359901" rel="nofollow noopener noreferrer" target="_blank" title="La vie devant soi"><img src="https://image.yes24.com/goods/359901/L" alt="La vie devant soi by Romain Gary — book cover" loading="lazy"></a>
-    </div>
-    </div>
-    <div class="cv-page">
-    <div class="cv-row">
     <a class="cv" href="https://www.yes24.com/product/goods/129367072" rel="nofollow noopener noreferrer" target="_blank" title="Le sixième sommeil"><img src="https://image.yes24.com/goods/129367072/L" alt="Le sixième sommeil by Bernard Werber — book cover" loading="lazy"></a>
     <a class="cv" href="https://www.yes24.com/product/goods/136552965" rel="nofollow noopener noreferrer" target="_blank" title="Less Noticeable"><img src="https://image.yes24.com/goods/136552965/L" alt="Less Noticeable by Lee Hwon — book cover" loading="lazy"></a>
     <a class="cv" href="https://www.yes24.com/product/goods/97255028" rel="nofollow noopener noreferrer" target="_blank" title="Long Night"><img src="https://image.yes24.com/goods/97255028/L" alt="Long Night by Luri — book cover" loading="lazy"></a>
     <a class="cv" href="https://www.yes24.com/product/goods/173082175" rel="nofollow noopener noreferrer" target="_blank" title="My Perfect Funeral"><img src="https://image.yes24.com/goods/173082175/L" alt="My Perfect Funeral by Jo Hyeon-Seon — book cover" loading="lazy"></a>
-    </div>
-    <div class="cv-row">
     <a class="cv" href="https://www.yes24.com/product/goods/92090936" rel="nofollow noopener noreferrer" target="_blank" title="Plum"><img src="https://image.yes24.com/goods/92090936/L" alt="Plum by Lee Joohye — book cover" loading="lazy"></a>
     <a class="cv" href="https://www.yes24.com/product/goods/101375755" rel="nofollow noopener noreferrer" target="_blank" title="Project Hail Mary"><img src="https://image.yes24.com/goods/101375755/L" alt="Project Hail Mary by Andy Weir — book cover" loading="lazy"></a>
     <a class="cv" href="https://www.yes24.com/product/goods/123386099" rel="nofollow noopener noreferrer" target="_blank" title="Save the Last Dance for Me"><img src="https://image.yes24.com/goods/123386099/L" alt="Save the Last Dance for Me by Eun Hee-Kyung — book cover" loading="lazy"></a>
     <a class="cv" href="https://www.yes24.com/product/goods/141403153" rel="nofollow noopener noreferrer" target="_blank" title="Seol Ja-Eun, Chasing the Flame"><img src="https://image.yes24.com/goods/141403153/L" alt="Seol Ja-Eun, Chasing the Flame by Jeong Serang — book cover" loading="lazy"></a>
-    </div>
-    <div class="cv-row">
     <a class="cv" href="https://www.yes24.com/product/goods/117828174" rel="nofollow noopener noreferrer" target="_blank" title="Shredding"><img src="https://image.yes24.com/goods/117828174/L" alt="Shredding by Gu Byeong-Mo — book cover" loading="lazy"></a>
     <a class="cv" href="https://www.yes24.com/product/goods/42798224" rel="nofollow noopener noreferrer" target="_blank" title="Summer Outside"><img src="https://image.yes24.com/goods/42798224/L" alt="Summer Outside by Kim Ae-ran — book cover" loading="lazy"></a>
     <a class="cv" href="https://www.yes24.com/product/goods/119559209" rel="nofollow noopener noreferrer" target="_blank" title="Teddy Bears Don&#x27;t Die"><img src="https://image.yes24.com/goods/119559209/L" alt="Teddy Bears Don&#x27;t Die by Jo Ye-Eun — book cover" loading="lazy"></a>
     <a class="cv" href="https://www.yes24.com/product/goods/7573574" rel="nofollow noopener noreferrer" target="_blank" title="Temptation"><img src="https://image.yes24.com/goods/7573574/L" alt="Temptation by Douglas Kennedy — book cover" loading="lazy"></a>
-    </div>
-    </div>
-    <div class="cv-page">
-    <div class="cv-row">
     <a class="cv" href="https://www.yes24.com/product/goods/30547371" rel="nofollow noopener noreferrer" target="_blank" title="The Course of Love"><img src="https://image.yes24.com/goods/30547371/L" alt="The Course of Love by Alain de Botton — book cover" loading="lazy"></a>
     <a class="cv" href="https://www.yes24.com/product/goods/91065309" rel="nofollow noopener noreferrer" target="_blank" title="The Dallergut Dream Department Store"><img src="https://image.yes24.com/goods/91065309/L" alt="The Dallergut Dream Department Store by Yes, Already — book cover" loading="lazy"></a>
     <a class="cv" href="https://www.yes24.com/product/goods/13259665" rel="nofollow noopener noreferrer" target="_blank" title="The Education of Little Tree"><img src="https://image.yes24.com/goods/13259665/L" alt="The Education of Little Tree by Forrest Carter — book cover" loading="lazy"></a>
     <a class="cv" href="https://www.yes24.com/product/goods/27643793" rel="nofollow noopener noreferrer" target="_blank" title="The Good Son"><img src="https://image.yes24.com/goods/27643793/L" alt="The Good Son by Jeong Yoo-Jeong — book cover" loading="lazy"></a>
-    </div>
-    <div class="cv-row">
     <a class="cv" href="https://www.yes24.com/product/goods/103026125" rel="nofollow noopener noreferrer" target="_blank" title="The Greenhouse at the End of the World"><img src="https://image.yes24.com/goods/103026125/L" alt="The Greenhouse at the End of the World by Kim Choyeop — book cover" loading="lazy"></a>
     <a class="cv" href="https://www.yes24.com/product/goods/139934114" rel="nofollow noopener noreferrer" target="_blank" title="The Last Children of Tokyo"><img src="https://image.yes24.com/goods/139934114/L" alt="The Last Children of Tokyo by Yoko Tawada — book cover" loading="lazy"></a>
     <a class="cv" href="https://www.yes24.com/product/goods/74820501" rel="nofollow noopener noreferrer" target="_blank" title="The New Seoul Park Jelly Massacre"><img src="https://image.yes24.com/goods/74820501/L" alt="The New Seoul Park Jelly Massacre by Jo Ye-Eun — book cover" loading="lazy"></a>
     <a class="cv" href="https://www.yes24.com/product/goods/125761518" rel="nofollow noopener noreferrer" target="_blank" title="The Old Woman with the Knife"><img src="https://image.yes24.com/goods/125761518/L" alt="The Old Woman with the Knife by Gu Byeong-Mo — book cover" loading="lazy"></a>
-    </div>
-    <div class="cv-row">
     <a class="cv" href="https://www.yes24.com/product/goods/122544941" rel="nofollow noopener noreferrer" target="_blank" title="The Only One"><img src="https://image.yes24.com/goods/122544941/L" alt="The Only One by Choi Jinyoung — book cover" loading="lazy"></a>
     <a class="cv" href="https://www.yes24.com/product/goods/147561542" rel="nofollow noopener noreferrer" target="_blank" title="The Romantic Movement"><img src="https://image.yes24.com/goods/147561542/L" alt="The Romantic Movement by Alain de Botton — book cover" loading="lazy"></a>
     <a class="cv" href="https://www.yes24.com/product/goods/117873525" rel="nofollow noopener noreferrer" target="_blank" title="The Summer I Left Behind"><img src="https://image.yes24.com/goods/117873525/L" alt="The Summer I Left Behind by Seong Hae-Na — book cover" loading="lazy"></a>
     <a class="cv" href="https://www.yes24.com/product/goods/128121470" rel="nofollow noopener noreferrer" target="_blank" title="The Ten Thousand Doors of January"><img src="https://image.yes24.com/goods/128121470/L" alt="The Ten Thousand Doors of January by Alex E. Harrow — book cover" loading="lazy"></a>
-    </div>
-    </div>
-    <div class="cv-page">
-    <div class="cv-row">
     <a class="cv" href="https://www.yes24.com/product/goods/140199769" rel="nofollow noopener noreferrer" target="_blank" title="Things That Come After Love"><img src="https://image.yes24.com/goods/140199769/L" alt="Things That Come After Love by Gong Ji-Young, Tsuji Hitonari — book cover" loading="lazy"></a>
     <a class="cv" href="https://www.yes24.com/product/goods/84791107" rel="nofollow noopener noreferrer" target="_blank" title="This Is for You"><img src="https://image.yes24.com/goods/84791107/L" alt="This Is for You by Ellen M. Bard — book cover" loading="lazy"></a>
     <a class="cv" href="https://www.yes24.com/product/goods/116922356" rel="nofollow noopener noreferrer" target="_blank" title="Twelve Footsteps"><img src="https://image.yes24.com/goods/116922356/L" alt="Twelve Footsteps by Jaeseung Jeong — book cover" loading="lazy"></a>
     <a class="cv" href="https://www.yes24.com/product/goods/147561189" rel="nofollow noopener noreferrer" target="_blank" title="Welcome to the Community"><img src="https://image.yes24.com/goods/147561189/L" alt="Welcome to the Community by Kwon Seong-min — book cover" loading="lazy"></a>
-    </div>
-    <div class="cv-row">
     <a class="cv" href="https://www.yes24.com/product/goods/1441810" rel="nofollow noopener noreferrer" target="_blank" title="Whale"><img src="https://image.yes24.com/goods/1441810/L" alt="Whale by Cheon Myeong-Gwan — book cover" loading="lazy"></a>
     <a class="cv" href="https://www.yes24.com/product/goods/74394249" rel="nofollow noopener noreferrer" target="_blank" title="Where the Crawdads Sing"><img src="https://image.yes24.com/goods/74394249/L" alt="Where the Crawdads Sing by Delia Owens — book cover" loading="lazy"></a>
     <a class="cv" href="https://www.yes24.com/product/goods/108233533" rel="nofollow noopener noreferrer" target="_blank" title="Wizard Bakery"><img src="https://image.yes24.com/goods/108233533/L" alt="Wizard Bakery by Gu Byeong-Mo — book cover" loading="lazy"></a>
-    </div>
-    </div>
-    <div class="cv-pager" data-total="55" data-per="12"><button type="button" class="pg" data-go="prev" aria-label="prev">◀</button><button type="button" class="pg" data-go="0">1</button><button type="button" class="pg" data-go="1">2</button><button type="button" class="pg" data-go="2">3</button><button type="button" class="pg" data-go="3">4</button><button type="button" class="pg" data-go="4">5</button><button type="button" class="pg" data-go="next" aria-label="next">▶</button><span class="pg-count"></span></div>
     </div>
     <ol class="reading-list" id="rlist">
     <li class="rl-item" id="b1">
@@ -2098,34 +2049,6 @@
     try { saved = localStorage.getItem("shelfView2"); } catch (e) {}
     if (saved === "spine") set("spine", false);
     tabs.forEach(function (t) { t.addEventListener("click", function () { set(t.dataset.view, true); }); });
-    // 표지 보기 쪽 넘김 (12권을 넘는 책장만)
-    var pager = document.querySelector(".cv-pager");
-    var pages = document.querySelectorAll(".cv-page");
-    if (pager && pages.length > 1) {
-      var cur = 0, ko = (document.documentElement.lang || "ko").indexOf("ko") === 0;
-      var total = +pager.dataset.total, per = +pager.dataset.per;
-      var nums = pager.querySelectorAll("[data-go]");
-      var show = function (n) {
-        cur = Math.max(0, Math.min(pages.length - 1, n));
-        pages.forEach(function (p, i) { p.classList.toggle("on", i === cur); });
-        nums.forEach(function (b) {
-          var g = b.dataset.go;
-          b.classList.toggle("on", g === String(cur));
-          b.disabled = (g === "prev" && cur === 0) || (g === "next" && cur === pages.length - 1);
-        });
-        var from = cur * per + 1, to = Math.min(total, (cur + 1) * per);
-        pager.querySelector(".pg-count").textContent = ko
-          ? from + "–" + to + "권 · 총 " + total + "권 · " + (cur + 1) + "/" + pages.length + "쪽"
-          : "Books " + from + "–" + to + " of " + total;
-      };
-      pager.addEventListener("click", function (e) {
-        var b = e.target.closest("[data-go]");
-        if (!b || b.disabled) return;
-        var g = b.dataset.go;
-        show(g === "prev" ? cur - 1 : g === "next" ? cur + 1 : +g);
-      });
-      show(0);
-    }
   })();
   </script>
   <script>
@@ -2136,6 +2059,29 @@
     var H2C = "https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js";
     var PROXY = "https://images.weserv.nl/?url=";
     var PAPER = "#fcfaf5";
+    var PER = 12;
+    // 표지 보기에서 책이 12권을 넘으면 어느 12권을 저장할지 고르는 칸을 붙인다
+    (function () {
+      var area = document.getElementById("shelf-area");
+      var n = area ? area.querySelectorAll(".cv").length : 0;
+      if (n <= PER) return;
+      var ko = (document.documentElement.lang || "ko").indexOf("ko") === 0;
+      var sel = document.createElement("select");
+      sel.id = "shelf-range"; sel.className = "sh-range";
+      sel.setAttribute("aria-label", ko ? "저장할 책 범위" : "Books to save");
+      for (var p = 0; p * PER < n; p++) {
+        var o = document.createElement("option");
+        o.value = p;
+        var a = p * PER + 1, b = Math.min(n, (p + 1) * PER);
+        o.textContent = ko ? a + "–" + b + "권 (표지 12권씩)" : "Books " + a + "–" + b;
+        sel.appendChild(o);
+      }
+      var first = btns[0];
+      first.parentNode.insertBefore(sel, first);
+      var sync = function () { sel.style.display = area.classList.contains("show-covers") ? "" : "none"; };
+      new MutationObserver(sync).observe(area, { attributes: true, attributeFilter: ["class"] });
+      sync();
+    })();
     var FONT = '-apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif';
     // 캔버스 한계. 넘기면 빈 그림이 나오거나 아예 실패한다. 사파리는 한 변보다
     // 넓이를 먼저 막는다(약 1677만 픽셀). 제목·여백을 얹을 몫을 빼고 잡는다.
@@ -2299,6 +2245,15 @@
       // 저장하는 그림에는 NEW 표시와 함께 추천한 셀럽 목록을 넣지 않는다.
       // html2canvas가 문서를 복사할 때 이 클래스도 따라가서 복사본에서만 빠진 채 그려진다.
       view.classList.add("is-capturing");
+      // 표지 보기에서 책이 12권을 넘으면 고른 12권만 4열 3줄로 담는다
+      var capTiles = [], capSel = document.getElementById("shelf-range");
+      if (capSel && capSel.value !== "" && view.classList.contains("show-covers")) {
+        var from = +capSel.value * PER;
+        [].forEach.call(view.querySelectorAll(".cv"), function (t, i) {
+          if (i < from || i >= from + PER) { t.classList.add("cap-off"); capTiles.push(t); }
+        });
+        view.classList.add("cap-12");
+      }
       guard(loadH2C(), 15000, "html2canvas").then(function () {
         swap = swapImages(view);
         return swap.ready;
@@ -2329,7 +2284,8 @@
       }).then(function () {
         if (swap) swap.undo.forEach(function (f) { f(); });
         if (muted) unmute(muted);
-        view.classList.remove("is-capturing");
+        view.classList.remove("is-capturing", "cap-12");
+        capTiles.forEach(function (t) { t.classList.remove("cap-off"); });
         btns.forEach(function (b) { b.disabled = false; });
         btn.textContent = was;
       });
