@@ -48,7 +48,7 @@ const state = {
   ink: '#111111',
   bookBorder: false,    // 책 표지 테두리(기본 없음)
   bookScale: 1,         // 책 표지 크기 배율 (자동 정렬 기준 폭에 곱한다)
-  bookFace: 'spine',    // 책을 어떻게 보여줄지 — 'spine'(책등) | 'cover'(표지)
+  bookFace: 'cover',    // 책을 어떻게 보여줄지 — 'cover'(표지, 기본) | 'spine'(책등)
   proxy: true,
   watermark: true,
   credit: '',
@@ -658,8 +658,11 @@ function itemHTML(it) {
         ? `<img class="tg-spine-i" src="${esc(proxify(sp))}" alt="" onerror="this.remove()"
              onload="if(this.naturalWidth/this.naturalHeight>${SPINE_MAX_RATIO})this.remove()">`
         : '';
-      return `<div class="tg-item tg-spine${selCls}" data-id="${it.id}"
-        style="${base}width:${w}px;height:${h}px;--c:${spineTint(it.title)}">
+      // 책등 사진이 없거나 못 불러오면 표지를 잘라 책등으로 쓴다(제목은 세로로 얹는다)
+      const cut = it.url && !it.url.startsWith('data:')
+        ? `<div class="tg-spine-c" style="background-image:url('${esc(proxify(it.url))}')"></div>` : '';
+      return `<div class="tg-item tg-spine${cut ? ' has-c' : ''}${selCls}" data-id="${it.id}"
+        style="${base}width:${w}px;height:${h}px;--c:${spineTint(it.title)}">${cut}
         <span class="tg-spine-t" style="font-size:${Math.max(11, Math.round(w * 0.34))}px"><i>${esc(it.title)}</i></span>${img}
       </div>`;
     }
@@ -1327,7 +1330,7 @@ function waitForImages(node, timeout = 9000) {
       setTimeout(res, timeout);
     }));
   });
-  $$('.tg-bg, .tg-bookimg', node).forEach((d) => {
+  $$('.tg-bg, .tg-bookimg, .tg-spine-c', node).forEach((d) => {
     const m = /url\(["']?(.*?)["']?\)/.exec(d.style.backgroundImage || '');
     if (!m || !m[1]) return;
     tasks.push(new Promise((res) => {
