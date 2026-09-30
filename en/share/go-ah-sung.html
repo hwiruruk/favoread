@@ -400,29 +400,19 @@
     .vt { font: inherit; font-size: 12px; font-weight: 700; padding: 5px 10px; background: #fff; color: #000; border: 0; cursor: pointer; }
     .vt + .vt { border-left: 2px solid #000; }
     .vt[aria-pressed="true"] { background: #000; color: #fff; }
-    .covers { display: none; margin: 14px 0 22px; border: 2px solid #000; background: #f7f2e4; }
-    .show-covers .covers { display: block; }
+    .covers { display: none; grid-template-columns: repeat(auto-fill, minmax(84px, 1fr)); gap: 14px 12px; margin: 14px 0 22px; }
+    .show-covers .covers { display: grid; }
     .show-covers .shelf { display: none; }
-    .cv-page { display: none; }
-    .cv-page.on { display: block; }
-    .cv-row { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 0 18px;
-              padding: 20px 18px 16px; border-bottom: 12px solid #d9a066; }
-    .cv-row + .cv-row { border-top: 2px solid #000; }
-    .cv { position: relative; display: block; aspect-ratio: 2/3; border: 2px solid #000; box-shadow: 4px 4px 0 0 #000;
-          background: #f4f4f0; overflow: hidden; color: #000; text-decoration: none; transition: transform .12s, box-shadow .12s; }
-    .cv:hover { transform: translate(-2px, -4px); box-shadow: 6px 8px 0 0 #000; text-decoration: none; }
+    .cv { position: relative; display: block; aspect-ratio: 2/3; border: 1.5px solid #000; box-shadow: 2px 2px 0 0 #000;
+          background: #f4f4f0; overflow: hidden; color: #000; text-decoration: none; transition: transform .12s; }
+    .cv:hover { transform: translateY(-3px); text-decoration: none; }
     .cv img { width: 100%; height: 100%; object-fit: cover; display: block; }
     .cv-no { display: flex; height: 100%; align-items: center; justify-content: center; padding: 6px;
              font-size: 11px; font-weight: 700; line-height: 1.3; text-align: center; word-break: keep-all; }
-    .cv-pager { display: flex; align-items: center; justify-content: center; gap: 6px; flex-wrap: wrap;
-                padding: 12px 8px; border-top: 2px solid #000; background: #fff; }
-    .cv-pager .pg { font: inherit; font-size: 13px; font-weight: 800; min-width: 34px; height: 34px; cursor: pointer;
-                    background: #fff; color: #000; border: 2px solid #000; box-shadow: 2px 2px 0 0 #000; }
-    .cv-pager .pg:hover { background: #fde047; }
-    .cv-pager .pg.on { background: #fde047; }
-    .cv-pager .pg[disabled] { opacity: .35; cursor: default; background: #fff; }
-    .cv-pager .pg-count { flex-basis: 100%; text-align: center; font-size: 12px; font-weight: 700; color: #555; margin-top: 4px; }
-    @media (max-width: 480px) { .cv-row { gap: 0 10px; padding: 16px 10px 12px; } }
+    .sh-range { font: inherit; font-size: 12px; font-weight: 700; padding: 5px 6px; background: #fff; color: #000;
+                border: 2px solid #000; box-shadow: 2px 2px 0 0 #000; }
+    .is-capturing.cap-12 .covers { grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 16px 14px; }
+    .is-capturing .cv.cap-off { display: none; }
     .shelf { --sh-h: 270px; --plank: 7px; --row: calc(var(--sh-h) + 18px);
              display: flex; flex-wrap: wrap; align-items: flex-end; gap: 11px 2px;
              margin: 14px 0 22px; padding: 0 8px 7px;
@@ -545,55 +535,53 @@
       </div>
     </div>
     <details class="new-sec">
-      <summary class="new-sec-h"><span class="rl-new-tag">NEW</span> New in the last 10 days (2 books) <span class="new-sec-more" data-show="Show" data-hide="Hide"></span></summary>
+      <summary class="new-sec-h"><span class="rl-new-tag">NEW</span> New in the last 10 days (13 books) <span class="new-sec-more" data-show="Show" data-hide="Hide"></span></summary>
       <div class="new-tiles">
         <a class="new-tile" href="#b1"><span class="nt-cover"><img src="https://image.yes24.com/goods/2357406/L" alt="A Song Quietly Sung by Han Kang — book cover" loading="lazy"></span><span class="nt-title">A Song Quietly Sung</span></a>
+        <a class="new-tile" href="#b2"><span class="nt-cover"><img src="https://img.millie.co.kr/200x/service/cover/179494866/2ed91e43755a4fbb95e90df5258d48aa.jpg" alt="A Very Ordinary Marriage by Bora Chung — book cover" loading="lazy"></span><span class="nt-title">A Very Ordinary Marriage</span></a>
+        <a class="new-tile" href="#b3"><span class="nt-cover"><img src="https://image.yes24.com/goods/85122333/L" alt="Educated by Tara Westover — book cover" loading="lazy"></span><span class="nt-title">Educated</span></a>
+        <a class="new-tile" href="#b4"><span class="nt-cover"><img src="https://image.yes24.com/goods/103017964/L" alt="Frappe-toi le cœur by Amélie Nothomb — book cover" loading="lazy"></span><span class="nt-title">Frappe-toi le cœur</span></a>
+        <a class="new-tile" href="#b5"><span class="nt-cover"><img src="https://image.yes24.com/goods/2365723/L" alt="Gotham Handbook: New York, Mode D&#x27;Emploi by Sophie Calle, Paul Auster — book cover" loading="lazy"></span><span class="nt-title">Gotham Handbook: New York, Mode D&#x27;Emploi</span></a>
+        <a class="new-tile" href="#b6"><span class="nt-cover"><img src="https://image.yes24.com/goods/2143116/L" alt="His Lonely and Lonely Night by Park Wan-suh — book cover" loading="lazy"></span><span class="nt-title">His Lonely and Lonely Night</span></a>
+        <a class="new-tile" href="#b7"><span class="nt-cover"><img src="https://image.yes24.com/goods/66992033/L" alt="I Was at the Dig Site. by Soo-Kyung Heo — book cover" loading="lazy"></span><span class="nt-title">I Was at the Dig Site.</span></a>
+        <a class="new-tile" href="#b8"><span class="nt-cover"><img src="https://image.yes24.com/goods/109580345/L" alt="Les Années by Annie Ernaux — book cover" loading="lazy"></span><span class="nt-title">Les Années</span></a>
+        <a class="new-tile" href="#b9"><span class="nt-cover"><img src="https://image.yes24.com/goods/3021273/L" alt="Memories of the CheonguHwae by Shin Young-Bok (Author), Kim Se-Hyeon (Illustration) — book cover" loading="lazy"></span><span class="nt-title">Memories of the CheonguHwae</span></a>
         <a class="new-tile" href="#b10"><span class="nt-cover"><img src="https://image.yes24.com/goods/196261854/L" alt="Park Wan-Seo’S Words by Park Wan-Seo, Ho Won-Sook — book cover" loading="lazy"></span><span class="nt-title">Park Wan-Seo’S Words</span></a>
+        <a class="new-tile" href="#b11"><span class="nt-cover"><img src="https://image.yes24.com/goods/125905365/L" alt="Reason for Travel by Kim Youngha — book cover" loading="lazy"></span><span class="nt-title">Reason for Travel</span></a>
+        <a class="new-tile" href="#b12"><span class="nt-cover"><img src="https://image.yes24.com/goods/33189102/L" alt="Seagull / Three Sisters / Uncle Vanya / Cherry Blossom Garden by Anton Chekhov — book cover" loading="lazy"></span><span class="nt-title">Seagull / Three Sisters / Uncle Vanya / Cherry Blossom Garden</span></a>
+        <a class="new-tile" href="#b13"><span class="nt-cover"><img src="https://image.yes24.com/goods/182276224/L" alt="True Story by Sophie Calle — book cover" loading="lazy"></span><span class="nt-title">True Story</span></a>
       </div>
     </details>
     <div id="shelf-area" class="show-covers">
     <div class="shelf" id="shelf">
     <a class="sp is-new" style="--c:hsl(104,48%,38%);--w:41px;--fs:15px" href="https://www.yes24.com/product/goods/2357406" rel="nofollow noopener noreferrer" target="_blank" title="A Song Quietly Sung"><span class="sp-t"><i>A Song Quietly Sung</i></span><img class="sp-i" src="https://image.yes24.com/goods/2357406/side" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.parentNode.classList.add('sp-fail');this.remove()" onload="if(this.naturalWidth/this.naturalHeight>0.4){this.parentNode.classList.add('sp-fail');this.remove()}"><span class="sp-new" data-added="2026-09-29">NEW</span></a>
-    <a class="sp no-img has-cut" style="--c:hsl(93,46%,40%);--w:31px;--fs:15px" href="https://www.millie.co.kr/v4/book/f3108b88b0524c90" rel="nofollow noopener noreferrer" target="_blank" title="A Very Ordinary Marriage"><img class="sp-c" src="https://img.millie.co.kr/200x/service/cover/179494866/2ed91e43755a4fbb95e90df5258d48aa.jpg" alt="" loading="lazy" referrerpolicy="no-referrer"><span class="sp-t"><i>A Very Ordinary Marriage</i></span></a>
-    <a class="sp" style="--c:hsl(48,37%,47%);--w:43px;--fs:15px" href="https://www.yes24.com/product/goods/85122333" rel="nofollow noopener noreferrer" target="_blank" title="Educated"><span class="sp-t"><i>Educated</i></span><img class="sp-i" src="https://image.yes24.com/goods/85122333/side" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.parentNode.classList.add('sp-fail');this.remove()" onload="if(this.naturalWidth/this.naturalHeight>0.4){this.parentNode.classList.add('sp-fail');this.remove()}"></a>
-    <a class="sp" style="--c:hsl(193,51%,36%);--w:39px;--fs:15px" href="https://www.yes24.com/product/goods/103017964" rel="nofollow noopener noreferrer" target="_blank" title="Frappe-toi le cœur"><span class="sp-t"><i>Frappe-toi le cœur</i></span><img class="sp-i" src="https://image.yes24.com/goods/103017964/side" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.parentNode.classList.add('sp-fail');this.remove()" onload="if(this.naturalWidth/this.naturalHeight>0.4){this.parentNode.classList.add('sp-fail');this.remove()}"></a>
-    <a class="sp no-img has-cut" style="--c:hsl(1,32%,41%);--w:39px;--fs:9px" href="https://www.yes24.com/product/goods/2365723" rel="nofollow noopener noreferrer" target="_blank" title="Gotham Handbook: New York, Mode D&#x27;Emploi"><img class="sp-c" src="https://image.yes24.com/goods/2365723/L" alt="" loading="lazy" referrerpolicy="no-referrer"><span class="sp-t"><i>Gotham Handbook: New York, Mode D&#x27;Emploi</i></span></a>
-    <a class="sp no-img has-cut" style="--c:hsl(51,32%,35%);--w:35px;--fs:13px" href="https://www.yes24.com/product/goods/2143116" rel="nofollow noopener noreferrer" target="_blank" title="His Lonely and Lonely Night"><img class="sp-c" src="https://image.yes24.com/goods/2143116/L" alt="" loading="lazy" referrerpolicy="no-referrer"><span class="sp-t"><i>His Lonely and Lonely Night</i></span></a>
-    <a class="sp" style="--c:hsl(168,46%,28%);--w:44px;--fs:15px" href="https://www.yes24.com/product/goods/66992033" rel="nofollow noopener noreferrer" target="_blank" title="I Was at the Dig Site."><span class="sp-t"><i>I Was at the Dig Site.</i></span><img class="sp-i" src="https://image.yes24.com/goods/66992033/side" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.parentNode.classList.add('sp-fail');this.remove()" onload="if(this.naturalWidth/this.naturalHeight>0.4){this.parentNode.classList.add('sp-fail');this.remove()}"></a>
-    <a class="sp" style="--c:hsl(284,32%,38%);--w:32px;--fs:15px" href="https://www.yes24.com/product/goods/109580345" rel="nofollow noopener noreferrer" target="_blank" title="Les Années"><span class="sp-t"><i>Les Années</i></span><img class="sp-i" src="https://image.yes24.com/goods/109580345/side" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.parentNode.classList.add('sp-fail');this.remove()" onload="if(this.naturalWidth/this.naturalHeight>0.4){this.parentNode.classList.add('sp-fail');this.remove()}"></a>
-    <a class="sp" style="--c:hsl(276,37%,43%);--w:31px;--fs:13px" href="https://www.yes24.com/product/goods/3021273" rel="nofollow noopener noreferrer" target="_blank" title="Memories of the CheonguHwae"><span class="sp-t"><i>Memories of the CheonguHwae</i></span><img class="sp-i" src="https://image.yes24.com/goods/3021273/side" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.parentNode.classList.add('sp-fail');this.remove()" onload="if(this.naturalWidth/this.naturalHeight>0.4){this.parentNode.classList.add('sp-fail');this.remove()}"></a>
-    <a class="sp is-new" style="--c:hsl(264,51%,27%);--w:30px;--fs:15px" href="https://www.yes24.com/product/goods/196261854" rel="nofollow noopener noreferrer" target="_blank" title="Park Wan-Seo’S Words"><span class="sp-t"><i>Park Wan-Seo’S Words</i></span><img class="sp-i" src="https://image.yes24.com/goods/196261854/side" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.parentNode.classList.add('sp-fail');this.remove()" onload="if(this.naturalWidth/this.naturalHeight>0.4){this.parentNode.classList.add('sp-fail');this.remove()}"><span class="sp-new" data-added="2026-09-26">NEW</span></a>
-    <a class="sp" style="--c:hsl(129,41%,45%);--w:33px;--fs:15px" href="https://www.yes24.com/product/goods/125905365" rel="nofollow noopener noreferrer" target="_blank" title="Reason for Travel"><span class="sp-t"><i>Reason for Travel</i></span><img class="sp-i" src="https://image.yes24.com/goods/125905365/side" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.parentNode.classList.add('sp-fail');this.remove()" onload="if(this.naturalWidth/this.naturalHeight>0.4){this.parentNode.classList.add('sp-fail');this.remove()}"></a>
-    <a class="sp" style="--c:hsl(221,36%,43%);--w:38px;--fs:8px" href="https://www.yes24.com/product/goods/33189102" rel="nofollow noopener noreferrer" target="_blank" title="Seagull / Three Sisters / Uncle Vanya / Cherry Blossom Garden"><span class="sp-t"><i>Seagull / Three Sisters / Uncle Vanya / Cherry Blossom Garden</i></span><img class="sp-i" src="https://image.yes24.com/goods/33189102/side" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.parentNode.classList.add('sp-fail');this.remove()" onload="if(this.naturalWidth/this.naturalHeight>0.4){this.parentNode.classList.add('sp-fail');this.remove()}"></a>
-    <a class="sp" style="--c:hsl(52,47%,36%);--w:34px;--fs:15px" href="https://www.yes24.com/product/goods/182276224" rel="nofollow noopener noreferrer" target="_blank" title="True Story"><span class="sp-t"><i>True Story</i></span><img class="sp-i" src="https://image.yes24.com/goods/182276224/side" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.parentNode.classList.add('sp-fail');this.remove()" onload="if(this.naturalWidth/this.naturalHeight>0.4){this.parentNode.classList.add('sp-fail');this.remove()}"></a>
+    <a class="sp no-img has-cut is-new" style="--c:hsl(93,46%,40%);--w:31px;--fs:15px" href="https://www.millie.co.kr/v4/book/f3108b88b0524c90" rel="nofollow noopener noreferrer" target="_blank" title="A Very Ordinary Marriage"><img class="sp-c" src="https://img.millie.co.kr/200x/service/cover/179494866/2ed91e43755a4fbb95e90df5258d48aa.jpg" alt="" loading="lazy" referrerpolicy="no-referrer"><span class="sp-t"><i>A Very Ordinary Marriage</i></span><span class="sp-new" data-added="2026-09-29">NEW</span></a>
+    <a class="sp is-new" style="--c:hsl(48,37%,47%);--w:43px;--fs:15px" href="https://www.yes24.com/product/goods/85122333" rel="nofollow noopener noreferrer" target="_blank" title="Educated"><span class="sp-t"><i>Educated</i></span><img class="sp-i" src="https://image.yes24.com/goods/85122333/side" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.parentNode.classList.add('sp-fail');this.remove()" onload="if(this.naturalWidth/this.naturalHeight>0.4){this.parentNode.classList.add('sp-fail');this.remove()}"><span class="sp-new" data-added="2026-09-29">NEW</span></a>
+    <a class="sp is-new" style="--c:hsl(193,51%,36%);--w:39px;--fs:15px" href="https://www.yes24.com/product/goods/103017964" rel="nofollow noopener noreferrer" target="_blank" title="Frappe-toi le cœur"><span class="sp-t"><i>Frappe-toi le cœur</i></span><img class="sp-i" src="https://image.yes24.com/goods/103017964/side" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.parentNode.classList.add('sp-fail');this.remove()" onload="if(this.naturalWidth/this.naturalHeight>0.4){this.parentNode.classList.add('sp-fail');this.remove()}"><span class="sp-new" data-added="2026-09-29">NEW</span></a>
+    <a class="sp no-img has-cut is-new" style="--c:hsl(1,32%,41%);--w:39px;--fs:9px" href="https://www.yes24.com/product/goods/2365723" rel="nofollow noopener noreferrer" target="_blank" title="Gotham Handbook: New York, Mode D&#x27;Emploi"><img class="sp-c" src="https://image.yes24.com/goods/2365723/L" alt="" loading="lazy" referrerpolicy="no-referrer"><span class="sp-t"><i>Gotham Handbook: New York, Mode D&#x27;Emploi</i></span><span class="sp-new" data-added="2026-09-29">NEW</span></a>
+    <a class="sp no-img has-cut is-new" style="--c:hsl(51,32%,35%);--w:35px;--fs:13px" href="https://www.yes24.com/product/goods/2143116" rel="nofollow noopener noreferrer" target="_blank" title="His Lonely and Lonely Night"><img class="sp-c" src="https://image.yes24.com/goods/2143116/L" alt="" loading="lazy" referrerpolicy="no-referrer"><span class="sp-t"><i>His Lonely and Lonely Night</i></span><span class="sp-new" data-added="2026-09-29">NEW</span></a>
+    <a class="sp is-new" style="--c:hsl(168,46%,28%);--w:44px;--fs:15px" href="https://www.yes24.com/product/goods/66992033" rel="nofollow noopener noreferrer" target="_blank" title="I Was at the Dig Site."><span class="sp-t"><i>I Was at the Dig Site.</i></span><img class="sp-i" src="https://image.yes24.com/goods/66992033/side" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.parentNode.classList.add('sp-fail');this.remove()" onload="if(this.naturalWidth/this.naturalHeight>0.4){this.parentNode.classList.add('sp-fail');this.remove()}"><span class="sp-new" data-added="2026-09-29">NEW</span></a>
+    <a class="sp is-new" style="--c:hsl(284,32%,38%);--w:32px;--fs:15px" href="https://www.yes24.com/product/goods/109580345" rel="nofollow noopener noreferrer" target="_blank" title="Les Années"><span class="sp-t"><i>Les Années</i></span><img class="sp-i" src="https://image.yes24.com/goods/109580345/side" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.parentNode.classList.add('sp-fail');this.remove()" onload="if(this.naturalWidth/this.naturalHeight>0.4){this.parentNode.classList.add('sp-fail');this.remove()}"><span class="sp-new" data-added="2026-09-29">NEW</span></a>
+    <a class="sp is-new" style="--c:hsl(276,37%,43%);--w:31px;--fs:13px" href="https://www.yes24.com/product/goods/3021273" rel="nofollow noopener noreferrer" target="_blank" title="Memories of the CheonguHwae"><span class="sp-t"><i>Memories of the CheonguHwae</i></span><img class="sp-i" src="https://image.yes24.com/goods/3021273/side" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.parentNode.classList.add('sp-fail');this.remove()" onload="if(this.naturalWidth/this.naturalHeight>0.4){this.parentNode.classList.add('sp-fail');this.remove()}"><span class="sp-new" data-added="2026-09-29">NEW</span></a>
+    <a class="sp is-new" style="--c:hsl(264,51%,27%);--w:30px;--fs:15px" href="https://www.yes24.com/product/goods/196261854" rel="nofollow noopener noreferrer" target="_blank" title="Park Wan-Seo’S Words"><span class="sp-t"><i>Park Wan-Seo’S Words</i></span><img class="sp-i" src="https://image.yes24.com/goods/196261854/side" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.parentNode.classList.add('sp-fail');this.remove()" onload="if(this.naturalWidth/this.naturalHeight>0.4){this.parentNode.classList.add('sp-fail');this.remove()}"><span class="sp-new" data-added="2026-09-29">NEW</span></a>
+    <a class="sp is-new" style="--c:hsl(129,41%,45%);--w:33px;--fs:15px" href="https://www.yes24.com/product/goods/125905365" rel="nofollow noopener noreferrer" target="_blank" title="Reason for Travel"><span class="sp-t"><i>Reason for Travel</i></span><img class="sp-i" src="https://image.yes24.com/goods/125905365/side" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.parentNode.classList.add('sp-fail');this.remove()" onload="if(this.naturalWidth/this.naturalHeight>0.4){this.parentNode.classList.add('sp-fail');this.remove()}"><span class="sp-new" data-added="2026-09-29">NEW</span></a>
+    <a class="sp is-new" style="--c:hsl(221,36%,43%);--w:38px;--fs:8px" href="https://www.yes24.com/product/goods/33189102" rel="nofollow noopener noreferrer" target="_blank" title="Seagull / Three Sisters / Uncle Vanya / Cherry Blossom Garden"><span class="sp-t"><i>Seagull / Three Sisters / Uncle Vanya / Cherry Blossom Garden</i></span><img class="sp-i" src="https://image.yes24.com/goods/33189102/side" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.parentNode.classList.add('sp-fail');this.remove()" onload="if(this.naturalWidth/this.naturalHeight>0.4){this.parentNode.classList.add('sp-fail');this.remove()}"><span class="sp-new" data-added="2026-09-29">NEW</span></a>
+    <a class="sp is-new" style="--c:hsl(52,47%,36%);--w:34px;--fs:15px" href="https://www.yes24.com/product/goods/182276224" rel="nofollow noopener noreferrer" target="_blank" title="True Story"><span class="sp-t"><i>True Story</i></span><img class="sp-i" src="https://image.yes24.com/goods/182276224/side" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.parentNode.classList.add('sp-fail');this.remove()" onload="if(this.naturalWidth/this.naturalHeight>0.4){this.parentNode.classList.add('sp-fail');this.remove()}"><span class="sp-new" data-added="2026-09-29">NEW</span></a>
     </div>
     <div class="covers" id="covers">
-    <div class="cv-page on">
-    <div class="cv-row">
     <a class="cv" href="https://www.yes24.com/product/goods/2357406" rel="nofollow noopener noreferrer" target="_blank" title="A Song Quietly Sung"><img src="https://image.yes24.com/goods/2357406/L" alt="A Song Quietly Sung by Han Kang — book cover" loading="lazy"></a>
     <a class="cv" href="https://www.millie.co.kr/v4/book/f3108b88b0524c90" rel="nofollow noopener noreferrer" target="_blank" title="A Very Ordinary Marriage"><img src="https://img.millie.co.kr/200x/service/cover/179494866/2ed91e43755a4fbb95e90df5258d48aa.jpg" alt="A Very Ordinary Marriage by Bora Chung — book cover" loading="lazy"></a>
     <a class="cv" href="https://www.yes24.com/product/goods/85122333" rel="nofollow noopener noreferrer" target="_blank" title="Educated"><img src="https://image.yes24.com/goods/85122333/L" alt="Educated by Tara Westover — book cover" loading="lazy"></a>
     <a class="cv" href="https://www.yes24.com/product/goods/103017964" rel="nofollow noopener noreferrer" target="_blank" title="Frappe-toi le cœur"><img src="https://image.yes24.com/goods/103017964/L" alt="Frappe-toi le cœur by Amélie Nothomb — book cover" loading="lazy"></a>
-    </div>
-    <div class="cv-row">
     <a class="cv" href="https://www.yes24.com/product/goods/2365723" rel="nofollow noopener noreferrer" target="_blank" title="Gotham Handbook: New York, Mode D&#x27;Emploi"><img src="https://image.yes24.com/goods/2365723/L" alt="Gotham Handbook: New York, Mode D&#x27;Emploi by Sophie Calle, Paul Auster — book cover" loading="lazy"></a>
     <a class="cv" href="https://www.yes24.com/product/goods/2143116" rel="nofollow noopener noreferrer" target="_blank" title="His Lonely and Lonely Night"><img src="https://image.yes24.com/goods/2143116/L" alt="His Lonely and Lonely Night by Park Wan-suh — book cover" loading="lazy"></a>
     <a class="cv" href="https://www.yes24.com/product/goods/66992033" rel="nofollow noopener noreferrer" target="_blank" title="I Was at the Dig Site."><img src="https://image.yes24.com/goods/66992033/L" alt="I Was at the Dig Site. by Soo-Kyung Heo — book cover" loading="lazy"></a>
     <a class="cv" href="https://www.yes24.com/product/goods/109580345" rel="nofollow noopener noreferrer" target="_blank" title="Les Années"><img src="https://image.yes24.com/goods/109580345/L" alt="Les Années by Annie Ernaux — book cover" loading="lazy"></a>
-    </div>
-    <div class="cv-row">
     <a class="cv" href="https://www.yes24.com/product/goods/3021273" rel="nofollow noopener noreferrer" target="_blank" title="Memories of the CheonguHwae"><img src="https://image.yes24.com/goods/3021273/L" alt="Memories of the CheonguHwae by Shin Young-Bok (Author), Kim Se-Hyeon (Illustration) — book cover" loading="lazy"></a>
     <a class="cv" href="https://www.yes24.com/product/goods/196261854" rel="nofollow noopener noreferrer" target="_blank" title="Park Wan-Seo’S Words"><img src="https://image.yes24.com/goods/196261854/L" alt="Park Wan-Seo’S Words by Park Wan-Seo, Ho Won-Sook — book cover" loading="lazy"></a>
     <a class="cv" href="https://www.yes24.com/product/goods/125905365" rel="nofollow noopener noreferrer" target="_blank" title="Reason for Travel"><img src="https://image.yes24.com/goods/125905365/L" alt="Reason for Travel by Kim Youngha — book cover" loading="lazy"></a>
     <a class="cv" href="https://www.yes24.com/product/goods/33189102" rel="nofollow noopener noreferrer" target="_blank" title="Seagull / Three Sisters / Uncle Vanya / Cherry Blossom Garden"><img src="https://image.yes24.com/goods/33189102/L" alt="Seagull / Three Sisters / Uncle Vanya / Cherry Blossom Garden by Anton Chekhov — book cover" loading="lazy"></a>
-    </div>
-    </div>
-    <div class="cv-page">
-    <div class="cv-row">
     <a class="cv" href="https://www.yes24.com/product/goods/182276224" rel="nofollow noopener noreferrer" target="_blank" title="True Story"><img src="https://image.yes24.com/goods/182276224/L" alt="True Story by Sophie Calle — book cover" loading="lazy"></a>
-    </div>
-    </div>
-    <div class="cv-pager" data-total="13" data-per="12"><button type="button" class="pg" data-go="prev" aria-label="prev">◀</button><button type="button" class="pg" data-go="0">1</button><button type="button" class="pg" data-go="1">2</button><button type="button" class="pg" data-go="next" aria-label="next">▶</button><span class="pg-count"></span></div>
     </div>
     <ol class="reading-list" id="rlist">
     <li class="rl-item" id="b1">
@@ -608,7 +596,7 @@
     </li>
     <li class="rl-item" id="b2">
       <span class="rl-num">2</span>
-      <a class="rl-cover" href="https://www.millie.co.kr/v4/book/f3108b88b0524c90" rel="nofollow noopener noreferrer" target="_blank" aria-label="A Very Ordinary Marriage — buy or read more"><img src="https://img.millie.co.kr/200x/service/cover/179494866/2ed91e43755a4fbb95e90df5258d48aa.jpg" alt="A Very Ordinary Marriage by Bora Chung — book cover" loading="lazy"></a>
+      <a class="rl-cover" href="https://www.millie.co.kr/v4/book/f3108b88b0524c90" rel="nofollow noopener noreferrer" target="_blank" aria-label="A Very Ordinary Marriage — buy or read more"><span class="rl-new" data-added="2026-09-29">NEW</span><img src="https://img.millie.co.kr/200x/service/cover/179494866/2ed91e43755a4fbb95e90df5258d48aa.jpg" alt="A Very Ordinary Marriage by Bora Chung — book cover" loading="lazy"></a>
       <div class="rl-meta">
         <div class="rl-title"><a href="https://www.millie.co.kr/v4/book/f3108b88b0524c90" rel="nofollow noopener noreferrer" target="_blank">A Very Ordinary Marriage</a> <span style="color:#888;font-size:12px;font-weight:400">(아주 보통의 결혼)</span></div>
         <div class="rl-byline">Bora Chung</div>
@@ -618,7 +606,7 @@
     </li>
     <li class="rl-item" id="b3">
       <span class="rl-num">3</span>
-      <a class="rl-cover" href="https://www.yes24.com/product/goods/85122333" rel="nofollow noopener noreferrer" target="_blank" aria-label="Educated — buy or read more"><img src="https://image.yes24.com/goods/85122333/L" alt="Educated by Tara Westover — book cover" loading="lazy"></a>
+      <a class="rl-cover" href="https://www.yes24.com/product/goods/85122333" rel="nofollow noopener noreferrer" target="_blank" aria-label="Educated — buy or read more"><span class="rl-new" data-added="2026-09-29">NEW</span><img src="https://image.yes24.com/goods/85122333/L" alt="Educated by Tara Westover — book cover" loading="lazy"></a>
       <div class="rl-meta">
         <div class="rl-title"><a href="https://www.yes24.com/product/goods/85122333" rel="nofollow noopener noreferrer" target="_blank">Educated</a> <span style="color:#888;font-size:12px;font-weight:400">(배움의 발견)</span></div>
         <div class="rl-byline">Tara Westover *</div>
@@ -628,7 +616,7 @@
     </li>
     <li class="rl-item" id="b4">
       <span class="rl-num">4</span>
-      <a class="rl-cover" href="https://www.yes24.com/product/goods/103017964" rel="nofollow noopener noreferrer" target="_blank" aria-label="Frappe-toi le cœur — buy or read more"><img src="https://image.yes24.com/goods/103017964/L" alt="Frappe-toi le cœur by Amélie Nothomb — book cover" loading="lazy"></a>
+      <a class="rl-cover" href="https://www.yes24.com/product/goods/103017964" rel="nofollow noopener noreferrer" target="_blank" aria-label="Frappe-toi le cœur — buy or read more"><span class="rl-new" data-added="2026-09-29">NEW</span><img src="https://image.yes24.com/goods/103017964/L" alt="Frappe-toi le cœur by Amélie Nothomb — book cover" loading="lazy"></a>
       <div class="rl-meta">
         <div class="rl-title"><a href="https://www.yes24.com/product/goods/103017964" rel="nofollow noopener noreferrer" target="_blank">Frappe-toi le cœur</a> <span style="color:#888;font-size:12px;font-weight:400">(너의 심장을 쳐라)</span></div>
         <div class="rl-byline">Amélie Nothomb</div>
@@ -638,7 +626,7 @@
     </li>
     <li class="rl-item" id="b5">
       <span class="rl-num">5</span>
-      <a class="rl-cover" href="https://www.yes24.com/product/goods/2365723" rel="nofollow noopener noreferrer" target="_blank" aria-label="Gotham Handbook: New York, Mode D&#x27;Emploi — buy or read more"><img src="https://image.yes24.com/goods/2365723/L" alt="Gotham Handbook: New York, Mode D&#x27;Emploi by Sophie Calle, Paul Auster — book cover" loading="lazy"></a>
+      <a class="rl-cover" href="https://www.yes24.com/product/goods/2365723" rel="nofollow noopener noreferrer" target="_blank" aria-label="Gotham Handbook: New York, Mode D&#x27;Emploi — buy or read more"><span class="rl-new" data-added="2026-09-29">NEW</span><img src="https://image.yes24.com/goods/2365723/L" alt="Gotham Handbook: New York, Mode D&#x27;Emploi by Sophie Calle, Paul Auster — book cover" loading="lazy"></a>
       <div class="rl-meta">
         <div class="rl-title"><a href="https://www.yes24.com/product/goods/2365723" rel="nofollow noopener noreferrer" target="_blank">Gotham Handbook: New York, Mode D&#x27;Emploi</a> <span style="color:#888;font-size:12px;font-weight:400">(뉴욕 이야기)</span></div>
         <div class="rl-byline">Sophie Calle, Paul Auster *</div>
@@ -648,7 +636,7 @@
     </li>
     <li class="rl-item" id="b6">
       <span class="rl-num">6</span>
-      <a class="rl-cover" href="https://www.yes24.com/product/goods/2143116" rel="nofollow noopener noreferrer" target="_blank" aria-label="His Lonely and Lonely Night — buy or read more"><img src="https://image.yes24.com/goods/2143116/L" alt="His Lonely and Lonely Night by Park Wan-suh — book cover" loading="lazy"></a>
+      <a class="rl-cover" href="https://www.yes24.com/product/goods/2143116" rel="nofollow noopener noreferrer" target="_blank" aria-label="His Lonely and Lonely Night — buy or read more"><span class="rl-new" data-added="2026-09-29">NEW</span><img src="https://image.yes24.com/goods/2143116/L" alt="His Lonely and Lonely Night by Park Wan-suh — book cover" loading="lazy"></a>
       <div class="rl-meta">
         <div class="rl-title"><a href="https://www.yes24.com/product/goods/2143116" rel="nofollow noopener noreferrer" target="_blank">His Lonely and Lonely Night</a> <span style="color:#888;font-size:12px;font-weight:400">(그의 외롭고 쓸쓸한 밤)</span></div>
         <div class="rl-byline">Park Wan-suh</div>
@@ -659,7 +647,7 @@
     </li>
     <li class="rl-item" id="b7">
       <span class="rl-num">7</span>
-      <a class="rl-cover" href="https://www.yes24.com/product/goods/66992033" rel="nofollow noopener noreferrer" target="_blank" aria-label="I Was at the Dig Site. — buy or read more"><img src="https://image.yes24.com/goods/66992033/L" alt="I Was at the Dig Site. by Soo-Kyung Heo — book cover" loading="lazy"></a>
+      <a class="rl-cover" href="https://www.yes24.com/product/goods/66992033" rel="nofollow noopener noreferrer" target="_blank" aria-label="I Was at the Dig Site. — buy or read more"><span class="rl-new" data-added="2026-09-29">NEW</span><img src="https://image.yes24.com/goods/66992033/L" alt="I Was at the Dig Site. by Soo-Kyung Heo — book cover" loading="lazy"></a>
       <div class="rl-meta">
         <div class="rl-title"><a href="https://www.yes24.com/product/goods/66992033" rel="nofollow noopener noreferrer" target="_blank">I Was at the Dig Site.</a> <span style="color:#888;font-size:12px;font-weight:400">(나는 발굴지에 있었다)</span></div>
         <div class="rl-byline">Soo-Kyung Heo *</div>
@@ -670,7 +658,7 @@
     </li>
     <li class="rl-item" id="b8">
       <span class="rl-num">8</span>
-      <a class="rl-cover" href="https://www.yes24.com/product/goods/109580345" rel="nofollow noopener noreferrer" target="_blank" aria-label="Les Années — buy or read more"><img src="https://image.yes24.com/goods/109580345/L" alt="Les Années by Annie Ernaux — book cover" loading="lazy"></a>
+      <a class="rl-cover" href="https://www.yes24.com/product/goods/109580345" rel="nofollow noopener noreferrer" target="_blank" aria-label="Les Années — buy or read more"><span class="rl-new" data-added="2026-09-29">NEW</span><img src="https://image.yes24.com/goods/109580345/L" alt="Les Années by Annie Ernaux — book cover" loading="lazy"></a>
       <div class="rl-meta">
         <div class="rl-title"><a href="https://www.yes24.com/product/goods/109580345" rel="nofollow noopener noreferrer" target="_blank">Les Années</a> <span style="color:#888;font-size:12px;font-weight:400">(세월)</span></div>
         <div class="rl-byline">Annie Ernaux</div>
@@ -680,7 +668,7 @@
     </li>
     <li class="rl-item" id="b9">
       <span class="rl-num">9</span>
-      <a class="rl-cover" href="https://www.yes24.com/product/goods/3021273" rel="nofollow noopener noreferrer" target="_blank" aria-label="Memories of the CheonguHwae — buy or read more"><img src="https://image.yes24.com/goods/3021273/L" alt="Memories of the CheonguHwae by Shin Young-Bok (Author), Kim Se-Hyeon (Illustration) — book cover" loading="lazy"></a>
+      <a class="rl-cover" href="https://www.yes24.com/product/goods/3021273" rel="nofollow noopener noreferrer" target="_blank" aria-label="Memories of the CheonguHwae — buy or read more"><span class="rl-new" data-added="2026-09-29">NEW</span><img src="https://image.yes24.com/goods/3021273/L" alt="Memories of the CheonguHwae by Shin Young-Bok (Author), Kim Se-Hyeon (Illustration) — book cover" loading="lazy"></a>
       <div class="rl-meta">
         <div class="rl-title"><a href="https://www.yes24.com/product/goods/3021273" rel="nofollow noopener noreferrer" target="_blank">Memories of the CheonguHwae *</a> <span style="color:#888;font-size:12px;font-weight:400">(청구회 추억)</span></div>
         <div class="rl-byline">Shin Young-Bok (Author), Kim Se-Hyeon (Illustration) *</div>
@@ -691,7 +679,7 @@
     </li>
     <li class="rl-item" id="b10">
       <span class="rl-num">10</span>
-      <a class="rl-cover" href="https://www.yes24.com/product/goods/196261854" rel="nofollow noopener noreferrer" target="_blank" aria-label="Park Wan-Seo’S Words — buy or read more"><span class="rl-new" data-added="2026-09-26">NEW</span><img src="https://image.yes24.com/goods/196261854/L" alt="Park Wan-Seo’S Words by Park Wan-Seo, Ho Won-Sook — book cover" loading="lazy"></a>
+      <a class="rl-cover" href="https://www.yes24.com/product/goods/196261854" rel="nofollow noopener noreferrer" target="_blank" aria-label="Park Wan-Seo’S Words — buy or read more"><span class="rl-new" data-added="2026-09-29">NEW</span><img src="https://image.yes24.com/goods/196261854/L" alt="Park Wan-Seo’S Words by Park Wan-Seo, Ho Won-Sook — book cover" loading="lazy"></a>
       <div class="rl-meta">
         <div class="rl-title"><a href="https://www.yes24.com/product/goods/196261854" rel="nofollow noopener noreferrer" target="_blank">Park Wan-Seo’S Words *</a> <span style="color:#888;font-size:12px;font-weight:400">(박완서의 낱말들)</span></div>
         <div class="rl-byline">Park Wan-Seo, Ho Won-Sook *</div>
@@ -701,7 +689,7 @@
     </li>
     <li class="rl-item" id="b11">
       <span class="rl-num">11</span>
-      <a class="rl-cover" href="https://www.yes24.com/product/goods/125905365" rel="nofollow noopener noreferrer" target="_blank" aria-label="Reason for Travel — buy or read more"><img src="https://image.yes24.com/goods/125905365/L" alt="Reason for Travel by Kim Youngha — book cover" loading="lazy"></a>
+      <a class="rl-cover" href="https://www.yes24.com/product/goods/125905365" rel="nofollow noopener noreferrer" target="_blank" aria-label="Reason for Travel — buy or read more"><span class="rl-new" data-added="2026-09-29">NEW</span><img src="https://image.yes24.com/goods/125905365/L" alt="Reason for Travel by Kim Youngha — book cover" loading="lazy"></a>
       <div class="rl-meta">
         <div class="rl-title"><a href="https://www.yes24.com/product/goods/125905365" rel="nofollow noopener noreferrer" target="_blank">Reason for Travel *</a> <span style="color:#888;font-size:12px;font-weight:400">(여행의 이유)</span></div>
         <div class="rl-byline">Kim Youngha</div>
@@ -712,7 +700,7 @@
     </li>
     <li class="rl-item" id="b12">
       <span class="rl-num">12</span>
-      <a class="rl-cover" href="https://www.yes24.com/product/goods/33189102" rel="nofollow noopener noreferrer" target="_blank" aria-label="Seagull / Three Sisters / Uncle Vanya / Cherry Blossom Garden — buy or read more"><img src="https://image.yes24.com/goods/33189102/L" alt="Seagull / Three Sisters / Uncle Vanya / Cherry Blossom Garden by Anton Chekhov — book cover" loading="lazy"></a>
+      <a class="rl-cover" href="https://www.yes24.com/product/goods/33189102" rel="nofollow noopener noreferrer" target="_blank" aria-label="Seagull / Three Sisters / Uncle Vanya / Cherry Blossom Garden — buy or read more"><span class="rl-new" data-added="2026-09-29">NEW</span><img src="https://image.yes24.com/goods/33189102/L" alt="Seagull / Three Sisters / Uncle Vanya / Cherry Blossom Garden by Anton Chekhov — book cover" loading="lazy"></a>
       <div class="rl-meta">
         <div class="rl-title"><a href="https://www.yes24.com/product/goods/33189102" rel="nofollow noopener noreferrer" target="_blank">Seagull / Three Sisters / Uncle Vanya / Cherry Blossom Garden</a> <span style="color:#888;font-size:12px;font-weight:400">(갈매기 / 세 자매 / 바냐 아저씨 / 벚꽃 동산)</span></div>
         <div class="rl-byline">Anton Chekhov</div>
@@ -722,7 +710,7 @@
     </li>
     <li class="rl-item" id="b13">
       <span class="rl-num">13</span>
-      <a class="rl-cover" href="https://www.yes24.com/product/goods/182276224" rel="nofollow noopener noreferrer" target="_blank" aria-label="True Story — buy or read more"><img src="https://image.yes24.com/goods/182276224/L" alt="True Story by Sophie Calle — book cover" loading="lazy"></a>
+      <a class="rl-cover" href="https://www.yes24.com/product/goods/182276224" rel="nofollow noopener noreferrer" target="_blank" aria-label="True Story — buy or read more"><span class="rl-new" data-added="2026-09-29">NEW</span><img src="https://image.yes24.com/goods/182276224/L" alt="True Story by Sophie Calle — book cover" loading="lazy"></a>
       <div class="rl-meta">
         <div class="rl-title"><a href="https://www.yes24.com/product/goods/182276224" rel="nofollow noopener noreferrer" target="_blank">True Story *</a> <span style="color:#888;font-size:12px;font-weight:400">(진실된 이야기)</span></div>
         <div class="rl-byline">Sophie Calle</div>
@@ -747,34 +735,6 @@
     try { saved = localStorage.getItem("shelfView2"); } catch (e) {}
     if (saved === "spine") set("spine", false);
     tabs.forEach(function (t) { t.addEventListener("click", function () { set(t.dataset.view, true); }); });
-    // 표지 보기 쪽 넘김 (12권을 넘는 책장만)
-    var pager = document.querySelector(".cv-pager");
-    var pages = document.querySelectorAll(".cv-page");
-    if (pager && pages.length > 1) {
-      var cur = 0, ko = (document.documentElement.lang || "ko").indexOf("ko") === 0;
-      var total = +pager.dataset.total, per = +pager.dataset.per;
-      var nums = pager.querySelectorAll("[data-go]");
-      var show = function (n) {
-        cur = Math.max(0, Math.min(pages.length - 1, n));
-        pages.forEach(function (p, i) { p.classList.toggle("on", i === cur); });
-        nums.forEach(function (b) {
-          var g = b.dataset.go;
-          b.classList.toggle("on", g === String(cur));
-          b.disabled = (g === "prev" && cur === 0) || (g === "next" && cur === pages.length - 1);
-        });
-        var from = cur * per + 1, to = Math.min(total, (cur + 1) * per);
-        pager.querySelector(".pg-count").textContent = ko
-          ? from + "–" + to + "권 · 총 " + total + "권 · " + (cur + 1) + "/" + pages.length + "쪽"
-          : "Books " + from + "–" + to + " of " + total;
-      };
-      pager.addEventListener("click", function (e) {
-        var b = e.target.closest("[data-go]");
-        if (!b || b.disabled) return;
-        var g = b.dataset.go;
-        show(g === "prev" ? cur - 1 : g === "next" ? cur + 1 : +g);
-      });
-      show(0);
-    }
   })();
   </script>
   <script>
@@ -785,6 +745,29 @@
     var H2C = "https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js";
     var PROXY = "https://images.weserv.nl/?url=";
     var PAPER = "#fcfaf5";
+    var PER = 12;
+    // 표지 보기에서 책이 12권을 넘으면 어느 12권을 저장할지 고르는 칸을 붙인다
+    (function () {
+      var area = document.getElementById("shelf-area");
+      var n = area ? area.querySelectorAll(".cv").length : 0;
+      if (n <= PER) return;
+      var ko = (document.documentElement.lang || "ko").indexOf("ko") === 0;
+      var sel = document.createElement("select");
+      sel.id = "shelf-range"; sel.className = "sh-range";
+      sel.setAttribute("aria-label", ko ? "저장할 책 범위" : "Books to save");
+      for (var p = 0; p * PER < n; p++) {
+        var o = document.createElement("option");
+        o.value = p;
+        var a = p * PER + 1, b = Math.min(n, (p + 1) * PER);
+        o.textContent = ko ? a + "–" + b + "권 (표지 12권씩)" : "Books " + a + "–" + b;
+        sel.appendChild(o);
+      }
+      var first = btns[0];
+      first.parentNode.insertBefore(sel, first);
+      var sync = function () { sel.style.display = area.classList.contains("show-covers") ? "" : "none"; };
+      new MutationObserver(sync).observe(area, { attributes: true, attributeFilter: ["class"] });
+      sync();
+    })();
     var FONT = '-apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif';
     // 캔버스 한계. 넘기면 빈 그림이 나오거나 아예 실패한다. 사파리는 한 변보다
     // 넓이를 먼저 막는다(약 1677만 픽셀). 제목·여백을 얹을 몫을 빼고 잡는다.
@@ -948,6 +931,15 @@
       // 저장하는 그림에는 NEW 표시와 함께 추천한 셀럽 목록을 넣지 않는다.
       // html2canvas가 문서를 복사할 때 이 클래스도 따라가서 복사본에서만 빠진 채 그려진다.
       view.classList.add("is-capturing");
+      // 표지 보기에서 책이 12권을 넘으면 고른 12권만 4열 3줄로 담는다
+      var capTiles = [], capSel = document.getElementById("shelf-range");
+      if (capSel && capSel.value !== "" && view.classList.contains("show-covers")) {
+        var from = +capSel.value * PER;
+        [].forEach.call(view.querySelectorAll(".cv"), function (t, i) {
+          if (i < from || i >= from + PER) { t.classList.add("cap-off"); capTiles.push(t); }
+        });
+        view.classList.add("cap-12");
+      }
       guard(loadH2C(), 15000, "html2canvas").then(function () {
         swap = swapImages(view);
         return swap.ready;
@@ -978,7 +970,8 @@
       }).then(function () {
         if (swap) swap.undo.forEach(function (f) { f(); });
         if (muted) unmute(muted);
-        view.classList.remove("is-capturing");
+        view.classList.remove("is-capturing", "cap-12");
+        capTiles.forEach(function (t) { t.classList.remove("cap-off"); });
         btns.forEach(function (b) { b.disabled = false; });
         btn.textContent = was;
       });

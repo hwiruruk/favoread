@@ -470,29 +470,19 @@
     .vt { font: inherit; font-size: 12px; font-weight: 700; padding: 5px 10px; background: #fff; color: #000; border: 0; cursor: pointer; }
     .vt + .vt { border-left: 2px solid #000; }
     .vt[aria-pressed="true"] { background: #000; color: #fff; }
-    .covers { display: none; margin: 14px 0 22px; border: 2px solid #000; background: #f7f2e4; }
-    .show-covers .covers { display: block; }
+    .covers { display: none; grid-template-columns: repeat(auto-fill, minmax(84px, 1fr)); gap: 14px 12px; margin: 14px 0 22px; }
+    .show-covers .covers { display: grid; }
     .show-covers .shelf { display: none; }
-    .cv-page { display: none; }
-    .cv-page.on { display: block; }
-    .cv-row { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 0 18px;
-              padding: 20px 18px 16px; border-bottom: 12px solid #d9a066; }
-    .cv-row + .cv-row { border-top: 2px solid #000; }
-    .cv { position: relative; display: block; aspect-ratio: 2/3; border: 2px solid #000; box-shadow: 4px 4px 0 0 #000;
-          background: #f4f4f0; overflow: hidden; color: #000; text-decoration: none; transition: transform .12s, box-shadow .12s; }
-    .cv:hover { transform: translate(-2px, -4px); box-shadow: 6px 8px 0 0 #000; text-decoration: none; }
+    .cv { position: relative; display: block; aspect-ratio: 2/3; border: 1.5px solid #000; box-shadow: 2px 2px 0 0 #000;
+          background: #f4f4f0; overflow: hidden; color: #000; text-decoration: none; transition: transform .12s; }
+    .cv:hover { transform: translateY(-3px); text-decoration: none; }
     .cv img { width: 100%; height: 100%; object-fit: cover; display: block; }
     .cv-no { display: flex; height: 100%; align-items: center; justify-content: center; padding: 6px;
              font-size: 11px; font-weight: 700; line-height: 1.3; text-align: center; word-break: keep-all; }
-    .cv-pager { display: flex; align-items: center; justify-content: center; gap: 6px; flex-wrap: wrap;
-                padding: 12px 8px; border-top: 2px solid #000; background: #fff; }
-    .cv-pager .pg { font: inherit; font-size: 13px; font-weight: 800; min-width: 34px; height: 34px; cursor: pointer;
-                    background: #fff; color: #000; border: 2px solid #000; box-shadow: 2px 2px 0 0 #000; }
-    .cv-pager .pg:hover { background: #fde047; }
-    .cv-pager .pg.on { background: #fde047; }
-    .cv-pager .pg[disabled] { opacity: .35; cursor: default; background: #fff; }
-    .cv-pager .pg-count { flex-basis: 100%; text-align: center; font-size: 12px; font-weight: 700; color: #555; margin-top: 4px; }
-    @media (max-width: 480px) { .cv-row { gap: 0 10px; padding: 16px 10px 12px; } }
+    .sh-range { font: inherit; font-size: 12px; font-weight: 700; padding: 5px 6px; background: #fff; color: #000;
+                border: 2px solid #000; box-shadow: 2px 2px 0 0 #000; }
+    .is-capturing.cap-12 .covers { grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 16px 14px; }
+    .is-capturing .cv.cap-off { display: none; }
     .shelf { --sh-h: 270px; --plank: 7px; --row: calc(var(--sh-h) + 18px);
              display: flex; flex-wrap: wrap; align-items: flex-end; gap: 11px 2px;
              margin: 14px 0 22px; padding: 0 8px 7px;
@@ -638,62 +628,47 @@
     </details>
     <div id="shelf-area" class="show-covers">
     <div class="shelf" id="shelf">
-    <a class="sp is-new" style="--c:hsl(61,52%,27%);--w:32px;--fs:15px" href="https://www.yes24.com/product/goods/18360997" rel="nofollow noopener noreferrer" target="_blank" title="Brave New World"><span class="sp-t"><i>Brave New World</i></span><img class="sp-i" src="https://image.yes24.com/goods/18360997/side" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.parentNode.classList.add('sp-fail');this.remove()" onload="if(this.naturalWidth/this.naturalHeight>0.4){this.parentNode.classList.add('sp-fail');this.remove()}"><span class="sp-new" data-added="2026-09-22">NEW</span></a>
-    <a class="sp no-img has-cut is-new" style="--c:hsl(41,32%,44%);--w:30px;--fs:15px" href="https://www.yes24.com/product/goods/39441749" rel="nofollow noopener noreferrer" target="_blank" title="Dignity of Words"><img class="sp-c" src="https://image.yes24.com/goods/39441749/L" alt="" loading="lazy" referrerpolicy="no-referrer"><span class="sp-t"><i>Dignity of Words</i></span><span class="sp-new" data-added="2026-09-22">NEW</span></a>
-    <a class="sp is-new" style="--c:hsl(285,39%,31%);--w:42px;--fs:15px" href="https://www.yes24.com/product/goods/132226737" rel="nofollow noopener noreferrer" target="_blank" title="Factfulness"><span class="sp-t"><i>Factfulness</i></span><img class="sp-i" src="https://image.yes24.com/goods/132226737/side" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.parentNode.classList.add('sp-fail');this.remove()" onload="if(this.naturalWidth/this.naturalHeight>0.4){this.parentNode.classList.add('sp-fail');this.remove()}"><span class="sp-new" data-added="2026-09-22">NEW</span></a>
-    <a class="sp no-img has-cut is-new" style="--c:hsl(97,55%,33%);--w:43px;--fs:15px" href="https://www.yes24.com/product/goods/22712338" rel="nofollow noopener noreferrer" target="_blank" title="Food Is Common Sense"><img class="sp-c" src="https://image.yes24.com/goods/22712338/L" alt="" loading="lazy" referrerpolicy="no-referrer"><span class="sp-t"><i>Food Is Common Sense</i></span><span class="sp-new" data-added="2026-09-22">NEW</span></a>
-    <a class="sp no-img has-cut is-new" style="--c:hsl(356,55%,32%);--w:30px;--fs:10px" href="https://www.yes24.com/product/goods/79297023" rel="nofollow noopener noreferrer" target="_blank" title="How to Win Friends &amp; Influence People"><img class="sp-c" src="https://image.yes24.com/goods/79297023/L" alt="" loading="lazy" referrerpolicy="no-referrer"><span class="sp-t"><i>How to Win Friends &amp; Influence People</i></span><span class="sp-new" data-added="2026-09-22">NEW</span></a>
-    <a class="sp is-new" style="--c:hsl(298,32%,26%);--w:33px;--fs:10px" href="https://www.yes24.com/product/goods/73162329" rel="nofollow noopener noreferrer" target="_blank" title="If Reborn, Would You Live in Korea?"><span class="sp-t"><i>If Reborn, Would You Live in Korea?</i></span><img class="sp-i" src="https://image.yes24.com/goods/73162329/side" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.parentNode.classList.add('sp-fail');this.remove()" onload="if(this.naturalWidth/this.naturalHeight>0.4){this.parentNode.classList.add('sp-fail');this.remove()}"><span class="sp-new" data-added="2026-09-22">NEW</span></a>
-    <a class="sp is-new" style="--c:hsl(7,50%,42%);--w:30px;--fs:13px" href="https://www.yes24.com/product/goods/22862876" rel="nofollow noopener noreferrer" target="_blank" title="Intellectual Capital Theory"><span class="sp-t"><i>Intellectual Capital Theory</i></span><img class="sp-i" src="https://image.yes24.com/goods/22862876/side" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.parentNode.classList.add('sp-fail');this.remove()" onload="if(this.naturalWidth/this.naturalHeight>0.4){this.parentNode.classList.add('sp-fail');this.remove()}"><span class="sp-new" data-added="2026-09-22">NEW</span></a>
-    <a class="sp is-new" style="--c:hsl(262,55%,47%);--w:41px;--fs:9px" href="https://www.yes24.com/product/goods/79296230" rel="nofollow noopener noreferrer" target="_blank" title="Liberal Arts on the Way Home from Work"><span class="sp-t"><i>Liberal Arts on the Way Home from Work</i></span><img class="sp-i" src="https://image.yes24.com/goods/79296230/side" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.parentNode.classList.add('sp-fail');this.remove()" onload="if(this.naturalWidth/this.naturalHeight>0.4){this.parentNode.classList.add('sp-fail');this.remove()}"><span class="sp-new" data-added="2026-09-22">NEW</span></a>
-    <a class="sp is-new" style="--c:hsl(1,36%,32%);--w:33px;--fs:15px" href="https://www.yes24.com/product/goods/118805757" rel="nofollow noopener noreferrer" target="_blank" title="Living, Loving, Learning"><span class="sp-t"><i>Living, Loving, Learning</i></span><img class="sp-i" src="https://image.yes24.com/goods/118805757/side" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.parentNode.classList.add('sp-fail');this.remove()" onload="if(this.naturalWidth/this.naturalHeight>0.4){this.parentNode.classList.add('sp-fail');this.remove()}"><span class="sp-new" data-added="2026-09-22">NEW</span></a>
-    <a class="sp is-new" style="--c:hsl(237,44%,37%);--w:30px;--fs:15px" href="https://www.yes24.com/product/goods/110157236" rel="nofollow noopener noreferrer" target="_blank" title="Nudge"><span class="sp-t"><i>Nudge</i></span><img class="sp-i" src="https://image.yes24.com/goods/110157236/side" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.parentNode.classList.add('sp-fail');this.remove()" onload="if(this.naturalWidth/this.naturalHeight>0.4){this.parentNode.classList.add('sp-fail');this.remove()}"><span class="sp-new" data-added="2026-09-22">NEW</span></a>
-    <a class="sp is-new" style="--c:hsl(129,41%,45%);--w:33px;--fs:15px" href="https://www.yes24.com/product/goods/125905365" rel="nofollow noopener noreferrer" target="_blank" title="Reason for Travel"><span class="sp-t"><i>Reason for Travel</i></span><img class="sp-i" src="https://image.yes24.com/goods/125905365/side" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.parentNode.classList.add('sp-fail');this.remove()" onload="if(this.naturalWidth/this.naturalHeight>0.4){this.parentNode.classList.add('sp-fail');this.remove()}"><span class="sp-new" data-added="2026-09-22">NEW</span></a>
-    <a class="sp is-new" style="--c:hsl(256,45%,32%);--w:42px;--fs:13px" href="https://www.yes24.com/product/goods/125753838" rel="nofollow noopener noreferrer" target="_blank" title="The 90s Generation Is Coming"><span class="sp-t"><i>The 90s Generation Is Coming</i></span><img class="sp-i" src="https://image.yes24.com/goods/125753838/side" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.parentNode.classList.add('sp-fail');this.remove()" onload="if(this.naturalWidth/this.naturalHeight>0.4){this.parentNode.classList.add('sp-fail');this.remove()}"><span class="sp-new" data-added="2026-09-22">NEW</span></a>
-    <a class="sp no-img has-cut is-new" style="--c:hsl(356,48%,28%);--w:31px;--fs:15px" href="https://www.yes24.com/product/goods/38296798" rel="nofollow noopener noreferrer" target="_blank" title="The Harm in Hate Speech"><img class="sp-c" src="https://image.yes24.com/goods/38296798/L" alt="" loading="lazy" referrerpolicy="no-referrer"><span class="sp-t"><i>The Harm in Hate Speech</i></span><span class="sp-new" data-added="2026-09-22">NEW</span></a>
-    <a class="sp is-new" style="--c:hsl(201,52%,36%);--w:44px;--fs:12px" href="https://www.yes24.com/product/goods/4614945" rel="nofollow noopener noreferrer" target="_blank" title="Time When Philosophy Is Needed"><span class="sp-t"><i>Time When Philosophy Is Needed</i></span><img class="sp-i" src="https://image.yes24.com/goods/4614945/side" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.parentNode.classList.add('sp-fail');this.remove()" onload="if(this.naturalWidth/this.naturalHeight>0.4){this.parentNode.classList.add('sp-fail');this.remove()}"><span class="sp-new" data-added="2026-09-22">NEW</span></a>
-    <a class="sp is-new" style="--c:hsl(272,37%,46%);--w:42px;--fs:8px" href="https://www.yes24.com/product/goods/56789708" rel="nofollow noopener noreferrer" target="_blank" title="Tsutaya, a Place Where Tastes Are Designed"><span class="sp-t"><i>Tsutaya, a Place Where Tastes Are Designed</i></span><img class="sp-i" src="https://image.yes24.com/goods/56789708/side" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.parentNode.classList.add('sp-fail');this.remove()" onload="if(this.naturalWidth/this.naturalHeight>0.4){this.parentNode.classList.add('sp-fail');this.remove()}"><span class="sp-new" data-added="2026-09-22">NEW</span></a>
-    <a class="sp is-new" style="--c:hsl(117,41%,36%);--w:43px;--fs:15px" href="https://www.yes24.com/product/goods/116922356" rel="nofollow noopener noreferrer" target="_blank" title="Twelve Footsteps"><span class="sp-t"><i>Twelve Footsteps</i></span><img class="sp-i" src="https://image.yes24.com/goods/116922356/side" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.parentNode.classList.add('sp-fail');this.remove()" onload="if(this.naturalWidth/this.naturalHeight>0.4){this.parentNode.classList.add('sp-fail');this.remove()}"><span class="sp-new" data-added="2026-09-22">NEW</span></a>
-    <a class="sp is-new" style="--c:hsl(207,37%,41%);--w:44px;--fs:15px" href="https://www.yes24.com/product/goods/182624787" rel="nofollow noopener noreferrer" target="_blank" title="What Makes a City Live"><span class="sp-t"><i>What Makes a City Live</i></span><img class="sp-i" src="https://image.yes24.com/goods/182624787/side" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.parentNode.classList.add('sp-fail');this.remove()" onload="if(this.naturalWidth/this.naturalHeight>0.4){this.parentNode.classList.add('sp-fail');this.remove()}"><span class="sp-new" data-added="2026-09-22">NEW</span></a>
+    <a class="sp is-new" style="--c:hsl(61,52%,27%);--w:32px;--fs:15px" href="https://www.yes24.com/product/goods/18360997" rel="nofollow noopener noreferrer" target="_blank" title="Brave New World"><span class="sp-t"><i>Brave New World</i></span><img class="sp-i" src="https://image.yes24.com/goods/18360997/side" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.parentNode.classList.add('sp-fail');this.remove()" onload="if(this.naturalWidth/this.naturalHeight>0.4){this.parentNode.classList.add('sp-fail');this.remove()}"><span class="sp-new" data-added="2026-09-29">NEW</span></a>
+    <a class="sp no-img has-cut is-new" style="--c:hsl(41,32%,44%);--w:30px;--fs:15px" href="https://www.yes24.com/product/goods/39441749" rel="nofollow noopener noreferrer" target="_blank" title="Dignity of Words"><img class="sp-c" src="https://image.yes24.com/goods/39441749/L" alt="" loading="lazy" referrerpolicy="no-referrer"><span class="sp-t"><i>Dignity of Words</i></span><span class="sp-new" data-added="2026-09-29">NEW</span></a>
+    <a class="sp is-new" style="--c:hsl(285,39%,31%);--w:42px;--fs:15px" href="https://www.yes24.com/product/goods/132226737" rel="nofollow noopener noreferrer" target="_blank" title="Factfulness"><span class="sp-t"><i>Factfulness</i></span><img class="sp-i" src="https://image.yes24.com/goods/132226737/side" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.parentNode.classList.add('sp-fail');this.remove()" onload="if(this.naturalWidth/this.naturalHeight>0.4){this.parentNode.classList.add('sp-fail');this.remove()}"><span class="sp-new" data-added="2026-09-29">NEW</span></a>
+    <a class="sp no-img has-cut is-new" style="--c:hsl(97,55%,33%);--w:43px;--fs:15px" href="https://www.yes24.com/product/goods/22712338" rel="nofollow noopener noreferrer" target="_blank" title="Food Is Common Sense"><img class="sp-c" src="https://image.yes24.com/goods/22712338/L" alt="" loading="lazy" referrerpolicy="no-referrer"><span class="sp-t"><i>Food Is Common Sense</i></span><span class="sp-new" data-added="2026-09-29">NEW</span></a>
+    <a class="sp no-img has-cut is-new" style="--c:hsl(356,55%,32%);--w:30px;--fs:10px" href="https://www.yes24.com/product/goods/79297023" rel="nofollow noopener noreferrer" target="_blank" title="How to Win Friends &amp; Influence People"><img class="sp-c" src="https://image.yes24.com/goods/79297023/L" alt="" loading="lazy" referrerpolicy="no-referrer"><span class="sp-t"><i>How to Win Friends &amp; Influence People</i></span><span class="sp-new" data-added="2026-09-29">NEW</span></a>
+    <a class="sp is-new" style="--c:hsl(298,32%,26%);--w:33px;--fs:10px" href="https://www.yes24.com/product/goods/73162329" rel="nofollow noopener noreferrer" target="_blank" title="If Reborn, Would You Live in Korea?"><span class="sp-t"><i>If Reborn, Would You Live in Korea?</i></span><img class="sp-i" src="https://image.yes24.com/goods/73162329/side" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.parentNode.classList.add('sp-fail');this.remove()" onload="if(this.naturalWidth/this.naturalHeight>0.4){this.parentNode.classList.add('sp-fail');this.remove()}"><span class="sp-new" data-added="2026-09-29">NEW</span></a>
+    <a class="sp is-new" style="--c:hsl(7,50%,42%);--w:30px;--fs:13px" href="https://www.yes24.com/product/goods/22862876" rel="nofollow noopener noreferrer" target="_blank" title="Intellectual Capital Theory"><span class="sp-t"><i>Intellectual Capital Theory</i></span><img class="sp-i" src="https://image.yes24.com/goods/22862876/side" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.parentNode.classList.add('sp-fail');this.remove()" onload="if(this.naturalWidth/this.naturalHeight>0.4){this.parentNode.classList.add('sp-fail');this.remove()}"><span class="sp-new" data-added="2026-09-29">NEW</span></a>
+    <a class="sp is-new" style="--c:hsl(262,55%,47%);--w:41px;--fs:9px" href="https://www.yes24.com/product/goods/79296230" rel="nofollow noopener noreferrer" target="_blank" title="Liberal Arts on the Way Home from Work"><span class="sp-t"><i>Liberal Arts on the Way Home from Work</i></span><img class="sp-i" src="https://image.yes24.com/goods/79296230/side" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.parentNode.classList.add('sp-fail');this.remove()" onload="if(this.naturalWidth/this.naturalHeight>0.4){this.parentNode.classList.add('sp-fail');this.remove()}"><span class="sp-new" data-added="2026-09-29">NEW</span></a>
+    <a class="sp is-new" style="--c:hsl(1,36%,32%);--w:33px;--fs:15px" href="https://www.yes24.com/product/goods/118805757" rel="nofollow noopener noreferrer" target="_blank" title="Living, Loving, Learning"><span class="sp-t"><i>Living, Loving, Learning</i></span><img class="sp-i" src="https://image.yes24.com/goods/118805757/side" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.parentNode.classList.add('sp-fail');this.remove()" onload="if(this.naturalWidth/this.naturalHeight>0.4){this.parentNode.classList.add('sp-fail');this.remove()}"><span class="sp-new" data-added="2026-09-29">NEW</span></a>
+    <a class="sp is-new" style="--c:hsl(237,44%,37%);--w:30px;--fs:15px" href="https://www.yes24.com/product/goods/110157236" rel="nofollow noopener noreferrer" target="_blank" title="Nudge"><span class="sp-t"><i>Nudge</i></span><img class="sp-i" src="https://image.yes24.com/goods/110157236/side" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.parentNode.classList.add('sp-fail');this.remove()" onload="if(this.naturalWidth/this.naturalHeight>0.4){this.parentNode.classList.add('sp-fail');this.remove()}"><span class="sp-new" data-added="2026-09-29">NEW</span></a>
+    <a class="sp is-new" style="--c:hsl(129,41%,45%);--w:33px;--fs:15px" href="https://www.yes24.com/product/goods/125905365" rel="nofollow noopener noreferrer" target="_blank" title="Reason for Travel"><span class="sp-t"><i>Reason for Travel</i></span><img class="sp-i" src="https://image.yes24.com/goods/125905365/side" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.parentNode.classList.add('sp-fail');this.remove()" onload="if(this.naturalWidth/this.naturalHeight>0.4){this.parentNode.classList.add('sp-fail');this.remove()}"><span class="sp-new" data-added="2026-09-29">NEW</span></a>
+    <a class="sp is-new" style="--c:hsl(256,45%,32%);--w:42px;--fs:13px" href="https://www.yes24.com/product/goods/125753838" rel="nofollow noopener noreferrer" target="_blank" title="The 90s Generation Is Coming"><span class="sp-t"><i>The 90s Generation Is Coming</i></span><img class="sp-i" src="https://image.yes24.com/goods/125753838/side" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.parentNode.classList.add('sp-fail');this.remove()" onload="if(this.naturalWidth/this.naturalHeight>0.4){this.parentNode.classList.add('sp-fail');this.remove()}"><span class="sp-new" data-added="2026-09-29">NEW</span></a>
+    <a class="sp no-img has-cut is-new" style="--c:hsl(356,48%,28%);--w:31px;--fs:15px" href="https://www.yes24.com/product/goods/38296798" rel="nofollow noopener noreferrer" target="_blank" title="The Harm in Hate Speech"><img class="sp-c" src="https://image.yes24.com/goods/38296798/L" alt="" loading="lazy" referrerpolicy="no-referrer"><span class="sp-t"><i>The Harm in Hate Speech</i></span><span class="sp-new" data-added="2026-09-29">NEW</span></a>
+    <a class="sp is-new" style="--c:hsl(201,52%,36%);--w:44px;--fs:12px" href="https://www.yes24.com/product/goods/4614945" rel="nofollow noopener noreferrer" target="_blank" title="Time When Philosophy Is Needed"><span class="sp-t"><i>Time When Philosophy Is Needed</i></span><img class="sp-i" src="https://image.yes24.com/goods/4614945/side" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.parentNode.classList.add('sp-fail');this.remove()" onload="if(this.naturalWidth/this.naturalHeight>0.4){this.parentNode.classList.add('sp-fail');this.remove()}"><span class="sp-new" data-added="2026-09-29">NEW</span></a>
+    <a class="sp is-new" style="--c:hsl(272,37%,46%);--w:42px;--fs:8px" href="https://www.yes24.com/product/goods/56789708" rel="nofollow noopener noreferrer" target="_blank" title="Tsutaya, a Place Where Tastes Are Designed"><span class="sp-t"><i>Tsutaya, a Place Where Tastes Are Designed</i></span><img class="sp-i" src="https://image.yes24.com/goods/56789708/side" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.parentNode.classList.add('sp-fail');this.remove()" onload="if(this.naturalWidth/this.naturalHeight>0.4){this.parentNode.classList.add('sp-fail');this.remove()}"><span class="sp-new" data-added="2026-09-29">NEW</span></a>
+    <a class="sp is-new" style="--c:hsl(117,41%,36%);--w:43px;--fs:15px" href="https://www.yes24.com/product/goods/116922356" rel="nofollow noopener noreferrer" target="_blank" title="Twelve Footsteps"><span class="sp-t"><i>Twelve Footsteps</i></span><img class="sp-i" src="https://image.yes24.com/goods/116922356/side" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.parentNode.classList.add('sp-fail');this.remove()" onload="if(this.naturalWidth/this.naturalHeight>0.4){this.parentNode.classList.add('sp-fail');this.remove()}"><span class="sp-new" data-added="2026-09-29">NEW</span></a>
+    <a class="sp is-new" style="--c:hsl(207,37%,41%);--w:44px;--fs:15px" href="https://www.yes24.com/product/goods/182624787" rel="nofollow noopener noreferrer" target="_blank" title="What Makes a City Live"><span class="sp-t"><i>What Makes a City Live</i></span><img class="sp-i" src="https://image.yes24.com/goods/182624787/side" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.parentNode.classList.add('sp-fail');this.remove()" onload="if(this.naturalWidth/this.naturalHeight>0.4){this.parentNode.classList.add('sp-fail');this.remove()}"><span class="sp-new" data-added="2026-09-29">NEW</span></a>
     </div>
     <div class="covers" id="covers">
-    <div class="cv-page on">
-    <div class="cv-row">
     <a class="cv" href="https://www.yes24.com/product/goods/18360997" rel="nofollow noopener noreferrer" target="_blank" title="Brave New World"><img src="https://image.yes24.com/goods/18360997/L" alt="Brave New World by Aldous Huxley — book cover" loading="lazy"></a>
     <a class="cv" href="https://www.yes24.com/product/goods/39441749" rel="nofollow noopener noreferrer" target="_blank" title="Dignity of Words"><img src="https://image.yes24.com/goods/39441749/L" alt="Dignity of Words by Lee Ki-ju — book cover" loading="lazy"></a>
     <a class="cv" href="https://www.yes24.com/product/goods/132226737" rel="nofollow noopener noreferrer" target="_blank" title="Factfulness"><img src="https://image.yes24.com/goods/132226737/L" alt="Factfulness by Hans Rosling — book cover" loading="lazy"></a>
     <a class="cv" href="https://www.yes24.com/product/goods/22712338" rel="nofollow noopener noreferrer" target="_blank" title="Food Is Common Sense"><img src="https://image.yes24.com/goods/22712338/L" alt="Food Is Common Sense by Yoon Deok-no — book cover" loading="lazy"></a>
-    </div>
-    <div class="cv-row">
     <a class="cv" href="https://www.yes24.com/product/goods/79297023" rel="nofollow noopener noreferrer" target="_blank" title="How to Win Friends &amp; Influence People"><img src="https://image.yes24.com/goods/79297023/L" alt="How to Win Friends &amp; Influence People by Dale Carnegie — book cover" loading="lazy"></a>
     <a class="cv" href="https://www.yes24.com/product/goods/73162329" rel="nofollow noopener noreferrer" target="_blank" title="If Reborn, Would You Live in Korea?"><img src="https://image.yes24.com/goods/73162329/L" alt="If Reborn, Would You Live in Korea? by Lee Jae-yeol — book cover" loading="lazy"></a>
     <a class="cv" href="https://www.yes24.com/product/goods/22862876" rel="nofollow noopener noreferrer" target="_blank" title="Intellectual Capital Theory"><img src="https://image.yes24.com/goods/22862876/L" alt="Intellectual Capital Theory by Muneaki Masuda — book cover" loading="lazy"></a>
     <a class="cv" href="https://www.yes24.com/product/goods/79296230" rel="nofollow noopener noreferrer" target="_blank" title="Liberal Arts on the Way Home from Work"><img src="https://image.yes24.com/goods/79296230/L" alt="Liberal Arts on the Way Home from Work by Baeksang Economic Research Institute — book cover" loading="lazy"></a>
-    </div>
-    <div class="cv-row">
     <a class="cv" href="https://www.yes24.com/product/goods/118805757" rel="nofollow noopener noreferrer" target="_blank" title="Living, Loving, Learning"><img src="https://image.yes24.com/goods/118805757/L" alt="Living, Loving, Learning by Leo Buscaglia — book cover" loading="lazy"></a>
     <a class="cv" href="https://www.yes24.com/product/goods/110157236" rel="nofollow noopener noreferrer" target="_blank" title="Nudge"><img src="https://image.yes24.com/goods/110157236/L" alt="Nudge by Richard Thaler — book cover" loading="lazy"></a>
     <a class="cv" href="https://www.yes24.com/product/goods/125905365" rel="nofollow noopener noreferrer" target="_blank" title="Reason for Travel"><img src="https://image.yes24.com/goods/125905365/L" alt="Reason for Travel by Kim Young-ha — book cover" loading="lazy"></a>
     <a class="cv" href="https://www.yes24.com/product/goods/125753838" rel="nofollow noopener noreferrer" target="_blank" title="The 90s Generation Is Coming"><img src="https://image.yes24.com/goods/125753838/L" alt="The 90s Generation Is Coming by Lim Hong-taek — book cover" loading="lazy"></a>
-    </div>
-    </div>
-    <div class="cv-page">
-    <div class="cv-row">
     <a class="cv" href="https://www.yes24.com/product/goods/38296798" rel="nofollow noopener noreferrer" target="_blank" title="The Harm in Hate Speech"><img src="https://image.yes24.com/goods/38296798/L" alt="The Harm in Hate Speech by Jeremy Waldron — book cover" loading="lazy"></a>
     <a class="cv" href="https://www.yes24.com/product/goods/4614945" rel="nofollow noopener noreferrer" target="_blank" title="Time When Philosophy Is Needed"><img src="https://image.yes24.com/goods/4614945/L" alt="Time When Philosophy Is Needed by Kang Shin-ju — book cover" loading="lazy"></a>
     <a class="cv" href="https://www.yes24.com/product/goods/56789708" rel="nofollow noopener noreferrer" target="_blank" title="Tsutaya, a Place Where Tastes Are Designed"><img src="https://image.yes24.com/goods/56789708/L" alt="Tsutaya, a Place Where Tastes Are Designed by Muneaki Masuda — book cover" loading="lazy"></a>
     <a class="cv" href="https://www.yes24.com/product/goods/116922356" rel="nofollow noopener noreferrer" target="_blank" title="Twelve Footsteps"><img src="https://image.yes24.com/goods/116922356/L" alt="Twelve Footsteps by Jeong Jae-seung — book cover" loading="lazy"></a>
-    </div>
-    <div class="cv-row">
     <a class="cv" href="https://www.yes24.com/product/goods/182624787" rel="nofollow noopener noreferrer" target="_blank" title="What Makes a City Live"><img src="https://image.yes24.com/goods/182624787/L" alt="What Makes a City Live by Yoo Hyun-joon — book cover" loading="lazy"></a>
-    </div>
-    </div>
-    <div class="cv-pager" data-total="17" data-per="12"><button type="button" class="pg" data-go="prev" aria-label="prev">◀</button><button type="button" class="pg" data-go="0">1</button><button type="button" class="pg" data-go="1">2</button><button type="button" class="pg" data-go="next" aria-label="next">▶</button><span class="pg-count"></span></div>
     </div>
     <ol class="reading-list" id="rlist">
     <li class="rl-item" id="b1">
       <span class="rl-num">1</span>
-      <a class="rl-cover" href="https://www.yes24.com/product/goods/18360997" rel="nofollow noopener noreferrer" target="_blank" aria-label="Brave New World — buy or read more"><span class="rl-new" data-added="2026-09-22">NEW</span><img src="https://image.yes24.com/goods/18360997/L" alt="Brave New World by Aldous Huxley — book cover" loading="lazy"></a>
+      <a class="rl-cover" href="https://www.yes24.com/product/goods/18360997" rel="nofollow noopener noreferrer" target="_blank" aria-label="Brave New World — buy or read more"><span class="rl-new" data-added="2026-09-29">NEW</span><img src="https://image.yes24.com/goods/18360997/L" alt="Brave New World by Aldous Huxley — book cover" loading="lazy"></a>
       <div class="rl-meta">
         <div class="rl-title"><a href="https://www.yes24.com/product/goods/18360997" rel="nofollow noopener noreferrer" target="_blank">Brave New World</a> <span style="color:#888;font-size:12px;font-weight:400">(멋진 신세계)</span></div>
         <div class="rl-byline">Aldous Huxley</div>
@@ -704,7 +679,7 @@
     </li>
     <li class="rl-item" id="b2">
       <span class="rl-num">2</span>
-      <a class="rl-cover" href="https://www.yes24.com/product/goods/39441749" rel="nofollow noopener noreferrer" target="_blank" aria-label="Dignity of Words — buy or read more"><span class="rl-new" data-added="2026-09-22">NEW</span><img src="https://image.yes24.com/goods/39441749/L" alt="Dignity of Words by Lee Ki-ju — book cover" loading="lazy"></a>
+      <a class="rl-cover" href="https://www.yes24.com/product/goods/39441749" rel="nofollow noopener noreferrer" target="_blank" aria-label="Dignity of Words — buy or read more"><span class="rl-new" data-added="2026-09-29">NEW</span><img src="https://image.yes24.com/goods/39441749/L" alt="Dignity of Words by Lee Ki-ju — book cover" loading="lazy"></a>
       <div class="rl-meta">
         <div class="rl-title"><a href="https://www.yes24.com/product/goods/39441749" rel="nofollow noopener noreferrer" target="_blank">Dignity of Words</a> <span style="color:#888;font-size:12px;font-weight:400">(말의 품격)</span></div>
         <div class="rl-byline">Lee Ki-ju</div>
@@ -714,7 +689,7 @@
     </li>
     <li class="rl-item" id="b3">
       <span class="rl-num">3</span>
-      <a class="rl-cover" href="https://www.yes24.com/product/goods/132226737" rel="nofollow noopener noreferrer" target="_blank" aria-label="Factfulness — buy or read more"><span class="rl-new" data-added="2026-09-22">NEW</span><img src="https://image.yes24.com/goods/132226737/L" alt="Factfulness by Hans Rosling — book cover" loading="lazy"></a>
+      <a class="rl-cover" href="https://www.yes24.com/product/goods/132226737" rel="nofollow noopener noreferrer" target="_blank" aria-label="Factfulness — buy or read more"><span class="rl-new" data-added="2026-09-29">NEW</span><img src="https://image.yes24.com/goods/132226737/L" alt="Factfulness by Hans Rosling — book cover" loading="lazy"></a>
       <div class="rl-meta">
         <div class="rl-title"><a href="https://www.yes24.com/product/goods/132226737" rel="nofollow noopener noreferrer" target="_blank">Factfulness</a> <span style="color:#888;font-size:12px;font-weight:400">(팩트풀니스)</span></div>
         <div class="rl-byline">Hans Rosling</div>
@@ -725,7 +700,7 @@
     </li>
     <li class="rl-item" id="b4">
       <span class="rl-num">4</span>
-      <a class="rl-cover" href="https://www.yes24.com/product/goods/22712338" rel="nofollow noopener noreferrer" target="_blank" aria-label="Food Is Common Sense — buy or read more"><span class="rl-new" data-added="2026-09-22">NEW</span><img src="https://image.yes24.com/goods/22712338/L" alt="Food Is Common Sense by Yoon Deok-no — book cover" loading="lazy"></a>
+      <a class="rl-cover" href="https://www.yes24.com/product/goods/22712338" rel="nofollow noopener noreferrer" target="_blank" aria-label="Food Is Common Sense — buy or read more"><span class="rl-new" data-added="2026-09-29">NEW</span><img src="https://image.yes24.com/goods/22712338/L" alt="Food Is Common Sense by Yoon Deok-no — book cover" loading="lazy"></a>
       <div class="rl-meta">
         <div class="rl-title"><a href="https://www.yes24.com/product/goods/22712338" rel="nofollow noopener noreferrer" target="_blank">Food Is Common Sense</a> <span style="color:#888;font-size:12px;font-weight:400">(음식이 상식이다)</span></div>
         <div class="rl-byline">Yoon Deok-no</div>
@@ -736,7 +711,7 @@
     </li>
     <li class="rl-item" id="b5">
       <span class="rl-num">5</span>
-      <a class="rl-cover" href="https://www.yes24.com/product/goods/79297023" rel="nofollow noopener noreferrer" target="_blank" aria-label="How to Win Friends &amp; Influence People — buy or read more"><span class="rl-new" data-added="2026-09-22">NEW</span><img src="https://image.yes24.com/goods/79297023/L" alt="How to Win Friends &amp; Influence People by Dale Carnegie — book cover" loading="lazy"></a>
+      <a class="rl-cover" href="https://www.yes24.com/product/goods/79297023" rel="nofollow noopener noreferrer" target="_blank" aria-label="How to Win Friends &amp; Influence People — buy or read more"><span class="rl-new" data-added="2026-09-29">NEW</span><img src="https://image.yes24.com/goods/79297023/L" alt="How to Win Friends &amp; Influence People by Dale Carnegie — book cover" loading="lazy"></a>
       <div class="rl-meta">
         <div class="rl-title"><a href="https://www.yes24.com/product/goods/79297023" rel="nofollow noopener noreferrer" target="_blank">How to Win Friends &amp; Influence People</a> <span style="color:#888;font-size:12px;font-weight:400">(데일 카네기 인간 관계론)</span></div>
         <div class="rl-byline">Dale Carnegie</div>
@@ -748,7 +723,7 @@
     </li>
     <li class="rl-item" id="b6">
       <span class="rl-num">6</span>
-      <a class="rl-cover" href="https://www.yes24.com/product/goods/73162329" rel="nofollow noopener noreferrer" target="_blank" aria-label="If Reborn, Would You Live in Korea? — buy or read more"><span class="rl-new" data-added="2026-09-22">NEW</span><img src="https://image.yes24.com/goods/73162329/L" alt="If Reborn, Would You Live in Korea? by Lee Jae-yeol — book cover" loading="lazy"></a>
+      <a class="rl-cover" href="https://www.yes24.com/product/goods/73162329" rel="nofollow noopener noreferrer" target="_blank" aria-label="If Reborn, Would You Live in Korea? — buy or read more"><span class="rl-new" data-added="2026-09-29">NEW</span><img src="https://image.yes24.com/goods/73162329/L" alt="If Reborn, Would You Live in Korea? by Lee Jae-yeol — book cover" loading="lazy"></a>
       <div class="rl-meta">
         <div class="rl-title"><a href="https://www.yes24.com/product/goods/73162329" rel="nofollow noopener noreferrer" target="_blank">If Reborn, Would You Live in Korea?</a> <span style="color:#888;font-size:12px;font-weight:400">(다시 태어난다면, 한국에서 살겠습니까)</span></div>
         <div class="rl-byline">Lee Jae-yeol</div>
@@ -758,7 +733,7 @@
     </li>
     <li class="rl-item" id="b7">
       <span class="rl-num">7</span>
-      <a class="rl-cover" href="https://www.yes24.com/product/goods/22862876" rel="nofollow noopener noreferrer" target="_blank" aria-label="Intellectual Capital Theory — buy or read more"><span class="rl-new" data-added="2026-09-22">NEW</span><img src="https://image.yes24.com/goods/22862876/L" alt="Intellectual Capital Theory by Muneaki Masuda — book cover" loading="lazy"></a>
+      <a class="rl-cover" href="https://www.yes24.com/product/goods/22862876" rel="nofollow noopener noreferrer" target="_blank" aria-label="Intellectual Capital Theory — buy or read more"><span class="rl-new" data-added="2026-09-29">NEW</span><img src="https://image.yes24.com/goods/22862876/L" alt="Intellectual Capital Theory by Muneaki Masuda — book cover" loading="lazy"></a>
       <div class="rl-meta">
         <div class="rl-title"><a href="https://www.yes24.com/product/goods/22862876" rel="nofollow noopener noreferrer" target="_blank">Intellectual Capital Theory *</a> <span style="color:#888;font-size:12px;font-weight:400">(지적자본론)</span></div>
         <div class="rl-byline">Muneaki Masuda *</div>
@@ -768,7 +743,7 @@
     </li>
     <li class="rl-item" id="b8">
       <span class="rl-num">8</span>
-      <a class="rl-cover" href="https://www.yes24.com/product/goods/79296230" rel="nofollow noopener noreferrer" target="_blank" aria-label="Liberal Arts on the Way Home from Work — buy or read more"><span class="rl-new" data-added="2026-09-22">NEW</span><img src="https://image.yes24.com/goods/79296230/L" alt="Liberal Arts on the Way Home from Work by Baeksang Economic Research Institute — book cover" loading="lazy"></a>
+      <a class="rl-cover" href="https://www.yes24.com/product/goods/79296230" rel="nofollow noopener noreferrer" target="_blank" aria-label="Liberal Arts on the Way Home from Work — buy or read more"><span class="rl-new" data-added="2026-09-29">NEW</span><img src="https://image.yes24.com/goods/79296230/L" alt="Liberal Arts on the Way Home from Work by Baeksang Economic Research Institute — book cover" loading="lazy"></a>
       <div class="rl-meta">
         <div class="rl-title"><a href="https://www.yes24.com/product/goods/79296230" rel="nofollow noopener noreferrer" target="_blank">Liberal Arts on the Way Home from Work</a> <span style="color:#888;font-size:12px;font-weight:400">(퇴근길 인문학수업)</span></div>
         <div class="rl-byline">Baeksang Economic Research Institute</div>
@@ -778,7 +753,7 @@
     </li>
     <li class="rl-item" id="b9">
       <span class="rl-num">9</span>
-      <a class="rl-cover" href="https://www.yes24.com/product/goods/118805757" rel="nofollow noopener noreferrer" target="_blank" aria-label="Living, Loving, Learning — buy or read more"><span class="rl-new" data-added="2026-09-22">NEW</span><img src="https://image.yes24.com/goods/118805757/L" alt="Living, Loving, Learning by Leo Buscaglia — book cover" loading="lazy"></a>
+      <a class="rl-cover" href="https://www.yes24.com/product/goods/118805757" rel="nofollow noopener noreferrer" target="_blank" aria-label="Living, Loving, Learning — buy or read more"><span class="rl-new" data-added="2026-09-29">NEW</span><img src="https://image.yes24.com/goods/118805757/L" alt="Living, Loving, Learning by Leo Buscaglia — book cover" loading="lazy"></a>
       <div class="rl-meta">
         <div class="rl-title"><a href="https://www.yes24.com/product/goods/118805757" rel="nofollow noopener noreferrer" target="_blank">Living, Loving, Learning</a> <span style="color:#888;font-size:12px;font-weight:400">(살며 사랑하며 배우며)</span></div>
         <div class="rl-byline">Leo Buscaglia</div>
@@ -788,7 +763,7 @@
     </li>
     <li class="rl-item" id="b10">
       <span class="rl-num">10</span>
-      <a class="rl-cover" href="https://www.yes24.com/product/goods/110157236" rel="nofollow noopener noreferrer" target="_blank" aria-label="Nudge — buy or read more"><span class="rl-new" data-added="2026-09-22">NEW</span><img src="https://image.yes24.com/goods/110157236/L" alt="Nudge by Richard Thaler — book cover" loading="lazy"></a>
+      <a class="rl-cover" href="https://www.yes24.com/product/goods/110157236" rel="nofollow noopener noreferrer" target="_blank" aria-label="Nudge — buy or read more"><span class="rl-new" data-added="2026-09-29">NEW</span><img src="https://image.yes24.com/goods/110157236/L" alt="Nudge by Richard Thaler — book cover" loading="lazy"></a>
       <div class="rl-meta">
         <div class="rl-title"><a href="https://www.yes24.com/product/goods/110157236" rel="nofollow noopener noreferrer" target="_blank">Nudge</a> <span style="color:#888;font-size:12px;font-weight:400">(넛지)</span></div>
         <div class="rl-byline">Richard Thaler</div>
@@ -798,7 +773,7 @@
     </li>
     <li class="rl-item" id="b11">
       <span class="rl-num">11</span>
-      <a class="rl-cover" href="https://www.yes24.com/product/goods/125905365" rel="nofollow noopener noreferrer" target="_blank" aria-label="Reason for Travel — buy or read more"><span class="rl-new" data-added="2026-09-22">NEW</span><img src="https://image.yes24.com/goods/125905365/L" alt="Reason for Travel by Kim Young-ha — book cover" loading="lazy"></a>
+      <a class="rl-cover" href="https://www.yes24.com/product/goods/125905365" rel="nofollow noopener noreferrer" target="_blank" aria-label="Reason for Travel — buy or read more"><span class="rl-new" data-added="2026-09-29">NEW</span><img src="https://image.yes24.com/goods/125905365/L" alt="Reason for Travel by Kim Young-ha — book cover" loading="lazy"></a>
       <div class="rl-meta">
         <div class="rl-title"><a href="https://www.yes24.com/product/goods/125905365" rel="nofollow noopener noreferrer" target="_blank">Reason for Travel *</a> <span style="color:#888;font-size:12px;font-weight:400">(여행의 이유)</span></div>
         <div class="rl-byline">Kim Young-ha</div>
@@ -810,7 +785,7 @@
     </li>
     <li class="rl-item" id="b12">
       <span class="rl-num">12</span>
-      <a class="rl-cover" href="https://www.yes24.com/product/goods/125753838" rel="nofollow noopener noreferrer" target="_blank" aria-label="The 90s Generation Is Coming — buy or read more"><span class="rl-new" data-added="2026-09-22">NEW</span><img src="https://image.yes24.com/goods/125753838/L" alt="The 90s Generation Is Coming by Lim Hong-taek — book cover" loading="lazy"></a>
+      <a class="rl-cover" href="https://www.yes24.com/product/goods/125753838" rel="nofollow noopener noreferrer" target="_blank" aria-label="The 90s Generation Is Coming — buy or read more"><span class="rl-new" data-added="2026-09-29">NEW</span><img src="https://image.yes24.com/goods/125753838/L" alt="The 90s Generation Is Coming by Lim Hong-taek — book cover" loading="lazy"></a>
       <div class="rl-meta">
         <div class="rl-title"><a href="https://www.yes24.com/product/goods/125753838" rel="nofollow noopener noreferrer" target="_blank">The 90s Generation Is Coming</a> <span style="color:#888;font-size:12px;font-weight:400">(90년생이 온다)</span></div>
         <div class="rl-byline">Lim Hong-taek</div>
@@ -821,7 +796,7 @@
     </li>
     <li class="rl-item" id="b13">
       <span class="rl-num">13</span>
-      <a class="rl-cover" href="https://www.yes24.com/product/goods/38296798" rel="nofollow noopener noreferrer" target="_blank" aria-label="The Harm in Hate Speech — buy or read more"><span class="rl-new" data-added="2026-09-22">NEW</span><img src="https://image.yes24.com/goods/38296798/L" alt="The Harm in Hate Speech by Jeremy Waldron — book cover" loading="lazy"></a>
+      <a class="rl-cover" href="https://www.yes24.com/product/goods/38296798" rel="nofollow noopener noreferrer" target="_blank" aria-label="The Harm in Hate Speech — buy or read more"><span class="rl-new" data-added="2026-09-29">NEW</span><img src="https://image.yes24.com/goods/38296798/L" alt="The Harm in Hate Speech by Jeremy Waldron — book cover" loading="lazy"></a>
       <div class="rl-meta">
         <div class="rl-title"><a href="https://www.yes24.com/product/goods/38296798" rel="nofollow noopener noreferrer" target="_blank">The Harm in Hate Speech</a> <span style="color:#888;font-size:12px;font-weight:400">(혐오표현 자유는 어떻게 해악이 되는가)</span></div>
         <div class="rl-byline">Jeremy Waldron</div>
@@ -831,7 +806,7 @@
     </li>
     <li class="rl-item" id="b14">
       <span class="rl-num">14</span>
-      <a class="rl-cover" href="https://www.yes24.com/product/goods/4614945" rel="nofollow noopener noreferrer" target="_blank" aria-label="Time When Philosophy Is Needed — buy or read more"><span class="rl-new" data-added="2026-09-22">NEW</span><img src="https://image.yes24.com/goods/4614945/L" alt="Time When Philosophy Is Needed by Kang Shin-ju — book cover" loading="lazy"></a>
+      <a class="rl-cover" href="https://www.yes24.com/product/goods/4614945" rel="nofollow noopener noreferrer" target="_blank" aria-label="Time When Philosophy Is Needed — buy or read more"><span class="rl-new" data-added="2026-09-29">NEW</span><img src="https://image.yes24.com/goods/4614945/L" alt="Time When Philosophy Is Needed by Kang Shin-ju — book cover" loading="lazy"></a>
       <div class="rl-meta">
         <div class="rl-title"><a href="https://www.yes24.com/product/goods/4614945" rel="nofollow noopener noreferrer" target="_blank">Time When Philosophy Is Needed</a> <span style="color:#888;font-size:12px;font-weight:400">(철학이 필요한 시간)</span></div>
         <div class="rl-byline">Kang Shin-ju</div>
@@ -841,7 +816,7 @@
     </li>
     <li class="rl-item" id="b15">
       <span class="rl-num">15</span>
-      <a class="rl-cover" href="https://www.yes24.com/product/goods/56789708" rel="nofollow noopener noreferrer" target="_blank" aria-label="Tsutaya, a Place Where Tastes Are Designed — buy or read more"><span class="rl-new" data-added="2026-09-22">NEW</span><img src="https://image.yes24.com/goods/56789708/L" alt="Tsutaya, a Place Where Tastes Are Designed by Muneaki Masuda — book cover" loading="lazy"></a>
+      <a class="rl-cover" href="https://www.yes24.com/product/goods/56789708" rel="nofollow noopener noreferrer" target="_blank" aria-label="Tsutaya, a Place Where Tastes Are Designed — buy or read more"><span class="rl-new" data-added="2026-09-29">NEW</span><img src="https://image.yes24.com/goods/56789708/L" alt="Tsutaya, a Place Where Tastes Are Designed by Muneaki Masuda — book cover" loading="lazy"></a>
       <div class="rl-meta">
         <div class="rl-title"><a href="https://www.yes24.com/product/goods/56789708" rel="nofollow noopener noreferrer" target="_blank">Tsutaya, a Place Where Tastes Are Designed *</a> <span style="color:#888;font-size:12px;font-weight:400">(취향을 설계하는 곳, 츠타야)</span></div>
         <div class="rl-byline">Muneaki Masuda *</div>
@@ -851,7 +826,7 @@
     </li>
     <li class="rl-item" id="b16">
       <span class="rl-num">16</span>
-      <a class="rl-cover" href="https://www.yes24.com/product/goods/116922356" rel="nofollow noopener noreferrer" target="_blank" aria-label="Twelve Footsteps — buy or read more"><span class="rl-new" data-added="2026-09-22">NEW</span><img src="https://image.yes24.com/goods/116922356/L" alt="Twelve Footsteps by Jeong Jae-seung — book cover" loading="lazy"></a>
+      <a class="rl-cover" href="https://www.yes24.com/product/goods/116922356" rel="nofollow noopener noreferrer" target="_blank" aria-label="Twelve Footsteps — buy or read more"><span class="rl-new" data-added="2026-09-29">NEW</span><img src="https://image.yes24.com/goods/116922356/L" alt="Twelve Footsteps by Jeong Jae-seung — book cover" loading="lazy"></a>
       <div class="rl-meta">
         <div class="rl-title"><a href="https://www.yes24.com/product/goods/116922356" rel="nofollow noopener noreferrer" target="_blank">Twelve Footsteps</a> <span style="color:#888;font-size:12px;font-weight:400">(열두 발자국)</span></div>
         <div class="rl-byline">Jeong Jae-seung</div>
@@ -862,7 +837,7 @@
     </li>
     <li class="rl-item" id="b17">
       <span class="rl-num">17</span>
-      <a class="rl-cover" href="https://www.yes24.com/product/goods/182624787" rel="nofollow noopener noreferrer" target="_blank" aria-label="What Makes a City Live — buy or read more"><span class="rl-new" data-added="2026-09-22">NEW</span><img src="https://image.yes24.com/goods/182624787/L" alt="What Makes a City Live by Yoo Hyun-joon — book cover" loading="lazy"></a>
+      <a class="rl-cover" href="https://www.yes24.com/product/goods/182624787" rel="nofollow noopener noreferrer" target="_blank" aria-label="What Makes a City Live — buy or read more"><span class="rl-new" data-added="2026-09-29">NEW</span><img src="https://image.yes24.com/goods/182624787/L" alt="What Makes a City Live by Yoo Hyun-joon — book cover" loading="lazy"></a>
       <div class="rl-meta">
         <div class="rl-title"><a href="https://www.yes24.com/product/goods/182624787" rel="nofollow noopener noreferrer" target="_blank">What Makes a City Live</a> <span style="color:#888;font-size:12px;font-weight:400">(도시는 무엇으로 사는가)</span></div>
         <div class="rl-byline">Yoo Hyun-joon</div>
@@ -888,34 +863,6 @@
     try { saved = localStorage.getItem("shelfView2"); } catch (e) {}
     if (saved === "spine") set("spine", false);
     tabs.forEach(function (t) { t.addEventListener("click", function () { set(t.dataset.view, true); }); });
-    // 표지 보기 쪽 넘김 (12권을 넘는 책장만)
-    var pager = document.querySelector(".cv-pager");
-    var pages = document.querySelectorAll(".cv-page");
-    if (pager && pages.length > 1) {
-      var cur = 0, ko = (document.documentElement.lang || "ko").indexOf("ko") === 0;
-      var total = +pager.dataset.total, per = +pager.dataset.per;
-      var nums = pager.querySelectorAll("[data-go]");
-      var show = function (n) {
-        cur = Math.max(0, Math.min(pages.length - 1, n));
-        pages.forEach(function (p, i) { p.classList.toggle("on", i === cur); });
-        nums.forEach(function (b) {
-          var g = b.dataset.go;
-          b.classList.toggle("on", g === String(cur));
-          b.disabled = (g === "prev" && cur === 0) || (g === "next" && cur === pages.length - 1);
-        });
-        var from = cur * per + 1, to = Math.min(total, (cur + 1) * per);
-        pager.querySelector(".pg-count").textContent = ko
-          ? from + "–" + to + "권 · 총 " + total + "권 · " + (cur + 1) + "/" + pages.length + "쪽"
-          : "Books " + from + "–" + to + " of " + total;
-      };
-      pager.addEventListener("click", function (e) {
-        var b = e.target.closest("[data-go]");
-        if (!b || b.disabled) return;
-        var g = b.dataset.go;
-        show(g === "prev" ? cur - 1 : g === "next" ? cur + 1 : +g);
-      });
-      show(0);
-    }
   })();
   </script>
   <script>
@@ -926,6 +873,29 @@
     var H2C = "https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js";
     var PROXY = "https://images.weserv.nl/?url=";
     var PAPER = "#fcfaf5";
+    var PER = 12;
+    // 표지 보기에서 책이 12권을 넘으면 어느 12권을 저장할지 고르는 칸을 붙인다
+    (function () {
+      var area = document.getElementById("shelf-area");
+      var n = area ? area.querySelectorAll(".cv").length : 0;
+      if (n <= PER) return;
+      var ko = (document.documentElement.lang || "ko").indexOf("ko") === 0;
+      var sel = document.createElement("select");
+      sel.id = "shelf-range"; sel.className = "sh-range";
+      sel.setAttribute("aria-label", ko ? "저장할 책 범위" : "Books to save");
+      for (var p = 0; p * PER < n; p++) {
+        var o = document.createElement("option");
+        o.value = p;
+        var a = p * PER + 1, b = Math.min(n, (p + 1) * PER);
+        o.textContent = ko ? a + "–" + b + "권 (표지 12권씩)" : "Books " + a + "–" + b;
+        sel.appendChild(o);
+      }
+      var first = btns[0];
+      first.parentNode.insertBefore(sel, first);
+      var sync = function () { sel.style.display = area.classList.contains("show-covers") ? "" : "none"; };
+      new MutationObserver(sync).observe(area, { attributes: true, attributeFilter: ["class"] });
+      sync();
+    })();
     var FONT = '-apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif';
     // 캔버스 한계. 넘기면 빈 그림이 나오거나 아예 실패한다. 사파리는 한 변보다
     // 넓이를 먼저 막는다(약 1677만 픽셀). 제목·여백을 얹을 몫을 빼고 잡는다.
@@ -1089,6 +1059,15 @@
       // 저장하는 그림에는 NEW 표시와 함께 추천한 셀럽 목록을 넣지 않는다.
       // html2canvas가 문서를 복사할 때 이 클래스도 따라가서 복사본에서만 빠진 채 그려진다.
       view.classList.add("is-capturing");
+      // 표지 보기에서 책이 12권을 넘으면 고른 12권만 4열 3줄로 담는다
+      var capTiles = [], capSel = document.getElementById("shelf-range");
+      if (capSel && capSel.value !== "" && view.classList.contains("show-covers")) {
+        var from = +capSel.value * PER;
+        [].forEach.call(view.querySelectorAll(".cv"), function (t, i) {
+          if (i < from || i >= from + PER) { t.classList.add("cap-off"); capTiles.push(t); }
+        });
+        view.classList.add("cap-12");
+      }
       guard(loadH2C(), 15000, "html2canvas").then(function () {
         swap = swapImages(view);
         return swap.ready;
@@ -1119,7 +1098,8 @@
       }).then(function () {
         if (swap) swap.undo.forEach(function (f) { f(); });
         if (muted) unmute(muted);
-        view.classList.remove("is-capturing");
+        view.classList.remove("is-capturing", "cap-12");
+        capTiles.forEach(function (t) { t.classList.remove("cap-off"); });
         btns.forEach(function (b) { b.disabled = false; });
         btn.textContent = was;
       });

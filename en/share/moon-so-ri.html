@@ -364,29 +364,19 @@
     .vt { font: inherit; font-size: 12px; font-weight: 700; padding: 5px 10px; background: #fff; color: #000; border: 0; cursor: pointer; }
     .vt + .vt { border-left: 2px solid #000; }
     .vt[aria-pressed="true"] { background: #000; color: #fff; }
-    .covers { display: none; margin: 14px 0 22px; border: 2px solid #000; background: #f7f2e4; }
-    .show-covers .covers { display: block; }
+    .covers { display: none; grid-template-columns: repeat(auto-fill, minmax(84px, 1fr)); gap: 14px 12px; margin: 14px 0 22px; }
+    .show-covers .covers { display: grid; }
     .show-covers .shelf { display: none; }
-    .cv-page { display: none; }
-    .cv-page.on { display: block; }
-    .cv-row { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 0 18px;
-              padding: 20px 18px 16px; border-bottom: 12px solid #d9a066; }
-    .cv-row + .cv-row { border-top: 2px solid #000; }
-    .cv { position: relative; display: block; aspect-ratio: 2/3; border: 2px solid #000; box-shadow: 4px 4px 0 0 #000;
-          background: #f4f4f0; overflow: hidden; color: #000; text-decoration: none; transition: transform .12s, box-shadow .12s; }
-    .cv:hover { transform: translate(-2px, -4px); box-shadow: 6px 8px 0 0 #000; text-decoration: none; }
+    .cv { position: relative; display: block; aspect-ratio: 2/3; border: 1.5px solid #000; box-shadow: 2px 2px 0 0 #000;
+          background: #f4f4f0; overflow: hidden; color: #000; text-decoration: none; transition: transform .12s; }
+    .cv:hover { transform: translateY(-3px); text-decoration: none; }
     .cv img { width: 100%; height: 100%; object-fit: cover; display: block; }
     .cv-no { display: flex; height: 100%; align-items: center; justify-content: center; padding: 6px;
              font-size: 11px; font-weight: 700; line-height: 1.3; text-align: center; word-break: keep-all; }
-    .cv-pager { display: flex; align-items: center; justify-content: center; gap: 6px; flex-wrap: wrap;
-                padding: 12px 8px; border-top: 2px solid #000; background: #fff; }
-    .cv-pager .pg { font: inherit; font-size: 13px; font-weight: 800; min-width: 34px; height: 34px; cursor: pointer;
-                    background: #fff; color: #000; border: 2px solid #000; box-shadow: 2px 2px 0 0 #000; }
-    .cv-pager .pg:hover { background: #fde047; }
-    .cv-pager .pg.on { background: #fde047; }
-    .cv-pager .pg[disabled] { opacity: .35; cursor: default; background: #fff; }
-    .cv-pager .pg-count { flex-basis: 100%; text-align: center; font-size: 12px; font-weight: 700; color: #555; margin-top: 4px; }
-    @media (max-width: 480px) { .cv-row { gap: 0 10px; padding: 16px 10px 12px; } }
+    .sh-range { font: inherit; font-size: 12px; font-weight: 700; padding: 5px 6px; background: #fff; color: #000;
+                border: 2px solid #000; box-shadow: 2px 2px 0 0 #000; }
+    .is-capturing.cap-12 .covers { grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 16px 14px; }
+    .is-capturing .cv.cap-off { display: none; }
     .shelf { --sh-h: 270px; --plank: 7px; --row: calc(var(--sh-h) + 18px);
              display: flex; flex-wrap: wrap; align-items: flex-end; gap: 11px 2px;
              margin: 14px 0 22px; padding: 0 8px 7px;
@@ -509,56 +499,52 @@
       </div>
     </div>
     <details class="new-sec">
-      <summary class="new-sec-h"><span class="rl-new-tag">NEW</span> New in the last 10 days (7 books) <span class="new-sec-more" data-show="Show" data-hide="Hide"></span></summary>
+      <summary class="new-sec-h"><span class="rl-new-tag">NEW</span> New in the last 10 days (11 books) <span class="new-sec-more" data-show="Show" data-hide="Hide"></span></summary>
       <div class="new-tiles">
-        <a class="new-tile" href="#b3"><span class="nt-cover"><img src="https://image.yes24.com/goods/117012879/L" alt="Even If It Takes a Little Time by Lee Yunyeop — book cover" loading="lazy"></span><span class="nt-title">Even If It Takes a Little Time</span></a>
-        <a class="new-tile" href="#b6"><span class="nt-cover"><img src="https://image.yes24.com/goods/80386690/L" alt="Nothing Other than Love and Freedom by Kim Hana, Lee Seul-Ah, Kim Geum-Hee, Choi Eun-Young, Baek Su-Rin, Baek Se-Hee, Lee Seok-Won, Lim Jin-Ah, Kim Dong-Young — book cover" loading="lazy"></span><span class="nt-title">Nothing Other than Love and Freedom</span></a>
+        <a class="new-tile" href="#b1"><span class="nt-cover"><img src="https://image.yes24.com/goods/175476999/L" alt="Alle Toten Fliegen Hoch by Joachim Mayerhof — book cover" loading="lazy"></span><span class="nt-title">Alle Toten Fliegen Hoch</span></a>
         <a class="new-tile" href="#b2"><span class="nt-cover"><img src="https://image.yes24.com/goods/115050039/L" alt="Convalescence by Heo Eun-Sil — book cover" loading="lazy"></span><span class="nt-title">Convalescence</span></a>
+        <a class="new-tile" href="#b3"><span class="nt-cover"><img src="https://image.yes24.com/goods/117012879/L" alt="Even If It Takes a Little Time by Lee Yunyeop — book cover" loading="lazy"></span><span class="nt-title">Even If It Takes a Little Time</span></a>
         <a class="new-tile" href="#b4"><span class="nt-cover"><img src="https://image.yes24.com/goods/1433435/L" alt="Lectures by Sin Yŏng-bok — book cover" loading="lazy"></span><span class="nt-title">Lectures</span></a>
+        <a class="new-tile" href="#b5"><span class="nt-cover"><img src="https://image.yes24.com/goods/9000389/L" alt="Light Years by James Salter — book cover" loading="lazy"></span><span class="nt-title">Light Years</span></a>
+        <a class="new-tile" href="#b6"><span class="nt-cover"><img src="https://image.yes24.com/goods/80386690/L" alt="Nothing Other than Love and Freedom by Kim Hana, Lee Seul-Ah, Kim Geum-Hee, Choi Eun-Young, Baek Su-Rin, Baek Se-Hee, Lee Seok-Won, Lim Jin-Ah, Kim Dong-Young — book cover" loading="lazy"></span><span class="nt-title">Nothing Other than Love and Freedom</span></a>
         <a class="new-tile" href="#b7"><span class="nt-cover"><img src="https://image.yes24.com/goods/112392703/L" alt="Philosophy of Buddhism by Lee Jinkyung — book cover" loading="lazy"></span><span class="nt-title">Philosophy of Buddhism</span></a>
         <a class="new-tile" href="#b8"><span class="nt-cover"><img src="https://image.yes24.com/goods/36917853/L" alt="Shake Off the Snow from Young Trees by Olav Hauge — book cover" loading="lazy"></span><span class="nt-title">Shake Off the Snow from Young Trees</span></a>
+        <a class="new-tile" href="#b9"><span class="nt-cover"><img src="https://image.aladin.co.kr/product/38192/93/cover500/k082034605_1.jpg" alt="The Necklace by Guy de Maupassant — book cover" loading="lazy"></span><span class="nt-title">The Necklace</span></a>
         <a class="new-tile" href="#b10"><span class="nt-cover"><img src="https://image.yes24.com/goods/29334433/L" alt="Wild Play by Lee Sangwoo — book cover" loading="lazy"></span><span class="nt-title">Wild Play</span></a>
+        <a class="new-tile" href="#b11"><span class="nt-cover"><img src="https://image.yes24.com/goods/64694842/L" alt="You Are Right by Jeong Hye-shin — book cover" loading="lazy"></span><span class="nt-title">You Are Right</span></a>
       </div>
     </details>
     <div id="shelf-area" class="show-covers">
     <div class="shelf" id="shelf">
-    <a class="sp" style="--c:hsl(79,51%,35%);--w:39px;--fs:15px" href="https://www.yes24.com/product/goods/175476999" rel="nofollow noopener noreferrer" target="_blank" title="Alle Toten Fliegen Hoch"><span class="sp-t"><i>Alle Toten Fliegen Hoch</i></span><img class="sp-i" src="https://image.yes24.com/goods/175476999/side" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.parentNode.classList.add('sp-fail');this.remove()" onload="if(this.naturalWidth/this.naturalHeight>0.4){this.parentNode.classList.add('sp-fail');this.remove()}"></a>
-    <a class="sp is-new" style="--c:hsl(319,57%,44%);--w:37px;--fs:15px" href="https://www.yes24.com/product/goods/115050039" rel="nofollow noopener noreferrer" target="_blank" title="Convalescence"><span class="sp-t"><i>Convalescence</i></span><img class="sp-i" src="https://image.yes24.com/goods/115050039/side" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.parentNode.classList.add('sp-fail');this.remove()" onload="if(this.naturalWidth/this.naturalHeight>0.4){this.parentNode.classList.add('sp-fail');this.remove()}"><span class="sp-new" data-added="2026-09-23">NEW</span></a>
-    <a class="sp is-new" style="--c:hsl(76,54%,39%);--w:32px;--fs:12px" href="https://www.yes24.com/product/goods/117012879" rel="nofollow noopener noreferrer" target="_blank" title="Even If It Takes a Little Time"><span class="sp-t"><i>Even If It Takes a Little Time</i></span><img class="sp-i" src="https://image.yes24.com/goods/117012879/side" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.parentNode.classList.add('sp-fail');this.remove()" onload="if(this.naturalWidth/this.naturalHeight>0.4){this.parentNode.classList.add('sp-fail');this.remove()}"><span class="sp-new" data-added="2026-09-26">NEW</span></a>
-    <a class="sp is-new" style="--c:hsl(75,42%,36%);--w:36px;--fs:15px" href="https://www.yes24.com/product/goods/1433435" rel="nofollow noopener noreferrer" target="_blank" title="Lectures"><span class="sp-t"><i>Lectures</i></span><img class="sp-i" src="https://image.yes24.com/goods/1433435/side" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.parentNode.classList.add('sp-fail');this.remove()" onload="if(this.naturalWidth/this.naturalHeight>0.4){this.parentNode.classList.add('sp-fail');this.remove()}"><span class="sp-new" data-added="2026-09-23">NEW</span></a>
-    <a class="sp" style="--c:hsl(208,47%,44%);--w:37px;--fs:15px" href="https://www.yes24.com/product/goods/9000389" rel="nofollow noopener noreferrer" target="_blank" title="Light Years"><span class="sp-t"><i>Light Years</i></span><img class="sp-i" src="https://image.yes24.com/goods/9000389/side" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.parentNode.classList.add('sp-fail');this.remove()" onload="if(this.naturalWidth/this.naturalHeight>0.4){this.parentNode.classList.add('sp-fail');this.remove()}"></a>
-    <a class="sp is-new" style="--c:hsl(353,46%,47%);--w:42px;--fs:10px" href="https://www.yes24.com/product/goods/80386690" rel="nofollow noopener noreferrer" target="_blank" title="Nothing Other than Love and Freedom"><span class="sp-t"><i>Nothing Other than Love and Freedom</i></span><img class="sp-i" src="https://image.yes24.com/goods/80386690/side" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.parentNode.classList.add('sp-fail');this.remove()" onload="if(this.naturalWidth/this.naturalHeight>0.4){this.parentNode.classList.add('sp-fail');this.remove()}"><span class="sp-new" data-added="2026-09-26">NEW</span></a>
-    <a class="sp is-new" style="--c:hsl(329,54%,40%);--w:39px;--fs:15px" href="https://www.yes24.com/product/goods/112392703" rel="nofollow noopener noreferrer" target="_blank" title="Philosophy of Buddhism"><span class="sp-t"><i>Philosophy of Buddhism</i></span><img class="sp-i" src="https://image.yes24.com/goods/112392703/side" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.parentNode.classList.add('sp-fail');this.remove()" onload="if(this.naturalWidth/this.naturalHeight>0.4){this.parentNode.classList.add('sp-fail');this.remove()}"><span class="sp-new" data-added="2026-09-23">NEW</span></a>
-    <a class="sp is-new" style="--c:hsl(184,33%,44%);--w:41px;--fs:10px" href="https://www.yes24.com/product/goods/36917853" rel="nofollow noopener noreferrer" target="_blank" title="Shake Off the Snow from Young Trees"><span class="sp-t"><i>Shake Off the Snow from Young Trees</i></span><img class="sp-i" src="https://image.yes24.com/goods/36917853/side" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.parentNode.classList.add('sp-fail');this.remove()" onload="if(this.naturalWidth/this.naturalHeight>0.4){this.parentNode.classList.add('sp-fail');this.remove()}"><span class="sp-new" data-added="2026-09-23">NEW</span></a>
-    <a class="sp no-img has-cut" style="--c:hsl(77,39%,35%);--w:41px;--fs:15px" href="https://www.aladin.co.kr/shop/wproduct.aspx?ItemId=381929336&amp;partner=openAPI&amp;start=api" rel="nofollow noopener noreferrer" target="_blank" title="The Necklace"><img class="sp-c" src="https://image.aladin.co.kr/product/38192/93/cover500/k082034605_1.jpg" alt="" loading="lazy" referrerpolicy="no-referrer"><span class="sp-t"><i>The Necklace</i></span></a>
-    <a class="sp is-new" style="--c:hsl(18,36%,33%);--w:42px;--fs:15px" href="https://www.yes24.com/product/goods/29334433" rel="nofollow noopener noreferrer" target="_blank" title="Wild Play"><span class="sp-t"><i>Wild Play</i></span><img class="sp-i" src="https://image.yes24.com/goods/29334433/side" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.parentNode.classList.add('sp-fail');this.remove()" onload="if(this.naturalWidth/this.naturalHeight>0.4){this.parentNode.classList.add('sp-fail');this.remove()}"><span class="sp-new" data-added="2026-09-23">NEW</span></a>
-    <a class="sp" style="--c:hsl(196,41%,46%);--w:31px;--fs:15px" href="https://www.yes24.com/product/goods/64694842" rel="nofollow noopener noreferrer" target="_blank" title="You Are Right"><span class="sp-t"><i>You Are Right</i></span><img class="sp-i" src="https://image.yes24.com/goods/64694842/side" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.parentNode.classList.add('sp-fail');this.remove()" onload="if(this.naturalWidth/this.naturalHeight>0.4){this.parentNode.classList.add('sp-fail');this.remove()}"></a>
+    <a class="sp is-new" style="--c:hsl(79,51%,35%);--w:39px;--fs:15px" href="https://www.yes24.com/product/goods/175476999" rel="nofollow noopener noreferrer" target="_blank" title="Alle Toten Fliegen Hoch"><span class="sp-t"><i>Alle Toten Fliegen Hoch</i></span><img class="sp-i" src="https://image.yes24.com/goods/175476999/side" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.parentNode.classList.add('sp-fail');this.remove()" onload="if(this.naturalWidth/this.naturalHeight>0.4){this.parentNode.classList.add('sp-fail');this.remove()}"><span class="sp-new" data-added="2026-09-29">NEW</span></a>
+    <a class="sp is-new" style="--c:hsl(319,57%,44%);--w:37px;--fs:15px" href="https://www.yes24.com/product/goods/115050039" rel="nofollow noopener noreferrer" target="_blank" title="Convalescence"><span class="sp-t"><i>Convalescence</i></span><img class="sp-i" src="https://image.yes24.com/goods/115050039/side" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.parentNode.classList.add('sp-fail');this.remove()" onload="if(this.naturalWidth/this.naturalHeight>0.4){this.parentNode.classList.add('sp-fail');this.remove()}"><span class="sp-new" data-added="2026-09-29">NEW</span></a>
+    <a class="sp is-new" style="--c:hsl(76,54%,39%);--w:32px;--fs:12px" href="https://www.yes24.com/product/goods/117012879" rel="nofollow noopener noreferrer" target="_blank" title="Even If It Takes a Little Time"><span class="sp-t"><i>Even If It Takes a Little Time</i></span><img class="sp-i" src="https://image.yes24.com/goods/117012879/side" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.parentNode.classList.add('sp-fail');this.remove()" onload="if(this.naturalWidth/this.naturalHeight>0.4){this.parentNode.classList.add('sp-fail');this.remove()}"><span class="sp-new" data-added="2026-09-29">NEW</span></a>
+    <a class="sp is-new" style="--c:hsl(75,42%,36%);--w:36px;--fs:15px" href="https://www.yes24.com/product/goods/1433435" rel="nofollow noopener noreferrer" target="_blank" title="Lectures"><span class="sp-t"><i>Lectures</i></span><img class="sp-i" src="https://image.yes24.com/goods/1433435/side" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.parentNode.classList.add('sp-fail');this.remove()" onload="if(this.naturalWidth/this.naturalHeight>0.4){this.parentNode.classList.add('sp-fail');this.remove()}"><span class="sp-new" data-added="2026-09-29">NEW</span></a>
+    <a class="sp is-new" style="--c:hsl(208,47%,44%);--w:37px;--fs:15px" href="https://www.yes24.com/product/goods/9000389" rel="nofollow noopener noreferrer" target="_blank" title="Light Years"><span class="sp-t"><i>Light Years</i></span><img class="sp-i" src="https://image.yes24.com/goods/9000389/side" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.parentNode.classList.add('sp-fail');this.remove()" onload="if(this.naturalWidth/this.naturalHeight>0.4){this.parentNode.classList.add('sp-fail');this.remove()}"><span class="sp-new" data-added="2026-09-29">NEW</span></a>
+    <a class="sp is-new" style="--c:hsl(353,46%,47%);--w:42px;--fs:10px" href="https://www.yes24.com/product/goods/80386690" rel="nofollow noopener noreferrer" target="_blank" title="Nothing Other than Love and Freedom"><span class="sp-t"><i>Nothing Other than Love and Freedom</i></span><img class="sp-i" src="https://image.yes24.com/goods/80386690/side" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.parentNode.classList.add('sp-fail');this.remove()" onload="if(this.naturalWidth/this.naturalHeight>0.4){this.parentNode.classList.add('sp-fail');this.remove()}"><span class="sp-new" data-added="2026-09-29">NEW</span></a>
+    <a class="sp is-new" style="--c:hsl(329,54%,40%);--w:39px;--fs:15px" href="https://www.yes24.com/product/goods/112392703" rel="nofollow noopener noreferrer" target="_blank" title="Philosophy of Buddhism"><span class="sp-t"><i>Philosophy of Buddhism</i></span><img class="sp-i" src="https://image.yes24.com/goods/112392703/side" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.parentNode.classList.add('sp-fail');this.remove()" onload="if(this.naturalWidth/this.naturalHeight>0.4){this.parentNode.classList.add('sp-fail');this.remove()}"><span class="sp-new" data-added="2026-09-29">NEW</span></a>
+    <a class="sp is-new" style="--c:hsl(184,33%,44%);--w:41px;--fs:10px" href="https://www.yes24.com/product/goods/36917853" rel="nofollow noopener noreferrer" target="_blank" title="Shake Off the Snow from Young Trees"><span class="sp-t"><i>Shake Off the Snow from Young Trees</i></span><img class="sp-i" src="https://image.yes24.com/goods/36917853/side" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.parentNode.classList.add('sp-fail');this.remove()" onload="if(this.naturalWidth/this.naturalHeight>0.4){this.parentNode.classList.add('sp-fail');this.remove()}"><span class="sp-new" data-added="2026-09-29">NEW</span></a>
+    <a class="sp no-img has-cut is-new" style="--c:hsl(77,39%,35%);--w:41px;--fs:15px" href="https://www.aladin.co.kr/shop/wproduct.aspx?ItemId=381929336&amp;partner=openAPI&amp;start=api" rel="nofollow noopener noreferrer" target="_blank" title="The Necklace"><img class="sp-c" src="https://image.aladin.co.kr/product/38192/93/cover500/k082034605_1.jpg" alt="" loading="lazy" referrerpolicy="no-referrer"><span class="sp-t"><i>The Necklace</i></span><span class="sp-new" data-added="2026-09-29">NEW</span></a>
+    <a class="sp is-new" style="--c:hsl(18,36%,33%);--w:42px;--fs:15px" href="https://www.yes24.com/product/goods/29334433" rel="nofollow noopener noreferrer" target="_blank" title="Wild Play"><span class="sp-t"><i>Wild Play</i></span><img class="sp-i" src="https://image.yes24.com/goods/29334433/side" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.parentNode.classList.add('sp-fail');this.remove()" onload="if(this.naturalWidth/this.naturalHeight>0.4){this.parentNode.classList.add('sp-fail');this.remove()}"><span class="sp-new" data-added="2026-09-29">NEW</span></a>
+    <a class="sp is-new" style="--c:hsl(196,41%,46%);--w:31px;--fs:15px" href="https://www.yes24.com/product/goods/64694842" rel="nofollow noopener noreferrer" target="_blank" title="You Are Right"><span class="sp-t"><i>You Are Right</i></span><img class="sp-i" src="https://image.yes24.com/goods/64694842/side" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.parentNode.classList.add('sp-fail');this.remove()" onload="if(this.naturalWidth/this.naturalHeight>0.4){this.parentNode.classList.add('sp-fail');this.remove()}"><span class="sp-new" data-added="2026-09-29">NEW</span></a>
     </div>
     <div class="covers" id="covers">
-    <div class="cv-page on">
-    <div class="cv-row">
     <a class="cv" href="https://www.yes24.com/product/goods/175476999" rel="nofollow noopener noreferrer" target="_blank" title="Alle Toten Fliegen Hoch"><img src="https://image.yes24.com/goods/175476999/L" alt="Alle Toten Fliegen Hoch by Joachim Mayerhof — book cover" loading="lazy"></a>
     <a class="cv" href="https://www.yes24.com/product/goods/115050039" rel="nofollow noopener noreferrer" target="_blank" title="Convalescence"><img src="https://image.yes24.com/goods/115050039/L" alt="Convalescence by Heo Eun-Sil — book cover" loading="lazy"></a>
     <a class="cv" href="https://www.yes24.com/product/goods/117012879" rel="nofollow noopener noreferrer" target="_blank" title="Even If It Takes a Little Time"><img src="https://image.yes24.com/goods/117012879/L" alt="Even If It Takes a Little Time by Lee Yunyeop — book cover" loading="lazy"></a>
     <a class="cv" href="https://www.yes24.com/product/goods/1433435" rel="nofollow noopener noreferrer" target="_blank" title="Lectures"><img src="https://image.yes24.com/goods/1433435/L" alt="Lectures by Sin Yŏng-bok — book cover" loading="lazy"></a>
-    </div>
-    <div class="cv-row">
     <a class="cv" href="https://www.yes24.com/product/goods/9000389" rel="nofollow noopener noreferrer" target="_blank" title="Light Years"><img src="https://image.yes24.com/goods/9000389/L" alt="Light Years by James Salter — book cover" loading="lazy"></a>
     <a class="cv" href="https://www.yes24.com/product/goods/80386690" rel="nofollow noopener noreferrer" target="_blank" title="Nothing Other than Love and Freedom"><img src="https://image.yes24.com/goods/80386690/L" alt="Nothing Other than Love and Freedom by Kim Hana, Lee Seul-Ah, Kim Geum-Hee, Choi Eun-Young, Baek Su-Rin, Baek Se-Hee, Lee Seok-Won, Lim Jin-Ah, Kim Dong-Young — book cover" loading="lazy"></a>
     <a class="cv" href="https://www.yes24.com/product/goods/112392703" rel="nofollow noopener noreferrer" target="_blank" title="Philosophy of Buddhism"><img src="https://image.yes24.com/goods/112392703/L" alt="Philosophy of Buddhism by Lee Jinkyung — book cover" loading="lazy"></a>
     <a class="cv" href="https://www.yes24.com/product/goods/36917853" rel="nofollow noopener noreferrer" target="_blank" title="Shake Off the Snow from Young Trees"><img src="https://image.yes24.com/goods/36917853/L" alt="Shake Off the Snow from Young Trees by Olav Hauge — book cover" loading="lazy"></a>
-    </div>
-    <div class="cv-row">
     <a class="cv" href="https://www.aladin.co.kr/shop/wproduct.aspx?ItemId=381929336&amp;partner=openAPI&amp;start=api" rel="nofollow noopener noreferrer" target="_blank" title="The Necklace"><img src="https://image.aladin.co.kr/product/38192/93/cover500/k082034605_1.jpg" alt="The Necklace by Guy de Maupassant — book cover" loading="lazy"></a>
     <a class="cv" href="https://www.yes24.com/product/goods/29334433" rel="nofollow noopener noreferrer" target="_blank" title="Wild Play"><img src="https://image.yes24.com/goods/29334433/L" alt="Wild Play by Lee Sangwoo — book cover" loading="lazy"></a>
     <a class="cv" href="https://www.yes24.com/product/goods/64694842" rel="nofollow noopener noreferrer" target="_blank" title="You Are Right"><img src="https://image.yes24.com/goods/64694842/L" alt="You Are Right by Jeong Hye-shin — book cover" loading="lazy"></a>
     </div>
-    </div>
-    </div>
     <ol class="reading-list" id="rlist">
     <li class="rl-item" id="b1">
       <span class="rl-num">1</span>
-      <a class="rl-cover" href="https://www.yes24.com/product/goods/175476999" rel="nofollow noopener noreferrer" target="_blank" aria-label="Alle Toten Fliegen Hoch — buy or read more"><img src="https://image.yes24.com/goods/175476999/L" alt="Alle Toten Fliegen Hoch by Joachim Mayerhof — book cover" loading="lazy"></a>
+      <a class="rl-cover" href="https://www.yes24.com/product/goods/175476999" rel="nofollow noopener noreferrer" target="_blank" aria-label="Alle Toten Fliegen Hoch — buy or read more"><span class="rl-new" data-added="2026-09-29">NEW</span><img src="https://image.yes24.com/goods/175476999/L" alt="Alle Toten Fliegen Hoch by Joachim Mayerhof — book cover" loading="lazy"></a>
       <div class="rl-meta">
         <div class="rl-title"><a href="https://www.yes24.com/product/goods/175476999" rel="nofollow noopener noreferrer" target="_blank">Alle Toten Fliegen Hoch</a> <span style="color:#888;font-size:12px;font-weight:400">(죽은 이는 모두 날아오른다)</span></div>
         <div class="rl-byline">Joachim Mayerhof *</div>
@@ -568,7 +554,7 @@
     </li>
     <li class="rl-item" id="b2">
       <span class="rl-num">2</span>
-      <a class="rl-cover" href="https://www.yes24.com/product/goods/115050039" rel="nofollow noopener noreferrer" target="_blank" aria-label="Convalescence — buy or read more"><span class="rl-new" data-added="2026-09-23">NEW</span><img src="https://image.yes24.com/goods/115050039/L" alt="Convalescence by Heo Eun-Sil — book cover" loading="lazy"></a>
+      <a class="rl-cover" href="https://www.yes24.com/product/goods/115050039" rel="nofollow noopener noreferrer" target="_blank" aria-label="Convalescence — buy or read more"><span class="rl-new" data-added="2026-09-29">NEW</span><img src="https://image.yes24.com/goods/115050039/L" alt="Convalescence by Heo Eun-Sil — book cover" loading="lazy"></a>
       <div class="rl-meta">
         <div class="rl-title"><a href="https://www.yes24.com/product/goods/115050039" rel="nofollow noopener noreferrer" target="_blank">Convalescence *</a> <span style="color:#888;font-size:12px;font-weight:400">(회복기)</span></div>
         <div class="rl-byline">Heo Eun-Sil *</div>
@@ -578,7 +564,7 @@
     </li>
     <li class="rl-item" id="b3">
       <span class="rl-num">3</span>
-      <a class="rl-cover" href="https://www.yes24.com/product/goods/117012879" rel="nofollow noopener noreferrer" target="_blank" aria-label="Even If It Takes a Little Time — buy or read more"><span class="rl-new" data-added="2026-09-26">NEW</span><img src="https://image.yes24.com/goods/117012879/L" alt="Even If It Takes a Little Time by Lee Yunyeop — book cover" loading="lazy"></a>
+      <a class="rl-cover" href="https://www.yes24.com/product/goods/117012879" rel="nofollow noopener noreferrer" target="_blank" aria-label="Even If It Takes a Little Time — buy or read more"><span class="rl-new" data-added="2026-09-29">NEW</span><img src="https://image.yes24.com/goods/117012879/L" alt="Even If It Takes a Little Time by Lee Yunyeop — book cover" loading="lazy"></a>
       <div class="rl-meta">
         <div class="rl-title"><a href="https://www.yes24.com/product/goods/117012879" rel="nofollow noopener noreferrer" target="_blank">Even If It Takes a Little Time *</a> <span style="color:#888;font-size:12px;font-weight:400">(시간이 조금 걸리더라도)</span></div>
         <div class="rl-byline">Lee Yunyeop *</div>
@@ -589,7 +575,7 @@
     </li>
     <li class="rl-item" id="b4">
       <span class="rl-num">4</span>
-      <a class="rl-cover" href="https://www.yes24.com/product/goods/1433435" rel="nofollow noopener noreferrer" target="_blank" aria-label="Lectures — buy or read more"><span class="rl-new" data-added="2026-09-23">NEW</span><img src="https://image.yes24.com/goods/1433435/L" alt="Lectures by Sin Yŏng-bok — book cover" loading="lazy"></a>
+      <a class="rl-cover" href="https://www.yes24.com/product/goods/1433435" rel="nofollow noopener noreferrer" target="_blank" aria-label="Lectures — buy or read more"><span class="rl-new" data-added="2026-09-29">NEW</span><img src="https://image.yes24.com/goods/1433435/L" alt="Lectures by Sin Yŏng-bok — book cover" loading="lazy"></a>
       <div class="rl-meta">
         <div class="rl-title"><a href="https://www.yes24.com/product/goods/1433435" rel="nofollow noopener noreferrer" target="_blank">Lectures</a> <span style="color:#888;font-size:12px;font-weight:400">(강의)</span></div>
         <div class="rl-byline">Sin Yŏng-bok</div>
@@ -600,7 +586,7 @@
     </li>
     <li class="rl-item" id="b5">
       <span class="rl-num">5</span>
-      <a class="rl-cover" href="https://www.yes24.com/product/goods/9000389" rel="nofollow noopener noreferrer" target="_blank" aria-label="Light Years — buy or read more"><img src="https://image.yes24.com/goods/9000389/L" alt="Light Years by James Salter — book cover" loading="lazy"></a>
+      <a class="rl-cover" href="https://www.yes24.com/product/goods/9000389" rel="nofollow noopener noreferrer" target="_blank" aria-label="Light Years — buy or read more"><span class="rl-new" data-added="2026-09-29">NEW</span><img src="https://image.yes24.com/goods/9000389/L" alt="Light Years by James Salter — book cover" loading="lazy"></a>
       <div class="rl-meta">
         <div class="rl-title"><a href="https://www.yes24.com/product/goods/9000389" rel="nofollow noopener noreferrer" target="_blank">Light Years</a> <span style="color:#888;font-size:12px;font-weight:400">(가벼운 나날)</span></div>
         <div class="rl-byline">James Salter</div>
@@ -610,7 +596,7 @@
     </li>
     <li class="rl-item" id="b6">
       <span class="rl-num">6</span>
-      <a class="rl-cover" href="https://www.yes24.com/product/goods/80386690" rel="nofollow noopener noreferrer" target="_blank" aria-label="Nothing Other than Love and Freedom — buy or read more"><span class="rl-new" data-added="2026-09-26">NEW</span><img src="https://image.yes24.com/goods/80386690/L" alt="Nothing Other than Love and Freedom by Kim Hana, Lee Seul-Ah, Kim Geum-Hee, Choi Eun-Young, Baek Su-Rin, Baek Se-Hee, Lee Seok-Won, Lim Jin-Ah, Kim Dong-Young — book cover" loading="lazy"></a>
+      <a class="rl-cover" href="https://www.yes24.com/product/goods/80386690" rel="nofollow noopener noreferrer" target="_blank" aria-label="Nothing Other than Love and Freedom — buy or read more"><span class="rl-new" data-added="2026-09-29">NEW</span><img src="https://image.yes24.com/goods/80386690/L" alt="Nothing Other than Love and Freedom by Kim Hana, Lee Seul-Ah, Kim Geum-Hee, Choi Eun-Young, Baek Su-Rin, Baek Se-Hee, Lee Seok-Won, Lim Jin-Ah, Kim Dong-Young — book cover" loading="lazy"></a>
       <div class="rl-meta">
         <div class="rl-title"><a href="https://www.yes24.com/product/goods/80386690" rel="nofollow noopener noreferrer" target="_blank">Nothing Other than Love and Freedom *</a> <span style="color:#888;font-size:12px;font-weight:400">(다름 아닌 사랑과 자유)</span></div>
         <div class="rl-byline">Kim Hana, Lee Seul-Ah, Kim Geum-Hee, Choi Eun-Young, Baek Su-Rin, Baek Se-Hee, Lee Seok-Won, Lim Jin-Ah, Kim Dong-Young *</div>
@@ -621,7 +607,7 @@
     </li>
     <li class="rl-item" id="b7">
       <span class="rl-num">7</span>
-      <a class="rl-cover" href="https://www.yes24.com/product/goods/112392703" rel="nofollow noopener noreferrer" target="_blank" aria-label="Philosophy of Buddhism — buy or read more"><span class="rl-new" data-added="2026-09-23">NEW</span><img src="https://image.yes24.com/goods/112392703/L" alt="Philosophy of Buddhism by Lee Jinkyung — book cover" loading="lazy"></a>
+      <a class="rl-cover" href="https://www.yes24.com/product/goods/112392703" rel="nofollow noopener noreferrer" target="_blank" aria-label="Philosophy of Buddhism — buy or read more"><span class="rl-new" data-added="2026-09-29">NEW</span><img src="https://image.yes24.com/goods/112392703/L" alt="Philosophy of Buddhism by Lee Jinkyung — book cover" loading="lazy"></a>
       <div class="rl-meta">
         <div class="rl-title"><a href="https://www.yes24.com/product/goods/112392703" rel="nofollow noopener noreferrer" target="_blank">Philosophy of Buddhism *</a> <span style="color:#888;font-size:12px;font-weight:400">(불교를 철학하다)</span></div>
         <div class="rl-byline">Lee Jinkyung *</div>
@@ -631,7 +617,7 @@
     </li>
     <li class="rl-item" id="b8">
       <span class="rl-num">8</span>
-      <a class="rl-cover" href="https://www.yes24.com/product/goods/36917853" rel="nofollow noopener noreferrer" target="_blank" aria-label="Shake Off the Snow from Young Trees — buy or read more"><span class="rl-new" data-added="2026-09-23">NEW</span><img src="https://image.yes24.com/goods/36917853/L" alt="Shake Off the Snow from Young Trees by Olav Hauge — book cover" loading="lazy"></a>
+      <a class="rl-cover" href="https://www.yes24.com/product/goods/36917853" rel="nofollow noopener noreferrer" target="_blank" aria-label="Shake Off the Snow from Young Trees — buy or read more"><span class="rl-new" data-added="2026-09-29">NEW</span><img src="https://image.yes24.com/goods/36917853/L" alt="Shake Off the Snow from Young Trees by Olav Hauge — book cover" loading="lazy"></a>
       <div class="rl-meta">
         <div class="rl-title"><a href="https://www.yes24.com/product/goods/36917853" rel="nofollow noopener noreferrer" target="_blank">Shake Off the Snow from Young Trees *</a> <span style="color:#888;font-size:12px;font-weight:400">(어린 나무의 눈을 털어주다)</span></div>
         <div class="rl-byline">Olav Hauge *</div>
@@ -641,7 +627,7 @@
     </li>
     <li class="rl-item" id="b9">
       <span class="rl-num">9</span>
-      <a class="rl-cover" href="https://www.aladin.co.kr/shop/wproduct.aspx?ItemId=381929336&amp;partner=openAPI&amp;start=api" rel="nofollow noopener noreferrer" target="_blank" aria-label="The Necklace — buy or read more"><img src="https://image.aladin.co.kr/product/38192/93/cover500/k082034605_1.jpg" alt="The Necklace by Guy de Maupassant — book cover" loading="lazy"></a>
+      <a class="rl-cover" href="https://www.aladin.co.kr/shop/wproduct.aspx?ItemId=381929336&amp;partner=openAPI&amp;start=api" rel="nofollow noopener noreferrer" target="_blank" aria-label="The Necklace — buy or read more"><span class="rl-new" data-added="2026-09-29">NEW</span><img src="https://image.aladin.co.kr/product/38192/93/cover500/k082034605_1.jpg" alt="The Necklace by Guy de Maupassant — book cover" loading="lazy"></a>
       <div class="rl-meta">
         <div class="rl-title"><a href="https://www.aladin.co.kr/shop/wproduct.aspx?ItemId=381929336&amp;partner=openAPI&amp;start=api" rel="nofollow noopener noreferrer" target="_blank">The Necklace</a> <span style="color:#888;font-size:12px;font-weight:400">(목걸이)</span></div>
         <div class="rl-byline">Guy de Maupassant</div>
@@ -652,7 +638,7 @@
     </li>
     <li class="rl-item" id="b10">
       <span class="rl-num">10</span>
-      <a class="rl-cover" href="https://www.yes24.com/product/goods/29334433" rel="nofollow noopener noreferrer" target="_blank" aria-label="Wild Play — buy or read more"><span class="rl-new" data-added="2026-09-23">NEW</span><img src="https://image.yes24.com/goods/29334433/L" alt="Wild Play by Lee Sangwoo — book cover" loading="lazy"></a>
+      <a class="rl-cover" href="https://www.yes24.com/product/goods/29334433" rel="nofollow noopener noreferrer" target="_blank" aria-label="Wild Play — buy or read more"><span class="rl-new" data-added="2026-09-29">NEW</span><img src="https://image.yes24.com/goods/29334433/L" alt="Wild Play by Lee Sangwoo — book cover" loading="lazy"></a>
       <div class="rl-meta">
         <div class="rl-title"><a href="https://www.yes24.com/product/goods/29334433" rel="nofollow noopener noreferrer" target="_blank">Wild Play *</a> <span style="color:#888;font-size:12px;font-weight:400">(야생연극)</span></div>
         <div class="rl-byline">Lee Sangwoo *</div>
@@ -663,7 +649,7 @@
     </li>
     <li class="rl-item" id="b11">
       <span class="rl-num">11</span>
-      <a class="rl-cover" href="https://www.yes24.com/product/goods/64694842" rel="nofollow noopener noreferrer" target="_blank" aria-label="You Are Right — buy or read more"><img src="https://image.yes24.com/goods/64694842/L" alt="You Are Right by Jeong Hye-shin — book cover" loading="lazy"></a>
+      <a class="rl-cover" href="https://www.yes24.com/product/goods/64694842" rel="nofollow noopener noreferrer" target="_blank" aria-label="You Are Right — buy or read more"><span class="rl-new" data-added="2026-09-29">NEW</span><img src="https://image.yes24.com/goods/64694842/L" alt="You Are Right by Jeong Hye-shin — book cover" loading="lazy"></a>
       <div class="rl-meta">
         <div class="rl-title"><a href="https://www.yes24.com/product/goods/64694842" rel="nofollow noopener noreferrer" target="_blank">You Are Right</a> <span style="color:#888;font-size:12px;font-weight:400">(당신이 옳다)</span></div>
         <div class="rl-byline">Jeong Hye-shin</div>
@@ -690,34 +676,6 @@
     try { saved = localStorage.getItem("shelfView2"); } catch (e) {}
     if (saved === "spine") set("spine", false);
     tabs.forEach(function (t) { t.addEventListener("click", function () { set(t.dataset.view, true); }); });
-    // 표지 보기 쪽 넘김 (12권을 넘는 책장만)
-    var pager = document.querySelector(".cv-pager");
-    var pages = document.querySelectorAll(".cv-page");
-    if (pager && pages.length > 1) {
-      var cur = 0, ko = (document.documentElement.lang || "ko").indexOf("ko") === 0;
-      var total = +pager.dataset.total, per = +pager.dataset.per;
-      var nums = pager.querySelectorAll("[data-go]");
-      var show = function (n) {
-        cur = Math.max(0, Math.min(pages.length - 1, n));
-        pages.forEach(function (p, i) { p.classList.toggle("on", i === cur); });
-        nums.forEach(function (b) {
-          var g = b.dataset.go;
-          b.classList.toggle("on", g === String(cur));
-          b.disabled = (g === "prev" && cur === 0) || (g === "next" && cur === pages.length - 1);
-        });
-        var from = cur * per + 1, to = Math.min(total, (cur + 1) * per);
-        pager.querySelector(".pg-count").textContent = ko
-          ? from + "–" + to + "권 · 총 " + total + "권 · " + (cur + 1) + "/" + pages.length + "쪽"
-          : "Books " + from + "–" + to + " of " + total;
-      };
-      pager.addEventListener("click", function (e) {
-        var b = e.target.closest("[data-go]");
-        if (!b || b.disabled) return;
-        var g = b.dataset.go;
-        show(g === "prev" ? cur - 1 : g === "next" ? cur + 1 : +g);
-      });
-      show(0);
-    }
   })();
   </script>
   <script>
@@ -728,6 +686,29 @@
     var H2C = "https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js";
     var PROXY = "https://images.weserv.nl/?url=";
     var PAPER = "#fcfaf5";
+    var PER = 12;
+    // 표지 보기에서 책이 12권을 넘으면 어느 12권을 저장할지 고르는 칸을 붙인다
+    (function () {
+      var area = document.getElementById("shelf-area");
+      var n = area ? area.querySelectorAll(".cv").length : 0;
+      if (n <= PER) return;
+      var ko = (document.documentElement.lang || "ko").indexOf("ko") === 0;
+      var sel = document.createElement("select");
+      sel.id = "shelf-range"; sel.className = "sh-range";
+      sel.setAttribute("aria-label", ko ? "저장할 책 범위" : "Books to save");
+      for (var p = 0; p * PER < n; p++) {
+        var o = document.createElement("option");
+        o.value = p;
+        var a = p * PER + 1, b = Math.min(n, (p + 1) * PER);
+        o.textContent = ko ? a + "–" + b + "권 (표지 12권씩)" : "Books " + a + "–" + b;
+        sel.appendChild(o);
+      }
+      var first = btns[0];
+      first.parentNode.insertBefore(sel, first);
+      var sync = function () { sel.style.display = area.classList.contains("show-covers") ? "" : "none"; };
+      new MutationObserver(sync).observe(area, { attributes: true, attributeFilter: ["class"] });
+      sync();
+    })();
     var FONT = '-apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif';
     // 캔버스 한계. 넘기면 빈 그림이 나오거나 아예 실패한다. 사파리는 한 변보다
     // 넓이를 먼저 막는다(약 1677만 픽셀). 제목·여백을 얹을 몫을 빼고 잡는다.
@@ -891,6 +872,15 @@
       // 저장하는 그림에는 NEW 표시와 함께 추천한 셀럽 목록을 넣지 않는다.
       // html2canvas가 문서를 복사할 때 이 클래스도 따라가서 복사본에서만 빠진 채 그려진다.
       view.classList.add("is-capturing");
+      // 표지 보기에서 책이 12권을 넘으면 고른 12권만 4열 3줄로 담는다
+      var capTiles = [], capSel = document.getElementById("shelf-range");
+      if (capSel && capSel.value !== "" && view.classList.contains("show-covers")) {
+        var from = +capSel.value * PER;
+        [].forEach.call(view.querySelectorAll(".cv"), function (t, i) {
+          if (i < from || i >= from + PER) { t.classList.add("cap-off"); capTiles.push(t); }
+        });
+        view.classList.add("cap-12");
+      }
       guard(loadH2C(), 15000, "html2canvas").then(function () {
         swap = swapImages(view);
         return swap.ready;
@@ -921,7 +911,8 @@
       }).then(function () {
         if (swap) swap.undo.forEach(function (f) { f(); });
         if (muted) unmute(muted);
-        view.classList.remove("is-capturing");
+        view.classList.remove("is-capturing", "cap-12");
+        capTiles.forEach(function (t) { t.classList.remove("cap-off"); });
         btns.forEach(function (b) { b.disabled = false; });
         btn.textContent = was;
       });
