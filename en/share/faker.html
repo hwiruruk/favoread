@@ -902,15 +902,29 @@
     .vt { font: inherit; font-size: 12px; font-weight: 700; padding: 5px 10px; background: #fff; color: #000; border: 0; cursor: pointer; }
     .vt + .vt { border-left: 2px solid #000; }
     .vt[aria-pressed="true"] { background: #000; color: #fff; }
-    .covers { display: none; grid-template-columns: repeat(auto-fill, minmax(84px, 1fr)); gap: 14px 12px; margin: 14px 0 22px; }
-    .show-covers .covers { display: grid; }
+    .covers { display: none; margin: 14px 0 22px; border: 2px solid #000; background: #f7f2e4; }
+    .show-covers .covers { display: block; }
     .show-covers .shelf { display: none; }
-    .cv { position: relative; display: block; aspect-ratio: 2/3; border: 1.5px solid #000; box-shadow: 2px 2px 0 0 #000;
-          background: #f4f4f0; overflow: hidden; color: #000; text-decoration: none; transition: transform .12s; }
-    .cv:hover { transform: translateY(-3px); text-decoration: none; }
+    .cv-page { display: none; }
+    .cv-page.on { display: block; }
+    .cv-row { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 0 18px;
+              padding: 20px 18px 16px; border-bottom: 12px solid #d9a066; }
+    .cv-row + .cv-row { border-top: 2px solid #000; }
+    .cv { position: relative; display: block; aspect-ratio: 2/3; border: 2px solid #000; box-shadow: 4px 4px 0 0 #000;
+          background: #f4f4f0; overflow: hidden; color: #000; text-decoration: none; transition: transform .12s, box-shadow .12s; }
+    .cv:hover { transform: translate(-2px, -4px); box-shadow: 6px 8px 0 0 #000; text-decoration: none; }
     .cv img { width: 100%; height: 100%; object-fit: cover; display: block; }
     .cv-no { display: flex; height: 100%; align-items: center; justify-content: center; padding: 6px;
              font-size: 11px; font-weight: 700; line-height: 1.3; text-align: center; word-break: keep-all; }
+    .cv-pager { display: flex; align-items: center; justify-content: center; gap: 6px; flex-wrap: wrap;
+                padding: 12px 8px; border-top: 2px solid #000; background: #fff; }
+    .cv-pager .pg { font: inherit; font-size: 13px; font-weight: 800; min-width: 34px; height: 34px; cursor: pointer;
+                    background: #fff; color: #000; border: 2px solid #000; box-shadow: 2px 2px 0 0 #000; }
+    .cv-pager .pg:hover { background: #fde047; }
+    .cv-pager .pg.on { background: #fde047; }
+    .cv-pager .pg[disabled] { opacity: .35; cursor: default; background: #fff; }
+    .cv-pager .pg-count { flex-basis: 100%; text-align: center; font-size: 12px; font-weight: 700; color: #555; margin-top: 4px; }
+    @media (max-width: 480px) { .cv-row { gap: 0 10px; padding: 16px 10px 12px; } }
     .shelf { --sh-h: 270px; --plank: 7px; --row: calc(var(--sh-h) + 18px);
              display: flex; flex-wrap: wrap; align-items: flex-end; gap: 11px 2px;
              margin: 14px 0 22px; padding: 0 8px 7px;
@@ -951,6 +965,13 @@
     .sp-i { position: relative; z-index: 1; display: block;
             height: 100%; width: auto; max-width: 80px; object-fit: fill; }
     .sp.no-img, .sp.sp-fail { width: var(--w, 38px); }
+    .sp-c { position: absolute; inset: 0; z-index: 0; width: 100%; height: 100%; object-fit: cover; object-position: 50% 50%; }
+    .sp.no-img { box-shadow: inset -2px 0 5px rgba(0,0,0,.14), inset 2px 0 4px rgba(255,255,255,.1); }
+    .sp.no-img.has-cut::after { content: ''; position: absolute; inset: 0; z-index: 1; pointer-events: none;
+        background: linear-gradient(90deg, rgba(255,255,255,.12), rgba(255,255,255,0) 25%, rgba(0,0,0,0) 65%, rgba(0,0,0,.14)),
+                    rgba(0,0,0,.16); }
+    .sp.no-img.has-cut .sp-t { z-index: 2; }
+    .sp.no-img.has-cut.sp-fail::after, .sp.no-img.has-cut.sp-fail .sp-c { display: none; }
     .sp-new { position: absolute; top: 0; left: 0; right: 0; z-index: 3; text-align: center;
               font-size: 8px; line-height: 1; padding: 3px 0 2px;
               border-bottom: 1px solid rgba(0,0,0,.55); }
@@ -1018,32 +1039,32 @@
     <div class="shelf-head">
       <h2>Books Faker has read (41)</h2>
       <div class="shelf-tabs">
-        <span class="view-tabs" role="group"><button type="button" class="vt" data-view="spine" aria-pressed="true">📚 Spines</button><button type="button" class="vt" data-view="cover" aria-pressed="false">🖼 Covers</button></span>
+        <span class="view-tabs" role="group"><button type="button" class="vt" data-view="cover" aria-pressed="true">🖼 Covers</button><button type="button" class="vt" data-view="spine" aria-pressed="false">📚 Spines</button></span>
         <button type="button" class="sh-cap" id="shelf-cap" title="Download the bookshelf as an image">⤓ Save image</button>
         <button type="button" class="sh-cap" id="shelf-cap-clear" title="Download as a PNG with a transparent background">⤓ Transparent</button>
       </div>
     </div>
-    <div id="shelf-area">
+    <div id="shelf-area" class="show-covers">
     <div class="shelf" id="shelf">
     <a class="sp" style="--c:hsl(28,48%,37%);--w:37px;--fs:15px" href="https://www.yes24.com/product/goods/3489078" rel="nofollow noopener noreferrer" target="_blank" title="1Q84"><span class="sp-t"><i>1Q84</i></span><img class="sp-i" src="https://image.yes24.com/goods/3489078/side" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.parentNode.classList.add('sp-fail');this.remove()" onload="if(this.naturalWidth/this.naturalHeight>0.4){this.parentNode.classList.add('sp-fail');this.remove()}"></a>
-    <a class="sp no-img" style="--c:hsl(115,32%,33%);--w:30px;--fs:8px" href="https://www.yes24.com/product/goods/82936937" rel="nofollow noopener noreferrer" target="_blank" title="Apologia Sokratous, Kriton, Phaidon, Symposion"><span class="sp-t"><i>Apologia Sokratous, Kriton, Phaidon, Symposion</i></span></a>
+    <a class="sp no-img has-cut" style="--c:hsl(115,32%,33%);--w:30px;--fs:8px" href="https://www.yes24.com/product/goods/82936937" rel="nofollow noopener noreferrer" target="_blank" title="Apologia Sokratous, Kriton, Phaidon, Symposion"><img class="sp-c" src="https://image.yes24.com/goods/82936937/L" alt="" loading="lazy" referrerpolicy="no-referrer"><span class="sp-t"><i>Apologia Sokratous, Kriton, Phaidon, Symposion</i></span></a>
     <a class="sp" style="--c:hsl(300,56%,27%);--w:36px;--fs:10px" href="https://www.yes24.com/product/goods/59006530" rel="nofollow noopener noreferrer" target="_blank" title="Astrophysics for People in a Hurry"><span class="sp-t"><i>Astrophysics for People in a Hurry</i></span><img class="sp-i" src="https://image.yes24.com/goods/59006530/side" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.parentNode.classList.add('sp-fail');this.remove()" onload="if(this.naturalWidth/this.naturalHeight>0.4){this.parentNode.classList.add('sp-fail');this.remove()}"></a>
     <a class="sp" style="--c:hsl(160,33%,46%);--w:41px;--fs:12px" href="https://www.yes24.com/product/goods/37335066" rel="nofollow noopener noreferrer" target="_blank" title="A Theory of Fun for Game Design"><span class="sp-t"><i>A Theory of Fun for Game Design</i></span><img class="sp-i" src="https://image.yes24.com/goods/37335066/side" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.parentNode.classList.add('sp-fail');this.remove()" onload="if(this.naturalWidth/this.naturalHeight>0.4){this.parentNode.classList.add('sp-fail');this.remove()}"></a>
     <a class="sp" style="--c:hsl(173,45%,41%);--w:34px;--fs:9px" href="https://www.yes24.com/product/goods/32452801" rel="nofollow noopener noreferrer" target="_blank" title="Brain Science Story for the First Time"><span class="sp-t"><i>Brain Science Story for the First Time</i></span><img class="sp-i" src="https://image.yes24.com/goods/32452801/side" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.parentNode.classList.add('sp-fail');this.remove()" onload="if(this.naturalWidth/this.naturalHeight>0.4){this.parentNode.classList.add('sp-fail');this.remove()}"></a>
     <a class="sp" style="--c:hsl(222,57%,30%);--w:30px;--fs:8px" href="https://www.yes24.com/product/goods/84659792" rel="nofollow noopener noreferrer" target="_blank" title="Broad and Shallow Knowledge for Intellectual Conversation: Zero Version"><span class="sp-t"><i>Broad and Shallow Knowledge for Intellectual Conversation: Zero Version</i></span><img class="sp-i" src="https://image.yes24.com/goods/84659792/side" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.parentNode.classList.add('sp-fail');this.remove()" onload="if(this.naturalWidth/this.naturalHeight>0.4){this.parentNode.classList.add('sp-fail');this.remove()}"></a>
     <a class="sp" style="--c:hsl(236,37%,36%);--w:44px;--fs:15px" href="https://www.yes24.com/product/goods/2312211" rel="nofollow noopener noreferrer" target="_blank" title="Cosmos"><span class="sp-t"><i>Cosmos</i></span><img class="sp-i" src="https://image.yes24.com/goods/2312211/side" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.parentNode.classList.add('sp-fail');this.remove()" onload="if(this.naturalWidth/this.naturalHeight>0.4){this.parentNode.classList.add('sp-fail');this.remove()}"></a>
-    <a class="sp no-img" style="--c:hsl(150,42%,44%);--w:33px;--fs:15px" href="https://www.yes24.com/product/goods/66992093" rel="nofollow noopener noreferrer" target="_blank" title="Dasan&#x27;s Last Study"><span class="sp-t"><i>Dasan&#x27;s Last Study</i></span></a>
+    <a class="sp no-img has-cut" style="--c:hsl(150,42%,44%);--w:33px;--fs:15px" href="https://www.yes24.com/product/goods/66992093" rel="nofollow noopener noreferrer" target="_blank" title="Dasan&#x27;s Last Study"><img class="sp-c" src="https://image.yes24.com/goods/66992093/L" alt="" loading="lazy" referrerpolicy="no-referrer"><span class="sp-t"><i>Dasan&#x27;s Last Study</i></span></a>
     <a class="sp" style="--c:hsl(285,39%,31%);--w:42px;--fs:15px" href="https://www.yes24.com/product/goods/132226737" rel="nofollow noopener noreferrer" target="_blank" title="Factfulness"><span class="sp-t"><i>Factfulness</i></span><img class="sp-i" src="https://image.yes24.com/goods/132226737/side" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.parentNode.classList.add('sp-fail');this.remove()" onload="if(this.naturalWidth/this.naturalHeight>0.4){this.parentNode.classList.add('sp-fail');this.remove()}"></a>
     <a class="sp" style="--c:hsl(180,40%,30%);--w:41px;--fs:15px" href="https://www.yes24.com/product/goods/3315954" rel="nofollow noopener noreferrer" target="_blank" title="Fahrenheit 451"><span class="sp-t"><i>Fahrenheit 451</i></span><img class="sp-i" src="https://image.yes24.com/goods/3315954/side" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.parentNode.classList.add('sp-fail');this.remove()" onload="if(this.naturalWidth/this.naturalHeight>0.4){this.parentNode.classList.add('sp-fail');this.remove()}"></a>
     <a class="sp" style="--c:hsl(38,52%,39%);--w:40px;--fs:11px" href="https://www.yes24.com/product/goods/161405235" rel="nofollow noopener noreferrer" target="_blank" title="Fractal Story Told by Mandelbrot"><span class="sp-t"><i>Fractal Story Told by Mandelbrot</i></span><img class="sp-i" src="https://image.yes24.com/goods/161405235/side" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.parentNode.classList.add('sp-fail');this.remove()" onload="if(this.naturalWidth/this.naturalHeight>0.4){this.parentNode.classList.add('sp-fail');this.remove()}"></a>
     <a class="sp" style="--c:hsl(12,53%,45%);--w:34px;--fs:15px" href="https://www.yes24.com/product/goods/118754371" rel="nofollow noopener noreferrer" target="_blank" title="Freud&#x27;s Chair"><span class="sp-t"><i>Freud&#x27;s Chair</i></span><img class="sp-i" src="https://image.yes24.com/goods/118754371/side" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.parentNode.classList.add('sp-fail');this.remove()" onload="if(this.naturalWidth/this.naturalHeight>0.4){this.parentNode.classList.add('sp-fail');this.remove()}"></a>
     <a class="sp" style="--c:hsl(68,42%,46%);--w:38px;--fs:15px" href="https://www.yes24.com/product/goods/152827044" rel="nofollow noopener noreferrer" target="_blank" title="Game Theory"><span class="sp-t"><i>Game Theory</i></span><img class="sp-i" src="https://image.yes24.com/goods/152827044/side" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.parentNode.classList.add('sp-fail');this.remove()" onload="if(this.naturalWidth/this.naturalHeight>0.4){this.parentNode.classList.add('sp-fail');this.remove()}"></a>
-    <a class="sp no-img" style="--c:hsl(36,46%,43%);--w:40px;--fs:15px" href="https://www.yes24.com/product/goods/2970269" rel="nofollow noopener noreferrer" target="_blank" title="Golden Slumber"><span class="sp-t"><i>Golden Slumber</i></span></a>
+    <a class="sp no-img has-cut" style="--c:hsl(36,46%,43%);--w:40px;--fs:15px" href="https://www.yes24.com/product/goods/2970269" rel="nofollow noopener noreferrer" target="_blank" title="Golden Slumber"><img class="sp-c" src="https://image.yes24.com/goods/2970269/L" alt="" loading="lazy" referrerpolicy="no-referrer"><span class="sp-t"><i>Golden Slumber</i></span></a>
     <a class="sp" style="--c:hsl(307,54%,38%);--w:31px;--fs:11px" href="https://www.yes24.com/product/goods/90108338" rel="nofollow noopener noreferrer" target="_blank" title="Hakuba Mountain Lodge Murder Case"><span class="sp-t"><i>Hakuba Mountain Lodge Murder Case</i></span><img class="sp-i" src="https://image.yes24.com/goods/90108338/side" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.parentNode.classList.add('sp-fail');this.remove()" onload="if(this.naturalWidth/this.naturalHeight>0.4){this.parentNode.classList.add('sp-fail');this.remove()}"></a>
     <a class="sp" style="--c:hsl(139,38%,33%);--w:41px;--fs:8px" href="https://www.yes24.com/product/goods/26035944" rel="nofollow noopener noreferrer" target="_blank" title="How Not to Be Wrong: The Power of Mathematical Thinking"><span class="sp-t"><i>How Not to Be Wrong: The Power of Mathematical Thinking</i></span><img class="sp-i" src="https://image.yes24.com/goods/26035944/side" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.parentNode.classList.add('sp-fail');this.remove()" onload="if(this.naturalWidth/this.naturalHeight>0.4){this.parentNode.classList.add('sp-fail');this.remove()}"></a>
     <a class="sp" style="--c:hsl(326,57%,40%);--w:43px;--fs:13px" href="https://www.yes24.com/product/goods/118303541" rel="nofollow noopener noreferrer" target="_blank" title="How to Smile at Rude People"><span class="sp-t"><i>How to Smile at Rude People</i></span><img class="sp-i" src="https://image.yes24.com/goods/118303541/side" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.parentNode.classList.add('sp-fail');this.remove()" onload="if(this.naturalWidth/this.naturalHeight>0.4){this.parentNode.classList.add('sp-fail');this.remove()}"></a>
-    <a class="sp no-img" style="--c:hsl(162,51%,36%);--w:40px;--fs:15px" href="https://www.yes24.com/product/goods/7760495" rel="nofollow noopener noreferrer" target="_blank" title="Humanities Starting Now"><span class="sp-t"><i>Humanities Starting Now</i></span></a>
-    <a class="sp no-img" style="--c:hsl(172,50%,28%);--w:33px;--fs:15px" href="https://www.yes24.com/product/goods/106540460" rel="nofollow noopener noreferrer" target="_blank" title="I Decided to Live as Me"><span class="sp-t"><i>I Decided to Live as Me</i></span></a>
+    <a class="sp no-img has-cut" style="--c:hsl(162,51%,36%);--w:40px;--fs:15px" href="https://www.yes24.com/product/goods/7760495" rel="nofollow noopener noreferrer" target="_blank" title="Humanities Starting Now"><img class="sp-c" src="https://image.yes24.com/goods/7760495/L" alt="" loading="lazy" referrerpolicy="no-referrer"><span class="sp-t"><i>Humanities Starting Now</i></span></a>
+    <a class="sp no-img has-cut" style="--c:hsl(172,50%,28%);--w:33px;--fs:15px" href="https://www.yes24.com/product/goods/106540460" rel="nofollow noopener noreferrer" target="_blank" title="I Decided to Live as Me"><img class="sp-c" src="https://image.yes24.com/goods/106540460/L" alt="" loading="lazy" referrerpolicy="no-referrer"><span class="sp-t"><i>I Decided to Live as Me</i></span></a>
     <a class="sp" style="--c:hsl(121,34%,43%);--w:34px;--fs:15px" href="https://www.yes24.com/product/goods/117643865" rel="nofollow noopener noreferrer" target="_blank" title="Inner Communication"><span class="sp-t"><i>Inner Communication</i></span><img class="sp-i" src="https://image.yes24.com/goods/117643865/side" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.parentNode.classList.add('sp-fail');this.remove()" onload="if(this.naturalWidth/this.naturalHeight>0.4){this.parentNode.classList.add('sp-fail');this.remove()}"></a>
     <a class="sp" style="--c:hsl(5,57%,32%);--w:38px;--fs:8px" href="https://www.yes24.com/product/goods/108850617" rel="nofollow noopener noreferrer" target="_blank" title="Jag kan ha fel och andra visdomar fran mitt liv som buddhistmunk"><span class="sp-t"><i>Jag kan ha fel och andra visdomar fran mitt liv som buddhistmunk</i></span><img class="sp-i" src="https://image.yes24.com/goods/108850617/side" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.parentNode.classList.add('sp-fail');this.remove()" onload="if(this.naturalWidth/this.naturalHeight>0.4){this.parentNode.classList.add('sp-fail');this.remove()}"></a>
     <a class="sp" style="--c:hsl(238,48%,42%);--w:37px;--fs:9px" href="https://www.yes24.com/product/goods/15156691" rel="nofollow noopener noreferrer" target="_blank" title="Justice: What&#x27;s the Right Thing to Do?"><span class="sp-t"><i>Justice: What&#x27;s the Right Thing to Do?</i></span><img class="sp-i" src="https://image.yes24.com/goods/15156691/side" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.parentNode.classList.add('sp-fail');this.remove()" onload="if(this.naturalWidth/this.naturalHeight>0.4){this.parentNode.classList.add('sp-fail');this.remove()}"></a>
@@ -1053,7 +1074,7 @@
     <a class="sp" style="--c:hsl(248,47%,36%);--w:41px;--fs:15px" href="https://www.yes24.com/product/goods/32400671" rel="nofollow noopener noreferrer" target="_blank" title="Memory Man"><span class="sp-t"><i>Memory Man</i></span><img class="sp-i" src="https://image.yes24.com/goods/32400671/side" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.parentNode.classList.add('sp-fail');this.remove()" onload="if(this.naturalWidth/this.naturalHeight>0.4){this.parentNode.classList.add('sp-fail');this.remove()}"></a>
     <a class="sp" style="--c:hsl(306,54%,31%);--w:39px;--fs:15px" href="https://www.yes24.com/product/goods/44499829" rel="nofollow noopener noreferrer" target="_blank" title="Norwegian Wood"><span class="sp-t"><i>Norwegian Wood</i></span><img class="sp-i" src="https://image.yes24.com/goods/44499829/side" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.parentNode.classList.add('sp-fail');this.remove()" onload="if(this.naturalWidth/this.naturalHeight>0.4){this.parentNode.classList.add('sp-fail');this.remove()}"></a>
     <a class="sp" style="--c:hsl(151,54%,28%);--w:42px;--fs:15px" href="https://www.yes24.com/product/goods/126181478" rel="nofollow noopener noreferrer" target="_blank" title="Silent Spring"><span class="sp-t"><i>Silent Spring</i></span><img class="sp-i" src="https://image.yes24.com/goods/126181478/side" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.parentNode.classList.add('sp-fail');this.remove()" onload="if(this.naturalWidth/this.naturalHeight>0.4){this.parentNode.classList.add('sp-fail');this.remove()}"></a>
-    <a class="sp no-img" style="--c:hsl(41,38%,30%);--w:35px;--fs:8px" href="https://www.yes24.com/product/goods/68750187" rel="nofollow noopener noreferrer" target="_blank" title="Stanford&#x27;s Best Way to Recover from Fatigue"><span class="sp-t"><i>Stanford&#x27;s Best Way to Recover from Fatigue</i></span></a>
+    <a class="sp no-img has-cut" style="--c:hsl(41,38%,30%);--w:35px;--fs:8px" href="https://www.yes24.com/product/goods/68750187" rel="nofollow noopener noreferrer" target="_blank" title="Stanford&#x27;s Best Way to Recover from Fatigue"><img class="sp-c" src="https://image.yes24.com/goods/68750187/L" alt="" loading="lazy" referrerpolicy="no-referrer"><span class="sp-t"><i>Stanford&#x27;s Best Way to Recover from Fatigue</i></span></a>
     <a class="sp" style="--c:hsl(8,56%,31%);--w:42px;--fs:15px" href="https://www.yes24.com/product/goods/1511432" rel="nofollow noopener noreferrer" target="_blank" title="The Fabric of the Cosmos"><span class="sp-t"><i>The Fabric of the Cosmos</i></span><img class="sp-i" src="https://image.yes24.com/goods/1511432/side" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.parentNode.classList.add('sp-fail');this.remove()" onload="if(this.naturalWidth/this.naturalHeight>0.4){this.parentNode.classList.add('sp-fail');this.remove()}"></a>
     <a class="sp" style="--c:hsl(229,47%,40%);--w:31px;--fs:15px" href="https://www.yes24.com/product/goods/124574978" rel="nofollow noopener noreferrer" target="_blank" title="The Miracle Morning"><span class="sp-t"><i>The Miracle Morning</i></span><img class="sp-i" src="https://image.yes24.com/goods/124574978/side" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.parentNode.classList.add('sp-fail');this.remove()" onload="if(this.naturalWidth/this.naturalHeight>0.4){this.parentNode.classList.add('sp-fail');this.remove()}"></a>
     <a class="sp" style="--c:hsl(338,42%,47%);--w:39px;--fs:9px" href="https://www.yes24.com/product/goods/116586056" rel="nofollow noopener noreferrer" target="_blank" title="The Miracles of the Namiya General Store"><span class="sp-t"><i>The Miracles of the Namiya General Store</i></span><img class="sp-i" src="https://image.yes24.com/goods/116586056/side" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.parentNode.classList.add('sp-fail');this.remove()" onload="if(this.naturalWidth/this.naturalHeight>0.4){this.parentNode.classList.add('sp-fail');this.remove()}"></a>
@@ -1061,54 +1082,85 @@
     <a class="sp" style="--c:hsl(295,53%,28%);--w:31px;--fs:10px" href="https://www.yes24.com/product/goods/54233937" rel="nofollow noopener noreferrer" target="_blank" title="The Subtle Art of Not Giving a F*ck"><span class="sp-t"><i>The Subtle Art of Not Giving a F*ck</i></span><img class="sp-i" src="https://image.yes24.com/goods/54233937/side" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.parentNode.classList.add('sp-fail');this.remove()" onload="if(this.naturalWidth/this.naturalHeight>0.4){this.parentNode.classList.add('sp-fail');this.remove()}"></a>
     <a class="sp" style="--c:hsl(33,42%,31%);--w:40px;--fs:15px" href="https://www.yes24.com/product/goods/58787793" rel="nofollow noopener noreferrer" target="_blank" title="The Upward Spiral"><span class="sp-t"><i>The Upward Spiral</i></span><img class="sp-i" src="https://image.yes24.com/goods/58787793/side" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.parentNode.classList.add('sp-fail');this.remove()" onload="if(this.naturalWidth/this.naturalHeight>0.4){this.parentNode.classList.add('sp-fail');this.remove()}"></a>
     <a class="sp" style="--c:hsl(24,47%,34%);--w:38px;--fs:14px" href="https://www.yes24.com/product/goods/44135491" rel="nofollow noopener noreferrer" target="_blank" title="To Me Who Doesn&#x27;t Know Me"><span class="sp-t"><i>To Me Who Doesn&#x27;t Know Me</i></span><img class="sp-i" src="https://image.yes24.com/goods/44135491/side" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.parentNode.classList.add('sp-fail');this.remove()" onload="if(this.naturalWidth/this.naturalHeight>0.4){this.parentNode.classList.add('sp-fail');this.remove()}"></a>
-    <a class="sp no-img" style="--c:hsl(117,49%,33%);--w:31px;--fs:15px" href="https://www.yes24.com/product/goods/58816202" rel="nofollow noopener noreferrer" target="_blank" title="Voice of Sin"><span class="sp-t"><i>Voice of Sin</i></span></a>
+    <a class="sp no-img has-cut" style="--c:hsl(117,49%,33%);--w:31px;--fs:15px" href="https://www.yes24.com/product/goods/58816202" rel="nofollow noopener noreferrer" target="_blank" title="Voice of Sin"><img class="sp-c" src="https://image.yes24.com/goods/58816202/L" alt="" loading="lazy" referrerpolicy="no-referrer"><span class="sp-t"><i>Voice of Sin</i></span></a>
     <a class="sp" style="--c:hsl(244,32%,38%);--w:34px;--fs:15px" href="https://www.yes24.com/product/goods/5531156" rel="nofollow noopener noreferrer" target="_blank" title="Walden"><span class="sp-t"><i>Walden</i></span><img class="sp-i" src="https://image.yes24.com/goods/5531156/side" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.parentNode.classList.add('sp-fail');this.remove()" onload="if(this.naturalWidth/this.naturalHeight>0.4){this.parentNode.classList.add('sp-fail');this.remove()}"></a>
-    <a class="sp no-img" style="--c:hsl(217,54%,29%);--w:30px;--fs:8px" href="https://www.yes24.com/product/goods/44302269" rel="nofollow noopener noreferrer" target="_blank" title="We Have the Technology: How Biohackers, Foodies, Physicians, and Scientists Are Transforming Human Perception, One Sense at a Time"><span class="sp-t"><i>We Have the Technology: How Biohackers, Foodies, Physicians, and Scientists Are Transforming Human Perception, One Sense at a Time</i></span></a>
-    <a class="sp no-img" style="--c:hsl(134,39%,35%);--w:36px;--fs:15px" href="https://www.yes24.com/product/goods/35311060" rel="nofollow noopener noreferrer" target="_blank" title="What Is A Country"><span class="sp-t"><i>What Is A Country</i></span></a>
+    <a class="sp no-img has-cut" style="--c:hsl(217,54%,29%);--w:30px;--fs:8px" href="https://www.yes24.com/product/goods/44302269" rel="nofollow noopener noreferrer" target="_blank" title="We Have the Technology: How Biohackers, Foodies, Physicians, and Scientists Are Transforming Human Perception, One Sense at a Time"><img class="sp-c" src="https://image.yes24.com/goods/44302269/L" alt="" loading="lazy" referrerpolicy="no-referrer"><span class="sp-t"><i>We Have the Technology: How Biohackers, Foodies, Physicians, and Scientists Are Transforming Human Perception, One Sense at a Time</i></span></a>
+    <a class="sp no-img has-cut" style="--c:hsl(134,39%,35%);--w:36px;--fs:15px" href="https://www.yes24.com/product/goods/35311060" rel="nofollow noopener noreferrer" target="_blank" title="What Is A Country"><img class="sp-c" src="https://image.yes24.com/goods/35311060/L" alt="" loading="lazy" referrerpolicy="no-referrer"><span class="sp-t"><i>What Is A Country</i></span></a>
     <a class="sp" style="--c:hsl(104,38%,28%);--w:31px;--fs:12px" href="https://www.yes24.com/product/goods/90225942" rel="nofollow noopener noreferrer" target="_blank" title="When Einstein Walked with Gödel"><span class="sp-t"><i>When Einstein Walked with Gödel</i></span><img class="sp-i" src="https://image.yes24.com/goods/90225942/side" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.parentNode.classList.add('sp-fail');this.remove()" onload="if(this.naturalWidth/this.naturalHeight>0.4){this.parentNode.classList.add('sp-fail');this.remove()}"></a>
     </div>
     <div class="covers" id="covers">
+    <div class="cv-page on">
+    <div class="cv-row">
     <a class="cv" href="https://www.yes24.com/product/goods/3489078" rel="nofollow noopener noreferrer" target="_blank" title="1Q84"><img src="https://image.yes24.com/goods/3489078/L" alt="1Q84 by Haruki Murakami — book cover" loading="lazy"></a>
     <a class="cv" href="https://www.yes24.com/product/goods/82936937" rel="nofollow noopener noreferrer" target="_blank" title="Apologia Sokratous, Kriton, Phaidon, Symposion"><img src="https://image.yes24.com/goods/82936937/L" alt="Apologia Sokratous, Kriton, Phaidon, Symposion by Plato — book cover" loading="lazy"></a>
     <a class="cv" href="https://www.yes24.com/product/goods/59006530" rel="nofollow noopener noreferrer" target="_blank" title="Astrophysics for People in a Hurry"><img src="https://image.yes24.com/goods/59006530/L" alt="Astrophysics for People in a Hurry by Neil deGrasse Tyson — book cover" loading="lazy"></a>
     <a class="cv" href="https://www.yes24.com/product/goods/37335066" rel="nofollow noopener noreferrer" target="_blank" title="A Theory of Fun for Game Design"><img src="https://image.yes24.com/goods/37335066/L" alt="A Theory of Fun for Game Design by Raff Coaster — book cover" loading="lazy"></a>
+    </div>
+    <div class="cv-row">
     <a class="cv" href="https://www.yes24.com/product/goods/32452801" rel="nofollow noopener noreferrer" target="_blank" title="Brain Science Story for the First Time"><img src="https://image.yes24.com/goods/32452801/L" alt="Brain Science Story for the First Time by Yang Eunwoo — book cover" loading="lazy"></a>
     <a class="cv" href="https://www.yes24.com/product/goods/84659792" rel="nofollow noopener noreferrer" target="_blank" title="Broad and Shallow Knowledge for Intellectual Conversation: Zero Version"><img src="https://image.yes24.com/goods/84659792/L" alt="Broad and Shallow Knowledge for Intellectual Conversation: Zero Version by Chae Sajang — book cover" loading="lazy"></a>
     <a class="cv" href="https://www.yes24.com/product/goods/2312211" rel="nofollow noopener noreferrer" target="_blank" title="Cosmos"><img src="https://image.yes24.com/goods/2312211/L" alt="Cosmos by Carl Sagan — book cover" loading="lazy"></a>
     <a class="cv" href="https://www.yes24.com/product/goods/66992093" rel="nofollow noopener noreferrer" target="_blank" title="Dasan&#x27;s Last Study"><img src="https://image.yes24.com/goods/66992093/L" alt="Dasan&#x27;s Last Study by Jo Yoon-Je — book cover" loading="lazy"></a>
+    </div>
+    <div class="cv-row">
     <a class="cv" href="https://www.yes24.com/product/goods/132226737" rel="nofollow noopener noreferrer" target="_blank" title="Factfulness"><img src="https://image.yes24.com/goods/132226737/L" alt="Factfulness by Hans Rosling, Ola Rosling, Anna Rosling Rönlund — book cover" loading="lazy"></a>
     <a class="cv" href="https://www.yes24.com/product/goods/3315954" rel="nofollow noopener noreferrer" target="_blank" title="Fahrenheit 451"><img src="https://image.yes24.com/goods/3315954/L" alt="Fahrenheit 451 by Ray Bradbury — book cover" loading="lazy"></a>
     <a class="cv" href="https://www.yes24.com/product/goods/161405235" rel="nofollow noopener noreferrer" target="_blank" title="Fractal Story Told by Mandelbrot"><img src="https://image.yes24.com/goods/161405235/L" alt="Fractal Story Told by Mandelbrot by Bae Soo-Kyung — book cover" loading="lazy"></a>
     <a class="cv" href="https://www.yes24.com/product/goods/118754371" rel="nofollow noopener noreferrer" target="_blank" title="Freud&#x27;s Chair"><img src="https://image.yes24.com/goods/118754371/L" alt="Freud&#x27;s Chair by Jeong Do-Eon — book cover" loading="lazy"></a>
+    </div>
+    </div>
+    <div class="cv-page">
+    <div class="cv-row">
     <a class="cv" href="https://www.yes24.com/product/goods/152827044" rel="nofollow noopener noreferrer" target="_blank" title="Game Theory"><img src="https://image.yes24.com/goods/152827044/L" alt="Game Theory by Kim Youngse — book cover" loading="lazy"></a>
     <a class="cv" href="https://www.yes24.com/product/goods/2970269" rel="nofollow noopener noreferrer" target="_blank" title="Golden Slumber"><img src="https://image.yes24.com/goods/2970269/L" alt="Golden Slumber by Kōtarō Isaka — book cover" loading="lazy"></a>
     <a class="cv" href="https://www.yes24.com/product/goods/90108338" rel="nofollow noopener noreferrer" target="_blank" title="Hakuba Mountain Lodge Murder Case"><img src="https://image.yes24.com/goods/90108338/L" alt="Hakuba Mountain Lodge Murder Case by Keigo Higashino — book cover" loading="lazy"></a>
     <a class="cv" href="https://www.yes24.com/product/goods/26035944" rel="nofollow noopener noreferrer" target="_blank" title="How Not to Be Wrong: The Power of Mathematical Thinking"><img src="https://image.yes24.com/goods/26035944/L" alt="How Not to Be Wrong: The Power of Mathematical Thinking by Jordan Ellenberg — book cover" loading="lazy"></a>
+    </div>
+    <div class="cv-row">
     <a class="cv" href="https://www.yes24.com/product/goods/118303541" rel="nofollow noopener noreferrer" target="_blank" title="How to Smile at Rude People"><img src="https://image.yes24.com/goods/118303541/L" alt="How to Smile at Rude People by Jeong Mun-Jeong — book cover" loading="lazy"></a>
     <a class="cv" href="https://www.yes24.com/product/goods/7760495" rel="nofollow noopener noreferrer" target="_blank" title="Humanities Starting Now"><img src="https://image.yes24.com/goods/7760495/L" alt="Humanities Starting Now by Joo Hyeonseong — book cover" loading="lazy"></a>
     <a class="cv" href="https://www.yes24.com/product/goods/106540460" rel="nofollow noopener noreferrer" target="_blank" title="I Decided to Live as Me"><img src="https://image.yes24.com/goods/106540460/L" alt="I Decided to Live as Me by Kim Su-hyeon — book cover" loading="lazy"></a>
     <a class="cv" href="https://www.yes24.com/product/goods/117643865" rel="nofollow noopener noreferrer" target="_blank" title="Inner Communication"><img src="https://image.yes24.com/goods/117643865/L" alt="Inner Communication by Kim Ju-hwan — book cover" loading="lazy"></a>
+    </div>
+    <div class="cv-row">
     <a class="cv" href="https://www.yes24.com/product/goods/108850617" rel="nofollow noopener noreferrer" target="_blank" title="Jag kan ha fel och andra visdomar fran mitt liv som buddhistmunk"><img src="https://image.yes24.com/goods/108850617/L" alt="Jag kan ha fel och andra visdomar fran mitt liv som buddhistmunk by Björn Natthiko Lindeblad — book cover" loading="lazy"></a>
     <a class="cv" href="https://www.yes24.com/product/goods/15156691" rel="nofollow noopener noreferrer" target="_blank" title="Justice: What&#x27;s the Right Thing to Do?"><img src="https://image.yes24.com/goods/15156691/L" alt="Justice: What&#x27;s the Right Thing to Do? by Michael Sandel — book cover" loading="lazy"></a>
     <a class="cv" href="https://www.yes24.com/product/goods/23630397" rel="nofollow noopener noreferrer" target="_blank" title="Laplace&#x27;s Witch"><img src="https://image.yes24.com/goods/23630397/L" alt="Laplace&#x27;s Witch by Keigo Higashino — book cover" loading="lazy"></a>
     <a class="cv" href="https://www.yes24.com/product/goods/129367072" rel="nofollow noopener noreferrer" target="_blank" title="Le sixième sommeil"><img src="https://image.yes24.com/goods/129367072/L" alt="Le sixième sommeil by Bernard Werber — book cover" loading="lazy"></a>
+    </div>
+    </div>
+    <div class="cv-page">
+    <div class="cv-row">
     <a class="cv" href="https://www.yes24.com/product/goods/101375809" rel="nofollow noopener noreferrer" target="_blank" title="Martian"><img src="https://image.yes24.com/goods/101375809/L" alt="Martian by Andy Weir — book cover" loading="lazy"></a>
     <a class="cv" href="https://www.yes24.com/product/goods/32400671" rel="nofollow noopener noreferrer" target="_blank" title="Memory Man"><img src="https://image.yes24.com/goods/32400671/L" alt="Memory Man by David Baldacci — book cover" loading="lazy"></a>
     <a class="cv" href="https://www.yes24.com/product/goods/44499829" rel="nofollow noopener noreferrer" target="_blank" title="Norwegian Wood"><img src="https://image.yes24.com/goods/44499829/L" alt="Norwegian Wood by Haruki Murakami — book cover" loading="lazy"></a>
     <a class="cv" href="https://www.yes24.com/product/goods/126181478" rel="nofollow noopener noreferrer" target="_blank" title="Silent Spring"><img src="https://image.yes24.com/goods/126181478/L" alt="Silent Spring by Rachel Carson — book cover" loading="lazy"></a>
+    </div>
+    <div class="cv-row">
     <a class="cv" href="https://www.yes24.com/product/goods/68750187" rel="nofollow noopener noreferrer" target="_blank" title="Stanford&#x27;s Best Way to Recover from Fatigue"><img src="https://image.yes24.com/goods/68750187/L" alt="Stanford&#x27;s Best Way to Recover from Fatigue by Yamada Tomoo — book cover" loading="lazy"></a>
     <a class="cv" href="https://www.yes24.com/product/goods/1511432" rel="nofollow noopener noreferrer" target="_blank" title="The Fabric of the Cosmos"><img src="https://image.yes24.com/goods/1511432/L" alt="The Fabric of the Cosmos by Brian Greene — book cover" loading="lazy"></a>
     <a class="cv" href="https://www.yes24.com/product/goods/124574978" rel="nofollow noopener noreferrer" target="_blank" title="The Miracle Morning"><img src="https://image.yes24.com/goods/124574978/L" alt="The Miracle Morning by Hal Elrod — book cover" loading="lazy"></a>
     <a class="cv" href="https://www.yes24.com/product/goods/116586056" rel="nofollow noopener noreferrer" target="_blank" title="The Miracles of the Namiya General Store"><img src="https://image.yes24.com/goods/116586056/L" alt="The Miracles of the Namiya General Store by Keigo Higashino — book cover" loading="lazy"></a>
+    </div>
+    <div class="cv-row">
     <a class="cv" href="https://www.yes24.com/product/goods/195804435" rel="nofollow noopener noreferrer" target="_blank" title="The Selfish Gene"><img src="https://image.yes24.com/goods/195804435/L" alt="The Selfish Gene by Richard Dawkins — book cover" loading="lazy"></a>
     <a class="cv" href="https://www.yes24.com/product/goods/54233937" rel="nofollow noopener noreferrer" target="_blank" title="The Subtle Art of Not Giving a F*ck"><img src="https://image.yes24.com/goods/54233937/L" alt="The Subtle Art of Not Giving a F*ck by Mark Manson — book cover" loading="lazy"></a>
     <a class="cv" href="https://www.yes24.com/product/goods/58787793" rel="nofollow noopener noreferrer" target="_blank" title="The Upward Spiral"><img src="https://image.yes24.com/goods/58787793/L" alt="The Upward Spiral by Alex Cove — book cover" loading="lazy"></a>
     <a class="cv" href="https://www.yes24.com/product/goods/44135491" rel="nofollow noopener noreferrer" target="_blank" title="To Me Who Doesn&#x27;t Know Me"><img src="https://image.yes24.com/goods/44135491/L" alt="To Me Who Doesn&#x27;t Know Me by Ha Yujin — book cover" loading="lazy"></a>
+    </div>
+    </div>
+    <div class="cv-page">
+    <div class="cv-row">
     <a class="cv" href="https://www.yes24.com/product/goods/58816202" rel="nofollow noopener noreferrer" target="_blank" title="Voice of Sin"><img src="https://image.yes24.com/goods/58816202/L" alt="Voice of Sin by Takeshi Shiota — book cover" loading="lazy"></a>
     <a class="cv" href="https://www.yes24.com/product/goods/5531156" rel="nofollow noopener noreferrer" target="_blank" title="Walden"><img src="https://image.yes24.com/goods/5531156/L" alt="Walden by Henry David Thoreau — book cover" loading="lazy"></a>
     <a class="cv" href="https://www.yes24.com/product/goods/44302269" rel="nofollow noopener noreferrer" target="_blank" title="We Have the Technology: How Biohackers, Foodies, Physicians, and Scientists Are Transforming Human Perception, One Sense at a Time"><img src="https://image.yes24.com/goods/44302269/L" alt="We Have the Technology: How Biohackers, Foodies, Physicians, and Scientists Are Transforming Human Perception, One Sense at a Time by Kara Platoni — book cover" loading="lazy"></a>
     <a class="cv" href="https://www.yes24.com/product/goods/35311060" rel="nofollow noopener noreferrer" target="_blank" title="What Is A Country"><img src="https://image.yes24.com/goods/35311060/L" alt="What Is A Country by Rhyu Si-min — book cover" loading="lazy"></a>
+    </div>
+    <div class="cv-row">
     <a class="cv" href="https://www.yes24.com/product/goods/90225942" rel="nofollow noopener noreferrer" target="_blank" title="When Einstein Walked with Gödel"><img src="https://image.yes24.com/goods/90225942/L" alt="When Einstein Walked with Gödel by Jim Holt — book cover" loading="lazy"></a>
+    </div>
+    </div>
+    <div class="cv-pager" data-total="41" data-per="12"><button type="button" class="pg" data-go="prev" aria-label="prev">◀</button><button type="button" class="pg" data-go="0">1</button><button type="button" class="pg" data-go="1">2</button><button type="button" class="pg" data-go="2">3</button><button type="button" class="pg" data-go="3">4</button><button type="button" class="pg" data-go="next" aria-label="next">▶</button><span class="pg-count"></span></div>
     </div>
     <ol class="reading-list" id="rlist">
     <li class="rl-item" id="b1">
@@ -1574,12 +1626,40 @@
     function set(v, save) {
       area.classList.toggle("show-covers", v === "cover");
       tabs.forEach(function (t) { t.setAttribute("aria-pressed", String(t.dataset.view === v)); });
-      if (save) { try { localStorage.setItem("shelfView", v); } catch (e) {} }
+      if (save) { try { localStorage.setItem("shelfView2", v); } catch (e) {} }
     }
     var saved = null;
-    try { saved = localStorage.getItem("shelfView"); } catch (e) {}
-    if (saved === "cover") set("cover", false);
+    try { saved = localStorage.getItem("shelfView2"); } catch (e) {}
+    if (saved === "spine") set("spine", false);
     tabs.forEach(function (t) { t.addEventListener("click", function () { set(t.dataset.view, true); }); });
+    // 표지 보기 쪽 넘김 (12권을 넘는 책장만)
+    var pager = document.querySelector(".cv-pager");
+    var pages = document.querySelectorAll(".cv-page");
+    if (pager && pages.length > 1) {
+      var cur = 0, ko = (document.documentElement.lang || "ko").indexOf("ko") === 0;
+      var total = +pager.dataset.total, per = +pager.dataset.per;
+      var nums = pager.querySelectorAll("[data-go]");
+      var show = function (n) {
+        cur = Math.max(0, Math.min(pages.length - 1, n));
+        pages.forEach(function (p, i) { p.classList.toggle("on", i === cur); });
+        nums.forEach(function (b) {
+          var g = b.dataset.go;
+          b.classList.toggle("on", g === String(cur));
+          b.disabled = (g === "prev" && cur === 0) || (g === "next" && cur === pages.length - 1);
+        });
+        var from = cur * per + 1, to = Math.min(total, (cur + 1) * per);
+        pager.querySelector(".pg-count").textContent = ko
+          ? from + "–" + to + "권 · 총 " + total + "권 · " + (cur + 1) + "/" + pages.length + "쪽"
+          : "Books " + from + "–" + to + " of " + total;
+      };
+      pager.addEventListener("click", function (e) {
+        var b = e.target.closest("[data-go]");
+        if (!b || b.disabled) return;
+        var g = b.dataset.go;
+        show(g === "prev" ? cur - 1 : g === "next" ? cur + 1 : +g);
+      });
+      show(0);
+    }
   })();
   </script>
   <script>

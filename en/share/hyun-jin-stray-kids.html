@@ -688,15 +688,29 @@
     .vt { font: inherit; font-size: 12px; font-weight: 700; padding: 5px 10px; background: #fff; color: #000; border: 0; cursor: pointer; }
     .vt + .vt { border-left: 2px solid #000; }
     .vt[aria-pressed="true"] { background: #000; color: #fff; }
-    .covers { display: none; grid-template-columns: repeat(auto-fill, minmax(84px, 1fr)); gap: 14px 12px; margin: 14px 0 22px; }
-    .show-covers .covers { display: grid; }
+    .covers { display: none; margin: 14px 0 22px; border: 2px solid #000; background: #f7f2e4; }
+    .show-covers .covers { display: block; }
     .show-covers .shelf { display: none; }
-    .cv { position: relative; display: block; aspect-ratio: 2/3; border: 1.5px solid #000; box-shadow: 2px 2px 0 0 #000;
-          background: #f4f4f0; overflow: hidden; color: #000; text-decoration: none; transition: transform .12s; }
-    .cv:hover { transform: translateY(-3px); text-decoration: none; }
+    .cv-page { display: none; }
+    .cv-page.on { display: block; }
+    .cv-row { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 0 18px;
+              padding: 20px 18px 16px; border-bottom: 12px solid #d9a066; }
+    .cv-row + .cv-row { border-top: 2px solid #000; }
+    .cv { position: relative; display: block; aspect-ratio: 2/3; border: 2px solid #000; box-shadow: 4px 4px 0 0 #000;
+          background: #f4f4f0; overflow: hidden; color: #000; text-decoration: none; transition: transform .12s, box-shadow .12s; }
+    .cv:hover { transform: translate(-2px, -4px); box-shadow: 6px 8px 0 0 #000; text-decoration: none; }
     .cv img { width: 100%; height: 100%; object-fit: cover; display: block; }
     .cv-no { display: flex; height: 100%; align-items: center; justify-content: center; padding: 6px;
              font-size: 11px; font-weight: 700; line-height: 1.3; text-align: center; word-break: keep-all; }
+    .cv-pager { display: flex; align-items: center; justify-content: center; gap: 6px; flex-wrap: wrap;
+                padding: 12px 8px; border-top: 2px solid #000; background: #fff; }
+    .cv-pager .pg { font: inherit; font-size: 13px; font-weight: 800; min-width: 34px; height: 34px; cursor: pointer;
+                    background: #fff; color: #000; border: 2px solid #000; box-shadow: 2px 2px 0 0 #000; }
+    .cv-pager .pg:hover { background: #fde047; }
+    .cv-pager .pg.on { background: #fde047; }
+    .cv-pager .pg[disabled] { opacity: .35; cursor: default; background: #fff; }
+    .cv-pager .pg-count { flex-basis: 100%; text-align: center; font-size: 12px; font-weight: 700; color: #555; margin-top: 4px; }
+    @media (max-width: 480px) { .cv-row { gap: 0 10px; padding: 16px 10px 12px; } }
     .shelf { --sh-h: 270px; --plank: 7px; --row: calc(var(--sh-h) + 18px);
              display: flex; flex-wrap: wrap; align-items: flex-end; gap: 11px 2px;
              margin: 14px 0 22px; padding: 0 8px 7px;
@@ -737,6 +751,13 @@
     .sp-i { position: relative; z-index: 1; display: block;
             height: 100%; width: auto; max-width: 80px; object-fit: fill; }
     .sp.no-img, .sp.sp-fail { width: var(--w, 38px); }
+    .sp-c { position: absolute; inset: 0; z-index: 0; width: 100%; height: 100%; object-fit: cover; object-position: 50% 50%; }
+    .sp.no-img { box-shadow: inset -2px 0 5px rgba(0,0,0,.14), inset 2px 0 4px rgba(255,255,255,.1); }
+    .sp.no-img.has-cut::after { content: ''; position: absolute; inset: 0; z-index: 1; pointer-events: none;
+        background: linear-gradient(90deg, rgba(255,255,255,.12), rgba(255,255,255,0) 25%, rgba(0,0,0,0) 65%, rgba(0,0,0,.14)),
+                    rgba(0,0,0,.16); }
+    .sp.no-img.has-cut .sp-t { z-index: 2; }
+    .sp.no-img.has-cut.sp-fail::after, .sp.no-img.has-cut.sp-fail .sp-c { display: none; }
     .sp-new { position: absolute; top: 0; left: 0; right: 0; z-index: 3; text-align: center;
               font-size: 8px; line-height: 1; padding: 3px 0 2px;
               border-bottom: 1px solid rgba(0,0,0,.55); }
@@ -806,7 +827,7 @@
     <div class="shelf-head">
       <h2>Books Hyun-jin (Stray Kids) has read (29)</h2>
       <div class="shelf-tabs">
-        <span class="view-tabs" role="group"><button type="button" class="vt" data-view="spine" aria-pressed="true">📚 Spines</button><button type="button" class="vt" data-view="cover" aria-pressed="false">🖼 Covers</button></span>
+        <span class="view-tabs" role="group"><button type="button" class="vt" data-view="cover" aria-pressed="true">🖼 Covers</button><button type="button" class="vt" data-view="spine" aria-pressed="false">📚 Spines</button></span>
         <button type="button" class="sh-cap" id="shelf-cap" title="Download the bookshelf as an image">⤓ Save image</button>
         <button type="button" class="sh-cap" id="shelf-cap-clear" title="Download as a PNG with a transparent background">⤓ Transparent</button>
       </div>
@@ -839,11 +860,11 @@
         <a class="new-tile" href="#b28"><span class="nt-cover"><img src="https://image.yes24.com/goods/123746663/L" alt="When the Weather Is Fine by Lee Do-woo — book cover" loading="lazy"></span><span class="nt-title">When the Weather Is Fine</span></a>
       </div>
     </details>
-    <div id="shelf-area">
+    <div id="shelf-area" class="show-covers">
     <div class="shelf" id="shelf">
     <a class="sp is-new" style="--c:hsl(27,43%,33%);--w:41px;--fs:15px" href="https://www.yes24.com/product/goods/2950700" rel="nofollow noopener noreferrer" target="_blank" title="Aimez-vous Brahms?"><span class="sp-t"><i>Aimez-vous Brahms?</i></span><img class="sp-i" src="https://image.yes24.com/goods/2950700/side" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.parentNode.classList.add('sp-fail');this.remove()" onload="if(this.naturalWidth/this.naturalHeight>0.4){this.parentNode.classList.add('sp-fail');this.remove()}"><span class="sp-new" data-added="2026-09-29">NEW</span></a>
     <a class="sp is-new" style="--c:hsl(228,41%,33%);--w:39px;--fs:15px" href="https://www.yes24.com/product/goods/119697570" rel="nofollow noopener noreferrer" target="_blank" title="Almond"><span class="sp-t"><i>Almond</i></span><img class="sp-i" src="https://image.yes24.com/goods/119697570/side" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.parentNode.classList.add('sp-fail');this.remove()" onload="if(this.naturalWidth/this.naturalHeight>0.4){this.parentNode.classList.add('sp-fail');this.remove()}"><span class="sp-new" data-added="2026-09-29">NEW</span></a>
-    <a class="sp no-img is-new" style="--c:hsl(356,44%,39%);--w:41px;--fs:12px" href="https://www.yes24.com/product/goods/61778623" rel="nofollow noopener noreferrer" target="_blank" title="A Person Who Is Harmless to Me"><span class="sp-t"><i>A Person Who Is Harmless to Me</i></span><span class="sp-new" data-added="2026-09-29">NEW</span></a>
+    <a class="sp no-img has-cut is-new" style="--c:hsl(356,44%,39%);--w:41px;--fs:12px" href="https://www.yes24.com/product/goods/61778623" rel="nofollow noopener noreferrer" target="_blank" title="A Person Who Is Harmless to Me"><img class="sp-c" src="https://image.yes24.com/goods/61778623/L" alt="" loading="lazy" referrerpolicy="no-referrer"><span class="sp-t"><i>A Person Who Is Harmless to Me</i></span><span class="sp-new" data-added="2026-09-29">NEW</span></a>
     <a class="sp" style="--c:hsl(108,44%,46%);--w:37px;--fs:12px" href="https://www.yes24.com/product/goods/93317580" rel="nofollow noopener noreferrer" target="_blank" title="As If There Is a Friendly World"><span class="sp-t"><i>As If There Is a Friendly World</i></span><img class="sp-i" src="https://image.yes24.com/goods/93317580/side" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.parentNode.classList.add('sp-fail');this.remove()" onload="if(this.naturalWidth/this.naturalHeight>0.4){this.parentNode.classList.add('sp-fail');this.remove()}"></a>
     <a class="sp is-new" style="--c:hsl(191,46%,47%);--w:36px;--fs:13px" href="https://www.yes24.com/product/goods/67108537" rel="nofollow noopener noreferrer" target="_blank" title="Because You Are so Precious"><span class="sp-t"><i>Because You Are so Precious</i></span><img class="sp-i" src="https://image.yes24.com/goods/67108537/side" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.parentNode.classList.add('sp-fail');this.remove()" onload="if(this.naturalWidth/this.naturalHeight>0.4){this.parentNode.classList.add('sp-fail');this.remove()}"><span class="sp-new" data-added="2026-09-29">NEW</span></a>
     <a class="sp is-new" style="--c:hsl(103,34%,38%);--w:43px;--fs:15px" href="https://www.yes24.com/product/goods/122541830" rel="nofollow noopener noreferrer" target="_blank" title="Common Languages"><span class="sp-t"><i>Common Languages</i></span><img class="sp-i" src="https://image.yes24.com/goods/122541830/side" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.parentNode.classList.add('sp-fail');this.remove()" onload="if(this.naturalWidth/this.naturalHeight>0.4){this.parentNode.classList.add('sp-fail');this.remove()}"><span class="sp-new" data-added="2026-09-29">NEW</span></a>
@@ -872,35 +893,58 @@
     <a class="sp" style="--c:hsl(2,39%,26%);--w:43px;--fs:15px" href="https://www.yes24.com/product/goods/105526047" rel="nofollow noopener noreferrer" target="_blank" title="Why Fish Don&#x27;t Exist"><span class="sp-t"><i>Why Fish Don&#x27;t Exist</i></span><img class="sp-i" src="https://image.yes24.com/goods/105526047/side" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.parentNode.classList.add('sp-fail');this.remove()" onload="if(this.naturalWidth/this.naturalHeight>0.4){this.parentNode.classList.add('sp-fail');this.remove()}"></a>
     </div>
     <div class="covers" id="covers">
+    <div class="cv-page on">
+    <div class="cv-row">
     <a class="cv" href="https://www.yes24.com/product/goods/2950700" rel="nofollow noopener noreferrer" target="_blank" title="Aimez-vous Brahms?"><img src="https://image.yes24.com/goods/2950700/L" alt="Aimez-vous Brahms? by Françoise Sagan — book cover" loading="lazy"></a>
     <a class="cv" href="https://www.yes24.com/product/goods/119697570" rel="nofollow noopener noreferrer" target="_blank" title="Almond"><img src="https://image.yes24.com/goods/119697570/L" alt="Almond by Sohn Won-pyung — book cover" loading="lazy"></a>
     <a class="cv" href="https://www.yes24.com/product/goods/61778623" rel="nofollow noopener noreferrer" target="_blank" title="A Person Who Is Harmless to Me"><img src="https://image.yes24.com/goods/61778623/L" alt="A Person Who Is Harmless to Me by Choi Eun-yeong — book cover" loading="lazy"></a>
     <a class="cv" href="https://www.yes24.com/product/goods/93317580" rel="nofollow noopener noreferrer" target="_blank" title="As If There Is a Friendly World"><img src="https://image.yes24.com/goods/93317580/L" alt="As If There Is a Friendly World by Hwang Yeji — book cover" loading="lazy"></a>
+    </div>
+    <div class="cv-row">
     <a class="cv" href="https://www.yes24.com/product/goods/67108537" rel="nofollow noopener noreferrer" target="_blank" title="Because You Are so Precious"><img src="https://image.yes24.com/goods/67108537/L" alt="Because You Are so Precious by Kim Jihoon — book cover" loading="lazy"></a>
     <a class="cv" href="https://www.yes24.com/product/goods/122541830" rel="nofollow noopener noreferrer" target="_blank" title="Common Languages"><img src="https://image.yes24.com/goods/122541830/L" alt="Common Languages by Kim Eana — book cover" loading="lazy"></a>
     <a class="cv" href="https://www.yes24.com/product/goods/8759796" rel="nofollow noopener noreferrer" target="_blank" title="Contradictions"><img src="https://image.yes24.com/goods/8759796/L" alt="Contradictions by Yang Gui-ja — book cover" loading="lazy"></a>
     <a class="cv" href="https://www.yes24.com/product/goods/66752479" rel="nofollow noopener noreferrer" target="_blank" title="Fire Salamander"><img src="https://image.yes24.com/goods/66752479/L" alt="Fire Salamander by Han Kang — book cover" loading="lazy"></a>
+    </div>
+    <div class="cv-row">
     <a class="cv" href="https://www.yes24.com/product/goods/118569079" rel="nofollow noopener noreferrer" target="_blank" title="Foster"><img src="https://image.yes24.com/goods/118569079/L" alt="Foster by Claire Keegan — book cover" loading="lazy"></a>
     <a class="cv" href="https://www.yes24.com/product/goods/118578901" rel="nofollow noopener noreferrer" target="_blank" title="Hunger"><img src="https://image.yes24.com/goods/118578901/L" alt="Hunger by Choi Jinyoung — book cover" loading="lazy"></a>
     <a class="cv" href="https://www.yes24.com/product/goods/104692009" rel="nofollow noopener noreferrer" target="_blank" title="Lee Eoryeong&#x27;s Last Class"><img src="https://image.yes24.com/goods/104692009/L" alt="Lee Eoryeong&#x27;s Last Class by Kim Ji-Su, Eo-Ryeong Lee — book cover" loading="lazy"></a>
     <a class="cv" href="https://www.yes24.com/product/goods/1387488" rel="nofollow noopener noreferrer" target="_blank" title="No Longer Human"><img src="https://image.yes24.com/goods/1387488/L" alt="No Longer Human by Osamu Dazai — book cover" loading="lazy"></a>
+    </div>
+    </div>
+    <div class="cv-page">
+    <div class="cv-row">
     <a class="cv" href="https://www.yes24.com/product/goods/20258841" rel="nofollow noopener noreferrer" target="_blank" title="Poetry Night"><img src="https://image.yes24.com/goods/20258841/L" alt="Poetry Night by Ha Sangwook — book cover" loading="lazy"></a>
     <a class="cv" href="https://www.yes24.com/product/goods/123400303" rel="nofollow noopener noreferrer" target="_blank" title="Small Things Like These"><img src="https://image.yes24.com/goods/123400303/L" alt="Small Things Like These by Claire Keegan — book cover" loading="lazy"></a>
     <a class="cv" href="https://www.yes24.com/product/goods/252513" rel="nofollow noopener noreferrer" target="_blank" title="Snow Country"><img src="https://image.yes24.com/goods/252513/L" alt="Snow Country by Yasunari Kawabata — book cover" loading="lazy"></a>
     <a class="cv" href="https://www.yes24.com/product/goods/42798224" rel="nofollow noopener noreferrer" target="_blank" title="Summer Outside"><img src="https://image.yes24.com/goods/42798224/L" alt="Summer Outside by Kim Ae-ran — book cover" loading="lazy"></a>
+    </div>
+    <div class="cv-row">
     <a class="cv" href="https://www.yes24.com/product/goods/30387696" rel="nofollow noopener noreferrer" target="_blank" title="Temperature of Language"><img src="https://image.yes24.com/goods/30387696/L" alt="Temperature of Language by Lee Kiju — book cover" loading="lazy"></a>
     <a class="cv" href="https://www.yes24.com/product/goods/197687" rel="nofollow noopener noreferrer" target="_blank" title="The Giving Tree"><img src="https://image.yes24.com/goods/197687/L" alt="The Giving Tree by Shel Silverstein — book cover" loading="lazy"></a>
     <a class="cv" href="https://www.yes24.com/product/goods/110832417" rel="nofollow noopener noreferrer" target="_blank" title="The Mail in Post Office Box 110"><img src="https://image.yes24.com/goods/110832417/L" alt="The Mail in Post Office Box 110 by Lee Do-woo — book cover" loading="lazy"></a>
     <a class="cv" href="https://www.yes24.com/product/goods/116586056" rel="nofollow noopener noreferrer" target="_blank" title="The Miracles of the Namiya General Store"><img src="https://image.yes24.com/goods/116586056/L" alt="The Miracles of the Namiya General Store by Keigo Higashino — book cover" loading="lazy"></a>
+    </div>
+    <div class="cv-row">
     <a class="cv" href="https://www.yes24.com/product/goods/6157159" rel="nofollow noopener noreferrer" target="_blank" title="The Old Man and the Sea"><img src="https://image.yes24.com/goods/6157159/L" alt="The Old Man and the Sea by 어니스트 헤밍웨이 — book cover" loading="lazy"></a>
     <a class="cv" href="https://www.yes24.com/product/goods/76106687" rel="nofollow noopener noreferrer" target="_blank" title="The Only Hana on Earth"><img src="https://image.yes24.com/goods/76106687/L" alt="The Only Hana on Earth by Chung Serang — book cover" loading="lazy"></a>
     <a class="cv" href="https://www.yes24.com/product/goods/64704276" rel="nofollow noopener noreferrer" target="_blank" title="The Setting Sun"><img src="https://image.yes24.com/goods/64704276/L" alt="The Setting Sun by Osamu Dazai — book cover" loading="lazy"></a>
     <a class="cv" href="https://www.yes24.com/product/goods/4827613" rel="nofollow noopener noreferrer" target="_blank" title="The Stranger"><img src="https://image.yes24.com/goods/4827613/L" alt="The Stranger by Albert Camus — book cover" loading="lazy"></a>
+    </div>
+    </div>
+    <div class="cv-page">
+    <div class="cv-row">
     <a class="cv" href="https://www.yes24.com/product/goods/108422348" rel="nofollow noopener noreferrer" target="_blank" title="The Vegetarian"><img src="https://image.yes24.com/goods/108422348/L" alt="The Vegetarian by Han Kang — book cover" loading="lazy"></a>
     <a class="cv" href="https://www.yes24.com/product/goods/43504366" rel="nofollow noopener noreferrer" target="_blank" title="To the Place Where the Sun Sets"><img src="https://image.yes24.com/goods/43504366/L" alt="To the Place Where the Sun Sets by Choi Jinyoung — book cover" loading="lazy"></a>
     <a class="cv" href="https://www.yes24.com/product/goods/103495056" rel="nofollow noopener noreferrer" target="_blank" title="We Do Not Part"><img src="https://image.yes24.com/goods/103495056/L" alt="We Do Not Part by Han Kang — book cover" loading="lazy"></a>
     <a class="cv" href="https://www.yes24.com/product/goods/123746663" rel="nofollow noopener noreferrer" target="_blank" title="When the Weather Is Fine"><img src="https://image.yes24.com/goods/123746663/L" alt="When the Weather Is Fine by Lee Do-woo — book cover" loading="lazy"></a>
+    </div>
+    <div class="cv-row">
     <a class="cv" href="https://www.yes24.com/product/goods/105526047" rel="nofollow noopener noreferrer" target="_blank" title="Why Fish Don&#x27;t Exist"><img src="https://image.yes24.com/goods/105526047/L" alt="Why Fish Don&#x27;t Exist by Lulu Miller — book cover" loading="lazy"></a>
+    </div>
+    </div>
+    <div class="cv-pager" data-total="29" data-per="12"><button type="button" class="pg" data-go="prev" aria-label="prev">◀</button><button type="button" class="pg" data-go="0">1</button><button type="button" class="pg" data-go="1">2</button><button type="button" class="pg" data-go="2">3</button><button type="button" class="pg" data-go="next" aria-label="next">▶</button><span class="pg-count"></span></div>
     </div>
     <ol class="reading-list" id="rlist">
     <li class="rl-item" id="b1">
@@ -1230,12 +1274,40 @@
     function set(v, save) {
       area.classList.toggle("show-covers", v === "cover");
       tabs.forEach(function (t) { t.setAttribute("aria-pressed", String(t.dataset.view === v)); });
-      if (save) { try { localStorage.setItem("shelfView", v); } catch (e) {} }
+      if (save) { try { localStorage.setItem("shelfView2", v); } catch (e) {} }
     }
     var saved = null;
-    try { saved = localStorage.getItem("shelfView"); } catch (e) {}
-    if (saved === "cover") set("cover", false);
+    try { saved = localStorage.getItem("shelfView2"); } catch (e) {}
+    if (saved === "spine") set("spine", false);
     tabs.forEach(function (t) { t.addEventListener("click", function () { set(t.dataset.view, true); }); });
+    // 표지 보기 쪽 넘김 (12권을 넘는 책장만)
+    var pager = document.querySelector(".cv-pager");
+    var pages = document.querySelectorAll(".cv-page");
+    if (pager && pages.length > 1) {
+      var cur = 0, ko = (document.documentElement.lang || "ko").indexOf("ko") === 0;
+      var total = +pager.dataset.total, per = +pager.dataset.per;
+      var nums = pager.querySelectorAll("[data-go]");
+      var show = function (n) {
+        cur = Math.max(0, Math.min(pages.length - 1, n));
+        pages.forEach(function (p, i) { p.classList.toggle("on", i === cur); });
+        nums.forEach(function (b) {
+          var g = b.dataset.go;
+          b.classList.toggle("on", g === String(cur));
+          b.disabled = (g === "prev" && cur === 0) || (g === "next" && cur === pages.length - 1);
+        });
+        var from = cur * per + 1, to = Math.min(total, (cur + 1) * per);
+        pager.querySelector(".pg-count").textContent = ko
+          ? from + "–" + to + "권 · 총 " + total + "권 · " + (cur + 1) + "/" + pages.length + "쪽"
+          : "Books " + from + "–" + to + " of " + total;
+      };
+      pager.addEventListener("click", function (e) {
+        var b = e.target.closest("[data-go]");
+        if (!b || b.disabled) return;
+        var g = b.dataset.go;
+        show(g === "prev" ? cur - 1 : g === "next" ? cur + 1 : +g);
+      });
+      show(0);
+    }
   })();
   </script>
   <script>
