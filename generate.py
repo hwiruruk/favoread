@@ -306,21 +306,26 @@ def resolve_title_en(title_ko, author_ko, csv_value):
 JA_KANA_RE = re.compile(r'[぀-ヿ]')
 JA_HANGUL_RE = re.compile(r'[가-힣]')
 # 알라딘 원제에 섞여 오는 옛 자체를 일본 서점에서 쓰는 표기로 바꾼다 (자주 나오는 것만)
-JA_OLD_KANJI = {ord(a): b for a, b in zip('歲體驗國學藝寫眞對戀傳廣澤黑關醫兒總續讀',
-                                          '歳体験国学芸写真対恋伝広沢黒関医児総続読')}
+JA_OLD_KANJI = {ord(a): b for a, b in zip('歲體驗國學藝寫眞對戀傳廣澤黑關醫兒總續讀假莊惡獻燈禮團雜迹聽驛樣說邊靜',
+                                          '歳体験国学芸写真対恋伝広沢黒関医児総続読仮荘悪献灯礼団雑跡聴駅様説辺静')}
+# 한자만 있는 원제 중 일본어가 아닌 것(한국 고전·중국 작가)의 저자. 나머지 한자 원제는 일본 책으로 본다.
+JA_NOT_JAPANESE_AUTHORS = {'이순신', '공자', '최술', '쯔진천', '류츠신', '위화', '천팅이'}
 
 
 def original_title_ja(title_ko, author_ko):
-    """일본어 원제(가나가 들어간 것만). 없으면 ''.
+    """일본어 원제. 없으면 ''.
 
     data/titles_en.json 의 original 은 알라딘·예스24가 적어 둔 원제 그대로다.
-    한자만 있는 원제는 일본어인지 중국어·한문 고전인지 알 수 없어 뺀다.
+    가나가 있으면 일본어. 한자만 있으면 저자가 JA_NOT_JAPANESE_AUTHORS 가 아닐 때만 일본어로 본다.
     """
     ent = TITLES_EN.get((title_ko or '') + '|' + (author_ko or '').strip())
     orig = ((ent or {}).get('original') or '').strip()
-    if not orig or not JA_KANA_RE.search(orig) or JA_HANGUL_RE.search(orig):
+    if not orig or JA_HANGUL_RE.search(orig):
         return ''
-    orig = re.sub(r'(?<=[゠-ヿ])-', 'ー', orig)   # ゴ-ルデン → ゴールデン
+    if not JA_KANA_RE.search(orig):
+        if not re.search(r'[\u4e00-\u9fff]', orig) or (author_ko or '').strip() in JA_NOT_JAPANESE_AUTHORS:
+            return ''
+    orig = re.sub(r'(?<=[゠-ヿ])[-\u2015\u2014]', 'ー', orig)   # ゴ-ルデン・パレ―ド → ゴールデン・パレード
     return orig.translate(JA_OLD_KANJI)
 
 
