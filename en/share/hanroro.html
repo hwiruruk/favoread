@@ -812,15 +812,29 @@
     .vt { font: inherit; font-size: 12px; font-weight: 700; padding: 5px 10px; background: #fff; color: #000; border: 0; cursor: pointer; }
     .vt + .vt { border-left: 2px solid #000; }
     .vt[aria-pressed="true"] { background: #000; color: #fff; }
-    .covers { display: none; grid-template-columns: repeat(auto-fill, minmax(84px, 1fr)); gap: 14px 12px; margin: 14px 0 22px; }
-    .show-covers .covers { display: grid; }
+    .covers { display: none; margin: 14px 0 22px; border: 2px solid #000; background: #f7f2e4; }
+    .show-covers .covers { display: block; }
     .show-covers .shelf { display: none; }
-    .cv { position: relative; display: block; aspect-ratio: 2/3; border: 1.5px solid #000; box-shadow: 2px 2px 0 0 #000;
-          background: #f4f4f0; overflow: hidden; color: #000; text-decoration: none; transition: transform .12s; }
-    .cv:hover { transform: translateY(-3px); text-decoration: none; }
+    .cv-page { display: none; }
+    .cv-page.on { display: block; }
+    .cv-row { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 0 18px;
+              padding: 20px 18px 16px; border-bottom: 12px solid #d9a066; }
+    .cv-row + .cv-row { border-top: 2px solid #000; }
+    .cv { position: relative; display: block; aspect-ratio: 2/3; border: 2px solid #000; box-shadow: 4px 4px 0 0 #000;
+          background: #f4f4f0; overflow: hidden; color: #000; text-decoration: none; transition: transform .12s, box-shadow .12s; }
+    .cv:hover { transform: translate(-2px, -4px); box-shadow: 6px 8px 0 0 #000; text-decoration: none; }
     .cv img { width: 100%; height: 100%; object-fit: cover; display: block; }
     .cv-no { display: flex; height: 100%; align-items: center; justify-content: center; padding: 6px;
              font-size: 11px; font-weight: 700; line-height: 1.3; text-align: center; word-break: keep-all; }
+    .cv-pager { display: flex; align-items: center; justify-content: center; gap: 6px; flex-wrap: wrap;
+                padding: 12px 8px; border-top: 2px solid #000; background: #fff; }
+    .cv-pager .pg { font: inherit; font-size: 13px; font-weight: 800; min-width: 34px; height: 34px; cursor: pointer;
+                    background: #fff; color: #000; border: 2px solid #000; box-shadow: 2px 2px 0 0 #000; }
+    .cv-pager .pg:hover { background: #fde047; }
+    .cv-pager .pg.on { background: #fde047; }
+    .cv-pager .pg[disabled] { opacity: .35; cursor: default; background: #fff; }
+    .cv-pager .pg-count { flex-basis: 100%; text-align: center; font-size: 12px; font-weight: 700; color: #555; margin-top: 4px; }
+    @media (max-width: 480px) { .cv-row { gap: 0 10px; padding: 16px 10px 12px; } }
     .shelf { --sh-h: 270px; --plank: 7px; --row: calc(var(--sh-h) + 18px);
              display: flex; flex-wrap: wrap; align-items: flex-end; gap: 11px 2px;
              margin: 14px 0 22px; padding: 0 8px 7px;
@@ -861,6 +875,13 @@
     .sp-i { position: relative; z-index: 1; display: block;
             height: 100%; width: auto; max-width: 80px; object-fit: fill; }
     .sp.no-img, .sp.sp-fail { width: var(--w, 38px); }
+    .sp-c { position: absolute; inset: 0; z-index: 0; width: 100%; height: 100%; object-fit: cover; object-position: 50% 50%; }
+    .sp.no-img { box-shadow: inset -2px 0 5px rgba(0,0,0,.14), inset 2px 0 4px rgba(255,255,255,.1); }
+    .sp.no-img.has-cut::after { content: ''; position: absolute; inset: 0; z-index: 1; pointer-events: none;
+        background: linear-gradient(90deg, rgba(255,255,255,.12), rgba(255,255,255,0) 25%, rgba(0,0,0,0) 65%, rgba(0,0,0,.14)),
+                    rgba(0,0,0,.16); }
+    .sp.no-img.has-cut .sp-t { z-index: 2; }
+    .sp.no-img.has-cut.sp-fail::after, .sp.no-img.has-cut.sp-fail .sp-c { display: none; }
     .sp-new { position: absolute; top: 0; left: 0; right: 0; z-index: 3; text-align: center;
               font-size: 8px; line-height: 1; padding: 3px 0 2px;
               border-bottom: 1px solid rgba(0,0,0,.55); }
@@ -929,7 +950,7 @@
     <div class="shelf-head">
       <h2>Books Hanroro has read (36)</h2>
       <div class="shelf-tabs">
-        <span class="view-tabs" role="group"><button type="button" class="vt" data-view="spine" aria-pressed="true">📚 Spines</button><button type="button" class="vt" data-view="cover" aria-pressed="false">🖼 Covers</button></span>
+        <span class="view-tabs" role="group"><button type="button" class="vt" data-view="cover" aria-pressed="true">🖼 Covers</button><button type="button" class="vt" data-view="spine" aria-pressed="false">📚 Spines</button></span>
         <button type="button" class="sh-cap" id="shelf-cap" title="Download the bookshelf as an image">⤓ Save image</button>
         <button type="button" class="sh-cap" id="shelf-cap-clear" title="Download as a PNG with a transparent background">⤓ Transparent</button>
       </div>
@@ -964,7 +985,7 @@
         <a class="new-tile" href="#b36"><span class="nt-cover"><img src="https://image.yes24.com/goods/108685354/L" alt="Zombies Away by Bae Yeram — book cover" loading="lazy"></span><span class="nt-title">Zombies Away</span></a>
       </div>
     </details>
-    <div id="shelf-area">
+    <div id="shelf-area" class="show-covers">
     <div class="shelf" id="shelf">
     <a class="sp is-new" style="--c:hsl(92,52%,33%);--w:41px;--fs:15px" href="https://www.yes24.com/product/goods/59495035" rel="nofollow noopener noreferrer" target="_blank" title="Agami"><span class="sp-t"><i>Agami</i></span><img class="sp-i" src="https://image.yes24.com/goods/125761510/side" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.parentNode.classList.add('sp-fail');this.remove()" onload="if(this.naturalWidth/this.naturalHeight>0.4){this.parentNode.classList.add('sp-fail');this.remove()}"><span class="sp-new" data-added="2026-09-29">NEW</span></a>
     <a class="sp is-new" style="--c:hsl(72,44%,39%);--w:33px;--fs:15px" href="https://www.yes24.com/product/goods/28995741" rel="nofollow noopener noreferrer" target="_blank" title="A Little Life"><span class="sp-t"><i>A Little Life</i></span><img class="sp-i" src="https://image.yes24.com/goods/28995741/side" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.parentNode.classList.add('sp-fail');this.remove()" onload="if(this.naturalWidth/this.naturalHeight>0.4){this.parentNode.classList.add('sp-fail');this.remove()}"><span class="sp-new" data-added="2026-09-29">NEW</span></a>
@@ -986,7 +1007,7 @@
     <a class="sp is-new" style="--c:hsl(303,46%,44%);--w:41px;--fs:11px" href="https://www.yes24.com/product/goods/123859964" rel="nofollow noopener noreferrer" target="_blank" title="I Plan to Be Lovely Next Year Too"><span class="sp-t"><i>I Plan to Be Lovely Next Year Too</i></span><img class="sp-i" src="https://image.yes24.com/goods/123859964/side" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.parentNode.classList.add('sp-fail');this.remove()" onload="if(this.naturalWidth/this.naturalHeight>0.4){this.parentNode.classList.add('sp-fail');this.remove()}"><span class="sp-new" data-added="2026-09-29">NEW</span></a>
     <a class="sp" style="--c:hsl(221,35%,28%);--w:30px;--fs:10px" href="https://www.yes24.com/product/goods/36920662" rel="nofollow noopener noreferrer" target="_blank" title="Lover Who Hears Even While Sleeping"><span class="sp-t"><i>Lover Who Hears Even While Sleeping</i></span><img class="sp-i" src="https://image.yes24.com/goods/36920662/side" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.parentNode.classList.add('sp-fail');this.remove()" onload="if(this.naturalWidth/this.naturalHeight>0.4){this.parentNode.classList.add('sp-fail');this.remove()}"></a>
     <a class="sp is-new" style="--c:hsl(229,33%,27%);--w:41px;--fs:15px" href="https://www.yes24.com/product/goods/125836830" rel="nofollow noopener noreferrer" target="_blank" title="Mushroom Farm"><span class="sp-t"><i>Mushroom Farm</i></span><img class="sp-i" src="https://image.yes24.com/goods/125836830/side" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.parentNode.classList.add('sp-fail');this.remove()" onload="if(this.naturalWidth/this.naturalHeight>0.4){this.parentNode.classList.add('sp-fail');this.remove()}"><span class="sp-new" data-added="2026-09-29">NEW</span></a>
-    <a class="sp no-img" style="--c:hsl(30,57%,29%);--w:44px;--fs:15px" href="https://www.yes24.com/product/goods/130500819" rel="nofollow noopener noreferrer" target="_blank" title="One of Them Is a Lie"><span class="sp-t"><i>One of Them Is a Lie</i></span></a>
+    <a class="sp no-img has-cut" style="--c:hsl(30,57%,29%);--w:44px;--fs:15px" href="https://www.yes24.com/product/goods/130500819" rel="nofollow noopener noreferrer" target="_blank" title="One of Them Is a Lie"><img class="sp-c" src="https://image.yes24.com/goods/130500819/L" alt="" loading="lazy" referrerpolicy="no-referrer"><span class="sp-t"><i>One of Them Is a Lie</i></span></a>
     <a class="sp is-new" style="--c:hsl(64,46%,43%);--w:35px;--fs:15px" href="https://www.yes24.com/product/goods/115094437" rel="nofollow noopener noreferrer" target="_blank" title="Rang and My Desert"><span class="sp-t"><i>Rang and My Desert</i></span><img class="sp-i" src="https://image.yes24.com/goods/115094437/side" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.parentNode.classList.add('sp-fail');this.remove()" onload="if(this.naturalWidth/this.naturalHeight>0.4){this.parentNode.classList.add('sp-fail');this.remove()}"><span class="sp-new" data-added="2026-09-29">NEW</span></a>
     <a class="sp is-new" style="--c:hsl(173,39%,27%);--w:43px;--fs:15px" href="https://www.yes24.com/product/goods/83820924" rel="nofollow noopener noreferrer" target="_blank" title="Repetition for Love"><span class="sp-t"><i>Repetition for Love</i></span><img class="sp-i" src="https://image.yes24.com/goods/83820924/side" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.parentNode.classList.add('sp-fail');this.remove()" onload="if(this.naturalWidth/this.naturalHeight>0.4){this.parentNode.classList.add('sp-fail');this.remove()}"><span class="sp-new" data-added="2026-09-29">NEW</span></a>
     <a class="sp" style="--c:hsl(116,43%,33%);--w:37px;--fs:15px" href="https://www.yes24.com/product/goods/29288225" rel="nofollow noopener noreferrer" target="_blank" title="Shoko&#x27;s Smile"><span class="sp-t"><i>Shoko&#x27;s Smile</i></span><img class="sp-i" src="https://image.yes24.com/goods/29288225/side" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.parentNode.classList.add('sp-fail');this.remove()" onload="if(this.naturalWidth/this.naturalHeight>0.4){this.parentNode.classList.add('sp-fail');this.remove()}"></a>
@@ -1004,42 +1025,67 @@
     <a class="sp is-new" style="--c:hsl(60,32%,41%);--w:38px;--fs:15px" href="https://www.yes24.com/product/goods/108685354" rel="nofollow noopener noreferrer" target="_blank" title="Zombies Away"><span class="sp-t"><i>Zombies Away</i></span><img class="sp-i" src="https://image.yes24.com/goods/108685354/side" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.parentNode.classList.add('sp-fail');this.remove()" onload="if(this.naturalWidth/this.naturalHeight>0.4){this.parentNode.classList.add('sp-fail');this.remove()}"><span class="sp-new" data-added="2026-09-29">NEW</span></a>
     </div>
     <div class="covers" id="covers">
+    <div class="cv-page on">
+    <div class="cv-row">
     <a class="cv" href="https://www.yes24.com/product/goods/59495035" rel="nofollow noopener noreferrer" target="_blank" title="Agami"><img src="https://image.yes24.com/goods/59495035/L" alt="Agami by Gu Byeong-mo — book cover" loading="lazy"></a>
     <a class="cv" href="https://www.yes24.com/product/goods/28995741" rel="nofollow noopener noreferrer" target="_blank" title="A Little Life"><img src="https://image.yes24.com/goods/28995741/L" alt="A Little Life by Hanya Yanagihara — book cover" loading="lazy"></a>
     <a class="cv" href="https://www.yes24.com/product/goods/118444996" rel="nofollow noopener noreferrer" target="_blank" title="A Quiet Embrace"><img src="https://image.yes24.com/goods/118444996/L" alt="A Quiet Embrace by Park Yeonjun — book cover" loading="lazy"></a>
     <a class="cv" href="https://www.yes24.com/product/goods/101965629" rel="nofollow noopener noreferrer" target="_blank" title="Ashes and Bubbles"><img src="https://image.yes24.com/goods/101965629/L" alt="Ashes and Bubbles by Kim Cheongyul — book cover" loading="lazy"></a>
+    </div>
+    <div class="cv-row">
     <a class="cv" href="https://www.yes24.com/product/goods/283718" rel="nofollow noopener noreferrer" target="_blank" title="A Sorrow Beyond Dreams"><img src="https://image.yes24.com/goods/283718/L" alt="A Sorrow Beyond Dreams by Peter Handke — book cover" loading="lazy"></a>
     <a class="cv" href="https://www.yes24.com/product/goods/93745841" rel="nofollow noopener noreferrer" target="_blank" title="A Story That Cannot Be Deceived in A Nail"><img src="https://image.yes24.com/goods/93745841/L" alt="A Story That Cannot Be Deceived in A Nail by Kim Park Eun-Kyung — book cover" loading="lazy"></a>
     <a class="cv" href="https://www.yes24.com/product/goods/123947155" rel="nofollow noopener noreferrer" target="_blank" title="Axiomatic"><img src="https://image.yes24.com/goods/123947155/L" alt="Axiomatic by Maria Tumakin — book cover" loading="lazy"></a>
     <a class="cv" href="https://www.yes24.com/product/goods/92501644" rel="nofollow noopener noreferrer" target="_blank" title="Because in My Sister’S Country, No One Withers,"><img src="https://image.yes24.com/goods/92501644/L" alt="Because in My Sister’S Country, No One Withers, by Kim Heejun — book cover" loading="lazy"></a>
+    </div>
+    <div class="cv-row">
     <a class="cv" href="https://www.yes24.com/product/goods/118530641" rel="nofollow noopener noreferrer" target="_blank" title="Bless Those Who Forget"><img src="https://image.yes24.com/goods/118530641/L" alt="Bless Those Who Forget by Min Ji-Hyung — book cover" loading="lazy"></a>
     <a class="cv" href="https://www.yes24.com/product/goods/2812427" rel="nofollow noopener noreferrer" target="_blank" title="Dictionary of the Heart"><img src="https://image.yes24.com/goods/2812427/L" alt="Dictionary of the Heart by Kim So-yeon — book cover" loading="lazy"></a>
     <a class="cv" href="https://www.yes24.com/product/goods/12988267" rel="nofollow noopener noreferrer" target="_blank" title="Disturbing Black Blood"><img src="https://image.yes24.com/goods/12988267/L" alt="Disturbing Black Blood by Heo Yeon — book cover" loading="lazy"></a>
     <a class="cv" href="https://www.yes24.com/product/goods/192466480" rel="nofollow noopener noreferrer" target="_blank" title="Don&#x27;t Freeze, Don&#x27;t Die, You&#x27;ll Love"><img src="https://image.yes24.com/goods/192466480/L" alt="Don&#x27;t Freeze, Don&#x27;t Die, You&#x27;ll Love by Kwon Hyeyoung — book cover" loading="lazy"></a>
+    </div>
+    </div>
+    <div class="cv-page">
+    <div class="cv-row">
     <a class="cv" href="https://www.yes24.com/product/goods/66752479" rel="nofollow noopener noreferrer" target="_blank" title="Fire Salamander"><img src="https://image.yes24.com/goods/66752479/L" alt="Fire Salamander by Han Kang — book cover" loading="lazy"></a>
     <a class="cv" href="https://www.yes24.com/product/goods/92462811" rel="nofollow noopener noreferrer" target="_blank" title="Half A Day in the Forest"><img src="https://image.yes24.com/goods/92462811/L" alt="Half A Day in the Forest by Nam Younghwa — book cover" loading="lazy"></a>
     <a class="cv" href="https://www.yes24.com/product/goods/13137546" rel="nofollow noopener noreferrer" target="_blank" title="Human Acts"><img src="https://image.yes24.com/goods/13137546/L" alt="Human Acts by Han Kang — book cover" loading="lazy"></a>
     <a class="cv" href="https://www.yes24.com/product/goods/118578901" rel="nofollow noopener noreferrer" target="_blank" title="Hunger"><img src="https://image.yes24.com/goods/118578901/L" alt="Hunger by Choi Jin-young — book cover" loading="lazy"></a>
+    </div>
+    <div class="cv-row">
     <a class="cv" href="https://www.yes24.com/product/goods/17350782" rel="nofollow noopener noreferrer" target="_blank" title="I Became an Adult Without Anyone Knowing"><img src="https://image.yes24.com/goods/17350782/L" alt="I Became an Adult Without Anyone Knowing by Park Eun-jeong — book cover" loading="lazy"></a>
     <a class="cv" href="https://www.yes24.com/product/goods/123859964" rel="nofollow noopener noreferrer" target="_blank" title="I Plan to Be Lovely Next Year Too"><img src="https://image.yes24.com/goods/123859964/L" alt="I Plan to Be Lovely Next Year Too by 변윤제 — book cover" loading="lazy"></a>
     <a class="cv" href="https://www.yes24.com/product/goods/36920662" rel="nofollow noopener noreferrer" target="_blank" title="Lover Who Hears Even While Sleeping"><img src="https://image.yes24.com/goods/36920662/L" alt="Lover Who Hears Even While Sleeping by Kim Gaemi — book cover" loading="lazy"></a>
     <a class="cv" href="https://www.yes24.com/product/goods/125836830" rel="nofollow noopener noreferrer" target="_blank" title="Mushroom Farm"><img src="https://image.yes24.com/goods/125836830/L" alt="Mushroom Farm by Seong Hye-Ryeong — book cover" loading="lazy"></a>
+    </div>
+    <div class="cv-row">
     <a class="cv" href="https://www.yes24.com/product/goods/130500819" rel="nofollow noopener noreferrer" target="_blank" title="One of Them Is a Lie"><img src="https://image.yes24.com/goods/130500819/L" alt="One of Them Is a Lie by Kim Ae-Ran — book cover" loading="lazy"></a>
     <a class="cv" href="https://www.yes24.com/product/goods/115094437" rel="nofollow noopener noreferrer" target="_blank" title="Rang and My Desert"><img src="https://image.yes24.com/goods/115094437/L" alt="Rang and My Desert by Cheon Seonran — book cover" loading="lazy"></a>
     <a class="cv" href="https://www.yes24.com/product/goods/83820924" rel="nofollow noopener noreferrer" target="_blank" title="Repetition for Love"><img src="https://image.yes24.com/goods/83820924/L" alt="Repetition for Love by Hwang Inchan — book cover" loading="lazy"></a>
     <a class="cv" href="https://www.yes24.com/product/goods/29288225" rel="nofollow noopener noreferrer" target="_blank" title="Shoko&#x27;s Smile"><img src="https://image.yes24.com/goods/29288225/L" alt="Shoko&#x27;s Smile by Choi Eunyoung — book cover" loading="lazy"></a>
+    </div>
+    </div>
+    <div class="cv-page">
+    <div class="cv-row">
     <a class="cv" href="https://www.yes24.com/product/goods/67745465" rel="nofollow noopener noreferrer" target="_blank" title="So the Things I Wrote Down"><img src="https://image.yes24.com/goods/67745465/L" alt="So the Things I Wrote Down by Lee Jennie — book cover" loading="lazy"></a>
     <a class="cv" href="https://www.yes24.com/product/goods/65571845" rel="nofollow noopener noreferrer" target="_blank" title="The Name of the Beautiful Person Is Alone"><img src="https://image.yes24.com/goods/65571845/L" alt="The Name of the Beautiful Person Is Alone by Lee Hyunho — book cover" loading="lazy"></a>
     <a class="cv" href="https://www.yes24.com/product/goods/125761518" rel="nofollow noopener noreferrer" target="_blank" title="The Old Woman with the Knife"><img src="https://image.yes24.com/goods/125761518/L" alt="The Old Woman with the Knife by Gu Byeong-mo — book cover" loading="lazy"></a>
     <a class="cv" href="https://www.yes24.com/product/goods/143896198" rel="nofollow noopener noreferrer" target="_blank" title="The White Book"><img src="https://image.yes24.com/goods/143896198/L" alt="The White Book by Han Kang — book cover" loading="lazy"></a>
+    </div>
+    <div class="cv-row">
     <a class="cv" href="https://www.yes24.com/product/goods/125829847" rel="nofollow noopener noreferrer" target="_blank" title="Tomato Cup Ramen"><img src="https://image.yes24.com/goods/125829847/L" alt="Tomato Cup Ramen by Cha Jeong-Eun — book cover" loading="lazy"></a>
     <a class="cv" href="https://www.yes24.com/product/goods/90392124" rel="nofollow noopener noreferrer" target="_blank" title="Toward the Vanishing Point of the Forest"><img src="https://image.yes24.com/goods/90392124/L" alt="Toward the Vanishing Point of the Forest by Yang Anda — book cover" loading="lazy"></a>
     <a class="cv" href="https://www.yes24.com/product/goods/33085243" rel="nofollow noopener noreferrer" target="_blank" title="Unexpected Vanilla"><img src="https://image.yes24.com/goods/33085243/L" alt="Unexpected Vanilla by Lee Hyemi — book cover" loading="lazy"></a>
     <a class="cv" href="https://www.yes24.com/product/goods/140371585" rel="nofollow noopener noreferrer" target="_blank" title="Uses of Music"><img src="https://image.yes24.com/goods/140371585/L" alt="Uses of Music by Jo Hye-Rim — book cover" loading="lazy"></a>
+    </div>
+    <div class="cv-row">
     <a class="cv" href="https://www.yes24.com/product/goods/127043675" rel="nofollow noopener noreferrer" target="_blank" title="Walking in A Carrot Field"><img src="https://image.yes24.com/goods/127043675/L" alt="Walking in A Carrot Field by Ahn Hee-Yeon — book cover" loading="lazy"></a>
     <a class="cv" href="https://www.yes24.com/product/goods/97951059" rel="nofollow noopener noreferrer" target="_blank" title="When We Hold Hands, the Snow Melts"><img src="https://image.yes24.com/goods/97951059/L" alt="When We Hold Hands, the Snow Melts by Jang Sooyang — book cover" loading="lazy"></a>
     <a class="cv" href="https://www.yes24.com/product/goods/115850818" rel="nofollow noopener noreferrer" target="_blank" title="World"><img src="https://image.yes24.com/goods/115850818/L" alt="World by Kim Jong-Yeon — book cover" loading="lazy"></a>
     <a class="cv" href="https://www.yes24.com/product/goods/108685354" rel="nofollow noopener noreferrer" target="_blank" title="Zombies Away"><img src="https://image.yes24.com/goods/108685354/L" alt="Zombies Away by Bae Yeram — book cover" loading="lazy"></a>
+    </div>
+    </div>
+    <div class="cv-pager" data-total="36" data-per="12"><button type="button" class="pg" data-go="prev" aria-label="prev">◀</button><button type="button" class="pg" data-go="0">1</button><button type="button" class="pg" data-go="1">2</button><button type="button" class="pg" data-go="2">3</button><button type="button" class="pg" data-go="next" aria-label="next">▶</button><span class="pg-count"></span></div>
     </div>
     <ol class="reading-list" id="rlist">
     <li class="rl-item" id="b1">
@@ -1429,12 +1475,40 @@
     function set(v, save) {
       area.classList.toggle("show-covers", v === "cover");
       tabs.forEach(function (t) { t.setAttribute("aria-pressed", String(t.dataset.view === v)); });
-      if (save) { try { localStorage.setItem("shelfView", v); } catch (e) {} }
+      if (save) { try { localStorage.setItem("shelfView2", v); } catch (e) {} }
     }
     var saved = null;
-    try { saved = localStorage.getItem("shelfView"); } catch (e) {}
-    if (saved === "cover") set("cover", false);
+    try { saved = localStorage.getItem("shelfView2"); } catch (e) {}
+    if (saved === "spine") set("spine", false);
     tabs.forEach(function (t) { t.addEventListener("click", function () { set(t.dataset.view, true); }); });
+    // 표지 보기 쪽 넘김 (12권을 넘는 책장만)
+    var pager = document.querySelector(".cv-pager");
+    var pages = document.querySelectorAll(".cv-page");
+    if (pager && pages.length > 1) {
+      var cur = 0, ko = (document.documentElement.lang || "ko").indexOf("ko") === 0;
+      var total = +pager.dataset.total, per = +pager.dataset.per;
+      var nums = pager.querySelectorAll("[data-go]");
+      var show = function (n) {
+        cur = Math.max(0, Math.min(pages.length - 1, n));
+        pages.forEach(function (p, i) { p.classList.toggle("on", i === cur); });
+        nums.forEach(function (b) {
+          var g = b.dataset.go;
+          b.classList.toggle("on", g === String(cur));
+          b.disabled = (g === "prev" && cur === 0) || (g === "next" && cur === pages.length - 1);
+        });
+        var from = cur * per + 1, to = Math.min(total, (cur + 1) * per);
+        pager.querySelector(".pg-count").textContent = ko
+          ? from + "–" + to + "권 · 총 " + total + "권 · " + (cur + 1) + "/" + pages.length + "쪽"
+          : "Books " + from + "–" + to + " of " + total;
+      };
+      pager.addEventListener("click", function (e) {
+        var b = e.target.closest("[data-go]");
+        if (!b || b.disabled) return;
+        var g = b.dataset.go;
+        show(g === "prev" ? cur - 1 : g === "next" ? cur + 1 : +g);
+      });
+      show(0);
+    }
   })();
   </script>
   <script>
