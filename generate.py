@@ -524,7 +524,8 @@ SPINE_IMG_GUARD = (
 SHELF_CAPTURE_JS_TEMPLATE = (
     '  <script>\n'
     '  (function () {\n'
-    '    var btns = [document.getElementById("shelf-cap"), document.getElementById("shelf-cap-clear")]\n'
+    '    var btns = [document.getElementById("shelf-cap"), document.getElementById("shelf-cap-clear"),\n'
+    '                document.getElementById("shelf-x")]\n'
     '      .filter(Boolean);\n'
     '    if (!btns.length) return;\n'
     '    var H2C = "https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js";\n'
@@ -670,29 +671,122 @@ SHELF_CAPTURE_JS_TEMPLATE = (
     '      });\n'
     '    }\n'
     '\n'
-    '    function download(blob, clear) {\n'
+    '    function download(blob, suffix) {\n'
     '      var url = URL.createObjectURL(blob);\n'
     '      var a = document.createElement("a");\n'
     '      a.href = url; a.rel = "noopener";\n'
-    '      a.download = clear ? __FILE__.replace(/\\.png$/, __CLEAR__ + ".png") : __FILE__;\n'
+    '      a.download = suffix ? __FILE__.replace(/\\.png$/, suffix + ".png") : __FILE__;\n'
     '      document.body.appendChild(a);\n'
     '      a.click();\n'
     '      a.remove();\n'
     '      setTimeout(function () { URL.revokeObjectURL(url); }, 6000);\n'
     '    }\n'
     '\n'
+    '    /* ---- X(트위터) 공유 ----\n'
+    '       X의 글쓰기 창(intent)은 주소와 글만 받고 이미지는 못 붙인다. 그래서 X에 맞춘\n'
+    '       그림을 만들어 클립보드에 복사(안 되면 저장)하고, 목록 글이 채워진 창을 연다.\n'
+    '       붙여넣기만 하면 되도록. 지금 화면에 보이는 쪽(표지/책등)을 그린다. */\n'
+    '    var XT = __XT__;\n'
+    '    var LIGHT = [[0, 4351], [8192, 8205], [8208, 8223], [8242, 8247]];\n'
+    '    // X의 글자 수 규칙: 주소는 23, 한글·한자 등은 2, 라틴 문자는 1\n'
+    '    function tweetLen(text) {\n'
+    '      var n = 0;\n'
+    '      text = text.replace(/https?:\\/\\/\\S+/g, function () { n += 23; return ""; });\n'
+    '      Array.from(text).forEach(function (ch) {\n'
+    '        var cp = ch.codePointAt(0);\n'
+    '        if (cp === 0xFE0F) return;\n'
+    '        n += LIGHT.some(function (r) { return cp >= r[0] && cp <= r[1]; }) ? 1 : 2;\n'
+    '      });\n'
+    '      return n;\n'
+    '    }\n'
+    '    function pageUrl() {\n'
+    '      var c = document.querySelector(\'link[rel="canonical"]\');\n'
+    '      return (c && c.href) || location.href.split("#")[0];\n'
+    '    }\n'
+    '    // 그림에 보이는 책만 글에 적는다 (표지 보기는 지금 쪽, 책등 보기는 전부)\n'
+    '    function shownTitles(area) {\n'
+    '      var cover = area.classList.contains("show-covers");\n'
+    '      var els = [].slice.call(area.querySelectorAll(cover ? ".cv-page.on .cv" : ".shelf .sp"));\n'
+    '      return {\n'
+    '        list: els.map(function (e) { return (e.getAttribute("title") || "").trim(); }).filter(Boolean),\n'
+    '        total: area.querySelectorAll(".shelf .sp").length\n'
+    '      };\n'
+    '    }\n'
+    '    function buildText(list, total) {\n'
+    '      var head = __TITLE__ + "\\n\\n", tail = "\\n\\n" + pageUrl();\n'
+    '      function more(n) { return n > 0 ? "\\n" + XT.more.replace("%n", n) : ""; }\n'
+    '      var picked = [];\n'
+    '      for (var i = 0; i < list.length; i++) {\n'
+    '        var t = head + picked.concat((i + 1) + ". " + list[i]).join("\\n") + more(total - i - 1) + tail;\n'
+    '        if (tweetLen(t) > 280) break;\n'
+    '        picked.push((i + 1) + ". " + list[i]);\n'
+    '      }\n'
+    '      return head + picked.join("\\n") + more(total - picked.length) + tail;\n'
+    '    }\n'
+    '    // X 타임라인에 맞춘 그림: 가로 1200, 높이 675(16:9)~1350(4:5), 종이색 바탕\n'
+    '    function composeX(inner) {\n'
+    '      var W = 1200, pad = 56, head = 118, foot = 86, MAXH = 1350, MINH = 675;\n'
+    '      var s = Math.min((W - pad * 2) / inner.width, (MAXH - head - foot) / inner.height);\n'
+    '      var iw = Math.round(inner.width * s), ih = Math.round(inner.height * s);\n'
+    '      var H = Math.max(MINH, head + ih + foot);\n'
+    '      var c = document.createElement("canvas");\n'
+    '      c.width = W; c.height = H;\n'
+    '      var g = c.getContext("2d");\n'
+    '      g.fillStyle = PAPER; g.fillRect(0, 0, W, H);\n'
+    '      g.fillStyle = "#111";\n'
+    '      g.font = "800 40px " + FONT;\n'
+    '      g.textBaseline = "middle"; g.textAlign = "left";\n'
+    '      var t = __TITLE__;\n'
+    '      while (t.length > 4 && g.measureText(t).width > W - pad * 2) t = t.slice(0, -2) + "…";\n'
+    '      g.fillText(t, pad, head / 2 + 6);\n'
+    '      g.drawImage(inner, Math.round((W - iw) / 2), head + Math.max(0, Math.round((H - head - foot - ih) / 2)), iw, ih);\n'
+    '      g.fillStyle = "#8a8578";\n'
+    '      g.font = "600 28px " + FONT;\n'
+    '      g.textAlign = "right"; g.textBaseline = "middle";\n'
+    '      g.fillText("favorbook.co.kr", W - pad, H - foot / 2);\n'
+    '      return c;\n'
+    '    }\n'
+    '    function toast(msg) {\n'
+    '      var d = document.createElement("div");\n'
+    '      d.textContent = msg;\n'
+    '      d.style.cssText = "position:fixed;left:50%;bottom:24px;transform:translateX(-50%);z-index:99999;"\n'
+    '        + "max-width:min(92vw,420px);padding:12px 16px;background:#111;color:#fff;font:600 14px/1.5 " + FONT\n'
+    '        + ";border:2px solid #fde047;box-shadow:3px 3px 0 0 rgba(0,0,0,.35);text-align:center";\n'
+    '      document.body.appendChild(d);\n'
+    '      setTimeout(function () { d.remove(); }, 7000);\n'
+    '    }\n'
     '    function capture(btn) {\n'
-    '      var clear = btn.id === "shelf-cap-clear";\n'
-    '      // 책장과 표지 목록을 함께 담은 상자 하나만 넘긴다\n'
-    '      var view = document.getElementById("shelf-area") || document.getElementById("shelf");\n'
+    '      var mode = btn.id === "shelf-x" ? "x" : btn.id === "shelf-cap-clear" ? "clear" : "save";\n'
+    '      var clear = mode === "clear";\n'
+    '      var area = document.getElementById("shelf-area");\n'
+    '      // 저장은 책장과 표지 목록을 함께 담은 상자, X 공유는 지금 보는 책장/표지 판만\n'
+    '      var view = mode === "x"\n'
+    '        ? document.getElementById(area && area.classList.contains("show-covers") ? "covers" : "shelf")\n'
+    '        : (area || document.getElementById("shelf"));\n'
     '      if (!view) return;\n'
+    '      var mark = area || view;\n'
+    '      var text = "", xwin = null, clip = null, give = null, giveUp = null;\n'
+    '      if (mode === "x") {\n'
+    '        var info = shownTitles(mark);\n'
+    '        text = buildText(info.list, info.total);\n'
+    '        // 팝업 차단을 피하려면 클릭 직후에 창을 열어 둬야 한다. 주소는 나중에 채운다.\n'
+    '        xwin = window.open("about:blank", "_blank");\n'
+    '        // 클립보드 복사도 클릭 안에서 시작해야 사파리가 허락한다. 그림은 나중에 채운다.\n'
+    '        if (navigator.clipboard && window.ClipboardItem) {\n'
+    '          var pending = new Promise(function (ok, no) { give = ok; giveUp = no; });\n'
+    '          try {\n'
+    '            clip = navigator.clipboard.write([new ClipboardItem({ "image/png": pending })])\n'
+    '              .then(function () { return true; }, function () { return false; });\n'
+    '          } catch (e) { clip = null; }\n'
+    '        }\n'
+    '      }\n'
     '      var was = btn.textContent;\n'
     '      btns.forEach(function (b) { b.disabled = true; });\n'
     '      btn.textContent = __BUSY__;\n'
     '      var swap = null, muted = null;\n'
     '      // 저장하는 그림에는 NEW 표시와 함께 추천한 셀럽 목록을 넣지 않는다.\n'
     '      // html2canvas가 문서를 복사할 때 이 클래스도 따라가서 복사본에서만 빠진 채 그려진다.\n'
-    '      view.classList.add("is-capturing");\n'
+    '      mark.classList.add("is-capturing");\n'
     '      guard(loadH2C(), 15000, "html2canvas").then(function () {\n'
     '        swap = swapImages(view);\n'
     '        return swap.ready;\n'
@@ -714,16 +808,25 @@ SHELF_CAPTURE_JS_TEMPLATE = (
     '        }), 40000, "그리기");\n'
     '      }).then(function (inner) {\n'
     '        // data: 주소는 길어지면 브라우저가 파일 이름을 무시한다. Blob으로 넘긴다.\n'
-    '        return guard(toBlob(compose(inner, clear)), 25000, "내보내기");\n'
+    '        return guard(toBlob(mode === "x" ? composeX(inner) : compose(inner, clear)), 25000, "내보내기");\n'
     '      }).then(function (blob) {\n'
-    '        download(blob, clear);\n'
+    '        if (mode !== "x") { download(blob, clear ? __CLEAR__ : ""); return; }\n'
+    '        if (give) give(blob);\n'
+    '        return Promise.resolve(clip).then(function (ok) {\n'
+    '          if (!ok) download(blob, "_x");\n'
+    '          var url = "https://x.com/intent/post?text=" + encodeURIComponent(text);\n'
+    '          if (xwin && !xwin.closed) xwin.location.href = url; else window.open(url, "_blank");\n'
+    '          toast(ok ? XT.copied : XT.saved);\n'
+    '        });\n'
     '      }).catch(function (e) {\n'
     '        console.error(e);\n'
+    '        if (giveUp) giveUp(e);\n'
+    '        if (xwin && !xwin.closed) xwin.close();\n'
     '        alert(__FAIL__);\n'
     '      }).then(function () {\n'
     '        if (swap) swap.undo.forEach(function (f) { f(); });\n'
     '        if (muted) unmute(muted);\n'
-    '        view.classList.remove("is-capturing");\n'
+    '        mark.classList.remove("is-capturing");\n'
     '        btns.forEach(function (b) { b.disabled = false; });\n'
     '        btn.textContent = was;\n'
     '      });\n'
@@ -830,15 +933,32 @@ SHELF_VIEW_JS = (
 )
 
 
-def shelf_capture_js(busy, filename, fail, headline, clear_suffix='_투명'):
-    """언어별 문구만 갈아 끼운다. clear_suffix 는 투명 배경 파일 이름 끝에 붙는다."""
+def shelf_capture_js(busy, filename, fail, headline, clear_suffix='_투명', x_texts=None):
+    """언어별 문구만 갈아 끼운다. clear_suffix 는 투명 배경 파일 이름 끝에 붙는다.
+
+    x_texts 는 X 공유 문구: more(목록에 다 못 적은 권수, %n 자리), copied(그림이 복사됨), saved(그림이 저장됨).
+    """
     j = lambda v: json.dumps(v, ensure_ascii=False)
+    x_texts = x_texts or X_TEXTS_KO
     return (SHELF_CAPTURE_JS_TEMPLATE
             .replace('__CLEAR__', j(clear_suffix))
             .replace('__BUSY__', j(busy))
             .replace('__FILE__', j(filename))
             .replace('__FAIL__', j(fail))
+            .replace('__XT__', j(x_texts))
             .replace('__TITLE__', j(headline)))
+
+
+X_TEXTS_KO = {
+    'more': '외 %n권',
+    'copied': '그림을 복사했어요. X 글쓰기 창에서 붙여넣기(Ctrl+V / 길게 눌러 붙여넣기) 하세요.',
+    'saved': '그림을 저장했어요. X 글쓰기 창에서 이미지 추가로 올려 주세요.',
+}
+X_TEXTS_EN = {
+    'more': '+%n more',
+    'copied': 'Image copied. Paste it into the X composer (Ctrl+V / long-press to paste).',
+    'saved': 'Image saved. Attach it in the X composer.',
+}
 
 
 # 책장 CSS — 한국어 share 페이지와 /en/ 페이지가 함께 쓴다.
@@ -850,6 +970,8 @@ SHELF_CSS = (
     '    .sh-cap { font: inherit; font-size: 12px; font-weight: 700; cursor: pointer; padding: 5px 12px;\n'
     '              background: #fff; color: #000; border: 2px solid #000; box-shadow: 2px 2px 0 0 #000; }\n'
     '    .sh-cap:hover { background: #fde047; }\n'
+    '    .sh-x { background: #000; color: #fff; }\n'
+    '    .sh-x:hover { background: #333; color: #fff; }\n'
     '    .sh-cap[disabled] { opacity: .55; cursor: default; }\n'
     # 보기 전환 (책등 / 표지)
     '    .view-tabs { display: inline-flex; border: 2px solid #000; box-shadow: 2px 2px 0 0 #000; background: #fff; }\n'
@@ -948,6 +1070,7 @@ SHELF_CSS = (
     # 이미지로 저장하는 동안에는 NEW 표시와 함께 추천한 셀럽 목록을 뺀다
     '    .is-capturing .sp-new, .is-capturing .rl-new, .is-capturing .rl-shared, .is-capturing .rl-comment { display: none !important; }\n'
     '    .is-capturing .sp.is-new .sp-t { padding-top: 14px; }\n'
+    '    .is-capturing .cv-pager { display: none !important; }\n'
     # 좁은 화면에서는 한 줄에 너무 적게 들어가므로 조금 줄인다
     # 좁은 화면에서는 책등을 낮추므로 글자도 그 비율(205/270)만큼 줄인다
     '    @media (max-width: 480px) { .shelf { --sh-h: 205px; }\n'
@@ -2593,6 +2716,7 @@ for name, info in celebs.items():
         + shelf_view_tabs('📚 책등', '🖼 표지') +
         '        <button type="button" class="sh-cap" id="shelf-cap" title="책장을 그림으로 내려받아요">⤓ 이미지 저장</button>\n'
         '        <button type="button" class="sh-cap" id="shelf-cap-clear" title="배경 없이 투명한 PNG로 내려받아요">⤓ 투명 배경</button>\n'
+        '        <button type="button" class="sh-cap sh-x" id="shelf-x" title="지금 보는 표지/책등 그림과 목록 글로 X에 공유해요">𝕏 공유</button>\n'
         '      </div>\n'
         '    </div>\n'
         + new_block(new_items)
@@ -4011,6 +4135,7 @@ for name, info in celebs.items():
         + shelf_view_tabs('📚 Spines', '🖼 Covers') +
         '        <button type="button" class="sh-cap" id="shelf-cap" title="Download the bookshelf as an image">\u2913 Save image</button>\n'
         '        <button type="button" class="sh-cap" id="shelf-cap-clear" title="Download as a PNG with a transparent background">\u2913 Transparent</button>\n'
+        '        <button type="button" class="sh-cap sh-x" id="shelf-x" title="Share the current cover/spine view and list to X">\U0001D54F Share</button>\n'
         '      </div>\n'
         '    </div>\n'
         + new_block(en_new_items, 'en')
@@ -4026,7 +4151,7 @@ for name, info in celebs.items():
         + SHELF_VIEW_JS
         + shelf_capture_js('Saving…', 'bookshelf_' + slug + '.png',
                            'Could not create the image. Please try again.',
-                           _name_pl + ' — ' + str(n) + ' books', '_transparent')
+                           _name_pl + ' — ' + str(n) + ' books', '_transparent', X_TEXTS_EN)
         + (EN_TR_NOTE_HTML if en_show_tr_note else '')
         + en_taste_html
         + en_related_html
