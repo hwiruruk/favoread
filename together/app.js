@@ -536,9 +536,9 @@ function selectCeleb(name) {
   render();
 }
 
-/* 처음에는 글자 없이 사진 + 책 표지만. 문구는 ⑤에서 필요한 것만 올린다. */
+/* 처음에는 텅 빈 카드 — 책은 자동으로 놓지 않고, 놓을 자리만 안내선으로 보여준다.
+   책을 고르면 안내선이 사라진다(PNG에도 들어가지 않는다). 문구는 ⑤에서 필요한 것만 올린다. */
 function seedDefaults() {
-  state.celeb.books.slice(0, 3).forEach((b) => addBook(b, false));
   layoutBooks();
 }
 
@@ -737,7 +737,9 @@ function cardHTML() {
          ${state.credit ? `<span class="tg-mark-r">${esc(state.credit)}</span>` : ''}
        </div>`
     : '';
-  return photo + dim + state.items.map(itemHTML).join('') + mark;
+  const guide = state.items.some((i) => i.type === 'book') ? ''
+    : `<div class="tg-guide"><span>＋</span><b>책을 추가하세요</b></div>`;
+  return photo + dim + guide + state.items.map(itemHTML).join('') + mark;
 }
 
 function render(opts) {
@@ -1349,6 +1351,7 @@ async function exportPNG() {
   el.style.transform = 'none';
   el.style.width = `${W}px`; el.style.height = `${H}px`;
   $$('.tg-item', el).forEach((n) => n.classList.remove('sel'));
+  $$('.tg-guide', el).forEach((n) => n.remove());   // 안내선은 저장 그림에 넣지 않는다
   const holder = document.createElement('div');
   holder.style.cssText = 'position:fixed;left:-99999px;top:0;z-index:-1';
   holder.appendChild(el);
