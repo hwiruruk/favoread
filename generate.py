@@ -1252,6 +1252,43 @@ for _name, _info in celebs.items():
         _auto_comment_count += 1
 print(f"💬 검수 승인된 자동 코멘트 {_auto_comment_count}건 반영")
 
+# ── 책 취향 통계 ─────────────────────────────────────────────────────
+# 책 정보(번역서·출간일·쪽수·시리즈)는 data/bookinfo.json(tools/fetch_bookinfo.py),
+# 작가·출판사는 data.csv 에서 센다. 기준은 tools/taste.py 맨 위에 있다.
+# 믿을 만한 것만 내고, 모자라면 아무것도 안 낸다.
+import sys as _sys
+_sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), 'tools'))
+import taste as _taste
+try:
+    with open('data/bookinfo.json', encoding='utf-8') as f:
+        _bookinfo_db = json.load(f).get('books', {})
+except (FileNotFoundError, json.JSONDecodeError):
+    _bookinfo_db = {}
+_taste_year = datetime.date.today().year
+_taste_base = _taste.site_baseline(celebs, _bookinfo_db, _taste_year)
+TASTE = {}
+for _name, _info in celebs.items():
+    _t = _taste.compute(_info['books'], _bookinfo_db, _taste_base, _taste_year)
+    if _t:
+        TASTE[_name] = _t
+print(f"📊 책 취향 통계 {len(TASTE)}명 / {len(celebs)}명 (책 정보 확인 {len(_bookinfo_db)}권)")
+
+def taste_html(name, lang='ko'):
+    t = TASTE.get(name)
+    if not t:
+        return ''
+    if lang == 'ko':
+        lines, head = _taste.text_ko(t), '📊 독서 취향 (책 %d권 기준)' % t['n']
+        note = (('참고 코멘트 — 《' + t['note']['title'] + '》: ' + t['note']['ko']) if t['note'] else '')
+    else:
+        lines, head = _taste.text_en(t), 'Reading taste (from %d books)' % t['n']
+        note = (('From a comment on “' + (t['note']['title']) + '”: ' + t['note']['en'])
+                if t['note'] and t['note']['en'] else '')
+    return ('  <section class="taste">\n    <h2>' + esc(head) + '</h2>\n'
+            + ''.join('    <p>' + esc(l) + '</p>\n' for l in lines)
+            + (('    <p class="taste-note">' + esc(note) + '</p>\n') if note else '')
+            + '  </section>\n')
+
 print(f"CSV 파싱 완료: {len(celebs)}명")
 if EN_TITLE_SKIPPED:
     print(f"⚠️ 영문 제목 {len(EN_TITLE_SKIPPED)}건은 AI 답변 문구·후보 나열이 섞여 영문 페이지에서 뺐습니다"
@@ -2495,6 +2532,10 @@ for name, info in celebs.items():
         '    .bc-author { font-size: 12px; color: #555; margin-bottom: 6px; }\n'
         '    .bc-badge { display: inline-block; font-size: 11px; background: #fde047; border: 1px solid #000; padding: 1px 6px; font-weight: 700; }\n'
         '    .celeb-bio { margin: 4px 0 8px; padding: 6px 10px; background: #fff8e7; border-left: 4px solid #000; font-size: 14px; line-height: 1.45; color: #222; }\n'
+        '    .taste { margin: 16px 0; padding: 12px 14px; background: #e0f2fe; border: 2px solid #000; box-shadow: 3px 3px 0 0 #000; font-size: 14px; line-height: 1.6; }\n'
+        '    .taste h2 { margin: 0 0 6px; font-size: 15px; }\n'
+        '    .taste p { margin: 2px 0; }\n'
+        '    .taste .taste-note { margin-top: 6px; font-size: 13px; color: #444; }\n'
         + SHELF_CSS +
         '    .reading-list { list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 14px; counter-reset: rl; }\n'
         '    .rl-item { position: relative; background: #fff; border: 2px solid #000; box-shadow: 4px 4px 0 0 #000; padding: 14px 14px 14px 52px; transition: transform .12s, box-shadow .12s; }\n'
@@ -2563,6 +2604,8 @@ for name, info in celebs.items():
         '  <section class="intro">\n'
         '    <p style="margin:0">' + intro_p + '</p>\n'
         '  </section>\n'
+        + taste_html(name, 'ko')
+        +
         '\n'
         '  <section id="shelf-sec">\n'
         '    <div class="shelf-head">\n'
@@ -3896,6 +3939,10 @@ for name, info in celebs.items():
         '    h2 { font-size: 19px; margin: 32px 0 12px; padding-bottom: 4px; border-bottom: 2px solid #000; font-weight: 800; }\n'
         '    .intro { background: #fff; border: 2px solid #000; box-shadow: 4px 4px 0 0 #000; padding: 14px 16px; margin: 16px 0 24px; font-size: 15px; }\n'
         '    .celeb-bio { margin: 4px 0 8px; padding: 6px 10px; background: #fff8e7; border-left: 4px solid #000; font-size: 14px; line-height: 1.45; color: #222; }\n'
+        '    .taste { margin: 16px 0; padding: 12px 14px; background: #e0f2fe; border: 2px solid #000; box-shadow: 3px 3px 0 0 #000; font-size: 14px; line-height: 1.6; }\n'
+        '    .taste h2 { margin: 0 0 6px; font-size: 15px; }\n'
+        '    .taste p { margin: 2px 0; }\n'
+        '    .taste .taste-note { margin-top: 6px; font-size: 13px; color: #444; }\n'
         '    .celeb-alias { margin: 2px 0 0; font-size: 12px; color: #888; }\n'
         '    .pfaq { margin-top: 40px; }\n'
         '    .pfaq-q { background: #fff; border: 2px solid #000; box-shadow: 3px 3px 0 0 #000; padding: 12px 14px; margin-bottom: 12px; }\n'
@@ -3972,6 +4019,7 @@ for name, info in celebs.items():
         + ((', a ' + esc(_role_lbl)) if _roles else '')
         + ', gathered from interviews, YouTube, and SNS sources.</p>\n'
         '  </section>\n'
+        + taste_html(name, 'en')
         + ((
             '  <p class="grp-link">Part of <strong>' + esc(_en_group) + '</strong> — '
             '<a href="' + EN_BASE + 'group/' + safe_en_filename(_en_group) + '.html">'
