@@ -177,6 +177,8 @@
     .sh-cap { font: inherit; font-size: 12px; font-weight: 700; cursor: pointer; padding: 5px 12px;
               background: #fff; color: #000; border: 2px solid #000; box-shadow: 2px 2px 0 0 #000; }
     .sh-cap:hover { background: #fde047; }
+    .sh-x { background: #000; color: #fff; }
+    .sh-x:hover { background: #333; color: #fff; }
     .sh-cap[disabled] { opacity: .55; cursor: default; }
     .view-tabs { display: inline-flex; border: 2px solid #000; box-shadow: 2px 2px 0 0 #000; background: #fff; }
     .vt { font: inherit; font-size: 12px; font-weight: 700; padding: 5px 10px; background: #fff; color: #000; border: 0; cursor: pointer; }
@@ -258,6 +260,7 @@
     .sp.is-new .sp-t { padding-top: 22px; }
     .is-capturing .sp-new, .is-capturing .rl-new, .is-capturing .rl-shared, .is-capturing .rl-comment { display: none !important; }
     .is-capturing .sp.is-new .sp-t { padding-top: 14px; }
+    .is-capturing .cv-pager { display: none !important; }
     @media (max-width: 480px) { .shelf { --sh-h: 205px; }
                                  .sp.no-img, .sp.sp-fail { width: calc(var(--w, 38px) * .88); }
                                  .sp-i { max-width: 61px; }
@@ -323,6 +326,7 @@
         <span class="view-tabs" role="group"><button type="button" class="vt" data-view="cover" aria-pressed="true">🖼 Covers</button><button type="button" class="vt" data-view="spine" aria-pressed="false">📚 Spines</button></span>
         <button type="button" class="sh-cap" id="shelf-cap" title="Download the bookshelf as an image">⤓ Save image</button>
         <button type="button" class="sh-cap" id="shelf-cap-clear" title="Download as a PNG with a transparent background">⤓ Transparent</button>
+        <button type="button" class="sh-cap sh-x" id="shelf-x" title="Share the current cover/spine view and list to X">𝕏 Share</button>
       </div>
     </div>
     <div id="shelf-area" class="show-covers">
@@ -396,7 +400,8 @@
   </script>
   <script>
   (function () {
-    var btns = [document.getElementById("shelf-cap"), document.getElementById("shelf-cap-clear")]
+    var btns = [document.getElementById("shelf-cap"), document.getElementById("shelf-cap-clear"),
+                document.getElementById("shelf-x")]
       .filter(Boolean);
     if (!btns.length) return;
     var H2C = "https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js";
@@ -542,29 +547,122 @@
       });
     }
 
-    function download(blob, clear) {
+    function download(blob, suffix) {
       var url = URL.createObjectURL(blob);
       var a = document.createElement("a");
       a.href = url; a.rel = "noopener";
-      a.download = clear ? "bookshelf_sunghyun-cortis.png".replace(/\.png$/, "_transparent" + ".png") : "bookshelf_sunghyun-cortis.png";
+      a.download = suffix ? "bookshelf_sunghyun-cortis.png".replace(/\.png$/, suffix + ".png") : "bookshelf_sunghyun-cortis.png";
       document.body.appendChild(a);
       a.click();
       a.remove();
       setTimeout(function () { URL.revokeObjectURL(url); }, 6000);
     }
 
+    /* ---- X(트위터) 공유 ----
+       X의 글쓰기 창(intent)은 주소와 글만 받고 이미지는 못 붙인다. 그래서 X에 맞춘
+       그림을 만들어 클립보드에 복사(안 되면 저장)하고, 목록 글이 채워진 창을 연다.
+       붙여넣기만 하면 되도록. 지금 화면에 보이는 쪽(표지/책등)을 그린다. */
+    var XT = {"more": "+%n more", "copied": "Image copied. Paste it into the X composer (Ctrl+V / long-press to paste).", "saved": "Image saved. Attach it in the X composer."};
+    var LIGHT = [[0, 4351], [8192, 8205], [8208, 8223], [8242, 8247]];
+    // X의 글자 수 규칙: 주소는 23, 한글·한자 등은 2, 라틴 문자는 1
+    function tweetLen(text) {
+      var n = 0;
+      text = text.replace(/https?:\/\/\S+/g, function () { n += 23; return ""; });
+      Array.from(text).forEach(function (ch) {
+        var cp = ch.codePointAt(0);
+        if (cp === 0xFE0F) return;
+        n += LIGHT.some(function (r) { return cp >= r[0] && cp <= r[1]; }) ? 1 : 2;
+      });
+      return n;
+    }
+    function pageUrl() {
+      var c = document.querySelector('link[rel="canonical"]');
+      return (c && c.href) || location.href.split("#")[0];
+    }
+    // 그림에 보이는 책만 글에 적는다 (표지 보기는 지금 쪽, 책등 보기는 전부)
+    function shownTitles(area) {
+      var cover = area.classList.contains("show-covers");
+      var els = [].slice.call(area.querySelectorAll(cover ? ".cv-page.on .cv" : ".shelf .sp"));
+      return {
+        list: els.map(function (e) { return (e.getAttribute("title") || "").trim(); }).filter(Boolean),
+        total: area.querySelectorAll(".shelf .sp").length
+      };
+    }
+    function buildText(list, total) {
+      var head = "Sunghyun (CORTIS) — 1 books" + "\n\n", tail = "\n\n" + pageUrl();
+      function more(n) { return n > 0 ? "\n" + XT.more.replace("%n", n) : ""; }
+      var picked = [];
+      for (var i = 0; i < list.length; i++) {
+        var t = head + picked.concat((i + 1) + ". " + list[i]).join("\n") + more(total - i - 1) + tail;
+        if (tweetLen(t) > 280) break;
+        picked.push((i + 1) + ". " + list[i]);
+      }
+      return head + picked.join("\n") + more(total - picked.length) + tail;
+    }
+    // X 타임라인에 맞춘 그림: 가로 1200, 높이 675(16:9)~1350(4:5), 종이색 바탕
+    function composeX(inner) {
+      var W = 1200, pad = 56, head = 118, foot = 86, MAXH = 1350, MINH = 675;
+      var s = Math.min((W - pad * 2) / inner.width, (MAXH - head - foot) / inner.height);
+      var iw = Math.round(inner.width * s), ih = Math.round(inner.height * s);
+      var H = Math.max(MINH, head + ih + foot);
+      var c = document.createElement("canvas");
+      c.width = W; c.height = H;
+      var g = c.getContext("2d");
+      g.fillStyle = PAPER; g.fillRect(0, 0, W, H);
+      g.fillStyle = "#111";
+      g.font = "800 40px " + FONT;
+      g.textBaseline = "middle"; g.textAlign = "left";
+      var t = "Sunghyun (CORTIS) — 1 books";
+      while (t.length > 4 && g.measureText(t).width > W - pad * 2) t = t.slice(0, -2) + "…";
+      g.fillText(t, pad, head / 2 + 6);
+      g.drawImage(inner, Math.round((W - iw) / 2), head + Math.max(0, Math.round((H - head - foot - ih) / 2)), iw, ih);
+      g.fillStyle = "#8a8578";
+      g.font = "600 28px " + FONT;
+      g.textAlign = "right"; g.textBaseline = "middle";
+      g.fillText("favorbook.co.kr", W - pad, H - foot / 2);
+      return c;
+    }
+    function toast(msg) {
+      var d = document.createElement("div");
+      d.textContent = msg;
+      d.style.cssText = "position:fixed;left:50%;bottom:24px;transform:translateX(-50%);z-index:99999;"
+        + "max-width:min(92vw,420px);padding:12px 16px;background:#111;color:#fff;font:600 14px/1.5 " + FONT
+        + ";border:2px solid #fde047;box-shadow:3px 3px 0 0 rgba(0,0,0,.35);text-align:center";
+      document.body.appendChild(d);
+      setTimeout(function () { d.remove(); }, 7000);
+    }
     function capture(btn) {
-      var clear = btn.id === "shelf-cap-clear";
-      // 책장과 표지 목록을 함께 담은 상자 하나만 넘긴다
-      var view = document.getElementById("shelf-area") || document.getElementById("shelf");
+      var mode = btn.id === "shelf-x" ? "x" : btn.id === "shelf-cap-clear" ? "clear" : "save";
+      var clear = mode === "clear";
+      var area = document.getElementById("shelf-area");
+      // 저장은 책장과 표지 목록을 함께 담은 상자, X 공유는 지금 보는 책장/표지 판만
+      var view = mode === "x"
+        ? document.getElementById(area && area.classList.contains("show-covers") ? "covers" : "shelf")
+        : (area || document.getElementById("shelf"));
       if (!view) return;
+      var mark = area || view;
+      var text = "", xwin = null, clip = null, give = null, giveUp = null;
+      if (mode === "x") {
+        var info = shownTitles(mark);
+        text = buildText(info.list, info.total);
+        // 팝업 차단을 피하려면 클릭 직후에 창을 열어 둬야 한다. 주소는 나중에 채운다.
+        xwin = window.open("about:blank", "_blank");
+        // 클립보드 복사도 클릭 안에서 시작해야 사파리가 허락한다. 그림은 나중에 채운다.
+        if (navigator.clipboard && window.ClipboardItem) {
+          var pending = new Promise(function (ok, no) { give = ok; giveUp = no; });
+          try {
+            clip = navigator.clipboard.write([new ClipboardItem({ "image/png": pending })])
+              .then(function () { return true; }, function () { return false; });
+          } catch (e) { clip = null; }
+        }
+      }
       var was = btn.textContent;
       btns.forEach(function (b) { b.disabled = true; });
       btn.textContent = "Saving…";
       var swap = null, muted = null;
       // 저장하는 그림에는 NEW 표시와 함께 추천한 셀럽 목록을 넣지 않는다.
       // html2canvas가 문서를 복사할 때 이 클래스도 따라가서 복사본에서만 빠진 채 그려진다.
-      view.classList.add("is-capturing");
+      mark.classList.add("is-capturing");
       guard(loadH2C(), 15000, "html2canvas").then(function () {
         swap = swapImages(view);
         return swap.ready;
@@ -586,16 +684,25 @@
         }), 40000, "그리기");
       }).then(function (inner) {
         // data: 주소는 길어지면 브라우저가 파일 이름을 무시한다. Blob으로 넘긴다.
-        return guard(toBlob(compose(inner, clear)), 25000, "내보내기");
+        return guard(toBlob(mode === "x" ? composeX(inner) : compose(inner, clear)), 25000, "내보내기");
       }).then(function (blob) {
-        download(blob, clear);
+        if (mode !== "x") { download(blob, clear ? "_transparent" : ""); return; }
+        if (give) give(blob);
+        return Promise.resolve(clip).then(function (ok) {
+          if (!ok) download(blob, "_x");
+          var url = "https://x.com/intent/post?text=" + encodeURIComponent(text);
+          if (xwin && !xwin.closed) xwin.location.href = url; else window.open(url, "_blank");
+          toast(ok ? XT.copied : XT.saved);
+        });
       }).catch(function (e) {
         console.error(e);
+        if (giveUp) giveUp(e);
+        if (xwin && !xwin.closed) xwin.close();
         alert("Could not create the image. Please try again.");
       }).then(function () {
         if (swap) swap.undo.forEach(function (f) { f(); });
         if (muted) unmute(muted);
-        view.classList.remove("is-capturing");
+        mark.classList.remove("is-capturing");
         btns.forEach(function (b) { b.disabled = false; });
         btn.textContent = was;
       });
