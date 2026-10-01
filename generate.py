@@ -4910,11 +4910,12 @@ for _group in sorted(en_groups, key=lambda g: g.lower()):
             + esc(EN_GROUP_RE.sub('', r).strip() or r) + '</a>'
             for r in info['readers'])
         _bslug = en_book_slug_by_ko.get(info['ko'])
-        _t_html = (('<a href="' + EN_BASE + 'share/book/' + _bslug + '.html">' + esc(t) + '</a>')
-                   if _bslug else esc(t))
-        # 같은 판본을 사려는 팬을 위해 예스24 책 정보도 작게 붙인다
-        _t_html += (' <a class="gb-l" href="' + esc(yes24_book_url(info['ko'], info['link'], info['cover']))
-                    + '" rel="nofollow noopener noreferrer" target="_blank">YES24 ↗</a>')
+        # 책 제목은 예스24 책 정보로, 옆의 작은 링크는 영문 책 페이지(이 책을 읽은 사람 모두)로
+        _t_html = ('<a href="' + esc(yes24_book_url(info['ko'], info['link'], info['cover']))
+                   + '" rel="nofollow noopener noreferrer" target="_blank">' + esc(t) + '</a>')
+        if _bslug:
+            _t_html += (' <a class="gb-l" href="' + EN_BASE + 'share/book/' + _bslug
+                        + '.html">Who else read it</a>')
         book_rows += (
             '    <li class="gb">\n'
             '      <span class="gb-t">' + _t_html + '</span>\n'
