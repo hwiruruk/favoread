@@ -1314,6 +1314,14 @@ try:
         _subjects_db = json.load(f).get('books', {})
 except (FileNotFoundError, json.JSONDecodeError):
     _subjects_db = {}
+# 사람이 정한 분야 (편집기 '🏷️ 분야 검수' → data/genres.json) — 자동 분류보다 먼저 쓴다
+try:
+    with open('data/genres.json', encoding='utf-8') as f:
+        for _t, _g in (json.load(f).get('genres') or {}).items():
+            if (_g or {}).get('genre'):
+                _subjects_db[_t] = dict(_subjects_db.get(_t) or {}, genre_override=_g['genre'])
+except (FileNotFoundError, json.JSONDecodeError):
+    pass
 _taste_year = datetime.date.today().year
 _taste_base = _taste.site_baseline(celebs, _bookinfo_db, _taste_year, _subjects_db)
 TASTE = {}
