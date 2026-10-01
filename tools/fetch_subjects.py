@@ -5,12 +5,14 @@
 
     예스24 상품 번호 ──(itemDetail)──▶ ISBN13
     ISBN13 ──(국립중앙도서관 ISBN 서지정보)──▶ KDC 분류번호 · 부가기호
+    ISBN13 ──(국립중앙도서관 소장자료 검색)──▶ 청구기호 (사서가 붙인 KDC로 시작한다)
     ISBN13 ──(도서관 정보나루 도서 상세)──▶ KDC 분류번호 · 분류 이름
     ISBN13 ──(도서관 정보나루 키워드)──▶ 책 키워드 (단어 · 가중치)
 
-두 기관을 같이 쓰는 이유: 국립중앙도서관은 출판사가 등록한 서지라 신간까지 빠짐없이 있고,
-정보나루는 공공도서관이 실제로 정리한 분류와 책 키워드가 있다. 분류는 정보나루를 먼저 쓰고,
-없으면 국립중앙도서관 KDC, 그것도 없으면 부가기호 끝 세 자리(내용 분류)를 쓴다.
+두 기관을 같이 쓰는 이유: 정보나루는 공공도서관이 실제로 정리한 분류와 책 키워드가 있고,
+국립중앙도서관은 국내 출간 도서가 모두 납본되어 사서가 분류한 청구기호가 있다.
+ISBN 서지정보는 출판사가 적은 것이라 KDC가 빈 책이 많다(첫 실행 156권 중 105권) — 마지막 보조로만 쓴다.
+분류는 정보나루 → 소장자료 청구기호 → ISBN 서지정보 KDC → 부가기호 끝 세 자리 순서로 고른다.
 키 하나만 있어도 돈다 (그 기관 정보만 채운다).
 
 ISBN은 예스24에서 받는다. 책 정보(data/bookinfo.json)에 있는 예스24 상품 번호로 조회하니
@@ -20,7 +22,8 @@ ISBN은 예스24에서 받는다. 책 정보(data/bookinfo.json)에 있는 예�
 키가 틀렸거나 하루 호출 한도를 넘으면 거기서 멈추고, 그때까지 받은 것만 저장한다.
 
 실행
-    export NL_API_KEY=...          # 국립중앙도서관 ISBN 서지정보 Open API 인증키
+    export NL_API_KEY=...          # 국립중앙도서관 Open API 인증키 (ISBN 서지정보·소장자료 검색)
+    export NL_SEARCH_KEY=...       # 소장자료 검색 키가 따로 있을 때만. 없으면 NL_API_KEY 를 쓴다
     export LIBRARY_API_KEY=...     # 도서관 정보나루(data4library.kr) 인증키
     export YES24_PROXY=https://<worker>.workers.dev     # 또는 YES24_API_KEY
     python3 tools/fetch_subjects.py --count
@@ -55,13 +58,15 @@ BOOKINFO = os.path.join(ROOT, 'data', 'bookinfo.json')
 OUT_PATH = os.path.join(ROOT, 'data', 'subjects.json')
 UA = {'User-Agent': 'favorbook-subjects/1.0'}
 NL_URL = 'https://www.nl.go.kr/seoji/SearchApi.do'
+NLH_URL = 'https://www.nl.go.kr/NL/search/openApi/search.do'   # 소장자료 검색 (OPENAPI_GUIDE v2.6)
 D4L_URL = 'http://data4library.kr/api/'
 MAX_KEYWORDS = 15
 ISBN_RE = re.compile(r'97[89]\d{10}')
 KDC_RE = re.compile(r'\d{3}(\.\d+)?')
 
 
-def http_json(url, timeout=20):
+def http_json(url, timeout=20, label=''):
+    """label 을 주면 JSON이 아닌 응답(XML·HTML 오류 페이지)을 그 기관만 끄는 오류로 본다."""
     req = urllib.request.Request(url, headers=UA)
     try:
         with urllib.request.urlopen(req, timeout=timeout) as r:
@@ -71,6 +76,8 @@ def http_json(url, timeout=20):
             raise fb.Fatal('%s 인증 실패 (HTTP %d)' % (url.split('?')[0], e.code))
         raise fb.Transient('HTTP %d' % e.code)
     except json.JSONDecodeError:
+        if label:
+            raise SourceOff('%s: JSON이 아닌 응답이 왔습니다' % label)
         raise fb.Transient('JSON 아님')
     except Exception as e:
         raise fb.Transient(str(e))
@@ -139,6 +146,55 @@ class SourceOff(Exception):
     """한 기관만 못 쓰게 됐다 (키가 아직 활성화 전·하루 한도 초과 등). 그 기관만 끄고 나머지로 계속한다."""
 
 
+# ── 국립중앙도서관 소장자료 검색 ──────────────────────────────────────
+CALL_KDC_RE = re.compile(r'(?<![\d.])(\d{3}(?:\.\d+)?)(?![\d])')
+
+
+def _records(x):
+    """응답 어디에 있든 자료 목록(청구기호·표제가 든 dict 들)을 찾는다. 응답 모양이 문서에 자세하지 않아서."""
+    if isinstance(x, list):
+        recs = [r for r in x if isinstance(r, dict) and ('call_no' in r or 'title_info' in r)]
+        if recs:
+            return recs
+        for v in x:
+            r = _records(v)
+            if r:
+                return r
+    elif isinstance(x, dict):
+        for v in x.values():
+            r = _records(v)
+            if r:
+                return r
+    return []
+
+
+def nlh_lookup(isbn, key):
+    qs = urllib.parse.urlencode({'key': key, 'apiType': 'json', 'detailSearch': 'true',
+                                 'isbnOp': 'isbn', 'isbnCode': isbn, 'pageNum': 1, 'pageSize': 10})
+    d = http_json(NLH_URL + '?' + qs, label='국립중앙도서관 소장자료')
+    recs = _records(d)
+    if not recs:
+        raw = json.dumps(d, ensure_ascii=False)[:200]
+        total = str(d.get('total', '')) if isinstance(d, dict) else ''
+        if total.isdigit():
+            return None                  # 검색 결과 0건
+        if re.search(r'01[01]|INVALID KEY|NO KEY', raw):
+            raise SourceOff('국립중앙도서관 소장자료: 인증키 오류 (%s) — 소장자료 검색용 키를 NL_SEARCH_KEY 에 넣으세요' % raw)
+        if re.search(r'"?(000|101)"?|SYSTEM ERROR|SEARCH ERROR', raw):
+            raise fb.Transient('검색서버 오류 (%s)' % raw)
+        raise SourceOff('국립중앙도서관 소장자료: 알 수 없는 응답 (%s)' % raw)
+    # 이 ISBN 이 적힌 도서 자료를 먼저 본다
+    recs.sort(key=lambda r: (isbn not in re.sub(r'[^0-9 ]', ' ', str(r.get('isbn') or '')).split(),
+                             '도서' not in str(r.get('type_name') or '')))
+    for r in recs:
+        call_no = str(r.get('call_no') or '').strip()
+        m = CALL_KDC_RE.search(call_no)
+        if m:
+            return {'kdc': m.group(1), 'call_no': call_no, 'kdc_1s': str(r.get('kdc_name_1s') or '').strip()}
+    return {'kdc': '', 'call_no': str(recs[0].get('call_no') or '').strip(),
+            'kdc_1s': str(recs[0].get('kdc_name_1s') or '').strip()}
+
+
 # ── 도서관 정보나루 ──────────────────────────────────────────────────
 def d4l_call(path, params, key):
     qs = urllib.parse.urlencode({'authKey': key, 'format': 'json', **params})
@@ -181,10 +237,12 @@ def d4l_keywords(isbn, key):
     return out[:MAX_KEYWORDS]
 
 
-def best_kdc(nl, d4):
-    """정보나루 → 국립중앙도서관 → 부가기호 끝 세 자리 순서로 고른다."""
+def best_kdc(nl, d4, nlh=None):
+    """정보나루 → 소장자료 청구기호 → ISBN 서지정보 KDC → 부가기호 끝 세 자리 순서로 고른다."""
     if d4 and d4.get('kdc'):
         return d4['kdc'], 'd4l'
+    if nlh and nlh.get('kdc'):
+        return nlh['kdc'], 'nlh'
     if nl and nl.get('kdc'):
         return nl['kdc'], 'nl'
     for src in (nl, d4):
@@ -214,7 +272,8 @@ def main():
 
     nl_key = os.environ.get('NL_API_KEY', '').strip()
     d4_key = os.environ.get('LIBRARY_API_KEY', '').strip()
-    want = [s for s, k in (('nl', nl_key), ('d4l', d4_key)) if k]
+    nlh_key = os.environ.get('NL_SEARCH_KEY', '').strip() or nl_key
+    want = [s for s, k in (('nl', nl_key), ('nlh', nlh_key), ('d4l', d4_key)) if k]
 
     bookinfo = load_json(BOOKINFO).get('books') or {}
     prev = load_json(OUT_PATH)
@@ -238,11 +297,11 @@ def main():
         sys.exit('ISBN을 받으려면 YES24_PROXY 또는 YES24_API_KEY 가 필요합니다.')
     if args.limit:
         todo = todo[:args.limit]
-    print('책 정보 %d권 · 분야 확인 %d · 실패 기록 %d · 이번에 조회 %d (국립중앙도서관 %s · 정보나루 %s)'
+    print('책 정보 %d권 · 분야 확인 %d · 실패 기록 %d · 이번에 조회 %d (ISBN 서지정보 %s · 소장자료 %s · 정보나루 %s)'
           % (len(bookinfo), len(have), len(misses), len(todo),
-             '켬' if nl_key else '끔', '켬' if d4_key else '끔'))
+             '켬' if nl_key else '끔', '켬' if nlh_key else '끔', '켬' if d4_key else '끔'))
 
-    on = {'nl': bool(nl_key), 'd4l': bool(d4_key)}
+    on = {'nl': bool(nl_key), 'nlh': bool(nlh_key), 'd4l': bool(d4_key)}
     ok = fail = net = streak = 0
     for i, t in enumerate(todo, 1):
         try:
@@ -256,7 +315,7 @@ def main():
                 continue
             old = have.get(t) or {}
             tried = set(old.get('tried') or [])
-            nl = d4 = None
+            nl = d4 = nlh = None
             kw = old.get('keywords') or []
             if on['nl'] and 'nl' not in tried:
                 try:
@@ -268,6 +327,16 @@ def main():
                 time.sleep(args.sleep)
             if nl is None and (old.get('nl_kdc') or old.get('add_code')):
                 nl = {'kdc': old.get('nl_kdc', ''), 'add_code': old.get('add_code', '')}
+            if on['nlh'] and 'nlh' not in tried:
+                try:
+                    nlh = retry('국립중앙도서관 소장자료', nlh_lookup, isbn, nlh_key) or {}
+                    tried.add('nlh')
+                except SourceOff as e:
+                    on['nlh'] = False
+                    print('\n%s\n→ 이번 실행에서는 소장자료 검색을 빼고 계속합니다.\n' % e)
+                time.sleep(args.sleep)
+            if nlh is None and (old.get('nlh_kdc') or old.get('call_no')):
+                nlh = {'kdc': old.get('nlh_kdc', ''), 'call_no': old.get('call_no', '')}
             if on['d4l'] and 'd4l' not in tried:
                 try:
                     d4 = retry('정보나루', d4l_detail, isbn, d4_key) or {}
@@ -285,11 +354,11 @@ def main():
                       'class_nm': old.get('class_nm', '')}
             if not (tried - set(old.get('tried') or [])):
                 # 이 책은 어느 기관에도 새로 묻지 못했다 — 둘 다 꺼졌으면 멈춘다
-                if not on['nl'] and not on['d4l']:
+                if not any(on.values()):
                     print('조회할 수 있는 기관이 없어 멈춥니다. 여기까지 받은 것만 저장합니다.')
                     break
                 continue
-            kdc, src = best_kdc(nl, d4)
+            kdc, src = best_kdc(nl, d4, nlh)
             if not kdc and not kw:
                 misses[t] = '도서관 데이터에 분류·키워드 없음 (ISBN %s)' % isbn
                 fail += 1
@@ -301,6 +370,8 @@ def main():
                 'kdc_from': src,
                 'class_nm': (d4 or {}).get('class_nm', ''),
                 'nl_kdc': (nl or {}).get('kdc', ''),
+                'nlh_kdc': (nlh or {}).get('kdc', ''),
+                'call_no': (nlh or {}).get('call_no', ''),
                 'add_code': (nl or {}).get('add_code') or (d4 or {}).get('add_code', ''),
                 'keywords': kw,
                 'tried': sorted(tried),

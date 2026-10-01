@@ -10,7 +10,8 @@ name: Fetch Book Subjects
 # 손으로 돌리기: Actions → Fetch Book Subjects → Run workflow
 #
 # 미리 넣어둘 Secret (Settings → Secrets and variables → Actions):
-#   NL_API_KEY        국립중앙도서관 ISBN 서지정보 Open API 인증키
+#   NL_API_KEY        국립중앙도서관 Open API 인증키 (ISBN 서지정보·소장자료 검색)
+#   NL_SEARCH_KEY     소장자료 검색 키가 따로 발급됐을 때만 (없으면 NL_API_KEY 를 쓴다)
 #   LIBRARY_API_KEY   도서관 정보나루(data4library.kr) 인증키
 #   YES24_PROXY 또는 YES24_API_KEY   ISBN을 받을 때 쓴다 (책등·책 정보 워크플로와 같은 값)
 # 도서관 키는 둘 중 하나만 있어도 돈다. 나중에 다른 하나를 넣으면 그 기관 정보만 마저 받는다.
@@ -61,6 +62,7 @@ jobs:
         id: gate
         env:
           NL_API_KEY: ${{ secrets.NL_API_KEY }}
+          NL_SEARCH_KEY: ${{ secrets.NL_SEARCH_KEY }}
           LIBRARY_API_KEY: ${{ secrets.LIBRARY_API_KEY }}
         run: |
           if [ -z "$NL_API_KEY" ] && [ -z "$LIBRARY_API_KEY" ]; then
@@ -89,6 +91,7 @@ jobs:
         if: steps.gate.outputs.run == 'true'
         env:
           NL_API_KEY: ${{ secrets.NL_API_KEY }}
+          NL_SEARCH_KEY: ${{ secrets.NL_SEARCH_KEY }}
           LIBRARY_API_KEY: ${{ secrets.LIBRARY_API_KEY }}
           YES24_PROXY: ${{ secrets.YES24_PROXY }}
           YES24_API_KEY: ${{ secrets.YES24_API_KEY }}
@@ -130,7 +133,7 @@ jobs:
             ### 확인할 것
             - `kdc` 로 분야를 정합니다. 몇 권 훑어보고 틀린 게 있으면 그 책의 `kdc` 를 고쳐 주세요
               (813 소설 · 811 시 · 814 에세이 · 1xx 인문 · 325 경영 · 199 자기계발 …, 표는 tools/TASTE.md)
-            - `kdc_from` — 어디서 온 분류인지 (d4l 정보나루 · nl 국립중앙도서관 · add_code 부가기호)
+            - `kdc_from` — 어디서 온 분류인지 (d4l 정보나루 · nlh 국립중앙도서관 소장자료 청구기호 · nl 국립중앙도서관 ISBN 서지정보 · add_code 부가기호)
             - `misses` — 예스24에 ISBN이 없거나 도서관 데이터에 없는 책. 그 책은 분야 통계에서 빠집니다
           branch: chore/subjects
           delete-branch: true
