@@ -1761,7 +1761,6 @@
     
     slice.forEach(([name, data]) => {
       const card = document.createElement('a');
-      const celebUrl = `${BASE_PATH}?celeb=${encodeURIComponent(name)}`;
       card.href = celebShareUrl(name);
       card.dataset.name = name;
       // 누를 수 없는 하트 수 (hearts.js가 채운다. 하트 0이면 숨김)
@@ -1798,12 +1797,8 @@
         `;
       }
       
-      card.addEventListener('click', (e) => {
-        if (e.ctrlKey || e.metaKey || e.shiftKey) return;
-        e.preventDefault(); 
-        openModal(name);
-        history.pushState({ celeb: name }, '', celebUrl);
-      });
+      // 카드는 그 사람의 책장 페이지(share)로 바로 간다. 홈 팝업은 색인되지 않는 화면이라
+      // 클릭이 책장 페이지로 모이게 한다 (SEO). ?celeb= 주소는 예전 공유 링크용으로 팝업이 계속 연다.
       
       D.grid.appendChild(card);
     });
@@ -2103,7 +2098,6 @@
     picks.forEach(pick => {
       const name = pick.name;
       const data = celebMap[name];
-      const celebUrl = `${BASE_PATH}?celeb=${encodeURIComponent(name)}`;
       const note = pick.note || data.books.slice(0, 2).map(b => b.title).join(' · ');
 
       const card = document.createElement('a');
@@ -2128,12 +2122,8 @@
           <p class="text-[10px] text-muted line-clamp-1">${escHtml(note)}</p>
         </div>`;
 
-      card.addEventListener('click', (e) => {
-        if (e.ctrlKey || e.metaKey || e.shiftKey) return;
-        e.preventDefault();
-        openModal(name);
-        history.pushState({ celeb: name }, '', celebUrl);
-      });
+      // 카드는 그 사람의 책장 페이지(share)로 바로 간다. 홈 팝업은 색인되지 않는 화면이라
+      // 클릭이 책장 페이지로 모이게 한다 (SEO). ?celeb= 주소는 예전 공유 링크용으로 팝업이 계속 연다.
 
       D.featuredWrap.appendChild(card);
       if (!data.imageUrl) imgObserver.observe(card);
@@ -2202,12 +2192,8 @@
             <p class="text-[10px] text-muted truncate">${escHtml(bookSummary)}</p>
           </div>`;
 
-      card.addEventListener('click', (e) => {
-        if (e.ctrlKey || e.metaKey || e.shiftKey) return;
-        e.preventDefault();
-        openModal(name);
-        history.pushState({ celeb: name }, '', `${BASE_PATH}?celeb=${encodeURIComponent(name)}`);
-      });
+      // 카드는 그 사람의 책장 페이지(share)로 바로 간다. 홈 팝업은 색인되지 않는 화면이라
+      // 클릭이 책장 페이지로 모이게 한다 (SEO). ?celeb= 주소는 예전 공유 링크용으로 팝업이 계속 연다.
 
       D.topReaders.appendChild(card);
       if (!data.imageUrl) imgObserver.observe(card);
