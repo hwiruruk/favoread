@@ -3172,8 +3172,11 @@ for _g in sorted(ko_groups.values(), key=lambda g: g['ko']):
         who = ', '.join('<a href="' + esc(make_celeb_url(r)) + '">' + esc(_short(r)) + '</a>'
                         for r in info['readers'])
         # 책 제목은 예스24 책 정보로 보낸다
+        # 옆의 작은 링크는 사이트 안의 책 페이지(이 책을 읽은 사람 모두)로
         t_html = ('<a href="' + esc(yes24_book_url(t, info['link'], info['cover']))
                   + '" rel="nofollow noopener noreferrer" target="_blank">' + esc(t) + '</a>')
+        if t in books_with_pages:
+            t_html += ' <a class="gb-l" href="' + esc(make_book_url(t)) + '">읽은 사람 모두 보기</a>'
         book_rows += (
             '    <li class="gb">\n'
             '      <span class="gb-t">' + t_html + '</span>\n'
@@ -3250,6 +3253,7 @@ for _g in sorted(ko_groups.values(), key=lambda g: g['ko']):
         '    .books { padding: 0; margin: 0; }\n'
         '    .gb { background: #fff; border: 2px solid #000; box-shadow: 3px 3px 0 0 #000; padding: 10px 12px; margin-bottom: 10px; list-style: none; }\n'
         '    .gb-t { display: block; font-weight: 800; font-size: 15px; line-height: 1.3; }\n'
+        '    .gb-l { font-size: 12px; font-weight: 600; margin-left: 6px; white-space: nowrap; }\n'
         '    .gb-a { display: block; font-size: 12px; color: #555; }\n'
         '    .gb-w { display: block; font-size: 12px; margin-top: 3px; }\n'
         '    footer { margin-top: 40px; padding-top: 16px; border-top: 2px solid #000; font-size: 12px; color: #666; }\n'
@@ -4870,11 +4874,14 @@ for _group in sorted(en_groups, key=lambda g: g.lower()):
                 continue
             hit = gbooks.setdefault(t, {'readers': [], 'ko': b['title'],
                                         'cover': b.get('coverUrl', ''),
+                                        'link': b.get('link', ''),
                                         'author': plain_en(b.get('author_en') or b['author'])})
             if _name_en not in hit['readers']:
                 hit['readers'].append(_name_en)
             if not hit['cover'] and b.get('coverUrl'):
                 hit['cover'] = b['coverUrl']
+            if 'yes24.com/product' not in hit['link'] and 'yes24.com/product' in (b.get('link') or ''):
+                hit['link'] = b['link']
     ranked = sorted(gbooks.items(), key=lambda kv: (-len(kv[1]['readers']), kv[0].lower()))
     shared = [x for x in ranked if len(x[1]['readers']) >= 2]
 
@@ -4905,6 +4912,9 @@ for _group in sorted(en_groups, key=lambda g: g.lower()):
         _bslug = en_book_slug_by_ko.get(info['ko'])
         _t_html = (('<a href="' + EN_BASE + 'share/book/' + _bslug + '.html">' + esc(t) + '</a>')
                    if _bslug else esc(t))
+        # 같은 판본을 사려는 팬을 위해 예스24 책 정보도 작게 붙인다
+        _t_html += (' <a class="gb-l" href="' + esc(yes24_book_url(info['ko'], info['link'], info['cover']))
+                    + '" rel="nofollow noopener noreferrer" target="_blank">YES24 ↗</a>')
         book_rows += (
             '    <li class="gb">\n'
             '      <span class="gb-t">' + _t_html + '</span>\n'
@@ -4987,6 +4997,7 @@ for _group in sorted(en_groups, key=lambda g: g.lower()):
         '    .gm-c { display: block; font-size: 11px; color: #666; }\n'
         '    .gb { background: #fff; border: 2px solid #000; box-shadow: 3px 3px 0 0 #000; padding: 10px 12px; margin-bottom: 10px; list-style: none; }\n'
         '    .gb-t { display: block; font-weight: 800; font-size: 15px; line-height: 1.3; }\n'
+        '    .gb-l { font-size: 12px; font-weight: 600; margin-left: 6px; white-space: nowrap; }\n'
         '    .gb-a { display: block; font-size: 12px; color: #555; }\n'
         '    .gb-w { display: block; font-size: 12px; color: #2563eb; margin-top: 3px; }\n'
         '    .books { padding: 0; margin: 0; }\n'
