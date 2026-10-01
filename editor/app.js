@@ -313,9 +313,9 @@ const Gh = {
     return r.json();
   },
 
-  async getFile(path = Config.path, { allowMissing = false } = {}) {
+  async getFile(path = Config.path, { allowMissing = false, ref = Config.branch } = {}) {
     if (!Config.token) throw new Error('GitHub Token이 설정되지 않았습니다.');
-    const url = `/repos/${Config.repo}/contents/${encodeURIComponent(path)}?ref=${encodeURIComponent(Config.branch)}`;
+    const url = `/repos/${Config.repo}/contents/${encodeURIComponent(path)}?ref=${encodeURIComponent(ref)}`;
     const r = await this.api(url);
     if (!r.ok) {
       if (r.status === 404 && allowMissing) return { content: null, sha: null };
@@ -327,7 +327,7 @@ const Gh = {
         );
       }
       if (r.status === 404) {
-        throw new Error(`GitHub 로드 실패 (404): repo/branch/path 또는 PAT 저장소 권한 확인. (${Config.repo}@${Config.branch}:${path})`);
+        throw new Error(`GitHub 로드 실패 (404): repo/branch/path 또는 PAT 저장소 권한 확인. (${Config.repo}@${ref}:${path})`);
       }
       throw new Error(`GitHub 로드 실패 (${r.status}): ${t}`);
     }
@@ -2819,6 +2819,262 @@ $('#ttlSearch').addEventListener('input', () => { Ttl.shown = 60; renderTitlesLi
 $('#ttlMoreBtn').addEventListener('click', () => { Ttl.shown += 60; renderTitlesList(); });
 titlesDlg.addEventListener('close', () => {
   if (Ttl.dirty) toast('영문 제목 검수 결과가 아직 저장되지 않았습니다', 'err');
+});
+
+/* -------------------- 분야 검수 (data/genres.json) --------------------
+ *
+ * 셀럽 페이지 📊 독서 취향의 '주로 읽는 분야'는 tools/taste.py 가 도서관 분류번호(KDC)로 정한다.
+ * 분류는 Fetch Book Subjects 워크플로가 data/subjects.json 에 받아 둔다. 그런데 810(한국문학)·
+ * 879(포르투갈문학)처럼 나라만 있고 형식(소설·시·에세이)이 없는 번호는 분야를 정할 수 없고,
+ * 기관끼리 분류가 엇갈리는 책도 있다. 그런 책을 모아 사람이 고르게 한다.
+ *
+ * 결과는 data/genres.json 에만 쓴다 — subjects.json 은 워크플로 PR이 통째로 갈아 끼우므로
+ * 거기 쓰면 다음 수집 때 날아간다. generate.py 는 여기 값을 자동 분류보다 먼저 쓴다.
+ */
+const GENRES_PATH = 'data/genres.json';
+const SUBJECTS_PATH = 'data/subjects.json';
+const SUBJECTS_PR_BRANCH = 'chore/subjects';   // 아직 머지 안 한 수집 PR 브랜치
+// tools/taste.py 의 GENRE_EN 과 같은 목록·순서
+const GENRES = ['소설', '시', '에세이', '기타 문학', '인문', '사회', '경제·경영', '자기계발',
+  '과학', '실용·생활', '예술', '만화', '여행', '어린이책', '기타'];
+const GENRE_EXCLUDE = '제외';
+const Gnr = {
+  subjects: {}, misses: {}, from: '',
+  decided: new Map(),   // 도서명 -> { genre, reviewed }
+  touched: new Set(),
+  loaded: false, dirty: false, shown: 60,
+  waiting: 0,           // 소장자료 검색을 아직 안 거친 책 수 (목록에서 뺌)
+};
+const genresDlg = $('#genresDialog');
+
+/* tools/taste.py 의 genre() 와 같은 규칙. 모르면 null.
+ * 문학(8xx)은 셋째 자리가 형식: 1 시 · 3 소설 · 4·6·8 에세이 · 2·5·7 기타 문학.
+ * 셋째 자리가 0·9 이거나 89x 면 나라·언어만 있어 형식을 모른다. 부가기호 첫 자리 7 은 아동 도서. */
+function kdcGenre(kdc, addCode = '') {
+  if (String(addCode || '').replace(/\D/g, '')[0] === '7') return '어린이책';
+  const c = String(kdc || '').replace(/\D/g, '').slice(0, 3);
+  if (c.length < 3) return null;
+  if (c === '657') return '만화';
+  if (c[0] === '8') {
+    if ('09'.includes(c[1]) || '09'.includes(c[2])) return null;
+    return { 1: '시', 3: '소설', 4: '에세이', 6: '에세이', 8: '에세이' }[c[2]] || '기타 문학';
+  }
+  if (c === '199') return '자기계발';
+  if ('127'.includes(c[0]) || (c[0] === '9' && c[1] !== '8')) return '인문';
+  if (c.startsWith('98')) return '여행';
+  if (c.startsWith('32')) return '경제·경영';
+  return { 3: '사회', 4: '과학', 5: '실용·생활', 6: '예술' }[c[0]] || '기타';
+}
+
+function setGnrStatus(msg) { $('#gnrStatus').textContent = msg || ''; }
+
+async function loadGenresData() {
+  // 분류: main 에 없으면(수집 PR을 아직 머지 안 했으면) PR 브랜치에서 읽는다
+  let { content } = await Gh.getFile(SUBJECTS_PATH, { allowMissing: true });
+  Gnr.from = Config.branch;
+  if (!content) {
+    ({ content } = await Gh.getFile(SUBJECTS_PATH, { allowMissing: true, ref: SUBJECTS_PR_BRANCH }));
+    Gnr.from = SUBJECTS_PR_BRANCH;
+  }
+  if (!content) return false;
+  const doc = JSON.parse(content);
+  Gnr.subjects = doc.books || {};
+  Gnr.misses = doc.misses || {};
+  const g = await Gh.getFile(GENRES_PATH, { allowMissing: true });
+  Gnr.decided.clear();
+  for (const [t, v] of Object.entries((g.content && JSON.parse(g.content).genres) || {})) {
+    if (v && v.genre) Gnr.decided.set(t, v);
+  }
+  Gnr.loaded = true;
+  return true;
+}
+
+async function openGenresDialog() {
+  if (!Config.token) { toast('GitHub Token을 먼저 설정하세요', 'err'); settingsDlg.showModal(); return; }
+  genresDlg.showModal();
+  if (!Gnr.loaded) {
+    setGnrStatus('불러오는 중…');
+    try {
+      if (!(await loadGenresData())) {
+        setGnrStatus('');
+        $('#gnrList').innerHTML = '<p class="muted small" style="padding:18px 4px;">' +
+          '아직 data/subjects.json 이 없습니다. Actions → Fetch Book Subjects 를 먼저 돌려 주세요.</p>';
+        return;
+      }
+    } catch (err) {
+      setGnrStatus('');
+      toast('분야 불러오기 실패: ' + err.message, 'err');
+      return;
+    }
+    setGnrStatus(Gnr.from === SUBJECTS_PR_BRANCH
+      ? `분류는 아직 머지 안 한 수집 PR(${SUBJECTS_PR_BRANCH})에서 읽었습니다` : '');
+  }
+  $('#gnrSaveBtn').disabled = !Gnr.dirty;
+  Gnr.shown = 60;
+  renderGenresList();
+}
+
+// 사이트에 나가는 책 → 저자·링크·추천한 셀럽
+function siteBooks() {
+  const m = new Map();
+  for (const c of State.celebs.values()) {
+    for (const b of c.books) {
+      const t = (b.title || '').trim();
+      if (!t) continue;
+      if (!m.has(t)) m.set(t, { author: b.author || '', link: b.link || '', celebs: [] });
+      if (!m.get(t).celebs.includes(c.name)) m.get(t).celebs.push(c.name);
+    }
+  }
+  return m;
+}
+
+function gnrRows() {
+  const f = $('#gnrFilter').value;
+  const q = $('#gnrSearch').value.trim().toLowerCase();
+  const rows = [];
+  Gnr.waiting = 0;
+  for (const [t, info] of siteBooks()) {
+    const s = Gnr.subjects[t];
+    const miss = Gnr.misses[t];
+    const decided = Gnr.decided.get(t);
+    if (!s && !miss && !decided) continue;           // 아직 수집 전
+    const auto = s ? kdcGenre(s.kdc, s.add_code) : null;
+    // 기관별 분류가 서로 다른 분야를 가리키면 '기관끼리 다름'
+    const bySrc = [s?.kdc_from === 'd4l' ? s.kdc : '', s?.nlh_kdc, s?.nl_kdc]
+      .map(k => kdcGenre(k)).filter(Boolean);
+    const conflict = new Set(bySrc).size >= 2 && !(s?.add_code || '').startsWith('7');
+    // 소장자료 검색(청구기호)을 아직 안 거친 책은 다음 수집 때 저절로 풀릴 수 있으니 기다린다
+    const waiting = !!s && !(s.tried || []).includes('nlh2');
+    if (waiting && !decided) Gnr.waiting++;
+    const unknown = !!s && !auto && !waiting;
+    const nodata = !s && !!miss;
+    const ok = {
+      focus: !decided && (unknown || (conflict && !waiting) || nodata),
+      unknown: !decided && unknown, conflict: !decided && conflict && !waiting, nodata: !decided && nodata,
+      done: !!decided, all: !!s || !!decided,
+    }[f];
+    if (!ok) continue;
+    if (q) {
+      const hay = [t, info.author, s?.kdc, s?.call_no, s?.nl_kdc, s?.class_nm].join(' ').toLowerCase();
+      if (!hay.includes(q)) continue;
+    }
+    rows.push({ t, info, s, miss, auto, conflict, unknown, nodata, decided });
+  }
+  // 여러 셀럽이 고른 책일수록 통계에 크게 걸리니 위로
+  rows.sort((a, b) => b.info.celebs.length - a.info.celebs.length || a.t.localeCompare(b.t, 'ko'));
+  return rows;
+}
+
+function renderGenresList() {
+  const rows = gnrRows();
+  $('#gnrCount').textContent = `이 목록 ${rows.length} · 검수함 ${Gnr.decided.size}` +
+    (Gnr.waiting ? ` · 자동 조회 대기 ${Gnr.waiting}` : '');
+  const box = $('#gnrList');
+  if (!rows.length) {
+    box.innerHTML = '<p class="muted small" style="padding:18px 4px;">해당하는 책이 없습니다.</p>';
+    $('#gnrMoreBtn').classList.add('hidden');
+    return;
+  }
+  const page = rows.slice(0, Gnr.shown);
+  box.innerHTML = page.map(r => {
+    const { t, info, s, miss, auto, decided } = r;
+    const who = info.celebs.slice(0, 3).join(', ') + (info.celebs.length > 3 ? ` 외 ${info.celebs.length - 3}명` : '');
+    const flags = [r.unknown && '형식 모름', r.conflict && '기관끼리 다름', r.nodata && '도서관 데이터 없음']
+      .filter(Boolean).map(x => `<span class="ttl-flag">${x}</span>`).join('');
+    const ev = s ? [
+      s.call_no && `소장자료 청구기호 <b>${esc(s.call_no)}</b>`,
+      s.nl_kdc && `ISBN 서지정보 <b>${esc(s.nl_kdc)}</b>`,
+      s.kdc_from === 'd4l' && `정보나루 <b>${esc(s.kdc)}</b>${s.class_nm ? ` (${esc(s.class_nm)})` : ''}`,
+      s.add_code && `부가기호 <b>${esc(s.add_code)}</b>`,
+    ].filter(Boolean).join(' · ') : `수집 실패: ${esc(miss)}`;
+    const nlq = encodeURIComponent(s?.isbn || t);
+    const cur = decided?.genre || '';
+    return `<article class="cmt-card ${cur ? 'approved' : ''}" data-title="${esc(t)}">
+      <div class="cmt-head">
+        <b>${esc(t)}</b><span class="muted"> · ${esc(info.author)}</span>
+        <span class="cmt-state ${cur ? 's-approved' : ''}">${cur ? `검수: ${esc(cur === GENRE_EXCLUDE ? '통계에서 뺌' : cur)}`
+          : `자동: ${esc(auto || '모름')}`}</span>
+        ${flags}
+        <span class="cmt-spacer"></span>
+        <span class="muted small">${esc(who)}</span>
+      </div>
+      <p class="ttl-csv">${ev}</p>
+      <div class="ttl-links">
+        ${info.link ? `<a href="${esc(info.link)}" target="_blank" rel="noopener">예스24 상품 ↗</a>` : ''}
+        <a href="https://www.nl.go.kr/NL/contents/search.do?srchTarget=total&kwd=${nlq}" target="_blank" rel="noopener">국립중앙도서관 검색 ↗</a>
+        <a href="https://www.google.com/search?q=${encodeURIComponent(t + ' ' + info.author + ' 장르')}" target="_blank" rel="noopener">Google 검색 ↗</a>
+      </div>
+      <div class="gnr-picks">
+        ${GENRES.map(g => `<button type="button" class="gnr-pick ${cur === g ? 'picked' : ''} ${!cur && auto === g ? 'auto' : ''}" data-genre="${esc(g)}">${esc(g)}</button>`).join('')}
+        <button type="button" class="gnr-pick ${cur === GENRE_EXCLUDE ? 'picked' : ''}" data-genre="${GENRE_EXCLUDE}" title="이 책을 분야 통계에 넣지 않음">통계에서 뺌</button>
+        ${cur ? '<button type="button" class="btn small" data-undo="1" title="검수를 지우고 자동 분류로 되돌림">되돌리기</button>' : ''}
+      </div>
+    </article>`;
+  }).join('');
+  $('#gnrMoreBtn').classList.toggle('hidden', rows.length <= Gnr.shown);
+  $('#gnrMoreBtn').textContent = `더 보기 (${rows.length - Gnr.shown}건 남음)`;
+}
+
+$('#gnrList').addEventListener('click', (e) => {
+  const card = e.target.closest('.cmt-card');
+  if (!card || e.target.closest('a')) return;
+  const t = card.dataset.title;
+  const pick = e.target.closest('[data-genre]');
+  if (pick) Gnr.decided.set(t, { genre: pick.dataset.genre, reviewed: new Date().toISOString().slice(0, 10) });
+  else if (e.target.closest('[data-undo]')) Gnr.decided.delete(t);
+  else return;
+  Gnr.touched.add(t);
+  Gnr.dirty = true;
+  $('#gnrSaveBtn').disabled = false;
+  setGnrStatus(`미저장 변경 ${Gnr.touched.size}건`);
+  window.onbeforeunload = () => '저장되지 않은 변경이 있습니다.';
+  renderGenresList();
+});
+
+async function saveGenres() {
+  if (!Gnr.touched.size) return;
+  const message = prompt('커밋 메시지', `분야 검수 — ${Gnr.touched.size}권`);
+  if (!message) return;
+  const btn = $('#gnrSaveBtn');
+  btn.disabled = true;
+  setGnrStatus('저장 중…');
+  try {
+    // 최신 파일 위에 이번에 손댄 책만 덮는다
+    const { content, sha } = await Gh.getFile(GENRES_PATH, { allowMissing: true });
+    const doc = content ? JSON.parse(content) : {};
+    doc._note = "편집기 '🏷️ 분야 검수'에서 정한 책 분야. tools/taste.py 가 자동 분류(KDC)보다 먼저 쓴다. " +
+      "'제외'는 분야 통계에서 뺀다.";
+    doc.genres = doc.genres || {};
+    for (const t of Gnr.touched) {
+      if (Gnr.decided.has(t)) doc.genres[t] = Gnr.decided.get(t);
+      else delete doc.genres[t];
+    }
+    doc.genres = Object.fromEntries(Object.entries(doc.genres).sort((a, b) => a[0].localeCompare(b[0], 'ko')));
+    doc._updated = new Date().toISOString().slice(0, 10);
+    await Gh.putFile({ content: JSON.stringify(doc, null, 1) + '\n', sha, message, path: GENRES_PATH });
+    Gnr.decided.clear();
+    for (const [t, v] of Object.entries(doc.genres)) Gnr.decided.set(t, v);
+    const n = Gnr.touched.size;
+    Gnr.touched.clear();
+    Gnr.dirty = false;
+    if (!State.dirty && !Cmt.dirty && !Ttl.dirty) window.onbeforeunload = null;
+    setGnrStatus('저장 완료 — 사이트는 몇 분 뒤 다시 빌드됩니다');
+    toast(`분야 저장됨 — ${n}권`, 'ok');
+    renderGenresList();
+  } catch (err) {
+    setGnrStatus('');
+    toast(err.message, 'err');
+    btn.disabled = false;
+  }
+}
+
+$('#genresBtn').addEventListener('click', openGenresDialog);
+$('#gnrSaveBtn').addEventListener('click', saveGenres);
+$('#gnrFilter').addEventListener('change', () => { Gnr.shown = 60; renderGenresList(); });
+$('#gnrSearch').addEventListener('input', () => { Gnr.shown = 60; renderGenresList(); });
+$('#gnrMoreBtn').addEventListener('click', () => { Gnr.shown += 60; renderGenresList(); });
+genresDlg.addEventListener('close', () => {
+  if (Gnr.dirty) toast('분야 검수 결과가 아직 저장되지 않았습니다', 'err');
 });
 
 /* -------------------- 책 이름 통일 --------------------

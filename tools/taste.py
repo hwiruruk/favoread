@@ -76,6 +76,15 @@ def _flags(info, this_year):
 _KEYS = ('translated', 'recent', 'thick', 'thin')
 
 
+# 분야 이름과 영문 — 편집기 '🏷️ 분야 검수'(editor/app.js 의 GENRES)와 같은 목록·순서
+GENRE_EN = {
+    '소설': 'Fiction', '시': 'Poetry', '에세이': 'Essays', '기타 문학': 'Other literature',
+    '인문': 'Humanities', '사회': 'Society', '경제·경영': 'Business', '자기계발': 'Self-help',
+    '과학': 'Science', '실용·생활': 'Practical', '예술': 'Arts', '만화': 'Comics', '여행': 'Travel',
+    '어린이책': "Children's books", '기타': 'Other',
+}
+GENRE_EXCLUDE = '제외'   # 검수에서 '통계에서 뺌'을 고른 책
+
 _FORM = {'1': ('시', 'Poetry'), '3': ('소설', 'Fiction'),
          '4': ('에세이', 'Essays'), '6': ('에세이', 'Essays'), '8': ('에세이', 'Essays')}
 
@@ -91,6 +100,8 @@ def genre(kdc, add_code=''):
     c = re.sub(r'\D', '', kdc or '')[:3]
     if len(c) < 3:
         return None
+    if c == '657':
+        return ('만화', 'Comics')
     if c[0] == '8':
         if c[1] in '09' or c[2] in '09':
             return None
@@ -108,7 +119,11 @@ def genre(kdc, add_code=''):
 
 
 def _genre_of(subjects, t):
+    """사람이 정한 분야(data/genres.json → genre_override)가 있으면 그걸, 없으면 KDC로 정한다."""
     s = (subjects or {}).get(t) or {}
+    g = s.get('genre_override')
+    if g:
+        return None if g == GENRE_EXCLUDE else (g, GENRE_EN.get(g, g))
     return genre(s.get('kdc'), s.get('add_code'))
 
 
