@@ -23,6 +23,9 @@ on:
       - 'data/group_colors.json'
       # 페이지 생성기 자체 — 화면 구성을 바꾸면 모든 페이지를 다시 만들어야 한다
       - 'generate.py'
+      # 공유 미리보기 카드(og/*.jpg) — 그림을 바꾸면 모든 카드를 다시 그린다
+      - 'tools/make_og.py'
+      - 'tools/build_site.sh'
       - '.github/workflows/update-sitemap.yml'
 
 # 편집기로 저장하면 이 워크플로와 영문 제목 후보 워크플로가 동시에 돌고,
@@ -48,15 +51,19 @@ jobs:
         with:
           python-version: '3.12'
 
+      # 공유 미리보기 카드를 그리는 데 쓴다 (tools/make_og.py)
+      - name: Install Pillow
+        run: pip install pillow
+
       - name: Run generator
-        run: python3 generate.py
+        run: bash tools/build_site.sh
 
       - name: Commit & push
         run: |
           git config user.name  "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
           commit() {
-            git add -A data.json sitemap.xml share/ group/ recommend/ author/ en/ s/ data/shortlinks.json data/en_slugs.json data/page_lastmod.json data/detail/ index.html updates.html robots.txt llms.txt feed.xml
+            git add -A data.json sitemap.xml share/ group/ recommend/ author/ en/ s/ og/ data/og.json data/shortlinks.json data/en_slugs.json data/page_lastmod.json data/detail/ index.html updates.html robots.txt llms.txt feed.xml
             git diff --cached --quiet || git commit -m "chore: data.json·sitemap·share·index·en·s 자동 갱신 [$(date +%Y-%m-%d)]"
           }
           commit
@@ -69,7 +76,7 @@ jobs:
             sleep $((i * 5))
             git fetch origin "${GITHUB_REF_NAME}"
             git reset --hard "origin/${GITHUB_REF_NAME}"
-            python3 generate.py
+            bash tools/build_site.sh
             commit
           done
           exit 1

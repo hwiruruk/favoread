@@ -2094,6 +2094,24 @@ for _name, _info in celebs.items():
 assign_shorts('book', sorted(
     (t, book_title_en.get(t) or '') for t in books_with_pages), cap=36)
 
+# ── 공유 미리보기 카드 (data/og.json) ─────────────────────────────────
+# tools/make_og.py 가 그린 1200×630 카드. 없으면(새 셀럽이 아직 안 그려졌으면)
+# 예전처럼 셀럽 사진을 쓴다. 카드가 바뀌면 메신저가 옛 그림을 계속 보여 주지 않게 ?v= 를 붙인다.
+try:
+    with open('data/og.json', encoding='utf-8') as f:
+        OG_CARDS = json.load(f)
+except (FileNotFoundError, json.JSONDecodeError):
+    OG_CARDS = {}
+
+
+def og_card(name):
+    """(이미지 주소, 너비, 높이) 또는 None"""
+    c = OG_CARDS.get(name) or {}
+    if c.get('file') and os.path.exists(c['file']):
+        return BASE + c['file'] + '?v=' + c.get('fp', ''), 1200, 630
+    return None
+
+
 # ── 작가 페이지 대상 (/author/*.html) ────────────────────────────────
 # "한강 책 읽은 연예인", "하루키 좋아하는 아이돌"처럼 작가 이름으로 찾는 검색어를 받는다.
 # 언급이 적은 작가까지 만들면 책 페이지 때처럼 얇은 템플릿 페이지가 쌓이므로,
@@ -2128,6 +2146,17 @@ def author_ld(author):
         return None
     return {'@type': 'Person', 'name': a,
             **({'url': make_author_url(a)} if a in author_pages else {})}
+
+
+# ── 한국어 조사 ──────────────────────────────────────────────────────
+# 받침 유무로 을/를, 이/가, 은/는 을 고른다 ('한강을', '무라카미 하루키를').
+# 끝 글자가 한글이 아니면 고를 수 없어 '(을)를'처럼 둘 다 적는다.
+def josa(word, pair):
+    a, b = pair.split('/')
+    w = (word or '').strip()
+    if not w or not ('가' <= w[-1] <= '힣'):
+        return '(' + a + ')' + b
+    return a if (ord(w[-1]) - 0xAC00) % 28 else b
 
 
 # ── 출처 종류 ────────────────────────────────────────────────────────
@@ -2337,6 +2366,7 @@ for name, info in celebs.items():
     h1_text    = esc(name) + ' 추천 책 · 읽은 책 · 독서 기록'
 
     page_updated = celeb_page_lastmod('share/' + fn + '.html', name)
+    og_img, og_w, og_h = og_card(name) or (img, 600, 600)
     _group = KO_GROUP_OF.get(name)
     json_ld = {
         '@context': 'https://schema.org',
@@ -2649,9 +2679,9 @@ for name, info in celebs.items():
         '  <!-- Open Graph -->\n'
         '  <meta property="og:title" content="' + page_title + '">\n'
         '  <meta property="og:description" content="' + desc_text + '">\n'
-        '  <meta property="og:image" content="' + esc(img) + '">\n'
-        '  <meta property="og:image:width" content="600">\n'
-        '  <meta property="og:image:height" content="600">\n'
+        '  <meta property="og:image" content="' + esc(og_img) + '">\n'
+        '  <meta property="og:image:width" content="' + str(og_w) + '">\n'
+        '  <meta property="og:image:height" content="' + str(og_h) + '">\n'
         '  <meta property="og:image:alt" content="' + esc(name) + ' 읽은 책 추천 책 리스트">\n'
         '  <meta property="og:url" content="' + esc(page_url) + '">\n'
         '  <meta property="og:type" content="profile">\n'
@@ -2662,7 +2692,7 @@ for name, info in celebs.items():
         '  <meta name="twitter:card" content="summary_large_image">\n'
         '  <meta name="twitter:title" content="' + page_title + '">\n'
         '  <meta name="twitter:description" content="' + desc_text + '">\n'
-        '  <meta name="twitter:image" content="' + esc(img) + '">\n'
+        '  <meta name="twitter:image" content="' + esc(og_img) + '">\n'
         '  <meta name="twitter:image:alt" content="' + esc(name) + ' 읽은 책 추천 책 리스트">\n'
         '\n'
         '  <link rel="canonical" href="' + esc(page_url) + '">\n'
@@ -3533,7 +3563,7 @@ for a in sorted(author_pages, key=lambda x: (-len(author_mentions[x]), x)):
     }, lambda: _seed_date(author_mentions[a]))
 
     # 첫 문단 — "한강 책 읽은 연예인"에 대한 답
-    lead = (esc(a) + '의 책은 지금까지 셀럽 <strong>' + str(n_celebs) + '명</strong>이 읽었거나 추천했어요. ')
+    lead = (esc(a) + '의 책을 읽었거나 추천한 그들은 지금까지 <strong>' + str(n_celebs) + '명</strong>이에요. ')
     if len(ranked) == 1:
         lead += '언급된 책은 『' + esc(ranked[0][0]) + '』 한 권이에요.'
     else:
@@ -3545,7 +3575,7 @@ for a in sorted(author_pages, key=lambda x: (-len(author_mentions[x]), x)):
         per_celeb[c] = per_celeb.get(c, 0) + 1
     multi = sorted(((c, k) for c, k in per_celeb.items() if k >= 2), key=lambda x: (-x[1], x[0]))
     if multi:
-        lead += (' ' + esc(a) + '의 책을 여러 권 읽은 셀럽은 '
+        lead += (' 그중 ' + esc(a) + josa(a, '을/를') + ' 여러 권 읽은 사람은 '
                  + ', '.join(esc(c) + '(' + str(k) + '권)' for c, k in multi[:5])
                  + (' 등' if len(multi) > 5 else '') + '이에요.')
     src = source_summary(_celeb_book(c, t).get('source') for c, t in author_mentions[a])
@@ -3573,7 +3603,7 @@ for a in sorted(author_pages, key=lambda x: (-len(author_mentions[x]), x)):
             + '      <div>\n'
             '        <div class="ab-t">' + t_html + '</div>\n'
             '        <div class="ab-m">' + esc(bi.get('publisher') or '') + (' · ' if bi.get('publisher') else '')
-            + '셀럽 ' + str(len(cs)) + '명</div>\n'
+            + str(len(cs)) + '명이 읽음</div>\n'
             '        <p class="ab-who">' + ' · '.join(who) + '</p>\n'
             + quotes +
             '      </div>\n'
@@ -3583,11 +3613,11 @@ for a in sorted(author_pages, key=lambda x: (-len(author_mentions[x]), x)):
     others = [x for x in sorted(author_pages, key=lambda x: (-len(author_mentions[x]), x)) if x != a][:15]
     others_html = ' · '.join('<a href="' + esc(make_author_url(o)) + '">' + esc(o) + '</a>' for o in others)
 
-    title = a + ' 책 읽은 연예인 · 셀럽이 추천한 ' + a + ' 책'
+    title = a + ' 책 읽은 연예인 · 그들이 고른 ' + a + '의 책'
     top_titles = [t for t, _ in ranked[:3]]
     desc = (a + ' 책을 읽은 연예인·아이돌 ' + str(n_celebs) + '명. '
             + ', '.join('『' + t + '』' for t in top_titles)
-            + (' 등 ' if len(ranked) > 3 else ' ') + '셀럽이 고른 ' + a + '의 책 '
+            + (' 등 ' if len(ranked) > 3 else ' ') + '그들이 고른 ' + a + '의 책 '
             + str(len(ranked)) + '권과 추천 이유·출처를 모았어요.')
     ld = [
         {
@@ -3602,7 +3632,7 @@ for a in sorted(author_pages, key=lambda x: (-len(author_mentions[x]), x)):
             'isPartOf': {'@type': 'WebSite', 'name': '최애의 독서', 'url': BASE},
             'mainEntity': {
                 '@type': 'ItemList',
-                'name': '셀럽이 읽은 ' + a + '의 책',
+                'name': '연예인이 읽은 ' + a + '의 책',
                 'numberOfItems': len(ranked),
                 'itemListElement': [
                     {'@type': 'ListItem', 'position': i + 1,
@@ -3634,15 +3664,15 @@ for a in sorted(author_pages, key=lambda x: (-len(author_mentions[x]), x)):
     page = (
         _author_head(title, desc, url, ld, first_cover)
         + '  <div class="hero">\n'
-        '    <h1>' + esc(a) + ' 책을 읽은 셀럽</h1>\n'
+        '    <h1>그들이 읽은 ' + esc(a) + '의 책</h1>\n'
         '    <p>' + lead + '</p>\n'
         + (('    <p>' + src + '</p>\n') if src else '')
         + (('    <p class="updated">마지막 업데이트 <time datetime="' + updated + '">'
             + date_ko(updated) + '</time></p>\n') if date_ko(updated) else '')
         + '  </div>\n'
-        '  <h2>셀럽이 읽은 ' + esc(a) + '의 책 (' + str(len(ranked)) + '권)</h2>\n'
+        '  <h2>' + esc(a) + '의 책 ' + str(len(ranked)) + '권</h2>\n'
         '  <ol class="ab">\n' + rows + '  </ol>\n'
-        '  <h2>셀럽이 많이 읽은 다른 작가</h2>\n'
+        '  <h2>그들이 많이 읽은 다른 작가</h2>\n'
         '  <p class="others">' + others_html + ' · <a href="' + AUTHOR_HUB_URL + '">전체 보기 →</a></p>\n'
         + AUTHOR_FOOT +
         '</body>\n'
@@ -3655,13 +3685,13 @@ for a in sorted(author_pages, key=lambda x: (-len(author_mentions[x]), x)):
 _ai_rows = ''.join(
     '    <li>\n'
     '      <div class="ab-t">' + str(i + 1) + '. <a href="' + esc(make_author_url(a)) + '">' + esc(a) + '</a></div>\n'
-    '      <div class="ab-m">셀럽 ' + str(nc) + '명 · 책 ' + str(nb) + '권 · 가장 많이 읽힌 책 『' + esc(top) + '』</div>\n'
+    '      <div class="ab-m">' + str(nc) + '명이 읽음 · 책 ' + str(nb) + '권 · 가장 많이 읽힌 책 『' + esc(top) + '』</div>\n'
     '    </li>\n'
     for i, (a, nc, _nm, nb, top, _u) in enumerate(author_index)
 )
 _ai_top = [a for a, *_ in author_index[:3]]
-_ai_desc = ('셀럽이 가장 많이 읽은 작가 ' + str(len(author_index)) + '명. '
-            + ', '.join(_ai_top) + ' 등 작가별로 연예인·아이돌이 읽은 책과 추천 이유를 모았어요.')
+_ai_desc = ('연예인·아이돌이 가장 많이 읽은 작가 ' + str(len(author_index)) + '명. '
+            + ', '.join(_ai_top) + ' 등 작가별로 그들이 읽은 책과 추천 이유를 모았어요.')
 _ai_ld = clean_none([
     {
         '@context': 'https://schema.org',
@@ -3673,7 +3703,7 @@ _ai_ld = clean_none([
         'isPartOf': {'@type': 'WebSite', 'name': '최애의 독서', 'url': BASE},
         'mainEntity': {
             '@type': 'ItemList',
-            'name': '셀럽이 많이 읽은 작가',
+            'name': '연예인이 많이 읽은 작가',
             'numberOfItems': len(author_index),
             'itemListElement': [
                 {'@type': 'ListItem', 'position': i + 1, 'name': a, 'url': make_author_url(a)}
@@ -3691,11 +3721,11 @@ _ai_ld = clean_none([
     },
 ])
 write_if_changed('author/index.html', (
-    _author_head('작가별 연예인 추천책 · 셀럽이 많이 읽은 작가 ' + str(len(author_index)) + '명',
+    _author_head('작가별 연예인 추천책 · 그들이 많이 읽은 작가 ' + str(len(author_index)) + '명',
                  _ai_desc, AUTHOR_HUB_URL, _ai_ld, BASE + 'og-image.jpg')
     + '  <div class="hero">\n'
-    '    <h1>셀럽이 많이 읽은 작가</h1>\n'
-    '    <p>셀럽들이 읽었거나 추천한 책을 작가별로 모았어요. 언급이 ' + str(AUTHOR_MIN_MENTIONS)
+    '    <h1>그들이 많이 읽은 작가</h1>\n'
+    '    <p>그들이 읽었거나 추천한 책을 작가별로 모았어요. 언급이 ' + str(AUTHOR_MIN_MENTIONS)
     + '번 이상인 작가 ' + str(len(author_index)) + '명이고, 가장 많이 언급된 작가는 '
     + ', '.join(esc(a) for a in _ai_top) + ' 순이에요.</p>\n'
     '  </div>\n'
