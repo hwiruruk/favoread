@@ -76,6 +76,21 @@ def http_json(url, timeout=20):
         raise fb.Transient(str(e))
 
 
+RETRY_WAITS = (3, 10)    # 연결이 끊기면 이만큼(초) 쉬고 다시 묻는다
+
+
+def retry(label, fn, *args):
+    """일시적 오류(연결 거부·타임아웃)는 잠깐 쉬고 다시 부른다. 첫 실행에서 다섯 권에 한 번꼴
+    'Connection refused' 가 나서 200권 중 40권을 놓쳤다."""
+    for wait in RETRY_WAITS + (None,):
+        try:
+            return fn(*args)
+        except fb.Transient as e:
+            if wait is None:
+                raise fb.Transient('%s: %s' % (label, e))
+            time.sleep(wait)
+
+
 # ── ISBN (예스24) ───────────────────────────────────────────────────
 def find_isbn(it):
     """예스24 응답에서 ISBN13 을 찾는다. 필드 이름이 문서에 확실치 않아 'isbn' 이 든 키를 다 본다."""
@@ -232,7 +247,7 @@ def main():
     for i, t in enumerate(todo, 1):
         try:
             isbn = (have.get(t) or {}).get('isbn') or find_isbn(
-                fb.item_detail(bookinfo[t]['itemId'], proxy, y24_key))
+                retry('예스24', fb.item_detail, bookinfo[t]['itemId'], proxy, y24_key))
             time.sleep(args.sleep)
             if not isbn:
                 misses[t] = '예스24 응답에 ISBN 없음 (goods %s)' % bookinfo[t]['itemId']
@@ -245,7 +260,7 @@ def main():
             kw = old.get('keywords') or []
             if on['nl'] and 'nl' not in tried:
                 try:
-                    nl = nl_lookup(isbn, nl_key) or {}
+                    nl = retry('국립중앙도서관', nl_lookup, isbn, nl_key) or {}
                     tried.add('nl')
                 except SourceOff as e:
                     on['nl'] = False
@@ -255,9 +270,9 @@ def main():
                 nl = {'kdc': old.get('nl_kdc', ''), 'add_code': old.get('add_code', '')}
             if on['d4l'] and 'd4l' not in tried:
                 try:
-                    d4 = d4l_detail(isbn, d4_key) or {}
+                    d4 = retry('정보나루', d4l_detail, isbn, d4_key) or {}
                     time.sleep(args.sleep)
-                    kw = d4l_keywords(isbn, d4_key)
+                    kw = retry('정보나루', d4l_keywords, isbn, d4_key)
                     tried.add('d4l')
                 except SourceOff as e:
                     on['d4l'] = False
