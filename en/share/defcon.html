@@ -220,6 +220,12 @@
     .vt[aria-pressed="true"] { background: #000; color: #fff; }
     .covers { display: none; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 22px 18px; margin: 14px 0 22px; }
     .show-covers .covers { display: grid; }
+    .covers-more { display: none; }
+    .show-covers.covers-collapsed .covers .cv:nth-child(n+16) { display: none; }
+    .show-covers.covers-collapsed .covers-more { display: flex; position: relative; z-index: 1; height: 150px; margin: -172px 0 22px;
+        align-items: flex-end; justify-content: center; pointer-events: none;
+        background: linear-gradient(to bottom, rgba(252,250,245,0) 0%, rgba(252,250,245,.85) 55%, #fcfaf5 100%); }
+    .covers-more .sh-cap { pointer-events: auto; padding: 8px 18px; font-size: 13px; }
     .show-covers .shelf { display: none; }
     .cv { position: relative; display: block; aspect-ratio: 2/3; border: 1.5px solid #000; box-shadow: 2px 2px 0 0 #000;
           background: #f4f4f0; overflow: hidden; color: #000; text-decoration: none; transition: transform .12s; }
@@ -284,8 +290,11 @@
     .sp.is-new .sp-t { padding-top: 22px; }
     .is-capturing .sp-new, .is-capturing .rl-new, .is-capturing .rl-shared, .is-capturing .rl-comment { display: none !important; }
     .is-capturing .sp.is-new .sp-t { padding-top: 14px; }
-    @media (max-width: 700px) { .covers { grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 16px 14px; } }
-    @media (max-width: 480px) { .covers { grid-template-columns: repeat(auto-fill, minmax(84px, 1fr)); gap: 14px 12px; }
+    @media (max-width: 700px) { .covers { grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 16px 14px; }
+                                 .show-covers.covers-collapsed .covers .cv:nth-child(n+13) { display: none; } }
+    @media (max-width: 480px) { .covers { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 14px 12px; }
+                                 .show-covers.covers-collapsed .covers .cv:nth-child(n+10) { display: none; }
+                                 .show-covers.covers-collapsed .covers-more { height: 120px; margin-top: -142px; }
                                  .shelf { --sh-h: 205px; }
                                  .sp.no-img, .sp.sp-fail { width: calc(var(--w, 38px) * .88); }
                                  .sp-i { max-width: 61px; }
@@ -413,6 +422,8 @@
     try { saved = localStorage.getItem("shelfView2"); } catch (e) {}
     if (saved === "spine") set("spine", false);
     tabs.forEach(function (t) { t.addEventListener("click", function () { set(t.dataset.view, true); }); });
+    var more = document.getElementById("covers-more-btn");
+    if (more) more.addEventListener("click", function () { area.classList.remove("covers-collapsed"); });
   })();
   </script>
   <script>
@@ -609,6 +620,9 @@
       // 저장하는 그림에는 NEW 표시와 함께 추천한 셀럽 목록을 넣지 않는다.
       // html2canvas가 문서를 복사할 때 이 클래스도 따라가서 복사본에서만 빠진 채 그려진다.
       view.classList.add("is-capturing");
+      // 접어 둔 표지도 저장 범위에 들어가므로 찍는 동안만 펼친다
+      var wasCollapsed = view.classList.contains("covers-collapsed");
+      view.classList.remove("covers-collapsed");
       // 표지 보기에서 책이 12권을 넘으면 고른 12권만 4열 3줄로 담는다
       var capTiles = [], capSel = document.getElementById("shelf-range");
       if (capSel && capSel.value !== "" && view.classList.contains("show-covers")) {
@@ -649,6 +663,7 @@
         if (swap) swap.undo.forEach(function (f) { f(); });
         if (muted) unmute(muted);
         view.classList.remove("is-capturing", "cap-12");
+        if (wasCollapsed) view.classList.add("covers-collapsed");
         capTiles.forEach(function (t) { t.classList.remove("cap-off"); });
         btns.forEach(function (b) { b.disabled = false; });
         btn.textContent = was;

@@ -742,6 +742,9 @@ SHELF_CAPTURE_JS_TEMPLATE = (
     '      // 저장하는 그림에는 NEW 표시와 함께 추천한 셀럽 목록을 넣지 않는다.\n'
     '      // html2canvas가 문서를 복사할 때 이 클래스도 따라가서 복사본에서만 빠진 채 그려진다.\n'
     '      view.classList.add("is-capturing");\n'
+    '      // 접어 둔 표지도 저장 범위에 들어가므로 찍는 동안만 펼친다\n'
+    '      var wasCollapsed = view.classList.contains("covers-collapsed");\n'
+    '      view.classList.remove("covers-collapsed");\n'
     '      // 표지 보기에서 책이 12권을 넘으면 고른 12권만 4열 3줄로 담는다\n'
     '      var capTiles = [], capSel = document.getElementById("shelf-range");\n'
     '      if (capSel && capSel.value !== "" && view.classList.contains("show-covers")) {\n'
@@ -782,6 +785,7 @@ SHELF_CAPTURE_JS_TEMPLATE = (
     '        if (swap) swap.undo.forEach(function (f) { f(); });\n'
     '        if (muted) unmute(muted);\n'
     '        view.classList.remove("is-capturing", "cap-12");\n'
+    '        if (wasCollapsed) view.classList.add("covers-collapsed");\n'
     '        capTiles.forEach(function (t) { t.classList.remove("cap-off"); });\n'
     '        btns.forEach(function (b) { b.disabled = false; });\n'
     '        btn.textContent = was;\n'
@@ -815,6 +819,23 @@ def cover_shelf_html(tiles):
     return ''.join(tiles)
 
 
+# 표지가 이 권수를 넘으면 처음엔 3줄까지만 보이고 마지막 줄은 흐리게 가린다(5열 기준 15권).
+# 열 수가 바뀌어도(4열·3열) 3줄이 되도록 CSS가 nth-child 로 자른다. 그 아래 목록이 멀어지는 걸 막는다.
+COVER_COLLAPSE_OVER = 15
+
+
+def covers_collapsed_class(n):
+    return ' covers-collapsed' if n > COVER_COLLAPSE_OVER else ''
+
+
+def covers_more_html(n, lang='ko'):
+    if n <= COVER_COLLAPSE_OVER:
+        return ''
+    label = ('표지 전체 ' + str(n) + '권 보기 \u25BE') if lang == 'ko' else ('Show all ' + str(n) + ' covers \u25BE')
+    return ('    <div class="covers-more"><button type="button" class="sh-cap" id="covers-more-btn">'
+            + label + '</button></div>\n')
+
+
 def shelf_view_tabs(spine_label, cover_label):
     """책장 보기 전환 — 표지 / 책등. 표지가 기본이고, 누른 쪽은 다음 방문에도 기억한다."""
     return ('        <span class="view-tabs" role="group">'
@@ -838,6 +859,8 @@ SHELF_VIEW_JS = (
     '    try { saved = localStorage.getItem("shelfView2"); } catch (e) {}\n'
     '    if (saved === "spine") set("spine", false);\n'
     '    tabs.forEach(function (t) { t.addEventListener("click", function () { set(t.dataset.view, true); }); });\n'
+    '    var more = document.getElementById("covers-more-btn");\n'
+    '    if (more) more.addEventListener("click", function () { area.classList.remove("covers-collapsed"); });\n'
     '  })();\n'
     '  </script>\n'
 )
@@ -874,6 +897,13 @@ SHELF_CSS = (
     # 화면 폭에 따라 열 수를 고정한다: 5열 → 700px 이하 4열 → 480px 이하 3열(auto-fill).
     '    .covers { display: none; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 22px 18px; margin: 14px 0 22px; }\n'
     '    .show-covers .covers { display: grid; }\n'
+    # 처음엔 3줄까지만(5열 15권 · 4열 12권 · 3열 9권), 마지막 줄은 아래 그라데이션으로 흐리게 가린다
+    '    .covers-more { display: none; }\n'
+    '    .show-covers.covers-collapsed .covers .cv:nth-child(n+16) { display: none; }\n'
+    '    .show-covers.covers-collapsed .covers-more { display: flex; position: relative; z-index: 1; height: 150px; margin: -172px 0 22px;\n'
+    '        align-items: flex-end; justify-content: center; pointer-events: none;\n'
+    '        background: linear-gradient(to bottom, rgba(252,250,245,0) 0%, rgba(252,250,245,.85) 55%, #fcfaf5 100%); }\n'
+    '    .covers-more .sh-cap { pointer-events: auto; padding: 8px 18px; font-size: 13px; }\n'
     '    .show-covers .shelf { display: none; }\n'
     '    .cv { position: relative; display: block; aspect-ratio: 2/3; border: 1.5px solid #000; box-shadow: 2px 2px 0 0 #000;\n'
     '          background: #f4f4f0; overflow: hidden; color: #000; text-decoration: none; transition: transform .12s; }\n'
@@ -956,8 +986,11 @@ SHELF_CSS = (
     '    .is-capturing .sp.is-new .sp-t { padding-top: 14px; }\n'
     # 좁은 화면에서는 한 줄에 너무 적게 들어가므로 조금 줄인다
     # 좁은 화면에서는 책등을 낮추므로 글자도 그 비율(205/270)만큼 줄인다
-    '    @media (max-width: 700px) { .covers { grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 16px 14px; } }\n'
-    '    @media (max-width: 480px) { .covers { grid-template-columns: repeat(auto-fill, minmax(84px, 1fr)); gap: 14px 12px; }\n'
+    '    @media (max-width: 700px) { .covers { grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 16px 14px; }\n'
+    '                                 .show-covers.covers-collapsed .covers .cv:nth-child(n+13) { display: none; } }\n'
+    '    @media (max-width: 480px) { .covers { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 14px 12px; }\n'
+    '                                 .show-covers.covers-collapsed .covers .cv:nth-child(n+10) { display: none; }\n'
+    '                                 .show-covers.covers-collapsed .covers-more { height: 120px; margin-top: -142px; }\n'
     '                                 .shelf { --sh-h: 205px; }\n'
     '                                 .sp.no-img, .sp.sp-fail { width: calc(var(--w, 38px) * .88); }\n'
     '                                 .sp-i { max-width: 61px; }\n'
@@ -2652,13 +2685,14 @@ for name, info in celebs.items():
         + new_block(new_items)
         + (('    <p class="muted">' + str(shared_count) + '권은 다른 셀럽도 함께 추천한 책이에요. 아래 목록에서 함께 추천한 셀럽 이름을 볼 수 있어요.</p>\n')
            if shared_count else '')
-        + '    <div id="shelf-area" class="show-covers">\n'
+        + '    <div id="shelf-area" class="show-covers' + covers_collapsed_class(len(cover_tiles)) + '">\n'
         '    <div class="shelf" id="shelf">\n'
         + spine_html +
         '    </div>\n'
         '    <div class="covers" id="covers">\n'
         + cover_shelf_html(cover_tiles) +
         '    </div>\n'
+        + covers_more_html(len(cover_tiles), 'ko') +
         '    <ol class="reading-list" id="rlist">\n'
         + book_cards_html +
         '    </ol>\n'
@@ -4077,11 +4111,12 @@ for name, info in celebs.items():
         '      </div>\n'
         '    </div>\n'
         + new_block(en_new_items, 'en')
-        + '    <div id="shelf-area" class="show-covers">\n'
+        + '    <div id="shelf-area" class="show-covers' + covers_collapsed_class(len(en_cover_tiles)) + '">\n'
         '    <div class="shelf" id="shelf">\n' + en_spine_html +
         '    </div>\n'
         '    <div class="covers" id="covers">\n' + cover_shelf_html(en_cover_tiles) +
         '    </div>\n'
+        + covers_more_html(len(en_cover_tiles), 'en') +
         '    <ol class="reading-list" id="rlist">\n' + rows +
         '    </ol>\n'
         '    </div>\n'
