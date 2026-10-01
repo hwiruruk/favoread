@@ -365,6 +365,20 @@ def yes24_spine_url(cover_url):
     return 'https://image.yes24.com/goods/' + gid + '/side' if gid else None
 
 
+YES24_PRODUCT_RE = re.compile(r'yes24\.com/(?:product/)?goods/(?:detail/)?(\d+)', re.I)
+
+
+def yes24_book_url(title, link='', cover_url=''):
+    """예스24 책 정보 페이지 URL.
+    '도서 정보' 칸의 예스24 상품 URL → 예스24 표지 URL의 상품 ID → 제목 검색 순으로 찾는다."""
+    m = YES24_PRODUCT_RE.search(html.unescape(link or ''))
+    gid = m.group(1) if m and 'image.yes24.com' not in (link or '') else None
+    gid = gid or yes24_goods_id(cover_url)
+    if gid:
+        return 'https://www.yes24.com/product/goods/' + gid
+    return 'https://www.yes24.com/product/search?domain=BOOK&query=' + quote(title)
+
+
 def normalize_spine_value(v):
     """spines.json 값을 책등 이미지 URL로 맞춘다.
 
@@ -3127,11 +3141,13 @@ for _g in sorted(ko_groups.values(), key=lambda g: g['ko']):
     for _n in members:
         for b in celebs[_n]['books']:
             t = b['title'].strip()
-            hit = gbooks.setdefault(t, {'readers': [], 'author': b['author'], 'cover': b.get('coverUrl', '')})
+            hit = gbooks.setdefault(t, {'readers': [], 'author': b['author'], 'cover': b.get('coverUrl', ''), 'link': b.get('link', '')})
             if _n not in hit['readers']:
                 hit['readers'].append(_n)
             if not hit['cover'] and b.get('coverUrl'):
                 hit['cover'] = b['coverUrl']
+            if 'yes24.com/product' not in hit['link'] and 'yes24.com/product' in (b.get('link') or ''):
+                hit['link'] = b['link']
     ranked = sorted(gbooks.items(), key=lambda kv: (-len(kv[1]['readers']), title_sort_key(kv[0])))
     shared = [x for x in ranked if len(x[1]['readers']) >= 2]
 
@@ -3155,7 +3171,9 @@ for _g in sorted(ko_groups.values(), key=lambda g: g['ko']):
     for t, info in ranked[:LIMIT]:
         who = ', '.join('<a href="' + esc(make_celeb_url(r)) + '">' + esc(_short(r)) + '</a>'
                         for r in info['readers'])
-        t_html = ('<a href="' + esc(make_book_url(t)) + '">' + esc(t) + '</a>') if t in books_with_pages else esc(t)
+        # 책 제목은 예스24 책 정보로 보낸다
+        t_html = ('<a href="' + esc(yes24_book_url(t, info['link'], info['cover']))
+                  + '" rel="nofollow noopener noreferrer" target="_blank">' + esc(t) + '</a>')
         book_rows += (
             '    <li class="gb">\n'
             '      <span class="gb-t">' + t_html + '</span>\n'
