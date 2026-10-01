@@ -202,9 +202,15 @@ def nlh_lookup(isbn, key):
                              '도서' not in str(r.get('typename') or '')))
     for r in recs:
         call_no = str(r.get('callno') or '').strip()
-        m = CALL_KDC_RE.search(call_no)
-        if m:
-            return {'kdc': m.group(1), 'call_no': call_no, 'kdc_1s': str(r.get('kdcname1s') or '').strip()}
+        # 응답에 분류번호만 담은 classNo 가 있으면 그걸 먼저 쓴다 (실제 응답: "classNo": "813.7")
+        cls = str(r.get('classno') or '').strip()
+        if KDC_RE.fullmatch(cls):
+            kdc = cls
+        else:
+            m = CALL_KDC_RE.search(call_no)
+            kdc = m.group(1) if m else ''
+        if kdc:
+            return {'kdc': kdc, 'call_no': call_no, 'kdc_1s': str(r.get('kdcname1s') or '').strip()}
     return {'kdc': '', 'call_no': str(recs[0].get('callno') or '').strip(),
             'kdc_1s': str(recs[0].get('kdcname1s') or '').strip()}
 
