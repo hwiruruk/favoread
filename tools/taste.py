@@ -76,17 +76,25 @@ def _flags(info, this_year):
 _KEYS = ('translated', 'recent', 'thick', 'thin')
 
 
-_FORM = {'1': ('시', 'Poetry'), '3': ('소설', 'Fiction'), '4': ('에세이', 'Essays'), '6': ('에세이', 'Essays')}
+_FORM = {'1': ('시', 'Poetry'), '3': ('소설', 'Fiction'),
+         '4': ('에세이', 'Essays'), '6': ('에세이', 'Essays'), '8': ('에세이', 'Essays')}
 
 
-def genre(kdc):
+def genre(kdc, add_code=''):
     """KDC 분류번호 → (분야, 영문). 서점 분류에 가깝게 묶는다. 모르면 None.
-    문학(8xx)은 셋째 자리가 형식이다: 1 시 · 2 희곡 · 3 소설 · 4 수필 · 6 일기·서간·기행."""
+    문학(8xx)은 셋째 자리가 형식이다: 1 시 · 2 희곡 · 3 소설 · 4 수필 · 6 일기·서간·기행 · 8 르포·기타(산문).
+    셋째 자리가 0이면(810 한국문학처럼 나라만 있고 형식이 없음) 형식을 모르니 None —
+    부가기호 끝 세 자리로 분류를 대신할 때 흔하다. 89x·8x9(기타 언어 문학)도 셋째 자리가 형식이 아니라 None.
+    부가기호 첫 자리가 7이면 아동 도서라 '어린이책'으로 따로 센다."""
+    if re.sub(r'\D', '', add_code or '')[:1] == '7':
+        return ('어린이책', "Children's books")
     c = re.sub(r'\D', '', kdc or '')[:3]
     if len(c) < 3:
         return None
     if c[0] == '8':
-        return _FORM.get(c[2], ('기타 문학', 'Other literature')) if c[1] != '0' else ('기타 문학', 'Other literature')
+        if c[1] in '09' or c[2] in '09':
+            return None
+        return _FORM.get(c[2], ('기타 문학', 'Other literature'))
     if c == '199':
         return ('자기계발', 'Self-help')
     if c[0] in '127' or (c[0] == '9' and c[1] != '8'):
@@ -100,7 +108,8 @@ def genre(kdc):
 
 
 def _genre_of(subjects, t):
-    return genre(((subjects or {}).get(t) or {}).get('kdc'))
+    s = (subjects or {}).get(t) or {}
+    return genre(s.get('kdc'), s.get('add_code'))
 
 
 def _keywords_of(subjects, t):
