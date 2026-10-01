@@ -2784,8 +2784,8 @@ for name, info in celebs.items():
             '    <a class="lang-btn" href="' + esc(make_en_celeb_url(name_en)) + '" hreflang="en">EN</a>\n') if name_en else '')
         + '  </div>\n'
         + '  <nav><a href="' + BASE + '">← 최애의 독서 홈</a> · <a href="' + BASE + 'share/ranking.html">셀럽 독서 랭킹</a>'
-        + (' · <a href="' + BASE + 'recommend/idol.html">아이돌 추천책 모음</a>' if is_idol(name)
-           else ' · <a href="' + BASE + 'recommend/celeb.html">연예인 추천책 모음</a>') + '</nav>\n'
+        + (' · <a href="' + BASE + 'recommend/idol.html">아이돌 추천책 모음</a>' if is_idol(name) else '')
+        + '</nav>\n'
         '\n'
         '  <header class="celeb-header">\n'
         '    <div class="celeb-photo-wrap">\n'
@@ -3372,7 +3372,7 @@ def _hub_page(url, path, title, desc, h1, intro, ranked, list_title, people, peo
         '<body>\n'
         '  <nav><a href="' + BASE + '">← 최애의 독서</a> · <a href="' + IDOL_HUB_URL + '">아이돌 추천책</a>'
         ' · <a href="' + ACTOR_HUB_URL + '">배우 추천책</a> · <a href="' + MUSICIAN_HUB_URL + '">가수 추천책</a>'
-        ' · <a href="' + CELEB_HUB_URL + '">연예인 추천책</a> · <a href="' + AUTHOR_HUB_URL + '">작가별 추천책</a>'
+        ' · <a href="' + AUTHOR_HUB_URL + '">작가별 추천책</a>'
         ' · <a href="' + BASE + 'share/ranking.html">셀럽 독서 랭킹</a></nav>\n'
         '  <div class="hero">\n'
         '    <h1>' + esc(h1) + '</h1>\n'
@@ -3423,7 +3423,7 @@ _hub_page(
      ('아이돌이 가장 많이 추천한 책은 무엇인가요?',
       ('지금 기준으로 ' + ', '.join(_idol_picks) + ' 순으로 많이 언급됐어요.') if _idol_picks else '아직 집계 중이에요.'),
      ('배우나 다른 연예인 추천책도 볼 수 있나요?',
-      '연예인 추천책 모음 페이지에서 배우·가수·방송인이 추천한 책을 함께 볼 수 있어요.')],
+      '배우 추천책 모음, 가수 추천책 모음 페이지에서 배우·가수가 추천한 책을 따로 볼 수 있어요.')],
 )
 
 # 연예인 추천책 (아이돌 포함 전체)
@@ -3511,7 +3511,7 @@ def _author_head(title, desc, url, ld, og_image):
         '</head>\n'
         '<body>\n'
         '  <nav><a href="' + BASE + '">← 최애의 독서</a> · <a href="' + AUTHOR_HUB_URL + '">작가별 추천책</a>'
-        ' · <a href="' + IDOL_HUB_URL + '">아이돌 추천책</a> · <a href="' + CELEB_HUB_URL + '">연예인 추천책</a>'
+        ' · <a href="' + IDOL_HUB_URL + '">아이돌 추천책</a>'
         ' · <a href="' + BASE + 'share/ranking.html">셀럽 독서 랭킹</a></nav>\n'
     )
 
@@ -4038,8 +4038,7 @@ for _url, _path, _label, _names, _who, _example in (
          + ' 순이에요. ' + _example + '까지 출처 링크와 함께 볼 수 있어요.'],
         _ranked, _label + '가 가장 많이 추천한 책',
         _names, '책을 추천한 ' + _label + ' ' + str(len(_names)) + '명',
-        '  <p><a href="' + CELEB_HUB_URL + '">전체 연예인 추천책 모음 →</a> · <a href="' + AUTHOR_HUB_URL
-        + '">작가별 추천책 →</a></p>\n',
+        '  <p><a href="' + AUTHOR_HUB_URL + '">작가별 추천책 →</a></p>\n',
         [(_label + ' 추천책은 어떤 기준으로 모았나요?',
           _label + '가 직접 추천한 책은 물론, 방송·인터뷰·유튜브·SNS에서 읽었다고 말하거나 언급한 책, '
           '화보나 일상 사진에 포착된 책까지 출처와 함께 모았어요. 본인이 쓴 책이나 출연작의 원작은 넣지 않아요.'),
