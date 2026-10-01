@@ -1614,9 +1614,9 @@
 
     const shownCelebs = pubView.celebsOpen ? celebs : celebs.slice(0, PUB_CELEB_STEP);
     const chips = shownCelebs.map(([n, c]) => `
-        <button type="button" data-celeb="${escHtml(n)}"
-          class="font-sans font-bold text-[10px] sm:text-xs border-2 border-ink bg-white shadow-neo-sm px-2 py-0.5 hover:bg-neo-mint hover:-translate-y-0.5 transition-all">
-          ${escHtml(n)}${c > 1 ? ` <span class="text-muted">${c}</span>` : ''}</button>`).join('');
+        <a href="${escHtml(celebShareUrl(n))}"
+          class="font-sans font-bold text-[10px] sm:text-xs border-2 border-ink bg-white shadow-neo-sm px-2 py-0.5 hover:bg-neo-mint hover:-translate-y-0.5 transition-all text-ink no-underline">
+          ${escHtml(n)}${c > 1 ? ` <span class="text-muted">${c}</span>` : ''}</a>`).join('');
     const restCelebs = celebs.length - shownCelebs.length;
     const celebToggle = restCelebs > 0
       ? `<button type="button" data-pub-more="celebs"
@@ -1670,9 +1670,9 @@
     D.bookHitsCount.textContent = `${hits.length}권`;
     D.bookHitsList.innerHTML = hits.map((b) => {
       const chips = b.celebs.map((n) => `
-        <button type="button" data-celeb="${escHtml(n)}"
-          class="font-sans font-bold text-[10px] sm:text-xs border-2 border-ink bg-white shadow-neo-sm px-2.5 py-1 hover:bg-neo-mint hover:-translate-y-0.5 transition-all">
-          ${escHtml(n)}</button>`).join('');
+        <a href="${escHtml(celebShareUrl(n))}"
+          class="font-sans font-bold text-[10px] sm:text-xs border-2 border-ink bg-white shadow-neo-sm px-2.5 py-1 hover:bg-neo-mint hover:-translate-y-0.5 transition-all text-ink no-underline">
+          ${escHtml(n)}</a>`).join('');
       const cover = b.coverUrl
         ? `<img src="${escHtml(b.coverUrl)}" alt="${escHtml(b.title)} 표지" loading="lazy" referrerpolicy="no-referrer"
              class="w-full h-full object-cover">`
@@ -2313,8 +2313,7 @@
       D.search.focus();
     });
     D.bookHitsList.addEventListener('click', (e) => {
-      const b = e.target.closest('button[data-celeb]');
-      if (b) { openModal(b.dataset.celeb); return; }
+      // 셀럽 칩은 그 사람의 책장 페이지(share)로 가는 링크다 — 따로 처리하지 않는다
       // 출판사 모드: 표지를 누르면 그 책 제목으로 다시 검색해 읽은 셀럽을 전부 보여 준다
       // 더보기를 누르면 버튼 자리에 새 표지가 바로 들어온다. 모바일에서 탭 뒤에
       // 클릭이 한 번 더 들어오면(키보드가 닫히며 화면이 밀릴 때 등) 그 표지가
