@@ -1297,6 +1297,9 @@
   // 홈의 변형 주소 수백 개를 크롤링해 "크롤링됨 - 색인 미생성"으로 쌓인다.
   const celebShareUrl = (name) =>
     `https://favorbook.co.kr/share/${encodeURIComponent(name.replace(/\//g, '_').replace(/\\/g, '_'))}.html`;
+  // 책 페이지(share/book)는 2명 이상이 읽은 책에만 있다 (generate.py 와 같은 규칙)
+  const bookShareUrl = (title) =>
+    `https://favorbook.co.kr/share/book/${encodeURIComponent(title.replace(/[\/\\:"?]/g, '_'))}.html`;
   const SITE_URL  = (() => {
     try { if (document.referrer?.includes('sites.google.com')) return document.referrer.split('?')[0]; } catch {}
     return location.origin + BASE_PATH;
@@ -1524,6 +1527,9 @@
   /* 책 제목으로 검색했을 때 — 그 책과 그 책을 읽은 셀럽을 태그로 보여준다.
      이름으로 검색하면 셀럽 카드만 나오면 되지만, 책 제목을 쳤을 때
      '누가 이 책을 읽었나'가 궁금한 것이지 셀럽 카드가 궁금한 게 아니다. */
+  /* 검색은 띄어쓰기를 무시한다. 제목은 '인간 실격'인데 '인간실격'으로 치는 사람이 많다. */
+  const nk = (s) => String(s || '').toLowerCase().replace(/\s+/g, '');
+
   function bookIndex() {
     if (bookIndex._cache) return bookIndex._cache;
     const map = new Map();
@@ -1608,9 +1614,9 @@
 
     const shownCelebs = pubView.celebsOpen ? celebs : celebs.slice(0, PUB_CELEB_STEP);
     const chips = shownCelebs.map(([n, c]) => `
-        <button type="button" data-celeb="${escHtml(n)}"
-          class="font-sans font-bold text-[10px] sm:text-xs border-2 border-ink bg-white shadow-neo-sm px-2 py-0.5 hover:bg-neo-mint hover:-translate-y-0.5 transition-all">
-          ${escHtml(n)}${c > 1 ? ` <span class="text-muted">${c}</span>` : ''}</button>`).join('');
+        <a href="${escHtml(celebShareUrl(n))}"
+          class="font-sans font-bold text-[10px] sm:text-xs border-2 border-ink bg-white shadow-neo-sm px-2 py-0.5 hover:bg-neo-mint hover:-translate-y-0.5 transition-all text-ink no-underline">
+          ${escHtml(n)}${c > 1 ? ` <span class="text-muted">${c}</span>` : ''}</a>`).join('');
     const restCelebs = celebs.length - shownCelebs.length;
     const celebToggle = restCelebs > 0
       ? `<button type="button" data-pub-more="celebs"
@@ -1632,22 +1638,22 @@
   }
 
   function renderBookHits(q) {
-    const kw = q.trim().toLowerCase();
+    const kw = nk(q);
     // 두 글자는 돼야 쓸모 있는 결과가 나온다
     if (kw.length < 2) { D.bookHits.classList.add('hidden'); return { count: 0 }; }
 
     const byCelebs = (a, b) => b.celebs.length - a.celebs.length || a.title.localeCompare(b.title, 'ko');
     const all = bookIndex();
     const hits = all
-      .filter((b) => b.title.toLowerCase().includes(kw)
-                  || (b.author || '').toLowerCase().includes(kw))
+      .filter((b) => nk(b.title).includes(kw)
+                  || nk(b.author).includes(kw))
       // 여러 셀럽이 읽은 책을 먼저, 그다음 제목 순
       .sort(byCelebs)
       .slice(0, 12);
 
     // 제목·저자로는 안 걸리고 출판사로만 걸리면 출판사 모드
     if (!hits.length) {
-      const pubOf = (b) => b.publishers.find((p) => p.toLowerCase().includes(kw));
+      const pubOf = (b) => b.publishers.find((p) => nk(p).includes(kw));
       const pubHits = all.filter(pubOf).sort(byCelebs);
       pubHits.forEach((b) => { b.pubMatch = pubOf(b); });
       if (pubHits.length) {
@@ -1664,19 +1670,23 @@
     D.bookHitsCount.textContent = `${hits.length}권`;
     D.bookHitsList.innerHTML = hits.map((b) => {
       const chips = b.celebs.map((n) => `
-        <button type="button" data-celeb="${escHtml(n)}"
-          class="font-sans font-bold text-[10px] sm:text-xs border-2 border-ink bg-white shadow-neo-sm px-2.5 py-1 hover:bg-neo-mint hover:-translate-y-0.5 transition-all">
-          ${escHtml(n)}</button>`).join('');
+        <a href="${escHtml(celebShareUrl(n))}"
+          class="font-sans font-bold text-[10px] sm:text-xs border-2 border-ink bg-white shadow-neo-sm px-2.5 py-1 hover:bg-neo-mint hover:-translate-y-0.5 transition-all text-ink no-underline">
+          ${escHtml(n)}</a>`).join('');
       const cover = b.coverUrl
         ? `<img src="${escHtml(b.coverUrl)}" alt="${escHtml(b.title)} 표지" loading="lazy" referrerpolicy="no-referrer"
              class="w-full h-full object-cover">`
         : `<div class="w-full h-full bg-paper-dark flex items-center justify-center text-2xl">📕</div>`;
       const meta = [b.author, b.publisher].filter(Boolean).join(' · ');
+      // 책 페이지가 있는 책(2명 이상)은 표지와 제목을 눌러 이동한다. 1명뿐인 책은 페이지가 없다.
+      const bookHref = b.celebs.length >= 2 ? escHtml(bookShareUrl(b.title)) : '';
+      const link = (inner, cls = '') => bookHref
+        ? `<a href="${bookHref}" class="${cls} hover:underline decoration-2 underline-offset-4">${inner}</a>` : inner;
       return `
         <div class="flex gap-3 sm:gap-4 bg-white border-2 border-ink shadow-neo p-3 sm:p-4">
-          <div class="w-[62px] sm:w-[74px] flex-none aspect-[2/3] border-2 border-ink overflow-hidden bg-paper-dark">${cover}</div>
+          <div class="w-[62px] sm:w-[74px] flex-none aspect-[2/3] border-2 border-ink overflow-hidden bg-paper-dark">${bookHref ? `<a href="${bookHref}" class="block w-full h-full" aria-label="${escHtml(b.title)} 책 페이지">${cover}</a>` : cover}</div>
           <div class="min-w-0 flex-1">
-            <h3 class="text-sm sm:text-base font-black leading-snug word-break-keep">${escHtml(b.title)}</h3>
+            <h3 class="text-sm sm:text-base font-black leading-snug word-break-keep">${link(escHtml(b.title))}</h3>
             ${meta ? `<p class="text-[11px] sm:text-xs font-bold text-muted mt-0.5 mb-2">${escHtml(meta)}</p>` : '<div class="mb-2"></div>'}
             <p class="text-[10px] sm:text-[11px] font-sans font-bold tracking-widest text-muted mb-1.5">읽은 셀럽 ${b.celebs.length}명</p>
             <div class="flex flex-wrap gap-1.5">${chips}</div>
@@ -1710,7 +1720,7 @@
   }
 
   function filterEntries(kw = '') {
-    const q = kw.toLowerCase();
+    const q = nk(kw);
     
     let currentEntries = viewMode === 'list'
       ? [...entries].sort((a, b) => a[0].localeCompare(b[0], 'ko'))
@@ -1718,12 +1728,13 @@
 
     filteredEntries = currentEntries.filter(([name, data]) => {
       if (!q) return true;
-      const str = `${name} ${data.books.map(b => `${b.title} ${b.author} ${b.publisher}`).join(' ')}`.toLowerCase();
+      // 칸 사이는 '|'로 막아 제목 끝과 저자 앞이 이어져 우연히 걸리지 않게 한다
+      const str = nk(`${name}|${data.books.map(b => `${b.title}|${b.author}|${b.publisher}`).join('|')}`);
       return str.includes(q);
     });
     // 이름이 걸린 사람을 책 제목으로만 걸린 사람보다 앞에 둔다 (무작위 순서에 묻히지 않게)
     if (q) {
-      const byName = (e) => e[0].toLowerCase().includes(q);
+      const byName = (e) => nk(e[0]).includes(q);
       filteredEntries = [...filteredEntries.filter(byName), ...filteredEntries.filter((e) => !byName(e))];
     }
 
@@ -1731,7 +1742,7 @@
     // 책 제목으로 찾았는데 사람 이름은 안 걸렸다면, 아래 셀럽 목록은 위 태그와
     // 같은 사람들이라 중복이다. 그럴 때는 목록을 접는다.
     // 출판사로 찾았을 때도 셀럽은 책 아래 태그로 이미 나오므로 큰 카드 목록은 접는다.
-    const nameHit = !!q && currentEntries.some(([name]) => name.toLowerCase().includes(q));
+    const nameHit = !!q && currentEntries.some(([name]) => nk(name).includes(q));
     // pubMode 는 책 제목으로 찾았을 때 undefined 라서 이 식이 undefined 가 되고,
     // classList.toggle('hidden', undefined) 는 '강제 값 없음'으로 읽혀 목록을 뒤집어 버린다.
     // (예: '키키' → 키야(키키) 이름이 걸려도 책 제목 결과 때문에 셀럽 목록이 접혔다) 불리언으로 고정.
@@ -1750,7 +1761,6 @@
     
     slice.forEach(([name, data]) => {
       const card = document.createElement('a');
-      const celebUrl = `${BASE_PATH}?celeb=${encodeURIComponent(name)}`;
       card.href = celebShareUrl(name);
       card.dataset.name = name;
       // 누를 수 없는 하트 수 (hearts.js가 채운다. 하트 0이면 숨김)
@@ -1787,12 +1797,8 @@
         `;
       }
       
-      card.addEventListener('click', (e) => {
-        if (e.ctrlKey || e.metaKey || e.shiftKey) return;
-        e.preventDefault(); 
-        openModal(name);
-        history.pushState({ celeb: name }, '', celebUrl);
-      });
+      // 카드는 그 사람의 책장 페이지(share)로 바로 간다. 홈 팝업은 색인되지 않는 화면이라
+      // 클릭이 책장 페이지로 모이게 한다 (SEO). ?celeb= 주소는 예전 공유 링크용으로 팝업이 계속 연다.
       
       D.grid.appendChild(card);
     });
@@ -2092,7 +2098,6 @@
     picks.forEach(pick => {
       const name = pick.name;
       const data = celebMap[name];
-      const celebUrl = `${BASE_PATH}?celeb=${encodeURIComponent(name)}`;
       const note = pick.note || data.books.slice(0, 2).map(b => b.title).join(' · ');
 
       const card = document.createElement('a');
@@ -2117,12 +2122,8 @@
           <p class="text-[10px] text-muted line-clamp-1">${escHtml(note)}</p>
         </div>`;
 
-      card.addEventListener('click', (e) => {
-        if (e.ctrlKey || e.metaKey || e.shiftKey) return;
-        e.preventDefault();
-        openModal(name);
-        history.pushState({ celeb: name }, '', celebUrl);
-      });
+      // 카드는 그 사람의 책장 페이지(share)로 바로 간다. 홈 팝업은 색인되지 않는 화면이라
+      // 클릭이 책장 페이지로 모이게 한다 (SEO). ?celeb= 주소는 예전 공유 링크용으로 팝업이 계속 연다.
 
       D.featuredWrap.appendChild(card);
       if (!data.imageUrl) imgObserver.observe(card);
@@ -2191,12 +2192,8 @@
             <p class="text-[10px] text-muted truncate">${escHtml(bookSummary)}</p>
           </div>`;
 
-      card.addEventListener('click', (e) => {
-        if (e.ctrlKey || e.metaKey || e.shiftKey) return;
-        e.preventDefault();
-        openModal(name);
-        history.pushState({ celeb: name }, '', `${BASE_PATH}?celeb=${encodeURIComponent(name)}`);
-      });
+      // 카드는 그 사람의 책장 페이지(share)로 바로 간다. 홈 팝업은 색인되지 않는 화면이라
+      // 클릭이 책장 페이지로 모이게 한다 (SEO). ?celeb= 주소는 예전 공유 링크용으로 팝업이 계속 연다.
 
       D.topReaders.appendChild(card);
       if (!data.imageUrl) imgObserver.observe(card);
@@ -2302,8 +2299,7 @@
       D.search.focus();
     });
     D.bookHitsList.addEventListener('click', (e) => {
-      const b = e.target.closest('button[data-celeb]');
-      if (b) { openModal(b.dataset.celeb); return; }
+      // 셀럽 칩은 그 사람의 책장 페이지(share)로 가는 링크다 — 따로 처리하지 않는다
       // 출판사 모드: 표지를 누르면 그 책 제목으로 다시 검색해 읽은 셀럽을 전부 보여 준다
       // 더보기를 누르면 버튼 자리에 새 표지가 바로 들어온다. 모바일에서 탭 뒤에
       // 클릭이 한 번 더 들어오면(키보드가 닫히며 화면이 밀릴 때 등) 그 표지가
