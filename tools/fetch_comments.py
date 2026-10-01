@@ -238,13 +238,25 @@ OUTLET = {
 }
 
 
+def load_detail(name):
+    """data/detail/<셀럽>.json → {책 제목: {comment, source, link}}. 없으면 {}."""
+    path = os.path.join(ROOT, 'data', 'detail', name.replace('/', '_').replace('\\', '_') + '.json')
+    try:
+        with open(path, encoding='utf-8') as f:
+            return json.load(f)
+    except (FileNotFoundError, json.JSONDecodeError):
+        return {}
+
+
 def load_tasks(max_books):
     """출처 URL 하나에 책 여러 권이 묶인 작업 목록."""
     celebs = json.load(open(DATA_JSON, encoding='utf-8'))['celebs']
     by_source = {}
     for name, v in celebs.items():
+        # 출처는 data.json 이 아니라 data/detail/<셀럽>.json 에 있다 (generate.py 가 용량 때문에 분리)
+        detail = load_detail(name)
         for b in v.get('books', []):
-            src = (b.get('source') or '').strip()
+            src = (b.get('source') or detail.get(b['title'], {}).get('source') or '').strip()
             if src.startswith('http'):
                 by_source.setdefault((name, src), []).append(b['title'])
     return [{'celeb': c, 'source': s, 'titles': t}
