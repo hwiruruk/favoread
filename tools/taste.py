@@ -37,11 +37,10 @@ MIN_PAGE_SHARE = 0.50
 _NO_AUTHOR = {'', '편집부', '저자 미상', '미상', '작자 미상', '엮음', '지음', '글', '그림'}
 
 
-def _work_key(title, info):
-    """같은 시리즈나 같은 작품이면 같은 키. 시리즈 번호를 알면 그걸 쓴다."""
-    ids = (info or {}).get('series') or []
-    if ids:
-        return 'S%s' % ids[0]
+def _work_key(title):
+    """같은 작품의 여러 권(1권·2권, 상·하)이면 같은 키.
+    예스24 '시리즈'는 쓰지 않는다. 출판사 전집(세계문학전집·시인선)이나 작가 모음
+    (한강 작품 전부가 한 시리즈)까지 들어 있어서, 서로 다른 책이 한 작품으로 묶인다."""
     t = re.sub(r'\([^)]*\)|\[[^\]]*\]', ' ', title or '')
     t = re.sub(r'(제?\s*\d+\s*(권|부|편|화)?|[ⅠⅡⅢⅣⅤ]+|상|중|하)\s*$', '', t.strip())
     return re.sub(r'[^0-9A-Za-z가-힣]+', '', t).lower()
@@ -122,7 +121,7 @@ def compute(books, bookinfo, baseline, this_year):
         a = (b.get('author') or '').strip()
         if a in _NO_AUTHOR:
             continue
-        by_author.setdefault(a, {}).setdefault(_work_key(t, bookinfo.get(t)), t)
+        by_author.setdefault(a, {}).setdefault(_work_key(t), t)
         en_name.setdefault(a, (b.get('author_en') or '').strip().rstrip('*').strip())
     authors = [{'author': a, 'author_en': en_name.get(a) or a, 'count': len(w), 'titles': sorted(w.values())}
                for a, w in by_author.items() if len(w) >= MIN_AUTHOR_WORKS]
