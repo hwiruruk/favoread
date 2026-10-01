@@ -365,6 +365,20 @@ def yes24_spine_url(cover_url):
     return 'https://image.yes24.com/goods/' + gid + '/side' if gid else None
 
 
+YES24_PRODUCT_RE = re.compile(r'yes24\.com/(?:product/)?goods/(?:detail/)?(\d+)', re.I)
+
+
+def yes24_book_url(title, link='', cover_url=''):
+    """예스24 책 정보 페이지 URL.
+    '도서 정보' 칸의 예스24 상품 URL → 예스24 표지 URL의 상품 ID → 제목 검색 순으로 찾는다."""
+    m = YES24_PRODUCT_RE.search(html.unescape(link or ''))
+    gid = m.group(1) if m and 'image.yes24.com' not in (link or '') else None
+    gid = gid or yes24_goods_id(cover_url)
+    if gid:
+        return 'https://www.yes24.com/product/goods/' + gid
+    return 'https://www.yes24.com/product/search?domain=BOOK&query=' + quote(title)
+
+
 def normalize_spine_value(v):
     """spines.json 값을 책등 이미지 URL로 맞춘다.
 
@@ -556,29 +570,6 @@ SHELF_CAPTURE_JS_TEMPLATE = (
     '    var H2C = "https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js";\n'
     '    var PROXY = "https://images.weserv.nl/?url=";\n'
     '    var PAPER = "#fcfaf5";\n'
-    '    var PER = 12;\n'
-    '    // 표지 보기에서 책이 12권을 넘으면 어느 12권을 저장할지 고르는 칸을 붙인다\n'
-    '    (function () {\n'
-    '      var area = document.getElementById("shelf-area");\n'
-    '      var n = area ? area.querySelectorAll(".cv").length : 0;\n'
-    '      if (n <= PER) return;\n'
-    '      var ko = (document.documentElement.lang || "ko").indexOf("ko") === 0;\n'
-    '      var sel = document.createElement("select");\n'
-    '      sel.id = "shelf-range"; sel.className = "sh-range";\n'
-    '      sel.setAttribute("aria-label", ko ? "저장할 책 범위" : "Books to save");\n'
-    '      for (var p = 0; p * PER < n; p++) {\n'
-    '        var o = document.createElement("option");\n'
-    '        o.value = p;\n'
-    '        var a = p * PER + 1, b = Math.min(n, (p + 1) * PER);\n'
-    '        o.textContent = ko ? a + "–" + b + "권 (표지 12권씩)" : "Books " + a + "–" + b;\n'
-    '        sel.appendChild(o);\n'
-    '      }\n'
-    '      var first = btns[0];\n'
-    '      first.parentNode.insertBefore(sel, first);\n'
-    '      var sync = function () { sel.style.display = area.classList.contains("show-covers") ? "" : "none"; };\n'
-    '      new MutationObserver(sync).observe(area, { attributes: true, attributeFilter: ["class"] });\n'
-    '      sync();\n'
-    '    })();\n'
     '    var FONT = \'-apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif\';\n'
     '    // 캔버스 한계. 넘기면 빈 그림이 나오거나 아예 실패한다. 사파리는 한 변보다\n'
     '    // 넓이를 먼저 막는다(약 1677만 픽셀). 제목·여백을 얹을 몫을 빼고 잡는다.\n'
@@ -742,18 +733,7 @@ SHELF_CAPTURE_JS_TEMPLATE = (
     '      // 저장하는 그림에는 NEW 표시와 함께 추천한 셀럽 목록을 넣지 않는다.\n'
     '      // html2canvas가 문서를 복사할 때 이 클래스도 따라가서 복사본에서만 빠진 채 그려진다.\n'
     '      view.classList.add("is-capturing");\n'
-    '      // 접어 둔 표지도 저장 범위에 들어가므로 찍는 동안만 펼친다\n'
-    '      var wasCollapsed = view.classList.contains("covers-collapsed");\n'
-    '      view.classList.remove("covers-collapsed");\n'
-    '      // 표지 보기에서 책이 12권을 넘으면 고른 12권만 4열 3줄로 담는다\n'
-    '      var capTiles = [], capSel = document.getElementById("shelf-range");\n'
-    '      if (capSel && capSel.value !== "" && view.classList.contains("show-covers")) {\n'
-    '        var from = +capSel.value * PER;\n'
-    '        [].forEach.call(view.querySelectorAll(".cv"), function (t, i) {\n'
-    '          if (i < from || i >= from + PER) { t.classList.add("cap-off"); capTiles.push(t); }\n'
-    '        });\n'
-    '        view.classList.add("cap-12");\n'
-    '      }\n'
+    '      // 화면에 보이는 그대로 담는다. 표지를 접어 둔 상태면 보이는 3줄만, 펼쳤으면 전체.\n'
     '      guard(loadH2C(), 15000, "html2canvas").then(function () {\n'
     '        swap = swapImages(view);\n'
     '        return swap.ready;\n'
@@ -784,9 +764,7 @@ SHELF_CAPTURE_JS_TEMPLATE = (
     '      }).then(function () {\n'
     '        if (swap) swap.undo.forEach(function (f) { f(); });\n'
     '        if (muted) unmute(muted);\n'
-    '        view.classList.remove("is-capturing", "cap-12");\n'
-    '        if (wasCollapsed) view.classList.add("covers-collapsed");\n'
-    '        capTiles.forEach(function (t) { t.classList.remove("cap-off"); });\n'
+    '        view.classList.remove("is-capturing");\n'
     '        btns.forEach(function (b) { b.disabled = false; });\n'
     '        btn.textContent = was;\n'
     '      });\n'
@@ -810,12 +788,8 @@ def cover_tile(title, cover_url, link, added, alt):
     return '    <span class="cv" title="' + esc(title) + '">' + inner + '</span>\n'
 
 
-COVER_COLS = 4                       # 이미지 저장: 표지 한 줄 4권
-COVER_PAGE = 12                      # 이미지 저장: 한 장 12권 (4열 3줄)
-
-
 def cover_shelf_html(tiles):
-    """표지 보기 — 책 전체를 격자로 늘어놓는다. 12권 나누기는 이미지 저장에서만 쓴다."""
+    """표지 보기 — 책 전체를 격자로 늘어놓는다."""
     return ''.join(tiles)
 
 
@@ -911,11 +885,8 @@ SHELF_CSS = (
     '    .cv img { width: 100%; height: 100%; object-fit: cover; display: block; }\n'
     '    .cv-no { display: flex; height: 100%; align-items: center; justify-content: center; padding: 6px;\n'
     '             font-size: 11px; font-weight: 700; line-height: 1.3; text-align: center; word-break: keep-all; }\n'
-    # 이미지 저장 — 표지 보기에서 고른 12권만 4열 3줄로 담는다
-    '    .sh-range { font: inherit; font-size: 12px; font-weight: 700; padding: 5px 6px; background: #fff; color: #000;\n'
-    '                border: 2px solid #000; box-shadow: 2px 2px 0 0 #000; }\n'
-    '    .is-capturing.cap-12 .covers { grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 16px 14px; }\n'
-    '    .is-capturing .cv.cap-off { display: none; }\n'
+    # 이미지 저장 — 접힌 상태면 보이는 3줄만 담고, 흐린 가림막과 '전체 보기' 버튼은 빼고 찍는다
+    '    .is-capturing .covers-more { display: none !important; }\n'
     # 책장 — 책등을 같은 높이로 세워 바닥에 붙여 늘어놓는다.
     # 줄이 넘어가도 줄마다 선반 판이 받치도록, 선반 판을 줄 간격(--row)마다
     # 되풀이되는 배경으로 그린다. 판은 책등 바로 아래(--sh-h)에 온다.
@@ -2850,7 +2821,7 @@ for name, info in celebs.items():
         '      <h2>📚 ' + esc(sname) + '의 독서 리스트 (' + str(n_books) + '권)</h2>\n'
         '      <div class="shelf-tabs">\n'
         + shelf_view_tabs('📚 책등', '🖼 표지') +
-        '        <button type="button" class="sh-cap" id="shelf-cap" title="책장을 그림으로 내려받아요">⤓ 이미지 저장</button>\n'
+        '        <button type="button" class="sh-cap" id="shelf-cap" title="지금 보이는 책장을 그대로 그림으로 내려받아요">⤓ 이미지 저장</button>\n'
         '        <button type="button" class="sh-cap" id="shelf-cap-clear" title="배경 없이 투명한 PNG로 내려받아요">⤓ 투명 배경</button>\n'
         '      </div>\n'
         '    </div>\n'
@@ -3136,11 +3107,13 @@ for _g in sorted(ko_groups.values(), key=lambda g: g['ko']):
     for _n in members:
         for b in celebs[_n]['books']:
             t = b['title'].strip()
-            hit = gbooks.setdefault(t, {'readers': [], 'author': b['author'], 'cover': b.get('coverUrl', '')})
+            hit = gbooks.setdefault(t, {'readers': [], 'author': b['author'], 'cover': b.get('coverUrl', ''), 'link': b.get('link', '')})
             if _n not in hit['readers']:
                 hit['readers'].append(_n)
             if not hit['cover'] and b.get('coverUrl'):
                 hit['cover'] = b['coverUrl']
+            if 'yes24.com/product' not in hit['link'] and 'yes24.com/product' in (b.get('link') or ''):
+                hit['link'] = b['link']
     ranked = sorted(gbooks.items(), key=lambda kv: (-len(kv[1]['readers']), title_sort_key(kv[0])))
     shared = [x for x in ranked if len(x[1]['readers']) >= 2]
 
@@ -3164,7 +3137,12 @@ for _g in sorted(ko_groups.values(), key=lambda g: g['ko']):
     for t, info in ranked[:LIMIT]:
         who = ', '.join('<a href="' + esc(make_celeb_url(r)) + '">' + esc(_short(r)) + '</a>'
                         for r in info['readers'])
-        t_html = ('<a href="' + esc(make_book_url(t)) + '">' + esc(t) + '</a>') if t in books_with_pages else esc(t)
+        # 책 제목은 예스24 책 정보로 보낸다
+        # 옆의 작은 링크는 사이트 안의 책 페이지(이 책을 읽은 사람 모두)로
+        t_html = ('<a href="' + esc(yes24_book_url(t, info['link'], info['cover']))
+                  + '" rel="nofollow noopener noreferrer" target="_blank">' + esc(t) + '</a>')
+        if t in books_with_pages:
+            t_html += ' <a class="gb-l" href="' + esc(make_book_url(t)) + '">읽은 사람 모두 보기</a>'
         book_rows += (
             '    <li class="gb">\n'
             '      <span class="gb-t">' + t_html + '</span>\n'
@@ -3241,6 +3219,7 @@ for _g in sorted(ko_groups.values(), key=lambda g: g['ko']):
         '    .books { padding: 0; margin: 0; }\n'
         '    .gb { background: #fff; border: 2px solid #000; box-shadow: 3px 3px 0 0 #000; padding: 10px 12px; margin-bottom: 10px; list-style: none; }\n'
         '    .gb-t { display: block; font-weight: 800; font-size: 15px; line-height: 1.3; }\n'
+        '    .gb-l { font-size: 12px; font-weight: 600; margin-left: 6px; white-space: nowrap; }\n'
         '    .gb-a { display: block; font-size: 12px; color: #555; }\n'
         '    .gb-w { display: block; font-size: 12px; margin-top: 3px; }\n'
         '    footer { margin-top: 40px; padding-top: 16px; border-top: 2px solid #000; font-size: 12px; color: #666; }\n'
@@ -4603,7 +4582,7 @@ for name, info in celebs.items():
         '      <h2>Books ' + esc(_name_pl) + ' has read (' + str(n) + ')</h2>\n'
         '      <div class="shelf-tabs">\n'
         + shelf_view_tabs('📚 Spines', '🖼 Covers') +
-        '        <button type="button" class="sh-cap" id="shelf-cap" title="Download the bookshelf as an image">\u2913 Save image</button>\n'
+        '        <button type="button" class="sh-cap" id="shelf-cap" title="Download the bookshelf as shown on screen">\u2913 Save image</button>\n'
         '        <button type="button" class="sh-cap" id="shelf-cap-clear" title="Download as a PNG with a transparent background">\u2913 Transparent</button>\n'
         '      </div>\n'
         '    </div>\n'
@@ -4861,11 +4840,14 @@ for _group in sorted(en_groups, key=lambda g: g.lower()):
                 continue
             hit = gbooks.setdefault(t, {'readers': [], 'ko': b['title'],
                                         'cover': b.get('coverUrl', ''),
+                                        'link': b.get('link', ''),
                                         'author': plain_en(b.get('author_en') or b['author'])})
             if _name_en not in hit['readers']:
                 hit['readers'].append(_name_en)
             if not hit['cover'] and b.get('coverUrl'):
                 hit['cover'] = b['coverUrl']
+            if 'yes24.com/product' not in hit['link'] and 'yes24.com/product' in (b.get('link') or ''):
+                hit['link'] = b['link']
     ranked = sorted(gbooks.items(), key=lambda kv: (-len(kv[1]['readers']), kv[0].lower()))
     shared = [x for x in ranked if len(x[1]['readers']) >= 2]
 
@@ -4894,8 +4876,12 @@ for _group in sorted(en_groups, key=lambda g: g.lower()):
             + esc(EN_GROUP_RE.sub('', r).strip() or r) + '</a>'
             for r in info['readers'])
         _bslug = en_book_slug_by_ko.get(info['ko'])
-        _t_html = (('<a href="' + EN_BASE + 'share/book/' + _bslug + '.html">' + esc(t) + '</a>')
-                   if _bslug else esc(t))
+        # 책 제목은 예스24 책 정보로, 옆의 작은 링크는 영문 책 페이지(이 책을 읽은 사람 모두)로
+        _t_html = ('<a href="' + esc(yes24_book_url(info['ko'], info['link'], info['cover']))
+                   + '" rel="nofollow noopener noreferrer" target="_blank">' + esc(t) + '</a>')
+        if _bslug:
+            _t_html += (' <a class="gb-l" href="' + EN_BASE + 'share/book/' + _bslug
+                        + '.html">Who else read it</a>')
         book_rows += (
             '    <li class="gb">\n'
             '      <span class="gb-t">' + _t_html + '</span>\n'
@@ -4978,6 +4964,7 @@ for _group in sorted(en_groups, key=lambda g: g.lower()):
         '    .gm-c { display: block; font-size: 11px; color: #666; }\n'
         '    .gb { background: #fff; border: 2px solid #000; box-shadow: 3px 3px 0 0 #000; padding: 10px 12px; margin-bottom: 10px; list-style: none; }\n'
         '    .gb-t { display: block; font-weight: 800; font-size: 15px; line-height: 1.3; }\n'
+        '    .gb-l { font-size: 12px; font-weight: 600; margin-left: 6px; white-space: nowrap; }\n'
         '    .gb-a { display: block; font-size: 12px; color: #555; }\n'
         '    .gb-w { display: block; font-size: 12px; color: #2563eb; margin-top: 3px; }\n'
         '    .books { padding: 0; margin: 0; }\n'
