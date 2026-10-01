@@ -280,8 +280,12 @@
   <link rel="stylesheet" href="https://favorbook.co.kr/assets/fonts/kopubworld.css">
   <style>
     body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; max-width: 860px; margin: 0 auto; padding: 20px; color: #222; line-height: 1.6; background: #fcfaf5; }
-    .lang-toggle { position: absolute; top: 16px; right: 16px; display: flex; gap: 6px; }
-    .copy-btn { cursor: pointer; font-family: inherit; }
+    body { position: relative; }
+    .lang-toggle { position: absolute; top: 16px; right: 20px; display: flex; gap: 6px; }
+    .heart-row { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; }
+    .copy-btn { display: inline-flex; align-items: center; gap: 6px; padding: 7px 14px; border: 2px solid #000; background: #fde047; box-shadow: 2px 2px 0 0 #000; font-family: inherit; font-size: 14px; font-weight: 800; color: #000; cursor: pointer; transition: transform .1s, box-shadow .1s, background .1s; }
+    .copy-btn:hover { transform: translate(-1px,-1px); box-shadow: 3px 3px 0 0 #000; background: #fef08a; }
+    .copy-btn:active { transform: none; box-shadow: 1px 1px 0 0 #000; }
     .copy-btn.done { background: #86efac; }
     .lang-btn { padding: 6px 12px; border: 2px solid #000; background: #fff; box-shadow: 2px 2px 0 0 #000; font-size: 12px; font-weight: 700; text-decoration: none; color: #000; transition: transform .1s, box-shadow .1s; }
     .lang-btn:hover { transform: translate(-1px,-1px); box-shadow: 3px 3px 0 0 #000; background: #fde047; text-decoration: none; }
@@ -289,7 +293,8 @@
     nav { margin: 50px 0 16px; font-size: 13px; }
     .celeb-header { display: flex; align-items: center; gap: 20px; margin-bottom: 16px; flex-wrap: wrap; }
     .celeb-photo-wrap { position: relative; flex-shrink: 0; }
-    .celeb-img { width: 120px; height: 120px; border-radius: 50%; object-fit: cover; display: block; border: 2px solid #000; }
+    .celeb-img { width: 120px; height: 150px; border-radius: 12px; object-fit: cover; object-position: 50% 20%; display: block; border: 2px solid #000; box-shadow: 3px 3px 0 0 #000; background: #f4f4f0; }
+    @media (min-width: 641px) { .celeb-img { width: 176px; height: 220px; } }
     .img-credit { position: absolute; bottom: 0; right: 0; font-size: 10px; line-height: 1; padding: 2px 4px; background: rgba(255,255,255,0.85); border: 1px solid #ccc; border-radius: 999px; text-decoration: none; color: #555; opacity: 0.55; transition: opacity .15s; }
     .img-credit:hover { opacity: 1; }
     h1 { font-size: 26px; margin: 0 0 8px; font-weight: 900; }
@@ -458,7 +463,6 @@
 </head>
 <body>
   <div class="lang-toggle">
-    <button class="lang-btn copy-btn" type="button" data-url="https://favorbook.co.kr/s/kim-yoon-ah-jaurim.html" data-done="복사했어요!">🔗 링크 복사</button>
     <span class="lang-btn active">한국어</span>
     <a class="lang-btn" href="https://favorbook.co.kr/en/share/kim-yoon-ah-jaurim.html" hreflang="en">EN</a>
   </div>
@@ -466,24 +470,19 @@
 
   <header class="celeb-header">
     <div class="celeb-photo-wrap">
-      <img class="celeb-img" src="https://image.tmdb.org/t/p/w500/nvrZeRpeh6g7MyFZJ1Y0CtBTfa3.jpg" alt="김윤아(자우림) 프로필 사진" width="120" height="120">
+      <img class="celeb-img" src="https://image.tmdb.org/t/p/w500/nvrZeRpeh6g7MyFZJ1Y0CtBTfa3.jpg" alt="김윤아(자우림) 프로필 사진" width="176" height="220">
       <a class="img-credit" href="https://image.tmdb.org/t/p/w500/nvrZeRpeh6g7MyFZJ1Y0CtBTfa3.jpg" target="_blank" rel="nofollow noopener noreferrer" title="이미지 출처">📷</a>
     </div>
     <div>
       <h1>김윤아(자우림) 추천 책 · 읽은 책 · 독서 기록</h1>
       <p class="celeb-bio">록 밴드 자우림(Jaurim)의 보컬·작사가. 1997년 데뷔, 다수의 솔로 앨범 발표.</p>
       <p style="margin:0;color:#666;font-size:14px">총 <strong>10권</strong>의 도서</p>
-      <p class="heart-row"><button type="button" class="heart-btn" data-heart="c:김윤아(자우림)" aria-pressed="false" aria-label="김윤아에게 하트" title="김윤아에게 하트" hidden><span class="heart-ico" aria-hidden="true">♡</span><span class="heart-n"></span></button></p>
+      <p class="heart-row"><button type="button" class="heart-btn" data-heart="c:김윤아(자우림)" aria-pressed="false" aria-label="김윤아에게 하트" title="김윤아에게 하트" hidden><span class="heart-ico" aria-hidden="true">♡</span><span class="heart-n"></span></button><button class="copy-btn" type="button" data-url="https://favorbook.co.kr/s/kim-yoon-ah-jaurim.html" data-done="복사했어요!" title="https://favorbook.co.kr/s/kim-yoon-ah-jaurim.html">🔗 공유 링크 복사</button></p>
     </div>
   </header>
 
   <section class="intro">
     <p style="margin:0">김윤아(자우림)의 추천 책·읽은 책은 지금까지 <strong>10권</strong>이 확인됐어요. 대표적으로 『당신의 이름을 지어다가 며칠은 먹었다』(박준), 『피프티 피플』(정세랑), 『왜 세계의 절반은 굶주리는가』(장 지글러) 등이 있어요. 출처는 SNS 4건, 기사·방송 등 6건이에요. <span class="updated">마지막 업데이트 <time datetime="2026-05-18">2026년 5월 18일</time></span></p>
-  </section>
-  <section class="taste">
-    <h2>📊 독서 취향 (책 10권 기준)</h2>
-    <p>같은 작가를 여러 권 골랐어요: 정세랑 3권.</p>
-    <p class="taste-note">참고 코멘트 — 《목소리를 드릴게요》: 생일이던 3월 11일에 이 SF 소설집을 읽고 있다고 트위터에 올렸어요. 정세랑 작가는 &#x27;저의 세계관이 김윤아 님의 세계관에서 비롯했다&#x27;며 화답했습니다.</p>
   </section>
 
   <section id="shelf-sec">
@@ -901,11 +900,11 @@
   })();
   </script>
 
-  <section>
-    <h2>📝 김윤아의 책 취향</h2>
-    <p>추천 도서에 가장 자주 등장한 작가는 정세랑 (3권), 모리스 샌닥, 박경리 등이에요.</p>
+  <section class="taste">
+    <h2>📊 독서 취향 (책 10권 기준)</h2>
+    <p>같은 작가를 여러 권 골랐어요: 정세랑 3권.</p>
+    <p class="taste-note">참고 코멘트 — 《목소리를 드릴게요》: 생일이던 3월 11일에 이 SF 소설집을 읽고 있다고 트위터에 올렸어요. 정세랑 작가는 &#x27;저의 세계관이 김윤아 님의 세계관에서 비롯했다&#x27;며 화답했습니다.</p>
   </section>
-
   <section class="related-celebs">
     <h2>🤝 책 취향이 겹치는 셀럽</h2>
     <p class="muted">같은 책을 함께 추천한 다른 셀럽이에요. 숫자는 공통 도서 권수.</p>

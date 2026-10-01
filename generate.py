@@ -1012,15 +1012,24 @@ def make_en_book_url(title_en):
 # 한글 주소는 주소창에서 복사하면 퍼센트 인코딩돼 60~200자가 된다.
 
 COPY_BTN_CSS = (
-    '    .copy-btn { cursor: pointer; font-family: inherit; }\n'
+    '    .heart-row { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; }\n'
+    '    .copy-btn { display: inline-flex; align-items: center; gap: 6px; padding: 7px 14px; border: 2px solid #000; background: #fde047; box-shadow: 2px 2px 0 0 #000; font-family: inherit; font-size: 14px; font-weight: 800; color: #000; cursor: pointer; transition: transform .1s, box-shadow .1s, background .1s; }\n'
+    '    .copy-btn:hover { transform: translate(-1px,-1px); box-shadow: 3px 3px 0 0 #000; background: #fef08a; }\n'
+    '    .copy-btn:active { transform: none; box-shadow: 1px 1px 0 0 #000; }\n'
     '    .copy-btn.done { background: #86efac; }\n'
 )
 
+# 한/영 전환 버튼 — body 를 기준으로 잡아 넓은 화면에서도 본문 칸 오른쪽 위에 붙는다
+LANG_TOGGLE_CSS = (
+    '    body { position: relative; }\n'
+    '    .lang-toggle { position: absolute; top: 16px; right: 20px; display: flex; gap: 6px; }\n'
+)
 
-def copy_btn_html(url, label='🔗 링크 복사', done='복사했어요!'):
-    return ('    <button class="lang-btn copy-btn" type="button"'
-            ' data-url="' + esc(url) + '" data-done="' + esc(done) + '">'
-            + esc(label) + '</button>\n')
+
+def copy_btn_html(url, label='🔗 공유 링크 복사', done='복사했어요!'):
+    return ('<button class="copy-btn" type="button"'
+            ' data-url="' + esc(url) + '" data-done="' + esc(done) + '"'
+            ' title="' + esc(url) + '">' + esc(label) + '</button>')
 
 
 COPY_BTN_JS = (
@@ -2576,11 +2585,13 @@ for name, info in celebs.items():
         a = b['author'].strip()
         if a:
             author_counts[a] = author_counts.get(a, 0) + 1
-    top_authors = sorted(author_counts.items(), key=lambda x: x[1], reverse=True)[:3]
-    if top_authors:
+    # 한 권뿐인 작가는 '자주 등장'이 아니다. 📊 취향 상자가 이미 작가를 꼽았으면 겹치니 생략
+    top_authors = sorted(((a, c) for a, c in author_counts.items() if c >= 2),
+                         key=lambda x: (-x[1], x[0]))[:3]
+    if top_authors and not (TASTE.get(name) or {}).get('authors'):
         author_summary = (
             '추천 도서에 가장 자주 등장한 작가는 '
-            + ', '.join(esc(a) + (' (' + str(c) + '권)' if c > 1 else '') for a, c in top_authors)
+            + ', '.join(esc(a) + ' (' + str(c) + '권)' for a, c in top_authors)
             + ' 등이에요.'
         )
     else:
@@ -2719,7 +2730,7 @@ for name, info in celebs.items():
         '  <link rel="stylesheet" href="' + BASE + 'assets/fonts/kopubworld.css">\n'
         '  <style>\n'
         '    body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; max-width: 860px; margin: 0 auto; padding: 20px; color: #222; line-height: 1.6; background: #fcfaf5; }\n'
-        '    .lang-toggle { position: absolute; top: 16px; right: 16px; display: flex; gap: 6px; }\n'
+        + LANG_TOGGLE_CSS
         + COPY_BTN_CSS +
         '    .lang-btn { padding: 6px 12px; border: 2px solid #000; background: #fff; box-shadow: 2px 2px 0 0 #000; font-size: 12px; font-weight: 700; text-decoration: none; color: #000; transition: transform .1s, box-shadow .1s; }\n'
         '    .lang-btn:hover { transform: translate(-1px,-1px); box-shadow: 3px 3px 0 0 #000; background: #fde047; text-decoration: none; }\n'
@@ -2727,7 +2738,8 @@ for name, info in celebs.items():
         '    nav { margin: 50px 0 16px; font-size: 13px; }\n'
         '    .celeb-header { display: flex; align-items: center; gap: 20px; margin-bottom: 16px; flex-wrap: wrap; }\n'
         '    .celeb-photo-wrap { position: relative; flex-shrink: 0; }\n'
-        '    .celeb-img { width: 120px; height: 120px; border-radius: 50%; object-fit: cover; display: block; border: 2px solid #000; }\n'
+        '    .celeb-img { width: 120px; height: 150px; border-radius: 12px; object-fit: cover; object-position: 50% 20%; display: block; border: 2px solid #000; box-shadow: 3px 3px 0 0 #000; background: #f4f4f0; }\n'
+        '    @media (min-width: 641px) { .celeb-img { width: 176px; height: 220px; } }\n'
         '    .img-credit { position: absolute; bottom: 0; right: 0; font-size: 10px; line-height: 1; padding: 2px 4px; background: rgba(255,255,255,0.85); border: 1px solid #ccc; border-radius: 999px; text-decoration: none; color: #555; opacity: 0.55; transition: opacity .15s; }\n'
         '    .img-credit:hover { opacity: 1; }\n'
         '    h1 { font-size: 26px; margin: 0 0 8px; font-weight: 900; }\n'
@@ -2797,7 +2809,6 @@ for name, info in celebs.items():
         '</head>\n'
         '<body>\n'
         + '  <div class="lang-toggle">\n'
-        + copy_btn_html(make_celeb_short_url(name))
         + (('    <span class="lang-btn active">한국어</span>\n'
             '    <a class="lang-btn" href="' + esc(make_en_celeb_url(name_en)) + '" hreflang="en">EN</a>\n') if name_en else '')
         + '  </div>\n'
@@ -2807,7 +2818,7 @@ for name, info in celebs.items():
         '\n'
         '  <header class="celeb-header">\n'
         '    <div class="celeb-photo-wrap">\n'
-        '      <img class="celeb-img" src="' + esc(img) + '" alt="' + esc(name) + ' 프로필 사진" width="120" height="120">\n'
+        '      <img class="celeb-img" src="' + esc(img) + '" alt="' + esc(name) + ' 프로필 사진" width="176" height="220">\n'
         + (('      <a class="img-credit" href="' + esc(img) + '" target="_blank" rel="nofollow noopener noreferrer" title="이미지 출처">📷</a>\n')
            if img and img.startswith('http') else '')
         + '    </div>\n'
@@ -2816,15 +2827,14 @@ for name, info in celebs.items():
         + (('      <p class="celeb-bio">' + esc(get_bio(name, 'ko')) + '</p>\n')
            if get_bio(name, 'ko') else '')
         + '      <p style="margin:0;color:#666;font-size:14px">총 <strong>' + str(n_books) + '권</strong>의 도서</p>\n'
-        '      <p class="heart-row">' + heart_btn_html(celeb_heart_key(name), sname + '에게 하트') + '</p>\n'
+        '      <p class="heart-row">' + heart_btn_html(celeb_heart_key(name), sname + '에게 하트')
+        + copy_btn_html(make_celeb_short_url(name)) + '</p>\n'
         '    </div>\n'
         '  </header>\n'
         '\n'
         '  <section class="intro">\n'
         '    <p style="margin:0">' + intro_p + '</p>\n'
         '  </section>\n'
-        + taste_html(name, 'ko')
-        +
         '\n'
         '  <section id="shelf-sec">\n'
         '    <div class="shelf-head">\n'
@@ -2857,6 +2867,7 @@ for name, info in celebs.items():
                            sname + '의 독서 리스트 ' + str(n_books) + '권')
         +
         '\n'
+        + taste_html(name, 'ko')
         + (('  <section>\n'
             '    <h2>📝 ' + esc(sname) + '의 책 취향</h2>\n'
             '    <p>' + author_summary + '</p>\n'
@@ -3057,7 +3068,7 @@ for title, binfo in book_celebs.items():
         '\n'
         '  <style>\n'
         '    body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; max-width: 800px; margin: 0 auto; padding: 20px; color: #222; background: #fcfaf5; line-height: 1.6; }\n'
-        '    .lang-toggle { position: absolute; top: 16px; right: 16px; display: flex; gap: 6px; }\n'
+        + LANG_TOGGLE_CSS
         + COPY_BTN_CSS +
         '    .lang-btn { padding: 6px 12px; border: 2px solid #000; background: #fff; box-shadow: 2px 2px 0 0 #000; font-size: 12px; font-weight: 700; text-decoration: none; color: #000; transition: transform .1s, box-shadow .1s; }\n'
         '    .lang-btn:hover { transform: translate(-1px,-1px); box-shadow: 3px 3px 0 0 #000; background: #fde047; text-decoration: none; }\n'
@@ -3073,7 +3084,6 @@ for title, binfo in book_celebs.items():
         '</head>\n'
         '<body>\n'
         + '  <div class="lang-toggle">\n'
-        + copy_btn_html(make_book_short_url(title))
         + (('    <span class="lang-btn active">한국어</span>\n'
             '    <a class="lang-btn" href="' + esc(make_en_book_url(title_en)) + '" hreflang="en">EN</a>\n') if title_en else '')
         + '  </div>\n'
@@ -3081,7 +3091,8 @@ for title, binfo in book_celebs.items():
         '\n'
         '  <h1>' + esc(title) + ((' <span lang="ja" style="font-size:.6em; font-weight:700; color:#666">(' + esc(title_ja) + ')</span>') if title_ja else '') + '</h1>\n'
         '  <p>' + author_html(binfo['author']) + ((' · ' + esc(binfo['publisher'])) if binfo['publisher'] else '') + '</p>\n'
-        '  <p class="heart-row">' + heart_btn_html(book_heart_key(title), '이 책에 하트') + '</p>\n'
+        '  <p class="heart-row">' + heart_btn_html(book_heart_key(title), '이 책에 하트')
+        + copy_btn_html(make_book_short_url(title)) + '</p>\n'
         + cover_html + intro_html +
         '  <h2>이 책을 읽은 셀럽 (' + str(celeb_count) + '명)</h2>\n'
         '  <ul class="notes">\n' + celeb_rows + '\n  </ul>\n'
@@ -4313,14 +4324,15 @@ for name, info in celebs.items():
         a = plain_en(b.get('author_en') or b['author'])
         if a:
             _en_auth[a] = _en_auth.get(a, 0) + 1
-    _top_auth = sorted(_en_auth.items(), key=lambda x: (-x[1], x[0]))[:3]
+    _top_auth = sorted(((a, c) for a, c in _en_auth.items() if c >= 2),
+                       key=lambda x: (-x[1], x[0]))[:3]
     en_taste_html = ''
-    if _top_auth:
+    if _top_auth and not (TASTE.get(name) or {}).get('authors'):
         en_taste_html = (
             '  <section>\n'
             '    <h2>📝 ' + esc(_name_pl) + "'s reading taste</h2>\n"
             '    <p>Authors that come up most often in ' + esc(_name_pl) + "'s list: "
-            + ', '.join(esc(a) + (' (' + str(c) + ' books)' if c > 1 else '') for a, c in _top_auth)
+            + ', '.join(esc(a) + ' (' + str(c) + ' books)' for a, c in _top_auth)
             + '.</p>\n'
             '  </section>\n')
 
@@ -4471,14 +4483,15 @@ for name, info in celebs.items():
         '  <link rel="stylesheet" href="' + BASE + 'assets/fonts/kopubworld.css">\n'
         '  <style>\n'
         '    body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; max-width: 860px; margin: 0 auto; padding: 20px; color: #222; line-height: 1.6; background: #fcfaf5; }\n'
-        '    .lang-toggle { position: absolute; top: 16px; right: 16px; display: flex; gap: 6px; }\n'
+        + LANG_TOGGLE_CSS
         + COPY_BTN_CSS +
         '    .lang-btn { padding: 6px 12px; border: 2px solid #000; background: #fff; box-shadow: 2px 2px 0 0 #000; font-size: 12px; font-weight: 700; text-decoration: none; color: #000; transition: transform .1s, box-shadow .1s; }\n'
         '    .lang-btn:hover { transform: translate(-1px,-1px); box-shadow: 3px 3px 0 0 #000; background: #fde047; text-decoration: none; }\n'
         '    .lang-btn.active { background: #000; color: #fff; }\n'
         '    nav { margin: 50px 0 16px; font-size: 13px; }\n'
         '    .celeb-header { display: flex; align-items: center; gap: 20px; margin-bottom: 16px; flex-wrap: wrap; }\n'
-        '    .celeb-img { width: 120px; height: 120px; border-radius: 50%; object-fit: cover; border: 2px solid #000; }\n'
+        '    .celeb-img { width: 120px; height: 150px; border-radius: 12px; object-fit: cover; object-position: 50% 20%; display: block; border: 2px solid #000; box-shadow: 3px 3px 0 0 #000; background: #f4f4f0; }\n'
+        '    @media (min-width: 641px) { .celeb-img { width: 176px; height: 220px; } }\n'
         '    .celeb-photo-wrap { position: relative; flex-shrink: 0; }\n'
         '    .img-credit { position: absolute; bottom: 0; right: 0; font-size: 10px; line-height: 1; padding: 2px 4px; background: rgba(255,255,255,0.85); border: 1px solid #ccc; border-radius: 999px; text-decoration: none; color: #555; opacity: 0.55; transition: opacity .15s; }\n'
         '    .img-credit:hover { opacity: 1; text-decoration: none; }\n'
@@ -4533,14 +4546,13 @@ for name, info in celebs.items():
         '</head>\n'
         '<body>\n'
         '  <div class="lang-toggle">\n'
-        + copy_btn_html(make_en_celeb_short_url(name), '🔗 Copy link', 'Copied!')
         + '    <a class="lang-btn" href="' + esc(ko_url) + '" hreflang="ko">한국어</a>\n'
         '    <span class="lang-btn active">EN</span>\n'
         '  </div>\n'
         '  <nav><a href="' + EN_BASE + '">← Favorbook Home</a> · <a href="' + EN_BASE + 'share/ranking.html">Most-read books ranking</a></nav>\n'
         '  <header class="celeb-header">\n'
         '    <div class="celeb-photo-wrap">\n'
-        '    <img class="celeb-img" src="' + esc(img) + '" alt="' + esc(_name_pl) + ' profile photo" width="120" height="120">\n'
+        '    <img class="celeb-img" src="' + esc(img) + '" alt="' + esc(_name_pl) + ' profile photo" width="176" height="220">\n'
         + (('      <a class="img-credit" href="' + esc(img) + '" target="_blank" rel="nofollow noopener noreferrer" title="Image source">📷</a>\n')
            if img.startswith('http') else '')
         + '    </div>\n'
@@ -4557,7 +4569,8 @@ for name, info in celebs.items():
         + (('      <p class="celeb-alias">Also written ' + esc(' · '.join(_variants))
             + '</p>\n') if _variants else '')
         + '      <p style="margin:0;color:#666;font-size:14px">' + str(n) + ' book' + ('s' if n != 1 else '') + ' read &amp; recommended</p>\n'
-        '      <p class="heart-row">' + heart_btn_html(celeb_heart_key(name), 'Send ' + _name_pl + ' a heart') + '</p>\n'
+        '      <p class="heart-row">' + heart_btn_html(celeb_heart_key(name), 'Send ' + _name_pl + ' a heart')
+        + copy_btn_html(make_en_celeb_short_url(name), '🔗 Copy share link', 'Copied!') + '</p>\n'
         '    </div>\n'
         '  </header>\n'
         '  <section class="intro">\n'
@@ -4566,7 +4579,6 @@ for name, info in celebs.items():
         + ((', a ' + esc(_role_lbl)) if _roles else '')
         + ', gathered from interviews, YouTube, and SNS sources.</p>\n'
         '  </section>\n'
-        + taste_html(name, 'en')
         + ((
             '  <p class="grp-link">Part of <strong>' + esc(_en_group) + '</strong> — '
             '<a href="' + EN_BASE + 'group/' + safe_en_filename(_en_group) + '.html">'
@@ -4602,6 +4614,7 @@ for name, info in celebs.items():
                            'Could not create the image. Please try again.',
                            _name_pl + ' — ' + str(n) + ' books', '_transparent')
         + (EN_TR_NOTE_HTML if en_show_tr_note else '')
+        + taste_html(name, 'en')
         + en_taste_html
         + en_related_html
         + '  <section class="pfaq">\n'
@@ -4749,7 +4762,7 @@ for title, t_en in book_title_en.items():
         + json.dumps(json_ld, ensure_ascii=False, indent=2) + '\n  </script>\n'
         '  <style>\n'
         '    body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; max-width: 800px; margin: 0 auto; padding: 20px; color: #222; background: #fcfaf5; line-height: 1.6; }\n'
-        '    .lang-toggle { position: absolute; top: 16px; right: 16px; display: flex; gap: 6px; }\n'
+        + LANG_TOGGLE_CSS
         + COPY_BTN_CSS +
         '    .lang-btn { padding: 6px 12px; border: 2px solid #000; background: #fff; box-shadow: 2px 2px 0 0 #000; font-size: 12px; font-weight: 700; text-decoration: none; color: #000; transition: transform .1s, box-shadow .1s; }\n'
         '    .lang-btn:hover { transform: translate(-1px,-1px); box-shadow: 3px 3px 0 0 #000; background: #fde047; text-decoration: none; }\n'
@@ -4767,7 +4780,6 @@ for title, t_en in book_title_en.items():
         '</head>\n'
         '<body>\n'
         '  <div class="lang-toggle">\n'
-        + copy_btn_html(make_en_book_short_url(title), '🔗 Copy link', 'Copied!')
         + '    <a class="lang-btn" href="' + esc(ko_url) + '" hreflang="ko">한국어</a>\n'
         '    <span class="lang-btn active">EN</span>\n'
         '  </div>\n'
@@ -4777,7 +4789,8 @@ for title, t_en in book_title_en.items():
         + ((' · ' + esc(author_display)) if author_display.strip() else '')
         + ((' · ' + esc(binfo['publisher'])) if binfo['publisher'].strip() else '')
         + '</p>\n'
-        '  <p class="heart-row">' + heart_btn_html(book_heart_key(title), 'Heart this book') + '</p>\n'
+        '  <p class="heart-row">' + heart_btn_html(book_heart_key(title), 'Heart this book')
+        + copy_btn_html(make_en_book_short_url(title), '🔗 Copy share link', 'Copied!') + '</p>\n'
         + cover_html
         + '  <p class="intro">' + esc(t_en) + ' (Korean title: ' + esc(title) + ')'
         + ((' by ' + esc(author_display)) if author_display.strip() else '')
