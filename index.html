@@ -1297,6 +1297,9 @@
   // 홈의 변형 주소 수백 개를 크롤링해 "크롤링됨 - 색인 미생성"으로 쌓인다.
   const celebShareUrl = (name) =>
     `https://favorbook.co.kr/share/${encodeURIComponent(name.replace(/\//g, '_').replace(/\\/g, '_'))}.html`;
+  // 책 페이지(share/book)는 2명 이상이 읽은 책에만 있다 (generate.py 와 같은 규칙)
+  const bookShareUrl = (title) =>
+    `https://favorbook.co.kr/share/book/${encodeURIComponent(title.replace(/[\/\\:"?]/g, '_'))}.html`;
   const SITE_URL  = (() => {
     try { if (document.referrer?.includes('sites.google.com')) return document.referrer.split('?')[0]; } catch {}
     return location.origin + BASE_PATH;
@@ -1675,11 +1678,15 @@
              class="w-full h-full object-cover">`
         : `<div class="w-full h-full bg-paper-dark flex items-center justify-center text-2xl">📕</div>`;
       const meta = [b.author, b.publisher].filter(Boolean).join(' · ');
+      // 책 페이지가 있는 책(2명 이상)은 표지와 제목을 눌러 이동한다. 1명뿐인 책은 페이지가 없다.
+      const bookHref = b.celebs.length >= 2 ? escHtml(bookShareUrl(b.title)) : '';
+      const link = (inner, cls = '') => bookHref
+        ? `<a href="${bookHref}" class="${cls} hover:underline decoration-2 underline-offset-4">${inner}</a>` : inner;
       return `
         <div class="flex gap-3 sm:gap-4 bg-white border-2 border-ink shadow-neo p-3 sm:p-4">
-          <div class="w-[62px] sm:w-[74px] flex-none aspect-[2/3] border-2 border-ink overflow-hidden bg-paper-dark">${cover}</div>
+          <div class="w-[62px] sm:w-[74px] flex-none aspect-[2/3] border-2 border-ink overflow-hidden bg-paper-dark">${bookHref ? `<a href="${bookHref}" class="block w-full h-full" aria-label="${escHtml(b.title)} 책 페이지">${cover}</a>` : cover}</div>
           <div class="min-w-0 flex-1">
-            <h3 class="text-sm sm:text-base font-black leading-snug word-break-keep">${escHtml(b.title)}</h3>
+            <h3 class="text-sm sm:text-base font-black leading-snug word-break-keep">${link(escHtml(b.title))}</h3>
             ${meta ? `<p class="text-[11px] sm:text-xs font-bold text-muted mt-0.5 mb-2">${escHtml(meta)}</p>` : '<div class="mb-2"></div>'}
             <p class="text-[10px] sm:text-[11px] font-sans font-bold tracking-widest text-muted mb-1.5">읽은 셀럽 ${b.celebs.length}명</p>
             <div class="flex flex-wrap gap-1.5">${chips}</div>
