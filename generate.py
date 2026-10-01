@@ -870,8 +870,9 @@ SHELF_CSS = (
     '    .vt + .vt { border-left: 2px solid #000; }\n'
     '    .vt[aria-pressed="true"] { background: #000; color: #fff; }\n'
     # 표지 보기 — 책등 대신 표지를 격자로 늘어놓는다
-    # 데스크톱은 한 줄 6권 안팎(표지 ~125px). 84px로 두면 9권씩 들어가 87권짜리 목록의 표지가 자글자글했다.
-    '    .covers { display: none; grid-template-columns: repeat(auto-fill, minmax(112px, 1fr)); gap: 20px 16px; margin: 14px 0 22px; }\n'
+    # 한 줄 5권(표지 ~150px). 예전 auto-fill 84px 는 데스크톱에서 9권씩 들어가 87권짜리 목록의 표지가 자글자글했다.
+    # 화면 폭에 따라 열 수를 고정한다: 5열 → 700px 이하 4열 → 480px 이하 3열(auto-fill).
+    '    .covers { display: none; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 22px 18px; margin: 14px 0 22px; }\n'
     '    .show-covers .covers { display: grid; }\n'
     '    .show-covers .shelf { display: none; }\n'
     '    .cv { position: relative; display: block; aspect-ratio: 2/3; border: 1.5px solid #000; box-shadow: 2px 2px 0 0 #000;\n'
@@ -955,6 +956,7 @@ SHELF_CSS = (
     '    .is-capturing .sp.is-new .sp-t { padding-top: 14px; }\n'
     # 좁은 화면에서는 한 줄에 너무 적게 들어가므로 조금 줄인다
     # 좁은 화면에서는 책등을 낮추므로 글자도 그 비율(205/270)만큼 줄인다
+    '    @media (max-width: 700px) { .covers { grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 16px 14px; } }\n'
     '    @media (max-width: 480px) { .covers { grid-template-columns: repeat(auto-fill, minmax(84px, 1fr)); gap: 14px 12px; }\n'
     '                                 .shelf { --sh-h: 205px; }\n'
     '                                 .sp.no-img, .sp.sp-fail { width: calc(var(--w, 38px) * .88); }\n'
