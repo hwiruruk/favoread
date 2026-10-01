@@ -150,10 +150,17 @@ class SourceOff(Exception):
 CALL_KDC_RE = re.compile(r'(?<![\d.])(\d{3}(?:\.\d+)?)(?![\d])')
 
 
+def _nk(k):
+    """필드 이름 맞추기: 가이드에는 call_no 로 적혀 있지만 JSON 은 callNo 처럼 올 수 있다."""
+    return re.sub(r'[^0-9a-z]', '', str(k).lower())
+
+
 def _records(x):
-    """응답 어디에 있든 자료 목록(청구기호·표제가 든 dict 들)을 찾는다. 응답 모양이 문서에 자세하지 않아서."""
+    """응답 어디에 있든 자료 목록(청구기호·표제가 든 dict 들)을 찾는다. 응답 모양이 문서에 자세하지 않아서.
+    돌려줄 때 필드 이름을 소문자·밑줄 없이 맞춘다 (callno, titleinfo, kdcname1s …)."""
     if isinstance(x, list):
-        recs = [r for r in x if isinstance(r, dict) and ('call_no' in r or 'title_info' in r)]
+        recs = [{_nk(k): v for k, v in r.items()} for r in x if isinstance(r, dict)]
+        recs = [r for r in recs if 'callno' in r or 'titleinfo' in r]
         if recs:
             return recs
         for v in x:
@@ -168,31 +175,38 @@ def _records(x):
     return []
 
 
+_nlh_shown = []
+
+
 def nlh_lookup(isbn, key):
     qs = urllib.parse.urlencode({'key': key, 'apiType': 'json', 'detailSearch': 'true',
                                  'isbnOp': 'isbn', 'isbnCode': isbn, 'pageNum': 1, 'pageSize': 10})
     d = http_json(NLH_URL + '?' + qs, label='국립중앙도서관 소장자료')
+    if not _nlh_shown:   # 응답 모양을 로그에서 확인할 수 있게 첫 응답만 찍는다 (키는 응답에 없다)
+        _nlh_shown.append(1)
+        print('  (소장자료 첫 응답, ISBN %s) %s' % (isbn, json.dumps(d, ensure_ascii=False)[:700]))
     recs = _records(d)
     if not recs:
         raw = json.dumps(d, ensure_ascii=False)[:200]
-        total = str(d.get('total', '')) if isinstance(d, dict) else ''
-        if total.isdigit():
+        total = next((str(v) for k, v in (d.items() if isinstance(d, dict) else []) if _nk(k) == 'total'), '')
+        if total.isdigit() and int(total) == 0:
             return None                  # 검색 결과 0건
         if re.search(r'01[01]|INVALID KEY|NO KEY', raw):
             raise SourceOff('국립중앙도서관 소장자료: 인증키 오류 (%s) — 소장자료 검색용 키를 NL_SEARCH_KEY 에 넣으세요' % raw)
         if re.search(r'"?(000|101)"?|SYSTEM ERROR|SEARCH ERROR', raw):
             raise fb.Transient('검색서버 오류 (%s)' % raw)
-        raise SourceOff('국립중앙도서관 소장자료: 알 수 없는 응답 (%s)' % raw)
+        # 결과가 있다는데 목록을 못 읽었으면 조용히 넘기지 않는다 (첫 수집 때 196권이 이렇게 빈칸이 됐다)
+        raise SourceOff('국립중앙도서관 소장자료: 응답 형식을 읽지 못함 (%s)' % raw)
     # 이 ISBN 이 적힌 도서 자료를 먼저 본다
     recs.sort(key=lambda r: (isbn not in re.sub(r'[^0-9 ]', ' ', str(r.get('isbn') or '')).split(),
-                             '도서' not in str(r.get('type_name') or '')))
+                             '도서' not in str(r.get('typename') or '')))
     for r in recs:
-        call_no = str(r.get('call_no') or '').strip()
+        call_no = str(r.get('callno') or '').strip()
         m = CALL_KDC_RE.search(call_no)
         if m:
-            return {'kdc': m.group(1), 'call_no': call_no, 'kdc_1s': str(r.get('kdc_name_1s') or '').strip()}
-    return {'kdc': '', 'call_no': str(recs[0].get('call_no') or '').strip(),
-            'kdc_1s': str(recs[0].get('kdc_name_1s') or '').strip()}
+            return {'kdc': m.group(1), 'call_no': call_no, 'kdc_1s': str(r.get('kdcname1s') or '').strip()}
+    return {'kdc': '', 'call_no': str(recs[0].get('callno') or '').strip(),
+            'kdc_1s': str(recs[0].get('kdcname1s') or '').strip()}
 
 
 # ── 도서관 정보나루 ──────────────────────────────────────────────────
@@ -273,7 +287,7 @@ def main():
     nl_key = os.environ.get('NL_API_KEY', '').strip()
     d4_key = os.environ.get('LIBRARY_API_KEY', '').strip()
     nlh_key = os.environ.get('NL_SEARCH_KEY', '').strip() or nl_key
-    want = [s for s, k in (('nl', nl_key), ('nlh', nlh_key), ('d4l', d4_key)) if k]
+    want = [s for s, k in (('nl', nl_key), ('nlh2', nlh_key), ('d4l', d4_key)) if k]
 
     bookinfo = load_json(BOOKINFO).get('books') or {}
     prev = load_json(OUT_PATH)
@@ -301,7 +315,7 @@ def main():
           % (len(bookinfo), len(have), len(misses), len(todo),
              '켬' if nl_key else '끔', '켬' if nlh_key else '끔', '켬' if d4_key else '끔'))
 
-    on = {'nl': bool(nl_key), 'nlh': bool(nlh_key), 'd4l': bool(d4_key)}
+    on = {'nl': bool(nl_key), 'nlh2': bool(nlh_key), 'd4l': bool(d4_key)}
     ok = fail = net = streak = 0
     for i, t in enumerate(todo, 1):
         try:
@@ -327,12 +341,13 @@ def main():
                 time.sleep(args.sleep)
             if nl is None and (old.get('nl_kdc') or old.get('add_code')):
                 nl = {'kdc': old.get('nl_kdc', ''), 'add_code': old.get('add_code', '')}
-            if on['nlh'] and 'nlh' not in tried:
+            if on['nlh2'] and 'nlh2' not in tried:
                 try:
                     nlh = retry('국립중앙도서관 소장자료', nlh_lookup, isbn, nlh_key) or {}
-                    tried.add('nlh')
+                    tried.discard('nlh')   # 첫 버전 표시 (필드 이름을 못 읽어 빈칸이었다)
+                    tried.add('nlh2')
                 except SourceOff as e:
-                    on['nlh'] = False
+                    on['nlh2'] = False
                     print('\n%s\n→ 이번 실행에서는 소장자료 검색을 빼고 계속합니다.\n' % e)
                 time.sleep(args.sleep)
             if nlh is None and (old.get('nlh_kdc') or old.get('call_no')):
