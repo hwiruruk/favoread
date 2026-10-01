@@ -106,8 +106,8 @@ def nl_lookup(isbn, key):
     docs = d.get('docs')
     if docs is None:
         msg = d.get('ERR_MESSAGE') or d.get('RESULT') or d.get('message') or str(d)[:120]
-        if re.search(r'인증|cert|key|KEY', str(msg)):
-            raise fb.Fatal('국립중앙도서관: %s' % msg)
+        if re.search(r'인증|cert|key|KEY|활성|한도|초과', str(msg)):
+            raise SourceOff('국립중앙도서관: %s' % msg)
         raise fb.Transient('국립중앙도서관: %s' % msg)
     if not docs:
         return None
@@ -120,6 +120,10 @@ def nl_lookup(isbn, key):
     }
 
 
+class SourceOff(Exception):
+    """한 기관만 못 쓰게 됐다 (키가 아직 활성화 전·하루 한도 초과 등). 그 기관만 끄고 나머지로 계속한다."""
+
+
 # ── 도서관 정보나루 ──────────────────────────────────────────────────
 def d4l_call(path, params, key):
     qs = urllib.parse.urlencode({'authKey': key, 'format': 'json', **params})
@@ -127,8 +131,8 @@ def d4l_call(path, params, key):
     res = d.get('response') or {}
     err = res.get('error')
     if err:
-        # 키 오류·하루 한도 초과 — 더 돌려봐야 소용없다
-        raise fb.Fatal('도서관 정보나루: %s' % err)
+        # 키 활성화 전·키 오류·하루 한도 초과 — 이번 실행에서는 정보나루를 끈다
+        raise SourceOff('도서관 정보나루: %s' % err)
     return res
 
 
@@ -223,6 +227,7 @@ def main():
           % (len(bookinfo), len(have), len(misses), len(todo),
              '켬' if nl_key else '끔', '켬' if d4_key else '끔'))
 
+    on = {'nl': bool(nl_key), 'd4l': bool(d4_key)}
     ok = fail = net = streak = 0
     for i, t in enumerate(todo, 1):
         try:
@@ -238,21 +243,37 @@ def main():
             tried = set(old.get('tried') or [])
             nl = d4 = None
             kw = old.get('keywords') or []
-            if nl_key:
-                nl = nl_lookup(isbn, nl_key) or {}
-                tried.add('nl')
+            if on['nl'] and 'nl' not in tried:
+                try:
+                    nl = nl_lookup(isbn, nl_key) or {}
+                    tried.add('nl')
+                except SourceOff as e:
+                    on['nl'] = False
+                    print('\n%s\n→ 이번 실행에서는 국립중앙도서관을 빼고 계속합니다.\n' % e)
                 time.sleep(args.sleep)
-            elif old.get('nl_kdc') or old.get('add_code'):
+            if nl is None and (old.get('nl_kdc') or old.get('add_code')):
                 nl = {'kdc': old.get('nl_kdc', ''), 'add_code': old.get('add_code', '')}
-            if d4_key:
-                d4 = d4l_detail(isbn, d4_key) or {}
+            if on['d4l'] and 'd4l' not in tried:
+                try:
+                    d4 = d4l_detail(isbn, d4_key) or {}
+                    time.sleep(args.sleep)
+                    kw = d4l_keywords(isbn, d4_key)
+                    tried.add('d4l')
+                except SourceOff as e:
+                    on['d4l'] = False
+                    d4 = None
+                    kw = old.get('keywords') or []
+                    print('\n%s\n→ 이번 실행에서는 정보나루를 빼고 계속합니다 (키워드는 나중에 다시 돌리면 채워집니다).\n' % e)
                 time.sleep(args.sleep)
-                kw = d4l_keywords(isbn, d4_key)
-                tried.add('d4l')
-                time.sleep(args.sleep)
-            elif old.get('class_nm') or old.get('kdc_from') == 'd4l':
+            if d4 is None and (old.get('class_nm') or old.get('kdc_from') == 'd4l'):
                 d4 = {'kdc': old.get('kdc', '') if old.get('kdc_from') == 'd4l' else '',
                       'class_nm': old.get('class_nm', '')}
+            if not (tried - set(old.get('tried') or [])):
+                # 이 책은 어느 기관에도 새로 묻지 못했다 — 둘 다 꺼졌으면 멈춘다
+                if not on['nl'] and not on['d4l']:
+                    print('조회할 수 있는 기관이 없어 멈춥니다. 여기까지 받은 것만 저장합니다.')
+                    break
+                continue
             kdc, src = best_kdc(nl, d4)
             if not kdc and not kw:
                 misses[t] = '도서관 데이터에 분류·키워드 없음 (ISBN %s)' % isbn
@@ -294,6 +315,9 @@ def main():
           % (ok, fail, net, len(have), len(bookinfo)))
     if args.dry_run:
         print('--dry-run 이라 파일에 쓰지 않았습니다.')
+        return
+    if not ok and not fail:
+        print('새로 받은 게 없어 파일을 그대로 둡니다.')
         return
     os.makedirs(os.path.dirname(OUT_PATH), exist_ok=True)
     with open(OUT_PATH, 'w', encoding='utf-8') as f:
