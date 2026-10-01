@@ -1297,6 +1297,7 @@ print(f"💬 검수 승인된 자동 코멘트 {_auto_comment_count}건 반영")
 
 # ── 책 취향 통계 ─────────────────────────────────────────────────────
 # 책 정보(번역서·출간일·쪽수·시리즈)는 data/bookinfo.json(tools/fetch_bookinfo.py),
+# 분야·키워드는 data/subjects.json(tools/fetch_subjects.py),
 # 작가·출판사는 data.csv 에서 센다. 기준은 tools/taste.py 맨 위에 있다.
 # 믿을 만한 것만 내고, 모자라면 아무것도 안 낸다.
 import sys as _sys
@@ -1307,14 +1308,20 @@ try:
         _bookinfo_db = json.load(f).get('books', {})
 except (FileNotFoundError, json.JSONDecodeError):
     _bookinfo_db = {}
+# 분야(KDC)·키워드는 data/subjects.json (tools/fetch_subjects.py — 국립중앙도서관·도서관 정보나루)
+try:
+    with open('data/subjects.json', encoding='utf-8') as f:
+        _subjects_db = json.load(f).get('books', {})
+except (FileNotFoundError, json.JSONDecodeError):
+    _subjects_db = {}
 _taste_year = datetime.date.today().year
-_taste_base = _taste.site_baseline(celebs, _bookinfo_db, _taste_year)
+_taste_base = _taste.site_baseline(celebs, _bookinfo_db, _taste_year, _subjects_db)
 TASTE = {}
 for _name, _info in celebs.items():
-    _t = _taste.compute(_info['books'], _bookinfo_db, _taste_base, _taste_year)
+    _t = _taste.compute(_info['books'], _bookinfo_db, _taste_base, _taste_year, _subjects_db)
     if _t:
         TASTE[_name] = _t
-print(f"📊 책 취향 통계 {len(TASTE)}명 / {len(celebs)}명 (책 정보 확인 {len(_bookinfo_db)}권)")
+print(f"📊 책 취향 통계 {len(TASTE)}명 / {len(celebs)}명 (책 정보 확인 {len(_bookinfo_db)}권 · 분야 확인 {len(_subjects_db)}권)")
 
 def taste_html(name, lang='ko'):
     t = TASTE.get(name)
@@ -1327,6 +1334,8 @@ def taste_html(name, lang='ko'):
         lines, head = _taste.text_en(t), 'Reading taste (from %d books)' % t['n']
         note = (('From a comment on “' + (t['note']['title']) + '”: ' + t['note']['en'])
                 if t['note'] and t['note']['en'] else '')
+    if not lines:   # 영문엔 키워드 줄이 없어서, 키워드만 있는 셀럽은 빈 칸이 된다
+        return ''
     return ('  <section class="taste">\n    <h2>' + esc(head) + '</h2>\n'
             + ''.join('    <p>' + esc(l) + '</p>\n' for l in lines)
             + (('    <p class="taste-note">' + esc(note) + '</p>\n') if note else '')
