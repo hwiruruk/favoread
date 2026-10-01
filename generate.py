@@ -556,29 +556,6 @@ SHELF_CAPTURE_JS_TEMPLATE = (
     '    var H2C = "https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js";\n'
     '    var PROXY = "https://images.weserv.nl/?url=";\n'
     '    var PAPER = "#fcfaf5";\n'
-    '    var PER = 12;\n'
-    '    // 표지 보기에서 책이 12권을 넘으면 어느 12권을 저장할지 고르는 칸을 붙인다\n'
-    '    (function () {\n'
-    '      var area = document.getElementById("shelf-area");\n'
-    '      var n = area ? area.querySelectorAll(".cv").length : 0;\n'
-    '      if (n <= PER) return;\n'
-    '      var ko = (document.documentElement.lang || "ko").indexOf("ko") === 0;\n'
-    '      var sel = document.createElement("select");\n'
-    '      sel.id = "shelf-range"; sel.className = "sh-range";\n'
-    '      sel.setAttribute("aria-label", ko ? "저장할 책 범위" : "Books to save");\n'
-    '      for (var p = 0; p * PER < n; p++) {\n'
-    '        var o = document.createElement("option");\n'
-    '        o.value = p;\n'
-    '        var a = p * PER + 1, b = Math.min(n, (p + 1) * PER);\n'
-    '        o.textContent = ko ? a + "–" + b + "권 (표지 12권씩)" : "Books " + a + "–" + b;\n'
-    '        sel.appendChild(o);\n'
-    '      }\n'
-    '      var first = btns[0];\n'
-    '      first.parentNode.insertBefore(sel, first);\n'
-    '      var sync = function () { sel.style.display = area.classList.contains("show-covers") ? "" : "none"; };\n'
-    '      new MutationObserver(sync).observe(area, { attributes: true, attributeFilter: ["class"] });\n'
-    '      sync();\n'
-    '    })();\n'
     '    var FONT = \'-apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif\';\n'
     '    // 캔버스 한계. 넘기면 빈 그림이 나오거나 아예 실패한다. 사파리는 한 변보다\n'
     '    // 넓이를 먼저 막는다(약 1677만 픽셀). 제목·여백을 얹을 몫을 빼고 잡는다.\n'
@@ -742,18 +719,7 @@ SHELF_CAPTURE_JS_TEMPLATE = (
     '      // 저장하는 그림에는 NEW 표시와 함께 추천한 셀럽 목록을 넣지 않는다.\n'
     '      // html2canvas가 문서를 복사할 때 이 클래스도 따라가서 복사본에서만 빠진 채 그려진다.\n'
     '      view.classList.add("is-capturing");\n'
-    '      // 접어 둔 표지도 저장 범위에 들어가므로 찍는 동안만 펼친다\n'
-    '      var wasCollapsed = view.classList.contains("covers-collapsed");\n'
-    '      view.classList.remove("covers-collapsed");\n'
-    '      // 표지 보기에서 책이 12권을 넘으면 고른 12권만 4열 3줄로 담는다\n'
-    '      var capTiles = [], capSel = document.getElementById("shelf-range");\n'
-    '      if (capSel && capSel.value !== "" && view.classList.contains("show-covers")) {\n'
-    '        var from = +capSel.value * PER;\n'
-    '        [].forEach.call(view.querySelectorAll(".cv"), function (t, i) {\n'
-    '          if (i < from || i >= from + PER) { t.classList.add("cap-off"); capTiles.push(t); }\n'
-    '        });\n'
-    '        view.classList.add("cap-12");\n'
-    '      }\n'
+    '      // 화면에 보이는 그대로 담는다. 표지를 접어 둔 상태면 보이는 3줄만, 펼쳤으면 전체.\n'
     '      guard(loadH2C(), 15000, "html2canvas").then(function () {\n'
     '        swap = swapImages(view);\n'
     '        return swap.ready;\n'
@@ -784,9 +750,7 @@ SHELF_CAPTURE_JS_TEMPLATE = (
     '      }).then(function () {\n'
     '        if (swap) swap.undo.forEach(function (f) { f(); });\n'
     '        if (muted) unmute(muted);\n'
-    '        view.classList.remove("is-capturing", "cap-12");\n'
-    '        if (wasCollapsed) view.classList.add("covers-collapsed");\n'
-    '        capTiles.forEach(function (t) { t.classList.remove("cap-off"); });\n'
+    '        view.classList.remove("is-capturing");\n'
     '        btns.forEach(function (b) { b.disabled = false; });\n'
     '        btn.textContent = was;\n'
     '      });\n'
@@ -810,12 +774,8 @@ def cover_tile(title, cover_url, link, added, alt):
     return '    <span class="cv" title="' + esc(title) + '">' + inner + '</span>\n'
 
 
-COVER_COLS = 4                       # 이미지 저장: 표지 한 줄 4권
-COVER_PAGE = 12                      # 이미지 저장: 한 장 12권 (4열 3줄)
-
-
 def cover_shelf_html(tiles):
-    """표지 보기 — 책 전체를 격자로 늘어놓는다. 12권 나누기는 이미지 저장에서만 쓴다."""
+    """표지 보기 — 책 전체를 격자로 늘어놓는다."""
     return ''.join(tiles)
 
 
@@ -911,11 +871,8 @@ SHELF_CSS = (
     '    .cv img { width: 100%; height: 100%; object-fit: cover; display: block; }\n'
     '    .cv-no { display: flex; height: 100%; align-items: center; justify-content: center; padding: 6px;\n'
     '             font-size: 11px; font-weight: 700; line-height: 1.3; text-align: center; word-break: keep-all; }\n'
-    # 이미지 저장 — 표지 보기에서 고른 12권만 4열 3줄로 담는다
-    '    .sh-range { font: inherit; font-size: 12px; font-weight: 700; padding: 5px 6px; background: #fff; color: #000;\n'
-    '                border: 2px solid #000; box-shadow: 2px 2px 0 0 #000; }\n'
-    '    .is-capturing.cap-12 .covers { grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 16px 14px; }\n'
-    '    .is-capturing .cv.cap-off { display: none; }\n'
+    # 이미지 저장 — 접힌 상태면 보이는 3줄만 담고, 흐린 가림막과 '전체 보기' 버튼은 빼고 찍는다
+    '    .is-capturing .covers-more { display: none !important; }\n'
     # 책장 — 책등을 같은 높이로 세워 바닥에 붙여 늘어놓는다.
     # 줄이 넘어가도 줄마다 선반 판이 받치도록, 선반 판을 줄 간격(--row)마다
     # 되풀이되는 배경으로 그린다. 판은 책등 바로 아래(--sh-h)에 온다.
@@ -2841,7 +2798,7 @@ for name, info in celebs.items():
         '      <h2>📚 ' + esc(sname) + '의 독서 리스트 (' + str(n_books) + '권)</h2>\n'
         '      <div class="shelf-tabs">\n'
         + shelf_view_tabs('📚 책등', '🖼 표지') +
-        '        <button type="button" class="sh-cap" id="shelf-cap" title="책장을 그림으로 내려받아요">⤓ 이미지 저장</button>\n'
+        '        <button type="button" class="sh-cap" id="shelf-cap" title="지금 보이는 책장을 그대로 그림으로 내려받아요">⤓ 이미지 저장</button>\n'
         '        <button type="button" class="sh-cap" id="shelf-cap-clear" title="배경 없이 투명한 PNG로 내려받아요">⤓ 투명 배경</button>\n'
         '      </div>\n'
         '    </div>\n'
@@ -4594,7 +4551,7 @@ for name, info in celebs.items():
         '      <h2>Books ' + esc(_name_pl) + ' has read (' + str(n) + ')</h2>\n'
         '      <div class="shelf-tabs">\n'
         + shelf_view_tabs('📚 Spines', '🖼 Covers') +
-        '        <button type="button" class="sh-cap" id="shelf-cap" title="Download the bookshelf as an image">\u2913 Save image</button>\n'
+        '        <button type="button" class="sh-cap" id="shelf-cap" title="Download the bookshelf as shown on screen">\u2913 Save image</button>\n'
         '        <button type="button" class="sh-cap" id="shelf-cap-clear" title="Download as a PNG with a transparent background">\u2913 Transparent</button>\n'
         '      </div>\n'
         '    </div>\n'
