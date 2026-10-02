@@ -1,4 +1,4 @@
-"""셀럽별 '책 취향' 통계 — 분야·키워드·작가·번역서·출간 시기·분량·출판사를 세어 믿을 만한 것만 문장으로 돌려준다.
+"""셀럽별 '책 취향' 통계 — 분야·작가·번역서·출간 시기·분량·출판사를 세어 믿을 만한 것만 문장으로 돌려준다.
 
 generate.py 가 빌드 때 부른다. 네트워크도 모델도 쓰지 않는다.
 같은 입력이면 늘 같은 결과가 나온다.
@@ -14,10 +14,9 @@ generate.py 가 빌드 때 부른다. 네트워크도 모델도 쓰지 않는다
       같은 시리즈의 권수 늘리기는 한 작품으로 센다
     - 출판사는 3권 이상이고 비중 30% 이상일 때만 꼽는다
     - 분야는 분야를 아는 책이 5권 이상·70% 이상이면 많은 순으로 보여준다 (KDC → genre())
-    - 키워드는 그 셀럽의 책 2권 이상에 같이 나온 것만, 사이트 전체에 흔한 단어는 뺀다
 
 책 정보(번역서·출간일·쪽수·시리즈)는 data/bookinfo.json (tools/fetch_bookinfo.py).
-분야(KDC)·키워드는 data/subjects.json (tools/fetch_subjects.py — 국립중앙도서관·도서관 정보나루).
+분야(KDC)는 data/subjects.json (tools/fetch_subjects.py — 국립중앙도서관·도서관 정보나루).
 작가·출판사는 data.csv 에서 온다. 상수는 여기 한 곳에서만 고친다.
 """
 import re
@@ -37,31 +36,10 @@ THICK_PAGES = 500        # 이 쪽수 이상이면 두꺼운 책
 THIN_PAGES = 250         # 이 쪽수 이하면 얇은 책
 MIN_PAGE_SHARE = 0.50
 
-# 분야·키워드 (data/subjects.json — tools/fetch_subjects.py)
+# 분야 (data/subjects.json — tools/fetch_subjects.py)
 GENRE_TOP = 3            # 분야는 많은 순으로 이만큼까지 보여준다
 GENRE_GAP = 0.20         # 한 분야 비중이 사이트 평균보다 이만큼 높으면 따로 말한다
 MIN_GENRE_BOOKS = 3      # 그 분야 책이 이 권수 이상일 때만
-KW_MAX = 5               # 키워드는 이만큼까지
-KW_MIN_BOOKS = 2         # 그 셀럽의 책 중 이 권수 이상에 나온 키워드만 (한 권짜리는 취향이 아니다)
-KW_MIN_SHARE = 0.10      # 그리고 키워드가 있는 그 셀럽 책의 이 비율 이상 (40권 중 2권은 취향이 아니다)
-KW_COMMON = 0.15         # 사이트 책 이 비율 넘게 나오는 키워드는 너무 흔해서 뺀다
-# 정보나루 키워드는 책 소개글에서 뽑은 단어라 잡음이 많다. 첫 수집(162권)에서 본 것:
-# 같은 작가의 다른 책 제목(반짝 반짝 빛나는), 작가·출판사 이름(하루키, 민음사), 숫자·영문(1Q84, BOOK),
-# 소개글 상투어(세상, 이유, 시작, 존재). 한글 단어만 남기고, 이름은 site_baseline 이 data.csv 에서 모아 뺀다.
-_KW_WORD = re.compile(r'[가-힣]{2,8}')
-_KW_STOP = {'소설', '작가', '작품', '이야기', '책', '사람', '세계', '독자', '출간', '장편소설', '단편',
-            '소설집', '시집', '에세이', '산문', '산문집', '수록', '번역', '자신', '문학', '시인', '저자',
-            '우리', '시간', '생각', '사회', '인간', '삶', '한국', '이번', '통해', '대한', '하나',
-            # 소개글 상투어
-            '세상', '이유', '시작', '존재', '소중', '다양', '모습', '방법', '순간', '의미', '이들', '마음',
-            '시대', '인물', '문장', '시절', '처음', '이후', '최근', '마지막', '오늘', '지금', '자기', '그녀',
-            '그들', '모두', '무엇', '정도', '경우', '사실', '결과', '과정', '내용', '부분', '문제', '이름',
-            '다음', '얼마', '가지', '전개', '변화', '배경', '등장', '주인공', '질문', '대답', '기록', '독서',
-            # 출판·홍보 용어
-            '발표', '수상', '수상자', '수상작', '대상', '문학상', '베스트셀러', '스테디셀러', '판매', '종합',
-            '발매', '소개', '올해', '해설', '작가노트', '등단', '신인', '신예', '출판', '출판사', '편집',
-            '원작', '국내', '해외', '인기', '화제', '시리즈', '신작', '전작', '데뷔', '대표작', '동료',
-            '장편', '단편집', '한국문학', '영미소설', '일본소설', '젊은작가', '전집', '개정판', '번역가'}
 
 _NO_AUTHOR = {'', '편집부', '저자 미상', '미상', '작자 미상', '엮음', '지음', '글', '그림'}
 
@@ -142,29 +120,17 @@ def _genre_of(subjects, t):
     return genre(s.get('kdc'), s.get('add_code'))
 
 
-def _keywords_of(subjects, t):
-    return {w for w, _ in ((subjects or {}).get(t) or {}).get('keywords') or []
-            if _KW_WORD.fullmatch(w) and w not in _KW_STOP}
-
-
-def _name_words(text):
-    """작가·출판사 칸에서 이름 낱말을 뽑는다 ('무라카미 하루키 (지은이)' → 무라카미, 하루키)."""
-    return {w for w in re.findall(r'[가-힣]{2,}', text or '') if w not in _NO_AUTHOR}
-
-
 def site_baseline(celebs, bookinfo, this_year, subjects=None):
     """사이트 전체에서 각 성질의 비중 (고유 책 기준). 평균과 다른지 비교하는 기준선.
-    '_genre' 는 분야별 비중, '_common_kw' 는 너무 흔해서 취향이라 할 수 없는 키워드
-    (사이트 책 15% 넘게 나오는 단어 + 사이트에 있는 작가·출판사 이름)."""
+    '_genre' 는 분야별 비중."""
     seen, tot, yes = set(), dict.fromkeys(_KEYS, 0), dict.fromkeys(_KEYS, 0)
-    genres, kw_count, kw_books, names = {}, {}, 0, set()
+    genres = {}
     for info in celebs.values():
         for b in info['books']:
             t = b['title'].strip()
             if t in seen:
                 continue
             seen.add(t)
-            names |= _name_words(b.get('author')) | _name_words(b.get('publisher'))
             for k, v in zip(_KEYS, _flags(bookinfo.get(t), this_year)):
                 if v is not None:
                     tot[k] += 1
@@ -172,15 +138,9 @@ def site_baseline(celebs, bookinfo, this_year, subjects=None):
             g = _genre_of(subjects, t)
             if g:
                 genres[g[0]] = genres.get(g[0], 0) + 1
-            kws = _keywords_of(subjects, t)
-            if kws:
-                kw_books += 1
-                for w in kws:
-                    kw_count[w] = kw_count.get(w, 0) + 1
     base = {k: yes[k] / tot[k] for k in _KEYS if tot[k]}
     n_genre = sum(genres.values())
     base['_genre'] = {g: n / n_genre for g, n in genres.items()} if n_genre else {}
-    base['_common_kw'] = {w for w, n in kw_count.items() if kw_books and n / kw_books > KW_COMMON} | names
     return base
 
 
@@ -192,7 +152,7 @@ def _trim(text, n):
 def compute(books, bookinfo, baseline, this_year, subjects=None):
     """books: 그 셀럽의 책 목록(dict: title, author, publisher, comment, ...).
     bookinfo: {제목: 책 정보}. baseline: site_baseline() 결과.
-    subjects: {제목: 분야·키워드} (data/subjects.json). 없으면 분야·키워드 줄이 빠진다.
+    subjects: {제목: 분야} (data/subjects.json). 없으면 분야 줄이 빠진다.
     믿을 만한 게 없으면 None."""
     uniq = {}
     for b in books:
@@ -241,19 +201,6 @@ def compute(books, bookinfo, baseline, this_year, subjects=None):
             facts.insert(0, {'key': 'genre_high', 'label': g[0], 'label_en': g[1], 'n': n, 'of': genre_of,
                              'pct': round(n / genre_of * 100), 'base': round(gb.get(g[0], 0) * 100)})
 
-    # 키워드 — 이 셀럽의 책 여러 권에 같이 나오는 키워드. 사이트 전체에 흔한 단어는 뺀다
-    keywords = []
-    kw_sets = {t: _keywords_of(subjects, t) - (baseline.get('_common_kw') or set()) for t in uniq}
-    kw_known = [k for k in kw_sets.values() if k]
-    if len(kw_known) >= MIN_BOOKS:
-        cnt = {}
-        for ks in kw_known:
-            for w in ks:
-                cnt[w] = cnt.get(w, 0) + 1
-        need = max(KW_MIN_BOOKS, len(kw_known) * KW_MIN_SHARE)
-        keywords = [w for w, n in sorted(cnt.items(), key=lambda x: (-x[1], x[0]))
-                    if n >= need][:KW_MAX]
-
     # 작가 — 서로 다른 작품 수
     by_author, en_name = {}, {}
     for t, b in uniq.items():
@@ -279,7 +226,7 @@ def compute(books, bookinfo, baseline, this_year, subjects=None):
         if len(ts) >= MIN_PUB_BOOKS and len(ts) / n_all >= MIN_PUB_SHARE:
             publisher = {'name': p, 'count': len(ts), 'titles': sorted(ts)}
 
-    if not facts and not authors and not publisher and not genres and not keywords:
+    if not facts and not authors and not publisher and not genres:
         return None
 
     # 참고 코멘트 — 꼽힌 작가·출판사의 책 중 코멘트가 붙은 첫 권
@@ -292,7 +239,7 @@ def compute(books, bookinfo, baseline, this_year, subjects=None):
                     'en': _trim(uniq[t].get('comment_en') or '', NOTE_MAX)}
             break
     return {'n': n_all, 'facts': facts, 'authors': authors, 'publisher': publisher, 'note': note,
-            'genres': genres, 'genre_of': genre_of, 'keywords': keywords}
+            'genres': genres, 'genre_of': genre_of}
 
 
 _KO = {
@@ -319,8 +266,6 @@ def text_ko(t):
     if t.get('genres'):
         out.append('주로 읽는 분야: ' + ', '.join('%s %d권' % (g['ko'], g['n']) for g in t['genres'])
                    + ' (분야를 아는 %d권 중).' % t['genre_of'])
-    if t.get('keywords'):
-        out.append('책 키워드로 보면: ' + ', '.join(t['keywords']) + '.')
     out += [_KO[f['key']].format(**f) + '.' for f in t['facts']]
     if t['authors']:
         out.append('같은 작가를 여러 권 골랐어요: ' + ', '.join(
