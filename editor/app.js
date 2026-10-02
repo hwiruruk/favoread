@@ -3409,7 +3409,7 @@ function renderGenresList() {
     const ev = s ? [
       s.call_no && `소장자료 청구기호 <b>${esc(s.call_no)}</b>`,
       s.nl_kdc && `ISBN 서지정보 <b>${esc(s.nl_kdc)}</b>`,
-      s.kdc_from === 'd4l' && `정보나루 <b>${esc(s.kdc)}</b>${s.class_nm ? ` (${esc(s.class_nm)})` : ''}`,
+      s.kdc_from === 'd4l' && `정보나루 <b>${esc(s.kdc)}</b>${/[^>\s]/.test(s.class_nm || '') ? ` (${esc(s.class_nm)})` : ''}`,
       s.add_code && `부가기호 <b>${esc(s.add_code)}</b>`,
     ].filter(Boolean).join(' · ') : `수집 실패: ${esc(miss)}`;
     const nlq = encodeURIComponent(s?.isbn || t);

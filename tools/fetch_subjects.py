@@ -236,7 +236,8 @@ def d4l_detail(isbn, key):
     kdc = (book.get('class_no') or '').strip()
     return {
         'kdc': kdc if KDC_RE.match(kdc) else '',
-        'class_nm': (book.get('class_nm') or '').strip(),
+        # 분류 이름이 없으면 '>  >' 처럼 구분자만 온다
+        'class_nm': (book.get('class_nm') or '').strip() if re.search(r'[^>\s]', book.get('class_nm') or '') else '',
         'add_code': (book.get('addition_symbol') or '').strip(),
     }
 
