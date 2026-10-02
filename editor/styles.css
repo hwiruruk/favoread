@@ -58,12 +58,42 @@ code { background: var(--panel-2); padding: 1px 5px; border-radius: 4px; }
   font-size: 11px; padding: 2px 8px; border-radius: 999px;
   background: var(--panel-2); color: var(--muted); border: 1px solid var(--border);
 }
-.topbar-actions { display: flex; align-items: center; gap: 8px; }
+.topbar-actions { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; justify-content: flex-end; }
+.topbar-actions .btn, .topbar-actions .badge, .brand .tag { white-space: nowrap; }
 .status { color: var(--muted); font-size: 12px; }
 .badge {
   background: var(--warn); color: #000; font-weight: 600;
   font-size: 11px; padding: 2px 8px; border-radius: 999px;
 }
+/* 드래프트 · 미발행 — 눌러서 발행 창을 연다 */
+.badge.draft {
+  background: var(--accent); color: #fff; border: 0; cursor: pointer; font-family: inherit;
+}
+.badge.draft:hover { background: var(--accent-2); }
+
+/* 발행 창 — 발행본과 바뀐 점 */
+.pub-summary { margin: 8px 0; }
+.pub-conflict {
+  margin: 8px 0; padding: 8px 10px; border-radius: 8px; font-size: 12px;
+  background: rgba(255,181,71,0.15); border: 1px solid var(--warn);
+}
+.pub-list {
+  list-style: none; margin: 0 0 12px; padding: 0;
+  border: 1px solid var(--border); border-radius: 8px; background: var(--panel-2);
+  max-height: 46vh; overflow-y: auto;
+}
+.pub-list > li { padding: 8px 10px; border-bottom: 1px solid var(--border); }
+.pub-list > li:last-child { border-bottom: none; }
+.pub-list > li a { color: var(--text); text-decoration: none; }
+.pub-list > li a:hover { text-decoration: underline; }
+.pub-list ul { list-style: none; margin: 4px 0 0; padding: 0 0 0 10px; font-size: 12px; }
+.pub-list li.add { color: var(--ok); }
+.pub-list li.del { color: var(--danger); }
+.pub-tag {
+  font-size: 11px; padding: 1px 6px; border-radius: 999px; margin-left: 4px;
+}
+.pub-tag.add { background: rgba(61,220,151,0.18); color: var(--ok); }
+.pub-tag.del { background: rgba(255,93,108,0.18); color: var(--danger); }
 
 /* Buttons */
 .btn {
@@ -76,6 +106,7 @@ code { background: var(--panel-2); padding: 1px 5px; border-radius: 4px; }
 .btn.primary { background: var(--accent); border-color: var(--accent); color: #fff; }
 .btn.primary:hover { background: var(--accent-2); border-color: var(--accent-2); }
 .btn.primary[disabled] { opacity: 0.5; cursor: not-allowed; }
+.btn[disabled] { opacity: 0.5; cursor: not-allowed; }
 .btn.ghost { background: transparent; }
 .btn.danger { color: var(--danger); border-color: rgba(255,93,108,0.4); }
 .btn.danger:hover { background: rgba(255,93,108,0.1); }
