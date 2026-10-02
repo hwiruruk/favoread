@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""책 분야(KDC)와 키워드를 국립중앙도서관·도서관 정보나루에서 받아 data/subjects.json 에 채우는 배치.
+"""책 분야(KDC)를 국립중앙도서관·도서관 정보나루에서 받아 data/subjects.json 에 채우는 배치.
 
 '책 취향' 통계(tools/taste.py)의 재료다. 예스24에는 책별 분야가 없어서 공공 도서관 데이터를 쓴다.
 
@@ -7,9 +7,8 @@
     ISBN13 ──(국립중앙도서관 ISBN 서지정보)──▶ KDC 분류번호 · 부가기호
     ISBN13 ──(국립중앙도서관 소장자료 검색)──▶ 청구기호 (사서가 붙인 KDC로 시작한다)
     ISBN13 ──(도서관 정보나루 도서 상세)──▶ KDC 분류번호 · 분류 이름
-    ISBN13 ──(도서관 정보나루 키워드)──▶ 책 키워드 (단어 · 가중치)
 
-두 기관을 같이 쓰는 이유: 정보나루는 공공도서관이 실제로 정리한 분류와 책 키워드가 있고,
+두 기관을 같이 쓰는 이유: 정보나루는 공공도서관이 실제로 정리한 분류가 있고,
 국립중앙도서관은 국내 출간 도서가 모두 납본되어 사서가 분류한 청구기호가 있다.
 ISBN 서지정보는 출판사가 적은 것이라 KDC가 빈 책이 많다(첫 실행 156권 중 105권) — 마지막 보조로만 쓴다.
 분류는 정보나루 → 소장자료 청구기호 → ISBN 서지정보 KDC → 부가기호 끝 세 자리 순서로 고른다.
@@ -32,7 +31,7 @@ ISBN은 예스24에서 받는다. 책 정보(data/bookinfo.json)에 있는 예�
 
 옵션
     --count       조회 대상 권수만 출력하고 끝
-    --limit N     이번에 조회할 책 수 (0=무제한). 정보나루는 하루 호출 한도가 있어 워크플로는 200권씩 돈다
+    --limit N     이번에 조회할 책 수 (0=무제한). 정보나루는 하루 호출 한도가 있어 워크플로는 400권씩 돈다
     --dry-run     파일에 쓰지 않고 결과만 출력
     --refresh     못 찾은 책도 다시 조회
     --sleep SEC   호출 간 대기 (기본 0.3초)
@@ -60,7 +59,6 @@ UA = {'User-Agent': 'favorbook-subjects/1.0'}
 NL_URL = 'https://www.nl.go.kr/seoji/SearchApi.do'
 NLH_URL = 'https://www.nl.go.kr/NL/search/openApi/search.do'   # 소장자료 검색 (OPENAPI_GUIDE v2.6)
 D4L_URL = 'http://data4library.kr/api/'
-MAX_KEYWORDS = 15
 ISBN_RE = re.compile(r'97[89]\d{10}')
 KDC_RE = re.compile(r'\d{3}(\.\d+)?')
 
@@ -236,25 +234,10 @@ def d4l_detail(isbn, key):
     kdc = (book.get('class_no') or '').strip()
     return {
         'kdc': kdc if KDC_RE.match(kdc) else '',
-        'class_nm': (book.get('class_nm') or '').strip(),
+        # 분류 이름이 없으면 '>  >' 처럼 구분자만 온다
+        'class_nm': (book.get('class_nm') or '').strip() if re.search(r'[^>\s]', book.get('class_nm') or '') else '',
         'add_code': (book.get('addition_symbol') or '').strip(),
     }
-
-
-def d4l_keywords(isbn, key):
-    res = d4l_call('keywordList', {'isbn13': isbn, 'additionalYN': 'N'}, key)
-    out = []
-    for x in res.get('items') or []:
-        it = (x or {}).get('item') or x or {}
-        w = (it.get('word') or '').strip()
-        try:
-            wt = round(float(it.get('weight') or 0), 2)
-        except ValueError:
-            wt = 0
-        if w:
-            out.append([w, wt])
-    out.sort(key=lambda p: -p[1])
-    return out[:MAX_KEYWORDS]
 
 
 def best_kdc(nl, d4, nlh=None):
@@ -336,7 +319,6 @@ def main():
             old = have.get(t) or {}
             tried = set(old.get('tried') or [])
             nl = d4 = nlh = None
-            kw = old.get('keywords') or []
             if on['nl'] and 'nl' not in tried:
                 try:
                     nl = retry('국립중앙도서관', nl_lookup, isbn, nl_key) or {}
@@ -361,14 +343,11 @@ def main():
             if on['d4l'] and 'd4l' not in tried:
                 try:
                     d4 = retry('정보나루', d4l_detail, isbn, d4_key) or {}
-                    time.sleep(args.sleep)
-                    kw = retry('정보나루', d4l_keywords, isbn, d4_key)
                     tried.add('d4l')
                 except SourceOff as e:
                     on['d4l'] = False
                     d4 = None
-                    kw = old.get('keywords') or []
-                    print('\n%s\n→ 이번 실행에서는 정보나루를 빼고 계속합니다 (키워드는 나중에 다시 돌리면 채워집니다).\n' % e)
+                    print('\n%s\n→ 이번 실행에서는 정보나루를 빼고 계속합니다 (다음에 다시 돌리면 그 책만 마저 받습니다).\n' % e)
                 time.sleep(args.sleep)
             if d4 is None and (old.get('class_nm') or old.get('kdc_from') == 'd4l'):
                 d4 = {'kdc': old.get('kdc', '') if old.get('kdc_from') == 'd4l' else '',
@@ -380,8 +359,8 @@ def main():
                     break
                 continue
             kdc, src = best_kdc(nl, d4, nlh)
-            if not kdc and not kw:
-                misses[t] = '도서관 데이터에 분류·키워드 없음 (ISBN %s)' % isbn
+            if not kdc:
+                misses[t] = '도서관 데이터에 분류 없음 (ISBN %s)' % isbn
                 fail += 1
                 print('  [%d/%d] ✗ %s — %s' % (i, len(todo), t, misses[t]))
                 continue
@@ -394,14 +373,13 @@ def main():
                 'nlh_kdc': (nlh or {}).get('kdc', ''),
                 'call_no': (nlh or {}).get('call_no', ''),
                 'add_code': (nl or {}).get('add_code') or (d4 or {}).get('add_code', ''),
-                'keywords': kw,
                 'tried': sorted(tried),
             }
             misses.pop(t, None)
             ok += 1
             streak = 0
-            print('  [%d/%d] ✓ %s — KDC %s%s · 키워드 %d개'
-                  % (i, len(todo), t, kdc or '-', ' (%s)' % have[t]['class_nm'] if have[t]['class_nm'] else '', len(kw)))
+            print('  [%d/%d] ✓ %s — KDC %s%s'
+                  % (i, len(todo), t, kdc, ' (%s)' % have[t]['class_nm'] if have[t]['class_nm'] else ''))
         except fb.Missing as e:
             misses[t] = '예스24에 없음 (%s, goods %s)' % (e, bookinfo[t]['itemId'])
             fail += 1
@@ -426,11 +404,13 @@ def main():
     if not ok and not fail:
         print('새로 받은 게 없어 파일을 그대로 둡니다.')
         return
+    for v in have.values():
+        v.pop('keywords', None)   # 예전에 받던 정보나루 키워드 — 잡음이 많아 쓰지 않기로 했다
     os.makedirs(os.path.dirname(OUT_PATH), exist_ok=True)
     with open(OUT_PATH, 'w', encoding='utf-8') as f:
         json.dump({
             'generated': time.strftime('%Y-%m-%d'),
-            'note': '책 분야(KDC)·키워드 (국립중앙도서관·도서관 정보나루). tools/fetch_subjects.py 가 채운다. '
+            'note': '책 분야(KDC) (국립중앙도서관·도서관 정보나루). tools/fetch_subjects.py 가 채운다. '
                     '손으로 고쳐도 된다(이미 있는 책은 다시 조회하지 않는다).',
             'books': dict(sorted(have.items())),
             'misses': dict(sorted(misses.items())),

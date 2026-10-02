@@ -1,10 +1,10 @@
 name: Fetch Book Subjects
 
-# '책 취향' 통계(셀럽 페이지의 📊 독서 취향)에 쓸 책 분야(KDC)와 키워드를
+# '책 취향' 통계(셀럽 페이지의 📊 독서 취향)에 쓸 책 분야(KDC)를
 # 국립중앙도서관·도서관 정보나루에서 받아 data/subjects.json 에 채운다. 설명은 tools/TASTE.md.
 #
 # 자동으로 돈다 — 분야를 모르는 책이 10권 넘게 쌓였을 때만 조회한다.
-# 도서관 정보나루는 하루 호출 한도가 있어서 한 번에 200권씩만 받는다.
+# 도서관 정보나루는 하루 호출 한도가 있어서 한 번에 400권씩만 받는다 (책 한 권에 1번 부른다).
 # 처음엔 1,600권이 넘으니 매일 조금씩 채워진다 (손으로 여러 번 돌려도 된다).
 #
 # 손으로 돌리기: Actions → Fetch Book Subjects → Run workflow
@@ -20,9 +20,9 @@ on:
   workflow_dispatch:
     inputs:
       limit:
-        description: '이번에 조회할 책 수 (0 = 전부). 정보나루 하루 한도 때문에 200 정도가 안전'
+        description: '이번에 조회할 책 수 (0 = 전부). 정보나루 하루 한도 때문에 400 정도가 안전'
         required: false
-        default: '200'
+        default: '400'
         type: string
       refresh:
         description: '지난번에 못 찾은 책도 다시 조회'
@@ -35,7 +35,7 @@ on:
 
 env:
   MIN_BATCH: 10   # 분야를 모르는 책이 이 권수 이상 모이면 자동 실행
-  AUTO_LIMIT: 200 # 자동 실행 때 한 번에 조회할 책 수
+  AUTO_LIMIT: 400 # 자동 실행 때 한 번에 조회할 책 수
 
 jobs:
   subjects:
@@ -51,7 +51,7 @@ jobs:
         with:
           python-version: '3.12'
 
-      # 아직 머지 안 한 지난 PR이 있으면 거기 받아둔 것부터 이어서 받는다 (같은 200권을 또 받지 않게)
+      # 아직 머지 안 한 지난 PR이 있으면 거기 받아둔 것부터 이어서 받는다 (같은 책을 또 받지 않게)
       - name: 머지 전 PR의 결과 이어받기
         run: |
           if git fetch --depth=1 origin chore/subjects 2>/dev/null; then
@@ -87,7 +87,7 @@ jobs:
             echo "기준 미달 — 이번엔 건너뜁니다."
           fi
 
-      - name: 분야·키워드 받기
+      - name: 분야 받기
         if: steps.gate.outputs.run == 'true'
         env:
           NL_API_KEY: ${{ secrets.NL_API_KEY }}
@@ -121,14 +121,14 @@ jobs:
         if: steps.diff.outputs.changed == 'true'
         uses: peter-evans/create-pull-request@v8
         with:
-          commit-message: "chore: 책 분야·키워드 수집 (독서 취향 통계용)"
-          title: "chore: 책 분야·키워드 수집 (독서 취향 통계용)"
+          commit-message: "chore: 책 분야 수집 (독서 취향 통계용)"
+          title: "chore: 책 분야 수집 (독서 취향 통계용)"
           body: |
-            ## 책 분야·키워드 수집
+            ## 책 분야 수집
 
-            `tools/fetch_subjects.py` 가 국립중앙도서관·도서관 정보나루에서 받은 책 분야(KDC)와 키워드입니다.
+            `tools/fetch_subjects.py` 가 국립중앙도서관·도서관 정보나루에서 받은 책 분야(KDC)입니다.
             바뀐 파일은 `data/subjects.json` 하나예요.
-            머지하면 사이트 갱신 워크플로가 돌면서 셀럽 페이지 📊 독서 취향에 분야·키워드 줄이 붙습니다.
+            머지하면 사이트 갱신 워크플로가 돌면서 셀럽 페이지 📊 독서 취향에 분야 줄이 붙습니다.
 
             ### 확인할 것
             - `kdc` 로 분야를 정합니다. 몇 권 훑어보고 틀린 게 있으면 그 책의 `kdc` 를 고쳐 주세요

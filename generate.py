@@ -1297,7 +1297,7 @@ print(f"💬 검수 승인된 자동 코멘트 {_auto_comment_count}건 반영")
 
 # ── 책 취향 통계 ─────────────────────────────────────────────────────
 # 책 정보(번역서·출간일·쪽수·시리즈)는 data/bookinfo.json(tools/fetch_bookinfo.py),
-# 분야·키워드는 data/subjects.json(tools/fetch_subjects.py),
+# 분야는 data/subjects.json(tools/fetch_subjects.py),
 # 작가·출판사는 data.csv 에서 센다. 기준은 tools/taste.py 맨 위에 있다.
 # 믿을 만한 것만 내고, 모자라면 아무것도 안 낸다.
 import sys as _sys
@@ -1308,7 +1308,7 @@ try:
         _bookinfo_db = json.load(f).get('books', {})
 except (FileNotFoundError, json.JSONDecodeError):
     _bookinfo_db = {}
-# 분야(KDC)·키워드는 data/subjects.json (tools/fetch_subjects.py — 국립중앙도서관·도서관 정보나루)
+# 분야(KDC)는 data/subjects.json (tools/fetch_subjects.py — 국립중앙도서관·도서관 정보나루)
 try:
     with open('data/subjects.json', encoding='utf-8') as f:
         _subjects_db = json.load(f).get('books', {})
@@ -1342,7 +1342,7 @@ def taste_html(name, lang='ko'):
         lines, head = _taste.text_en(t), 'Reading taste (from %d books)' % t['n']
         note = (('From a comment on “' + (t['note']['title']) + '”: ' + t['note']['en'])
                 if t['note'] and t['note']['en'] else '')
-    if not lines:   # 영문엔 키워드 줄이 없어서, 키워드만 있는 셀럽은 빈 칸이 된다
+    if not lines:
         return ''
     return ('  <section class="taste">\n    <h2>' + esc(head) + '</h2>\n'
             + ''.join('    <p>' + esc(l) + '</p>\n' for l in lines)
