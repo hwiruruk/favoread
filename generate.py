@@ -5890,7 +5890,7 @@ en_index = (
     '<head>\n' + GA_TAG +
     '  <meta charset="UTF-8">\n'
     '  <meta name="viewport" content="width=device-width, initial-scale=1.0">\n'
-    '  <title>What K-pop Idols &amp; K-Drama Actors Read — Korean Star Book Archive | Favorbook</title>\n'
+    '  <title>What K-pop Idols &amp; K-Drama Actors Read | Favorbook</title>\n'
     '  <meta name="description" content="A searchable archive of what Korean stars read — K-pop idols (BTS, aespa, IVE, NewJeans), K-drama and K-movie actors, directors and musicians. Every book traced to its source.">\n'
     '  <meta name="keywords" content="korean celebrity books, korean actor books, k-drama actor books, k-movie actor books, what korean actors read, korean drama star reading list, kdrama books, korean actress books, korean film director books, korean star book recommendations, books from korea, kpop idol books, what bts reads, BTS reading list, RM book recommendations, IU books, what kpop idols read, kpop star reading, korean celebrity books, k-drama actor books, IVE books, NewJeans reading list, SEVENTEEN books, kpop idol favorite books, korean idol book recommendations, kpop reading list, books read by kpop idols, korean drama actor reading list, kdrama books, kpop fandom books, kpop star book archive, kpop star reading, kpop idol reading list, korean celebrity reading archive, what do kpop idols read">\n'
     '  <meta name="referrer" content="no-referrer">\n'
