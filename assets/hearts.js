@@ -206,27 +206,21 @@
     }
   }
 
-  function toggle(btn) {
-    var key = btn.getAttribute('data-heart');
-    if (!key || pending[key]) return;
-    var on = !mine[key];
+  // 하트를 넣거나 뺀다. metaVal은 넣을 때 적어 둘 [보던 셀럽, 누른 시각].
+  function setHeart(key, on, metaVal) {
+    if (!key || pending[key] || !!mine[key] === on) return false;
     var before = counts[key] || 0;
     var metaBefore = meta[key];
 
     // 먼저 화면을 바꾸고 서버 응답으로 맞춘다
     if (on) {
       mine[key] = true;
-      meta[key] = [key.charAt(0) === 'b' ? contextCeleb(btn) : '', Date.now()];
+      meta[key] = metaVal || ['', Date.now()];
     } else delete mine[key];
     counts[key] = Math.max(before + (on ? 1 : -1), 0);
     saveMine();
     saveMeta();
     renderKey(key);
-    if (on) {
-      btn.classList.remove('pop');
-      void btn.offsetWidth;
-      btn.classList.add('pop');
-    }
 
     pending[key] = true;
     post('/heart', { key: key, voter: voterId(), on: on }).then(function (d) {
@@ -246,6 +240,19 @@
 
     if (on && typeof window.gtag === 'function') {
       try { window.gtag('event', 'heart', { item: key }); } catch (e) {}
+    }
+    return true;
+  }
+
+  function toggle(btn) {
+    var key = btn.getAttribute('data-heart');
+    if (!key) return;
+    var on = !mine[key];
+    if (!setHeart(key, on, [key.charAt(0) === 'b' ? contextCeleb(btn) : '', Date.now()])) return;
+    if (on) {
+      btn.classList.remove('pop');
+      void btn.offsetWidth;
+      btn.classList.add('pop');
     }
   }
 
@@ -269,12 +276,16 @@
     fab: 'My hearts', title: 'My hearts', close: 'Close', empty: 'No hearts yet. Tap ♡ on a celeb or a book to keep it here.',
     note: 'Saved only in this browser.', copy: 'Copy list', copied: 'Copied!', loading: 'Loading…',
     fail: 'Could not load the list. Please try again later.', shared: 'Books read by several celebs',
+    del: 'Remove', delAll: 'Remove all', undo: 'Undo',
+    removed: function (what) { return 'Removed “' + what + '”'; },
     books: function (n) { return n + (n === 1 ? ' book' : ' books'); },
     readBy: function (names, more) { return 'Read by ' + names.join(', ') + (more ? ' +' + more : ''); },
   } : {
     fab: '내 하트', title: '내 하트', close: '닫기', empty: '아직 하트가 없어요. 셀럽이나 책의 ♡를 누르면 여기에 담겨요.',
     note: '이 브라우저에만 저장돼요.', copy: '목록 복사', copied: '복사했어요', loading: '불러오는 중…',
     fail: '목록을 불러오지 못했어요. 잠시 후 다시 열어 주세요.', shared: '여러 셀럽이 읽은 책',
+    del: '빼기', delAll: '모두 빼기', undo: '되돌리기',
+    removed: function (what) { return '‘' + what + '’ 뺐어요'; },
     books: function (n) { return '책 ' + n + '권'; },
     readBy: function (names, more) { return names.join(', ') + (more ? ' 외 ' + more + '명' : '') + ' 읽음'; },
   };
@@ -320,6 +331,14 @@
     + '.mh-bt a:hover{text-decoration:underline}'
     + '.mh-bt small{display:block;color:#666;font-size:12px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}'
     + '.mh-ul{margin:0;padding:0}'
+    + '.mh-del{flex:none;width:30px;height:30px;padding:0;border:1.5px solid #000;background:#fff;color:#000;'
+    + 'font:800 14px/1 -apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;cursor:pointer}'
+    + '.mh-del:hover{background:#fee2e2;color:#b91c1c}'
+    + '.mh-gh .mh-del{width:auto;padding:0 8px;font-size:12px}'
+    + '.mh-undo{display:flex;align-items:center;gap:10px;margin:0;padding:10px 16px;border-top:2px solid #000;background:#000;color:#fff;font-size:13px}'
+    + '.mh-undo[hidden]{display:none}'
+    + '.mh-undo span{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}'
+    + '.mh-undo button{padding:5px 10px;border:2px solid #fff;background:#fde047;color:#000;font-weight:800;font-size:12px;font-family:inherit;cursor:pointer}'
     + 'html.mh-open{overflow:hidden}'
     + '.is-capturing .mh-fab{display:none!important}'
     + '@media print{.mh-fab,.mh-bg{display:none!important}}';
@@ -454,14 +473,21 @@
     return '<li class="mh-bk">' + cover
       + '<span class="mh-bt">' + (href ? '<a href="' + escHtml(href) + '">' + escHtml(title) + '</a>' : '<b>' + escHtml(title) + '</b>')
       + (by ? '<small>' + escHtml(by) + '</small>' : '') + '</span>'
-      + heartBtn(b.key, owner) + '</li>';
+      + delBtn([b.key], title, T.del) + '</li>';
   }
 
-  // 서랍 안의 하트 버튼. 눌러서 빼도 서랍을 닫을 때까지는 자리에 남아 바로 되돌릴 수 있다.
-  function heartBtn(key, owner) {
+  // 셀럽 하트 버튼. 책만 담긴 셀럽도 여기서 바로 하트를 넣을 수 있다.
+  function heartBtn(key) {
     return '<button type="button" class="heart-btn sm" data-heart="' + escHtml(key) + '"'
-      + (key.charAt(0) === 'b' ? ' data-heart-celeb="' + escHtml(owner || '') + '"' : '')
       + ' aria-pressed="false" hidden><span class="heart-ico" aria-hidden="true">♡</span><span class="heart-n"></span></button>';
+  }
+
+  // 빼기 버튼. keys의 하트를 모두 빼고 그 줄(묶음)을 서랍에서 지운다.
+  function delBtn(keys, what, label) {
+    var short = label === T.del;
+    return '<button type="button" class="mh-del" data-del="' + escHtml(JSON.stringify(keys)) + '"'
+      + ' data-what="' + escHtml(what) + '" aria-label="' + escHtml(what + ' ' + label) + '" title="' + escHtml(label) + '">'
+      + (short ? '✕' : escHtml(label)) + '</button>';
   }
 
   function renderDrawer(body, site) {
@@ -473,13 +499,15 @@
         + (c.imageUrl ? '<img class="mh-ph" src="' + escHtml(c.imageUrl) + '" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.removeAttribute(\'src\')">' : '<span class="mh-ph"></span>')
         + '<span class="mh-gn"><a href="' + escHtml(celebUrl(site, g.name)) + '">' + escHtml(g.name) + '</a>'
         + (g.books.length ? '<small>' + T.books(g.books.length) + '</small>' : '') + '</span>'
-        + heartBtn('c:' + g.name) + '</div>'
+        + heartBtn('c:' + g.name)
+        + delBtn(['c:' + g.name].concat(g.books.map(function (b) { return b.key; })), g.name, T.delAll) + '</div>'
         + (g.books.length ? '<ul class="mh-ul">' + g.books.map(function (b) { return bookRow(site, b, g.name); }).join('') + '</ul>' : '')
         + '</section>';
     });
     if (gs.shared.books.length) {
       html += '<section class="mh-g"><div class="mh-gh"><span class="mh-gn"><b>' + T.shared + '</b>'
-        + '<small>' + T.books(gs.shared.books.length) + '</small></span></div><ul class="mh-ul">'
+        + '<small>' + T.books(gs.shared.books.length) + '</small></span>'
+        + delBtn(gs.shared.books.map(function (b) { return b.key; }), T.shared, T.delAll) + '</div><ul class="mh-ul">'
         + gs.shared.books.map(function (b) { return bookRow(site, b, ''); }).join('') + '</ul></section>';
     }
     body.innerHTML = html || '<p class="mh-msg">' + T.empty + '</p>';
@@ -487,7 +515,7 @@
     return gs;
   }
 
-  // 목록 복사 — 셀럽별로 책 제목을 줄줄이 적어 메모나 메신저에 붙여 넣을 수 있게 한다
+  // 목록 복사 — 셀럽별로 책 제목을 줄줄이 적고 맨 끝에 홈페이지 주소만 붙인다
   function listText(site, gs) {
     var lines = [];
     var line = function (b) {
@@ -495,10 +523,7 @@
       return '- ' + enOr(b.info.title_en, b.title) + (a ? ' (' + a + ')' : '');
     };
     gs.list.forEach(function (g) {
-      // 메신저에 붙여도 짧도록 짧은 주소(/s/…)를 먼저 쓴다
-      var c = site.celebs[g.name] || {};
-      var url = (!EN && c.shortUrl) || (location.origin + celebUrl(site, g.name));
-      lines.push((mine['c:' + g.name] ? '♥ ' : '') + g.name + ' — ' + url);
+      lines.push(g.name);
       g.books.forEach(function (b) { lines.push(line(b)); });
       lines.push('');
     });
@@ -507,7 +532,7 @@
       gs.shared.books.forEach(function (b) { lines.push(line(b)); });
       lines.push('');
     }
-    lines.push((EN ? 'Favorbook' : '최애의 독서') + ' ' + location.origin + '/');
+    lines.push(EN ? 'Favorbook https://favorbook.co.kr/en/' : '최애의 독서 https://favorbook.co.kr/');
     return lines.join('\n');
   }
 
@@ -525,7 +550,77 @@
   }
 
   var drawer = null;
+  var drawerSite = null;
   var lastFocus = null;
+
+  // 빼기 — 하트를 빼고(서버의 하트 수도 줄어든다) 그 줄을 바로 지운다.
+  // 잘못 눌렀을 때를 위해 마지막으로 뺀 것은 잠깐 되돌릴 수 있다.
+  var lastRemoved = null;
+  var undoTimer = null;
+
+  function removeFromDrawer(btn) {
+    var keys;
+    try { keys = JSON.parse(btn.getAttribute('data-del')) || []; } catch (e) { return; }
+    var gone = [];
+    keys.forEach(function (k) {
+      if (!mine[k]) return;
+      var m = meta[k];
+      if (setHeart(k, false)) gone.push([k, m]);
+    });
+    var row = btn.closest('.mh-bk') || btn.closest('.mh-g');
+    var sec = btn.closest('.mh-g');
+    if (row) row.parentNode.removeChild(row);
+    // 책을 다 뺀 묶음: 셀럽 하트도 없으면 묶음째 지우고, 있으면 권수만 고친다
+    if (sec && sec.parentNode && row !== sec) {
+      var left = sec.querySelectorAll('.mh-bk').length;
+      var ch = sec.querySelector('.mh-gh .heart-btn');
+      if (!left && !(ch && mine[ch.getAttribute('data-heart')])) sec.parentNode.removeChild(sec);
+      else {
+        var small = sec.querySelector('.mh-gn small');
+        if (small) { if (left) small.textContent = T.books(left); else small.parentNode.removeChild(small); }
+        var all = sec.querySelector('.mh-gh .mh-del');
+        if (all) {
+          try {
+            all.setAttribute('data-del', JSON.stringify(JSON.parse(all.getAttribute('data-del')).filter(function (k) {
+              return keys.indexOf(k) < 0;
+            })));
+          } catch (e) {}
+        }
+      }
+    }
+    var body = drawer.querySelector('.mh-body');
+    if (!body.querySelector('.mh-g')) {
+      body.innerHTML = '<p class="mh-msg">' + T.empty + '</p>';
+      drawer.querySelector('.mh-copy').hidden = true;
+    }
+    if (!gone.length) return;
+    lastRemoved = gone;
+    var bar = drawer.querySelector('.mh-undo');
+    bar.querySelector('span').textContent = T.removed(btn.getAttribute('data-what') || '');
+    bar.hidden = false;
+    clearTimeout(undoTimer);
+    undoTimer = setTimeout(hideUndo, 6000);
+  }
+
+  function hideUndo() {
+    clearTimeout(undoTimer);
+    lastRemoved = null;
+    if (drawer) drawer.querySelector('.mh-undo').hidden = true;
+  }
+
+  function undoRemove() {
+    var back = lastRemoved;
+    hideUndo();
+    if (!back || !drawerSite) return;
+    // 빼는 요청이 아직 서버에 가는 중이면 끝날 때까지 잠깐 기다렸다 다시 넣는다
+    var tries = 0;
+    (function apply() {
+      if (back.some(function (x) { return pending[x[0]]; }) && tries++ < 30) { setTimeout(apply, 100); return; }
+      back.forEach(function (x) { setHeart(x[0], true, x[1]); });
+      var gs = renderDrawer(drawer.querySelector('.mh-body'), drawerSite);
+      drawer.querySelector('.mh-copy').hidden = !(gs.list.length || gs.shared.books.length);
+    })();
+  }
   function closeDrawer() {
     if (!drawer || drawer.hidden) return;
     drawer.hidden = true;
@@ -542,10 +637,15 @@
         + '<div class="mh-head"><h2 id="mh-title"><span aria-hidden="true">♥</span> ' + T.title + '</h2>'
         + '<button type="button" class="mh-btn mh-copy">' + T.copy + '</button>'
         + '<button type="button" class="mh-btn mh-x" aria-label="' + T.close + '">✕</button></div>'
-        + '<div class="mh-body"></div><p class="mh-note">' + T.note + '</p></div>';
+        + '<div class="mh-body"></div>'
+        + '<p class="mh-undo" role="status" hidden><span></span><button type="button">' + T.undo + '</button></p>'
+        + '<p class="mh-note">' + T.note + '</p></div>';
       drawer.addEventListener('click', function (e) {
-        if (e.target === drawer || (e.target.closest && e.target.closest('.mh-x'))) closeDrawer();
+        if (e.target === drawer || (e.target.closest && e.target.closest('.mh-x'))) { closeDrawer(); return; }
+        var del = e.target.closest && e.target.closest('.mh-del');
+        if (del) removeFromDrawer(del);
       });
+      drawer.querySelector('.mh-undo button').addEventListener('click', undoRemove);
       document.addEventListener('keydown', function (e) {
         if (e.key === 'Escape') closeDrawer();
       });
@@ -560,7 +660,9 @@
     copy.hidden = true;
     drawer.querySelector('.mh-x').focus();
 
+    hideUndo();
     loadSite().then(function (site) {
+      drawerSite = site;
       var gs = renderDrawer(body, site);
       copy.hidden = !(gs.list.length || gs.shared.books.length);
       copy.textContent = T.copy;
