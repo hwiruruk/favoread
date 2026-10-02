@@ -12,6 +12,9 @@ const LS = {
 const Config = {
   get repo()      { return LS.get('repo', 'hwiruruk/favoread'); },
   get branch()    { return LS.get('branch', 'main'); },
+  // 드래프트 브랜치 — data.csv 편집을 사이트에 내보내기 전에 보관하는 곳.
+  // 'draft/' 로 시작해야 사이트 재생성 워크플로가 돌지 않는다 (update-sitemap.yml).
+  get draftBranch() { return LS.get('draftBranch', 'draft/editor'); },
   get path()      { return LS.get('path', 'data.csv'); },
   get token()     { return LS.get('token'); },
   get ttb()       { return LS.get('ttb'); },
@@ -28,9 +31,14 @@ const State = {
   col: {},              // canonical name -> index
   celebs: new Map(),    // name -> { name, name_en, img, books:[...] }
   order: [],            // celeb name order (preserves first-appearance ordering)
-  originalSha: null,
+  baseSha: null,        // 발행 브랜치 data.csv의 blob sha — 지금 편집본이 이 위에서 출발했다
+  baseCommit: null,     // 그때 발행 브랜치 끝 커밋 — 새 드래프트 브랜치를 여기서 딴다
+  conflicts: [],        // 드래프트와 발행본이 같은 칸을 서로 다르게 고친 곳 (드래프트 값이 이김)
+  draftSha: null,       // 드래프트 브랜치 data.csv의 blob sha (드래프트가 없으면 null)
+  hasDraft: false,      // 발행 안 된 드래프트가 있음
+  published: null,      // 발행본(사이트에 나간 data.csv)을 읽은 것 — 발행 전 바뀐 점 비교용
   selected: null,       // currently selected celeb name
-  dirty: false,         // any unsaved change
+  dirty: false,         // any unsaved change (드래프트에도 아직 안 들어감)
   bookEditing: null,    // { celebName, bookIndex|null }
 };
 
@@ -138,11 +146,23 @@ function fixKoreanNameOrder(ko, en) {
 
 function setDirty(v) {
   State.dirty = v;
-  $('#saveBtn').disabled = !v;
   const badge = $('#dirtyBadge');
   badge.classList.toggle('hidden', !v);
   if (v) badge.textContent = '미저장 변경';
   window.onbeforeunload = v ? () => '저장되지 않은 변경이 있습니다.' : null;
+  updateDraftUi();
+}
+
+/* 드래프트 / 발행 상태를 상단 바에 표시한다.
+ *  - 미저장 변경: 아직 어디에도 안 들어간 편집 (새로고침하면 사라짐)
+ *  - 드래프트: GitHub 드래프트 브랜치에 보관됨, 사이트에는 아직 안 나감
+ *  - 발행: 발행 브랜치(main)에 커밋 → 사이트 재생성 */
+function updateDraftUi() {
+  $('#saveBtn').disabled = !State.dirty;
+  $('#publishBtn').disabled = !(State.dirty || State.hasDraft);
+  $('#draftBadge').classList.toggle('hidden', !State.hasDraft);
+  $('#branchTag').textContent = `${Config.repo} @ ${Config.branch}` +
+    (State.hasDraft ? ` · 드래프트 ${Config.draftBranch}` : '');
 }
 
 /* Unicode-safe base64 — GitHub이 내려주는 파일 내용을 푸는 데 쓴다.
@@ -175,6 +195,14 @@ function buildColIdx(headers) {
 }
 
 function loadCsv(text) {
+  const { headers, col, celebs, order } = parseCsv(text);
+  State.headers = headers;
+  State.col = col;
+  State.celebs = celebs;
+  State.order = order;
+}
+
+function parseCsv(text) {
   const result = Papa.parse(text, { skipEmptyLines: false });
   if (!result.data.length) throw new Error('CSV가 비어있습니다.');
   const rows = result.data;
@@ -221,10 +249,7 @@ function loadCsv(text) {
   // 도서를 도서명 → 저자 가나다순으로 정렬 (한국어 우선 로케일 비교)
   for (const c of celebs.values()) sortBooks(c.books);
 
-  State.headers = headers;
-  State.col = col;
-  State.celebs = celebs;
-  State.order = order;
+  return { headers, col, celebs, order };
 }
 
 /* 한국어 우선 가나다순 정렬: 도서명 1차, 저자 2차. */
@@ -346,10 +371,9 @@ const Gh = {
    * 그 선을 넘으면 GitHub이 503 "Could not create file"을 돌려준다(크기 얘기가
    * 아니라 헷갈리는 메시지). Blob → Tree → Commit → Ref 순서로 올리면
    * 100MB까지 가능하고, 커밋 하나로 떨어지는 결과는 똑같다. */
-  async putFile({ content, sha, message, path = Config.path }) {
+  async putFile({ content, sha, message, path = Config.path, branch = Config.branch }) {
     if (!Config.token) throw new Error('GitHub Token이 설정되지 않았습니다.');
     const repo = Config.repo;
-    const branch = Config.branch;
     const json = (path, body, method = 'POST') => this.apiJson(path, {
       method,
       headers: { 'Content-Type': 'application/json' },
@@ -369,7 +393,7 @@ const Gh = {
       for (let attempt = 0; ; attempt++) {
         try {
           // 1. 브랜치 끝 커밋
-          const ref = await this.apiJson(`/repos/${repo}/git/ref/heads/${encodeURIComponent(branch)}`);
+          const ref = await this.apiJson(`/repos/${repo}/git/ref/heads/${refPath(branch)}`);
           const headSha = ref.object.sha;
           const headCommit = await this.apiJson(`/repos/${repo}/git/commits/${headSha}`);
 
@@ -397,10 +421,10 @@ const Gh = {
           const commitBody = { message, tree: tree.sha, parents: [headSha] };
           if (who) { commitBody.author = who; commitBody.committer = who; }
           const commit = await json(`/repos/${repo}/git/commits`, commitBody);
-          await json(`/repos/${repo}/git/refs/heads/${encodeURIComponent(branch)}`,
+          await json(`/repos/${repo}/git/refs/heads/${refPath(branch)}`,
             { sha: commit.sha, force: false }, 'PATCH');
 
-          return { sha: blob.sha };
+          return { sha: blob.sha, commit: commit.sha };
         } catch (e) {
           const raced = e && !e.conflict && (e.status === 409 || e.status === 422);
           if (!raced || attempt >= 3) throw e;
@@ -427,7 +451,44 @@ const Gh = {
       throw err;
     }
   },
+
+  /* ---- 드래프트 브랜치 다루기 ---- */
+
+  // 브랜치 끝 커밋 sha. 브랜치가 없으면 null.
+  async branchHead(branch) {
+    const r = await this.api(`/repos/${Config.repo}/git/ref/heads/${refPath(branch)}`);
+    if (r.status === 404) return null;
+    if (!r.ok) throw new Error(`브랜치 조회 실패 (${r.status}): ${branch}`);
+    return (await r.json()).object.sha;
+  },
+  async createBranch(branch, sha) {
+    return this.apiJson(`/repos/${Config.repo}/git/refs`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ ref: `refs/heads/${branch}`, sha }),
+    });
+  },
+  async deleteBranch(branch) {
+    const r = await this.api(`/repos/${Config.repo}/git/refs/heads/${refPath(branch)}`, { method: 'DELETE' });
+    if (!r.ok && r.status !== 404 && r.status !== 422) throw new Error(`브랜치 삭제 실패 (${r.status}): ${branch}`);
+  },
+  // ref(브랜치·커밋) 시점의 파일 blob sha. 파일이 없으면 null. (내용은 안 푼다)
+  async fileShaAt(ref, path = Config.path) {
+    const r = await this.api(`/repos/${Config.repo}/contents/${encodeURIComponent(path)}?ref=${encodeURIComponent(ref)}`);
+    if (r.status === 404) return null;
+    if (!r.ok) throw new Error(`파일 조회 실패 (${r.status}): ${path}@${ref}`);
+    return (await r.json()).sha || null;
+  },
+  // base...head 비교 — ahead_by(드래프트에만 있는 커밋 수)와 갈라진 지점(merge_base_commit)
+  async compare(base, head) {
+    return this.apiJson(`/repos/${Config.repo}/compare/${refPath(base)}...${refPath(head)}?per_page=1`);
+  },
 };
+
+// 브랜치 이름의 '/'는 경로 구분자로 남겨야 GitHub API가 알아듣는다 (draft/editor).
+function refPath(branch) {
+  return String(branch).split('/').map(encodeURIComponent).join('/');
+}
 
 /* -------------------- Aladin API --------------------
  * 호출 순서:
@@ -1672,6 +1733,7 @@ const settingsDlg = $('#settingsDialog');
 function loadSettingsToForm() {
   $('#cfgRepo').value = Config.repo;
   $('#cfgBranch').value = Config.branch;
+  $('#cfgDraftBranch').value = Config.draftBranch;
   $('#cfgPath').value = Config.path;
   $('#cfgToken').value = Config.token;
   $('#cfgTtb').value = Config.ttb;
@@ -1681,63 +1743,426 @@ function loadSettingsToForm() {
 }
 $('#settingsBtn').addEventListener('click', () => { loadSettingsToForm(); settingsDlg.showModal(); });
 $('#saveSettingsBtn').addEventListener('click', () => {
+  // 드래프트 브랜치는 'draft/'로 시작해야 사이트 재생성 워크플로가 안 돈다
+  let draft = $('#cfgDraftBranch').value.trim().replace(/^refs\/heads\//, '') || 'draft/editor';
+  if (!draft.startsWith('draft/')) draft = 'draft/' + draft;
+  const branch = $('#cfgBranch').value.trim() || 'main';
+  if (draft === branch) { toast('드래프트 브랜치는 발행 브랜치와 달라야 합니다', 'err'); return; }
   LS.set('repo', $('#cfgRepo').value.trim());
-  LS.set('branch', $('#cfgBranch').value.trim());
+  LS.set('branch', branch);
+  LS.set('draftBranch', draft);
   LS.set('path', $('#cfgPath').value.trim() || 'data.csv');
   LS.set('token', $('#cfgToken').value.trim());
   LS.set('ttb', $('#cfgTtb').value.trim());
   LS.set('corsProxy', $('#cfgCorsProxy').value.trim());
   LS.set('yes24Proxy', $('#cfgYes24Proxy').value.trim().replace(/\/+$/, ''));
   LS.set('committer', $('#cfgCommitter').value.trim());
-  $('#branchTag').textContent = `${Config.repo} @ ${Config.branch}`;
-  toast('설정 저장됨', 'ok');
+  updateDraftUi();
+  toast('설정 저장됨 — 브랜치를 바꿨다면 ↻ 불러오기를 눌러 주세요', 'ok');
   settingsDlg.close();
 });
 
-/* -------------------- Load / Save -------------------- */
-async function reloadFromGithub() {
-  if (State.dirty && !confirm('미저장 변경이 있습니다. 그래도 다시 불러오시겠습니까?')) return;
+/* -------------------- Load / Draft / Publish --------------------
+ * data.csv 편집은 두 단계로 나간다.
+ *  1) 📝 드래프트 저장 — 드래프트 브랜치(기본 draft/editor)에 커밋. 사이트는 그대로다.
+ *     다른 컴퓨터·브라우저에서 열어도 ↻ 불러오기 하면 드래프트가 이어서 열린다.
+ *  2) 🚀 발행 — 발행본과 비교해 바뀐 점을 보여주고, 확인하면 발행 브랜치(main)에
+ *     커밋 하나로 올린다. 그 커밋이 사이트 재생성 워크플로를 돌린다. 드래프트는 지운다.
+ * 드래프트 브랜치는 'draft/'로 시작해서 update-sitemap.yml 이 돌지 않는다. */
+const stamp = () => new Date().toISOString().slice(0, 16).replace('T', ' ');
+// 책 한 권의 칸 (도서명은 짝짓는 열쇠라 뺌) — 발행 전 비교와 병합에 쓴다
+const PUB_BOOK_FIELDS = [
+  ['title_en', '영문 제목'], ['author', '저자'], ['author_en', '저자 영문'], ['publisher', '출판사'],
+  ['source', '출처'], ['link', '도서 정보'], ['cover', '표지'], ['comment', '코멘트'],
+];
+
+/* 드래프트 브랜치가 있으면 그 data.csv를 연다. 없으면 null.
+ * 드래프트에만 있는 커밋이 없거나 내용이 발행본과 같으면(이미 발행됨) 지운다.
+ * 드래프트를 딴 뒤 발행본 data.csv가 바뀌었으면 그때의 발행본(base)도 같이 돌려준다 —
+ * 불러오는 쪽이 셀럽·책 단위로 3-way 병합한다. */
+async function openDraft(mainSha) {
+  const draft = Config.draftBranch;
+  if (!draft || draft === Config.branch) return null;
+  if (!(await Gh.branchHead(draft))) return null;
+  const cmp = await Gh.compare(Config.branch, draft);
+  const draftSha = await Gh.fileShaAt(draft);
+  if (!cmp.ahead_by || !draftSha || draftSha === mainSha) {
+    await Gh.deleteBranch(draft).catch(err => console.warn('지난 드래프트 정리 실패', err));
+    return null;
+  }
+  const { content, sha } = await Gh.getFile(Config.path, { ref: draft });
+  const fork = cmp.merge_base_commit.sha;
+  const base = (await Gh.fileShaAt(fork)) === mainSha ? null
+    : (await Gh.getFile(Config.path, { ref: fork, allowMissing: true })).content;
+  return { content, sha, base };
+}
+
+/* 셀럽·책·칸 단위 3-way 병합.
+ * base = 드래프트를 시작할 때의 발행본, ours = 드래프트(지금 편집본), theirs = 지금 발행본.
+ * 한쪽만 바꾼 칸은 그쪽 값을, 양쪽이 같은 칸을 다르게 바꿨으면 드래프트 값을 쓰고
+ * conflicts 에 적는다. git merge 는 줄 단위라 붙어 있는 두 셀럽 줄을 각자 고쳐도
+ * 충돌로 보는데, 이건 같은 책의 같은 칸일 때만 충돌이다. */
+const MERGE_LABEL = { name_en: '영문명', img: '이미지', ...Object.fromEntries(PUB_BOOK_FIELDS) };
+function mergeCsv(base, ours, theirs) {
+  const conflicts = [];
+  const same = (a, b) => (a ?? '') === (b ?? '');
+  const bookKeys = PUB_BOOK_FIELDS.map(([k]) => k);
+  // 같은 셀럽에 같은 제목이 두 번 있을 수 있어 '제목 + 몇 번째'로 짝짓는다
+  const keyed = (books) => {
+    const seen = {}, m = new Map();
+    for (const b of books || []) m.set(b.title + '\u0000' + (seen[b.title] = (seen[b.title] || 0) + 1), b);
+    return m;
+  };
+  const eqBook = (a, b) => same(a.title, b.title) && bookKeys.every(k => same(a[k], b[k]));
+  const eqCeleb = (a, b) => {
+    if (!same(a.name_en, b.name_en) || !same(a.img, b.img) || a.books.length !== b.books.length) return false;
+    const kb = keyed(b.books);
+    return [...keyed(a.books)].every(([k, x]) => kb.has(k) && eqBook(x, kb.get(k)));
+  };
+  const pick = (b, o, t, where) => {
+    if (same(o, t) || same(t, b)) return o;
+    if (same(o, b)) return t;
+    conflicts.push({ ...where, ours: o ?? '', theirs: t ?? '' });
+    return o;
+  };
+  // 한쪽에만 있거나 한쪽에서 지워진 것: 지운 쪽이 손대지 않은 걸 지웠으면 지운다
+  const exist = (b, o, t, eq, where) => {
+    if (o && t) return 'both';
+    if (!o && !t) return null;
+    const one = o || t;
+    if (!b) return o ? 'ours' : 'theirs';        // 한쪽이 새로 넣음
+    if (eq(b, one)) return null;                // 다른 쪽이 그대로 둔 걸 지움
+    conflicts.push({ ...where, field: o ? 'deleted-theirs' : 'deleted-ours' });
+    return o ? 'ours' : null;                   // 드래프트 쪽을 따른다
+  };
+
+  const celebs = new Map(), order = [];
+  const names = new Set([...ours.order, ...theirs.order]);
+  for (const name of names) {
+    const b = base.celebs.get(name), o = ours.celebs.get(name), t = theirs.celebs.get(name);
+    const how = exist(b, o, t, eqCeleb, { celeb: name });
+    if (!how) continue;
+    if (how !== 'both') { celebs.set(name, how === 'ours' ? o : t); order.push(name); continue; }
+    const c = {
+      name,
+      name_en: pick(b?.name_en, o.name_en, t.name_en, { celeb: name, field: 'name_en' }),
+      img: pick(b?.img, o.img, t.img, { celeb: name, field: 'img' }),
+      books: [],
+    };
+    const bb = keyed(b?.books), ob = keyed(o.books), tb = keyed(t.books);
+    for (const k of new Set([...ob.keys(), ...tb.keys()])) {
+      const x = bb.get(k), y = ob.get(k), z = tb.get(k);
+      const title = (y || z).title;
+      const bh = exist(x, y, z, eqBook, { celeb: name, title });
+      if (!bh) continue;
+      if (bh !== 'both') { c.books.push(bh === 'ours' ? y : z); continue; }
+      const book = { title };
+      for (const f of bookKeys) book[f] = pick(x?.[f], y[f], z[f], { celeb: name, title, field: f });
+      c.books.push(book);
+    }
+    sortBooks(c.books);
+    celebs.set(name, c);
+    order.push(name);
+  }
+  return { celebs, order, conflicts };
+}
+
+// 발행본이 그새 바뀌었으면 지금 편집본에 합친다. base = 편집본이 출발한 발행본(파싱한 것)
+function mergeIntoState(base, theirs) {
+  const r = mergeCsv(base, State, theirs);
+  State.celebs = r.celebs;
+  State.order = r.order;
+  if (State.selected && !State.celebs.has(State.selected)) State.selected = null;
+  State.conflicts = [...State.conflicts, ...r.conflicts];
+  return r;
+}
+
+// 병합 뒤 사람이 그 칸을 발행본 값으로 고쳐 놨으면 더는 충돌이 아니다
+function liveConflicts() {
+  return State.conflicts.filter(c => {
+    if (c.field.startsWith('deleted')) return true;
+    const cel = State.celebs.get(c.celeb);
+    if (!cel) return false;
+    const now = c.title ? cel.books.find(b => b.title === c.title)?.[c.field] : cel[c.field];
+    return (now ?? '') !== (c.theirs ?? '');
+  });
+}
+
+function conflictText(c) {
+  const where = esc(c.celeb) + (c.title ? ` · ${esc(c.title)}` : '');
+  if (c.field === 'deleted-theirs') return `${where} — 발행본에서 지웠지만 드래프트에서 고쳐서 <b>남깁니다</b>`;
+  if (c.field === 'deleted-ours') return `${where} — 드래프트에서 지웠지만 발행본에서 고쳐졌습니다. <b>지웁니다</b>`;
+  return `${where} · ${esc(MERGE_LABEL[c.field] || c.field)}: 발행본 "${esc(c.theirs)}" 대신 드래프트 "${esc(c.ours)}"`;
+}
+
+async function reloadFromGithub({ ask = true } = {}) {
+  if (ask && State.dirty && !confirm('미저장 변경이 있습니다. 그래도 다시 불러오시겠습니까?')) return;
   setStatus('GitHub에서 불러오는 중…');
   try {
-    const { content, sha } = await Gh.getFile();
-    loadCsv(content);
-    State.originalSha = sha;
+    const head = await Gh.branchHead(Config.branch);
+    if (!head) throw new Error(`발행 브랜치를 찾지 못했습니다: ${Config.repo}@${Config.branch}`);
+    const main = await Gh.getFile(Config.path, { ref: head });
+    const draft = await openDraft(main.sha);
+    loadCsv(draft ? draft.content : main.content);
+    State.published = parseCsv(main.content);
+    State.baseSha = main.sha;
+    State.baseCommit = head;
+    State.draftSha = draft ? draft.sha : null;
+    State.hasDraft = !!draft;
+    State.conflicts = [];
+    // 드래프트를 딴 뒤 발행본이 바뀌었으면 그 변경을 드래프트에 합쳐서 연다
+    const merged = draft?.base != null ? mergeIntoState(parseCsv(draft.base), State.published) : null;
     State.selected = null;
     setDirty(false);
-    setStatus(`로드 완료 · ${State.celebs.size}명, sha ${sha.slice(0,7)}`);
+    const nPub = draft ? diffFromPublished().length : 0;
+    setStatus(draft
+      ? `드래프트 불러옴 · ${State.celebs.size}명 · 발행 안 된 셀럽 ${nPub}명`
+      : `로드 완료 · ${State.celebs.size}명, sha ${main.sha.slice(0,7)}`);
     const nTtl = await syncTitlesToBooks();
     renderSidebar(); renderDetail();
-    toast(nTtl ? `불러오기 완료 — 검수한 영문 제목 ${nTtl}건을 도서명_en에 반영했습니다 (저장하면 data.csv에도 반영)`
-               : '불러오기 완료', 'ok');
+    if (State.conflicts.length) {
+      toast(`드래프트와 발행본이 같은 곳을 다르게 고친 데가 ${State.conflicts.length}건 있습니다 — 🚀 발행 창에서 확인하세요`, 'err');
+    } else {
+      toast((draft ? '발행 안 된 드래프트를 불러왔습니다' : '불러오기 완료') +
+        (merged ? ' — 그새 발행된 변경도 합쳤습니다' : '') +
+        (nTtl ? ` — 검수한 영문 제목 ${nTtl}건을 도서명_en에 반영했습니다 (드래프트 저장·발행하면 data.csv에도 반영)` : ''), 'ok');
+    }
   } catch (err) {
     setStatus('');
     toast(err.message, 'err');
   }
 }
 
-async function saveToGithub() {
-  if (!State.dirty) return;
-  if (!Config.token) { toast('GitHub Token을 먼저 설정하세요', 'err'); settingsDlg.showModal(); return; }
+/* 📝 드래프트 저장 — 사이트에는 안 나간다 */
+async function saveDraft({ quiet = false } = {}) {
+  if (!State.dirty) return true;
+  if (!Config.token) { toast('GitHub Token을 먼저 설정하세요', 'err'); settingsDlg.showModal(); return false; }
+  const draft = Config.draftBranch;
+  if (!draft || draft === Config.branch) {
+    toast('⚙️ 설정에서 드래프트 브랜치를 발행 브랜치와 다르게 정하세요', 'err');
+    return false;
+  }
   const content = dumpCsv();
-  const message = prompt('커밋 메시지', `편집기에서 데이터 업데이트 (${new Date().toISOString().slice(0,16).replace('T',' ')})`);
-  if (!message) return;
-  setStatus('GitHub에 저장 중…');
+  const message = `드래프트 저장 (${stamp()}) — ${summarizeDiff(diffFromPublished())}`;
+  setStatus('드래프트 저장 중…');
   $('#saveBtn').disabled = true;
+  let created = false;
   try {
-    const { sha } = await Gh.putFile({ content, sha: State.originalSha, message });
-    State.originalSha = sha;
+    let sha = State.draftSha;
+    if (!State.hasDraft) {
+      if (await Gh.branchHead(draft)) {
+        throw new Error('그새 다른 곳에서 드래프트가 저장됐습니다. ↻ 불러오기로 그 드래프트를 연 뒤 다시 고쳐 주세요.');
+      }
+      // 불러왔던 발행본 커밋에서 딴다 — 그새 발행본이 바뀌었어도 드래프트는 내가 본 것 위에
+      // 쌓이고, 발행할 때 git merge로 합쳐진다
+      await Gh.createBranch(draft, State.baseCommit);
+      created = true;
+      sha = State.baseSha;
+    }
+    const r = await Gh.putFile({ content, sha, message, branch: draft });
+    State.draftSha = r.sha;
+    State.hasDraft = true;
     setDirty(false);
-    setStatus(`저장 완료 · sha ${sha.slice(0,7)}`);
-    toast('저장됨 (커밋 + push 완료)', 'ok');
+    setStatus(`드래프트 저장됨 · ${stamp()} · 사이트에는 아직 안 나감`);
+    if (!quiet) toast('드래프트에 저장됨 — 🚀 발행을 눌러야 사이트에 반영됩니다', 'ok');
+    return true;
   } catch (err) {
+    if (created) await Gh.deleteBranch(draft).catch(() => {});
     setStatus('');
     setDirty(true);
     toast(err.message, 'err');
+    return false;
   }
 }
 
-$('#reloadBtn').addEventListener('click', reloadFromGithub);
-$('#saveBtn').addEventListener('click', saveToGithub);
+/* 발행본 → 지금 편집본에서 바뀐 점. 발행 창에 보여주고 커밋 메시지에도 쓴다. */
+function diffFromPublished() {
+  const pub = State.published;
+  if (!pub) return [];
+  const byTitle = (books) => new Map((books || []).map(b => [b.title, b]));
+  const names = new Set([...State.order.filter(n => State.celebs.has(n)), ...pub.order]);
+  const out = [];
+  for (const name of names) {
+    const now = State.celebs.get(name), was = pub.celebs.get(name);
+    const ent = { name, kind: !was ? 'add' : !now ? 'del' : 'mod', fields: [], books: [] };
+    if (now && was) {
+      if ((now.name_en || '') !== (was.name_en || '')) ent.fields.push(`영문명 ${was.name_en || '(빈칸)'} → ${now.name_en || '(빈칸)'}`);
+      if ((now.img || '') !== (was.img || '')) ent.fields.push('이미지 변경');
+    }
+    const nb = byTitle(now?.books), wb = byTitle(was?.books);
+    for (const [t, b] of nb) {
+      const o = wb.get(t);
+      if (!o) { ent.books.push({ kind: 'add', title: t, author: b.author }); continue; }
+      const changed = PUB_BOOK_FIELDS.filter(([k]) => (b[k] || '') !== (o[k] || '')).map(([, l]) => l);
+      if (changed.length) ent.books.push({ kind: 'mod', title: t, author: b.author, changed });
+    }
+    for (const [t, b] of wb) if (!nb.has(t)) ent.books.push({ kind: 'del', title: t, author: b.author });
+    if (ent.kind !== 'mod' || ent.fields.length || ent.books.length) out.push(ent);
+  }
+  return out;
+}
+
+function diffCounts(d) {
+  const n = { add: 0, del: 0, mod: 0 };
+  for (const e of d) for (const b of e.books) n[b.kind]++;
+  return n;
+}
+
+// "카리나(에스파) 외 2명 · 책 +3 −1 ✎2"
+function summarizeDiff(d) {
+  if (!d.length) return '내용 변경 없음';
+  const n = diffCounts(d);
+  const books = [n.add && `+${n.add}`, n.del && `−${n.del}`, n.mod && `✎${n.mod}`].filter(Boolean).join(' ');
+  return d[0].name + (d.length > 1 ? ` 외 ${d.length - 1}명` : '') + (books ? ` · 책 ${books}` : '');
+}
+
+const publishDlg = $('#publishDialog');
+function setPubStatus(msg) { $('#pubStatus').textContent = msg || ''; }
+
+function renderPublishDialog() {
+  const d = diffFromPublished();
+  const n = diffCounts(d);
+  const conflicts = liveConflicts();
+  $('#pubConflict').classList.toggle('hidden', !conflicts.length);
+  $('#pubConflictList').innerHTML = conflicts.map(c => `<li>${conflictText(c)}</li>`).join('');
+  $('#pubState').textContent = State.dirty
+    ? (State.hasDraft ? '드래프트 + 아직 드래프트에도 안 넣은 변경' : '아직 드래프트에도 안 넣은 변경')
+    : '드래프트에 저장된 변경';
+  $('#pubSummary').innerHTML = d.length
+    ? `셀럽 <b>${d.length}</b>명 · 책 추가 <b>${n.add}</b> · 삭제 <b>${n.del}</b> · 수정 <b>${n.mod}</b>`
+    : '발행본과 내용 차이가 없습니다 (정렬·형식만 다를 수 있어요)';
+  const SHOW = 300;
+  const tag = { add: '<span class="pub-tag add">새 셀럽</span>', del: '<span class="pub-tag del">셀럽 삭제</span>', mod: '' };
+  const mark = { add: '＋', del: '－', mod: '✎' };
+  $('#pubList').innerHTML = d.slice(0, SHOW).map(e => {
+    const lines = e.kind === 'del'
+      ? [`<li class="del">책 ${e.books.length}권 함께 빠짐</li>`]
+      : [
+          ...e.fields.map(f => `<li class="mod">✎ ${esc(f)}</li>`),
+          ...e.books.map(b => `<li class="${b.kind}">${mark[b.kind]} ${esc(b.title)}` +
+            (b.author ? ` <span class="muted">— ${esc(b.author)}</span>` : '') +
+            (b.changed ? ` <span class="muted">(${esc(b.changed.join(', '))})</span>` : '') + '</li>'),
+        ];
+    const name = e.kind === 'del' ? `<b>${esc(e.name)}</b>`
+      : `<a href="#" data-celeb="${esc(e.name)}"><b>${esc(e.name)}</b></a>`;
+    return `<li>${name} ${tag[e.kind]}<ul>${lines.join('')}</ul></li>`;
+  }).join('') + (d.length > SHOW ? `<li class="muted">… 외 ${d.length - SHOW}명</li>` : '');
+  if (!$('#pubMessage').value) $('#pubMessage').value = `편집기에서 발행 (${stamp()}) — ${summarizeDiff(d)}`;
+  $('#pubConfirmBtn').textContent = conflicts.length ? '⚠️ 확인했고 발행' : '🚀 발행';
+  $('#pubConfirmBtn').disabled = !(State.dirty || State.hasDraft);
+  $('#pubDraftBtn').classList.toggle('hidden', !State.dirty);
+  $('#discardDraftBtn').classList.toggle('hidden', !(State.dirty || State.hasDraft));
+}
+
+function openPublishDialog() {
+  if (!State.dirty && !State.hasDraft) { toast('발행할 변경이 없습니다', 'ok'); return; }
+  $('#pubMessage').value = '';
+  setPubStatus('');
+  renderPublishDialog();
+  publishDlg.showModal();
+}
+
+/* 🚀 발행 — 드래프트에 먼저 보관하고, 그새 발행본이 바뀌었으면 편집본에 합친 뒤,
+ * 그 내용을 발행 브랜치에 커밋 하나로 올린다. */
+async function publish() {
+  if (!Config.token) { toast('GitHub Token을 먼저 설정하세요', 'err'); settingsDlg.showModal(); return; }
+  const nConflict = liveConflicts().length;
+  if (nConflict && !confirm(
+    `발행본과 같은 곳을 다르게 고친 ${nConflict}건은 드래프트 값으로 발행됩니다. 계속할까요?`)) return;
+  const btn = $('#pubConfirmBtn');
+  btn.disabled = true;
+  try {
+    // 1. 드래프트에 보관 — 발행이 중간에 실패해도 편집한 게 남는다
+    if (State.dirty) {
+      setPubStatus('드래프트에 보관하는 중…');
+      if (!(await saveDraft({ quiet: true }))) { setPubStatus(''); return; }
+    }
+    const message = $('#pubMessage').value.trim() || `편집기에서 발행 (${stamp()})`;
+
+    // 2. 그새 발행본이 바뀌었으면(다른 사람 발행, 봇 PR 머지) 편집본에 합친다
+    const head = await Gh.branchHead(Config.branch);
+    const main = await Gh.getFile(Config.path, { ref: head });
+    if (main.sha !== State.baseSha) {
+      setPubStatus('그새 바뀐 발행본을 합치는 중…');
+      const theirs = parseCsv(main.content);
+      const r = mergeIntoState(State.published, theirs);
+      State.published = theirs;
+      State.baseSha = main.sha;
+      State.baseCommit = head;
+      renderSidebar(); renderDetail();
+      if (r.conflicts.length) {
+        // 새로 생긴 충돌은 사람이 보고 다시 누르게 한다
+        setDirty(true);
+        renderPublishDialog();
+        setPubStatus('');
+        toast(`그새 발행된 변경과 같은 곳을 다르게 고친 데가 ${r.conflicts.length}건 있습니다 — 확인 후 다시 누르세요`, 'err');
+        return;
+      }
+    }
+
+    // 3. 발행 브랜치에 커밋
+    setPubStatus('발행하는 중…');
+    const content = dumpCsv();
+    const r = await Gh.putFile({ content, sha: main.sha, message, branch: Config.branch });
+    await Gh.deleteBranch(Config.draftBranch).catch(err => console.warn('드래프트 브랜치 삭제 실패', err));
+    State.published = parseCsv(content);
+    State.baseSha = r.sha;
+    State.baseCommit = r.commit;
+    State.draftSha = null;
+    State.hasDraft = false;
+    State.conflicts = [];
+    setDirty(false);
+    setStatus(`발행 완료 · sha ${r.sha.slice(0,7)}`);
+    publishDlg.close();
+    toast('발행됨 — 사이트는 몇 분 뒤 다시 빌드됩니다', 'ok');
+  } catch (err) {
+    setPubStatus('');
+    toast(err.message, 'err');
+  } finally {
+    btn.disabled = !(State.dirty || State.hasDraft);
+  }
+}
+
+/* 드래프트 버리기 — 드래프트 브랜치를 지우고 발행본을 다시 연다 */
+async function discardDraft() {
+  if (!confirm('드래프트를 버리고 지금 사이트에 나간 발행본으로 되돌릴까요?\n' +
+    '드래프트에 저장한 내용과 미저장 변경이 모두 사라집니다.')) return;
+  try {
+    if (State.hasDraft) await Gh.deleteBranch(Config.draftBranch);
+    State.hasDraft = false;
+    State.draftSha = null;
+    State.conflicts = [];
+    setDirty(false);
+    publishDlg.close();
+    await reloadFromGithub({ ask: false });
+  } catch (err) {
+    toast(err.message, 'err');
+  }
+}
+
+$('#reloadBtn').addEventListener('click', () => reloadFromGithub());
+$('#saveBtn').addEventListener('click', () => saveDraft());
+$('#publishBtn').addEventListener('click', openPublishDialog);
+$('#draftBadge').addEventListener('click', openPublishDialog);
+$('#pubConfirmBtn').addEventListener('click', publish);
+$('#pubDraftBtn').addEventListener('click', async () => {
+  if (await saveDraft()) renderPublishDialog();
+});
+$('#discardDraftBtn').addEventListener('click', discardDraft);
+$('#pubList').addEventListener('click', (e) => {
+  const a = e.target.closest('a[data-celeb]');
+  if (!a) return;
+  e.preventDefault();
+  publishDlg.close();
+  selectCeleb(a.dataset.celeb);
+});
+// Ctrl+S (맥은 Cmd+S) — 드래프트 저장
+document.addEventListener('keydown', (e) => {
+  if ((e.ctrlKey || e.metaKey) && !e.shiftKey && !e.altKey && e.key.toLowerCase() === 's') {
+    e.preventDefault();
+    if (State.dirty) saveDraft();
+  }
+});
 $('#sortBtn').addEventListener('click', () => {
   const changed = sortAllCelebs();
   if (!changed) {
@@ -3400,14 +3825,17 @@ $('#uniList').addEventListener('click', (e) => {
   }
 });
 
-// 저장: data.csv 와 (바뀐 게 있으면) 영문 제목 검수 파일을 차례로 커밋한다
+// 저장: data.csv 는 드래프트에, (바뀐 게 있으면) 영문 제목 검수 파일은 바로 커밋한다
 $('#uniSaveBtn').addEventListener('click', async () => {
-  if (State.dirty) await saveToGithub();
+  const csv = State.dirty;
+  if (State.dirty) await saveDraft();
   if (Ttl.dirty) await saveTitles();
   if (!State.dirty && !Ttl.dirty) {
     Uni.changed = 0;
     $('#uniSaveBtn').disabled = true;
-    $('#uniStatus').textContent = '저장 완료 — 사이트는 몇 분 뒤 다시 빌드됩니다';
+    $('#uniStatus').textContent = csv
+      ? '저장 완료 — data.csv는 드래프트에 들어갔습니다. 🚀 발행해야 사이트에 반영됩니다'
+      : '저장 완료 — 사이트는 몇 분 뒤 다시 빌드됩니다';
   }
 });
 $('#unifyBtn').addEventListener('click', openUnifyDialog);
@@ -3415,7 +3843,7 @@ $('#uniFilter').addEventListener('change', renderUnifyList);
 $('#uniSearch').addEventListener('input', renderUnifyList);
 
 (function init() {
-  $('#branchTag').textContent = `${Config.repo} @ ${Config.branch}`;
+  updateDraftUi();
   if (!Config.token || !Config.ttb) {
     loadSettingsToForm();
     settingsDlg.showModal();

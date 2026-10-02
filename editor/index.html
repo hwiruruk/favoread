@@ -19,7 +19,8 @@
   </div>
   <div class="topbar-actions">
     <span id="statusMsg" class="status"></span>
-    <span id="dirtyBadge" class="badge hidden">0 변경</span>
+    <span id="dirtyBadge" class="badge hidden" title="아직 드래프트에도 안 들어간 편집 — 새로고침하면 사라집니다">미저장 변경</span>
+    <button id="draftBadge" type="button" class="badge draft hidden" title="드래프트에 저장됐지만 사이트에는 아직 안 나간 변경이 있습니다 — 눌러서 바뀐 점 보기">드래프트 · 미발행</button>
     <button id="reloadBtn" class="btn" title="GitHub에서 최신 CSV 다시 가져오기">↻ 불러오기</button>
     <button id="sortBtn" class="btn" title="모든 셀럽의 추천 도서를 도서명·저자 가나다순으로 정렬">🔤 정렬</button>
     <button id="missingBtn" class="btn" title="영문 누락된 셀럽·책 목록 (TSV 복사 → AI 의뢰 → 일괄 적용)">📋 누락 영문</button>
@@ -29,7 +30,8 @@
     <button id="unifyBtn" class="btn" title="같은 책인데 영문 제목이나 한국어 제목이 갈린 경우를 찾아 하나로 맞춤">📚 책 이름 통일</button>
     <button id="commentsBtn" class="btn" title="출처에서 자동으로 뽑은 추천 이유 초안을 검수 (승인한 것만 노출)">💬 코멘트 검수</button>
     <a class="btn" href="hearts.html" target="_blank" rel="noopener" style="text-decoration:none;display:inline-flex;align-items:center" title="셀럽·책 하트 순위와 최근 기록 (운영자 전용)">❤️ 하트 통계</a>
-    <button id="saveBtn" class="btn primary" disabled>💾 GitHub에 저장</button>
+    <button id="saveBtn" class="btn" disabled title="GitHub 드래프트 브랜치에 보관합니다. 사이트에는 안 나갑니다 (Ctrl+S)">📝 드래프트 저장</button>
+    <button id="publishBtn" class="btn primary" disabled title="발행본과 바뀐 점을 확인하고 사이트에 내보냅니다">🚀 발행</button>
     <button id="settingsBtn" class="btn ghost" title="설정">⚙️</button>
   </div>
 </header>
@@ -215,6 +217,41 @@
 </dialog>
 
 <!-- 설정 다이얼로그 -->
+<!-- 발행: 드래프트 → 발행 브랜치 -->
+<dialog id="publishDialog" class="modal" style="width: min(760px, 96vw);">
+  <header class="modal-head">
+    <h3>🚀 발행 — 사이트에 내보내기</h3>
+    <button type="button" class="x" data-close>✕</button>
+  </header>
+
+  <div class="modal-body" style="max-height: calc(90vh - 130px);">
+    <p class="muted small">
+      지금 사이트에 나가 있는 발행본과 비교한 바뀐 점입니다 (<span id="pubState"></span>).
+      <b>발행</b>을 누르면 이 내용이 <code>data.csv</code> 발행 브랜치에 커밋 하나로 올라가고,
+      사이트는 몇 분 뒤 다시 빌드됩니다. 발행 전까지는 사이트에 나가지 않습니다.
+    </p>
+    <div id="pubConflict" class="pub-conflict hidden">
+      ⚠️ 드래프트를 만든 뒤 다른 곳에서 발행된 변경이 이 드래프트와 <b>같은 책의 같은 칸</b>을 다르게 고쳤습니다.
+      아래 항목은 <b>드래프트 값</b>으로 발행됩니다. 발행본 값이 맞으면 그 칸을 고친 뒤 발행하거나,
+      <b>드래프트 버리기</b> 후 다시 고치세요. (다른 칸·다른 책의 변경은 저절로 합쳐졌습니다)
+      <ul id="pubConflictList"></ul>
+    </div>
+    <p id="pubSummary" class="pub-summary"></p>
+    <ul id="pubList" class="pub-list"></ul>
+    <label>커밋 메시지
+      <input id="pubMessage" type="text">
+    </label>
+  </div>
+
+  <footer class="modal-foot">
+    <span id="pubStatus" class="status"></span>
+    <button type="button" id="discardDraftBtn" class="btn danger" title="드래프트를 지우고 발행본으로 되돌림">드래프트 버리기</button>
+    <button type="button" class="btn" data-close>닫기</button>
+    <button type="button" id="pubDraftBtn" class="btn" title="발행하지 않고 드래프트에만 보관">📝 드래프트만 저장</button>
+    <button type="button" id="pubConfirmBtn" class="btn primary">🚀 발행</button>
+  </footer>
+</dialog>
+
 <dialog id="settingsDialog" class="modal">
   <form method="dialog">
     <header class="modal-head">
@@ -230,8 +267,12 @@
       <label>GitHub Repo
         <input id="cfgRepo" type="text" placeholder="hwiruruk/favoread" value="hwiruruk/favoread">
       </label>
-      <label>Branch
-        <input id="cfgBranch" type="text" placeholder="claude/data-management-ui-6tlb0">
+      <label>발행 브랜치 (사이트에 나가는 곳)
+        <input id="cfgBranch" type="text" placeholder="main">
+      </label>
+      <label>드래프트 브랜치
+        <input id="cfgDraftBranch" type="text" placeholder="draft/editor">
+        <small class="muted">📝 드래프트 저장은 이 브랜치에 커밋되고, 🚀 발행해야 발행 브랜치로 나갑니다. <code>draft/</code>로 시작해야 사이트 재생성이 돌지 않습니다 (안 붙이면 자동으로 붙임).</small>
       </label>
       <label>CSV 경로
         <input id="cfgPath" type="text" value="data.csv">
@@ -486,7 +527,8 @@
       그 책의 모든 줄이 같은 영문 제목이 됩니다. 검수 완료된 영문 제목(🔤 영문 제목 검수)도 함께 맞춥니다.
       <b>한국어 제목이 다른 같은 책</b>은 남길 제목을 고르면 나머지 줄의 도서명을 그 제목으로 바꿉니다.
       다른 책이면 <b>다른 책임</b>을 눌러 목록에서 빼세요.
-      마지막에 아래 <b>저장</b>을 눌러야 GitHub에 반영됩니다.
+      마지막에 아래 <b>저장</b>을 누르면 data.csv는 <b>드래프트</b>에 들어가고(🚀 발행해야 사이트에 반영),
+      영문 제목 검수 파일은 바로 커밋됩니다.
     </p>
     <div class="cmt-toolbar">
       <select id="uniFilter" class="small" style="width: 210px;">
@@ -502,7 +544,7 @@
   <footer class="modal-foot">
     <span id="uniStatus" class="status"></span>
     <button type="button" class="btn" data-close>닫기</button>
-    <button type="button" id="uniSaveBtn" class="btn primary" disabled>💾 GitHub에 저장</button>
+    <button type="button" id="uniSaveBtn" class="btn primary" disabled title="data.csv는 드래프트에, 영문 제목 검수 파일은 바로 저장">💾 저장</button>
   </footer>
 </dialog>
 
