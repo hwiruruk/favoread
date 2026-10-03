@@ -1100,6 +1100,10 @@ for (const id of ['bookTitleEn', 'bookAuthorEn']) {
     e.target.title = '';
   });
 }
+/* 직역 표시 — 공식 영문판·공식 영문명이 아닌 값은 끝에 ' *' 를 붙인다 */
+const withStar = (v) => (/\*\s*$/.test(v) ? v : v + ' *');
+const HANGUL_RE = /[\uAC00-\uD7A3\u3131-\u318E]/;
+
 async function autoFillEn(title, author) {
   const needTitle = !$('#bookTitleEn').value.trim();
   const needAuthor = !$('#bookAuthorEn').value.trim() && !!author;
@@ -1107,22 +1111,41 @@ async function autoFillEn(title, author) {
   const seq = ++enAutoSeq;
   const stillEmpty = (id) => seq === enAutoSeq && bookDlg.open && !$('#' + id).value.trim();
   const done = [];
+  const translate = (t) => EnEnrich.translateKoEn(t).catch(() => null);
   try {
     const [book, person] = await Promise.all([
       EnEnrich.bookEn(title, author).catch(() => null),
       needAuthor ? EnEnrich.celebEn(author).catch(() => null) : null,
     ]);
-    if (needTitle && book && book.title_en && stillEmpty('bookTitleEn')) {
-      markAutoFilled('bookTitleEn', book.title_en);
-      done.push('영문 제목');
+
+    // 제목: 영문판이 있으면 그 제목, 없으면 직역 + *
+    if (needTitle) {
+      let v = '', star = false;
+      if (book && book.title_en && !HANGUL_RE.test(book.title_en)) v = book.title_en;
+      else {
+        const r = await translate(title);
+        if (r && r.text) { v = withStar(toTitleCase(r.text)); star = true; }
+      }
+      if (v && stillEmpty('bookTitleEn')) {
+        markAutoFilled('bookTitleEn', v);
+        done.push(star ? '영문 제목(직역*)' : '영문 제목(영문판)');
+      }
     }
-    // 저자: 위키(인물) 결과를 우선, 없으면 영문판 정보의 저자
-    let authorEn = person && person.name_en
-      ? person.name_en.replace(/\s*\([^)]*\)\s*$/, '').trim()
-      : (book && book.author_en) || '';
-    if (needAuthor && authorEn && stillEmpty('bookAuthorEn')) {
-      markAutoFilled('bookAuthorEn', fixKoreanNameOrder(author, authorEn));
-      done.push('영문 저자');
+
+    // 저자: 위키(인물) → 영문판 저자 → 직역 + * 순서
+    if (needAuthor) {
+      let v = '', star = false;
+      if (person && person.name_en) v = person.name_en.replace(/\s*\([^)]*\)\s*$/, '').trim();
+      else if (book && book.author_en && !HANGUL_RE.test(book.author_en)) v = book.author_en;
+      if (v) v = fixKoreanNameOrder(author, v);
+      else {
+        const r = await translate(author);
+        if (r && r.text) { v = withStar(fixKoreanNameOrder(author, toTitleCase(r.text))); star = true; }
+      }
+      if (v && stillEmpty('bookAuthorEn')) {
+        markAutoFilled('bookAuthorEn', v);
+        done.push(star ? '영문 저자(직역*)' : '영문 저자');
+      }
     }
   } catch (err) {
     console.warn('[autoFillEn]', err.message);
