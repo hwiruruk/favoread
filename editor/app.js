@@ -47,6 +47,7 @@ const Cmt = {
   sha: null,
   loaded: false,
   dirty: false,
+  focus: null,          // 책 목록의 💬 메모로 연 항목 — 이것 하나만 보여준다
   key: (celeb, title) => `${celeb}|${title}`,
   get(celeb, title) { return this.loaded ? this.items.get(this.key(celeb, title)) : null; },
 };
@@ -842,6 +843,7 @@ function renderBooks() {
           <button class="btn small" data-act="edit">편집</button>
           ${isHttp(b.source) ? `<a class="btn small" href="${esc(b.source)}" target="_blank" rel="noopener" title="${esc(b.source)}">출처 열기 ↗</a>` : ''}
           ${b.link ? `<a class="btn small" href="${esc(b.link)}" target="_blank" rel="noopener">알라딘</a>` : ''}
+          <button class="btn small" data-act="memo" title="추천 이유 메모를 쓰면 AI가 한 줄로 다듬어 코멘트 검수에 올립니다">💬 메모</button>
           <button class="btn small danger" data-act="del">삭제</button>
         </div>
       </div>
@@ -856,6 +858,7 @@ $('#booksList').addEventListener('click', (e) => {
   const act = e.target.dataset.act;
   const c = State.celebs.get(State.selected);
   if (act === 'edit') openBookDialog(c.books[idx], idx);
+  if (act === 'memo') openCommentFor(c.name, c.books[idx]);
   if (act === 'del') {
     if (!confirm(`"${c.books[idx].title}" 책을 삭제하시겠습니까?`)) return;
     c.books.splice(idx, 1);
@@ -2308,14 +2311,34 @@ function splitCmtKey(k) {
   return i < 0 ? [k, ''] : [k.slice(0, i), k.slice(i + 1)];
 }
 
+/* AI 다듬기에 넘길 차례인 항목 (✨ AI 요청 복사에 담긴다).
+ * 메모가 있고, ko 가 비었거나 지난번 AI 문장을 그대로 둔 채 메모만 바뀐 미검수 항목. */
+function cmtNeedsPolish(v) {
+  if ((v.status || 'pending') !== 'pending') return false;
+  const memo = (v.memo || '').trim();
+  if (!memo) return false;
+  const ko = (v.ko || '').trim();
+  if (!ko) return true;
+  const ai = v.ai;
+  return !!ai && ko === (ai.ko || '').trim() && memo !== (ai.memo || '').trim();
+}
+
+// AI가 다듬은 문장을 사람이 아직 손대지 않은 채 승인 대기 중인 것
+function cmtIsAiDraft(v) {
+  return (v.status || 'pending') === 'pending' && !!v.ai && !!(v.ko || '').trim()
+    && (v.ko || '').trim() === (v.ai.ko || '').trim();
+}
+
 function cmtCounts() {
-  let pending = 0, approved = 0, rejected = 0;
+  let pending = 0, approved = 0, rejected = 0, total = 0;
   for (const v of Cmt.items.values()) {
+    if (v._new && !(v.memo || '').trim()) continue;   // 💬 메모로 열기만 한 빈 항목
+    total++;
     if (v.status === 'approved') approved++;
     else if (v.status === 'rejected') rejected++;
     else pending++;
   }
-  return { pending, approved, rejected, total: Cmt.items.size };
+  return { pending, approved, rejected, total };
 }
 
 async function openCommentsDialog() {
@@ -2359,12 +2382,21 @@ function cmtRows() {
   const rows = [];
   for (const [k, v] of Cmt.items) {
     const status = v.status || 'pending';
+    if (Cmt.focus) {
+      if (k === Cmt.focus) rows.push([k, v]);
+      continue;
+    }
     if (f === 'unwritten') {
       if (status !== 'pending' || (v.ko || '').trim()) continue;
     } else if (f === 'memo') {
       // 내가 메모는 해뒀고 아직 문장이 안 된 것 — Claude 에게 넘길 줄
       if (status !== 'pending' || (v.ko || '').trim() || !(v.memo || '').trim()) continue;
+    } else if (f === 'tidy') {
+      if (!cmtNeedsPolish(v)) continue;
+    } else if (f === 'ai') {
+      if (!cmtIsAiDraft(v)) continue;
     } else if (f !== 'all' && status !== f) continue;
+
     if (q && !k.toLowerCase().includes(q)) continue;
     rows.push([k, v]);
   }
@@ -2375,8 +2407,14 @@ function cmtRows() {
 
 function renderCommentsList() {
   const n = cmtCounts();
+  let tidy = 0, ai = 0;
+  for (const v of Cmt.items.values()) { if (cmtNeedsPolish(v)) tidy++; if (cmtIsAiDraft(v)) ai++; }
   $('#cmtCount').textContent =
-    `미검수 ${n.pending} · 승인 ${n.approved} · 반려 ${n.rejected} · 전체 ${n.total}`;
+    `미검수 ${n.pending} · 승인 ${n.approved} · 반려 ${n.rejected} · 전체 ${n.total}` +
+    (ai ? ` · ✨ AI 초안 ${ai}` : '') + (tidy ? ` · 다듬을 메모 ${tidy}` : '');
+  if (Cmt.focus) {
+    $('#cmtCount').innerHTML += ' · <button type="button" class="btn small" id="cmtUnfocusBtn">전체 목록으로</button>';
+  }
 
   const box = $('#cmtList');
   const rows = cmtRows();
@@ -2399,6 +2437,8 @@ function renderCommentsList() {
         <span class="cmt-state s-${status}">${CMT_LABEL[status]}</span>
         ${(v.ko || '').trim() ? '' : '<span class="cmt-state s-unwritten">문장 미작성</span>'}
         ${(v.memo || '').trim() && !(v.ko || '').trim() ? '<span class="cmt-state s-memo">메모 있음</span>' : ''}
+        ${cmtIsAiDraft(v) ? `<span class="cmt-state s-ai" title="${esc(`${v.ai.at || ''} AI가 메모를 다듬은 문장 — 읽어보고 고치거나 승인하세요`)}">✨ AI 초안</span>` : ''}
+        ${cmtNeedsPolish(v) && (v.ko || '').trim() ? '<span class="cmt-state s-memo" title="AI 문장을 만든 뒤 메모가 바뀌었습니다. 다음 다듬기 때 새로 씁니다">메모 바뀜</span>' : ''}
         ${v.score != null ? `<span class="muted small" title="추천 이유가 담겼을 법한 정도">점수 ${v.score}</span>` : ''}
         ${v.date ? `<span class="muted small" title="${esc(v.date_type || '게재일')}">${esc(v.date_type || '게재일')} ${esc(v.date)}</span>` : ''}
         ${known ? '' : '<span class="badge">데이터에 없는 항목</span>'}
@@ -2408,9 +2448,10 @@ function renderCommentsList() {
           : '<span class="flag warn">출처 없음</span>'}
       </div>
       ${v.note ? `<p class="cmt-note">⚠ ${esc(v.note)}</p>` : ''}
+      ${cmtIsAiDraft(v) && v.ai.note ? `<p class="cmt-note">✨ AI 메모: ${esc(v.ai.note)}</p>` : ''}
       ${v.quote ? `<blockquote class="cmt-quote">${v.quote_type ? `<span class="muted small">원문 ${esc(v.quote_type)} · </span>` : ''}${esc(v.quote)}</blockquote>` : ''}
       ${v.context ? `<details class="cmt-ctx"><summary>앞뒤 문단</summary><p>${esc(v.context)}</p></details>` : ''}
-      <label class="small cmt-memo">내 메모 — 출처를 보고 편한 말투로 적어두면 됩니다
+      <label class="small cmt-memo">내 메모 — 출처를 보고 편한 말투로 적어두면 AI가 아래 문장으로 다듬습니다
         <textarea data-f="memo" rows="2" placeholder="예: 헌책방에서 우연히 샀는데 그때 찾던 주제라 방향을 잡아줬다고 함"></textarea>
       </label>
       <div class="cmt-body">
@@ -2480,7 +2521,10 @@ $('#cmtList').addEventListener('keydown', (e) => {
 async function saveComments() {
   const comments = {};
   for (const [k, v] of Cmt.items) {
-    comments[k] = Object.assign({}, v, {
+    // 💬 메모로 열기만 하고 아무것도 안 쓴 항목은 파일에 남기지 않는다
+    if (v._new && !(v.memo || '').trim() && !(v.ko || '').trim() && !(v.en || '').trim()) continue;
+    const { _new, ...rest } = v;
+    comments[k] = Object.assign({}, rest, {
       ko: (v.ko || '').trim(),
       en: (v.en || '').trim(),
       status: v.status || 'pending',
@@ -2532,33 +2576,130 @@ $('#cmtCopyBtn').addEventListener('click', async () => {
   catch (e) { toast('복사 실패: ' + e.message, 'err'); }
 });
 
-$('#cmtApplyPasteBtn').addEventListener('click', () => {
+/* Claude 가 준 JSON 배열(✨ AI 요청 복사의 답)이나 '키 ⇥ 한국어 ⇥ English' TSV를 받는다. */
+function parseCmtPaste(text) {
+  const a = text.indexOf('['), b = text.lastIndexOf(']');
+  if (a >= 0 && b > a) {
+    try {
+      const arr = JSON.parse(text.slice(a, b + 1));
+      if (Array.isArray(arr)) return arr.filter(x => x && x.key);
+    } catch (e) { /* JSON이 아니면 TSV로 본다 */ }
+  }
   // 키에 '|' 가 들어 있어서 parseTsvLines(파이프도 구분자로 봄)는 못 쓴다. 탭만 본다.
-  const lines = $('#cmtPaste').value.split(/\r?\n/)
+  return text.split(/\r?\n/)
     .map(l => l.trim()).filter(Boolean)
     .map(l => l.split('\t').map(c => c.trim()))
-    .filter(c => c[0] && c[0] !== '키');
+    .filter(c => c[0] && c[0] !== '키')
+    .map(([key, ko, en, grade, note]) => ({ key, ko, en, grade, note }));
+}
+
+$('#cmtApplyPasteBtn').addEventListener('click', () => {
+  const rows = parseCmtPaste($('#cmtPaste').value);
+  const today = new Date().toISOString().slice(0, 10);
   let hit = 0, miss = 0;
-  for (const cols of lines) {
-    const [key, ko, en] = cols;
-    const it = Cmt.items.get((key || '').trim());
+  for (const r of rows) {
+    const it = Cmt.items.get(String(r.key || '').trim());
     if (!it) { miss++; continue; }
-    if (ko) it.ko = ko.trim();
-    if (en) it.en = en.trim();
+    if (r.ko) it.ko = String(r.ko).trim();
+    if (r.en) it.en = String(r.en).trim();
+    if (r.grade === 'A' || r.grade === 'B') it.grade = r.grade;
+    // 무엇을 보고 다듬었는지 남긴다 — 사람이 문장을 고쳤는지, 그 뒤 메모가 바뀌었는지 가리는 데 쓴다
+    it.ai = { memo: (it.memo || '').trim(), ko: it.ko, en: it.en, note: String(r.note || '').trim(), at: today };
     hit++;
   }
-  if (!hit) { toast('맞는 키가 없습니다 (첫 칸이 "연예인|도서명" 이어야 합니다)', 'err'); return; }
+  if (!hit) { toast('맞는 키가 없습니다 (key 가 "연예인|도서명" 이어야 합니다)', 'err'); return; }
   markCmtDirty();
+  Cmt.focus = null;
+  $('#cmtFilter').value = 'ai';
   renderCommentsList();
+  renderDetail();
   $('#cmtPaste').value = '';
-  toast(`${hit}건 채움` + (miss ? ` · ${miss}건은 키를 못 찾음` : ''), 'ok');
+  toast(`✨ ${hit}건 채움 — 읽어보고 승인한 뒤 저장하세요` + (miss ? ` · ${miss}건은 키를 못 찾음` : ''), 'ok');
+});
+
+/* 책 목록의 💬 메모 — 그 책 항목 하나만 띄운다. 수집기가 아직 못 만든 책이면 새로 만든다.
+ * 메모를 쓰고 ✨ AI 요청 복사로 Claude 에 넘기면 문장으로 다듬어 온다. */
+async function openCommentFor(celeb, book) {
+  await openCommentsDialog();
+  if (!Cmt.loaded || !commentsDlg.open) return;
+  const key = Cmt.key(celeb, book.title);
+  if (!Cmt.items.has(key)) {
+    Cmt.items.set(key, {
+      ko: '', en: '', memo: '',
+      source: isHttp(book.source) ? book.source : '',
+      outlet: '', grade: '', evidence: 'manual', note: '',
+      status: 'pending', _new: true,
+    });
+  }
+  Cmt.focus = key;
+  renderCommentsList();
+  const ta = $('#cmtList textarea[data-f="memo"]');
+  if (ta) ta.focus();
+}
+
+/* ✨ AI 요청 복사 — API 키 없이 Claude 대화창으로 다듬는다.
+ * 다듬을 메모를 지침과 함께 요청문 하나로 복사 → Claude 대화창에 붙여넣기 →
+ * 돌아온 답(JSON)을 아래 '붙여넣은 결과 적용' 칸에 넣으면 문장이 들어가고
+ * ✨ AI 초안 표시가 붙는다. 읽어보고 승인하면 나간다. */
+const CMT_POLISH_GUIDE = `한국 셀럽의 추천 도서를 모아 보여주는 사이트 favorbook.co.kr 의 코멘트를 다듬어 주세요.
+책마다 "이 사람이 왜 이 책을 추천했는지"를 한 줄로 붙입니다.
+아래 항목마다 편집자가 출처를 직접 읽고 남긴 메모(memo)가 있습니다. 이걸 사이트에 실을 한국어·영어 문장으로 옮겨 주세요.
+
+지킬 것
+- 근거는 memo 입니다. quote·context 는 고유명사나 사실을 확인하는 데만 쓰고, memo 에 없는 이유나 감상을 지어내지 마세요.
+- ko: 1~2문장, 120자 안팎. 셀럽 이름으로 시작하지 말고 전해 듣는 말투로 끝냅니다("~했대요", "~했어요", "~래요"). 끝에 "(출처: 매체명)".
+- en: ko 와 같은 내용을 자연스러운 영어 한 문장으로. 끝에 "(Source: 매체 영문명)" (씨네21 → Cine21, 보그 → Vogue Korea, 네이버 블로그 → Naver Blog). 매체를 모르면 source 주소로 판단합니다.
+- memo 가 원문을 길게 붙여넣은 것이면 추천 이유가 담긴 핵심만 추리고, 따옴표 인용을 그대로 옮기지 말고 풀어 씁니다.
+- grade: memo 에 추천 이유·감상이 있으면 "A", 읽었다·언급했다 같은 관계만 있으면 "B". B 면 관계만 담담히 적습니다.
+- note: 검수자가 알아야 할 점(다른 책 얘기 같다, 매체를 알 수 없다 등)을 한 줄로. 없으면 "".
+
+예시
+memo: 교보에서 별생각 없이 골랐는데 모순보다 재밌었다고. 건선으로 잠 못 자던 새벽마다 친구가 돼준 책 / outlet: 보그
+ko: 교보문고에서 별생각 없이 골랐는데 '모순'보다 훨씬 재미있게 읽었대요. 건선으로 잠 못 이루던 새벽마다 친구가 되어준 책이래요. (출처: 보그)
+en: Picked on a whim at Kyobo, she enjoyed it even more than Contradiction; it kept her company through sleepless nights with psoriasis. (Source: Vogue Korea)
+
+답은 설명 없이 JSON 배열 하나만 코드 블록으로 주세요. key 는 받은 그대로 둡니다.
+[{"key": "연예인|도서명", "ko": "…", "en": "…", "grade": "A", "note": ""}]
+
+항목:
+`;
+
+$('#cmtPolishBtn').addEventListener('click', async () => {
+  if (!Cmt.loaded) return;
+  // 지금 화면에서 쓴 메모 그대로 담는다 (저장 안 해도 된다)
+  const items = [...Cmt.items].filter(([, v]) => cmtNeedsPolish(v)).map(([k, v]) => {
+    const o = { key: k, outlet: v.outlet || '', source: v.source || '', memo: (v.memo || '').trim() };
+    if (v.quote) o.quote = v.quote;
+    if (v.context) o.context = v.context;
+    return o;
+  });
+  if (!items.length) { toast('다듬을 메모가 없습니다 (메모를 쓰고 한국어 칸은 비워두세요)', 'err'); return; }
+  const text = CMT_POLISH_GUIDE + JSON.stringify(items, null, 1);
+  try { await copyToClipboard(text); }
+  catch (e) { toast('복사 실패: ' + e.message, 'err'); return; }
+  const box = $('.cmt-bulk');
+  box.open = true;
+  $('#cmtPaste').focus();
+  box.scrollIntoView({ block: 'nearest' });
+  toast(`메모 ${items.length}건 요청 복사됨 — Claude 대화창에 붙여넣고, 받은 답을 아래 칸에 붙여넣으세요`, 'ok');
 });
 
 $('#commentsBtn').addEventListener('click', openCommentsDialog);
 $('#cmtSaveBtn').addEventListener('click', saveComments);
-$('#cmtFilter').addEventListener('change', renderCommentsList);
-$('#cmtSearch').addEventListener('input', renderCommentsList);
+$('#cmtFilter').addEventListener('change', () => { Cmt.focus = null; renderCommentsList(); });
+$('#cmtSearch').addEventListener('input', () => { Cmt.focus = null; renderCommentsList(); });
+$('#cmtCount').addEventListener('click', (e) => {
+  if (e.target.id !== 'cmtUnfocusBtn') return;
+  Cmt.focus = null;
+  renderCommentsList();
+});
 commentsDlg.addEventListener('close', () => {
+  Cmt.focus = null;
+  // 💬 메모로 열기만 하고 비워둔 항목은 치운다 (책 카드에 '검수 대기'가 잘못 뜨지 않게)
+  for (const [k, v] of Cmt.items) {
+    if (v._new && !(v.memo || '').trim() && !(v.ko || '').trim() && !(v.en || '').trim()) Cmt.items.delete(k);
+  }
+  renderDetail();
   if (Cmt.dirty) toast('검수 결과가 아직 저장되지 않았습니다', 'err');
 });
 

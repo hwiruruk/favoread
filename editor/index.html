@@ -174,7 +174,7 @@
         <label>도서 표지 URL
           <input id="bookCover" type="url" placeholder="https://image.yes24.com/goods/.../L">
         </label>
-        <label>코멘트
+        <label>코멘트 <small class="muted">— 쓴 그대로 사이트에 나갑니다. AI로 다듬고 검수하려면 책 목록의 💬 메모를 쓰세요</small>
           <textarea id="bookComment" rows="2"></textarea>
         </label>
       </div>
@@ -318,8 +318,10 @@
   <div class="modal-body" style="max-height: calc(90vh - 150px);">
     <p class="muted small">
       <b>출처 열기</b>로 원문을 확인하고 <b>내 메모</b>에 편한 말투로 적어두세요.
-      메모를 모아 AI에 넘기면 한국어·영어 한 줄로 다듬어 옵니다
-      (아래 <b>문장 한꺼번에 채우기</b>). 돌아온 문장을 보고 <b>승인</b>하면 나갑니다.
+      <b>✨ AI 요청 복사</b>를 누르면 다듬을 메모가 지침과 함께 복사됩니다. Claude 대화창에 붙여넣고,
+      받은 답을 아래 <b>붙여넣은 결과 적용</b> 칸에 넣으면 문장이 들어갑니다.
+      다듬은 문장에는 <b>✨ AI 초안</b> 표시가 붙고, 읽어보고 고치거나 <b>승인</b>한 뒤 저장하면 나갑니다.
+      책 목록의 <b>💬 메모</b> 버튼으로 아직 항목이 없는 책에도 메모를 쓸 수 있습니다.
       직접 쓰셔도 되고, <b>승인한 항목만</b> 사이트에 나갑니다.
       <b>인용</b>은 수집기가 출처에서 떠온 대목이고, <b>점수</b>는 추천 이유가 담겼을 법한
       정도라 높은 것부터 뜹니다.
@@ -333,6 +335,8 @@
         <option value="pending">미검수</option>
         <option value="unwritten">문장 미작성</option>
         <option value="memo">메모만 있음</option>
+        <option value="tidy">AI가 다듬을 차례</option>
+        <option value="ai">✨ AI 초안 (검토 대기)</option>
         <option value="approved">승인됨</option>
         <option value="rejected">반려됨</option>
         <option value="all">전체</option>
@@ -344,9 +348,10 @@
     <div id="cmtList" class="cmt-list"></div>
 
     <details class="cmt-bulk">
-      <summary class="muted small">문장 한꺼번에 채우기 (인용문 복사 → AI에 의뢰 → 결과 붙여넣기)</summary>
+      <summary class="muted small">AI 답 붙여넣기 · 문장 한꺼번에 채우기</summary>
       <p class="muted small">
-        필터를 <b>메모만 있음</b>으로 두고 복사하면, 내가 메모해둔 줄만 담깁니다.
+        <b>✨ AI 요청 복사</b>로 받은 Claude 답(JSON)을 그대로 아래 칸에 붙여넣고 <b>붙여넣은 결과 적용</b>을 누르세요.
+        예전 방식도 됩니다 — 필터를 <b>메모만 있음</b>으로 두고 복사하면, 내가 메모해둔 줄만 담깁니다.
         그걸 AI에 "메모를 근거로 한국어·영어 한 줄씩, 끝에 출처 표기"라고 맡긴 뒤
         돌아온 결과를 <code>키 ⇥ 한국어 ⇥ English</code> 형태로 붙여넣으면 한 번에 들어갑니다.
         복사되는 칸은 키·연예인·도서명·매체·출처·내메모·인용·앞뒤문단입니다.
@@ -354,7 +359,7 @@
       <div class="row" style="margin-bottom:6px;">
         <button type="button" id="cmtCopyBtn" class="btn small">지금 목록 TSV 복사</button>
       </div>
-      <textarea id="cmtPaste" rows="5" placeholder="황소윤(새소년)|거꾸로 사는 재미&#9;헌책방에서 우연히 집어 든 책이라고 했어요.&#9;She said she found it by chance at a used bookstore."></textarea>
+      <textarea id="cmtPaste" rows="5" placeholder="Claude 답(JSON)을 그대로 붙여넣거나, TSV로: 황소윤(새소년)|거꾸로 사는 재미&#9;헌책방에서 우연히 집어 든 책이라고 했어요.&#9;She said she found it by chance at a used bookstore."></textarea>
       <button type="button" id="cmtApplyPasteBtn" class="btn small">붙여넣은 결과 적용</button>
     </details>
   </div>
@@ -362,6 +367,7 @@
   <footer class="modal-foot">
     <span id="cmtStatus" class="status"></span>
     <button type="button" class="btn" data-close>닫기</button>
+    <button type="button" id="cmtPolishBtn" class="btn" title="AI가 다듬을 메모를 지침과 함께 복사합니다. Claude 대화창에 붙여넣고 답을 아래 칸에 붙여넣으세요">✨ AI 요청 복사</button>
     <button type="button" id="cmtSaveBtn" class="btn primary" disabled>💾 GitHub에 저장</button>
   </footer>
 </dialog>
