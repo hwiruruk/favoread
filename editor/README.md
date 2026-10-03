@@ -1,8 +1,8 @@
 # Favorbook 데이터 편집기
 
 브라우저에서 `data.csv`를 직접 편집하고 GitHub에 commit/push까지 처리하는
-정적 웹앱입니다. 알라딘 TTB API를 통해 책 정보(제목/저자/출판사/표지)를
-한 번에 채워 넣을 수 있습니다.
+정적 웹앱입니다. 예스24 Open API(프록시 Worker 경유)로 책 정보
+(제목/저자/출판사/표지/상품 링크)를 한 번에 채워 넣을 수 있습니다.
 
 ## 어디서 열까
 
@@ -40,11 +40,11 @@ python3 -m http.server 8765
 | 드래프트 브랜치 | `draft/editor` (기본값) — 발행 전 작업본을 보관하는 곳. `draft/`로 시작해야 함 |
 | CSV 경로 | `data.csv` |
 | GitHub Personal Access Token | fine-grained PAT, 이 저장소에 **Contents: Read and write** 권한 |
-| 알라딘 TTBKey | `https://www.aladin.co.kr/ttb/wblog_manage.aspx` 에서 발급한 키 |
+| 예스24 프록시 Worker URL | `tools/yes24-proxy/` 를 배포한 주소 (책 검색에 필요, API Key는 Worker에만 둠) |
 | 커밋 작성자 | `홍길동 <me@example.com>` (선택) |
 
 > 모든 값은 **이 브라우저의 localStorage**에만 저장됩니다. 공용 컴퓨터에서는
-> 사용 후 비워두세요. (브라우저 외부로 절대 전송되지 않으며, GitHub/알라딘
+> 사용 후 비워두세요. (브라우저 외부로 절대 전송되지 않으며, GitHub
 > API에 인증 헤더로만 사용됩니다.)
 
 ### GitHub PAT 발급법 (간단)
@@ -65,15 +65,21 @@ python3 -m http.server 8765
    - **+ 연예인** 버튼으로 새 인물 추가
 3. 연예인 클릭 → 상세 패널
    - 한글/영문/이미지 URL 편집 — 같은 인물이 여러 행에 있으면 저장 시 **모든 행에 일괄 반영**
-   - 책 카드: 편집 / 알라딘 링크 열기 / 삭제
+   - 책 카드: 편집 / 도서 정보 링크 열기 / 삭제
    - **+ 책 추가** 또는 카드의 **편집** → 책 다이얼로그
 4. 책 다이얼로그
-   - 좌측: 알라딘 검색 (제목/저자/ISBN 키워드) 또는 ItemId 직접 조회
+   - 좌측: 예스24 검색 (제목/저자/ISBN 키워드) 또는 ItemId·ISBN13·URL 직접 조회
+   - 도서 정보 칸에 예스24 상품 URL을 붙여넣으면 주소가 정리되고 표지(`image.yes24.com/goods/<ID>/L`)도 채워짐
+   - 검색 결과에 `이미 등록`(이 셀럽에게 있음) / `다른 셀럽 N명` 배지 — 제목이 같거나 같은 예스24 상품이면 같은 책으로 판단
+   - 결과를 고르면 비어 있는 영문 제목·영문 저자를 자동으로 찾아 채움 (노란 테두리 = 자동 채움, 확인 후 고치면 표시가 사라짐)
+   - 기존 책 편집 창을 열면 제목으로 예스24 검색을 미리 해 둠
+   - **적용 + 다음 책** — 추가하고 바로 빈 책 추가 창을 다시 엶 (새 책일 때만, Enter는 일반 적용)
+   - 예스24 프록시가 설정돼 있지 않으면 ⚙️ 설정 열기 / 예스24 새 탭 검색 버튼을 보여 줌
 
 ### 저자명 정리
-서점 API가 주는 저자 문자열에는 역할 표기가 붙어 옵니다.
+서점에서 가져온 저자 문자열에는 역할 표기가 붙어 옵니다.
 알라딘은 `신영복 (지은이), 김세현 (그림)`, 예스24는 `요아힘 마이어호프 저/박종대 역` 같은 식이에요.
-편집기는 **알라딘·예스24·구글북스 결과를 적용할 때, 그리고 저자 칸에 직접 붙여넣고 빠져나올 때**
+편집기는 **예스24 결과를 적용할 때, 그리고 저자 칸에 직접 붙여넣고 빠져나올 때**
 이걸 지은이만 남기고 정리합니다(`cleanAuthorName`).
 
 - `저 · 저자 · 지음 · 지은이 · 공저 · 글 · 글그림 · 쓴이 · 원작` — 꼬리표만 떼고 이름은 남김
@@ -338,8 +344,8 @@ JSON만 바꾸면 사이트에 바로 반영되고, `generate.py`는 정적 마�
 ## 이미지 미리보기
 
 - 연예인 이미지: 상세 패널 좌측 (140×180)
-- 책 표지: 책 카드 / 책 다이얼로그 / 알라딘 검색 결과 모두에서 노출
-- `referrerpolicy="no-referrer"`로 알라딘/MBC 등의 핫링크 차단을 회피합니다.
+- 책 표지: 책 카드 / 책 다이얼로그 / 예스24 검색 결과 모두에서 노출
+- `referrerpolicy="no-referrer"`로 서점/MBC 등의 핫링크 차단을 회피합니다.
 
 ## 데이터 모델 / generate.py 호환성
 
@@ -378,39 +384,6 @@ Git Data API의 blob은 100MB까지 받으므로 한동안 여유가 있습니�
 충돌 감지는 그대로입니다. 불러올 때의 blob sha를 기억했다가 저장 직전 브랜치 끝에서
 같은 파일의 sha와 비교하고, 다르면 저장을 멈춥니다. 커밋을 붙인 뒤 ref는
 `force: false`로 옮기므로, 그새 브랜치가 움직였으면 GitHub이 거절합니다.
-
-## 알라딘 API에 대해
-
-알라딘 TTB OpenAPI는 발급 시 등록된 URL과 호출 측 Referer가 일치할 때만
-응답합니다. 정적 사이트(favorbook.co.kr)에서 직접 호출하면 거의 항상
-`403 "Host not in allowlist"`로 막혀요. 이 편집기는 자매 프로젝트인
-BookStack에서 검증된 패턴을 그대로 사용합니다 — `api.allorigins.win/get`을
-프록시로 거치면 응답이 `{contents, status}`로 한 번 감싸져 돌아오고,
-Aladin은 Referer 검사를 우회한 형태로 처리합니다.
-
-- **기본 폴백 프록시 7종** (별도 설정 불필요, 순차 시도):
-  allorigins-get → corsproxy.io → cors.lol → corsproxy.org → codetabs →
-  allorigins-raw → thingproxy
-- 공개 프록시는 자주 죽으므로, **모두 실패하면 자체 Cloudflare Worker** 사용 권장
-  (10분 무료 셋업) — 자세한 안내: [`cloudflare-worker.js`](./cloudflare-worker.js)
-- 다른 프록시를 쓰려면 ⚙️ 설정의 "알라딘 호출 프록시"에 입력. 끝이 `?url=`로
-  끝나야 하며, **응답을 그대로(raw) 반환하는 프록시**라면 동작은 다음과 같이
-  처리됩니다: 응답이 `{contents, status}` 모양이면 contents 안의 본문을
-  파싱하고, 아니면 본문 자체를 JSON으로 본다.
-- ItemId만 알면 (예: `https://www.aladin.co.kr/...&ItemId=673870`) URL을 그대로
-  붙여 넣어도 ID를 추출해 조회합니다.
-
-### 알라딘 디버깅
-
-검색이 안 되면 브라우저 **개발자 도구 → Console**을 여세요. 호출 URL이
-`[Aladin] →` 로 찍힙니다.
-
-| 증상 | 원인 | 해결 |
-|------|------|------|
-| `프록시 HTTP 4xx/5xx` | 공개 프록시 일시 장애 | 잠시 후 재시도. 자주 발생하면 Cloudflare Worker 권장 (`cloudflare-worker.js`) |
-| `모든 프록시 실패` | 공개 프록시 전체 다운/API 변경 | Cloudflare Worker 셋업 (`cloudflare-worker.js` 참고, 10분) |
-| `알라딘 응답 파싱 실패` | Aladin이 HTML(로그인 안내/오류 페이지)을 돌려줌 | TTBKey 확인 |
-| `errorCode 8` 등 | TTBKey 만료/오타 | 알라딘 OpenAPI 관리 페이지에서 확인 |
 
 ## GitHub PAT 문제 해결
 
