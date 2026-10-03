@@ -690,13 +690,21 @@ function dupBookIdx(c) {
   return dup;
 }
 /* title과 같은 책: 이 셀럽 안(skipIdx 제외)의 책, 그리고 이 책을 가진 다른 셀럽 */
-function findDupTitle(celebName, title, skipIdx) {
+/* 예스24 상품 URL·표지 URL에서 상품 ID를 뽑는다 (없으면 '') */
+function yes24GoodsId(url) {
+  const m = /yes24\.com\/(?:product\/)?goods\/(?:detail\/)?(\d+)/i.exec(url || '');
+  return m ? m[1] : '';
+}
+/* goodsId를 주면 제목이 달라도(부제·리커버 표기 등) 같은 예스24 상품이면 같은 책으로 본다 */
+function findDupTitle(celebName, title, skipIdx, goodsId = '') {
   const k = normTitle(title);
   const out = { same: null, others: [] };
-  if (!k) return out;
+  if (!k && !goodsId) return out;
   for (const [name, c] of State.celebs) {
     c.books.forEach((b, i) => {
-      if (normTitle(b.title) !== k) return;
+      const hit = (k && normTitle(b.title) === k) ||
+        (goodsId && (yes24GoodsId(b.link) === goodsId || yes24GoodsId(b.cover) === goodsId));
+      if (!hit) return;
       if (name === celebName) { if (i !== skipIdx && !out.same) out.same = b; }
       else if (!out.others.includes(name)) out.others.push(name);
     });
@@ -978,17 +986,24 @@ function openBookDialog(book, index) {
   $('#yes24Results').innerHTML = '';
   $('#yes24Query').value = book?.title || '';
   $('#yes24ItemId').value = book?.link || '';
+  clearAutoFilled();
+  $('#bookApplyNextBtn').classList.toggle('hidden', !!book);
   updateDupHint();
   bookDlg.showModal();
-  // 새 책이면 바로 검색어를 칠 수 있게 예스24 검색칸에 커서를 둔다
-  if (!book) $('#yes24Query').focus();
+  if (!book) {
+    // 새 책이면 바로 검색어를 칠 수 있게 예스24 검색칸에 커서를 둔다
+    $('#yes24Query').focus();
+  } else if (book.title && Config.yes24Proxy) {
+    // 편집이면 제목으로 미리 검색해 둔다 — 표지·링크를 고칠 때 바로 고를 수 있게
+    runYes24Search(book.title);
+  }
 }
 
 /* 도서명을 입력하는 동안 중복 여부를 바로 알려 준다 */
 function updateDupHint() {
   const box = $('#bookDupHint'); if (!box) return;
   const ed = State.bookEditing || {};
-  const r = findDupTitle(ed.celebName, $('#bookTitle').value, ed.bookIndex);
+  const r = findDupTitle(ed.celebName, $('#bookTitle').value, ed.bookIndex, yes24GoodsId($('#bookLink').value));
   if (r.same) {
     box.className = 'dup-hint err';
     box.textContent = `⚠️ "${r.same.title}" — 이 셀럽에게 이미 등록된 책이에요.`;
@@ -1011,8 +1026,18 @@ $('#bookCover').addEventListener('input', () => {
   $('#bookCoverPreview').src = $('#bookCover').value || '';
 });
 
+/* '적용 + 다음 책'은 type=button — submit으로 두면 입력칸에서 Enter를 칠 때
+ * 기본 버튼이 돼 버린다. 눌렀을 때만 표시를 남기고 폼 제출을 대신 건다. */
+let bookApplyNext = false;
+$('#bookApplyNextBtn').addEventListener('click', () => {
+  bookApplyNext = true;
+  $('#bookForm').requestSubmit();
+  bookApplyNext = false; // 필수 칸이 비어 제출이 막혔을 때도 남지 않게
+});
+
 $('#bookForm').addEventListener('submit', (e) => {
   e.preventDefault();
+  const applyNext = bookApplyNext;
   const title = $('#bookTitle').value.trim();
   const author = $('#bookAuthor').value.trim();
   if (!title || !author) { toast('도서명과 저자는 필수', 'err'); return; }
@@ -1029,20 +1054,81 @@ $('#bookForm').addEventListener('submit', (e) => {
   };
   const ed = State.bookEditing;
   const c = State.celebs.get(ed.celebName);
-  const dup = findDupTitle(ed.celebName, title, ed.bookIndex);
+  const dup = findDupTitle(ed.celebName, title, ed.bookIndex, yes24GoodsId(data.link));
   if (dup.same && !confirm(
     `"${dup.same.title}" 책은 ${ed.celebName}에게 이미 등록되어 있어요.\n` +
     `(저자: ${dup.same.author || '-'})\n\n그래도 중복으로 등록할까요?`)) {
     toast('중복 도서라 등록하지 않았어요', 'err');
     return;
   }
-  if (ed.bookIndex == null) c.books.push(data);
+  const isNew = ed.bookIndex == null;
+  if (isNew) c.books.push(data);
   else c.books[ed.bookIndex] = data;
   sortBooks(c.books); // 추가/수정 후 자동 정렬
   setDirty(true);
   bookDlg.close();
   renderDetail(); renderSidebar();
+  // '적용 + 다음 책' — 같은 셀럽에 여러 권을 넣을 때 창을 다시 열 필요 없이 이어서 추가
+  if (isNew && applyNext) {
+    openBookDialog(null, null);
+    toast(`추가됨: ${title} — 다음 책을 검색하세요`, 'ok');
+  }
 });
+
+/* -------------------- 영문 자동채움 (예스24 결과 선택 직후) --------------------
+ * 비어 있는 영문 제목·영문 저자만 백그라운드로 채운다. 이미 적힌 값이나
+ * 조회 중에 사용자가 직접 친 값은 덮지 않는다. 채운 칸은 노란 테두리로
+ * 표시해 확인을 유도하고, 사용자가 고치면 표시가 사라진다. */
+let enAutoSeq = 0;
+function markAutoFilled(id, value) {
+  const el = $('#' + id);
+  el.value = value;
+  el.classList.add('auto-filled');
+  el.title = '자동으로 채운 값이에요. 맞는지 확인해 주세요.';
+}
+function clearAutoFilled() {
+  enAutoSeq++; // 진행 중인 조회 결과는 버린다
+  for (const id of ['bookTitleEn', 'bookAuthorEn']) {
+    const el = $('#' + id);
+    el.classList.remove('auto-filled');
+    el.title = '';
+  }
+}
+for (const id of ['bookTitleEn', 'bookAuthorEn']) {
+  $('#' + id).addEventListener('input', (e) => {
+    e.target.classList.remove('auto-filled');
+    e.target.title = '';
+  });
+}
+async function autoFillEn(title, author) {
+  const needTitle = !$('#bookTitleEn').value.trim();
+  const needAuthor = !$('#bookAuthorEn').value.trim() && !!author;
+  if (!title || (!needTitle && !needAuthor)) return;
+  const seq = ++enAutoSeq;
+  const stillEmpty = (id) => seq === enAutoSeq && bookDlg.open && !$('#' + id).value.trim();
+  const done = [];
+  try {
+    const [book, person] = await Promise.all([
+      EnEnrich.bookEn(title, author).catch(() => null),
+      needAuthor ? EnEnrich.celebEn(author).catch(() => null) : null,
+    ]);
+    if (needTitle && book && book.title_en && stillEmpty('bookTitleEn')) {
+      markAutoFilled('bookTitleEn', book.title_en);
+      done.push('영문 제목');
+    }
+    // 저자: 위키(인물) 결과를 우선, 없으면 영문판 정보의 저자
+    let authorEn = person && person.name_en
+      ? person.name_en.replace(/\s*\([^)]*\)\s*$/, '').trim()
+      : (book && book.author_en) || '';
+    if (needAuthor && authorEn && stillEmpty('bookAuthorEn')) {
+      markAutoFilled('bookAuthorEn', fixKoreanNameOrder(author, authorEn));
+      done.push('영문 저자');
+    }
+  } catch (err) {
+    console.warn('[autoFillEn]', err.message);
+  }
+  if (done.length && seq === enAutoSeq) toast(`${done.join('·')} 자동 채움 — 확인해 주세요`, 'ok');
+}
 
 /* -------------------- 저자명 정리 --------------------
  * 서점에서 가져온 저자 문자열에는 역할 표기가 붙어 온다.
@@ -1115,12 +1201,20 @@ function renderYes24Results(box) {
   const items = box._items || [];
   const more = (box._total || 0) > items.length;
   let html = '';
+  const ed = State.bookEditing || {};
   items.forEach((it, i) => {
     const cover = Yes24.cover(it);
+    const dup = findDupTitle(ed.celebName, it.title,
+      ed.bookIndex, String(it.itemId || '') || yes24GoodsId(it.link));
+    let badge = '';
+    if (dup.same) badge = '<span class="ar-badge err">이미 등록</span>';
+    else if (dup.others.length) {
+      badge = `<span class="ar-badge info" title="${esc(dup.others.join(', '))}">다른 셀럽 ${dup.others.length}명</span>`;
+    }
     html += `<div class="ar-item" data-i="${i}">
       <div class="ar-cover">${cover ? `<img src="${esc(cover)}" referrerpolicy="no-referrer" alt="">` : ''}</div>
       <div class="ar-meta">
-        <div class="ar-title">${esc(it.title)}</div>
+        <div class="ar-title">${esc(it.title)} ${badge}</div>
         <div class="ar-sub">${esc(it.author || '')} · ${esc(it.publisher || '')}</div>
         <div class="ar-sub muted">${esc(it.publishDate || '')} · ItemId ${it.itemId}</div>
       </div>
@@ -1133,9 +1227,30 @@ function renderYes24Results(box) {
   box.innerHTML = html;
 }
 
+/* 예스24 프록시가 없으면 오류 문구 대신 할 수 있는 일을 보여 준다:
+ * 설정 열기, 또는 같은 검색어로 예스24를 새 탭에서 검색 (API 불필요) */
+function renderYes24Setup(box, query) {
+  box._query = query;
+  box.innerHTML = `<div class="empty">
+    예스24 검색을 쓰려면 ⚙️ 설정에 예스24 프록시 Worker URL을 넣어야 해요.
+    <div class="row" style="justify-content:center;margin-top:8px;gap:6px;">
+      <button type="button" class="btn small primary" data-y24="settings">⚙️ 설정 열기</button>
+      <button type="button" class="btn small" data-y24="tab">🔎 예스24 새 탭에서 검색</button>
+    </div>
+    <div class="muted small" style="margin-top:6px;">새 탭에서 찾은 상품 주소를 아래 '도서 정보' 칸에 붙여넣으면 표지도 자동으로 채워져요.</div>
+  </div>`;
+}
+function openYes24SearchTab(q) {
+  const u = new URL('https://www.yes24.com/Product/Search');
+  u.searchParams.set('domain', 'BOOK');
+  u.searchParams.set('query', q);
+  window.open(u.toString(), '_blank', 'noopener');
+}
+
 const YES24_PAGE_SIZE = 5;
 async function runYes24Search(query, page = 1, append = false) {
   const box = $('#yes24Results');
+  if (!Config.yes24Proxy) { renderYes24Setup(box, query); return; }
   if (!append) {
     box.innerHTML = '<div class="empty">검색 중…</div>';
     box._query = query;
@@ -1176,6 +1291,7 @@ function applyYes24Item(it) {
   if (cover) $('#bookCover').value = cover;
   $('#bookCoverPreview').src = cover || '';
   toast(`반영: ${it.title}${cover ? ' + 표지' : ''}`, 'ok');
+  autoFillEn($('#bookTitle').value.trim(), $('#bookAuthor').value.trim());
 }
 
 $('#yes24SearchBtn').addEventListener('click', () => {
@@ -1186,6 +1302,13 @@ $('#yes24Query').addEventListener('keydown', (e) => {
   if (e.key === 'Enter') { e.preventDefault(); $('#yes24SearchBtn').click(); }
 });
 $('#yes24Results').addEventListener('click', (e) => {
+  const act = e.target.dataset && e.target.dataset.y24;
+  if (act === 'settings') { loadSettingsToForm(); settingsDlg.showModal(); return; }
+  if (act === 'tab') {
+    const q = $('#yes24Results')._query || $('#yes24Query').value.trim() || $('#bookTitle').value.trim();
+    if (q) openYes24SearchTab(q); else toast('검색어를 먼저 입력하세요', 'err');
+    return;
+  }
   if (e.target.id === 'yes24MoreBtn') {
     const box = $('#yes24Results');
     if (box._query) runYes24Search(box._query, box._page, true);
@@ -1199,6 +1322,15 @@ $('#yes24Results').addEventListener('click', (e) => {
 $('#yes24LookupBtn').addEventListener('click', async () => {
   const id = Yes24.parseItemId($('#yes24ItemId').value) || $('#yes24ItemId').value.trim();
   if (!id) { toast('ItemId, ISBN13 또는 예스24 URL을 입력하세요', 'err'); return; }
+  if (!Config.yes24Proxy) {
+    // 상품 URL이면 프록시 없이도 링크·표지는 채울 수 있다
+    if (YES24_GOODS_RE.test($('#yes24ItemId').value)) {
+      $('#bookLink').value = $('#yes24ItemId').value.trim();
+      $('#bookLink').dispatchEvent(new Event('input'));
+    }
+    renderYes24Setup($('#yes24Results'), $('#yes24Query').value.trim() || $('#bookTitle').value.trim());
+    return;
+  }
   try {
     const it = await Yes24.lookup(id);
     if (!it) { toast('해당 상품을 찾지 못했습니다', 'err'); return; }
@@ -1216,11 +1348,7 @@ $('#openYes24Btn').addEventListener('click', () => {
   const t = $('#bookTitle').value.trim();
   const a = $('#bookAuthor').value.trim();
   if (!t) { toast('먼저 제목을 채우세요', 'err'); return; }
-  const q = [t, a].filter(Boolean).join(' ');
-  const u = new URL('https://www.yes24.com/Product/Search');
-  u.searchParams.set('domain', 'BOOK');
-  u.searchParams.set('query', q);
-  window.open(u.toString(), '_blank', 'noopener');
+  openYes24SearchTab([t, a].filter(Boolean).join(' '));
 });
 
 /* 도서 정보 칸에 예스24 상품 URL을 붙여넣으면
@@ -1234,6 +1362,7 @@ $('#bookLink').addEventListener('input', () => {
   if (!m) return;
   const link = 'https://www.yes24.com/product/goods/' + m[1];
   if (el.value !== link) el.value = link;
+  updateDupHint();
   const cover = 'https://image.yes24.com/goods/' + m[1] + '/L';
   const cur = $('#bookCover').value.trim();
   if (cur === cover || (cur && !/image\.yes24\.com/i.test(cur))) return;
