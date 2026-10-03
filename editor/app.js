@@ -514,9 +514,10 @@ const Yes24 = {
     }
     return body.data;
   },
-  async search(query, page = 1, pageSize = 5) {
+  /* category: BOOK(국내도서) / FOREIGN(외국도서) — 예스24 Open API 문서 기준 */
+  async search(query, page = 1, pageSize = 5, category = 'BOOK') {
     const p = new URLSearchParams({
-      query, category: 'BOOK', page: String(page), pageSize: String(pageSize), detail: 'N',
+      query, category, page: String(page), pageSize: String(pageSize), detail: 'N',
     });
     const d = await this._call('/goods/itemList', p);
     return {
@@ -984,7 +985,12 @@ function openBookDialog(book, index) {
   for (const [id, v] of Object.entries(fields)) $('#' + id).value = v || '';
   $('#bookCoverPreview').src = book?.cover || '';
   $('#yes24Results').innerHTML = '';
-  $('#yes24Query').value = book?.title || '';
+  $('#yes24FgResults').innerHTML = '';
+  // 외서(제목에 한글 없음)를 편집하면 외서 검색 창을 펼쳐 둔다
+  const foreignBook = !!(book?.title && !HANGUL_RE.test(book.title));
+  $('#yes24Query').value = foreignBook ? '' : (book?.title || '');
+  $('#yes24FgQuery').value = foreignBook ? book.title : '';
+  $('#yes24Foreign').open = foreignBook;
   $('#yes24ItemId').value = book?.link || '';
   clearAutoFilled();
   $('#bookApplyNextBtn').classList.toggle('hidden', !!book);
@@ -995,7 +1001,7 @@ function openBookDialog(book, index) {
     $('#yes24Query').focus();
   } else if (book.title && Config.yes24Proxy) {
     // 편집이면 제목으로 미리 검색해 둔다 — 표지·링크를 고칠 때 바로 고를 수 있게
-    runYes24Search(book.title);
+    runYes24Search(book.title, 1, false, foreignBook ? 'FOREIGN' : 'BOOK');
   }
 }
 
@@ -1220,6 +1226,14 @@ function cleanAuthorName(raw) {
 }
 
 /* Yes24 search inside dialog — paginated 5 at a time */
+/* 예스24 검색 창은 국내도서·외서 두 개. 같은 코드로 돌리고 설정만 다르다.
+ * 외서는 상품 주소 형식이 국내도서와 같아서(…/product/goods/<ID>) 링크·표지 규칙도 같다. */
+const Y24_KINDS = {
+  BOOK:    { box: '#yes24Results',   query: '#yes24Query',   btn: '#yes24SearchBtn' },
+  FOREIGN: { box: '#yes24FgResults', query: '#yes24FgQuery', btn: '#yes24FgSearchBtn' },
+};
+function y24Box(kind) { const box = $(Y24_KINDS[kind].box); box._kind = kind; return box; }
+
 function renderYes24Results(box) {
   const items = box._items || [];
   const more = (box._total || 0) > items.length;
@@ -1245,7 +1259,7 @@ function renderYes24Results(box) {
   });
   if (more) {
     const remaining = box._total - items.length;
-    html += `<button type="button" id="yes24MoreBtn" class="btn small" style="display:block;width:100%;margin:6px 0;">+ 더 보기 (${remaining}건 남음)</button>`;
+    html += `<button type="button" data-y24="more" class="btn small" style="display:block;width:100%;margin:6px 0;">+ 더 보기 (${remaining}건 남음)</button>`;
   }
   box.innerHTML = html;
 }
@@ -1263,16 +1277,17 @@ function renderYes24Setup(box, query) {
     <div class="muted small" style="margin-top:6px;">새 탭에서 찾은 상품 주소를 아래 '도서 정보' 칸에 붙여넣으면 표지도 자동으로 채워져요.</div>
   </div>`;
 }
-function openYes24SearchTab(q) {
+/* domain: BOOK(국내도서) / FOREIGN(외국도서) — 예스24 사이트 검색의 분류 */
+function openYes24SearchTab(q, domain = 'BOOK') {
   const u = new URL('https://www.yes24.com/Product/Search');
-  u.searchParams.set('domain', 'BOOK');
+  u.searchParams.set('domain', domain);
   u.searchParams.set('query', q);
   window.open(u.toString(), '_blank', 'noopener');
 }
 
 const YES24_PAGE_SIZE = 5;
-async function runYes24Search(query, page = 1, append = false) {
-  const box = $('#yes24Results');
+async function runYes24Search(query, page = 1, append = false, kind = 'BOOK') {
+  const box = y24Box(kind);
   if (!Config.yes24Proxy) { renderYes24Setup(box, query); return; }
   if (!append) {
     box.innerHTML = '<div class="empty">검색 중…</div>';
@@ -1281,67 +1296,89 @@ async function runYes24Search(query, page = 1, append = false) {
     box._items = [];
     box._total = 0;
   } else {
-    const old = box.querySelector('#yes24MoreBtn');
+    const old = box.querySelector('[data-y24="more"]');
     if (old) { old.disabled = true; old.textContent = '불러오는 중…'; }
   }
   try {
-    const { items, total } = await Yes24.search(box._query, box._page, YES24_PAGE_SIZE);
+    const { items, total } = await Yes24.search(box._query, box._page, YES24_PAGE_SIZE, kind);
     box._items = (box._items || []).concat(items);
     box._page += 1;
     box._total = total || box._items.length;
     if (!box._items.length) {
-      box.innerHTML = '<div class="empty">결과 없음</div>';
+      box.innerHTML = `<div class="empty">결과 없음${kind === 'BOOK' ? ' — 원서라면 아래 🌏 외서 검색을 써 보세요' : ''}</div>`;
       return;
     }
     renderYes24Results(box);
   } catch (err) {
     if (!append) box.innerHTML = `<div class="empty">${esc(err.message)}</div>`;
     else {
-      const old = box.querySelector('#yes24MoreBtn');
+      const old = box.querySelector('[data-y24="more"]');
       if (old) { old.disabled = false; old.textContent = '+ 더 보기 (재시도)'; }
       toast(err.message, 'err');
     }
   }
 }
 
-function applyYes24Item(it) {
+/* 외서(원서)를 고르면 기존 데이터 규칙대로 채운다 (예: 'Connections' / Karl Deisseroth)
+ *  - 도서명·도서명 영문 모두 원제 (공식 제목이라 * 없음)
+ *  - 저자 영문 = 예스24 저자, 저자(한글) 칸은 비어 있을 때만 같은 값으로 — 한글 표기로 바꿔도 된다
+ * 국내도서는 한글 제목·저자를 채우고 영문은 자동 채움(영문판 → 없으면 직역*)에 맡긴다. */
+function applyYes24Item(it, kind = 'BOOK') {
   const cover = Yes24.cover(it);
+  const foreign = kind === 'FOREIGN' || (it.title && !HANGUL_RE.test(it.title));
+  clearAutoFilled();
+  const author = cleanAuthorName(it.author);
   $('#bookTitle').value = it.title || $('#bookTitle').value;
+  if (foreign) {
+    if (it.title) $('#bookTitleEn').value = it.title;
+    if (author) {
+      $('#bookAuthorEn').value = author;
+      if (!$('#bookAuthor').value.trim()) $('#bookAuthor').value = author;
+    }
+  } else {
+    $('#bookAuthor').value = author || $('#bookAuthor').value;
+  }
   updateDupHint();
-  $('#bookAuthor').value = cleanAuthorName(it.author) || $('#bookAuthor').value;
   $('#bookPublisher').value = it.publisher || $('#bookPublisher').value;
   $('#bookLink').value = it.link || $('#bookLink').value;
   if (cover) $('#bookCover').value = cover;
   $('#bookCoverPreview').src = cover || '';
-  toast(`반영: ${it.title}${cover ? ' + 표지' : ''}`, 'ok');
-  autoFillEn($('#bookTitle').value.trim(), $('#bookAuthor').value.trim());
+  if (foreign) {
+    toast(`외서 반영: ${it.title}${cover ? ' + 표지' : ''} — 저자 칸은 한글 표기(예: 조지 오웰)로 바꿔도 돼요`, 'ok');
+  } else {
+    toast(`반영: ${it.title}${cover ? ' + 표지' : ''}`, 'ok');
+    autoFillEn($('#bookTitle').value.trim(), $('#bookAuthor').value.trim());
+  }
 }
 
-$('#yes24SearchBtn').addEventListener('click', () => {
-  const q = $('#yes24Query').value.trim();
-  if (q) runYes24Search(q);
-});
-$('#yes24Query').addEventListener('keydown', (e) => {
-  if (e.key === 'Enter') { e.preventDefault(); $('#yes24SearchBtn').click(); }
-});
-$('#yes24Results').addEventListener('click', (e) => {
-  const act = e.target.dataset && e.target.dataset.y24;
-  if (act === 'settings') { loadSettingsToForm(); settingsDlg.showModal(); return; }
-  if (act === 'tab') {
-    const q = $('#yes24Results')._query || $('#yes24Query').value.trim() || $('#bookTitle').value.trim();
-    if (q) openYes24SearchTab(q); else toast('검색어를 먼저 입력하세요', 'err');
-    return;
-  }
-  if (e.target.id === 'yes24MoreBtn') {
-    const box = $('#yes24Results');
-    if (box._query) runYes24Search(box._query, box._page, true);
-    return;
-  }
-  const row = e.target.closest('.ar-item'); if (!row) return;
-  const items = $('#yes24Results')._items || [];
-  const it = items[+row.dataset.i];
-  if (it) applyYes24Item(it);
-});
+for (const kind of Object.keys(Y24_KINDS)) {
+  const { box: boxSel, query: querySel, btn: btnSel } = Y24_KINDS[kind];
+  const btn = $(btnSel);
+  btn.addEventListener('click', () => {
+    const q = $(querySel).value.trim();
+    if (q) runYes24Search(q, 1, false, kind);
+  });
+  $(querySel).addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') { e.preventDefault(); btn.click(); }
+  });
+  $(boxSel).addEventListener('click', (e) => {
+    const box = y24Box(kind);
+    const act = e.target.dataset && e.target.dataset.y24;
+    if (act === 'settings') { loadSettingsToForm(); settingsDlg.showModal(); return; }
+    if (act === 'tab') {
+      const q = box._query || $(querySel).value.trim() || $('#bookTitle').value.trim();
+      if (q) openYes24SearchTab(q, kind); else toast('검색어를 먼저 입력하세요', 'err');
+      return;
+    }
+    if (act === 'more') {
+      if (box._query) runYes24Search(box._query, box._page, true, kind);
+      return;
+    }
+    const row = e.target.closest('.ar-item'); if (!row) return;
+    const it = (box._items || [])[+row.dataset.i];
+    if (it) applyYes24Item(it, kind);
+  });
+}
 $('#yes24LookupBtn').addEventListener('click', async () => {
   const id = Yes24.parseItemId($('#yes24ItemId').value) || $('#yes24ItemId').value.trim();
   if (!id) { toast('ItemId, ISBN13 또는 예스24 URL을 입력하세요', 'err'); return; }
@@ -1351,14 +1388,14 @@ $('#yes24LookupBtn').addEventListener('click', async () => {
       $('#bookLink').value = $('#yes24ItemId').value.trim();
       $('#bookLink').dispatchEvent(new Event('input'));
     }
-    renderYes24Setup($('#yes24Results'), $('#yes24Query').value.trim() || $('#bookTitle').value.trim());
+    renderYes24Setup(y24Box('BOOK'), $('#yes24Query').value.trim() || $('#bookTitle').value.trim());
     return;
   }
   try {
+    // 상세 조회는 국내도서·외서 구분이 없다 — 제목에 한글이 없으면 외서로 채운다
     const it = await Yes24.lookup(id);
     if (!it) { toast('해당 상품을 찾지 못했습니다', 'err'); return; }
     applyYes24Item(it);
-    toast('예스24 정보 적용됨', 'ok');
   } catch (err) {
     toast(err.message, 'err');
   }
@@ -1371,7 +1408,8 @@ $('#openYes24Btn').addEventListener('click', () => {
   const t = $('#bookTitle').value.trim();
   const a = $('#bookAuthor').value.trim();
   if (!t) { toast('먼저 제목을 채우세요', 'err'); return; }
-  openYes24SearchTab([t, a].filter(Boolean).join(' '));
+  // 원제(한글 없음)면 외국도서 분류로 연다
+  openYes24SearchTab([t, a].filter(Boolean).join(' '), HANGUL_RE.test(t) ? 'BOOK' : 'FOREIGN');
 });
 
 /* 도서 정보 칸에 예스24 상품 URL을 붙여넣으면
