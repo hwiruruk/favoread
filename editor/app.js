@@ -1545,15 +1545,24 @@ const GBooks = {
     const t = list.find(x => x.type === 'ISBN_13') || list.find(x => x.type === 'ISBN_10');
     return t ? t.identifier.replace(/[^0-9Xx]/g, '') : '';
   },
-  async search(query, maxResults = 8) {
+  async _fetch(query, maxResults, lang) {
     const u = new URL('https://www.googleapis.com/books/v1/volumes');
     u.searchParams.set('q', query);
     u.searchParams.set('maxResults', String(maxResults));
     u.searchParams.set('printType', 'books');
+    if (lang) u.searchParams.set('langRestrict', lang);
     const r = await fetch(u.toString());
     if (!r.ok) throw new Error(`Google Books HTTP ${r.status}`);
     const d = await r.json();
-    return (d.items || []).map(it => {
+    return d.items || [];
+  },
+  /* 한글로 검색하면 한국어판만 먼저 찾고, 없을 때만 전체 언어로 다시 찾는다.
+   * 어느 경우든 한국어판을 목록 위쪽에 둔다 — 영문판이 맨 위에 떠서
+   * 무심코 고르면 한글 도서명 칸이 영문으로 채워지던 문제 방지. */
+  async search(query, maxResults = 8) {
+    let raw = HANGUL_RE.test(query) ? await this._fetch(query, maxResults, 'ko') : [];
+    if (!raw.length) raw = await this._fetch(query, maxResults);
+    const items = raw.map(it => {
       const v = it.volumeInfo || {};
       const t = v.subtitle ? `${v.title}: ${v.subtitle}` : v.title;
       const img = (v.imageLinks || {});
@@ -1568,8 +1577,16 @@ const GBooks = {
         isbn,
       };
     }).filter(x => x.title);
+    // 안정 정렬: 한국어판 → 그 밖의 판
+    return items.filter(isKoreanEdition).concat(items.filter(x => !isKoreanEdition(x)));
   },
 };
+
+const HANGUL_RE = /[\uAC00-\uD7A3\u3131-\u318E]/;
+/* 한국어판 여부 — Google Books 언어 코드가 ko이거나 제목에 한글이 있으면 한국어판으로 본다 */
+function isKoreanEdition(it) {
+  return it.lang === 'ko' || HANGUL_RE.test(it.title || '');
+}
 
 function renderGBooksResults(box, items) {
   if (!items.length) { box.innerHTML = '<div class="empty">결과 없음. 알라딘 검색이나 수동 입력을 이용하세요.</div>'; return; }
@@ -1577,7 +1594,7 @@ function renderGBooksResults(box, items) {
     <div class="ar-item" data-gi="${i}">
       <div class="ar-cover">${it.cover ? `<img src="${esc(it.cover)}" referrerpolicy="no-referrer" alt="">` : ''}</div>
       <div class="ar-meta">
-        <div class="ar-title">${esc(it.title)}</div>
+        <div class="ar-title">${esc(it.title)}${isKoreanEdition(it) ? '' : ' <span class="flag warn">영문판 → 영문 칸</span>'}</div>
         <div class="ar-sub">${esc(it.author || '(저자 없음)')}${it.year ? ` · ${esc(it.year)}` : ''}${it.lang ? ` <span class="muted">[${esc(it.lang)}]</span>` : ''}</div>
         ${it.isbn ? `<div class="ar-sub muted">ISBN ${esc(it.isbn)}</div>` : ''}
       </div>
@@ -1609,6 +1626,19 @@ $('#gbResults').addEventListener('click', (e) => {
   const items = $('#gbResults')._items || [];
   const it = items[+row.dataset.gi];
   if (!it) return;
+  // 영문판(외국어판)을 고르면 한글 칸은 건드리지 않고 영문 칸만 채운다.
+  // 표지도 한국어판 표지를 쓰는 게 원칙이라 비어 있을 때만 채운다.
+  if (!isKoreanEdition(it)) {
+    $('#bookTitleEn').value = it.title;
+    if (it.author) $('#bookAuthorEn').value = it.author;
+    if (it.cover && !$('#bookCover').value.trim()) {
+      $('#bookCover').value = it.cover;
+      $('#bookCoverPreview').src = it.cover;
+    }
+    toast(`영문판이라 영문 칸에 넣었어요: ${it.title}` +
+      ($('#bookTitle').value.trim() ? '' : ' — 한글 도서명은 예스24·알라딘 검색으로 채워 주세요'), 'ok');
+    return;
+  }
   // 제목·저자·표지만 채움 (알라딘 링크는 별도 워크플로우로 처리)
   $('#bookTitle').value = it.title;
   updateDupHint();
