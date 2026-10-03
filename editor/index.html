@@ -63,7 +63,7 @@
   <section id="detail" class="detail">
     <div id="detailEmpty" class="empty">
       <p>좌측에서 연예인을 선택하거나 <b>+ 연예인</b>으로 새로 추가하세요.</p>
-      <p class="muted">먼저 ⚙️ 설정에서 GitHub PAT와 알라딘 TTBKey를 입력해야 합니다.</p>
+      <p class="muted">먼저 ⚙️ 설정에서 GitHub PAT를 입력해야 합니다.</p>
     </div>
 
     <div id="detailContent" class="hidden">
@@ -114,39 +114,11 @@
 
     <div class="modal-body two-col">
       <div class="col">
-        <div class="quick-search">
-          <label>⚡ 빠른 검색 (Google Books, 프록시 불필요)
-            <div class="row">
-              <input id="gbQuery" type="search" placeholder="책 제목 (한글로 검색하면 한국어판 우선)">
-              <button type="button" id="gbSearchBtn" class="btn primary small">검색</button>
-            </div>
-          </label>
-          <div id="gbResults" class="aladin-results"></div>
-        </div>
-
-        <details class="aladin-search" style="margin-top:12px;">
-          <summary class="muted small" style="cursor:pointer;padding:6px 0;">▸ 알라딘 검색 (표지·출판사·ItemId까지 필요할 때)</summary>
-          <label>알라딘 검색
-            <div class="row">
-              <input id="aladinQuery" type="search" placeholder="책 제목 / 저자 / ISBN">
-              <button type="button" id="aladinSearchBtn" class="btn small">검색</button>
-            </div>
-          </label>
-          <label class="muted small">또는 ItemId 직접 입력
-            <div class="row">
-              <input id="aladinItemId" type="text" placeholder="예: 673870 또는 알라딘 URL">
-              <button type="button" id="aladinLookupBtn" class="btn small">조회</button>
-            </div>
-          </label>
-          <div id="aladinResults" class="aladin-results"></div>
-        </details>
-
-        <details class="aladin-search" open style="margin-top:12px;">
-          <summary class="muted small" style="cursor:pointer;padding:6px 0;">▸ 예스24 검색 (알라딘 대체, 표지·출판사·ItemId까지 필요할 때)</summary>
-          <label>예스24 검색
+        <div class="book-search">
+          <label>🔎 예스24 검색 (결과를 누르면 제목·저자·출판사·표지·링크가 채워져요)
             <div class="row">
               <input id="yes24Query" type="search" placeholder="책 제목 / 저자 / ISBN">
-              <button type="button" id="yes24SearchBtn" class="btn small">검색</button>
+              <button type="button" id="yes24SearchBtn" class="btn primary small">검색</button>
             </div>
           </label>
           <label class="muted small">또는 ItemId / ISBN13 / 예스24 URL 직접 입력
@@ -155,8 +127,8 @@
               <button type="button" id="yes24LookupBtn" class="btn small">조회</button>
             </div>
           </label>
-          <div id="yes24Results" class="aladin-results"></div>
-        </details>
+          <div id="yes24Results" class="search-results"></div>
+        </div>
       </div>
 
       <div class="col">
@@ -193,15 +165,14 @@
             <button type="button" id="openSourceBtn" class="btn small" title="출처 URL을 새 탭으로 엽니다">↗ 열기</button>
           </div>
         </label>
-        <label>도서 정보 (예스24 또는 알라딘 URL)
+        <label>도서 정보 (예스24 URL — 붙여넣으면 표지도 자동)
           <div class="row">
             <input id="bookLink" type="url" placeholder="https://www.yes24.com/product/goods/...">
             <button type="button" id="openYes24Btn" class="btn small" title="현재 제목·저자로 예스24 검색을 새 탭으로 엽니다. 원하는 도서 URL을 복사해 이 칸에 붙여넣으세요.">🔎 예스24</button>
-            <button type="button" id="openAladinBtn" class="btn small" title="현재 제목·저자로 알라딘 검색을 새 탭으로 엽니다. 원하는 도서 URL을 복사해 이 칸에 붙여넣으세요.">🔎 알라딘</button>
           </div>
         </label>
         <label>도서 표지 URL
-          <input id="bookCover" type="url" placeholder="https://image.aladin.co.kr/...">
+          <input id="bookCover" type="url" placeholder="https://image.yes24.com/goods/.../L">
         </label>
         <label>코멘트
           <textarea id="bookComment" rows="2"></textarea>
@@ -280,14 +251,6 @@
       <label>GitHub Personal Access Token
         <input id="cfgToken" type="password" placeholder="ghp_... (Contents: Read & Write 권한 필요)">
         <small class="muted">Settings → Developer settings → Personal access tokens(fine-grained) → 이 저장소에 Contents: Read and write</small>
-      </label>
-      <label>알라딘 TTBKey
-        <input id="cfgTtb" type="password" placeholder="ttbXXXXXXXXXX001">
-        <small class="muted">https://www.aladin.co.kr/ttb/wblog_manage.aspx 에서 발급</small>
-      </label>
-      <label>알라딘 호출 프록시 (비워두면 기본값 사용)
-        <input id="cfgCorsProxy" type="url" placeholder="https://api.allorigins.win/get?url=">
-        <small class="muted">기본값 <code>api.allorigins.win/get?url=</code> 사용 시 별도 설정 불필요. 다른 프록시를 쓰려면 끝이 <code>?url=</code>로 끝나야 합니다.</small>
       </label>
       <label>예스24 프록시 Worker URL
         <input id="cfgYes24Proxy" type="url" placeholder="https://yes24-proxy.your-name.workers.dev">

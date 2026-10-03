@@ -1,7 +1,6 @@
 /* Favorbook Editor — single-page editor for data.csv
  * Auth: GitHub PAT in localStorage, commits via Git Data API
  *       (blob → tree → commit → ref). Contents API는 1MB 한도가 있어 못 쓴다.
- * Aladin: JSONP (Output=JS&Callback=...) — bypasses CORS.
  */
 
 /* -------------------- Config (localStorage) -------------------- */
@@ -17,9 +16,7 @@ const Config = {
   get draftBranch() { return LS.get('draftBranch', 'draft/editor'); },
   get path()      { return LS.get('path', 'data.csv'); },
   get token()     { return LS.get('token'); },
-  get ttb()       { return LS.get('ttb'); },
   get committer() { return LS.get('committer'); },
-  get corsProxy() { return LS.get('corsProxy'); }, // e.g. https://corsproxy.io/?url=
   // 예스24 프록시 Worker URL. API Key는 Worker의 환경변수(secret)에만 있고
   // 여기(브라우저)에는 절대 저장하지 않음 — tools/yes24-proxy/README.md 참고.
   get yes24Proxy() { return LS.get('yes24Proxy'); },
@@ -490,188 +487,8 @@ function refPath(branch) {
   return String(branch).split('/').map(encodeURIComponent).join('/');
 }
 
-/* -------------------- Aladin API --------------------
- * 호출 순서:
- *  1) JSONP (<script> 태그) — 프록시·CORS·확장 차단 모두 우회. 가장 안정적.
- *     Aladin은 &Callback=xxx 붙이면 xxx({...}); 로 감싸서 응답.
- *  2) 공개 CORS 프록시 (allorigins 등) 순차 시도 — JSONP 실패 시 폴백.
- *
- * Aladin TTB OpenAPI는 등록된 URL과 Referer가 일치할 때만 응답하는데,
- * <script> 태그로 로드하면 브라우저가 favorbook.co.kr Referer를 보내주므로
- * TTBKey가 favorbook.co.kr로 등록돼 있으면 그대로 통과.
- */
-const Aladin = {
-  // Default proxies to try in order. Each item: [name, prefix, kind].
-  // kind: 'wrap' (response is {contents:..., status:...}) or 'raw' (body is upstream body)
-  // 공개 프록시는 자주 장애가 나므로 여러 후보 + 자체 Cloudflare Worker(설정 시) 우선.
-  DEFAULT_PROXIES: [
-    ['allorigins-get',   'https://api.allorigins.win/get?url=',        'wrap'],
-    ['corsproxy.io',     'https://corsproxy.io/?url=',                  'raw' ],
-    ['cors.lol',         'https://api.cors.lol/?url=',                  'raw' ],
-    ['corsproxy.org',    'https://corsproxy.org/?',                     'raw' ],
-    ['codetabs',         'https://api.codetabs.com/v1/proxy/?quest=',   'raw' ],
-    ['allorigins-raw',   'https://api.allorigins.win/raw?url=',         'raw' ],
-    ['thingproxy',       'https://thingproxy.freeboard.io/fetch/',      'raw' ],
-  ],
-  _baseParams(extra) {
-    const p = new URLSearchParams(extra);
-    p.set('ttbkey', Config.ttb);
-    p.set('output', 'js');
-    p.set('Version', '20131101');
-    return p;
-  },
-  _parseAladinBody(text) {
-    let s = String(text || '').trim();
-    if (!s) throw new Error('빈 응답');
-    if (s.endsWith(';')) s = s.slice(0, -1);
-    const m = s.match(/^[^({]*\(([\s\S]*)\)\s*$/);
-    if (m) s = m[1];
-    return JSON.parse(s);
-  },
-  async _tryProxy(name, prefix, kind, fullUrl) {
-    // thingproxy는 URL을 인코딩하지 않고 그대로 붙임 (예외 처리)
-    const proxied = name === 'thingproxy'
-      ? prefix + fullUrl
-      : prefix + encodeURIComponent(fullUrl);
-    const ctrl = new AbortController();
-    const timer = setTimeout(() => ctrl.abort(), 12000);
-    let r;
-    try {
-      r = await fetch(proxied, { signal: ctrl.signal });
-    } catch (e) {
-      throw new Error(e.name === 'AbortError' ? 'timeout 12s' : e.message);
-    } finally {
-      clearTimeout(timer);
-    }
-    if (!r.ok) throw new Error(`HTTP ${r.status}`);
-    const text = await r.text();
-    let body;
-    if (kind === 'wrap') {
-      let outer;
-      try { outer = JSON.parse(text); }
-      catch { throw new Error('proxy JSON 파싱 실패'); }
-      if (typeof outer.contents !== 'string') throw new Error('contents 필드 없음');
-      body = this._parseAladinBody(outer.contents);
-    } else {
-      body = this._parseAladinBody(text);
-    }
-    if (body && body.errorCode) throw new Error(`알라딘 ${body.errorCode}: ${body.errorMessage}`);
-    return body;
-  },
-  async _call(fullUrl) {
-    if (!Config.ttb) throw new Error('알라딘 TTBKey가 설정되지 않았습니다.');
-    console.log('[Aladin] →', fullUrl);
-
-    // 1) JSONP 우선 시도 — 프록시·CORS·브라우저 확장 우회
-    // Aladin은 &Callback=xxx 파라미터를 붙이면 xxx({...}); 형태로 감싸서 응답.
-    try {
-      const body = await this._jsonpCall(fullUrl);
-      if (body && body.errorCode) {
-        throw new Error(`알라딘 ${body.errorCode}: ${body.errorMessage}`);
-      }
-      console.log('[Aladin] ✓ JSONP (프록시 없이 직접)');
-      return body;
-    } catch (e) {
-      console.warn('[Aladin] ✗ JSONP:', e.message);
-    }
-
-    // 2) 폴백: 프록시 목록
-    const list = [];
-    if (Config.corsProxy) {
-      list.push(['user(wrap)', Config.corsProxy, 'wrap']);
-      list.push(['user(raw)',  Config.corsProxy, 'raw']);
-    }
-    list.push(...this.DEFAULT_PROXIES);
-
-    const errors = [];
-    for (const [name, prefix, kind] of list) {
-      try {
-        const r = await this._tryProxy(name, prefix, kind, fullUrl);
-        console.log(`[Aladin] ✓ ${name}`);
-        return r;
-      } catch (e) {
-        console.warn(`[Aladin] ✗ ${name}: ${e.message}`);
-        errors.push(`${name}: ${e.message}`);
-      }
-    }
-    throw new Error('모든 프록시 실패 — ' + errors.join(' / '));
-  },
-
-  /* JSONP: <script> 태그로 로드해서 콜백 함수로 데이터 수신.
-   * 브라우저의 CORS·확장 프록시 차단·네트워크 프록시 모두 우회.
-   * Aladin OpenAPI는 &Callback=<fn> 파라미터로 JSONP 지원. */
-  _jsonpCall(fullUrl) {
-    return new Promise((resolve, reject) => {
-      const cbName = '_aladin_cb_' + Math.random().toString(36).slice(2, 10);
-      const sep = fullUrl.includes('?') ? '&' : '?';
-      // Callback 파라미터 붙이기 (중복 방지)
-      const cleanUrl = fullUrl.replace(/&?Callback=[^&]*/gi, '');
-      const src = cleanUrl + sep + 'Callback=' + cbName;
-      const script = document.createElement('script');
-      const cleanup = () => {
-        clearTimeout(timer);
-        try { delete window[cbName]; } catch { window[cbName] = undefined; }
-        if (script.parentNode) script.parentNode.removeChild(script);
-      };
-      const timer = setTimeout(() => {
-        cleanup();
-        reject(new Error('JSONP timeout 10s'));
-      }, 10000);
-      window[cbName] = (data) => {
-        cleanup();
-        resolve(data);
-      };
-      script.onerror = () => {
-        cleanup();
-        reject(new Error('script load failed (CSP/network/블록됨)'));
-      };
-      script.src = src;
-      document.head.appendChild(script);
-    });
-  },
-  async search(query, start = 1, maxResults = 5) {
-    const p = this._baseParams({
-      Query: query,
-      QueryType: 'Keyword',
-      MaxResults: String(maxResults),
-      start: String(start),
-      SearchTarget: 'Book',
-      Cover: 'Big',
-    });
-    const r = await this._call('https://www.aladin.co.kr/ttb/api/ItemSearch.aspx?' + p);
-    return {
-      items: (r && r.item) || [],
-      total: Number(r && r.totalResults) || 0,
-    };
-  },
-  parseItemId(input) {
-    const s = String(input || '').trim();
-    const m = s.match(/ItemId=(\d+)/i);
-    if (m) return m[1];
-    if (/^\d+$/.test(s)) return s;
-    return null;
-  },
-  async lookup(itemId) {
-    const id = this.parseItemId(itemId) || itemId;
-    const p = this._baseParams({
-      itemIdType: 'ItemId',
-      ItemId: id,
-      Cover: 'Big',
-    });
-    const r = await this._call('https://www.aladin.co.kr/ttb/api/ItemLookUp.aspx?' + p);
-    return (r && r.item && r.item[0]) || null;
-  },
-  bigCover(item) {
-    const c = item && item.cover;
-    if (!c) return '';
-    return c
-      .replace(/\/cover(?:150|200|s|sum)\//, '/cover500/')
-      .replace('coversum', 'cover500');
-  },
-};
-
 /* -------------------- Yes24 API --------------------
- * 알라딘 서비스 종료에 대비한 대체 연동. 예스24 Open API는 X-Api-Key
+ * 책 정보(제목·저자·출판사·표지·상품 링크)를 채우는 유일한 검색. 예스24 Open API는 X-Api-Key
  * 요청 헤더로 인증하는데, 이 방식은 <script> 태그(JSONP)로 못 부르고
  * (커스텀 헤더 불가) 공식 문서도 API Key를 클라이언트 코드에 넣지 말라고
  * 명시한다. 그래서 반드시 Cloudflare Worker(tools/yes24-proxy/)를 거쳐야
@@ -1158,14 +975,13 @@ function openBookDialog(book, index) {
   };
   for (const [id, v] of Object.entries(fields)) $('#' + id).value = v || '';
   $('#bookCoverPreview').src = book?.cover || '';
-  $('#aladinResults').innerHTML = '';
-  $('#aladinQuery').value = book?.title || '';
-  $('#aladinItemId').value = book?.link || '';
   $('#yes24Results').innerHTML = '';
   $('#yes24Query').value = book?.title || '';
   $('#yes24ItemId').value = book?.link || '';
   updateDupHint();
   bookDlg.showModal();
+  // 새 책이면 바로 검색어를 칠 수 있게 예스24 검색칸에 커서를 둔다
+  if (!book) $('#yes24Query').focus();
 }
 
 /* 도서명을 입력하는 동안 중복 여부를 바로 알려 준다 */
@@ -1228,65 +1044,8 @@ $('#bookForm').addEventListener('submit', (e) => {
   renderDetail(); renderSidebar();
 });
 
-/* Aladin search inside dialog — paginated 5 at a time */
-const PAGE_SIZE = 5;
-function renderAladinResults(box) {
-  const items = box._items || [];
-  const more = (box._total || 0) > items.length;
-  let html = '';
-  items.forEach((it, i) => {
-    const cover = Aladin.bigCover(it);
-    html += `<div class="ar-item" data-i="${i}">
-      <div class="ar-cover">${cover ? `<img src="${esc(cover)}" referrerpolicy="no-referrer" alt="">` : ''}</div>
-      <div class="ar-meta">
-        <div class="ar-title">${esc(it.title)}</div>
-        <div class="ar-sub">${esc(it.author || '')} · ${esc(it.publisher || '')}</div>
-        <div class="ar-sub muted">${esc(it.pubDate || '')} · ItemId ${it.itemId}</div>
-      </div>
-    </div>`;
-  });
-  if (more) {
-    const remaining = box._total - items.length;
-    html += `<button type="button" id="aladinMoreBtn" class="btn small" style="display:block;width:100%;margin:6px 0;">+ 더 보기 (${remaining}건 남음)</button>`;
-  }
-  box.innerHTML = html;
-}
-
-async function runAladinSearch(query, append = false) {
-  const box = $('#aladinResults');
-  if (!append) {
-    box.innerHTML = '<div class="empty">검색 중…</div>';
-    box._query = query;
-    box._start = 1;
-    box._items = [];
-    box._total = 0;
-  } else {
-    const old = box.querySelector('#aladinMoreBtn');
-    if (old) { old.disabled = true; old.textContent = '불러오는 중…'; }
-  }
-  try {
-    const { items, total } = await Aladin.search(box._query, box._start, PAGE_SIZE);
-    box._items = (box._items || []).concat(items);
-    box._start += items.length;
-    box._total = total || box._items.length;
-    if (!box._items.length) {
-      box.innerHTML = '<div class="empty">결과 없음</div>';
-      return;
-    }
-    renderAladinResults(box);
-  } catch (err) {
-    if (!append) box.innerHTML = `<div class="empty">${esc(err.message)}</div>`;
-    else {
-      const old = box.querySelector('#aladinMoreBtn');
-      if (old) { old.disabled = false; old.textContent = '+ 더 보기 (재시도)'; }
-      toast(err.message, 'err');
-    }
-  }
-}
-/* 알라딘 author 필드는 '무라카미 하루키 (지은이), 홍길동 (옮긴이)' 형태.
- * 역할 표기 삭제 + '옮긴이/편집자'는 제외해 저자만 남김. */
 /* -------------------- 저자명 정리 --------------------
- * 서점 API가 주는 저자 문자열에는 역할 표기가 붙어 온다.
+ * 서점에서 가져온 저자 문자열에는 역할 표기가 붙어 온다.
  *   알라딘  "신영복 (지은이), 김세현 (그림)"
  *   예스24  "요아힘 마이어호프 저/박종대 역", "문순태,최일남,한승원,박완서 공저"
  * 이걸 지은이만 남기고 정리한다 — '저·지음' 같은 역할 꼬리표는 떼고,
@@ -1351,63 +1110,7 @@ function cleanAuthorName(raw) {
   return out.join(', ');
 }
 
-function applyAladinItem(it) {
-  const cover = Aladin.bigCover(it);
-  $('#bookTitle').value = it.title || $('#bookTitle').value;
-  updateDupHint();
-  $('#bookAuthor').value = cleanAuthorName(it.author) || $('#bookAuthor').value;
-  $('#bookPublisher').value = it.publisher || $('#bookPublisher').value;
-  $('#bookLink').value = it.link || $('#bookLink').value;
-  if (cover) $('#bookCover').value = cover;
-  $('#bookCoverPreview').src = cover || '';
-}
-
-$('#aladinSearchBtn').addEventListener('click', () => {
-  const q = $('#aladinQuery').value.trim();
-  if (q) runAladinSearch(q);
-});
-$('#aladinQuery').addEventListener('keydown', (e) => {
-  if (e.key === 'Enter') { e.preventDefault(); $('#aladinSearchBtn').click(); }
-});
-$('#aladinResults').addEventListener('click', (e) => {
-  if (e.target.id === 'aladinMoreBtn') {
-    const box = $('#aladinResults');
-    if (box._query) runAladinSearch(box._query, true);
-    return;
-  }
-  const row = e.target.closest('.ar-item'); if (!row) return;
-  const items = $('#aladinResults')._items || [];
-  const it = items[+row.dataset.i];
-  if (it) applyAladinItem(it);
-});
-$('#aladinLookupBtn').addEventListener('click', async () => {
-  const id = Aladin.parseItemId($('#aladinItemId').value);
-  if (!id) { toast('ItemId 또는 알라딘 URL을 입력하세요', 'err'); return; }
-  try {
-    const it = await Aladin.lookup(id);
-    if (!it) { toast('해당 ItemId의 책을 찾지 못했습니다', 'err'); return; }
-    applyAladinItem(it);
-    toast('알라딘 정보 적용됨', 'ok');
-  } catch (err) {
-    toast(err.message, 'err');
-  }
-});
-
-/* '🔎 알라딘' 버튼 — 현재 제목·저자로 알라딘 검색을 새 탭으로 오픈.
- * ItemId가 있는 알라딘 URL을 사용자가 복사해 옆 필드에 붙여넣는 방식.
- * 알라딘 API 호출 안 함 → 프록시 문제 무관. */
-$('#openAladinBtn').addEventListener('click', () => {
-  const t = $('#bookTitle').value.trim();
-  const a = $('#bookAuthor').value.trim();
-  if (!t) { toast('먼저 제목을 채우세요', 'err'); return; }
-  const q = [t, a].filter(Boolean).join(' ');
-  const u = new URL('https://www.aladin.co.kr/search/wsearchresult.aspx');
-  u.searchParams.set('SearchTarget', 'Book');
-  u.searchParams.set('SearchWord', q);
-  window.open(u.toString(), '_blank', 'noopener');
-});
-
-/* Yes24 search inside dialog — paginated 5 at a time (알라딘 섹션과 동일 패턴) */
+/* Yes24 search inside dialog — paginated 5 at a time */
 function renderYes24Results(box) {
   const items = box._items || [];
   const more = (box._total || 0) > items.length;
@@ -1472,6 +1175,7 @@ function applyYes24Item(it) {
   $('#bookLink').value = it.link || $('#bookLink').value;
   if (cover) $('#bookCover').value = cover;
   $('#bookCoverPreview').src = cover || '';
+  toast(`반영: ${it.title}${cover ? ' + 표지' : ''}`, 'ok');
 }
 
 $('#yes24SearchBtn').addEventListener('click', () => {
@@ -1506,7 +1210,7 @@ $('#yes24LookupBtn').addEventListener('click', async () => {
 });
 
 /* '🔎 예스24' 버튼 — 현재 제목·저자로 예스24 검색을 새 탭으로 오픈.
- * 알라딘 버튼과 동일한 패턴: 원하는 상품 URL을 사용자가 복사해 옆 필드에 붙여넣음.
+ * 원하는 상품 URL을 사용자가 복사해 옆 필드에 붙여넣음.
  * 예스24 API 호출 안 함 → Worker 설정 여부와 무관하게 항상 사용 가능. */
 $('#openYes24Btn').addEventListener('click', () => {
   const t = $('#bookTitle').value.trim();
@@ -1519,137 +1223,30 @@ $('#openYes24Btn').addEventListener('click', () => {
   window.open(u.toString(), '_blank', 'noopener');
 });
 
+/* 도서 정보 칸에 예스24 상품 URL을 붙여넣으면
+ *  - 추적 파라미터 등을 떼고 https://www.yes24.com/product/goods/<ID> 로 정리하고
+ *  - 표지 칸이 비었거나 다른 예스24 표지면 https://image.yes24.com/goods/<ID>/L 로 채운다
+ *    (data.csv의 표준 형식). 직접 넣은 다른 표지는 건드리지 않는다. API 호출 없음. */
+const YES24_GOODS_RE = /yes24\.com\/product\/goods\/(\d+)/i;
+$('#bookLink').addEventListener('input', () => {
+  const el = $('#bookLink');
+  const m = YES24_GOODS_RE.exec(el.value);
+  if (!m) return;
+  const link = 'https://www.yes24.com/product/goods/' + m[1];
+  if (el.value !== link) el.value = link;
+  const cover = 'https://image.yes24.com/goods/' + m[1] + '/L';
+  const cur = $('#bookCover').value.trim();
+  if (cur === cover || (cur && !/image\.yes24\.com/i.test(cur))) return;
+  $('#bookCover').value = cover;
+  $('#bookCoverPreview').src = cover;
+  toast('예스24 표지를 채웠어요', 'ok');
+});
+
 /* '↗ 열기' 버튼 — 출처 칸의 URL을 새 탭으로 열어 원문을 바로 확인한다 */
 $('#openSourceBtn').addEventListener('click', () => {
   const u = $('#bookSource').value.trim();
   if (!isHttp(u)) { toast('출처 칸에 http로 시작하는 URL이 없어요', 'err'); return; }
   window.open(u, '_blank', 'noopener');
-});
-
-/* -------------------- ⚡ 빠른 검색: Google Books --------------------
- * CORS 허용 API라 브라우저에서 직접 호출. 프록시·JSONP 불필요.
- * 제목·저자만 채움 (표지·출판사·ItemId는 필요 시 알라딘 검색으로 별도 조회). */
-const GBooks = {
-  /* Google Books thumbnail은 zoom=1(작음)로 오는 경우가 많음 → zoom=0(큼)로 교체.
-   * http URL도 https로 승격. edge=curl 제거해 종이 말림 효과 삭제. */
-  _upgradeCover(url) {
-    if (!url) return '';
-    let u = url.replace(/^http:/, 'https:');
-    u = u.replace(/&edge=curl/g, '').replace(/&zoom=\d+/g, '&zoom=0');
-    // zoom 파라미터가 아예 없으면 붙임 (더 큰 이미지)
-    if (!/[?&]zoom=/.test(u)) u += (u.includes('?') ? '&' : '?') + 'zoom=0';
-    return u;
-  },
-  _isbn13(idents) {
-    const list = idents || [];
-    const t = list.find(x => x.type === 'ISBN_13') || list.find(x => x.type === 'ISBN_10');
-    return t ? t.identifier.replace(/[^0-9Xx]/g, '') : '';
-  },
-  async _fetch(query, maxResults, lang) {
-    const u = new URL('https://www.googleapis.com/books/v1/volumes');
-    u.searchParams.set('q', query);
-    u.searchParams.set('maxResults', String(maxResults));
-    u.searchParams.set('printType', 'books');
-    if (lang) u.searchParams.set('langRestrict', lang);
-    const r = await fetch(u.toString());
-    if (!r.ok) throw new Error(`Google Books HTTP ${r.status}`);
-    const d = await r.json();
-    return d.items || [];
-  },
-  /* 한글로 검색하면 한국어판만 먼저 찾고, 없을 때만 전체 언어로 다시 찾는다.
-   * 어느 경우든 한국어판을 목록 위쪽에 둔다 — 영문판이 맨 위에 떠서
-   * 무심코 고르면 한글 도서명 칸이 영문으로 채워지던 문제 방지. */
-  async search(query, maxResults = 8) {
-    let raw = HANGUL_RE.test(query) ? await this._fetch(query, maxResults, 'ko') : [];
-    if (!raw.length) raw = await this._fetch(query, maxResults);
-    const items = raw.map(it => {
-      const v = it.volumeInfo || {};
-      const t = v.subtitle ? `${v.title}: ${v.subtitle}` : v.title;
-      const img = (v.imageLinks || {});
-      const cover = this._upgradeCover(img.thumbnail || img.smallThumbnail || '');
-      const isbn = this._isbn13(v.industryIdentifiers);
-      return {
-        title: t || '',
-        author: (v.authors || []).join(', '),
-        lang: v.language || '',
-        year: (v.publishedDate || '').slice(0, 4),
-        cover,
-        isbn,
-      };
-    }).filter(x => x.title);
-    // 안정 정렬: 한국어판 → 그 밖의 판
-    return items.filter(isKoreanEdition).concat(items.filter(x => !isKoreanEdition(x)));
-  },
-};
-
-const HANGUL_RE = /[\uAC00-\uD7A3\u3131-\u318E]/;
-/* 한국어판 여부 — Google Books 언어 코드가 ko이거나 제목에 한글이 있으면 한국어판으로 본다 */
-function isKoreanEdition(it) {
-  return it.lang === 'ko' || HANGUL_RE.test(it.title || '');
-}
-
-function renderGBooksResults(box, items) {
-  if (!items.length) { box.innerHTML = '<div class="empty">결과 없음. 알라딘 검색이나 수동 입력을 이용하세요.</div>'; return; }
-  box.innerHTML = items.map((it, i) => `
-    <div class="ar-item" data-gi="${i}">
-      <div class="ar-cover">${it.cover ? `<img src="${esc(it.cover)}" referrerpolicy="no-referrer" alt="">` : ''}</div>
-      <div class="ar-meta">
-        <div class="ar-title">${esc(it.title)}${isKoreanEdition(it) ? '' : ' <span class="flag warn">영문판 → 영문 칸</span>'}</div>
-        <div class="ar-sub">${esc(it.author || '(저자 없음)')}${it.year ? ` · ${esc(it.year)}` : ''}${it.lang ? ` <span class="muted">[${esc(it.lang)}]</span>` : ''}</div>
-        ${it.isbn ? `<div class="ar-sub muted">ISBN ${esc(it.isbn)}</div>` : ''}
-      </div>
-    </div>
-  `).join('');
-  box._items = items;
-}
-
-$('#gbSearchBtn').addEventListener('click', async () => {
-  const q = $('#gbQuery').value.trim();
-  if (!q) return;
-  const box = $('#gbResults');
-  box.innerHTML = '<div class="empty">검색 중…</div>';
-  try {
-    const items = await GBooks.search(q);
-    renderGBooksResults(box, items);
-  } catch (err) {
-    box.innerHTML = `<div class="empty">${esc(err.message)}</div>`;
-  }
-});
-
-$('#gbQuery').addEventListener('keydown', (e) => {
-  if (e.key === 'Enter') { e.preventDefault(); $('#gbSearchBtn').click(); }
-});
-
-$('#gbResults').addEventListener('click', (e) => {
-  const row = e.target.closest('.ar-item');
-  if (!row) return;
-  const items = $('#gbResults')._items || [];
-  const it = items[+row.dataset.gi];
-  if (!it) return;
-  // 영문판(외국어판)을 고르면 한글 칸은 건드리지 않고 영문 칸만 채운다.
-  // 표지도 한국어판 표지를 쓰는 게 원칙이라 비어 있을 때만 채운다.
-  if (!isKoreanEdition(it)) {
-    $('#bookTitleEn').value = it.title;
-    if (it.author) $('#bookAuthorEn').value = it.author;
-    if (it.cover && !$('#bookCover').value.trim()) {
-      $('#bookCover').value = it.cover;
-      $('#bookCoverPreview').src = it.cover;
-    }
-    toast(`영문판이라 영문 칸에 넣었어요: ${it.title}` +
-      ($('#bookTitle').value.trim() ? '' : ' — 한글 도서명은 예스24·알라딘 검색으로 채워 주세요'), 'ok');
-    return;
-  }
-  // 제목·저자·표지만 채움 (알라딘 링크는 별도 워크플로우로 처리)
-  $('#bookTitle').value = it.title;
-  updateDupHint();
-  $('#bookAuthor').value = cleanAuthorName(it.author) || $('#bookAuthor').value;
-  if (it.cover) {
-    $('#bookCover').value = it.cover;
-    $('#bookCoverPreview').src = it.cover;
-  }
-  // 알라딘 검색을 편하게 하도록 검색어 필드에 제목+저자 미리 넣어둠
-  $('#aladinQuery').value = [it.title, it.author].filter(Boolean).join(' ');
-  toast(`반영: ${it.title}${it.cover ? ' + 표지' : ''}`, 'ok');
 });
 
 $('#bookTranslateBtn').addEventListener('click', async (e) => {
@@ -1766,8 +1363,6 @@ function loadSettingsToForm() {
   $('#cfgDraftBranch').value = Config.draftBranch;
   $('#cfgPath').value = Config.path;
   $('#cfgToken').value = Config.token;
-  $('#cfgTtb').value = Config.ttb;
-  $('#cfgCorsProxy').value = Config.corsProxy;
   $('#cfgYes24Proxy').value = Config.yes24Proxy;
   $('#cfgCommitter').value = Config.committer;
 }
@@ -1783,8 +1378,6 @@ $('#saveSettingsBtn').addEventListener('click', () => {
   LS.set('draftBranch', draft);
   LS.set('path', $('#cfgPath').value.trim() || 'data.csv');
   LS.set('token', $('#cfgToken').value.trim());
-  LS.set('ttb', $('#cfgTtb').value.trim());
-  LS.set('corsProxy', $('#cfgCorsProxy').value.trim());
   LS.set('yes24Proxy', $('#cfgYes24Proxy').value.trim().replace(/\/+$/, ''));
   LS.set('committer', $('#cfgCommitter').value.trim());
   updateDraftUi();
@@ -3874,7 +3467,7 @@ $('#uniSearch').addEventListener('input', renderUnifyList);
 
 (function init() {
   updateDraftUi();
-  if (!Config.token || !Config.ttb) {
+  if (!Config.token) {
     loadSettingsToForm();
     settingsDlg.showModal();
     setStatus('설정을 입력한 뒤 ↻ 불러오기로 시작하세요.');
