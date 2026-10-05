@@ -2490,7 +2490,7 @@ for name, info in celebs.items():
                        + '" rel="nofollow noopener noreferrer" target="_blank" title="예스24에서 보기">📖 책 정보</a>')
         if b['source'] and b['source'].startswith('http'):
             source_html += (' <a class="rl-source" href="' + esc(b['source'])
-                            + '" rel="nofollow noopener noreferrer" target="_blank">📺 출처 보기</a>')
+                            + '" rel="nofollow noopener noreferrer" target="_blank">📺 출처</a>')
 
         # 함께 추천한 다른 셀럽 (카드 안에 임베드)
         shared_html = ''
