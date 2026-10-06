@@ -322,7 +322,14 @@
     .intro { background: #fff; border: 2px solid #000; box-shadow: 4px 4px 0 0 #000; padding: 14px 16px; margin: 16px 0 24px; font-size: 15px; }
     .celeb-bio { margin: 4px 0 8px; padding: 6px 10px; background: #fff8e7; border-left: 4px solid #000; font-size: 14px; line-height: 1.45; color: #222; }
     .taste { margin: 16px 0; background: #fff; border: 2px solid #000; box-shadow: 4px 4px 0 0 #000; font-size: 14px; line-height: 1.6; }
-    .taste-head { display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 10px; padding: 10px 14px; background: #e0f2fe; border-bottom: 2px solid #000; }
+    .taste-head { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 10px; padding: 10px 14px; background: #e0f2fe; cursor: pointer; list-style: none; }
+    .taste-head::-webkit-details-marker { display: none; }
+    .taste-head:hover { background: #fde047; }
+    .taste-head:focus-visible { outline: 3px solid #2563eb; outline-offset: 2px; }
+    .taste[open] > .taste-head { border-bottom: 2px solid #000; }
+    .taste-open { margin-left: auto; padding: 3px 10px; font-size: 12px; font-weight: 800; background: #fff; border: 2px solid #000; box-shadow: 2px 2px 0 0 #000; white-space: nowrap; }
+    .taste-open::after { content: attr(data-show); }
+    .taste[open] .taste-open::after { content: attr(data-hide); }
     .taste-head h2 { margin: 0; padding: 0; border: 0; font-size: 16px; font-weight: 900; }
     .taste-head span { font-size: 12px; color: #333; }
     .taste-body { padding: 14px; display: grid; gap: 18px; }
@@ -619,7 +626,7 @@
       <a class="rl-cover" href="https://www.yes24.com/product/goods/39404092" rel="nofollow noopener noreferrer" target="_blank" aria-label="Sapiens — buy or read more"><span class="rl-new" data-added="2026-09-27">NEW</span><img src="https://image.yes24.com/goods/39404092/L" alt="Sapiens by Yuval Noah Harari — book cover" loading="lazy"></a>
       <div class="rl-meta">
         <div class="rl-title"><a href="https://www.yes24.com/product/goods/39404092" rel="nofollow noopener noreferrer" target="_blank">Sapiens</a> <span style="color:#888;font-size:12px;font-weight:400">(사피엔스)</span></div>
-        <div class="rl-byline">Yuval Noah Harari</div>
+        <div class="rl-byline">Yuval Noah Harari <span style="color:#888">(<span lang="he">יובל נח הררי</span>)</span></div>
         <a class="rl-source" href="https://www.yes24.com/product/goods/39404092" rel="nofollow noopener noreferrer" target="_blank" title="View on YES24 (Korean bookstore)">📖 Book details</a> <a class="rl-source" href="https://www.sedaily.com/NewsView/1VFEVAEMHP" rel="nofollow noopener noreferrer" target="_blank">📺 Source</a>
         <button type="button" class="heart-btn sm" data-heart="b:사피엔스" aria-pressed="false" aria-label="Heart this book" title="Heart this book" hidden><span class="heart-ico" aria-hidden="true">♡</span><span class="heart-n"></span></button>
         <div class="rl-shared"><span class="rl-shared-label">👥 Also recommended by 4:</span> <a class="rl-celeb-chip" href="https://favorbook.co.kr/en/share/lee-byung-hun.html">Lee Byung-hun</a><a class="rl-celeb-chip" href="https://favorbook.co.kr/en/share/chang-kiha.html">Chang Kiha</a><a class="rl-celeb-chip" href="https://favorbook.co.kr/en/share/juyeon-the-boyz.html">Juyeon (THE BOYZ)</a><a class="rl-celeb-chip" href="https://favorbook.co.kr/en/share/kang-haneul.html">Kang Haneul</a> <a class="rl-book-link" href="https://favorbook.co.kr/en/share/book/sapiens.html">All readers →</a></div>
@@ -641,7 +648,7 @@
       <a class="rl-cover" href="https://www.yes24.com/product/goods/116586056" rel="nofollow noopener noreferrer" target="_blank" aria-label="The Miracles of the Namiya General Store — buy or read more"><img src="https://image.yes24.com/goods/116586056/L" alt="The Miracles of the Namiya General Store by Keigo Higashino — book cover" loading="lazy"></a>
       <div class="rl-meta">
         <div class="rl-title"><a href="https://www.yes24.com/product/goods/116586056" rel="nofollow noopener noreferrer" target="_blank">The Miracles of the Namiya General Store</a> <span style="color:#666">| <span lang="ja">ナミヤ雑貨店の奇跡</span></span> <span style="color:#888;font-size:12px;font-weight:400">(나미야 잡화점의 기적)</span></div>
-        <div class="rl-byline">Keigo Higashino</div>
+        <div class="rl-byline">Keigo Higashino <span style="color:#888">(<span lang="ja">東野圭吾</span>)</span></div>
         <p class="rl-comment">Read as part of a habit of reading for 30 minutes before bed, sometimes together with fans on a YouTube live stream. (Source: Seoul Economic Daily)</p>
         <a class="rl-source" href="https://www.yes24.com/product/goods/116586056" rel="nofollow noopener noreferrer" target="_blank" title="View on YES24 (Korean bookstore)">📖 Book details</a> <a class="rl-source" href="https://www.sedaily.com/NewsView/1VFEVAEMHP" rel="nofollow noopener noreferrer" target="_blank">📺 Source</a>
         <button type="button" class="heart-btn sm" data-heart="b:나미야 잡화점의 기적" aria-pressed="false" aria-label="Heart this book" title="Heart this book" hidden><span class="heart-ico" aria-hidden="true">♡</span><span class="heart-n"></span></button>
@@ -904,15 +911,22 @@
     });
   })();
   </script>
-  <section class="taste" aria-label="📊 Reading taste">
-    <header class="taste-head"><h2>📊 Reading taste</h2><span>from 11 books</span></header>
+  <details class="taste">
+    <summary class="taste-head"><h2>📊 Curious about Ha Yeon-joo's reading taste?</h2><span>from 11 books</span><b class="taste-open" aria-hidden="true" data-show="Show ▾" data-hide="Hide ▴"></b></summary>
     <div class="taste-body">
+      <p class="taste-sum">Most-read genre: <mark>Fiction</mark> (3 books)</p>
+      <div>
+        <p class="taste-label">Genres <small>11 books with a known genre</small></p>
+        <div class="taste-bar" role="img" aria-label="Fiction 3, Science 2, Humanities 2, Society 1, Poetry 1, Essays 1, Arts 1"><span style="flex:3 0 0;background:#fde047" title="Fiction 3">Fiction 27%</span><span style="flex:2 0 0;background:#99f6e4" title="Science 2">Science 18%</span><span style="flex:2 0 0;background:#fed7aa" title="Humanities 2">Humanities 18%</span><span style="flex:1 0 0;background:#bae6fd" title="Society 1"></span><span style="flex:1 0 0;background:#ddd6fe" title="Poetry 1"></span><span style="flex:1 0 0;background:#a7f3d0" title="Essays 1"></span><span style="flex:1 0 0;background:#f5d0fe" title="Arts 1"></span></div>
+        <ul class="taste-legend"><li><i style="background:#fde047"></i>Fiction 3</li><li><i style="background:#99f6e4"></i>Science 2</li><li><i style="background:#fed7aa"></i>Humanities 2</li><li><i style="background:#bae6fd"></i>Society 1</li><li><i style="background:#ddd6fe"></i>Poetry 1</li><li><i style="background:#a7f3d0"></i>Essays 1</li><li><i style="background:#f5d0fe"></i>Arts 1</li></ul>
+      </div>
       <div class="taste-tiles">
+      <div class="taste-tile"><b>Korean · Translated</b><div class="v">3<small> : </small>2</div><div class="meter" aria-hidden="true"><i style="width:60%"></i></div><p>Of 5 literary books: 3 Korean, 2 translated</p></div>
       <div class="taste-tile"><b>Authors picked more than once</b><div class="who">Han Kang 3</div></div>
       </div>
       <p class="taste-note">💬 “희랍어 시간” — Ha Yeon-joo was learning Greek at the time and read the Greek passages in the book firsth…</p>
     </div>
-  </section>
+  </details>
   <section class="related-celebs">
     <h2>🤝 Celebrities with similar reading taste</h2>
     <p class="muted">They recommended some of the same books. The number is how many books they share.</p>
