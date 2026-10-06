@@ -1520,9 +1520,9 @@ TASTE_GENRE_COLOR = {
 }
 TASTE_CSS = (
     '    .taste { margin: 16px 0; background: #fff; border: 2px solid #000; box-shadow: 4px 4px 0 0 #000; font-size: 14px; line-height: 1.6; }\n'
-    '    .taste-head { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 10px; padding: 10px 14px; background: #ff5fa8; cursor: pointer; list-style: none; }\n'
+    '    .taste-head { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 10px; padding: 10px 14px; background: #ff8cc6; cursor: pointer; list-style: none; }\n'
     '    .taste-head::-webkit-details-marker { display: none; }\n'
-    '    .taste-head:hover { background: #ff3d96; }\n'
+    '    .taste-head:hover { background: #ff6fb6; }\n'
     '    .taste-head:focus-visible { outline: 3px solid #2563eb; outline-offset: 2px; }\n'
     '    .taste[open] > .taste-head { border-bottom: 2px solid #000; }\n'
     '    .taste-open { margin-left: auto; padding: 3px 10px; font-size: 12px; font-weight: 800; background: #fff; border: 2px solid #000; box-shadow: 2px 2px 0 0 #000; white-space: nowrap; }\n'
