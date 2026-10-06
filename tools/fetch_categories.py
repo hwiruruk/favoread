@@ -29,6 +29,7 @@ API 응답에 카테고리가 있는지 문서로 확인하지 못해서 둘 다
     --dry-run     파일에 쓰지 않고 결과만 출력
     --refresh     못 찾은 책도 다시 조회
     --sleep SEC   책 사이 대기 (기본 1초 — 상품 페이지를 받으니 넉넉히 쉰다)
+    --max-minutes N  이만큼 지나면 멈추고 받은 것까지 저장 (0=제한 없음). 워크플로 6시간 제한에 잘리지 않게
 
 data/categories.json 은 손으로 고치지 말고, 분야가 틀리면 편집기 '🏷️ 분야 검수'에서 고친다
 (data/genres.json 에 남고 자동 분류보다 먼저 쓰인다).
@@ -54,6 +55,7 @@ PAGE_UA = {'User-Agent': 'Mozilla/5.0 (compatible; favorbook-categories/1.0; +ht
 CAT_LINK_RE = re.compile(r'<a\b[^>]*href="[^"]*category/display/(\d+)[^"]*"[^>]*>(.*?)</a>', re.I | re.S)
 TAG_RE = re.compile(r'<[^>]+>')
 SAFETY_FIRST = 5     # 처음 이만큼 연달아 카테고리를 못 읽으면 멈춘다
+NOT_GENRE_RE = re.compile(r'lexile', re.I)   # 원서의 영어 난이도 분류 — 분야가 아니라 버린다
 
 
 def _clean(s):
@@ -151,7 +153,7 @@ def page_paths(doc):
         for li in re.split(r'<li\b', block, flags=re.I)[1:] or [block]:
             links = CAT_LINK_RE.findall(li)
             p = [_clean(name) for _, name in links if _clean(name)]
-            if len(p) >= 2 and p not in [x['path'] for x in paths]:
+            if len(p) >= 2 and not NOT_GENRE_RE.search(p[0]) and p not in [x['path'] for x in paths]:
                 paths.append({'path': p, 'code': links[-1][0]})
         if paths:
             return paths
@@ -213,6 +215,7 @@ def main():
     ap.add_argument('--dry-run', action='store_true')
     ap.add_argument('--refresh', action='store_true')
     ap.add_argument('--sleep', type=float, default=1.0)
+    ap.add_argument('--max-minutes', type=float, default=0)
     args = ap.parse_args()
 
     books = fb.load_books()
@@ -234,7 +237,12 @@ def main():
           % (len(books), len(have), len(misses), len(todo), '켬' if state['api'] else '끔'))
 
     ok = fail = net = streak = 0
+    started = time.time()
     for i, t in enumerate(todo, 1):
+        if args.max_minutes and time.time() - started > args.max_minutes * 60:
+            print('\n%d분이 지나 여기서 멈춥니다. 받은 것까지 저장하고, 나머지는 다음 실행 때 이어서 받습니다.'
+                  % args.max_minutes)
+            break
         item_id = books[t]['id']
         try:
             paths, src = lookup(item_id, proxy, api_key, state)
