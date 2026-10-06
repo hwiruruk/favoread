@@ -515,6 +515,11 @@
   </section>
 
   <section id="grid" class="w-full">
+    <!-- 핫 카드와 셀럽 카드가 똑같이 생겨서, 제목이 없으면 핫 목록이 이어지는 것처럼 보인다 -->
+    <div id="grid-head" class="border-t-4 border-ink pt-12 md:pt-16 mb-6 md:mb-8">
+      <h2 class="text-2xl md:text-3xl font-black mb-2 word-break-keep">👀 셀럽 둘러보기<span id="grid-count" class="font-sans text-base md:text-lg font-bold text-muted ml-2"></span></h2>
+      <p class="text-sm md:text-base font-bold text-muted word-break-keep">카드를 누르면 읽은 책을 볼 수 있어요. 순서는 들어올 때마다 바뀌어요.</p>
+    </div>
     <div id="grid-container" class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-x-4 sm:gap-x-6 gap-y-8 sm:gap-y-12"></div>
     <div id="empty-state" class="hidden text-center py-20 text-ink font-sans font-bold tracking-widest">No results found.</div>
     
@@ -1733,7 +1738,7 @@
      검색창과 결과 사이에 '요즘 핫한 사람'이 끼어 있어서
      이름을 쳐도 결과를 보려면 한참 스크롤해야 했다. 검색 중에는 그 사이 칸과
      아래쪽 둘러보기 칸을 접어 결과가 검색창 바로 밑에 오게 한다. */
-  const SEARCH_HIDDEN = ['featured', 'join',
+  const SEARCH_HIDDEN = ['featured', 'grid-head', 'join',
                          'seo-top-readers', 'common-books', 'all-celebs'];
 
   function setSearchMode(on, { bookCount = 0, celebCount = 0, hideGrid = false } = {}) {
@@ -2323,6 +2328,8 @@
       entries.forEach(([, d]) => d.books.forEach(b => uniqBooks.add((b.title || '').replace(/\s+/g, '').toLowerCase())));
       uniqBooks.delete('');
       setStatus('success', `${entries.length.toLocaleString()} STARS ⭐ · ${uniqBooks.size.toLocaleString()} BOOKS 📚`);
+      const gridCount = document.getElementById('grid-count');
+      if (gridCount) gridCount.textContent = `${entries.length.toLocaleString()}명`;
 
       // 추가된 자동 구성 함수 실행
       try { renderDynamicSections(); } catch(e) { console.warn("renderDynamicSections:", e); }
