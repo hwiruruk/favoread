@@ -426,13 +426,42 @@ def _latin_key(s):
     return re.sub(r'[^0-9a-z]+', '', ''.join(c for c in s if not unicodedata.combining(c)).lower())
 
 
+# 영어 원제로 볼 낱말. 다른 언어에도 흔한 a·i·in·no·me·on·de 는 넣지 않는다 (A hora da estrela)
+EN_ORIG_WORDS = {
+    'the', 'of', 'and', 'an', 'to', 'is', 'are', 'was', 'be', 'will', 'can', 'not', 'never', 'let',
+    'you', 'your', 'my', 'we', 'our', 'he', 'she', 'his', 'her', 'they', 'their', 'it', 'its',
+    'for', 'with', 'at', 'from', 'by', 'this', 'that', 'all', 'how', 'what', 'why', 'who', 'when',
+    'where', 'there', 'do', "don't",
+    'one', 'two', 'three', 'four', 'five', 'six', 'seven', 'eight', 'nine', 'ten', 'twenty', 'thirty',
+    'forty', 'fifty', 'sixty', 'seventy', 'eighty', 'ninety', 'hundred', 'thousand', 'nineteen',
+}
+
+
+def _en_words(s):
+    return re.findall(r"[a-z][a-z']*", unicodedata.normalize('NFKD', html.unescape(str(s or ''))).lower())
+
+
+def is_english_original(orig, title_en):
+    """라틴 문자 원제가 영어인가. 영어 원서면 영문 제목과 나란히 둘 까닭이 없다
+    (The Martian / Martian, Fifty Shades of Grey, 1984 / Nineteen Eighty-Four)."""
+    if script_lang(orig) != 'latin' or EN_FOREIGN_RE.search(orig):
+        return False
+    a, b = _latin_key(orig), _latin_key(plain_en(title_en))
+    if not a or (b and (a.startswith(b) or b.startswith(a))):
+        return True
+    words = _en_words(orig)
+    if set(words) & EN_ORIG_WORDS:
+        return True
+    long_words = [w for w in words if len(w) >= 3]
+    en_words = set(_en_words(plain_en(title_en)))
+    return bool(long_words) and sum(w in en_words for w in long_words) / len(long_words) > 0.6
+
+
 def en_original(title_ko, author_ko, title_en):
-    """영문 페이지에 덧붙일 원제 (제목, 언어). 영어 원서라 영문 제목과 같으면 None."""
+    """영문 페이지에서 영문 제목과 나란히 둘 원제 (제목, 언어). 영어 원서면 None."""
     r = resolve_original(title_ko, author_ko)
-    if r and script_lang(r[0]) == 'latin':
-        a, b = _latin_key(r[0]), _latin_key(plain_en(title_en))
-        if not a or (b and (a.startswith(b) or b.startswith(a))):
-            return None
+    if r and is_english_original(r[0], title_en):
+        return None
     return r
 
 
@@ -4323,10 +4352,11 @@ for name, info in celebs.items():
                       + esc(b['title_en']) + '</a>')
         else:
             t_html = esc(b['title_en'])
-        # 한국어 제목 옆에 원제를 붙인다 — 해외 독자가 자기 나라 서점에서 원서를 찾을 수 있게
+        # 영어 제목 | 원제 (한국어) — 해외 독자는 영어 다음으로 원제를 보고 원서를 찾는다
         _orig = en_original(b['title'], b['author'], b['title_en'])
-        t_html += (' <span style="color:#888;font-size:12px;font-weight:400">(' + esc(b['title'])
-                   + ((' · Original: ' + lang_span(_orig)) if _orig else '') + ')</span>')
+        if _orig:
+            t_html += ' <span style="color:#666">| ' + lang_span(_orig) + '</span>'
+        t_html += ' <span style="color:#888;font-size:12px;font-weight:400">(' + esc(b['title']) + ')</span>'
 
         a_en = b.get('author_en')
         author_text = esc(a_en) if a_en else esc(b['author'])
@@ -4949,9 +4979,9 @@ for title, t_en in book_title_en.items():
         '    <span class="lang-btn active">EN</span>\n'
         '  </div>\n'
         '  <nav><a href="' + EN_BASE + '">← Favorbook Home</a> · <a href="' + EN_BASE + 'share/ranking.html">Most-read books ranking</a></nav>\n'
-        '  <h1>' + esc(t_en) + '</h1>\n'
+        '  <h1>' + esc(t_en)
+        + ((' <span style="color:#666">| ' + lang_span(orig) + '</span>') if orig else '') + '</h1>\n'
         '  <p class="meta">Korean: <strong>' + esc(title) + '</strong>'
-        + ((' · Original: <strong>' + lang_span(orig) + '</strong>') if orig else '')
         + ((' · ' + author_html) if author_display.strip() else '')
         + ((' · ' + esc(binfo['publisher'])) if binfo['publisher'].strip() else '')
         + '</p>\n'
