@@ -180,7 +180,7 @@
     .scrollbar-hide::-webkit-scrollbar { display: none; }
     .scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }
     @media (max-width: 767px) {
-      #hero, #about, #celebs, #books { scroll-margin-top: 60px; }
+      #hero, #search, #about, #featured, #categories, #groups, #celebs, #books { scroll-margin-top: 60px; }
     }
   </style>
 </head>
@@ -8728,7 +8728,9 @@
   const sections = ids.map(id => document.getElementById(id)).filter(Boolean);
   const tabs = document.querySelectorAll(".spy-tab");
   if (!sections.length || !tabs.length) return;
-  const setActive = (id) => tabs.forEach(t => t.classList.toggle("active", t.dataset.spy === id));
+  // Browse by Type/Group 칸은 탭이 따로 없다 — 셀럽 탭으로 묶어 핫(Trending) 탭과 헷갈리지 않게 한다
+  const alias = { categories: "celebs", groups: "celebs" };
+  const setActive = (id) => { id = alias[id] || id; tabs.forEach(t => t.classList.toggle("active", t.dataset.spy === id)); };
   const observer = new IntersectionObserver((entries) => {
     const visible = entries.filter(e => e.isIntersecting)
       .sort((a, b) => a.boundingClientRect.top - b.boundingClientRect.top);
