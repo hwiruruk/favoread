@@ -25,7 +25,7 @@
     <button id="sortBtn" class="btn" title="모든 셀럽의 추천 도서를 도서명·저자 가나다순으로 정렬">🔤 정렬</button>
     <button id="missingBtn" class="btn" title="영문 누락된 셀럽·책 목록 (TSV 복사 → AI 의뢰 → 일괄 적용)">📋 누락 영문</button>
     <button id="featuredBtn" class="btn" title="메인 상단에 고정 노출할 &apos;요즘 핫한 사람&apos; 한 줄 지정">🔥 핫한 사람</button>
-    <button id="titlesBtn" class="btn" title="원제·위키백과에서 찾은 공식 영문판 제목 후보를 검수 (승인한 제목이 영문 페이지에 나감)">🔤 영문 제목 검수</button>
+    <button id="titlesBtn" class="btn" title="원제·위키백과에서 찾은 공식 영문판 제목과 저자 영문 이름 후보를 검수 (승인한 값이 영문 페이지에 나감)">🔤 영문 제목·저자 검수</button>
     <button id="genresBtn" class="btn" title="도서관 분류로 소설·에세이 등을 정하지 못한 책을 직접 골라 줌 (독서 취향 통계에 쓰임)">🏷️ 분야 검수</button>
     <button id="unifyBtn" class="btn" title="같은 책인데 영문 제목이나 한국어 제목이 갈린 경우를 찾아 하나로 맞춤">📚 책 이름 통일</button>
     <button id="commentsBtn" class="btn" title="출처에서 자동으로 뽑은 추천 이유 초안을 검수 (승인한 것만 노출)">💬 코멘트 검수</button>
@@ -374,7 +374,7 @@
 
 <dialog id="titlesDialog" class="modal" style="width: min(980px, 96vw);">
   <header class="modal-head">
-    <h3>🔤 영문 제목 검수</h3>
+    <h3>🔤 영문 제목·저자 검수</h3>
     <button type="button" class="x" data-close>✕</button>
   </header>
 
@@ -389,19 +389,37 @@
       미검수 항목은 지금처럼 data.csv 값이 나가고, 결과는 <code>data/titles_en.json</code>에
       <b>이 창의 저장 버튼으로 바로 커밋</b>됩니다.
     </p>
+    <p class="muted small">
+      카드 아래 <b>저자 영문</b>은 같은 저자가 행마다 <code>Kim Youngha *</code> / <code>Kim Young-ha</code>처럼
+      갈린 것을 하나로 맞추는 칸입니다. 후보는 이 책의 영어판(Open Library)·위키데이터 책 항목의 저자,
+      예스24 원서 저자, 위키데이터·위키백과 인물 문서에서 모읍니다.
+      <b>Goodreads 저자 / 영어판 (제목+저자)</b> 링크로 입력한 표기가 맞는지 확인하고 <b>저자 승인</b>을 누르면
+      그 저자의 모든 책이 같은 표기로 나갑니다. 필터의 <b>저자:</b> 항목은 저자 한 명에 카드 하나씩 보여 줍니다.
+    </p>
 
     <div class="cmt-toolbar">
-      <select id="ttlFilter" class="small" style="width: 170px;">
-        <option value="focus">우선 검수 (후보 있음)</option>
-        <option value="conflict">CSV와 후보가 다름</option>
-        <option value="problem">문제 있는 값 (사이트에서 빠짐)</option>
-        <option value="star">직역* 인 것</option>
-        <option value="empty">영문 제목 빈 칸</option>
-        <option value="nocand">후보 없음 · 미조회</option>
-        <option value="pending">미검수 전체</option>
-        <option value="approved">승인됨</option>
-        <option value="none">공식판 없음 · 숨김</option>
-        <option value="all">전체</option>
+      <select id="ttlFilter" class="small" style="width: 190px;">
+        <optgroup label="제목">
+          <option value="focus">우선 검수 (후보 있음)</option>
+          <option value="conflict">CSV와 후보가 다름</option>
+          <option value="problem">문제 있는 값 (사이트에서 빠짐)</option>
+          <option value="star">직역* 인 것</option>
+          <option value="empty">영문 제목 빈 칸</option>
+          <option value="nocand">후보 없음 · 미조회</option>
+          <option value="pending">미검수 전체</option>
+          <option value="approved">승인됨</option>
+          <option value="none">공식판 없음 · 숨김</option>
+          <option value="all">전체</option>
+        </optgroup>
+        <optgroup label="저자 (저자 한 명에 카드 하나)">
+          <option value="a_focus">저자: 우선 검수 (후보 있음)</option>
+          <option value="a_variants">저자: 행마다 표기가 다름</option>
+          <option value="a_conflict">저자: CSV와 후보가 다름</option>
+          <option value="a_star">저자: 로마자* 인 것</option>
+          <option value="a_nocand">저자: 후보 없음 · 미조회</option>
+          <option value="a_pending">저자: 미검수 전체</option>
+          <option value="a_approved">저자: 검수 완료</option>
+        </optgroup>
       </select>
       <input id="ttlSearch" type="search" placeholder="한국어 / 영어 제목 · 저자 검색…">
       <span id="ttlCount" class="muted small"></span>

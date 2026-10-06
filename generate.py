@@ -277,13 +277,16 @@ def load_titles_en():
         return {}
     try:
         with open(path, encoding='utf-8') as fp:
-            return (json.load(fp) or {}).get('titles') or {}
+            return json.load(fp) or {}
     except (json.JSONDecodeError, OSError) as e:
         print('⚠️ data/titles_en.json 읽기 실패 — data.csv 값만 씁니다: %s' % e)
         return {}
 
 
-TITLES_EN = load_titles_en()
+_TITLES_EN_DOC = load_titles_en()
+TITLES_EN = _TITLES_EN_DOC.get('titles') or {}
+# 저자 영문 이름 검수 — 키는 data.csv 의 저자 칸 그대로. 같은 검수 창에서 제목과 함께 본다.
+AUTHORS_EN = _TITLES_EN_DOC.get('authors') or {}
 EN_TITLE_SKIPPED = {}   # 도서명 → 뺀 이유 (빌드 끝에 한 번에 알린다)
 
 
@@ -301,6 +304,21 @@ def resolve_title_en(title_ko, author_ko, csv_value):
         EN_TITLE_SKIPPED[title_ko] = '%s — %s' % (why, value)
         return None
     return en_title_case(value) if value else value
+
+
+def resolve_author_en(author_ko, csv_value):
+    """검수 결과 > data.csv 순으로 영문 저자를 정한다.
+
+    approved 면 그 저자의 모든 행이 같은 표기(value)로, none 이면 value 에 * 을 붙여 나간다.
+    미검수면 data.csv 값 그대로 (행마다 다를 수 있다).
+    """
+    ent = AUTHORS_EN.get((author_ko or '').strip())
+    if not ent or ent.get('status') not in ('approved', 'none'):
+        return csv_value
+    v = re.sub(r'\s*\*\s*$', '', (ent.get('value') or '').strip())
+    if not v or en_title_problem(author_ko, v):
+        return csv_value
+    return v if ent['status'] == 'approved' else v + ' *'
 
 
 JA_KANA_RE = re.compile(r'[぀-ヿ]')
@@ -1281,6 +1299,7 @@ with open("data.csv", encoding="utf-8") as f:
         title_en  = clean_en(get(C['title_en']))  if C['title_en']  is not None else None
         title_en  = resolve_title_en(title, get(C['author']), title_en)
         author_en = clean_en(get(C['author_en'])) if C['author_en'] is not None else None
+        author_en = resolve_author_en(get(C['author']), author_en)
 
         if name not in celebs:
             celebs[name] = {'img': img_url, 'books': [], 'name_en': name_en}

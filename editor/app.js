@@ -1680,7 +1680,7 @@ async function reloadFromGithub({ ask = true } = {}) {
     } else {
       toast((draft ? '발행 안 된 드래프트를 불러왔습니다' : '불러오기 완료') +
         (merged ? ' — 그새 발행된 변경도 합쳤습니다' : '') +
-        (nTtl ? ` — 검수한 영문 제목 ${nTtl}건을 도서명_en에 반영했습니다 (드래프트 저장·발행하면 data.csv에도 반영)` : ''), 'ok');
+        (nTtl ? ` — 검수한 영문 제목·저자 ${nTtl}건을 도서명_en·저자_en에 반영했습니다 (드래프트 저장·발행하면 data.csv에도 반영)` : ''), 'ok');
     }
   } catch (err) {
     setStatus('');
@@ -2712,11 +2712,18 @@ commentsDlg.addEventListener('close', () => {
  * data.csv 에 쓰지 않는 이유는 코멘트 검수와 같다. 파일 하나만 커밋하면
  * CSV 저장과 부딪히지 않고, 배치가 다시 돌아도 사람이 정한 값이 남는다.
  * generate.py 는 approved/none 이면 이 값을, pending 이면 data.csv 값을 쓴다.
+ *
+ * 같은 파일의 authors 는 저자 영문 이름이다 (키 = data.csv 의 저자 칸). 같은 저자도 행마다
+ * Kim Youngha * / Kim Young-ha 처럼 갈려 있어서, 위키데이터·Open Library·예스24·위키백과에
+ * 적힌 이름을 후보로 모아 두고 제목 카드 아래에서 함께 고른다. 승인하면 그 저자의 모든 행이
+ * 같은 표기로 맞춰진다. Goodreads 는 자동 수집이 막혀 있어 확인용 검색 링크만 단다.
  */
 const TITLES_PATH = 'data/titles_en.json';
 const Ttl = {
   items: new Map(),     // "도서명|저자" -> entry
   touched: new Set(),   // 이번에 손댄 키 — 저장할 때 최신 파일 위에 이것만 덮는다
+  authors: new Map(),   // 저자(한국어) -> entry
+  touchedAuthors: new Set(),
   loaded: false,
   dirty: false,
   shown: 60,
@@ -2729,6 +2736,21 @@ const TTL_FLAG = {
 };
 const TTL_SRC = { yes24: '예스24 원서명', aladin: '알라딘 원제', wikipedia: '위키백과', wikidata: '위키데이터', openlibrary: 'Open Library', ltikorea: '한국문학번역원(출간본)', ltikorea_title: '한국문학번역원 영문 제목' };
 const stripStar = (v) => String(v || '').replace(/\s*\*\s*$/, '').trim();
+const AUT_LABEL = { pending: '미검수', approved: '승인', none: '공식 표기 없음' };
+const AUT_FLAG = {
+  csv_star: ['로마자*', ''], csv_problem: ['문제 있는 값', 'bad'], csv_empty: ['빈 칸', ''],
+  conflict: ['CSV와 다름', 'bad'], variants: ['행마다 표기 다름', 'bad'], multi: ['여러 명', ''],
+  no_candidate: ['후보 없음', ''], unchecked: ['미조회', ''],
+};
+const AUT_SRC = { wikidata_book: '위키데이터(이 책의 저자)', openlibrary: 'Open Library 영어판', yes24: '예스24 원서 저자', wikidata: '위키데이터(인물)', wikipedia: '위키백과' };
+// 비교용 — 대소문자·하이픈·띄어쓰기·악센트 차이는 같은 이름 (tools/fetch_titles_en.py 의 name_key)
+const nameKey = (s) => String(s || '').normalize('NFKD').replace(/[\u0300-\u036f]/g, '').toLowerCase().replace(/[^0-9a-z]+/g, '');
+function autProblem(v) {
+  if (/[가-힣ㄱ-ㅎㅏ-ㅣ]/.test(v)) return '한글';
+  if (/\(\s*or\b|\bor similar\b|\bunofficial\b/i.test(v)) return 'AI 설명 문구';
+  if (/^\?/.test(v)) return '? 표시';
+  return null;
+}
 
 // generate.py 의 en_title_problem() 과 같은 규칙 — 여기서 막아야 승인해 놓고 사이트에서 빠지는 일이 없다
 function ttlProblem(titleKo, v) {
@@ -2787,6 +2809,35 @@ function ttlResolved(ent) {
   return null;
 }
 
+// 저자 검수 결과 → 저자_en. generate.py 의 resolve_author_en() 과 같은 규칙
+function autResolved(ent) {
+  if (!ent) return null;
+  const v = stripStar(ent.value);
+  if (!v) return null;
+  if (ent.status === 'approved') return v;
+  if (ent.status === 'none') return v + ' *';
+  return null;
+}
+
+function applyAuthorsToBooks(names) {
+  let n = 0;
+  for (const c of State.celebs.values()) {
+    for (const b of c.books) {
+      if (names && !names.has(b.author || '')) continue;
+      const v = autResolved(Ttl.authors.get(b.author || ''));
+      if (v && v !== (b.author_en || '')) { b.author_en = v; n++; }
+    }
+  }
+  if (n) setDirty(true);
+  return n;
+}
+
+function loadTitlesDoc(doc) {
+  for (const [k, v] of Object.entries(doc.titles || {})) Ttl.items.set(k, v);
+  for (const [k, v] of Object.entries(doc.authors || {})) Ttl.authors.set(k, v);
+  Ttl.loaded = true;
+}
+
 function applyTitlesToBooks(keys) {
   let n = 0;
   for (const c of State.celebs.values()) {
@@ -2808,23 +2859,22 @@ async function syncTitlesToBooks() {
     try {
       const doc = await fetchTitlesDoc();
       if (!doc) return 0;
-      for (const [k, v] of Object.entries(doc.titles || {})) Ttl.items.set(k, v);
-      Ttl.loaded = true;
+      loadTitlesDoc(doc);
     } catch (err) {
       console.warn('영문 제목 검수 파일 읽기 실패', err);
       return 0;
     }
   }
-  return applyTitlesToBooks();
+  return applyTitlesToBooks() + applyAuthorsToBooks();
 }
 
 function setTtlStatus(msg) { $('#ttlStatus').textContent = msg || ''; }
 
-function markTtlDirty(key) {
-  Ttl.touched.add(key);
+function markTtlDirty(key, isAuthor) {
+  (isAuthor ? Ttl.touchedAuthors : Ttl.touched).add(key);
   Ttl.dirty = true;
   $('#ttlSaveBtn').disabled = false;
-  setTtlStatus(`미저장 변경 ${Ttl.touched.size}건`);
+  setTtlStatus(`미저장 변경 — 제목 ${Ttl.touched.size}건 · 저자 ${Ttl.touchedAuthors.size}명`);
   window.onbeforeunload = () => '저장되지 않은 변경이 있습니다.';
 }
 
@@ -2846,8 +2896,7 @@ async function openTitlesDialog() {
           '아직 data/titles_en.json 이 없습니다. Actions → Fetch English Titles 를 먼저 돌려 주세요.</p>';
         return;
       }
-      for (const [k, v] of Object.entries(doc.titles || {})) Ttl.items.set(k, v);
-      Ttl.loaded = true;
+      loadTitlesDoc(doc);
       setTtlStatus(doc._updated ? `후보 갱신 ${doc._updated}` : '');
     } catch (err) {
       setTtlStatus('');
@@ -2866,11 +2915,77 @@ function ttlCounts() {
   return n;
 }
 
+// 편집기에 올라온 data.csv 의 저자별 저자_en 값(줄 수)과 책 — 검수 파일에 적힌 것보다 지금 상태가 정확하다
+function autIndex() {
+  const idx = new Map();
+  for (const c of State.celebs.values()) {
+    for (const b of c.books) {
+      const name = b.author || '';
+      if (!name) continue;
+      if (!idx.has(name)) idx.set(name, { values: new Map(), titles: new Set() });
+      const e = idx.get(name);
+      const v = (b.author_en || '').trim();
+      if (v) e.values.set(v, (e.values.get(v) || 0) + 1);
+      e.titles.add(b.title);
+    }
+  }
+  return idx;
+}
+
+// 저자 한 명의 검수 항목 + 지금 data.csv 값. 아직 조회 전인 저자도 직접 검수할 수 있게 빈 항목을 만든다
+function autView(name, idx) {
+  const ent = Ttl.authors.get(name) || { author: name, candidates: [], status: 'pending', value: '' };
+  const live = idx.get(name);
+  const values = live ? [...live.values].sort((a, b) => b[1] - a[1]) : Object.entries(ent.csv_values || {});
+  const books = live ? live.titles.size : (ent.books || 0);
+  // 하이픈·띄어쓰기만 달라도(Kim Youngha / Kim Young-ha) 사이트에는 다르게 나가니 갈린 것으로 본다
+  const variants = new Set(values.map(([x]) => stripStar(x).replace(/\s+/g, ' ')).filter(Boolean)).size > 1;
+  return { ent, values, books, variants };
+}
+
+function autCounts(idx) {
+  const n = { pending: 0, approved: 0, none: 0 };
+  for (const name of idx.keys()) {
+    const st = Ttl.authors.get(name)?.status;
+    n[st in n ? st : 'pending']++;
+  }
+  return n;
+}
+
 function ttlRows() {
   const f = $('#ttlFilter').value;
   const q = $('#ttlSearch').value.trim().toLowerCase();
   const rows = [];
+  // '저자:' 필터는 저자 한 명에 카드 하나 (그 저자의 첫 책 카드)
+  const byAuthor = f.startsWith('a_');
+  const idx = autIndex();
+  const seen = new Set();
   for (const [k, v] of Ttl.items) {
+    if (byAuthor) {
+      const name = v.author || '';
+      if (!name || seen.has(name)) continue;
+      const av = autView(name, idx);
+      const a = av.ent;
+      const ap = (a.status || 'pending') === 'pending';
+      const afl = a.flags || [];
+      const aok = {
+        a_focus: ap && (a.candidates || []).length > 0,
+        a_conflict: ap && afl.includes('conflict'),
+        a_variants: ap && av.variants,
+        a_star: ap && av.values.some(([x]) => /\*\s*$/.test(x)),
+        a_nocand: ap && !(a.candidates || []).length,
+        a_pending: ap, a_approved: !ap,
+      }[f];
+      if (!aok) continue;
+      if (q) {
+        const hay = [name, a.value, ...av.values.map(([x]) => x), ...(a.candidates || []).map(c => c.name)]
+          .join(' ').toLowerCase();
+        if (!hay.includes(q)) continue;
+      }
+      seen.add(name);
+      rows.push([k, v, av]);
+      continue;
+    }
     const st = v.status || 'pending';
     const fl = v.flags || [];
     const cands = v.candidates || [];
@@ -2886,10 +3001,23 @@ function ttlRows() {
     }[f];
     if (!ok) continue;
     if (q) {
-      const hay = [k, v.csv, v.value, ...cands.map(c => c.title)].join(' ').toLowerCase();
+      const a = Ttl.authors.get(v.author || '');
+      const hay = [k, v.csv, v.value, ...cands.map(c => c.title), a?.value,
+                   ...[...(idx.get(v.author || '')?.values.keys() || [])]].join(' ').toLowerCase();
       if (!hay.includes(q)) continue;
     }
     rows.push([k, v]);
+  }
+  if (byAuthor) {
+    // 확실한 후보 → 표기가 갈린 것 → 책이 많은 저자 순 (한 번 승인으로 고쳐지는 줄이 많은 쪽부터)
+    const rank = (av) => {
+      const a = av.ent;
+      const c = { high: 0, mid: 1 }[a.confidence] ?? 2;
+      return c * 10 - (av.variants ? 3 : 0) - ((a.flags || []).includes('conflict') ? 2 : 0);
+    };
+    rows.sort((a, b) => rank(a[2]) - rank(b[2]) || b[2].books - a[2].books
+      || (a[1].author || '').localeCompare(b[1].author || '', 'ko'));
+    return rows;
   }
   // 확실한 것부터 — 눌러서 승인만 하면 되는 카드가 위로 온다
   const rank = (v) => {
@@ -2913,14 +3041,17 @@ function bookLinkFor(title) {
 function renderTitlesList() {
   const n = ttlCounts();
   const rows = ttlRows();
+  const idx = autIndex();
+  const na = autCounts(idx);
   $('#ttlCount').textContent =
-    `이 목록 ${rows.length} · 미검수 ${n.pending} · 승인 ${n.approved} · 공식판 없음 ${n.none}`;
+    `이 목록 ${rows.length} · 제목 미검수 ${n.pending} · 승인 ${n.approved} · 공식판 없음 ${n.none}` +
+    ` · 저자 미검수 ${na.pending} · 승인 ${na.approved}`;
 
   const box = $('#ttlList');
   if (!rows.length) {
-    const hint = $('#ttlFilter').value === 'focus'
+    const hint = ['focus', 'a_focus'].includes($('#ttlFilter').value)
       ? ' 후보가 아직 없다면 GitHub Actions → Fetch English Titles 를 돌려 주세요. ' +
-        '그동안은 필터를 "문제 있는 값"이나 "직역* 인 것"으로 바꿔 직접 고칠 수 있습니다.' : '';
+        '그동안은 필터를 "문제 있는 값"이나 "직역* 인 것", "저자: 표기가 갈린 것"으로 바꿔 직접 고칠 수 있습니다.' : '';
     box.innerHTML = `<p class="muted small" style="padding:18px 4px;">해당하는 항목이 없습니다.${hint}</p>`;
     $('#ttlMoreBtn').classList.add('hidden');
     return;
@@ -2935,7 +3066,7 @@ function renderTitlesList() {
       ? `<span class="ttl-flag ${TTL_FLAG[f][1]}">${TTL_FLAG[f][0]}</span>` : '').join('');
     const conf = v.confidence && v.confidence !== 'none'
       ? `<span class="ttl-conf c-${esc(v.confidence)}" title="high = 영어판 확인 또는 두 곳 이상 일치">${v.confidence === 'high' ? '확실' : '후보'}</span>` : '';
-    return `<article class="cmt-card ${st}" data-key="${esc(k)}">
+    return `<article class="cmt-card ${st}" data-key="${esc(k)}" data-author="${esc(v.author || '')}">
       <div class="cmt-head">
         ${conf}
         <b>${esc(v.title)}</b><span class="muted"> · ${esc(v.author || '')}</span>
@@ -2960,26 +3091,121 @@ function renderTitlesList() {
         ${link ? `<a href="${esc(link)}" target="_blank" rel="noopener">예스24 상품 ↗</a>` : ''}
         <a href="https://www.google.com/search?q=${q}" target="_blank" rel="noopener">Google 검색 ↗</a>
         <a href="https://www.goodreads.com/search?q=${encodeURIComponent(v.title + ' ' + (v.author || ''))}" target="_blank" rel="noopener" title="한국어판을 찾아 들어가면 '다른 판(Other editions)'에 영어판 제목이 있습니다">Goodreads (한국어판) ↗</a>
-        ${author_en ? `<a href="https://www.goodreads.com/search?q=${encodeURIComponent(author_en)}" target="_blank" rel="noopener">Goodreads (저자) ↗</a>` : ''}
       </div>
       <div class="cmt-actions">
         <button type="button" class="btn small ok" data-act="approved" title="공식 영문판 제목으로 확정">승인</button>
+        <button type="button" class="btn small ok" data-act="both" title="아래 저자 영문 이름까지 한 번에 승인">제목·저자 함께 승인</button>
         <button type="button" class="btn small" data-act="none" title="공식 영문판이 없음 — 입력한 직역에 * 을 붙여 노출">공식판 없음 (직역*)</button>
         <button type="button" class="btn small" data-act="hide" title="영문 페이지에서 이 책을 뺌">영문 숨김</button>
         <button type="button" class="btn small" data-act="pending">보류</button>
         <span class="muted small">Ctrl+Enter = 승인</span>
       </div>
+      ${autBlock(v, idx)}
     </article>`;
   }).join('');
 
   // 입력칸은 value 로 넣는다 — 제목 속 따옴표가 HTML을 깨지 않도록
   page.forEach(([k, v], i) => {
-    const inp = box.children[i].querySelector('input[data-f="value"]');
+    const card = box.children[i];
+    const inp = card.querySelector('input[data-f="value"]');
     inp.value = v.value || (v.candidates?.[0]?.title) || stripStar(v.csv);
-    markPicked(box.children[i], inp.value);
+    markPicked(card, inp.value);
+    const ainp = card.querySelector('input[data-f="author"]');
+    if (ainp) {
+      const { ent: a, values } = autView(v.author || '', idx);
+      ainp.value = stripStar(a.value) || a.candidates?.[0]?.name || stripStar(values[0]?.[0]);
+      markPickedAuthor(card, ainp.value);
+    }
+    updateGrLinks(card);
   });
   $('#ttlMoreBtn').classList.toggle('hidden', rows.length <= Ttl.shown);
   $('#ttlMoreBtn').textContent = `더 보기 (${rows.length - Ttl.shown}건 남음)`;
+}
+
+// 카드 아래쪽 저자 영문 이름 칸. 승인하면 이 저자의 모든 책(행)이 같은 표기가 된다
+function autBlock(v, idx) {
+  const name = v.author || '';
+  if (!name) return '';
+  const { ent: a, values, books, variants } = autView(name, idx);
+  const st = a.status || 'pending';
+  const cands = a.candidates || [];
+  const fl = new Set(st === 'pending' ? (a.flags || []) : []);
+  if (st === 'pending' && variants) fl.add('variants');
+  const flags = [...fl].map(f => AUT_FLAG[f]
+    ? `<span class="ttl-flag ${AUT_FLAG[f][1]}">${AUT_FLAG[f][0]}</span>` : '').join('');
+  const conf = a.confidence && a.confidence !== 'none'
+    ? `<span class="ttl-conf c-${esc(a.confidence)}" title="확실 = 이 책의 영어판·위키데이터 책 항목에 적힌 저자이거나 두 곳 이상 일치">${a.confidence === 'high' ? '확실' : '후보'}</span>` : '';
+  return `<div class="ttl-author">
+    <div class="cmt-head">
+      ${conf}
+      <b>저자 영문</b><span class="muted"> · ${esc(name)} · 책 ${books}권${books > 1 ? ' (승인하면 모두 이 표기로)' : ''}</span>
+      <span class="cmt-state s-${st}">${AUT_LABEL[st] || st}${a.auto ? ' (자동)' : ''}</span>
+      ${flags}
+    </div>
+    <p class="ttl-csv">지금 data.csv: ${values.length
+      ? values.map(([x, n]) => `<b>${esc(x)}</b>${values.length > 1 ? ` <span class="muted">${n}줄</span>` : ''}`).join(' · ')
+      : '<b>(비어 있음)</b>'}</p>
+    ${cands.length ? `<div class="ttl-cands">${cands.map((c, i) => `
+      <button type="button" class="ttl-cand" data-apick="${i}">
+        <span>${esc(c.name)}</span>
+        <span class="src">${(c.sources || []).map(x => AUT_SRC[x] || x).join(' + ')}</span>
+        ${(c.urls || []).map(u => `<a href="${esc(u)}" target="_blank" rel="noopener">근거 ↗</a>`).join('')}
+      </button>`).join('')}</div>` : ''}
+    ${(a.notes || []).length ? `<p class="cmt-note">⚠ ${esc(a.notes.join(' · '))}</p>` : ''}
+    <div class="ttl-value">
+      <input type="text" data-f="author" placeholder="영문 저자 (영어판·인물 문서에 적힌 표기)">
+    </div>
+    <div class="ttl-links">
+      <a data-gr="author" target="_blank" rel="noopener" title="저자 페이지에 적힌 이름 표기를 확인하세요">Goodreads 저자 ↗</a>
+      <a data-gr="book" target="_blank" rel="noopener" title="입력한 영문 제목 + 영문 저자로 찾습니다. 영어판이 걸리면 제목과 저자가 둘 다 맞는 것">Goodreads 영어판 (제목+저자) ↗</a>
+      <a data-gr="ol" target="_blank" rel="noopener">Open Library 저자 ↗</a>
+      <a data-gr="wiki" target="_blank" rel="noopener">위키백과 인물 ↗</a>
+    </div>
+    <div class="cmt-actions">
+      <button type="button" class="btn small ok" data-aact="approved" title="이 저자의 모든 행을 이 표기로 맞춤">저자 승인</button>
+      <button type="button" class="btn small" data-aact="none" title="영어판·공식 표기가 없음 — 입력한 로마자 표기에 * 을 붙여 노출">공식 표기 없음 (로마자*)</button>
+      <button type="button" class="btn small" data-aact="pending">보류</button>
+    </div>
+  </div>`;
+}
+
+// 검증 링크는 입력칸 값으로 만든다 — 후보를 고르거나 고쳐 치면 바로 그 표기로 찾아진다
+function updateGrLinks(card) {
+  const t = stripStar(card.querySelector('input[data-f="value"]')?.value);
+  const a = stripStar(card.querySelector('input[data-f="author"]')?.value);
+  const name = card.dataset.author || '';
+  const set = (k, url) => { const el = card.querySelector(`a[data-gr="${k}"]`); if (el) el.href = url; };
+  set('author', `https://www.goodreads.com/search?q=${encodeURIComponent(a || name)}&search_type=books&search%5Bfield%5D=author`);
+  set('book', `https://www.goodreads.com/search?q=${encodeURIComponent([t, a].filter(Boolean).join(' '))}`);
+  set('ol', `https://openlibrary.org/search/authors?q=${encodeURIComponent(a || name)}`);
+  set('wiki', `https://ko.wikipedia.org/w/index.php?search=${encodeURIComponent(name)}`);
+}
+
+function markPickedAuthor(card, value) {
+  const a = Ttl.authors.get(card.dataset.author || '');
+  card.querySelectorAll('[data-apick]').forEach(btn => {
+    const c = a?.candidates?.[+btn.dataset.apick];
+    btn.classList.toggle('picked', !!c && nameKey(c.name) === nameKey(value));
+  });
+}
+
+function setAutState(card, act, quiet) {
+  const name = card.dataset.author || '';
+  if (!name) return false;
+  const val = stripStar(card.querySelector('input[data-f="author"]')?.value);
+  if (act !== 'pending' && !val) { toast('영문 저자가 비어 있습니다', 'err'); return false; }
+  const bad = act !== 'pending' && autProblem(val);
+  if (bad) { toast(`저자 이름에 ${bad}이(가) 섞여 있습니다`, 'err'); return false; }
+  const it = Ttl.authors.get(name) || { author: name, candidates: [] };
+  it.status = act;
+  it.value = val;
+  delete it.auto;
+  it.reviewed = new Date().toISOString().slice(0, 10);
+  Ttl.authors.set(name, it);
+  markTtlDirty(name, true);
+  if (applyAuthorsToBooks(new Set([name]))) { renderSidebar(); renderDetail(); }
+  if (!quiet) renderTitlesList();
+  return true;
 }
 
 function markPicked(card, value) {
@@ -2990,22 +3216,23 @@ function markPicked(card, value) {
   });
 }
 
-function setTtlState(card, act) {
+function setTtlState(card, act, quiet) {
   const key = card.dataset.key;
   const it = Ttl.items.get(key);
-  if (!it) return;
+  if (!it) return false;
   const val = stripStar(card.querySelector('input[data-f="value"]').value);
-  if (act === 'approved' && !val) { toast('영문 제목이 비어 있어 승인할 수 없습니다', 'err'); return; }
-  if (act === 'none' && !val) { toast('직역을 적거나, 영문 페이지에서 빼려면 "영문 숨김"을 누르세요', 'err'); return; }
+  if (act === 'approved' && !val) { toast('영문 제목이 비어 있어 승인할 수 없습니다', 'err'); return false; }
+  if (act === 'none' && !val) { toast('직역을 적거나, 영문 페이지에서 빼려면 "영문 숨김"을 누르세요', 'err'); return false; }
   const bad = (act === 'approved' || act === 'none') && ttlProblem(it.title, val);
-  if (bad) { toast(`제목에 ${bad}이(가) 섞여 있습니다. 하나로 고쳐 주세요`, 'err'); return; }
+  if (bad) { toast(`제목에 ${bad}이(가) 섞여 있습니다. 하나로 고쳐 주세요`, 'err'); return false; }
   if (act === 'hide') { it.status = 'none'; it.value = ''; }
   else { it.status = act; it.value = enTitleCase(val); }
   delete it.auto;
   it.reviewed = new Date().toISOString().slice(0, 10);
   markTtlDirty(key);
   if (applyTitlesToBooks(new Set([key]))) { renderSidebar(); renderDetail(); }
-  renderTitlesList();
+  if (!quiet) renderTitlesList();
+  return true;
 }
 
 $('#ttlList').addEventListener('click', (e) => {
@@ -3019,17 +3246,39 @@ $('#ttlList').addEventListener('click', (e) => {
       const inp = card.querySelector('input[data-f="value"]');
       inp.value = c.title;
       markPicked(card, c.title);
+      updateGrLinks(card);
       inp.focus();
     }
     return;
   }
+  const apick = e.target.closest('[data-apick]');
+  if (apick) {
+    const c = Ttl.authors.get(card.dataset.author || '')?.candidates?.[+apick.dataset.apick];
+    if (c) {
+      const inp = card.querySelector('input[data-f="author"]');
+      inp.value = c.name;
+      markPickedAuthor(card, c.name);
+      updateGrLinks(card);
+      inp.focus();
+    }
+    return;
+  }
+  const aact = e.target.dataset.aact;
+  if (aact) { setAutState(card, aact); return; }
   const act = e.target.dataset.act;
-  if (act) setTtlState(card, act);
+  if (act === 'both') {
+    // 제목이 막히면(문제 있는 값) 저자도 건드리지 않는다
+    if (setTtlState(card, 'approved', true)) setAutState(card, 'approved', true);
+    renderTitlesList();
+  } else if (act) setTtlState(card, act);
 });
 
 $('#ttlList').addEventListener('input', (e) => {
   const card = e.target.closest('.cmt-card');
-  if (card && e.target.dataset.f === 'value') markPicked(card, e.target.value.trim());
+  if (!card) return;
+  if (e.target.dataset.f === 'value') markPicked(card, e.target.value.trim());
+  if (e.target.dataset.f === 'author') markPickedAuthor(card, e.target.value.trim());
+  updateGrLinks(card);
 });
 
 $('#ttlList').addEventListener('keydown', (e) => {
@@ -3037,15 +3286,20 @@ $('#ttlList').addEventListener('keydown', (e) => {
   const card = e.target.closest('.cmt-card');
   if (!card) return;
   e.preventDefault();
-  setTtlState(card, 'approved');
+  if (e.target.dataset.f === 'author') setAutState(card, 'approved');
+  else setTtlState(card, 'approved');
 });
 
 async function saveTitles() {
-  if (!Ttl.touched.size) return;
+  if (!Ttl.touched.size && !Ttl.touchedAuthors.size) return;
   const n = { approved: 0, none: 0, pending: 0 };
   for (const k of Ttl.touched) n[Ttl.items.get(k)?.status in n ? Ttl.items.get(k).status : 'pending']++;
-  const message = prompt('커밋 메시지',
-    `영문 제목 검수 — 승인 ${n.approved} / 공식판 없음 ${n.none} / 보류 ${n.pending}`);
+  const na = { approved: 0, none: 0, pending: 0 };
+  for (const k of Ttl.touchedAuthors) na[Ttl.authors.get(k)?.status in na ? Ttl.authors.get(k).status : 'pending']++;
+  const parts = [];
+  if (Ttl.touched.size) parts.push(`승인 ${n.approved} / 공식판 없음 ${n.none} / 보류 ${n.pending}`);
+  if (Ttl.touchedAuthors.size) parts.push(`저자 승인 ${na.approved} / 공식 표기 없음 ${na.none} / 보류 ${na.pending}`);
+  const message = prompt('커밋 메시지', `영문 제목 검수 — ${parts.join(' · ')}`);
   if (!message) return;
 
   const btn = $('#ttlSaveBtn');
@@ -3065,15 +3319,26 @@ async function saveTitles() {
       delete base.auto;
       doc.titles[k] = base;
     }
+    doc.authors = doc.authors || {};
+    for (const k of Ttl.touchedAuthors) {
+      const mine = Ttl.authors.get(k);
+      const base = doc.authors[k] || { author: k, candidates: [] };
+      base.status = mine.status;
+      base.value = mine.value;
+      base.reviewed = mine.reviewed;
+      delete base.auto;
+      doc.authors[k] = base;
+    }
     doc._updated = new Date().toISOString().slice(0, 10);
     await Gh.putFile({ content: JSON.stringify(doc, null, 2) + '\n', sha, message, path: TITLES_PATH });
-    for (const [k, v] of Object.entries(doc.titles)) Ttl.items.set(k, v);
-    if (applyTitlesToBooks()) { renderSidebar(); renderDetail(); }
+    loadTitlesDoc(doc);
+    if (applyTitlesToBooks() + applyAuthorsToBooks()) { renderSidebar(); renderDetail(); }
     Ttl.touched.clear();
+    Ttl.touchedAuthors.clear();
     Ttl.dirty = false;
     if (!State.dirty && !Cmt.dirty) window.onbeforeunload = null;
     setTtlStatus('저장 완료 — 사이트는 몇 분 뒤 다시 빌드됩니다');
-    toast(`영문 제목 저장됨 — 승인 ${n.approved}건`, 'ok');
+    toast(`영문 제목 저장됨 — 제목 승인 ${n.approved}건 · 저자 승인 ${na.approved}명`, 'ok');
     renderTitlesList();
   } catch (err) {
     setTtlStatus('');
