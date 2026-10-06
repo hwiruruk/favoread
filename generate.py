@@ -342,7 +342,8 @@ def script_lang(s):
     s = s or ''
     for rx, lang in ((r'[぀-ヿ]', 'ja'), (r'[一-鿿]', 'han'), (r'[Ѐ-ӿ]', 'ru'),
                      (r'[Ͱ-Ͽ]', 'el'), (r'[֐-׿]', 'he'), (r'[؀-ۿ]', 'ar'),
-                     (r'[฀-๿]', 'th'), (r'[A-Za-zÀ-ɏ]', 'latin')):
+                     (r'[฀-๿]', 'th'), (r'[\u0980-\u09ff]', 'bn'), (r'[\u0900-\u097f]', 'hi'),
+                     (r'[A-Za-zÀ-ɏ]', 'latin')):
         if re.search(rx, s):
             return lang
     return ''
@@ -378,6 +379,9 @@ def resolve_author_native(author_ko):
     v = ent.get('native_value') if st == 'approved' else (cands[0].get('name') if cands else '')
     v = (v or '').strip()
     if not v or JA_HANGUL_RE.search(v):
+        return None
+    # 자동 후보의 라틴 문자 이름은 본명·전체 이름이라(Eric Arthur Blair) 싣지 않는다. 사람이 정한 값은 둔다
+    if st != 'approved' and script_lang(v) == 'latin':
         return None
     lang = next((c.get('lang') for c in cands if c.get('name') == v and c.get('lang')), '')
     if not lang:
