@@ -205,7 +205,7 @@
         "position": 9,
         "item": {
           "@type": "Book",
-          "name": "The Seven Deaths of Evenly Hardcastle",
+          "name": "The Seven Deaths of Evelyn Hardcastle",
           "alternateName": "에블린 하드캐슬의 일곱 번의 죽음",
           "author": {
             "@type": "Person",
@@ -501,10 +501,43 @@
     h2 { font-size: 19px; margin: 32px 0 12px; padding-bottom: 4px; border-bottom: 2px solid #000; font-weight: 800; }
     .intro { background: #fff; border: 2px solid #000; box-shadow: 4px 4px 0 0 #000; padding: 14px 16px; margin: 16px 0 24px; font-size: 15px; }
     .celeb-bio { margin: 4px 0 8px; padding: 6px 10px; background: #fff8e7; border-left: 4px solid #000; font-size: 14px; line-height: 1.45; color: #222; }
-    .taste { margin: 16px 0; padding: 12px 14px; background: #e0f2fe; border: 2px solid #000; box-shadow: 3px 3px 0 0 #000; font-size: 14px; line-height: 1.6; }
-    .taste h2 { margin: 0 0 6px; font-size: 15px; }
-    .taste p { margin: 2px 0; }
-    .taste .taste-note { margin-top: 6px; font-size: 13px; color: #444; }
+    .taste { margin: 16px 0; background: #fff; border: 2px solid #000; box-shadow: 4px 4px 0 0 #000; font-size: 14px; line-height: 1.6; }
+    .taste-head { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 10px; padding: 10px 14px; background: #e0f2fe; cursor: pointer; list-style: none; }
+    .taste-head::-webkit-details-marker { display: none; }
+    .taste-head:hover { background: #fde047; }
+    .taste-head:focus-visible { outline: 3px solid #2563eb; outline-offset: 2px; }
+    .taste[open] > .taste-head { border-bottom: 2px solid #000; }
+    .taste-open { margin-left: auto; padding: 3px 10px; font-size: 12px; font-weight: 800; background: #fff; border: 2px solid #000; box-shadow: 2px 2px 0 0 #000; white-space: nowrap; }
+    .taste-open::after { content: attr(data-show); }
+    .taste[open] .taste-open::after { content: attr(data-hide); }
+    .taste-head h2 { margin: 0; padding: 0; border: 0; font-size: 16px; font-weight: 900; }
+    .taste-head span { font-size: 12px; color: #333; }
+    .taste-body { padding: 14px; display: grid; gap: 18px; }
+    .taste-sum { margin: 0; font-size: 18px; font-weight: 900; line-height: 1.4; word-break: keep-all; }
+    .taste-sum mark { background: linear-gradient(transparent 55%, #fde047 55%); color: inherit; padding: 0 2px; }
+    .taste-label { margin: 0 0 6px; font-size: 12px; font-weight: 800; color: #555; }
+    .taste-label small { font-weight: 600; }
+    .taste-bar { display: flex; height: 28px; border: 2px solid #000; overflow: hidden; }
+    .taste-bar span { min-width: 0; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 800; white-space: nowrap; overflow: hidden; border-right: 1.5px solid #000; }
+    .taste-bar span:last-child { border-right: 0; }
+    .taste-legend { list-style: none; padding: 0; margin: 8px 0 0; display: flex; flex-wrap: wrap; gap: 4px 14px; font-size: 13px; }
+    .taste-legend li { display: flex; align-items: center; gap: 6px; }
+    .taste-legend i { width: 12px; height: 12px; border: 1.5px solid #000; flex-shrink: 0; }
+    .taste-chips { display: flex; flex-wrap: wrap; gap: 8px; }
+    .taste-chip { display: inline-flex; align-items: baseline; gap: 6px; padding: 4px 10px; background: #fff; border: 2px solid #000; box-shadow: 2px 2px 0 0 #000; font-weight: 700; font-size: 14px; }
+    .taste-chip.big { background: #fde047; font-size: 15px; }
+    .taste-chip small { font-size: 12px; color: #555; font-weight: 600; }
+    .taste-tiles { display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: 10px; }
+    .taste-tile { border: 2px solid #000; background: #fff8e7; padding: 9px 12px; min-width: 0; }
+    .taste-tile b { display: block; font-size: 12px; color: #555; }
+    .taste-tile .v { font-family: "Space Grotesk", sans-serif; font-size: 24px; font-weight: 700; line-height: 1.25; font-variant-numeric: tabular-nums; }
+    .taste-tile .v small { font-size: 14px; }
+    .taste-tile .meter { height: 9px; border: 1.5px solid #000; background: #fff; margin: 6px 0 3px; }
+    .taste-tile .meter i { display: block; height: 100%; background: #000; }
+    .taste-tile p { margin: 0; font-size: 12px; color: #333; word-break: keep-all; }
+    .taste-tile .who { font-size: 14px; font-weight: 800; margin-top: 2px; word-break: keep-all; }
+    @media (max-width: 560px) { .taste-bar span:not(.wide) { font-size: 0; } .taste-sum { font-size: 16px; } }
+    .taste-note { margin: 0; background: #fff7c2; border: 1.5px solid #000; padding: 7px 10px; font-size: 13px; word-break: keep-all; }
     .celeb-alias { margin: 2px 0 0; font-size: 12px; color: #888; }
     .pfaq { margin-top: 40px; }
     .pfaq-q { background: #fff; border: 2px solid #000; box-shadow: 3px 3px 0 0 #000; padding: 12px 14px; margin-bottom: 12px; }
@@ -685,7 +718,7 @@
         <a class="new-tile" href="#b14"><span class="nt-cover"><img src="https://image.yes24.com/goods/126438531/L" alt="The Dictionary of Obscure Sorrows by John Koenig — book cover" loading="lazy"></span><span class="nt-title">The Dictionary of Obscure Sorrows</span></a>
         <a class="new-tile" href="#b15"><span class="nt-cover"><img src="https://image.yes24.com/goods/125707989/L" alt="The Giver by Lois Lowry — book cover" loading="lazy"></span><span class="nt-title">The Giver</span></a>
         <a class="new-tile" href="#b16"><span class="nt-cover"><img src="https://image.yes24.com/goods/146196244/L" alt="The Impossible Fortune by Richard Osman — book cover" loading="lazy"></span><span class="nt-title">The Impossible Fortune</span></a>
-        <a class="new-tile" href="#b17"><span class="nt-cover"><img src="https://image.yes24.com/goods/94155983/L" alt="The Seven Deaths of Evenly Hardcastle by Stuart Turton — book cover" loading="lazy"></span><span class="nt-title">The Seven Deaths of Evenly Hardcastle</span></a>
+        <a class="new-tile" href="#b17"><span class="nt-cover"><img src="https://image.yes24.com/goods/94155983/L" alt="The Seven Deaths of Evelyn Hardcastle by Stuart Turton — book cover" loading="lazy"></span><span class="nt-title">The Seven Deaths of Evelyn Hardcastle</span></a>
         <a class="new-tile" href="#b18"><span class="nt-cover"><img src="https://image.yes24.com/goods/78567971/L" alt="The Woman in the Window by A. J. Finn — book cover" loading="lazy"></span><span class="nt-title">The Woman in the Window</span></a>
         <a class="new-tile" href="#b19"><span class="nt-cover"><img src="https://image.yes24.com/goods/105805943/L" alt="Thursday Murder Club by Richard Osman — book cover" loading="lazy"></span><span class="nt-title">Thursday Murder Club</span></a>
         <a class="new-tile" href="#b20"><span class="nt-cover"><img src="https://image.yes24.com/goods/94754362/L" alt="When the Tiger Came Down the Mountain by Vo, Nghi — book cover" loading="lazy"></span><span class="nt-title">When the Tiger Came Down the Mountain</span></a>
@@ -709,7 +742,7 @@
     <a class="sp is-new" style="--c:hsl(181,38%,27%);--w:43px;--fs:11px" href="https://www.yes24.com/product/goods/126438531" rel="nofollow noopener noreferrer" target="_blank" title="The Dictionary of Obscure Sorrows"><span class="sp-t"><i>The Dictionary of Obscure Sorrows</i></span><img class="sp-i" src="https://image.yes24.com/goods/126438531/side" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.parentNode.classList.add('sp-fail');this.remove()" onload="if(this.naturalWidth/this.naturalHeight>0.4){this.parentNode.classList.add('sp-fail');this.remove()}"><span class="sp-new" data-added="2026-10-06">NEW</span></a>
     <a class="sp is-new" style="--c:hsl(325,36%,34%);--w:35px;--fs:15px" href="https://www.yes24.com/product/goods/125707989" rel="nofollow noopener noreferrer" target="_blank" title="The Giver"><span class="sp-t"><i>The Giver</i></span><img class="sp-i" src="https://image.yes24.com/goods/125707989/side" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.parentNode.classList.add('sp-fail');this.remove()" onload="if(this.naturalWidth/this.naturalHeight>0.4){this.parentNode.classList.add('sp-fail');this.remove()}"><span class="sp-new" data-added="2026-10-06">NEW</span></a>
     <a class="sp is-new" style="--c:hsl(269,56%,33%);--w:44px;--fs:15px" href="https://www.yes24.com/product/goods/146196244" rel="nofollow noopener noreferrer" target="_blank" title="The Impossible Fortune"><span class="sp-t"><i>The Impossible Fortune</i></span><img class="sp-i" src="https://image.yes24.com/goods/146196244/side" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.parentNode.classList.add('sp-fail');this.remove()" onload="if(this.naturalWidth/this.naturalHeight>0.4){this.parentNode.classList.add('sp-fail');this.remove()}"><span class="sp-new" data-added="2026-10-06">NEW</span></a>
-    <a class="sp is-new" style="--c:hsl(200,37%,41%);--w:44px;--fs:10px" href="https://www.yes24.com/product/goods/94155983" rel="nofollow noopener noreferrer" target="_blank" title="The Seven Deaths of Evenly Hardcastle"><span class="sp-t"><i>The Seven Deaths of Evenly Hardcastle</i></span><img class="sp-i" src="https://image.yes24.com/goods/94155983/side" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.parentNode.classList.add('sp-fail');this.remove()" onload="if(this.naturalWidth/this.naturalHeight>0.4){this.parentNode.classList.add('sp-fail');this.remove()}"><span class="sp-new" data-added="2026-10-06">NEW</span></a>
+    <a class="sp is-new" style="--c:hsl(200,37%,41%);--w:44px;--fs:10px" href="https://www.yes24.com/product/goods/94155983" rel="nofollow noopener noreferrer" target="_blank" title="The Seven Deaths of Evelyn Hardcastle"><span class="sp-t"><i>The Seven Deaths of Evelyn Hardcastle</i></span><img class="sp-i" src="https://image.yes24.com/goods/94155983/side" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.parentNode.classList.add('sp-fail');this.remove()" onload="if(this.naturalWidth/this.naturalHeight>0.4){this.parentNode.classList.add('sp-fail');this.remove()}"><span class="sp-new" data-added="2026-10-06">NEW</span></a>
     <a class="sp is-new" style="--c:hsl(72,32%,43%);--w:42px;--fs:15px" href="https://www.yes24.com/product/goods/78567971" rel="nofollow noopener noreferrer" target="_blank" title="The Woman in the Window"><span class="sp-t"><i>The Woman in the Window</i></span><img class="sp-i" src="https://image.yes24.com/goods/78567971/side" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.parentNode.classList.add('sp-fail');this.remove()" onload="if(this.naturalWidth/this.naturalHeight>0.4){this.parentNode.classList.add('sp-fail');this.remove()}"><span class="sp-new" data-added="2026-10-06">NEW</span></a>
     <a class="sp is-new" style="--c:hsl(126,54%,28%);--w:40px;--fs:15px" href="https://www.yes24.com/product/goods/105805943" rel="nofollow noopener noreferrer" target="_blank" title="Thursday Murder Club"><span class="sp-t"><i>Thursday Murder Club</i></span><img class="sp-i" src="https://image.yes24.com/goods/105805943/side" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.parentNode.classList.add('sp-fail');this.remove()" onload="if(this.naturalWidth/this.naturalHeight>0.4){this.parentNode.classList.add('sp-fail');this.remove()}"><span class="sp-new" data-added="2026-10-06">NEW</span></a>
     <a class="sp is-new" style="--c:hsl(342,37%,31%);--w:31px;--fs:10px" href="https://www.yes24.com/product/goods/94754362" rel="nofollow noopener noreferrer" target="_blank" title="When the Tiger Came Down the Mountain"><span class="sp-t"><i>When the Tiger Came Down the Mountain</i></span><img class="sp-i" src="https://image.yes24.com/goods/94754362/side" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.parentNode.classList.add('sp-fail');this.remove()" onload="if(this.naturalWidth/this.naturalHeight>0.4){this.parentNode.classList.add('sp-fail');this.remove()}"><span class="sp-new" data-added="2026-10-06">NEW</span></a>
@@ -731,7 +764,7 @@
     <a class="cv" href="https://www.yes24.com/product/goods/126438531" rel="nofollow noopener noreferrer" target="_blank" title="The Dictionary of Obscure Sorrows"><img src="https://image.yes24.com/goods/126438531/L" alt="The Dictionary of Obscure Sorrows by John Koenig — book cover" loading="lazy"></a>
     <a class="cv" href="https://www.yes24.com/product/goods/125707989" rel="nofollow noopener noreferrer" target="_blank" title="The Giver"><img src="https://image.yes24.com/goods/125707989/L" alt="The Giver by Lois Lowry — book cover" loading="lazy"></a>
     <a class="cv" href="https://www.yes24.com/product/goods/146196244" rel="nofollow noopener noreferrer" target="_blank" title="The Impossible Fortune"><img src="https://image.yes24.com/goods/146196244/L" alt="The Impossible Fortune by Richard Osman — book cover" loading="lazy"></a>
-    <a class="cv" href="https://www.yes24.com/product/goods/94155983" rel="nofollow noopener noreferrer" target="_blank" title="The Seven Deaths of Evenly Hardcastle"><img src="https://image.yes24.com/goods/94155983/L" alt="The Seven Deaths of Evenly Hardcastle by Stuart Turton — book cover" loading="lazy"></a>
+    <a class="cv" href="https://www.yes24.com/product/goods/94155983" rel="nofollow noopener noreferrer" target="_blank" title="The Seven Deaths of Evelyn Hardcastle"><img src="https://image.yes24.com/goods/94155983/L" alt="The Seven Deaths of Evelyn Hardcastle by Stuart Turton — book cover" loading="lazy"></a>
     <a class="cv" href="https://www.yes24.com/product/goods/78567971" rel="nofollow noopener noreferrer" target="_blank" title="The Woman in the Window"><img src="https://image.yes24.com/goods/78567971/L" alt="The Woman in the Window by A. J. Finn — book cover" loading="lazy"></a>
     <a class="cv" href="https://www.yes24.com/product/goods/105805943" rel="nofollow noopener noreferrer" target="_blank" title="Thursday Murder Club"><img src="https://image.yes24.com/goods/105805943/L" alt="Thursday Murder Club by Richard Osman — book cover" loading="lazy"></a>
     <a class="cv" href="https://www.yes24.com/product/goods/94754362" rel="nofollow noopener noreferrer" target="_blank" title="When the Tiger Came Down the Mountain"><img src="https://image.yes24.com/goods/94754362/L" alt="When the Tiger Came Down the Mountain by Vo, Nghi — book cover" loading="lazy"></a>
@@ -773,7 +806,7 @@
       <a class="rl-cover" href="https://www.yes24.com/product/goods/107653917" rel="nofollow noopener noreferrer" target="_blank" aria-label="Crying in H Mart: A Memoir — buy or read more"><span class="rl-new" data-added="2026-10-06">NEW</span><img src="https://image.yes24.com/goods/107653917/L" alt="Crying in H Mart: A Memoir by Michelle Zauner — book cover" loading="lazy"></a>
       <div class="rl-meta">
         <div class="rl-title"><a href="https://www.yes24.com/product/goods/107653917" rel="nofollow noopener noreferrer" target="_blank">Crying in H Mart: A Memoir</a> <span style="color:#888;font-size:12px;font-weight:400">(H마트에서 울다)</span></div>
-        <div class="rl-byline">Michelle Zauner</div>
+        <div class="rl-byline">Michelle Zauner <span style="color:#888">(<span lang="en">Michelle Chongmi Zauner</span>)</span></div>
         <a class="rl-source" href="https://www.yes24.com/product/goods/107653917" rel="nofollow noopener noreferrer" target="_blank" title="View on YES24 (Korean bookstore)">📖 Book details</a> <a class="rl-source" href="https://x.com/Lilyfied_/status/1867787855348838742?s=20" rel="nofollow noopener noreferrer" target="_blank">📺 Source</a>
         <button type="button" class="heart-btn sm" data-heart="b:H마트에서 울다" aria-pressed="false" aria-label="Heart this book" title="Heart this book" hidden><span class="heart-ico" aria-hidden="true">♡</span><span class="heart-n"></span></button>
         <div class="rl-shared"><span class="rl-shared-label">👥 Also recommended by 1:</span> <a class="rl-celeb-chip" href="https://favorbook.co.kr/en/share/jung-eun-chae.html">Jung Eun-chae</a> <a class="rl-book-link" href="https://favorbook.co.kr/en/share/book/crying-in-h-mart-a-memoir.html">All readers →</a></div>
@@ -814,7 +847,7 @@
       <span class="rl-num">8</span>
       <a class="rl-cover" href="https://www.yes24.com/product/goods/112197903" rel="nofollow noopener noreferrer" target="_blank" aria-label="Hamnet — buy or read more"><span class="rl-new" data-added="2026-10-06">NEW</span><img src="https://image.yes24.com/goods/112197903/L" alt="Hamnet by Maggie OFarrell — book cover" loading="lazy"></a>
       <div class="rl-meta">
-        <div class="rl-title"><a href="https://www.yes24.com/product/goods/112197903" rel="nofollow noopener noreferrer" target="_blank">Hamnet *</a> <span style="color:#888;font-size:12px;font-weight:400">(햄닛)</span></div>
+        <div class="rl-title"><a href="https://www.yes24.com/product/goods/112197903" rel="nofollow noopener noreferrer" target="_blank">Hamnet</a> <span style="color:#888;font-size:12px;font-weight:400">(햄닛)</span></div>
         <div class="rl-byline">Maggie OFarrell</div>
         <a class="rl-source" href="https://www.yes24.com/product/goods/112197903" rel="nofollow noopener noreferrer" target="_blank" title="View on YES24 (Korean bookstore)">📖 Book details</a> <a class="rl-source" href="https://x.com/haemigxx/status/2090009065145643066?s=20" rel="nofollow noopener noreferrer" target="_blank">📺 Source</a>
         <button type="button" class="heart-btn sm" data-heart="b:햄닛" aria-pressed="false" aria-label="Heart this book" title="Heart this book" hidden><span class="heart-ico" aria-hidden="true">♡</span><span class="heart-n"></span></button>
@@ -905,9 +938,9 @@
     </li>
     <li class="rl-item" id="b17">
       <span class="rl-num">17</span>
-      <a class="rl-cover" href="https://www.yes24.com/product/goods/94155983" rel="nofollow noopener noreferrer" target="_blank" aria-label="The Seven Deaths of Evenly Hardcastle — buy or read more"><span class="rl-new" data-added="2026-10-06">NEW</span><img src="https://image.yes24.com/goods/94155983/L" alt="The Seven Deaths of Evenly Hardcastle by Stuart Turton — book cover" loading="lazy"></a>
+      <a class="rl-cover" href="https://www.yes24.com/product/goods/94155983" rel="nofollow noopener noreferrer" target="_blank" aria-label="The Seven Deaths of Evelyn Hardcastle — buy or read more"><span class="rl-new" data-added="2026-10-06">NEW</span><img src="https://image.yes24.com/goods/94155983/L" alt="The Seven Deaths of Evelyn Hardcastle by Stuart Turton — book cover" loading="lazy"></a>
       <div class="rl-meta">
-        <div class="rl-title"><a href="https://www.yes24.com/product/goods/94155983" rel="nofollow noopener noreferrer" target="_blank">The Seven Deaths of Evenly Hardcastle</a> <span style="color:#888;font-size:12px;font-weight:400">(에블린 하드캐슬의 일곱 번의 죽음)</span></div>
+        <div class="rl-title"><a href="https://www.yes24.com/product/goods/94155983" rel="nofollow noopener noreferrer" target="_blank">The Seven Deaths of Evelyn Hardcastle</a> <span style="color:#888;font-size:12px;font-weight:400">(에블린 하드캐슬의 일곱 번의 죽음)</span></div>
         <div class="rl-byline">Stuart Turton</div>
         <a class="rl-source" href="https://www.yes24.com/product/goods/94155983" rel="nofollow noopener noreferrer" target="_blank" title="View on YES24 (Korean bookstore)">📖 Book details</a> <a class="rl-source" href="https://x.com/Lilyfied_/status/2075510470988255412?s=20" rel="nofollow noopener noreferrer" target="_blank">📺 Source</a>
         <button type="button" class="heart-btn sm" data-heart="b:에블린 하드캐슬의 일곱 번의 죽음" aria-pressed="false" aria-label="Heart this book" title="Heart this book" hidden><span class="heart-ico" aria-hidden="true">♡</span><span class="heart-n"></span></button>
@@ -1178,10 +1211,21 @@
   })();
   </script>
   <p class="tr-note">Book titles and author names marked with an asterisk (<strong>*</strong>) are machine-translated from Korean. No official English edition was confirmed for them, so read them as approximations of the Korean original shown next to them.</p>
-  <section class="taste">
-    <h2>Reading taste (from 20 books)</h2>
-    <p>Returns to the same author: Jane Austen (2 books).</p>
-  </section>
+  <details class="taste">
+    <summary class="taste-head"><h2>📊 Curious about LILY (NMIXX)'s reading taste?</h2><span>from 20 books</span><b class="taste-open" aria-hidden="true" data-show="Show ▾" data-hide="Hide ▴"></b></summary>
+    <div class="taste-body">
+      <p class="taste-sum">Most-read genre: <mark>Fiction</mark> (17 books)</p>
+      <div>
+        <p class="taste-label">Genres <small>20 books with a known genre</small></p>
+        <div class="taste-bar" role="img" aria-label="Fiction 17, Essays 2, Other 1"><span class="wide" style="flex:17 0 0;background:#fde047" title="Fiction 17">Fiction 85%</span><span style="flex:2 0 0;background:#a7f3d0" title="Essays 2"></span><span style="flex:1 0 0;background:#f5f5f4" title="Other 1"></span></div>
+        <ul class="taste-legend"><li><i style="background:#fde047"></i>Fiction 17</li><li><i style="background:#a7f3d0"></i>Essays 2</li><li><i style="background:#f5f5f4"></i>Other 1</li></ul>
+      </div>
+      <div class="taste-tiles">
+      <div class="taste-tile"><b>Korean · Translated</b><div class="v">0<small> : </small>14</div><div class="meter" aria-hidden="true"><i style="width:0%"></i></div><p>Of 14 literary books: 0 Korean, 14 translated</p></div>
+      <div class="taste-tile"><b>Authors picked more than once</b><div class="who">Jane Austen 2</div></div>
+      </div>
+    </div>
+  </details>
   <section class="related-celebs">
     <h2>🤝 Celebrities with similar reading taste</h2>
     <p class="muted">They recommended some of the same books. The number is how many books they share.</p>

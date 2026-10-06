@@ -503,10 +503,43 @@
     h2 { font-size: 19px; margin: 32px 0 12px; padding-bottom: 4px; border-bottom: 2px solid #000; font-weight: 800; }
     .intro { background: #fff; border: 2px solid #000; box-shadow: 4px 4px 0 0 #000; padding: 14px 16px; margin: 16px 0 24px; font-size: 15px; }
     .celeb-bio { margin: 4px 0 8px; padding: 6px 10px; background: #fff8e7; border-left: 4px solid #000; font-size: 14px; line-height: 1.45; color: #222; }
-    .taste { margin: 16px 0; padding: 12px 14px; background: #e0f2fe; border: 2px solid #000; box-shadow: 3px 3px 0 0 #000; font-size: 14px; line-height: 1.6; }
-    .taste h2 { margin: 0 0 6px; font-size: 15px; }
-    .taste p { margin: 2px 0; }
-    .taste .taste-note { margin-top: 6px; font-size: 13px; color: #444; }
+    .taste { margin: 16px 0; background: #fff; border: 2px solid #000; box-shadow: 4px 4px 0 0 #000; font-size: 14px; line-height: 1.6; }
+    .taste-head { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 10px; padding: 10px 14px; background: #e0f2fe; cursor: pointer; list-style: none; }
+    .taste-head::-webkit-details-marker { display: none; }
+    .taste-head:hover { background: #fde047; }
+    .taste-head:focus-visible { outline: 3px solid #2563eb; outline-offset: 2px; }
+    .taste[open] > .taste-head { border-bottom: 2px solid #000; }
+    .taste-open { margin-left: auto; padding: 3px 10px; font-size: 12px; font-weight: 800; background: #fff; border: 2px solid #000; box-shadow: 2px 2px 0 0 #000; white-space: nowrap; }
+    .taste-open::after { content: attr(data-show); }
+    .taste[open] .taste-open::after { content: attr(data-hide); }
+    .taste-head h2 { margin: 0; padding: 0; border: 0; font-size: 16px; font-weight: 900; }
+    .taste-head span { font-size: 12px; color: #333; }
+    .taste-body { padding: 14px; display: grid; gap: 18px; }
+    .taste-sum { margin: 0; font-size: 18px; font-weight: 900; line-height: 1.4; word-break: keep-all; }
+    .taste-sum mark { background: linear-gradient(transparent 55%, #fde047 55%); color: inherit; padding: 0 2px; }
+    .taste-label { margin: 0 0 6px; font-size: 12px; font-weight: 800; color: #555; }
+    .taste-label small { font-weight: 600; }
+    .taste-bar { display: flex; height: 28px; border: 2px solid #000; overflow: hidden; }
+    .taste-bar span { min-width: 0; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 800; white-space: nowrap; overflow: hidden; border-right: 1.5px solid #000; }
+    .taste-bar span:last-child { border-right: 0; }
+    .taste-legend { list-style: none; padding: 0; margin: 8px 0 0; display: flex; flex-wrap: wrap; gap: 4px 14px; font-size: 13px; }
+    .taste-legend li { display: flex; align-items: center; gap: 6px; }
+    .taste-legend i { width: 12px; height: 12px; border: 1.5px solid #000; flex-shrink: 0; }
+    .taste-chips { display: flex; flex-wrap: wrap; gap: 8px; }
+    .taste-chip { display: inline-flex; align-items: baseline; gap: 6px; padding: 4px 10px; background: #fff; border: 2px solid #000; box-shadow: 2px 2px 0 0 #000; font-weight: 700; font-size: 14px; }
+    .taste-chip.big { background: #fde047; font-size: 15px; }
+    .taste-chip small { font-size: 12px; color: #555; font-weight: 600; }
+    .taste-tiles { display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: 10px; }
+    .taste-tile { border: 2px solid #000; background: #fff8e7; padding: 9px 12px; min-width: 0; }
+    .taste-tile b { display: block; font-size: 12px; color: #555; }
+    .taste-tile .v { font-family: "Space Grotesk", sans-serif; font-size: 24px; font-weight: 700; line-height: 1.25; font-variant-numeric: tabular-nums; }
+    .taste-tile .v small { font-size: 14px; }
+    .taste-tile .meter { height: 9px; border: 1.5px solid #000; background: #fff; margin: 6px 0 3px; }
+    .taste-tile .meter i { display: block; height: 100%; background: #000; }
+    .taste-tile p { margin: 0; font-size: 12px; color: #333; word-break: keep-all; }
+    .taste-tile .who { font-size: 14px; font-weight: 800; margin-top: 2px; word-break: keep-all; }
+    @media (max-width: 560px) { .taste-bar span:not(.wide) { font-size: 0; } .taste-sum { font-size: 16px; } }
+    .taste-note { margin: 0; background: #fff7c2; border: 1.5px solid #000; padding: 7px 10px; font-size: 13px; word-break: keep-all; }
     .celeb-alias { margin: 2px 0 0; font-size: 12px; color: #888; }
     .pfaq { margin-top: 40px; }
     .pfaq-q { background: #fff; border: 2px solid #000; box-shadow: 3px 3px 0 0 #000; padding: 12px 14px; margin-bottom: 12px; }
@@ -668,10 +701,9 @@
       </div>
     </div>
     <details class="new-sec">
-      <summary class="new-sec-h"><span class="rl-new-tag">NEW</span> New in the last 10 days (2 books) <span class="new-sec-more" data-show="Show" data-hide="Hide"></span></summary>
+      <summary class="new-sec-h"><span class="rl-new-tag">NEW</span> New in the last 10 days (1 book) <span class="new-sec-more" data-show="Show" data-hide="Hide"></span></summary>
       <div class="new-tiles">
         <a class="new-tile" href="#b12"><span class="nt-cover"><img src="https://image.yes24.com/goods/6194565/L" alt="My Uncle Bruce Lee by Cheon Myeong-kwan — book cover" loading="lazy"></span><span class="nt-title">My Uncle Bruce Lee</span></a>
-        <a class="new-tile" href="#b15"><span class="nt-cover"><img src="https://image.yes24.com/goods/3378917/L" alt="Tess by Thomas Hardy — book cover" loading="lazy"></span><span class="nt-title">Tess</span></a>
       </div>
     </details>
     <div id="shelf-area" class="show-covers covers-collapsed">
@@ -690,7 +722,7 @@
     <a class="sp is-new" style="--c:hsl(20,41%,41%);--w:35px;--fs:15px" href="https://www.yes24.com/product/goods/6194565" rel="nofollow noopener noreferrer" target="_blank" title="My Uncle Bruce Lee"><span class="sp-t"><i>My Uncle Bruce Lee</i></span><img class="sp-i" src="https://image.yes24.com/goods/6194565/side" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.parentNode.classList.add('sp-fail');this.remove()" onload="if(this.naturalWidth/this.naturalHeight>0.4){this.parentNode.classList.add('sp-fail');this.remove()}"><span class="sp-new" data-added="2026-09-27">NEW</span></a>
     <a class="sp" style="--c:hsl(105,33%,34%);--w:35px;--fs:15px" href="https://www.yes24.com/product/goods/176521109" rel="nofollow noopener noreferrer" target="_blank" title="Shoot Me in the Heart"><span class="sp-t"><i>Shoot Me in the Heart</i></span><img class="sp-i" src="https://image.yes24.com/goods/176521109/side" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.parentNode.classList.add('sp-fail');this.remove()" onload="if(this.naturalWidth/this.naturalHeight>0.4){this.parentNode.classList.add('sp-fail');this.remove()}"></a>
     <a class="sp" style="--c:hsl(229,47%,27%);--w:30px;--fs:10px" href="https://www.yes24.com/product/goods/7358910" rel="nofollow noopener noreferrer" target="_blank" title="Special Criteria for Choosing Love"><span class="sp-t"><i>Special Criteria for Choosing Love</i></span><img class="sp-i" src="https://image.yes24.com/goods/7358910/side" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.parentNode.classList.add('sp-fail');this.remove()" onload="if(this.naturalWidth/this.naturalHeight>0.4){this.parentNode.classList.add('sp-fail');this.remove()}"></a>
-    <a class="sp is-new" style="--c:hsl(88,45%,39%);--w:43px;--fs:15px" href="https://www.yes24.com/product/goods/3378917" rel="nofollow noopener noreferrer" target="_blank" title="Tess"><span class="sp-t"><i>Tess</i></span><img class="sp-i" src="https://image.yes24.com/goods/3378917/side" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.parentNode.classList.add('sp-fail');this.remove()" onload="if(this.naturalWidth/this.naturalHeight>0.4){this.parentNode.classList.add('sp-fail');this.remove()}"><span class="sp-new" data-added="2026-09-26">NEW</span></a>
+    <a class="sp" style="--c:hsl(88,45%,39%);--w:43px;--fs:15px" href="https://www.yes24.com/product/goods/3378917" rel="nofollow noopener noreferrer" target="_blank" title="Tess"><span class="sp-t"><i>Tess</i></span><img class="sp-i" src="https://image.yes24.com/goods/3378917/side" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.parentNode.classList.add('sp-fail');this.remove()" onload="if(this.naturalWidth/this.naturalHeight>0.4){this.parentNode.classList.add('sp-fail');this.remove()}"></a>
     <a class="sp" style="--c:hsl(300,52%,37%);--w:42px;--fs:14px" href="https://www.yes24.com/product/goods/5180209" rel="nofollow noopener noreferrer" target="_blank" title="Tess of the d&#x27;Urbervilles"><span class="sp-t"><i>Tess of the d&#x27;Urbervilles</i></span><img class="sp-i" src="https://image.yes24.com/goods/5180209/side" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.parentNode.classList.add('sp-fail');this.remove()" onload="if(this.naturalWidth/this.naturalHeight>0.4){this.parentNode.classList.add('sp-fail');this.remove()}"></a>
     <a class="sp" style="--c:hsl(11,55%,36%);--w:41px;--fs:9px" href="https://www.yes24.com/product/goods/75192817" rel="nofollow noopener noreferrer" target="_blank" title="Totto-Chan: The Little Girl at the Window"><span class="sp-t"><i>Totto-Chan: The Little Girl at the Window</i></span><img class="sp-i" src="https://image.yes24.com/goods/75192817/side" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.parentNode.classList.add('sp-fail');this.remove()" onload="if(this.naturalWidth/this.naturalHeight>0.4){this.parentNode.classList.add('sp-fail');this.remove()}"></a>
     <a class="sp" style="--c:hsl(215,41%,27%);--w:43px;--fs:15px" href="https://www.yes24.com/product/goods/139871136" rel="nofollow noopener noreferrer" target="_blank" title="Van Gogh&#x27;s Letters"><span class="sp-t"><i>Van Gogh&#x27;s Letters</i></span><img class="sp-i" src="https://image.yes24.com/goods/139871136/side" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.parentNode.classList.add('sp-fail');this.remove()" onload="if(this.naturalWidth/this.naturalHeight>0.4){this.parentNode.classList.add('sp-fail');this.remove()}"></a>
@@ -771,8 +803,8 @@
       <span class="rl-num">5</span>
       <a class="rl-cover" href="https://www.yes24.com/product/goods/92901787" rel="nofollow noopener noreferrer" target="_blank" aria-label="Le Petit Prince — buy or read more"><img src="https://image.yes24.com/goods/92901787/L" alt="Le Petit Prince by Antoine de Saint-Exupéry — book cover" loading="lazy"></a>
       <div class="rl-meta">
-        <div class="rl-title"><a href="https://www.yes24.com/product/goods/92901787" rel="nofollow noopener noreferrer" target="_blank">Le Petit Prince</a> <span style="color:#666">| <span>Le Petit Prince</span></span> <span style="color:#888;font-size:12px;font-weight:400">(어린왕자)</span></div>
-        <div class="rl-byline">Antoine de Saint-Exupéry</div>
+        <div class="rl-title"><a href="https://www.yes24.com/product/goods/92901787" rel="nofollow noopener noreferrer" target="_blank">Le Petit Prince</a> <span style="color:#666">| <span lang="fr">Le Petit Prince</span></span> <span style="color:#888;font-size:12px;font-weight:400">(어린왕자)</span></div>
+        <div class="rl-byline">Antoine de Saint-Exupéry <span style="color:#888">(<span lang="fr">Antoine Marie Jean-Baptiste Roger</span>)</span></div>
         <p class="rl-comment">Featured in Lee Bo-young&#x27;s reading memoir Times of Love, in a chapter titled &#x27;rain falling on the desert of the heart.&#x27; (Source: Kyobo Book)</p>
         <a class="rl-source" href="https://www.yes24.com/product/goods/92901787" rel="nofollow noopener noreferrer" target="_blank" title="View on YES24 (Korean bookstore)">📖 Book details</a> <a class="rl-source" href="https://product.kyobobook.co.kr/detail/S000000888073" rel="nofollow noopener noreferrer" target="_blank">📺 Source</a>
         <button type="button" class="heart-btn sm" data-heart="b:어린왕자" aria-pressed="false" aria-label="Heart this book" title="Heart this book" hidden><span class="heart-ico" aria-hidden="true">♡</span><span class="heart-n"></span></button>
@@ -796,7 +828,7 @@
       <a class="rl-cover" href="https://www.yes24.com/product/goods/126159296" rel="nofollow noopener noreferrer" target="_blank" aria-label="Me Before You — buy or read more"><img src="https://image.yes24.com/goods/126159296/L" alt="Me Before You by Jojo Moyes — book cover" loading="lazy"></a>
       <div class="rl-meta">
         <div class="rl-title"><a href="https://www.yes24.com/product/goods/126159296" rel="nofollow noopener noreferrer" target="_blank">Me Before You</a> <span style="color:#888;font-size:12px;font-weight:400">(미 비포 유)</span></div>
-        <div class="rl-byline">Jojo Moyes</div>
+        <div class="rl-byline">Jojo Moyes <span style="color:#888">(<span lang="en">Pauline Sara Jo Moyes Arthur</span>)</span></div>
         <p class="rl-comment">Featured in Lee Bo-young&#x27;s reading memoir Times of Love, in a chapter titled &#x27;stepping into an unfamiliar world.&#x27; (Source: Kyobo Book)</p>
         <a class="rl-source" href="https://www.yes24.com/product/goods/126159296" rel="nofollow noopener noreferrer" target="_blank" title="View on YES24 (Korean bookstore)">📖 Book details</a> <a class="rl-source" href="https://product.kyobobook.co.kr/detail/S000000888073" rel="nofollow noopener noreferrer" target="_blank">📺 Source</a>
         <button type="button" class="heart-btn sm" data-heart="b:미 비포 유" aria-pressed="false" aria-label="Heart this book" title="Heart this book" hidden><span class="heart-ico" aria-hidden="true">♡</span><span class="heart-n"></span></button>
@@ -808,7 +840,7 @@
       <a class="rl-cover" href="https://www.yes24.com/product/goods/1481953" rel="nofollow noopener noreferrer" target="_blank" aria-label="Memoria De Mis Putas Tristes — buy or read more"><img src="https://image.yes24.com/goods/1481953/L" alt="Memoria De Mis Putas Tristes by Gabriel García Márquez — book cover" loading="lazy"></a>
       <div class="rl-meta">
         <div class="rl-title"><a href="https://www.yes24.com/product/goods/1481953" rel="nofollow noopener noreferrer" target="_blank">Memoria De Mis Putas Tristes</a> <span style="color:#888;font-size:12px;font-weight:400">(내 슬픈 창녀들의 추억)</span></div>
-        <div class="rl-byline">Gabriel García Márquez</div>
+        <div class="rl-byline">Gabriel García Márquez <span style="color:#888">(<span lang="es">Gabriel José de la Concordia García Márquez</span>)</span></div>
         <p class="rl-comment">Featured in Lee Bo-young&#x27;s reading memoir Times of Love, in a chapter titled &#x27;on growing older.&#x27; (Source: Kyobo Book)</p>
         <a class="rl-source" href="https://www.yes24.com/product/goods/1481953" rel="nofollow noopener noreferrer" target="_blank" title="View on YES24 (Korean bookstore)">📖 Book details</a> <a class="rl-source" href="https://product.kyobobook.co.kr/detail/S000000888073" rel="nofollow noopener noreferrer" target="_blank">📺 Source</a>
         <button type="button" class="heart-btn sm" data-heart="b:내 슬픈 창녀들의 추억" aria-pressed="false" aria-label="Heart this book" title="Heart this book" hidden><span class="heart-ico" aria-hidden="true">♡</span><span class="heart-n"></span></button>
@@ -884,7 +916,7 @@
     </li>
     <li class="rl-item" id="b15">
       <span class="rl-num">15</span>
-      <a class="rl-cover" href="https://www.yes24.com/product/goods/3378917" rel="nofollow noopener noreferrer" target="_blank" aria-label="Tess — buy or read more"><span class="rl-new" data-added="2026-09-26">NEW</span><img src="https://image.yes24.com/goods/3378917/L" alt="Tess by Thomas Hardy — book cover" loading="lazy"></a>
+      <a class="rl-cover" href="https://www.yes24.com/product/goods/3378917" rel="nofollow noopener noreferrer" target="_blank" aria-label="Tess — buy or read more"><img src="https://image.yes24.com/goods/3378917/L" alt="Tess by Thomas Hardy — book cover" loading="lazy"></a>
       <div class="rl-meta">
         <div class="rl-title"><a href="https://www.yes24.com/product/goods/3378917" rel="nofollow noopener noreferrer" target="_blank">Tess</a> <span style="color:#666">| <span>Tess of the D&#x27;urbervilles</span></span> <span style="color:#888;font-size:12px;font-weight:400">(테스)</span></div>
         <div class="rl-byline">Thomas Hardy</div>
@@ -1180,6 +1212,20 @@
     });
   })();
   </script>
+  <details class="taste">
+    <summary class="taste-head"><h2>📊 Curious about Lee Bo-young's reading taste?</h2><span>from 20 books</span><b class="taste-open" aria-hidden="true" data-show="Show ▾" data-hide="Hide ▴"></b></summary>
+    <div class="taste-body">
+      <p class="taste-sum">Most-read genre: <mark>Fiction</mark> (15 books)</p>
+      <div>
+        <p class="taste-label">Genres <small>20 books with a known genre</small></p>
+        <div class="taste-bar" role="img" aria-label="Fiction 15, Essays 4, Society 1"><span class="wide" style="flex:15 0 0;background:#fde047" title="Fiction 15">Fiction 75%</span><span style="flex:4 0 0;background:#a7f3d0" title="Essays 4">Essays 20%</span><span style="flex:1 0 0;background:#bae6fd" title="Society 1"></span></div>
+        <ul class="taste-legend"><li><i style="background:#fde047"></i>Fiction 15</li><li><i style="background:#a7f3d0"></i>Essays 4</li><li><i style="background:#bae6fd"></i>Society 1</li></ul>
+      </div>
+      <div class="taste-tiles">
+      <div class="taste-tile"><b>Korean · Translated</b><div class="v">6<small> : </small>13</div><div class="meter" aria-hidden="true"><i style="width:32%"></i></div><p>Of 19 literary books: 6 Korean, 13 translated</p></div>
+      </div>
+    </div>
+  </details>
   <section>
     <h2>📝 Lee Bo-young's reading taste</h2>
     <p>Authors that come up most often in Lee Bo-young's list: Thomas Hardy (2 books).</p>

@@ -287,10 +287,43 @@
     h2 { font-size: 19px; margin: 32px 0 12px; padding-bottom: 4px; border-bottom: 2px solid #000; font-weight: 800; }
     .intro { background: #fff; border: 2px solid #000; box-shadow: 4px 4px 0 0 #000; padding: 14px 16px; margin: 16px 0 24px; font-size: 15px; }
     .celeb-bio { margin: 4px 0 8px; padding: 6px 10px; background: #fff8e7; border-left: 4px solid #000; font-size: 14px; line-height: 1.45; color: #222; }
-    .taste { margin: 16px 0; padding: 12px 14px; background: #e0f2fe; border: 2px solid #000; box-shadow: 3px 3px 0 0 #000; font-size: 14px; line-height: 1.6; }
-    .taste h2 { margin: 0 0 6px; font-size: 15px; }
-    .taste p { margin: 2px 0; }
-    .taste .taste-note { margin-top: 6px; font-size: 13px; color: #444; }
+    .taste { margin: 16px 0; background: #fff; border: 2px solid #000; box-shadow: 4px 4px 0 0 #000; font-size: 14px; line-height: 1.6; }
+    .taste-head { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 10px; padding: 10px 14px; background: #e0f2fe; cursor: pointer; list-style: none; }
+    .taste-head::-webkit-details-marker { display: none; }
+    .taste-head:hover { background: #fde047; }
+    .taste-head:focus-visible { outline: 3px solid #2563eb; outline-offset: 2px; }
+    .taste[open] > .taste-head { border-bottom: 2px solid #000; }
+    .taste-open { margin-left: auto; padding: 3px 10px; font-size: 12px; font-weight: 800; background: #fff; border: 2px solid #000; box-shadow: 2px 2px 0 0 #000; white-space: nowrap; }
+    .taste-open::after { content: attr(data-show); }
+    .taste[open] .taste-open::after { content: attr(data-hide); }
+    .taste-head h2 { margin: 0; padding: 0; border: 0; font-size: 16px; font-weight: 900; }
+    .taste-head span { font-size: 12px; color: #333; }
+    .taste-body { padding: 14px; display: grid; gap: 18px; }
+    .taste-sum { margin: 0; font-size: 18px; font-weight: 900; line-height: 1.4; word-break: keep-all; }
+    .taste-sum mark { background: linear-gradient(transparent 55%, #fde047 55%); color: inherit; padding: 0 2px; }
+    .taste-label { margin: 0 0 6px; font-size: 12px; font-weight: 800; color: #555; }
+    .taste-label small { font-weight: 600; }
+    .taste-bar { display: flex; height: 28px; border: 2px solid #000; overflow: hidden; }
+    .taste-bar span { min-width: 0; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 800; white-space: nowrap; overflow: hidden; border-right: 1.5px solid #000; }
+    .taste-bar span:last-child { border-right: 0; }
+    .taste-legend { list-style: none; padding: 0; margin: 8px 0 0; display: flex; flex-wrap: wrap; gap: 4px 14px; font-size: 13px; }
+    .taste-legend li { display: flex; align-items: center; gap: 6px; }
+    .taste-legend i { width: 12px; height: 12px; border: 1.5px solid #000; flex-shrink: 0; }
+    .taste-chips { display: flex; flex-wrap: wrap; gap: 8px; }
+    .taste-chip { display: inline-flex; align-items: baseline; gap: 6px; padding: 4px 10px; background: #fff; border: 2px solid #000; box-shadow: 2px 2px 0 0 #000; font-weight: 700; font-size: 14px; }
+    .taste-chip.big { background: #fde047; font-size: 15px; }
+    .taste-chip small { font-size: 12px; color: #555; font-weight: 600; }
+    .taste-tiles { display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: 10px; }
+    .taste-tile { border: 2px solid #000; background: #fff8e7; padding: 9px 12px; min-width: 0; }
+    .taste-tile b { display: block; font-size: 12px; color: #555; }
+    .taste-tile .v { font-family: "Space Grotesk", sans-serif; font-size: 24px; font-weight: 700; line-height: 1.25; font-variant-numeric: tabular-nums; }
+    .taste-tile .v small { font-size: 14px; }
+    .taste-tile .meter { height: 9px; border: 1.5px solid #000; background: #fff; margin: 6px 0 3px; }
+    .taste-tile .meter i { display: block; height: 100%; background: #000; }
+    .taste-tile p { margin: 0; font-size: 12px; color: #333; word-break: keep-all; }
+    .taste-tile .who { font-size: 14px; font-weight: 800; margin-top: 2px; word-break: keep-all; }
+    @media (max-width: 560px) { .taste-bar span:not(.wide) { font-size: 0; } .taste-sum { font-size: 16px; } }
+    .taste-note { margin: 0; background: #fff7c2; border: 1.5px solid #000; padding: 7px 10px; font-size: 13px; word-break: keep-all; }
     .celeb-alias { margin: 2px 0 0; font-size: 12px; color: #888; }
     .pfaq { margin-top: 40px; }
     .pfaq-q { background: #fff; border: 2px solid #000; box-shadow: 3px 3px 0 0 #000; padding: 12px 14px; margin-bottom: 12px; }
@@ -453,26 +486,21 @@
       </div>
     </div>
     <details class="new-sec">
-      <summary class="new-sec-h"><span class="rl-new-tag">NEW</span> New in the last 10 days (6 books) <span class="new-sec-more" data-show="Show" data-hide="Hide"></span></summary>
+      <summary class="new-sec-h"><span class="rl-new-tag">NEW</span> New in the last 10 days (1 book) <span class="new-sec-more" data-show="Show" data-hide="Hide"></span></summary>
       <div class="new-tiles">
         <a class="new-tile" href="#b1"><span class="nt-cover"><img src="https://image.yes24.com/goods/196550792/L" alt="Even If We&#x27;re Crazy, Women’S Baseball by Do Jun-Woo — book cover" loading="lazy"></span><span class="nt-title">Even If We&#x27;re Crazy, Women’S Baseball</span></a>
-        <a class="new-tile" href="#b2"><span class="nt-cover"><img src="https://image.yes24.com/goods/119423730/L" alt="Let&#x27;s Call This My Heart by Hwang Inchan — book cover" loading="lazy"></span><span class="nt-title">Let&#x27;s Call This My Heart</span></a>
-        <a class="new-tile" href="#b3"><span class="nt-cover"><img src="https://image.yes24.com/goods/36920662/L" alt="Lover Who Hears Even While Sleeping by Kim Ant — book cover" loading="lazy"></span><span class="nt-title">Lover Who Hears Even While Sleeping</span></a>
-        <a class="new-tile" href="#b4"><span class="nt-cover"><img src="https://image.yes24.com/goods/144532949/L" alt="Poetry and Matter by Na Hee-Deok — book cover" loading="lazy"></span><span class="nt-title">Poetry and Matter</span></a>
-        <a class="new-tile" href="#b7"><span class="nt-cover"><img src="https://image.yes24.com/goods/126964752/L" alt="Vitality Development by Lim Seung-Yu — book cover" loading="lazy"></span><span class="nt-title">Vitality Development</span></a>
-        <a class="new-tile" href="#b8"><span class="nt-cover"><img src="https://image.yes24.com/goods/192646861/L" alt="We Love Poetry by Go Myeong-Jae, Go Seon-Kyung, Kim Teut-Dol, Kim Min-Ha, Kim So-Yeon, Na Hee-Deok, Moon Gyeong-Yeon, Min Byeong-Hun, Park Jeong-Min, Etc. — book cover" loading="lazy"></span><span class="nt-title">We Love Poetry</span></a>
       </div>
     </details>
     <div id="shelf-area" class="show-covers">
     <div class="shelf" id="shelf">
     <a class="sp is-new" style="--c:hsl(20,45%,43%);--w:43px;--fs:10px" href="https://www.yes24.com/product/goods/196550792" rel="nofollow noopener noreferrer" target="_blank" title="Even If We&#x27;re Crazy, Women’S Baseball"><span class="sp-t"><i>Even If We&#x27;re Crazy, Women’S Baseball</i></span><img class="sp-i" src="https://image.yes24.com/goods/196550792/side" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.parentNode.classList.add('sp-fail');this.remove()" onload="if(this.naturalWidth/this.naturalHeight>0.4){this.parentNode.classList.add('sp-fail');this.remove()}"><span class="sp-new" data-added="2026-09-26">NEW</span></a>
-    <a class="sp is-new" style="--c:hsl(84,47%,36%);--w:30px;--fs:15px" href="https://www.yes24.com/product/goods/119423730" rel="nofollow noopener noreferrer" target="_blank" title="Let&#x27;s Call This My Heart"><span class="sp-t"><i>Let&#x27;s Call This My Heart</i></span><img class="sp-i" src="https://image.yes24.com/goods/119423730/side" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.parentNode.classList.add('sp-fail');this.remove()" onload="if(this.naturalWidth/this.naturalHeight>0.4){this.parentNode.classList.add('sp-fail');this.remove()}"><span class="sp-new" data-added="2026-09-26">NEW</span></a>
-    <a class="sp is-new" style="--c:hsl(221,35%,28%);--w:30px;--fs:10px" href="https://www.yes24.com/product/goods/36920662" rel="nofollow noopener noreferrer" target="_blank" title="Lover Who Hears Even While Sleeping"><span class="sp-t"><i>Lover Who Hears Even While Sleeping</i></span><img class="sp-i" src="https://image.yes24.com/goods/36920662/side" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.parentNode.classList.add('sp-fail');this.remove()" onload="if(this.naturalWidth/this.naturalHeight>0.4){this.parentNode.classList.add('sp-fail');this.remove()}"><span class="sp-new" data-added="2026-09-26">NEW</span></a>
-    <a class="sp is-new" style="--c:hsl(40,52%,29%);--w:33px;--fs:15px" href="https://www.yes24.com/product/goods/144532949" rel="nofollow noopener noreferrer" target="_blank" title="Poetry and Matter"><span class="sp-t"><i>Poetry and Matter</i></span><img class="sp-i" src="https://image.yes24.com/goods/144532949/side" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.parentNode.classList.add('sp-fail');this.remove()" onload="if(this.naturalWidth/this.naturalHeight>0.4){this.parentNode.classList.add('sp-fail');this.remove()}"><span class="sp-new" data-added="2026-09-26">NEW</span></a>
+    <a class="sp" style="--c:hsl(84,47%,36%);--w:30px;--fs:15px" href="https://www.yes24.com/product/goods/119423730" rel="nofollow noopener noreferrer" target="_blank" title="Let&#x27;s Call This My Heart"><span class="sp-t"><i>Let&#x27;s Call This My Heart</i></span><img class="sp-i" src="https://image.yes24.com/goods/119423730/side" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.parentNode.classList.add('sp-fail');this.remove()" onload="if(this.naturalWidth/this.naturalHeight>0.4){this.parentNode.classList.add('sp-fail');this.remove()}"></a>
+    <a class="sp" style="--c:hsl(221,35%,28%);--w:30px;--fs:10px" href="https://www.yes24.com/product/goods/36920662" rel="nofollow noopener noreferrer" target="_blank" title="Lover Who Hears Even While Sleeping"><span class="sp-t"><i>Lover Who Hears Even While Sleeping</i></span><img class="sp-i" src="https://image.yes24.com/goods/36920662/side" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.parentNode.classList.add('sp-fail');this.remove()" onload="if(this.naturalWidth/this.naturalHeight>0.4){this.parentNode.classList.add('sp-fail');this.remove()}"></a>
+    <a class="sp" style="--c:hsl(40,52%,29%);--w:33px;--fs:15px" href="https://www.yes24.com/product/goods/144532949" rel="nofollow noopener noreferrer" target="_blank" title="Poetry and Matter"><span class="sp-t"><i>Poetry and Matter</i></span><img class="sp-i" src="https://image.yes24.com/goods/144532949/side" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.parentNode.classList.add('sp-fail');this.remove()" onload="if(this.naturalWidth/this.naturalHeight>0.4){this.parentNode.classList.add('sp-fail');this.remove()}"></a>
     <a class="sp" style="--c:hsl(81,40%,45%);--w:30px;--fs:15px" href="https://www.yes24.com/product/goods/189381231" rel="nofollow noopener noreferrer" target="_blank" title="Sontag on Film"><span class="sp-t"><i>Sontag on Film</i></span><img class="sp-i" src="https://image.yes24.com/goods/189381231/side" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.parentNode.classList.add('sp-fail');this.remove()" onload="if(this.naturalWidth/this.naturalHeight>0.4){this.parentNode.classList.add('sp-fail');this.remove()}"></a>
     <a class="sp" style="--c:hsl(113,48%,34%);--w:38px;--fs:8px" href="https://www.yes24.com/product/goods/124769666" rel="nofollow noopener noreferrer" target="_blank" title="The Authenticity Hoax: Why the &quot;Real&quot; Things We Seek Don&#x27;t Make Us Happy"><span class="sp-t"><i>The Authenticity Hoax: Why the &quot;Real&quot; Things We Seek Don&#x27;t Make Us Happy</i></span><img class="sp-i" src="https://image.yes24.com/goods/124769666/side" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.parentNode.classList.add('sp-fail');this.remove()" onload="if(this.naturalWidth/this.naturalHeight>0.4){this.parentNode.classList.add('sp-fail');this.remove()}"></a>
-    <a class="sp is-new" style="--c:hsl(315,51%,27%);--w:41px;--fs:15px" href="https://www.yes24.com/product/goods/126964752" rel="nofollow noopener noreferrer" target="_blank" title="Vitality Development"><span class="sp-t"><i>Vitality Development</i></span><img class="sp-i" src="https://image.yes24.com/goods/126964752/side" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.parentNode.classList.add('sp-fail');this.remove()" onload="if(this.naturalWidth/this.naturalHeight>0.4){this.parentNode.classList.add('sp-fail');this.remove()}"><span class="sp-new" data-added="2026-09-26">NEW</span></a>
-    <a class="sp is-new" style="--c:hsl(23,43%,32%);--w:32px;--fs:15px" href="https://www.yes24.com/product/goods/192646861" rel="nofollow noopener noreferrer" target="_blank" title="We Love Poetry"><span class="sp-t"><i>We Love Poetry</i></span><img class="sp-i" src="https://image.yes24.com/goods/192646861/side" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.parentNode.classList.add('sp-fail');this.remove()" onload="if(this.naturalWidth/this.naturalHeight>0.4){this.parentNode.classList.add('sp-fail');this.remove()}"><span class="sp-new" data-added="2026-09-26">NEW</span></a>
+    <a class="sp" style="--c:hsl(315,51%,27%);--w:41px;--fs:15px" href="https://www.yes24.com/product/goods/126964752" rel="nofollow noopener noreferrer" target="_blank" title="Vitality Development"><span class="sp-t"><i>Vitality Development</i></span><img class="sp-i" src="https://image.yes24.com/goods/126964752/side" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.parentNode.classList.add('sp-fail');this.remove()" onload="if(this.naturalWidth/this.naturalHeight>0.4){this.parentNode.classList.add('sp-fail');this.remove()}"></a>
+    <a class="sp" style="--c:hsl(23,43%,32%);--w:32px;--fs:15px" href="https://www.yes24.com/product/goods/192646861" rel="nofollow noopener noreferrer" target="_blank" title="We Love Poetry"><span class="sp-t"><i>We Love Poetry</i></span><img class="sp-i" src="https://image.yes24.com/goods/192646861/side" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.parentNode.classList.add('sp-fail');this.remove()" onload="if(this.naturalWidth/this.naturalHeight>0.4){this.parentNode.classList.add('sp-fail');this.remove()}"></a>
     </div>
     <div class="covers" id="covers">
     <a class="cv" href="https://www.yes24.com/product/goods/196550792" rel="nofollow noopener noreferrer" target="_blank" title="Even If We&#x27;re Crazy, Women’S Baseball"><img src="https://image.yes24.com/goods/196550792/L" alt="Even If We&#x27;re Crazy, Women’S Baseball by Do Jun-Woo — book cover" loading="lazy"></a>
@@ -497,7 +525,7 @@
     </li>
     <li class="rl-item" id="b2">
       <span class="rl-num">2</span>
-      <a class="rl-cover" href="https://www.yes24.com/product/goods/119423730" rel="nofollow noopener noreferrer" target="_blank" aria-label="Let&#x27;s Call This My Heart — buy or read more"><span class="rl-new" data-added="2026-09-26">NEW</span><img src="https://image.yes24.com/goods/119423730/L" alt="Let&#x27;s Call This My Heart by Hwang Inchan — book cover" loading="lazy"></a>
+      <a class="rl-cover" href="https://www.yes24.com/product/goods/119423730" rel="nofollow noopener noreferrer" target="_blank" aria-label="Let&#x27;s Call This My Heart — buy or read more"><img src="https://image.yes24.com/goods/119423730/L" alt="Let&#x27;s Call This My Heart by Hwang Inchan — book cover" loading="lazy"></a>
       <div class="rl-meta">
         <div class="rl-title"><a href="https://www.yes24.com/product/goods/119423730" rel="nofollow noopener noreferrer" target="_blank">Let&#x27;s Call This My Heart *</a> <span style="color:#888;font-size:12px;font-weight:400">(이걸 내 마음이라고 하자)</span></div>
         <div class="rl-byline">Hwang Inchan</div>
@@ -507,7 +535,7 @@
     </li>
     <li class="rl-item" id="b3">
       <span class="rl-num">3</span>
-      <a class="rl-cover" href="https://www.yes24.com/product/goods/36920662" rel="nofollow noopener noreferrer" target="_blank" aria-label="Lover Who Hears Even While Sleeping — buy or read more"><span class="rl-new" data-added="2026-09-26">NEW</span><img src="https://image.yes24.com/goods/36920662/L" alt="Lover Who Hears Even While Sleeping by Kim Ant — book cover" loading="lazy"></a>
+      <a class="rl-cover" href="https://www.yes24.com/product/goods/36920662" rel="nofollow noopener noreferrer" target="_blank" aria-label="Lover Who Hears Even While Sleeping — buy or read more"><img src="https://image.yes24.com/goods/36920662/L" alt="Lover Who Hears Even While Sleeping by Kim Ant — book cover" loading="lazy"></a>
       <div class="rl-meta">
         <div class="rl-title"><a href="https://www.yes24.com/product/goods/36920662" rel="nofollow noopener noreferrer" target="_blank">Lover Who Hears Even While Sleeping</a> <span style="color:#888;font-size:12px;font-weight:400">(자면서도 다 듣는 애인아)</span></div>
         <div class="rl-byline">Kim Ant *</div>
@@ -518,7 +546,7 @@
     </li>
     <li class="rl-item" id="b4">
       <span class="rl-num">4</span>
-      <a class="rl-cover" href="https://www.yes24.com/product/goods/144532949" rel="nofollow noopener noreferrer" target="_blank" aria-label="Poetry and Matter — buy or read more"><span class="rl-new" data-added="2026-09-26">NEW</span><img src="https://image.yes24.com/goods/144532949/L" alt="Poetry and Matter by Na Hee-Deok — book cover" loading="lazy"></a>
+      <a class="rl-cover" href="https://www.yes24.com/product/goods/144532949" rel="nofollow noopener noreferrer" target="_blank" aria-label="Poetry and Matter — buy or read more"><img src="https://image.yes24.com/goods/144532949/L" alt="Poetry and Matter by Na Hee-Deok — book cover" loading="lazy"></a>
       <div class="rl-meta">
         <div class="rl-title"><a href="https://www.yes24.com/product/goods/144532949" rel="nofollow noopener noreferrer" target="_blank">Poetry and Matter *</a> <span style="color:#888;font-size:12px;font-weight:400">(시와 물질)</span></div>
         <div class="rl-byline">Na Hee-Deok *</div>
@@ -531,7 +559,7 @@
       <a class="rl-cover" href="https://www.yes24.com/product/goods/189381231" rel="nofollow noopener noreferrer" target="_blank" aria-label="Sontag on Film — buy or read more"><img src="https://image.yes24.com/goods/189381231/L" alt="Sontag on Film by Susan Sontag — book cover" loading="lazy"></a>
       <div class="rl-meta">
         <div class="rl-title"><a href="https://www.yes24.com/product/goods/189381231" rel="nofollow noopener noreferrer" target="_blank">Sontag on Film</a> <span style="color:#888;font-size:12px;font-weight:400">(영화에 관하여)</span></div>
-        <div class="rl-byline">Susan Sontag</div>
+        <div class="rl-byline">Susan Sontag <span style="color:#888">(<span lang="en">Susan Lee Sontag</span>)</span></div>
         <a class="rl-source" href="https://www.yes24.com/product/goods/189381231" rel="nofollow noopener noreferrer" target="_blank" title="View on YES24 (Korean bookstore)">📖 Book details</a> <a class="rl-source" href="https://www.topstarnews.net/news/articleView.html?idxno=16057832" rel="nofollow noopener noreferrer" target="_blank">📺 Source</a>
         <button type="button" class="heart-btn sm" data-heart="b:영화에 관하여" aria-pressed="false" aria-label="Heart this book" title="Heart this book" hidden><span class="heart-ico" aria-hidden="true">♡</span><span class="heart-n"></span></button>
       </div>
@@ -548,7 +576,7 @@
     </li>
     <li class="rl-item" id="b7">
       <span class="rl-num">7</span>
-      <a class="rl-cover" href="https://www.yes24.com/product/goods/126964752" rel="nofollow noopener noreferrer" target="_blank" aria-label="Vitality Development — buy or read more"><span class="rl-new" data-added="2026-09-26">NEW</span><img src="https://image.yes24.com/goods/126964752/L" alt="Vitality Development by Lim Seung-Yu — book cover" loading="lazy"></a>
+      <a class="rl-cover" href="https://www.yes24.com/product/goods/126964752" rel="nofollow noopener noreferrer" target="_blank" aria-label="Vitality Development — buy or read more"><img src="https://image.yes24.com/goods/126964752/L" alt="Vitality Development by Lim Seung-Yu — book cover" loading="lazy"></a>
       <div class="rl-meta">
         <div class="rl-title"><a href="https://www.yes24.com/product/goods/126964752" rel="nofollow noopener noreferrer" target="_blank">Vitality Development *</a> <span style="color:#888;font-size:12px;font-weight:400">(생명력 전개)</span></div>
         <div class="rl-byline">Lim Seung-Yu *</div>
@@ -558,7 +586,7 @@
     </li>
     <li class="rl-item" id="b8">
       <span class="rl-num">8</span>
-      <a class="rl-cover" href="https://www.yes24.com/product/goods/192646861" rel="nofollow noopener noreferrer" target="_blank" aria-label="We Love Poetry — buy or read more"><span class="rl-new" data-added="2026-09-26">NEW</span><img src="https://image.yes24.com/goods/192646861/L" alt="We Love Poetry by Go Myeong-Jae, Go Seon-Kyung, Kim Teut-Dol, Kim Min-Ha, Kim So-Yeon, Na Hee-Deok, Moon Gyeong-Yeon, Min Byeong-Hun, Park Jeong-Min, Etc. — book cover" loading="lazy"></a>
+      <a class="rl-cover" href="https://www.yes24.com/product/goods/192646861" rel="nofollow noopener noreferrer" target="_blank" aria-label="We Love Poetry — buy or read more"><img src="https://image.yes24.com/goods/192646861/L" alt="We Love Poetry by Go Myeong-Jae, Go Seon-Kyung, Kim Teut-Dol, Kim Min-Ha, Kim So-Yeon, Na Hee-Deok, Moon Gyeong-Yeon, Min Byeong-Hun, Park Jeong-Min, Etc. — book cover" loading="lazy"></a>
       <div class="rl-meta">
         <div class="rl-title"><a href="https://www.yes24.com/product/goods/192646861" rel="nofollow noopener noreferrer" target="_blank">We Love Poetry *</a> <span style="color:#888;font-size:12px;font-weight:400">(우리는 시를 사랑해)</span></div>
         <div class="rl-byline">Go Myeong-Jae, Go Seon-Kyung, Kim Teut-Dol, Kim Min-Ha, Kim So-Yeon, Na Hee-Deok, Moon Gyeong-Yeon, Min Byeong-Hun, Park Jeong-Min, Etc. *</div>
@@ -800,11 +828,22 @@
   })();
   </script>
   <p class="tr-note">Book titles and author names marked with an asterisk (<strong>*</strong>) are machine-translated from Korean. No official English edition was confirmed for them, so read them as approximations of the Korean original shown next to them.</p>
-  <section class="taste">
-    <h2>Reading taste (from 8 books)</h2>
-    <p>Favors recent releases (last 2 years): 4 of 8 (50%).</p>
-    <p>Leans toward short books (250 pages or fewer): 5 of 8 (62%).</p>
-  </section>
+  <details class="taste">
+    <summary class="taste-head"><h2>📊 Curious about Lee Joo-young's reading taste?</h2><span>from 8 books</span><b class="taste-open" aria-hidden="true" data-show="Show ▾" data-hide="Hide ▴"></b></summary>
+    <div class="taste-body">
+      <p class="taste-sum">Most-read genre: <mark>Poetry</mark> (4 books)</p>
+      <div>
+        <p class="taste-label">Genres <small>8 books with a known genre</small></p>
+        <div class="taste-bar" role="img" aria-label="Poetry 4, Essays 2, Society 1, Humanities 1"><span class="wide" style="flex:4 0 0;background:#ddd6fe" title="Poetry 4">Poetry 50%</span><span style="flex:2 0 0;background:#a7f3d0" title="Essays 2">Essays 25%</span><span style="flex:1 0 0;background:#bae6fd" title="Society 1">Society 12%</span><span style="flex:1 0 0;background:#fed7aa" title="Humanities 1">Humanities 12%</span></div>
+        <ul class="taste-legend"><li><i style="background:#ddd6fe"></i>Poetry 4</li><li><i style="background:#a7f3d0"></i>Essays 2</li><li><i style="background:#bae6fd"></i>Society 1</li><li><i style="background:#fed7aa"></i>Humanities 1</li></ul>
+      </div>
+      <div class="taste-tiles">
+      <div class="taste-tile"><b>Korean · Translated</b><div class="v">6<small> : </small>0</div><div class="meter" aria-hidden="true"><i style="width:100%"></i></div><p>Of 6 literary books: 6 Korean, 0 translated</p></div>
+      <div class="taste-tile"><b>Released in the last 2 years</b><div class="v">50<small>%</small></div><div class="meter" aria-hidden="true"><i style="width:50%"></i></div><p>4 of 8</p></div>
+      <div class="taste-tile"><b>250 pages or fewer</b><div class="v">62<small>%</small></div><div class="meter" aria-hidden="true"><i style="width:62%"></i></div><p>5 of 8</p></div>
+      </div>
+    </div>
+  </details>
   <section class="related-celebs">
     <h2>🤝 Celebrities with similar reading taste</h2>
     <p class="muted">They recommended some of the same books. The number is how many books they share.</p>

@@ -233,10 +233,43 @@
     .bc-author { font-size: 12px; color: #555; margin-bottom: 6px; }
     .bc-badge { display: inline-block; font-size: 11px; background: #fde047; border: 1px solid #000; padding: 1px 6px; font-weight: 700; }
     .celeb-bio { margin: 4px 0 8px; padding: 6px 10px; background: #fff8e7; border-left: 4px solid #000; font-size: 14px; line-height: 1.45; color: #222; }
-    .taste { margin: 16px 0; padding: 12px 14px; background: #e0f2fe; border: 2px solid #000; box-shadow: 3px 3px 0 0 #000; font-size: 14px; line-height: 1.6; }
-    .taste h2 { margin: 0 0 6px; font-size: 15px; }
-    .taste p { margin: 2px 0; }
-    .taste .taste-note { margin-top: 6px; font-size: 13px; color: #444; }
+    .taste { margin: 16px 0; background: #fff; border: 2px solid #000; box-shadow: 4px 4px 0 0 #000; font-size: 14px; line-height: 1.6; }
+    .taste-head { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 10px; padding: 10px 14px; background: #e0f2fe; cursor: pointer; list-style: none; }
+    .taste-head::-webkit-details-marker { display: none; }
+    .taste-head:hover { background: #fde047; }
+    .taste-head:focus-visible { outline: 3px solid #2563eb; outline-offset: 2px; }
+    .taste[open] > .taste-head { border-bottom: 2px solid #000; }
+    .taste-open { margin-left: auto; padding: 3px 10px; font-size: 12px; font-weight: 800; background: #fff; border: 2px solid #000; box-shadow: 2px 2px 0 0 #000; white-space: nowrap; }
+    .taste-open::after { content: attr(data-show); }
+    .taste[open] .taste-open::after { content: attr(data-hide); }
+    .taste-head h2 { margin: 0; padding: 0; border: 0; font-size: 16px; font-weight: 900; }
+    .taste-head span { font-size: 12px; color: #333; }
+    .taste-body { padding: 14px; display: grid; gap: 18px; }
+    .taste-sum { margin: 0; font-size: 18px; font-weight: 900; line-height: 1.4; word-break: keep-all; }
+    .taste-sum mark { background: linear-gradient(transparent 55%, #fde047 55%); color: inherit; padding: 0 2px; }
+    .taste-label { margin: 0 0 6px; font-size: 12px; font-weight: 800; color: #555; }
+    .taste-label small { font-weight: 600; }
+    .taste-bar { display: flex; height: 28px; border: 2px solid #000; overflow: hidden; }
+    .taste-bar span { min-width: 0; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 800; white-space: nowrap; overflow: hidden; border-right: 1.5px solid #000; }
+    .taste-bar span:last-child { border-right: 0; }
+    .taste-legend { list-style: none; padding: 0; margin: 8px 0 0; display: flex; flex-wrap: wrap; gap: 4px 14px; font-size: 13px; }
+    .taste-legend li { display: flex; align-items: center; gap: 6px; }
+    .taste-legend i { width: 12px; height: 12px; border: 1.5px solid #000; flex-shrink: 0; }
+    .taste-chips { display: flex; flex-wrap: wrap; gap: 8px; }
+    .taste-chip { display: inline-flex; align-items: baseline; gap: 6px; padding: 4px 10px; background: #fff; border: 2px solid #000; box-shadow: 2px 2px 0 0 #000; font-weight: 700; font-size: 14px; }
+    .taste-chip.big { background: #fde047; font-size: 15px; }
+    .taste-chip small { font-size: 12px; color: #555; font-weight: 600; }
+    .taste-tiles { display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: 10px; }
+    .taste-tile { border: 2px solid #000; background: #fff8e7; padding: 9px 12px; min-width: 0; }
+    .taste-tile b { display: block; font-size: 12px; color: #555; }
+    .taste-tile .v { font-family: "Space Grotesk", sans-serif; font-size: 24px; font-weight: 700; line-height: 1.25; font-variant-numeric: tabular-nums; }
+    .taste-tile .v small { font-size: 14px; }
+    .taste-tile .meter { height: 9px; border: 1.5px solid #000; background: #fff; margin: 6px 0 3px; }
+    .taste-tile .meter i { display: block; height: 100%; background: #000; }
+    .taste-tile p { margin: 0; font-size: 12px; color: #333; word-break: keep-all; }
+    .taste-tile .who { font-size: 14px; font-weight: 800; margin-top: 2px; word-break: keep-all; }
+    @media (max-width: 560px) { .taste-bar span:not(.wide) { font-size: 0; } .taste-sum { font-size: 16px; } }
+    .taste-note { margin: 0; background: #fff7c2; border: 1.5px solid #000; padding: 7px 10px; font-size: 13px; word-break: keep-all; }
     .shelf-head { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
     .shelf-head h2 { margin-bottom: 0; border-bottom: none; padding-bottom: 0; }
     .shelf-tabs { display: flex; gap: 6px; flex-wrap: wrap; }
@@ -398,19 +431,13 @@
         <button type="button" class="sh-cap" id="shelf-cap-clear" title="배경 없이 투명한 PNG로 내려받아요">⤓ 투명 배경</button>
       </div>
     </div>
-    <details class="new-sec">
-      <summary class="new-sec-h"><span class="rl-new-tag">NEW</span> 최근 10일 새로 추가된 책 (1권) <span class="new-sec-more" data-show="보기" data-hide="접기"></span></summary>
-      <div class="new-tiles">
-        <a class="new-tile" href="#b4"><span class="nt-cover"><img src="https://image.yes24.com/goods/98799362/L" alt="작은 별이지만 빛나고 있어 표지" loading="lazy"></span><span class="nt-title">작은 별이지만 빛나고 있어</span></a>
-      </div>
-    </details>
     <p class="muted">3권은 다른 셀럽도 함께 추천한 책이에요. 아래 목록에서 함께 추천한 셀럽 이름을 볼 수 있어요.</p>
     <div id="shelf-area" class="show-covers">
     <div class="shelf" id="shelf">
     <a class="sp no-img sp-light" style="--c:#f6f1ee;--w:34px;--fs:15px" href="https://www.yes24.com/product/goods/89583119" rel="nofollow noopener noreferrer" target="_blank" title="슬픔의 위로"><span class="sp-t"><i>슬픔의 위로</i></span></a>
     <a class="sp" style="--c:hsl(238,35%,41%);--w:41px;--fs:15px" href="https://www.yes24.com/product/goods/90266627" rel="nofollow noopener noreferrer" target="_blank" title="애쓰지 않고 편안하게"><span class="sp-t"><i>애쓰지 않고 편안하게</i></span><img class="sp-i" src="https://image.yes24.com/goods/90266627/side" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.parentNode.classList.add('sp-fail');this.remove()" onload="if(this.naturalWidth/this.naturalHeight>0.4){this.parentNode.classList.add('sp-fail');this.remove()}"></a>
     <a class="sp no-img sp-light" style="--c:#ffffff;--w:40px;--fs:9px" href="https://www.yes24.com/product/goods/13108339" rel="nofollow noopener noreferrer" target="_blank" title="어떤 사람이 최고의 자리에 오르는가"><span class="sp-t"><i>어떤 사람이 최고의 자리에 오르는가</i></span></a>
-    <a class="sp is-new" style="--c:hsl(108,45%,45%);--w:38px;--fs:12px" href="https://www.yes24.com/product/goods/98799362" rel="nofollow noopener noreferrer" target="_blank" title="작은 별이지만 빛나고 있어"><span class="sp-t"><i>작은 별이지만 빛나고 있어</i></span><img class="sp-i" src="https://image.yes24.com/goods/98799362/side" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.parentNode.classList.add('sp-fail');this.remove()" onload="if(this.naturalWidth/this.naturalHeight>0.4){this.parentNode.classList.add('sp-fail');this.remove()}"><span class="sp-new" data-added="2026-09-26">NEW</span></a>
+    <a class="sp" style="--c:hsl(108,45%,45%);--w:38px;--fs:12px" href="https://www.yes24.com/product/goods/98799362" rel="nofollow noopener noreferrer" target="_blank" title="작은 별이지만 빛나고 있어"><span class="sp-t"><i>작은 별이지만 빛나고 있어</i></span><img class="sp-i" src="https://image.yes24.com/goods/98799362/side" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.parentNode.classList.add('sp-fail');this.remove()" onload="if(this.naturalWidth/this.naturalHeight>0.4){this.parentNode.classList.add('sp-fail');this.remove()}"></a>
     <a class="sp" style="--c:hsl(111,33%,45%);--w:37px;--fs:10px" href="https://www.yes24.com/product/goods/61779464" rel="nofollow noopener noreferrer" target="_blank" title="죽고 싶지만 떡볶이는 먹고 싶어"><span class="sp-t"><i>죽고 싶지만 떡볶이는 먹고 싶어</i></span><img class="sp-i" src="https://image.yes24.com/goods/61779464/side" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.parentNode.classList.add('sp-fail');this.remove()" onload="if(this.naturalWidth/this.naturalHeight>0.4){this.parentNode.classList.add('sp-fail');this.remove()}"></a>
     </div>
     <div class="covers" id="covers">
@@ -454,7 +481,7 @@
     </li>
     <li class="rl-item" id="b4">
       <span class="rl-num">4</span>
-      <a class="rl-cover" href="https://www.yes24.com/product/goods/98799362" rel="nofollow noopener noreferrer" target="_blank" aria-label="작은 별이지만 빛나고 있어 알라딘에서 보기"><span class="rl-new" data-added="2026-09-26">NEW</span><img src="https://image.yes24.com/goods/98799362/L" alt="작은 별이지만 빛나고 있어 표지" loading="lazy"></a>
+      <a class="rl-cover" href="https://www.yes24.com/product/goods/98799362" rel="nofollow noopener noreferrer" target="_blank" aria-label="작은 별이지만 빛나고 있어 알라딘에서 보기"><img src="https://image.yes24.com/goods/98799362/L" alt="작은 별이지만 빛나고 있어 표지" loading="lazy"></a>
       <div class="rl-meta">
         <div class="rl-title"><a href="https://www.yes24.com/product/goods/98799362" rel="nofollow noopener noreferrer" target="_blank">작은 별이지만 빛나고 있어</a></div>
         <div class="rl-byline">소윤 · 북로망스</div>
@@ -708,6 +735,21 @@
   })();
   </script>
 
+  <details class="taste">
+    <summary class="taste-head"><h2>📊 에스쿱스의 독서 취향이 궁금하다면?</h2><span>책 5권 기준</span><b class="taste-open" aria-hidden="true" data-show="펼쳐 보기 ▾" data-hide="접기 ▴"></b></summary>
+    <div class="taste-body">
+      <p class="taste-sum">가장 많이 읽은 분야는 <mark>에세이</mark> 3권, 자주 고른 키워드는 <mark>한국 에세이</mark> 3권</p>
+      <div>
+        <p class="taste-label">분야 <small>분야를 아는 5권</small></p>
+        <div class="taste-bar" role="img" aria-label="에세이 3, 인문 1, 자기계발 1"><span class="wide" style="flex:3 0 0;background:#a7f3d0" title="에세이 3">에세이 60%</span><span style="flex:1 0 0;background:#fed7aa" title="인문 1">인문 20%</span><span style="flex:1 0 0;background:#fecaca" title="자기계발 1">자기계발 20%</span></div>
+        <ul class="taste-legend"><li><i style="background:#a7f3d0"></i>에세이 3권</li><li><i style="background:#fed7aa"></i>인문 1권</li><li><i style="background:#fecaca"></i>자기계발 1권</li></ul>
+      </div>
+      <div>
+        <p class="taste-label">자주 고른 키워드 <small>예스24 카테고리 · 2권 이상</small></p>
+        <div class="taste-chips"><span class="taste-chip big">한국 에세이 <small>3권</small></span></div>
+      </div>
+    </div>
+  </details>
   <section class="related-celebs">
     <h2>🤝 책 취향이 겹치는 셀럽</h2>
     <p class="muted">같은 책을 함께 추천한 다른 셀럽이에요. 숫자는 공통 도서 권수.</p>

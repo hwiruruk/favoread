@@ -267,10 +267,43 @@
     .bc-author { font-size: 12px; color: #555; margin-bottom: 6px; }
     .bc-badge { display: inline-block; font-size: 11px; background: #fde047; border: 1px solid #000; padding: 1px 6px; font-weight: 700; }
     .celeb-bio { margin: 4px 0 8px; padding: 6px 10px; background: #fff8e7; border-left: 4px solid #000; font-size: 14px; line-height: 1.45; color: #222; }
-    .taste { margin: 16px 0; padding: 12px 14px; background: #e0f2fe; border: 2px solid #000; box-shadow: 3px 3px 0 0 #000; font-size: 14px; line-height: 1.6; }
-    .taste h2 { margin: 0 0 6px; font-size: 15px; }
-    .taste p { margin: 2px 0; }
-    .taste .taste-note { margin-top: 6px; font-size: 13px; color: #444; }
+    .taste { margin: 16px 0; background: #fff; border: 2px solid #000; box-shadow: 4px 4px 0 0 #000; font-size: 14px; line-height: 1.6; }
+    .taste-head { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 10px; padding: 10px 14px; background: #e0f2fe; cursor: pointer; list-style: none; }
+    .taste-head::-webkit-details-marker { display: none; }
+    .taste-head:hover { background: #fde047; }
+    .taste-head:focus-visible { outline: 3px solid #2563eb; outline-offset: 2px; }
+    .taste[open] > .taste-head { border-bottom: 2px solid #000; }
+    .taste-open { margin-left: auto; padding: 3px 10px; font-size: 12px; font-weight: 800; background: #fff; border: 2px solid #000; box-shadow: 2px 2px 0 0 #000; white-space: nowrap; }
+    .taste-open::after { content: attr(data-show); }
+    .taste[open] .taste-open::after { content: attr(data-hide); }
+    .taste-head h2 { margin: 0; padding: 0; border: 0; font-size: 16px; font-weight: 900; }
+    .taste-head span { font-size: 12px; color: #333; }
+    .taste-body { padding: 14px; display: grid; gap: 18px; }
+    .taste-sum { margin: 0; font-size: 18px; font-weight: 900; line-height: 1.4; word-break: keep-all; }
+    .taste-sum mark { background: linear-gradient(transparent 55%, #fde047 55%); color: inherit; padding: 0 2px; }
+    .taste-label { margin: 0 0 6px; font-size: 12px; font-weight: 800; color: #555; }
+    .taste-label small { font-weight: 600; }
+    .taste-bar { display: flex; height: 28px; border: 2px solid #000; overflow: hidden; }
+    .taste-bar span { min-width: 0; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 800; white-space: nowrap; overflow: hidden; border-right: 1.5px solid #000; }
+    .taste-bar span:last-child { border-right: 0; }
+    .taste-legend { list-style: none; padding: 0; margin: 8px 0 0; display: flex; flex-wrap: wrap; gap: 4px 14px; font-size: 13px; }
+    .taste-legend li { display: flex; align-items: center; gap: 6px; }
+    .taste-legend i { width: 12px; height: 12px; border: 1.5px solid #000; flex-shrink: 0; }
+    .taste-chips { display: flex; flex-wrap: wrap; gap: 8px; }
+    .taste-chip { display: inline-flex; align-items: baseline; gap: 6px; padding: 4px 10px; background: #fff; border: 2px solid #000; box-shadow: 2px 2px 0 0 #000; font-weight: 700; font-size: 14px; }
+    .taste-chip.big { background: #fde047; font-size: 15px; }
+    .taste-chip small { font-size: 12px; color: #555; font-weight: 600; }
+    .taste-tiles { display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: 10px; }
+    .taste-tile { border: 2px solid #000; background: #fff8e7; padding: 9px 12px; min-width: 0; }
+    .taste-tile b { display: block; font-size: 12px; color: #555; }
+    .taste-tile .v { font-family: "Space Grotesk", sans-serif; font-size: 24px; font-weight: 700; line-height: 1.25; font-variant-numeric: tabular-nums; }
+    .taste-tile .v small { font-size: 14px; }
+    .taste-tile .meter { height: 9px; border: 1.5px solid #000; background: #fff; margin: 6px 0 3px; }
+    .taste-tile .meter i { display: block; height: 100%; background: #000; }
+    .taste-tile p { margin: 0; font-size: 12px; color: #333; word-break: keep-all; }
+    .taste-tile .who { font-size: 14px; font-weight: 800; margin-top: 2px; word-break: keep-all; }
+    @media (max-width: 560px) { .taste-bar span:not(.wide) { font-size: 0; } .taste-sum { font-size: 16px; } }
+    .taste-note { margin: 0; background: #fff7c2; border: 1.5px solid #000; padding: 7px 10px; font-size: 13px; word-break: keep-all; }
     .shelf-head { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
     .shelf-head h2 { margin-bottom: 0; border-bottom: none; padding-bottom: 0; }
     .shelf-tabs { display: flex; gap: 6px; flex-wrap: wrap; }
@@ -433,10 +466,9 @@
       </div>
     </div>
     <details class="new-sec">
-      <summary class="new-sec-h"><span class="rl-new-tag">NEW</span> 최근 10일 새로 추가된 책 (2권) <span class="new-sec-more" data-show="보기" data-hide="접기"></span></summary>
+      <summary class="new-sec-h"><span class="rl-new-tag">NEW</span> 최근 10일 새로 추가된 책 (1권) <span class="new-sec-more" data-show="보기" data-hide="접기"></span></summary>
       <div class="new-tiles">
         <a class="new-tile" href="#b6"><span class="nt-cover"><img src="https://image.yes24.com/goods/359901/L" alt="자기 앞의 생 표지" loading="lazy"></span><span class="nt-title">자기 앞의 생</span></a>
-        <a class="new-tile" href="#b5"><span class="nt-cover"><img src="https://image.yes24.com/goods/15322641/L" alt="드러누운 밤 표지" loading="lazy"></span><span class="nt-title">드러누운 밤</span></a>
       </div>
     </details>
     <p class="muted">6권은 다른 셀럽도 함께 추천한 책이에요. 아래 목록에서 함께 추천한 셀럽 이름을 볼 수 있어요.</p>
@@ -446,7 +478,7 @@
     <a class="sp" style="--c:hsl(96,37%,35%);--w:43px;--fs:15px" href="https://www.yes24.com/product/goods/29318426" rel="nofollow noopener noreferrer" target="_blank" title="나의 눈부신 친구"><span class="sp-t"><i>나의 눈부신 친구</i></span><img class="sp-i" src="https://image.yes24.com/goods/29318426/side" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.parentNode.classList.add('sp-fail');this.remove()" onload="if(this.naturalWidth/this.naturalHeight>0.4){this.parentNode.classList.add('sp-fail');this.remove()}"></a>
     <a class="sp" style="--c:hsl(217,44%,46%);--w:38px;--fs:15px" href="https://www.yes24.com/product/goods/29375048" rel="nofollow noopener noreferrer" target="_blank" title="너무 시끄러운 고독"><span class="sp-t"><i>너무 시끄러운 고독</i></span><img class="sp-i" src="https://image.yes24.com/goods/29375048/side" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.parentNode.classList.add('sp-fail');this.remove()" onload="if(this.naturalWidth/this.naturalHeight>0.4){this.parentNode.classList.add('sp-fail');this.remove()}"></a>
     <a class="sp" style="--c:hsl(292,41%,27%);--w:32px;--fs:15px" href="https://www.yes24.com/product/goods/6157159" rel="nofollow noopener noreferrer" target="_blank" title="노인과 바다"><span class="sp-t"><i>노인과 바다</i></span><img class="sp-i" src="https://image.yes24.com/goods/6157159/side" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.parentNode.classList.add('sp-fail');this.remove()" onload="if(this.naturalWidth/this.naturalHeight>0.4){this.parentNode.classList.add('sp-fail');this.remove()}"></a>
-    <a class="sp is-new" style="--c:hsl(116,49%,39%);--w:41px;--fs:15px" href="https://www.yes24.com/product/goods/15322641" rel="nofollow noopener noreferrer" target="_blank" title="드러누운 밤"><span class="sp-t"><i>드러누운 밤</i></span><img class="sp-i" src="https://image.yes24.com/goods/15322641/side" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.parentNode.classList.add('sp-fail');this.remove()" onload="if(this.naturalWidth/this.naturalHeight>0.4){this.parentNode.classList.add('sp-fail');this.remove()}"><span class="sp-new" data-added="2026-09-26">NEW</span></a>
+    <a class="sp" style="--c:hsl(116,49%,39%);--w:41px;--fs:15px" href="https://www.yes24.com/product/goods/15322641" rel="nofollow noopener noreferrer" target="_blank" title="드러누운 밤"><span class="sp-t"><i>드러누운 밤</i></span><img class="sp-i" src="https://image.yes24.com/goods/15322641/side" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.parentNode.classList.add('sp-fail');this.remove()" onload="if(this.naturalWidth/this.naturalHeight>0.4){this.parentNode.classList.add('sp-fail');this.remove()}"></a>
     <a class="sp is-new" style="--c:hsl(351,55%,30%);--w:38px;--fs:15px" href="https://www.yes24.com/product/goods/359901" rel="nofollow noopener noreferrer" target="_blank" title="자기 앞의 생"><span class="sp-t"><i>자기 앞의 생</i></span><img class="sp-i" src="https://image.yes24.com/goods/359901/side" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.parentNode.classList.add('sp-fail');this.remove()" onload="if(this.naturalWidth/this.naturalHeight>0.4){this.parentNode.classList.add('sp-fail');this.remove()}"><span class="sp-new" data-added="2026-09-27">NEW</span></a>
     <a class="sp" style="--c:hsl(347,40%,33%);--w:43px;--fs:15px" href="https://www.yes24.com/product/goods/1492648" rel="nofollow noopener noreferrer" target="_blank" title="지문사냥꾼"><span class="sp-t"><i>지문사냥꾼</i></span><img class="sp-i" src="https://image.yes24.com/goods/1492648/side" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.parentNode.classList.add('sp-fail');this.remove()" onload="if(this.naturalWidth/this.naturalHeight>0.4){this.parentNode.classList.add('sp-fail');this.remove()}"></a>
     </div>
@@ -510,7 +542,7 @@
     </li>
     <li class="rl-item" id="b5">
       <span class="rl-num">5</span>
-      <a class="rl-cover" href="https://www.yes24.com/product/goods/15322641" rel="nofollow noopener noreferrer" target="_blank" aria-label="드러누운 밤 알라딘에서 보기"><span class="rl-new" data-added="2026-09-26">NEW</span><img src="https://image.yes24.com/goods/15322641/L" alt="드러누운 밤 표지" loading="lazy"></a>
+      <a class="rl-cover" href="https://www.yes24.com/product/goods/15322641" rel="nofollow noopener noreferrer" target="_blank" aria-label="드러누운 밤 알라딘에서 보기"><img src="https://image.yes24.com/goods/15322641/L" alt="드러누운 밤 표지" loading="lazy"></a>
       <div class="rl-meta">
         <div class="rl-title"><a href="https://www.yes24.com/product/goods/15322641" rel="nofollow noopener noreferrer" target="_blank">드러누운 밤</a></div>
         <div class="rl-byline">훌리오 꼬르따사르 · 창비</div>
@@ -775,10 +807,21 @@
   })();
   </script>
 
-  <section class="taste">
-    <h2>📊 독서 취향 (책 7권 기준)</h2>
-    <p>가벼운 분량(250쪽 이하)의 책이 많아요: 7권 중 4권(57%).</p>
-  </section>
+  <details class="taste">
+    <summary class="taste-head"><h2>📊 조여정의 독서 취향이 궁금하다면?</h2><span>책 7권 기준</span><b class="taste-open" aria-hidden="true" data-show="펼쳐 보기 ▾" data-hide="접기 ▴"></b></summary>
+    <div class="taste-body">
+      <p class="taste-sum">가장 많이 읽은 분야는 <mark>소설</mark> 7권</p>
+      <div>
+        <p class="taste-label">분야 <small>분야를 아는 7권</small></p>
+        <div class="taste-bar" role="img" aria-label="소설 7"><span class="wide" style="flex:7 0 0;background:#fde047" title="소설 7">소설 100%</span></div>
+        <ul class="taste-legend"><li><i style="background:#fde047"></i>소설 7권</li></ul>
+      </div>
+      <div class="taste-tiles">
+      <div class="taste-tile"><b>국내 · 번역서</b><div class="v">1<small> : </small>6</div><div class="meter" aria-hidden="true"><i style="width:14%"></i></div><p>나라를 아는 문학 7권 중 국내 작가 1권 · 번역서 6권</p></div>
+      <div class="taste-tile"><b>250쪽 이하</b><div class="v">57<small>%</small></div><div class="meter" aria-hidden="true"><i style="width:57%"></i></div><p>7권 중 4권</p></div>
+      </div>
+    </div>
+  </details>
   <section class="related-celebs">
     <h2>🤝 책 취향이 겹치는 셀럽</h2>
     <p class="muted">같은 책을 함께 추천한 다른 셀럽이에요. 숫자는 공통 도서 권수.</p>

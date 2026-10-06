@@ -321,10 +321,43 @@
     h2 { font-size: 19px; margin: 32px 0 12px; padding-bottom: 4px; border-bottom: 2px solid #000; font-weight: 800; }
     .intro { background: #fff; border: 2px solid #000; box-shadow: 4px 4px 0 0 #000; padding: 14px 16px; margin: 16px 0 24px; font-size: 15px; }
     .celeb-bio { margin: 4px 0 8px; padding: 6px 10px; background: #fff8e7; border-left: 4px solid #000; font-size: 14px; line-height: 1.45; color: #222; }
-    .taste { margin: 16px 0; padding: 12px 14px; background: #e0f2fe; border: 2px solid #000; box-shadow: 3px 3px 0 0 #000; font-size: 14px; line-height: 1.6; }
-    .taste h2 { margin: 0 0 6px; font-size: 15px; }
-    .taste p { margin: 2px 0; }
-    .taste .taste-note { margin-top: 6px; font-size: 13px; color: #444; }
+    .taste { margin: 16px 0; background: #fff; border: 2px solid #000; box-shadow: 4px 4px 0 0 #000; font-size: 14px; line-height: 1.6; }
+    .taste-head { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 10px; padding: 10px 14px; background: #e0f2fe; cursor: pointer; list-style: none; }
+    .taste-head::-webkit-details-marker { display: none; }
+    .taste-head:hover { background: #fde047; }
+    .taste-head:focus-visible { outline: 3px solid #2563eb; outline-offset: 2px; }
+    .taste[open] > .taste-head { border-bottom: 2px solid #000; }
+    .taste-open { margin-left: auto; padding: 3px 10px; font-size: 12px; font-weight: 800; background: #fff; border: 2px solid #000; box-shadow: 2px 2px 0 0 #000; white-space: nowrap; }
+    .taste-open::after { content: attr(data-show); }
+    .taste[open] .taste-open::after { content: attr(data-hide); }
+    .taste-head h2 { margin: 0; padding: 0; border: 0; font-size: 16px; font-weight: 900; }
+    .taste-head span { font-size: 12px; color: #333; }
+    .taste-body { padding: 14px; display: grid; gap: 18px; }
+    .taste-sum { margin: 0; font-size: 18px; font-weight: 900; line-height: 1.4; word-break: keep-all; }
+    .taste-sum mark { background: linear-gradient(transparent 55%, #fde047 55%); color: inherit; padding: 0 2px; }
+    .taste-label { margin: 0 0 6px; font-size: 12px; font-weight: 800; color: #555; }
+    .taste-label small { font-weight: 600; }
+    .taste-bar { display: flex; height: 28px; border: 2px solid #000; overflow: hidden; }
+    .taste-bar span { min-width: 0; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 800; white-space: nowrap; overflow: hidden; border-right: 1.5px solid #000; }
+    .taste-bar span:last-child { border-right: 0; }
+    .taste-legend { list-style: none; padding: 0; margin: 8px 0 0; display: flex; flex-wrap: wrap; gap: 4px 14px; font-size: 13px; }
+    .taste-legend li { display: flex; align-items: center; gap: 6px; }
+    .taste-legend i { width: 12px; height: 12px; border: 1.5px solid #000; flex-shrink: 0; }
+    .taste-chips { display: flex; flex-wrap: wrap; gap: 8px; }
+    .taste-chip { display: inline-flex; align-items: baseline; gap: 6px; padding: 4px 10px; background: #fff; border: 2px solid #000; box-shadow: 2px 2px 0 0 #000; font-weight: 700; font-size: 14px; }
+    .taste-chip.big { background: #fde047; font-size: 15px; }
+    .taste-chip small { font-size: 12px; color: #555; font-weight: 600; }
+    .taste-tiles { display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: 10px; }
+    .taste-tile { border: 2px solid #000; background: #fff8e7; padding: 9px 12px; min-width: 0; }
+    .taste-tile b { display: block; font-size: 12px; color: #555; }
+    .taste-tile .v { font-family: "Space Grotesk", sans-serif; font-size: 24px; font-weight: 700; line-height: 1.25; font-variant-numeric: tabular-nums; }
+    .taste-tile .v small { font-size: 14px; }
+    .taste-tile .meter { height: 9px; border: 1.5px solid #000; background: #fff; margin: 6px 0 3px; }
+    .taste-tile .meter i { display: block; height: 100%; background: #000; }
+    .taste-tile p { margin: 0; font-size: 12px; color: #333; word-break: keep-all; }
+    .taste-tile .who { font-size: 14px; font-weight: 800; margin-top: 2px; word-break: keep-all; }
+    @media (max-width: 560px) { .taste-bar span:not(.wide) { font-size: 0; } .taste-sum { font-size: 16px; } }
+    .taste-note { margin: 0; background: #fff7c2; border: 1.5px solid #000; padding: 7px 10px; font-size: 13px; word-break: keep-all; }
     .celeb-alias { margin: 2px 0 0; font-size: 12px; color: #888; }
     .pfaq { margin-top: 40px; }
     .pfaq-q { background: #fff; border: 2px solid #000; box-shadow: 3px 3px 0 0 #000; padding: 12px 14px; margin-bottom: 12px; }
@@ -850,10 +883,20 @@
   })();
   </script>
   <p class="tr-note">Book titles and author names marked with an asterisk (<strong>*</strong>) are machine-translated from Korean. No official English edition was confirmed for them, so read them as approximations of the Korean original shown next to them.</p>
-  <section class="taste">
-    <h2>Reading taste (from 10 books)</h2>
-    <p>Returns to the same author: Haruki Murakami (2 books).</p>
-  </section>
+  <details class="taste">
+    <summary class="taste-head"><h2>📊 Curious about Sumin's reading taste?</h2><span>from 10 books</span><b class="taste-open" aria-hidden="true" data-show="Show ▾" data-hide="Hide ▴"></b></summary>
+    <div class="taste-body">
+      <p class="taste-sum">Most-read genre: <mark>Essays</mark> (2 books)</p>
+      <div>
+        <p class="taste-label">Genres <small>9 books with a known genre</small></p>
+        <div class="taste-bar" role="img" aria-label="Essays 2, Arts 2, Comics 1, Fiction 1, Poetry 1, Humanities 1, Self-help 1"><span style="flex:2 0 0;background:#a7f3d0" title="Essays 2">Essays 22%</span><span style="flex:2 0 0;background:#f5d0fe" title="Arts 2">Arts 22%</span><span style="flex:1 0 0;background:#fdba74" title="Comics 1"></span><span style="flex:1 0 0;background:#fde047" title="Fiction 1"></span><span style="flex:1 0 0;background:#ddd6fe" title="Poetry 1"></span><span style="flex:1 0 0;background:#fed7aa" title="Humanities 1"></span><span style="flex:1 0 0;background:#fecaca" title="Self-help 1"></span></div>
+        <ul class="taste-legend"><li><i style="background:#a7f3d0"></i>Essays 2</li><li><i style="background:#f5d0fe"></i>Arts 2</li><li><i style="background:#fdba74"></i>Comics 1</li><li><i style="background:#fde047"></i>Fiction 1</li><li><i style="background:#ddd6fe"></i>Poetry 1</li><li><i style="background:#fed7aa"></i>Humanities 1</li><li><i style="background:#fecaca"></i>Self-help 1</li></ul>
+      </div>
+      <div class="taste-tiles">
+      <div class="taste-tile"><b>Authors picked more than once</b><div class="who">Haruki Murakami 2</div></div>
+      </div>
+    </div>
+  </details>
   <section class="related-celebs">
     <h2>🤝 Celebrities with similar reading taste</h2>
     <p class="muted">They recommended some of the same books. The number is how many books they share.</p>

@@ -465,10 +465,43 @@
     .bc-author { font-size: 12px; color: #555; margin-bottom: 6px; }
     .bc-badge { display: inline-block; font-size: 11px; background: #fde047; border: 1px solid #000; padding: 1px 6px; font-weight: 700; }
     .celeb-bio { margin: 4px 0 8px; padding: 6px 10px; background: #fff8e7; border-left: 4px solid #000; font-size: 14px; line-height: 1.45; color: #222; }
-    .taste { margin: 16px 0; padding: 12px 14px; background: #e0f2fe; border: 2px solid #000; box-shadow: 3px 3px 0 0 #000; font-size: 14px; line-height: 1.6; }
-    .taste h2 { margin: 0 0 6px; font-size: 15px; }
-    .taste p { margin: 2px 0; }
-    .taste .taste-note { margin-top: 6px; font-size: 13px; color: #444; }
+    .taste { margin: 16px 0; background: #fff; border: 2px solid #000; box-shadow: 4px 4px 0 0 #000; font-size: 14px; line-height: 1.6; }
+    .taste-head { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 10px; padding: 10px 14px; background: #e0f2fe; cursor: pointer; list-style: none; }
+    .taste-head::-webkit-details-marker { display: none; }
+    .taste-head:hover { background: #fde047; }
+    .taste-head:focus-visible { outline: 3px solid #2563eb; outline-offset: 2px; }
+    .taste[open] > .taste-head { border-bottom: 2px solid #000; }
+    .taste-open { margin-left: auto; padding: 3px 10px; font-size: 12px; font-weight: 800; background: #fff; border: 2px solid #000; box-shadow: 2px 2px 0 0 #000; white-space: nowrap; }
+    .taste-open::after { content: attr(data-show); }
+    .taste[open] .taste-open::after { content: attr(data-hide); }
+    .taste-head h2 { margin: 0; padding: 0; border: 0; font-size: 16px; font-weight: 900; }
+    .taste-head span { font-size: 12px; color: #333; }
+    .taste-body { padding: 14px; display: grid; gap: 18px; }
+    .taste-sum { margin: 0; font-size: 18px; font-weight: 900; line-height: 1.4; word-break: keep-all; }
+    .taste-sum mark { background: linear-gradient(transparent 55%, #fde047 55%); color: inherit; padding: 0 2px; }
+    .taste-label { margin: 0 0 6px; font-size: 12px; font-weight: 800; color: #555; }
+    .taste-label small { font-weight: 600; }
+    .taste-bar { display: flex; height: 28px; border: 2px solid #000; overflow: hidden; }
+    .taste-bar span { min-width: 0; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 800; white-space: nowrap; overflow: hidden; border-right: 1.5px solid #000; }
+    .taste-bar span:last-child { border-right: 0; }
+    .taste-legend { list-style: none; padding: 0; margin: 8px 0 0; display: flex; flex-wrap: wrap; gap: 4px 14px; font-size: 13px; }
+    .taste-legend li { display: flex; align-items: center; gap: 6px; }
+    .taste-legend i { width: 12px; height: 12px; border: 1.5px solid #000; flex-shrink: 0; }
+    .taste-chips { display: flex; flex-wrap: wrap; gap: 8px; }
+    .taste-chip { display: inline-flex; align-items: baseline; gap: 6px; padding: 4px 10px; background: #fff; border: 2px solid #000; box-shadow: 2px 2px 0 0 #000; font-weight: 700; font-size: 14px; }
+    .taste-chip.big { background: #fde047; font-size: 15px; }
+    .taste-chip small { font-size: 12px; color: #555; font-weight: 600; }
+    .taste-tiles { display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: 10px; }
+    .taste-tile { border: 2px solid #000; background: #fff8e7; padding: 9px 12px; min-width: 0; }
+    .taste-tile b { display: block; font-size: 12px; color: #555; }
+    .taste-tile .v { font-family: "Space Grotesk", sans-serif; font-size: 24px; font-weight: 700; line-height: 1.25; font-variant-numeric: tabular-nums; }
+    .taste-tile .v small { font-size: 14px; }
+    .taste-tile .meter { height: 9px; border: 1.5px solid #000; background: #fff; margin: 6px 0 3px; }
+    .taste-tile .meter i { display: block; height: 100%; background: #000; }
+    .taste-tile p { margin: 0; font-size: 12px; color: #333; word-break: keep-all; }
+    .taste-tile .who { font-size: 14px; font-weight: 800; margin-top: 2px; word-break: keep-all; }
+    @media (max-width: 560px) { .taste-bar span:not(.wide) { font-size: 0; } .taste-sum { font-size: 16px; } }
+    .taste-note { margin: 0; background: #fff7c2; border: 1.5px solid #000; padding: 7px 10px; font-size: 13px; word-break: keep-all; }
     .shelf-head { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
     .shelf-head h2 { margin-bottom: 0; border-bottom: none; padding-bottom: 0; }
     .shelf-tabs { display: flex; gap: 6px; flex-wrap: wrap; }
@@ -631,12 +664,11 @@
       </div>
     </div>
     <details class="new-sec">
-      <summary class="new-sec-h"><span class="rl-new-tag">NEW</span> 최근 10일 새로 추가된 책 (4권) <span class="new-sec-more" data-show="보기" data-hide="접기"></span></summary>
+      <summary class="new-sec-h"><span class="rl-new-tag">NEW</span> 최근 10일 새로 추가된 책 (3권) <span class="new-sec-more" data-show="보기" data-hide="접기"></span></summary>
       <div class="new-tiles">
         <a class="new-tile" href="#b5"><span class="nt-cover"><img src="https://image.yes24.com/goods/106722/L" alt="달의 궁전 표지" loading="lazy"></span><span class="nt-title">달의 궁전</span></a>
         <a class="new-tile" href="#b17"><span class="nt-cover"><img src="https://image.yes24.com/goods/113450433/L" alt="존재의 세 가지 거짓말 표지" loading="lazy"></span><span class="nt-title">존재의 세 가지 거짓말</span></a>
         <a class="new-tile" href="#b19"><span class="nt-cover"><img src="https://image.yes24.com/goods/26034255/L" alt="호밀빵 햄 샌드위치 표지" loading="lazy"></span><span class="nt-title">호밀빵 햄 샌드위치</span></a>
-        <a class="new-tile" href="#b15"><span class="nt-cover"><img src="https://image.yes24.com/goods/195236685/L" alt="인생은 길고 투쟁은 진행 중 표지" loading="lazy"></span><span class="nt-title">인생은 길고 투쟁은 진행 중</span></a>
       </div>
     </details>
     <p class="muted">2권은 다른 셀럽도 함께 추천한 책이에요. 아래 목록에서 함께 추천한 셀럽 이름을 볼 수 있어요.</p>
@@ -656,7 +688,7 @@
     <a class="sp" style="--c:hsl(95,46%,31%);--w:31px;--fs:15px" href="https://www.yes24.com/product/goods/97663732" rel="nofollow noopener noreferrer" target="_blank" title="옥상의 민들레꽃"><span class="sp-t"><i>옥상의 민들레꽃</i></span><img class="sp-i" src="https://image.yes24.com/goods/97663732/side" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.parentNode.classList.add('sp-fail');this.remove()" onload="if(this.naturalWidth/this.naturalHeight>0.4){this.parentNode.classList.add('sp-fail');this.remove()}"></a>
     <a class="sp" style="--c:hsl(280,37%,36%);--w:37px;--fs:15px" href="https://www.yes24.com/product/goods/133809288" rel="nofollow noopener noreferrer" target="_blank" title="와일드"><span class="sp-t"><i>와일드</i></span><img class="sp-i" src="https://image.yes24.com/goods/133809288/side" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.parentNode.classList.add('sp-fail');this.remove()" onload="if(this.naturalWidth/this.naturalHeight>0.4){this.parentNode.classList.add('sp-fail');this.remove()}"></a>
     <a class="sp no-img" style="--c:#743d1f;--w:31px;--fs:15px" href="https://www.yes24.com/product/goods/59158807" rel="nofollow noopener noreferrer" target="_blank" title="왕국"><span class="sp-t"><i>왕국</i></span></a>
-    <a class="sp is-new" style="--c:hsl(262,43%,36%);--w:34px;--fs:12px" href="https://www.yes24.com/product/goods/195236685" rel="nofollow noopener noreferrer" target="_blank" title="인생은 길고 투쟁은 진행 중"><span class="sp-t"><i>인생은 길고 투쟁은 진행 중</i></span><img class="sp-i" src="https://image.yes24.com/goods/195236685/side" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.parentNode.classList.add('sp-fail');this.remove()" onload="if(this.naturalWidth/this.naturalHeight>0.4){this.parentNode.classList.add('sp-fail');this.remove()}"><span class="sp-new" data-added="2026-09-26">NEW</span></a>
+    <a class="sp" style="--c:hsl(262,43%,36%);--w:34px;--fs:12px" href="https://www.yes24.com/product/goods/195236685" rel="nofollow noopener noreferrer" target="_blank" title="인생은 길고 투쟁은 진행 중"><span class="sp-t"><i>인생은 길고 투쟁은 진행 중</i></span><img class="sp-i" src="https://image.yes24.com/goods/195236685/side" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.parentNode.classList.add('sp-fail');this.remove()" onload="if(this.naturalWidth/this.naturalHeight>0.4){this.parentNode.classList.add('sp-fail');this.remove()}"></a>
     <a class="sp no-img sp-light" style="--c:#ffffff;--w:30px;--fs:15px" href="https://www.yes24.com/product/goods/18199847" rel="nofollow noopener noreferrer" target="_blank" title="장정일의 공부"><span class="sp-t"><i>장정일의 공부</i></span></a>
     <a class="sp is-new" style="--c:hsl(357,57%,29%);--w:30px;--fs:15px" href="https://www.yes24.com/product/goods/113450433" rel="nofollow noopener noreferrer" target="_blank" title="존재의 세 가지 거짓말"><span class="sp-t"><i>존재의 세 가지 거짓말</i></span><img class="sp-i" src="https://image.yes24.com/goods/113450433/side" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.parentNode.classList.add('sp-fail');this.remove()" onload="if(this.naturalWidth/this.naturalHeight>0.4){this.parentNode.classList.add('sp-fail');this.remove()}"><span class="sp-new" data-added="2026-09-30">NEW</span></a>
     <a class="sp" style="--c:hsl(269,36%,34%);--w:39px;--fs:15px" href="https://www.yes24.com/product/goods/76071289" rel="nofollow noopener noreferrer" target="_blank" title="청소부 매뉴얼"><span class="sp-t"><i>청소부 매뉴얼</i></span><img class="sp-i" src="https://image.yes24.com/goods/76071289/side" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.parentNode.classList.add('sp-fail');this.remove()" onload="if(this.naturalWidth/this.naturalHeight>0.4){this.parentNode.classList.add('sp-fail');this.remove()}"></a>
@@ -834,7 +866,7 @@
     </li>
     <li class="rl-item" id="b15">
       <span class="rl-num">15</span>
-      <a class="rl-cover" href="https://www.yes24.com/product/goods/195236685" rel="nofollow noopener noreferrer" target="_blank" aria-label="인생은 길고 투쟁은 진행 중 알라딘에서 보기"><span class="rl-new" data-added="2026-09-26">NEW</span><img src="https://image.yes24.com/goods/195236685/L" alt="인생은 길고 투쟁은 진행 중 표지" loading="lazy"></a>
+      <a class="rl-cover" href="https://www.yes24.com/product/goods/195236685" rel="nofollow noopener noreferrer" target="_blank" aria-label="인생은 길고 투쟁은 진행 중 알라딘에서 보기"><img src="https://image.yes24.com/goods/195236685/L" alt="인생은 길고 투쟁은 진행 중 표지" loading="lazy"></a>
       <div class="rl-meta">
         <div class="rl-title"><a href="https://www.yes24.com/product/goods/195236685" rel="nofollow noopener noreferrer" target="_blank">인생은 길고 투쟁은 진행 중</a></div>
         <div class="rl-byline">변정정희 · 현암사</div>
@@ -1119,10 +1151,25 @@
   })();
   </script>
 
-  <section class="taste">
-    <h2>📊 독서 취향 (책 19권 기준)</h2>
-    <p>같은 작가를 여러 권 골랐어요: 루시아 벌린 2권.</p>
-  </section>
+  <details class="taste">
+    <summary class="taste-head"><h2>📊 원소윤의 독서 취향이 궁금하다면?</h2><span>책 19권 기준</span><b class="taste-open" aria-hidden="true" data-show="펼쳐 보기 ▾" data-hide="접기 ▴"></b></summary>
+    <div class="taste-body">
+      <p class="taste-sum">가장 많이 읽은 분야는 <mark>소설</mark> 9권, 자주 고른 키워드는 <mark>영미소설</mark> 7권 · <mark>외국 에세이</mark> 3권</p>
+      <div>
+        <p class="taste-label">분야 <small>분야를 아는 19권</small></p>
+        <div class="taste-bar" role="img" aria-label="소설 9, 에세이 4, 인문 3, 사회 2, 어린이책 1"><span class="wide" style="flex:9 0 0;background:#fde047" title="소설 9">소설 47%</span><span style="flex:4 0 0;background:#a7f3d0" title="에세이 4">에세이 21%</span><span style="flex:3 0 0;background:#fed7aa" title="인문 3">인문 16%</span><span style="flex:2 0 0;background:#bae6fd" title="사회 2"></span><span style="flex:1 0 0;background:#bef264" title="어린이책 1"></span></div>
+        <ul class="taste-legend"><li><i style="background:#fde047"></i>소설 9권</li><li><i style="background:#a7f3d0"></i>에세이 4권</li><li><i style="background:#fed7aa"></i>인문 3권</li><li><i style="background:#bae6fd"></i>사회 2권</li><li><i style="background:#bef264"></i>어린이책 1권</li></ul>
+      </div>
+      <div>
+        <p class="taste-label">자주 고른 키워드 <small>예스24 카테고리 · 2권 이상</small></p>
+        <div class="taste-chips"><span class="taste-chip big">영미소설 <small>7권</small></span><span class="taste-chip big">외국 에세이 <small>3권</small></span><span class="taste-chip">인문/교양 <small>3권</small></span><span class="taste-chip">사회학 <small>2권</small></span><span class="taste-chip">여행 에세이 <small>2권</small></span><span class="taste-chip">한국 에세이 <small>2권</small></span></div>
+      </div>
+      <div class="taste-tiles">
+      <div class="taste-tile"><b>국내 · 번역서</b><div class="v">2<small> : </small>12</div><div class="meter" aria-hidden="true"><i style="width:14%"></i></div><p>나라를 아는 문학 14권 중 국내 작가 2권 · 번역서 12권</p></div>
+      <div class="taste-tile"><b>여러 권 고른 작가</b><div class="who">루시아 벌린 2권</div><p>《내 인생은 열린 책》 《청소부 매뉴얼》</p></div>
+      </div>
+    </div>
+  </details>
   <section class="related-celebs">
     <h2>🤝 책 취향이 겹치는 셀럽</h2>
     <p class="muted">같은 책을 함께 추천한 다른 셀럽이에요. 숫자는 공통 도서 권수.</p>

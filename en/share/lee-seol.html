@@ -827,10 +827,43 @@
     h2 { font-size: 19px; margin: 32px 0 12px; padding-bottom: 4px; border-bottom: 2px solid #000; font-weight: 800; }
     .intro { background: #fff; border: 2px solid #000; box-shadow: 4px 4px 0 0 #000; padding: 14px 16px; margin: 16px 0 24px; font-size: 15px; }
     .celeb-bio { margin: 4px 0 8px; padding: 6px 10px; background: #fff8e7; border-left: 4px solid #000; font-size: 14px; line-height: 1.45; color: #222; }
-    .taste { margin: 16px 0; padding: 12px 14px; background: #e0f2fe; border: 2px solid #000; box-shadow: 3px 3px 0 0 #000; font-size: 14px; line-height: 1.6; }
-    .taste h2 { margin: 0 0 6px; font-size: 15px; }
-    .taste p { margin: 2px 0; }
-    .taste .taste-note { margin-top: 6px; font-size: 13px; color: #444; }
+    .taste { margin: 16px 0; background: #fff; border: 2px solid #000; box-shadow: 4px 4px 0 0 #000; font-size: 14px; line-height: 1.6; }
+    .taste-head { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 10px; padding: 10px 14px; background: #e0f2fe; cursor: pointer; list-style: none; }
+    .taste-head::-webkit-details-marker { display: none; }
+    .taste-head:hover { background: #fde047; }
+    .taste-head:focus-visible { outline: 3px solid #2563eb; outline-offset: 2px; }
+    .taste[open] > .taste-head { border-bottom: 2px solid #000; }
+    .taste-open { margin-left: auto; padding: 3px 10px; font-size: 12px; font-weight: 800; background: #fff; border: 2px solid #000; box-shadow: 2px 2px 0 0 #000; white-space: nowrap; }
+    .taste-open::after { content: attr(data-show); }
+    .taste[open] .taste-open::after { content: attr(data-hide); }
+    .taste-head h2 { margin: 0; padding: 0; border: 0; font-size: 16px; font-weight: 900; }
+    .taste-head span { font-size: 12px; color: #333; }
+    .taste-body { padding: 14px; display: grid; gap: 18px; }
+    .taste-sum { margin: 0; font-size: 18px; font-weight: 900; line-height: 1.4; word-break: keep-all; }
+    .taste-sum mark { background: linear-gradient(transparent 55%, #fde047 55%); color: inherit; padding: 0 2px; }
+    .taste-label { margin: 0 0 6px; font-size: 12px; font-weight: 800; color: #555; }
+    .taste-label small { font-weight: 600; }
+    .taste-bar { display: flex; height: 28px; border: 2px solid #000; overflow: hidden; }
+    .taste-bar span { min-width: 0; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 800; white-space: nowrap; overflow: hidden; border-right: 1.5px solid #000; }
+    .taste-bar span:last-child { border-right: 0; }
+    .taste-legend { list-style: none; padding: 0; margin: 8px 0 0; display: flex; flex-wrap: wrap; gap: 4px 14px; font-size: 13px; }
+    .taste-legend li { display: flex; align-items: center; gap: 6px; }
+    .taste-legend i { width: 12px; height: 12px; border: 1.5px solid #000; flex-shrink: 0; }
+    .taste-chips { display: flex; flex-wrap: wrap; gap: 8px; }
+    .taste-chip { display: inline-flex; align-items: baseline; gap: 6px; padding: 4px 10px; background: #fff; border: 2px solid #000; box-shadow: 2px 2px 0 0 #000; font-weight: 700; font-size: 14px; }
+    .taste-chip.big { background: #fde047; font-size: 15px; }
+    .taste-chip small { font-size: 12px; color: #555; font-weight: 600; }
+    .taste-tiles { display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: 10px; }
+    .taste-tile { border: 2px solid #000; background: #fff8e7; padding: 9px 12px; min-width: 0; }
+    .taste-tile b { display: block; font-size: 12px; color: #555; }
+    .taste-tile .v { font-family: "Space Grotesk", sans-serif; font-size: 24px; font-weight: 700; line-height: 1.25; font-variant-numeric: tabular-nums; }
+    .taste-tile .v small { font-size: 14px; }
+    .taste-tile .meter { height: 9px; border: 1.5px solid #000; background: #fff; margin: 6px 0 3px; }
+    .taste-tile .meter i { display: block; height: 100%; background: #000; }
+    .taste-tile p { margin: 0; font-size: 12px; color: #333; word-break: keep-all; }
+    .taste-tile .who { font-size: 14px; font-weight: 800; margin-top: 2px; word-break: keep-all; }
+    @media (max-width: 560px) { .taste-bar span:not(.wide) { font-size: 0; } .taste-sum { font-size: 16px; } }
+    .taste-note { margin: 0; background: #fff7c2; border: 1.5px solid #000; padding: 7px 10px; font-size: 13px; word-break: keep-all; }
     .celeb-alias { margin: 2px 0 0; font-size: 12px; color: #888; }
     .pfaq { margin-top: 40px; }
     .pfaq-q { background: #fff; border: 2px solid #000; box-shadow: 3px 3px 0 0 #000; padding: 12px 14px; margin-bottom: 12px; }
@@ -992,7 +1025,7 @@
       </div>
     </div>
     <details class="new-sec">
-      <summary class="new-sec-h"><span class="rl-new-tag">NEW</span> New in the last 10 days (24 books) <span class="new-sec-more" data-show="Show" data-hide="Hide"></span></summary>
+      <summary class="new-sec-h"><span class="rl-new-tag">NEW</span> New in the last 10 days (20 books) <span class="new-sec-more" data-show="Show" data-hide="Hide"></span></summary>
       <div class="new-tiles">
         <a class="new-tile" href="#b1"><span class="nt-cover"><img src="https://image.yes24.com/goods/9295923/L" alt="A Forest No One Has Seen by Cho Hae-jin — book cover" loading="lazy"></span><span class="nt-title">A Forest No One Has Seen</span></a>
         <a class="new-tile" href="#b3"><span class="nt-cover"><img src="https://image.yes24.com/goods/2950700/L" alt="Aimez-vous Brahms? by Françoise Sagan — book cover" loading="lazy"></span><span class="nt-title">Aimez-vous Brahms?</span></a>
@@ -1014,10 +1047,6 @@
         <a class="new-tile" href="#b38"><span class="nt-cover"><img src="https://image.yes24.com/goods/6259976/L" alt="Who Ate up All the Shinga? by Park Wan-suh — book cover" loading="lazy"></span><span class="nt-title">Who Ate up All the Shinga?</span></a>
         <a class="new-tile" href="#b21"><span class="nt-cover"><img src="https://image.yes24.com/goods/95313913/L" alt="Olive, Again by Elizabeth Strout — book cover" loading="lazy"></span><span class="nt-title">Olive, Again</span></a>
         <a class="new-tile" href="#b22"><span class="nt-cover"><img src="https://image.yes24.com/goods/89959817/L" alt="Pippi Crossed the Desert of Manic Depression by Lee Joohyun — book cover" loading="lazy"></span><span class="nt-title">Pippi Crossed the Desert of Manic Depression</span></a>
-        <a class="new-tile" href="#b10"><span class="nt-cover"><img src="https://image.yes24.com/goods/95538356/L" alt="First Person Singular by Haruki Murakami — book cover" loading="lazy"></span><span class="nt-title">First Person Singular</span></a>
-        <a class="new-tile" href="#b12"><span class="nt-cover"><img src="https://image.yes24.com/goods/90926375/L" alt="Instructions for a Heatwave by Maggie O&#x27;Farrell — book cover" loading="lazy"></span><span class="nt-title">Instructions for a Heatwave</span></a>
-        <a class="new-tile" href="#b13"><span class="nt-cover"><img src="https://image.yes24.com/goods/1440642/L" alt="Knulp by Hermann Hesse — book cover" loading="lazy"></span><span class="nt-title">Knulp</span></a>
-        <a class="new-tile" href="#b34"><span class="nt-cover"><img src="https://image.yes24.com/goods/91915609/L" alt="The Shirley Club by Park Seo-Ryeon — book cover" loading="lazy"></span><span class="nt-title">The Shirley Club</span></a>
       </div>
     </details>
     <div id="shelf-area" class="show-covers covers-collapsed">
@@ -1031,10 +1060,10 @@
     <a class="sp" style="--c:hsl(256,47%,36%);--w:36px;--fs:15px" href="https://www.yes24.com/product/goods/97666779" rel="nofollow noopener noreferrer" target="_blank" title="Dream of Becoming Me"><span class="sp-t"><i>Dream of Becoming Me</i></span><img class="sp-i" src="https://image.yes24.com/goods/97666779/side" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.parentNode.classList.add('sp-fail');this.remove()" onload="if(this.naturalWidth/this.naturalHeight>0.4){this.parentNode.classList.add('sp-fail');this.remove()}"></a>
     <a class="sp is-new" style="--c:hsl(6,40%,39%);--w:44px;--fs:15px" href="https://www.yes24.com/product/goods/143371696" rel="nofollow noopener noreferrer" target="_blank" title="Ein Hund namens Money"><span class="sp-t"><i>Ein Hund namens Money</i></span><img class="sp-i" src="https://image.yes24.com/goods/143371696/side" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.parentNode.classList.add('sp-fail');this.remove()" onload="if(this.naturalWidth/this.naturalHeight>0.4){this.parentNode.classList.add('sp-fail');this.remove()}"><span class="sp-new" data-added="2026-10-03">NEW</span></a>
     <a class="sp" style="--c:hsl(274,53%,47%);--w:42px;--fs:10px" href="https://www.yes24.com/product/goods/78212610" rel="nofollow noopener noreferrer" target="_blank" title="Eleanor Oliphant Is Completely Fine"><span class="sp-t"><i>Eleanor Oliphant Is Completely Fine</i></span><img class="sp-i" src="https://image.yes24.com/goods/78212610/side" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.parentNode.classList.add('sp-fail');this.remove()" onload="if(this.naturalWidth/this.naturalHeight>0.4){this.parentNode.classList.add('sp-fail');this.remove()}"></a>
-    <a class="sp is-new" style="--c:hsl(231,34%,40%);--w:35px;--fs:15px" href="https://www.yes24.com/product/goods/95538356" rel="nofollow noopener noreferrer" target="_blank" title="First Person Singular"><span class="sp-t"><i>First Person Singular</i></span><img class="sp-i" src="https://image.yes24.com/goods/95538356/side" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.parentNode.classList.add('sp-fail');this.remove()" onload="if(this.naturalWidth/this.naturalHeight>0.4){this.parentNode.classList.add('sp-fail');this.remove()}"><span class="sp-new" data-added="2026-09-26">NEW</span></a>
+    <a class="sp" style="--c:hsl(231,34%,40%);--w:35px;--fs:15px" href="https://www.yes24.com/product/goods/95538356" rel="nofollow noopener noreferrer" target="_blank" title="First Person Singular"><span class="sp-t"><i>First Person Singular</i></span><img class="sp-i" src="https://image.yes24.com/goods/95538356/side" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.parentNode.classList.add('sp-fail');this.remove()" onload="if(this.naturalWidth/this.naturalHeight>0.4){this.parentNode.classList.add('sp-fail');this.remove()}"></a>
     <a class="sp is-new" style="--c:hsl(297,47%,47%);--w:42px;--fs:12px" href="https://www.yes24.com/product/goods/43874211" rel="nofollow noopener noreferrer" target="_blank" title="Honeybees and Distant Thunder"><span class="sp-t"><i>Honeybees and Distant Thunder</i></span><img class="sp-i" src="https://image.yes24.com/goods/43874211/side" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.parentNode.classList.add('sp-fail');this.remove()" onload="if(this.naturalWidth/this.naturalHeight>0.4){this.parentNode.classList.add('sp-fail');this.remove()}"><span class="sp-new" data-added="2026-10-03">NEW</span></a>
-    <a class="sp is-new" style="--c:hsl(286,40%,28%);--w:39px;--fs:13px" href="https://www.yes24.com/product/goods/90926375" rel="nofollow noopener noreferrer" target="_blank" title="Instructions for a Heatwave"><span class="sp-t"><i>Instructions for a Heatwave</i></span><img class="sp-i" src="https://image.yes24.com/goods/90926375/side" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.parentNode.classList.add('sp-fail');this.remove()" onload="if(this.naturalWidth/this.naturalHeight>0.4){this.parentNode.classList.add('sp-fail');this.remove()}"><span class="sp-new" data-added="2026-09-26">NEW</span></a>
-    <a class="sp is-new" style="--c:hsl(108,32%,32%);--w:36px;--fs:15px" href="https://www.yes24.com/product/goods/1440642" rel="nofollow noopener noreferrer" target="_blank" title="Knulp"><span class="sp-t"><i>Knulp</i></span><img class="sp-i" src="https://image.yes24.com/goods/1440642/side" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.parentNode.classList.add('sp-fail');this.remove()" onload="if(this.naturalWidth/this.naturalHeight>0.4){this.parentNode.classList.add('sp-fail');this.remove()}"><span class="sp-new" data-added="2026-09-26">NEW</span></a>
+    <a class="sp" style="--c:hsl(286,40%,28%);--w:39px;--fs:13px" href="https://www.yes24.com/product/goods/90926375" rel="nofollow noopener noreferrer" target="_blank" title="Instructions for a Heatwave"><span class="sp-t"><i>Instructions for a Heatwave</i></span><img class="sp-i" src="https://image.yes24.com/goods/90926375/side" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.parentNode.classList.add('sp-fail');this.remove()" onload="if(this.naturalWidth/this.naturalHeight>0.4){this.parentNode.classList.add('sp-fail');this.remove()}"></a>
+    <a class="sp" style="--c:hsl(108,32%,32%);--w:36px;--fs:15px" href="https://www.yes24.com/product/goods/1440642" rel="nofollow noopener noreferrer" target="_blank" title="Knulp"><span class="sp-t"><i>Knulp</i></span><img class="sp-i" src="https://image.yes24.com/goods/1440642/side" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.parentNode.classList.add('sp-fail');this.remove()" onload="if(this.naturalWidth/this.naturalHeight>0.4){this.parentNode.classList.add('sp-fail');this.remove()}"></a>
     <a class="sp is-new" style="--c:hsl(263,57%,47%);--w:39px;--fs:15px" href="https://www.yes24.com/product/goods/60894315" rel="nofollow noopener noreferrer" target="_blank" title="Kyung-ae&#x27;s Heart"><span class="sp-t"><i>Kyung-ae&#x27;s Heart</i></span><img class="sp-i" src="https://image.yes24.com/goods/60894315/side" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.parentNode.classList.add('sp-fail');this.remove()" onload="if(this.naturalWidth/this.naturalHeight>0.4){this.parentNode.classList.add('sp-fail');this.remove()}"><span class="sp-new" data-added="2026-10-03">NEW</span></a>
     <a class="sp is-new" style="--c:hsl(20,45%,39%);--w:35px;--fs:15px" href="https://www.yes24.com/product/goods/4827619" rel="nofollow noopener noreferrer" target="_blank" title="La Peste"><span class="sp-t"><i>La Peste</i></span><img class="sp-i" src="https://image.yes24.com/goods/4827619/side" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.parentNode.classList.add('sp-fail');this.remove()" onload="if(this.naturalWidth/this.naturalHeight>0.4){this.parentNode.classList.add('sp-fail');this.remove()}"><span class="sp-new" data-added="2026-10-03">NEW</span></a>
     <a class="sp" style="--c:hsl(351,55%,30%);--w:38px;--fs:15px" href="https://www.yes24.com/product/goods/359901" rel="nofollow noopener noreferrer" target="_blank" title="La vie devant soi"><span class="sp-t"><i>La vie devant soi</i></span><img class="sp-i" src="https://image.yes24.com/goods/359901/side" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.parentNode.classList.add('sp-fail');this.remove()" onload="if(this.naturalWidth/this.naturalHeight>0.4){this.parentNode.classList.add('sp-fail');this.remove()}"></a>
@@ -1055,7 +1084,7 @@
     <a class="sp is-new" style="--c:hsl(211,53%,38%);--w:43px;--fs:9px" href="https://www.yes24.com/product/goods/106176007" rel="nofollow noopener noreferrer" target="_blank" title="The Name of the Girl Who Passed You By"><span class="sp-t"><i>The Name of the Girl Who Passed You By</i></span><img class="sp-i" src="https://image.yes24.com/goods/106176007/side" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.parentNode.classList.add('sp-fail');this.remove()" onload="if(this.naturalWidth/this.naturalHeight>0.4){this.parentNode.classList.add('sp-fail');this.remove()}"><span class="sp-new" data-added="2026-10-03">NEW</span></a>
     <a class="sp" style="--c:hsl(152,35%,39%);--w:38px;--fs:13px" href="https://www.yes24.com/product/goods/125761518" rel="nofollow noopener noreferrer" target="_blank" title="The Old Woman with the Knife"><span class="sp-t"><i>The Old Woman with the Knife</i></span><img class="sp-i" src="https://image.yes24.com/goods/125761518/side" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.parentNode.classList.add('sp-fail');this.remove()" onload="if(this.naturalWidth/this.naturalHeight>0.4){this.parentNode.classList.add('sp-fail');this.remove()}"></a>
     <a class="sp is-new" style="--c:hsl(61,51%,30%);--w:32px;--fs:15px" href="https://www.yes24.com/product/goods/92562566" rel="nofollow noopener noreferrer" target="_blank" title="The School Nurse Files"><span class="sp-t"><i>The School Nurse Files</i></span><img class="sp-i" src="https://image.yes24.com/goods/92562566/side" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.parentNode.classList.add('sp-fail');this.remove()" onload="if(this.naturalWidth/this.naturalHeight>0.4){this.parentNode.classList.add('sp-fail');this.remove()}"><span class="sp-new" data-added="2026-10-03">NEW</span></a>
-    <a class="sp is-new" style="--c:hsl(197,52%,41%);--w:37px;--fs:15px" href="https://www.yes24.com/product/goods/91915609" rel="nofollow noopener noreferrer" target="_blank" title="The Shirley Club"><span class="sp-t"><i>The Shirley Club</i></span><img class="sp-i" src="https://image.yes24.com/goods/91915609/side" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.parentNode.classList.add('sp-fail');this.remove()" onload="if(this.naturalWidth/this.naturalHeight>0.4){this.parentNode.classList.add('sp-fail');this.remove()}"><span class="sp-new" data-added="2026-09-26">NEW</span></a>
+    <a class="sp" style="--c:hsl(197,52%,41%);--w:37px;--fs:15px" href="https://www.yes24.com/product/goods/91915609" rel="nofollow noopener noreferrer" target="_blank" title="The Shirley Club"><span class="sp-t"><i>The Shirley Club</i></span><img class="sp-i" src="https://image.yes24.com/goods/91915609/side" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.parentNode.classList.add('sp-fail');this.remove()" onload="if(this.naturalWidth/this.naturalHeight>0.4){this.parentNode.classList.add('sp-fail');this.remove()}"></a>
     <a class="sp no-img" style="--c:#cd9f80;--w:32px;--fs:15px" href="https://www.yes24.com/product/goods/99190748" rel="nofollow noopener noreferrer" target="_blank" title="The Sky Is Everywhere"><span class="sp-t"><i>The Sky Is Everywhere</i></span></a>
     <a class="sp" style="--c:hsl(139,56%,42%);--w:37px;--fs:12px" href="https://www.yes24.com/product/goods/43504366" rel="nofollow noopener noreferrer" target="_blank" title="To the Place Where the Sun Sets"><span class="sp-t"><i>To the Place Where the Sun Sets</i></span><img class="sp-i" src="https://image.yes24.com/goods/43504366/side" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.parentNode.classList.add('sp-fail');this.remove()" onload="if(this.naturalWidth/this.naturalHeight>0.4){this.parentNode.classList.add('sp-fail');this.remove()}"></a>
     <a class="sp no-img" style="--c:#06412f;--w:42px;--fs:15px" href="https://www.yes24.com/product/goods/4612938" rel="nofollow noopener noreferrer" target="_blank" title="Very Old Joke"><span class="sp-t"><i>Very Old Joke</i></span></a>
@@ -1205,7 +1234,7 @@
     </li>
     <li class="rl-item" id="b10">
       <span class="rl-num">10</span>
-      <a class="rl-cover" href="https://www.yes24.com/product/goods/95538356" rel="nofollow noopener noreferrer" target="_blank" aria-label="First Person Singular — buy or read more"><span class="rl-new" data-added="2026-09-26">NEW</span><img src="https://image.yes24.com/goods/95538356/L" alt="First Person Singular by Haruki Murakami — book cover" loading="lazy"></a>
+      <a class="rl-cover" href="https://www.yes24.com/product/goods/95538356" rel="nofollow noopener noreferrer" target="_blank" aria-label="First Person Singular — buy or read more"><img src="https://image.yes24.com/goods/95538356/L" alt="First Person Singular by Haruki Murakami — book cover" loading="lazy"></a>
       <div class="rl-meta">
         <div class="rl-title"><a href="https://www.yes24.com/product/goods/95538356" rel="nofollow noopener noreferrer" target="_blank">First Person Singular</a> <span style="color:#666">| <span lang="ja">一人称単数</span></span> <span style="color:#888;font-size:12px;font-weight:400">(일인칭 단수)</span></div>
         <div class="rl-byline">Haruki Murakami <span style="color:#888">(<span lang="ja">村上春樹</span>)</span></div>
@@ -1226,7 +1255,7 @@
     </li>
     <li class="rl-item" id="b12">
       <span class="rl-num">12</span>
-      <a class="rl-cover" href="https://www.yes24.com/product/goods/90926375" rel="nofollow noopener noreferrer" target="_blank" aria-label="Instructions for a Heatwave — buy or read more"><span class="rl-new" data-added="2026-09-26">NEW</span><img src="https://image.yes24.com/goods/90926375/L" alt="Instructions for a Heatwave by Maggie O&#x27;Farrell — book cover" loading="lazy"></a>
+      <a class="rl-cover" href="https://www.yes24.com/product/goods/90926375" rel="nofollow noopener noreferrer" target="_blank" aria-label="Instructions for a Heatwave — buy or read more"><img src="https://image.yes24.com/goods/90926375/L" alt="Instructions for a Heatwave by Maggie O&#x27;Farrell — book cover" loading="lazy"></a>
       <div class="rl-meta">
         <div class="rl-title"><a href="https://www.yes24.com/product/goods/90926375" rel="nofollow noopener noreferrer" target="_blank">Instructions for a Heatwave</a> <span style="color:#888;font-size:12px;font-weight:400">(불볕더위에 대처하는 법)</span></div>
         <div class="rl-byline">Maggie O&#x27;Farrell</div>
@@ -1236,10 +1265,10 @@
     </li>
     <li class="rl-item" id="b13">
       <span class="rl-num">13</span>
-      <a class="rl-cover" href="https://www.yes24.com/product/goods/1440642" rel="nofollow noopener noreferrer" target="_blank" aria-label="Knulp — buy or read more"><span class="rl-new" data-added="2026-09-26">NEW</span><img src="https://image.yes24.com/goods/1440642/L" alt="Knulp by Hermann Hesse — book cover" loading="lazy"></a>
+      <a class="rl-cover" href="https://www.yes24.com/product/goods/1440642" rel="nofollow noopener noreferrer" target="_blank" aria-label="Knulp — buy or read more"><img src="https://image.yes24.com/goods/1440642/L" alt="Knulp by Hermann Hesse — book cover" loading="lazy"></a>
       <div class="rl-meta">
         <div class="rl-title"><a href="https://www.yes24.com/product/goods/1440642" rel="nofollow noopener noreferrer" target="_blank">Knulp</a> <span style="color:#888;font-size:12px;font-weight:400">(크눌프)</span></div>
-        <div class="rl-byline">Hermann Hesse</div>
+        <div class="rl-byline">Hermann Hesse <span style="color:#888">(<span lang="de">Hermann Karl Hesse</span>)</span></div>
         <a class="rl-source" href="https://www.yes24.com/product/goods/1440642" rel="nofollow noopener noreferrer" target="_blank" title="View on YES24 (Korean bookstore)">📖 Book details</a> <a class="rl-source" href="https://x.com/minumsa_books/status/1322025578824871936?s=20" rel="nofollow noopener noreferrer" target="_blank">📺 Source</a>
         <button type="button" class="heart-btn sm" data-heart="b:크눌프" aria-pressed="false" aria-label="Heart this book" title="Heart this book" hidden><span class="heart-ico" aria-hidden="true">♡</span><span class="heart-n"></span></button>
         <div class="rl-shared"><span class="rl-shared-label">👥 Also recommended by 3:</span> <a class="rl-celeb-chip" href="https://favorbook.co.kr/en/share/kim-sae-byuk.html">Kim Sae-byuk</a><a class="rl-celeb-chip" href="https://favorbook.co.kr/en/share/son-jong-won.html">Son Jong-won</a><a class="rl-celeb-chip" href="https://favorbook.co.kr/en/share/juyeon-the-boyz.html">Juyeon (THE BOYZ)</a> <a class="rl-book-link" href="https://favorbook.co.kr/en/share/book/knulp.html">All readers →</a></div>
@@ -1466,7 +1495,7 @@
     </li>
     <li class="rl-item" id="b34">
       <span class="rl-num">34</span>
-      <a class="rl-cover" href="https://www.yes24.com/product/goods/91915609" rel="nofollow noopener noreferrer" target="_blank" aria-label="The Shirley Club — buy or read more"><span class="rl-new" data-added="2026-09-26">NEW</span><img src="https://image.yes24.com/goods/91915609/L" alt="The Shirley Club by Park Seo-Ryeon — book cover" loading="lazy"></a>
+      <a class="rl-cover" href="https://www.yes24.com/product/goods/91915609" rel="nofollow noopener noreferrer" target="_blank" aria-label="The Shirley Club — buy or read more"><img src="https://image.yes24.com/goods/91915609/L" alt="The Shirley Club by Park Seo-Ryeon — book cover" loading="lazy"></a>
       <div class="rl-meta">
         <div class="rl-title"><a href="https://www.yes24.com/product/goods/91915609" rel="nofollow noopener noreferrer" target="_blank">The Shirley Club *</a> <span style="color:#888;font-size:12px;font-weight:400">(더 셜리 클럽)</span></div>
         <div class="rl-byline">Park Seo-Ryeon *</div>
@@ -1764,11 +1793,22 @@
   })();
   </script>
   <p class="tr-note">Book titles and author names marked with an asterisk (<strong>*</strong>) are machine-translated from Korean. No official English edition was confirmed for them, so read them as approximations of the Korean original shown next to them.</p>
-  <section class="taste">
-    <h2>Reading taste (from 39 books)</h2>
-    <p>Returns to the same author: Choi Jin-young (5 books), Gu Byeong-mo (2 books), Park Wan-suh (2 books).</p>
-    <p class="taste-note">From a comment on “겨울방학”: Lee Seol loves imaginative books but also realistic ones, and this novel is an example.</p>
-  </section>
+  <details class="taste">
+    <summary class="taste-head"><h2>📊 Curious about Lee Seol's reading taste?</h2><span>from 39 books</span><b class="taste-open" aria-hidden="true" data-show="Show ▾" data-hide="Hide ▴"></b></summary>
+    <div class="taste-body">
+      <p class="taste-sum">Most-read genre: <mark>Fiction</mark> (35 books)</p>
+      <div>
+        <p class="taste-label">Genres <small>38 books with a known genre</small></p>
+        <div class="taste-bar" role="img" aria-label="Fiction 35, Business 1, Children&#x27;s books 1, Humanities 1"><span class="wide" style="flex:35 0 0;background:#fde047" title="Fiction 35">Fiction 92%</span><span style="flex:1 0 0;background:#c7d2fe" title="Business 1"></span><span style="flex:1 0 0;background:#bef264" title="Children&#x27;s books 1"></span><span style="flex:1 0 0;background:#fed7aa" title="Humanities 1"></span></div>
+        <ul class="taste-legend"><li><i style="background:#fde047"></i>Fiction 35</li><li><i style="background:#c7d2fe"></i>Business 1</li><li><i style="background:#bef264"></i>Children&#x27;s books 1</li><li><i style="background:#fed7aa"></i>Humanities 1</li></ul>
+      </div>
+      <div class="taste-tiles">
+      <div class="taste-tile"><b>Korean · Translated</b><div class="v">19<small> : </small>16</div><div class="meter" aria-hidden="true"><i style="width:54%"></i></div><p>Of 35 literary books: 19 Korean, 16 translated</p></div>
+      <div class="taste-tile"><b>Authors picked more than once</b><div class="who">Choi Jin-young 5</div><div class="who">Gu Byeong-mo 2</div><div class="who">Park Wan-suh 2</div></div>
+      </div>
+      <p class="taste-note">💬 “겨울방학” — Lee Seol loves imaginative books but also realistic ones, and this novel is an example.</p>
+    </div>
+  </details>
   <section class="related-celebs">
     <h2>🤝 Celebrities with similar reading taste</h2>
     <p class="muted">They recommended some of the same books. The number is how many books they share.</p>

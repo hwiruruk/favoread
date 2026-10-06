@@ -338,10 +338,43 @@
     .bc-author { font-size: 12px; color: #555; margin-bottom: 6px; }
     .bc-badge { display: inline-block; font-size: 11px; background: #fde047; border: 1px solid #000; padding: 1px 6px; font-weight: 700; }
     .celeb-bio { margin: 4px 0 8px; padding: 6px 10px; background: #fff8e7; border-left: 4px solid #000; font-size: 14px; line-height: 1.45; color: #222; }
-    .taste { margin: 16px 0; padding: 12px 14px; background: #e0f2fe; border: 2px solid #000; box-shadow: 3px 3px 0 0 #000; font-size: 14px; line-height: 1.6; }
-    .taste h2 { margin: 0 0 6px; font-size: 15px; }
-    .taste p { margin: 2px 0; }
-    .taste .taste-note { margin-top: 6px; font-size: 13px; color: #444; }
+    .taste { margin: 16px 0; background: #fff; border: 2px solid #000; box-shadow: 4px 4px 0 0 #000; font-size: 14px; line-height: 1.6; }
+    .taste-head { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 10px; padding: 10px 14px; background: #e0f2fe; cursor: pointer; list-style: none; }
+    .taste-head::-webkit-details-marker { display: none; }
+    .taste-head:hover { background: #fde047; }
+    .taste-head:focus-visible { outline: 3px solid #2563eb; outline-offset: 2px; }
+    .taste[open] > .taste-head { border-bottom: 2px solid #000; }
+    .taste-open { margin-left: auto; padding: 3px 10px; font-size: 12px; font-weight: 800; background: #fff; border: 2px solid #000; box-shadow: 2px 2px 0 0 #000; white-space: nowrap; }
+    .taste-open::after { content: attr(data-show); }
+    .taste[open] .taste-open::after { content: attr(data-hide); }
+    .taste-head h2 { margin: 0; padding: 0; border: 0; font-size: 16px; font-weight: 900; }
+    .taste-head span { font-size: 12px; color: #333; }
+    .taste-body { padding: 14px; display: grid; gap: 18px; }
+    .taste-sum { margin: 0; font-size: 18px; font-weight: 900; line-height: 1.4; word-break: keep-all; }
+    .taste-sum mark { background: linear-gradient(transparent 55%, #fde047 55%); color: inherit; padding: 0 2px; }
+    .taste-label { margin: 0 0 6px; font-size: 12px; font-weight: 800; color: #555; }
+    .taste-label small { font-weight: 600; }
+    .taste-bar { display: flex; height: 28px; border: 2px solid #000; overflow: hidden; }
+    .taste-bar span { min-width: 0; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 800; white-space: nowrap; overflow: hidden; border-right: 1.5px solid #000; }
+    .taste-bar span:last-child { border-right: 0; }
+    .taste-legend { list-style: none; padding: 0; margin: 8px 0 0; display: flex; flex-wrap: wrap; gap: 4px 14px; font-size: 13px; }
+    .taste-legend li { display: flex; align-items: center; gap: 6px; }
+    .taste-legend i { width: 12px; height: 12px; border: 1.5px solid #000; flex-shrink: 0; }
+    .taste-chips { display: flex; flex-wrap: wrap; gap: 8px; }
+    .taste-chip { display: inline-flex; align-items: baseline; gap: 6px; padding: 4px 10px; background: #fff; border: 2px solid #000; box-shadow: 2px 2px 0 0 #000; font-weight: 700; font-size: 14px; }
+    .taste-chip.big { background: #fde047; font-size: 15px; }
+    .taste-chip small { font-size: 12px; color: #555; font-weight: 600; }
+    .taste-tiles { display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: 10px; }
+    .taste-tile { border: 2px solid #000; background: #fff8e7; padding: 9px 12px; min-width: 0; }
+    .taste-tile b { display: block; font-size: 12px; color: #555; }
+    .taste-tile .v { font-family: "Space Grotesk", sans-serif; font-size: 24px; font-weight: 700; line-height: 1.25; font-variant-numeric: tabular-nums; }
+    .taste-tile .v small { font-size: 14px; }
+    .taste-tile .meter { height: 9px; border: 1.5px solid #000; background: #fff; margin: 6px 0 3px; }
+    .taste-tile .meter i { display: block; height: 100%; background: #000; }
+    .taste-tile p { margin: 0; font-size: 12px; color: #333; word-break: keep-all; }
+    .taste-tile .who { font-size: 14px; font-weight: 800; margin-top: 2px; word-break: keep-all; }
+    @media (max-width: 560px) { .taste-bar span:not(.wide) { font-size: 0; } .taste-sum { font-size: 16px; } }
+    .taste-note { margin: 0; background: #fff7c2; border: 1.5px solid #000; padding: 7px 10px; font-size: 13px; word-break: keep-all; }
     .shelf-head { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
     .shelf-head h2 { margin-bottom: 0; border-bottom: none; padding-bottom: 0; }
     .shelf-tabs { display: flex; gap: 6px; flex-wrap: wrap; }
@@ -910,6 +943,24 @@
   })();
   </script>
 
+  <details class="taste">
+    <summary class="taste-head"><h2>📊 김태우의 독서 취향이 궁금하다면?</h2><span>책 11권 기준</span><b class="taste-open" aria-hidden="true" data-show="펼쳐 보기 ▾" data-hide="접기 ▴"></b></summary>
+    <div class="taste-body">
+      <p class="taste-sum">가장 많이 읽은 분야는 <mark>소설</mark> 7권, 자주 고른 키워드는 <mark>한국소설</mark> 3권</p>
+      <div>
+        <p class="taste-label">분야 <small>분야를 아는 11권</small></p>
+        <div class="taste-bar" role="img" aria-label="소설 7, 인문 3, 시 1"><span class="wide" style="flex:7 0 0;background:#fde047" title="소설 7">소설 64%</span><span style="flex:3 0 0;background:#fed7aa" title="인문 3">인문 27%</span><span style="flex:1 0 0;background:#ddd6fe" title="시 1"></span></div>
+        <ul class="taste-legend"><li><i style="background:#fde047"></i>소설 7권</li><li><i style="background:#fed7aa"></i>인문 3권</li><li><i style="background:#ddd6fe"></i>시 1권</li></ul>
+      </div>
+      <div>
+        <p class="taste-label">자주 고른 키워드 <small>예스24 카테고리 · 2권 이상</small></p>
+        <div class="taste-chips"><span class="taste-chip big">한국소설 <small>3권</small></span><span class="taste-chip">공포/스릴러 <small>2권</small></span><span class="taste-chip">서양 고전문학 <small>2권</small></span><span class="taste-chip">영미소설 <small>2권</small></span><span class="taste-chip">영화와 드라마 원작 <small>2권</small></span><span class="taste-chip">인문/교양 <small>2권</small></span><span class="taste-chip">주제로 읽는 역사 <small>2권</small></span></div>
+      </div>
+      <div class="taste-tiles">
+      <div class="taste-tile"><b>국내 · 번역서</b><div class="v">3<small> : </small>5</div><div class="meter" aria-hidden="true"><i style="width:38%"></i></div><p>나라를 아는 문학 8권 중 국내 작가 3권 · 번역서 5권</p></div>
+      </div>
+    </div>
+  </details>
   <section class="related-celebs">
     <h2>🤝 책 취향이 겹치는 셀럽</h2>
     <p class="muted">같은 책을 함께 추천한 다른 셀럽이에요. 숫자는 공통 도서 권수.</p>

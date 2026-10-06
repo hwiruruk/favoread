@@ -3555,8 +3555,10 @@ function y24PathGenre(path) {
   if (!p.length) return null;
   const g = y24Top(p[0]);
   const rest = p.slice(1);
+  if (g === 'lit' && rest.some(x => /비평|이론|작가\s*탐구/.test(x))) return '인문';   // 문학 이론서
   if (g === 'lit') return y24Lit(rest);
   if (g === '만화' && rest.some(x => x.includes('노벨'))) return '소설';
+  if (g === 'teen' && rest.some(x => x.includes('문학'))) return '소설';   // 청소년 문학
   if (g === 'teen') {
     return y24Lit(rest) || [...rest].reverse().map(y24Top).find(x => x && x !== 'lit' && x !== 'teen') || null;
   }
