@@ -1069,7 +1069,7 @@ SHELF_CSS = (
     '    .cv-no { display: flex; height: 100%; align-items: center; justify-content: center; padding: 6px;\n'
     '             font-size: 11px; font-weight: 700; line-height: 1.3; text-align: center; word-break: keep-all; }\n'
     # 이미지 저장 — 접힌 상태면 보이는 3줄만 담고, 흐린 가림막과 '전체 보기' 버튼은 빼고 찍는다
-    '    .is-capturing .covers-more { display: none !important; }\n'
+    '    .is-capturing .covers-more, .is-capturing .taste { display: none !important; }\n'
     # 책장 — 책등을 같은 높이로 세워 바닥에 붙여 늘어놓는다. 선반 판(검은 바닥)은 두지 않는다.
     '    .shelf { --sh-h: ' + str(SPINE_H) + 'px;\n'
     '             display: flex; flex-wrap: wrap; align-items: flex-end; gap: 11px 2px;\n'
@@ -1516,16 +1516,16 @@ TASTE_GENRE_COLOR = {
 }
 TASTE_CSS = (
     '    .taste { margin: 16px 0; background: #fff; border: 2px solid #000; box-shadow: 4px 4px 0 0 #000; font-size: 14px; line-height: 1.6; }\n'
-    '    .taste-head { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 10px; padding: 10px 14px; background: #e0f2fe; cursor: pointer; list-style: none; }\n'
+    '    .taste-head { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 10px; padding: 10px 14px; background: #ff5fa8; cursor: pointer; list-style: none; }\n'
     '    .taste-head::-webkit-details-marker { display: none; }\n'
-    '    .taste-head:hover { background: #fde047; }\n'
+    '    .taste-head:hover { background: #ff3d96; }\n'
     '    .taste-head:focus-visible { outline: 3px solid #2563eb; outline-offset: 2px; }\n'
     '    .taste[open] > .taste-head { border-bottom: 2px solid #000; }\n'
     '    .taste-open { margin-left: auto; padding: 3px 10px; font-size: 12px; font-weight: 800; background: #fff; border: 2px solid #000; box-shadow: 2px 2px 0 0 #000; white-space: nowrap; }\n'
     '    .taste-open::after { content: attr(data-show); }\n'
     '    .taste[open] .taste-open::after { content: attr(data-hide); }\n'
     '    .taste-head h2 { margin: 0; padding: 0; border: 0; font-size: 16px; font-weight: 900; }\n'
-    '    .taste-head span { font-size: 12px; color: #333; }\n'
+    '    .taste-head span { font-size: 12px; color: #111; }\n'
     '    .taste-body { padding: 14px; display: grid; gap: 18px; }\n'
     '    .taste-sum { margin: 0; font-size: 18px; font-weight: 900; line-height: 1.4; word-break: keep-all; }\n'
     '    .taste-sum mark { background: linear-gradient(transparent 55%, #fde047 55%); color: inherit; padding: 0 2px; }\n'
@@ -1549,9 +1549,9 @@ TASTE_CSS = (
     '    .taste-tile .meter { height: 9px; border: 1.5px solid #000; background: #fff; margin: 6px 0 3px; }\n'
     '    .taste-tile .meter i { display: block; height: 100%; background: #000; }\n'
     '    .taste-tile p { margin: 0; font-size: 12px; color: #333; word-break: keep-all; }\n'
-    '    .taste-tile .who { font-size: 14px; font-weight: 800; margin-top: 2px; word-break: keep-all; }\n'
+    '    .taste-tile .who { font-size: 14px; font-weight: 800; margin-top: 4px; word-break: keep-all; }\n'
+    '    .taste-tile .who + p { margin-bottom: 2px; }\n'
     '    @media (max-width: 560px) { .taste-bar span:not(.wide) { font-size: 0; } .taste-sum { font-size: 16px; } }\n'
-    '    .taste-note { margin: 0; background: #fff7c2; border: 1.5px solid #000; padding: 7px 10px; font-size: 13px; word-break: keep-all; }\n'
 )
 
 
@@ -1625,18 +1625,14 @@ def taste_html(name, lang='ko', who=''):
                                  ('%d권 중 %d권' % (f['of'], f['n'])) if ko else '%d of %d' % (f['n'], f['of']))
     if t['authors']:
         tiles += ('      <div class="taste-tile"><b>' + ('여러 권 고른 작가' if ko else 'Authors picked more than once')
-                  + '</b>' + ''.join('<div class="who">%s %d%s</div>' % (
-                      esc(a['author'] if ko else a['author_en']), a['count'], '권' if ko else '')
+                  + '</b>' + ''.join(
+                      '<div class="who">%s %d%s</div>' % (esc(a['author'] if ko else a['author_en']), a['count'], '권' if ko else '')
+                      + (('<p>' + esc(' '.join('《%s》' % x for x in a['titles'][:3])) + '</p>') if ko else '')
                       for a in t['authors'])
-                  + (('<p>' + esc(' '.join('《%s》' % x for x in t['authors'][0]['titles'][:3])) + '</p>') if ko else '')
                   + '</div>\n')
     if tiles:
         out.append('      <div class="taste-tiles">\n' + tiles + '      </div>\n')
 
-    if ko and t['note']:
-        out.append('      <p class="taste-note">💬 《' + esc(t['note']['title']) + '》 — ' + esc(t['note']['ko']) + '</p>\n')
-    elif not ko and t['note'] and t['note']['en']:
-        out.append('      <p class="taste-note">💬 “' + esc(t['note']['title']) + '” — ' + esc(t['note']['en']) + '</p>\n')
     if not out:
         return ''
     who = who or short_name(name)
@@ -3149,7 +3145,8 @@ for name, info in celebs.items():
         '    <div class="covers" id="covers">\n'
         + cover_shelf_html(cover_tiles) +
         '    </div>\n'
-        + covers_more_html(len(cover_tiles), 'ko') +
+        + covers_more_html(len(cover_tiles), 'ko')
+        + taste_html(name, 'ko') +
         '    <ol class="reading-list" id="rlist">\n'
         + book_cards_html +
         '    </ol>\n'
@@ -3161,7 +3158,6 @@ for name, info in celebs.items():
                            sname + '의 독서 리스트 ' + str(n_books) + '권')
         +
         '\n'
-        + taste_html(name, 'ko')
         + (('  <section>\n'
             '    <h2>📝 ' + esc(sname) + '의 책 취향</h2>\n'
             '    <p>' + author_summary + '</p>\n'
@@ -4910,7 +4906,8 @@ for name, info in celebs.items():
         '    </div>\n'
         '    <div class="covers" id="covers">\n' + cover_shelf_html(en_cover_tiles) +
         '    </div>\n'
-        + covers_more_html(len(en_cover_tiles), 'en') +
+        + covers_more_html(len(en_cover_tiles), 'en')
+        + taste_html(name, 'en', _name_pl) +
         '    <ol class="reading-list" id="rlist">\n' + rows +
         '    </ol>\n'
         '    </div>\n'
@@ -4920,7 +4917,6 @@ for name, info in celebs.items():
                            'Could not create the image. Please try again.',
                            _name_pl + ' — ' + str(n) + ' books', '_transparent')
         + (EN_TR_NOTE_HTML if en_show_tr_note else '')
-        + taste_html(name, 'en', _name_pl)
         + en_taste_html
         + en_related_html
         + '  <section class="pfaq">\n'
