@@ -920,15 +920,10 @@ SHELF_CSS = (
     '             font-size: 11px; font-weight: 700; line-height: 1.3; text-align: center; word-break: keep-all; }\n'
     # 이미지 저장 — 접힌 상태면 보이는 3줄만 담고, 흐린 가림막과 '전체 보기' 버튼은 빼고 찍는다
     '    .is-capturing .covers-more { display: none !important; }\n'
-    # 책장 — 책등을 같은 높이로 세워 바닥에 붙여 늘어놓는다.
-    # 줄이 넘어가도 줄마다 선반 판이 받치도록, 선반 판을 줄 간격(--row)마다
-    # 되풀이되는 배경으로 그린다. 판은 책등 바로 아래(--sh-h)에 온다.
-    '    .shelf { --sh-h: ' + str(SPINE_H) + 'px; --plank: 7px; --row: calc(var(--sh-h) + 18px);\n'
+    # 책장 — 책등을 같은 높이로 세워 바닥에 붙여 늘어놓는다. 선반 판(검은 바닥)은 두지 않는다.
+    '    .shelf { --sh-h: ' + str(SPINE_H) + 'px;\n'
     '             display: flex; flex-wrap: wrap; align-items: flex-end; gap: 11px 2px;\n'
-    '             margin: 14px 0 22px; padding: 0 8px 7px;\n'
-    '             background-image: linear-gradient(to bottom, transparent var(--sh-h), #000 var(--sh-h),\n'
-    '               #000 calc(var(--sh-h) + var(--plank)), transparent calc(var(--sh-h) + var(--plank)));\n'
-    '             background-size: 100% var(--row); background-repeat: repeat-y; }\n'
+    '             margin: 14px 0 22px; padding: 0 8px; }\n'
     # 최근 추가된 책 칸 — 본 목록 위에 따로 모은다
     '    .new-sec { margin: 12px 0 6px; padding: 8px 12px; background: #fffbe6; border: 1.5px dashed #000; }\n'
     '    .new-sec[open] { padding-bottom: 2px; }\n'
