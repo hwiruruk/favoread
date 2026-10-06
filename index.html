@@ -1980,6 +1980,17 @@
     for (const ch of String(title || '')) h = (h * 31 + ch.charCodeAt(0)) >>> 0;
     return `hsl(${h % 360},${34 + (h >> 3) % 22}%,${26 + (h >> 7) % 20}%)`;
   }
+  /* 표지 대표색(spineColor, tools/cover_colors.py)이 밝으면 흰 제목이 묻히니 검은 글자로 쓴다.
+     generate.py의 is_light_color와 같은 기준. */
+  function isLightColor(hex) {
+    const m = /^#([0-9a-f]{6})$/i.exec(hex || '');
+    if (!m) return false;
+    const lin = [0, 2, 4].map(i => {
+      const c = parseInt(m[1].slice(i, i + 2), 16) / 255;
+      return c <= 0.04045 ? c / 12.92 : Math.pow((c + 0.055) / 1.055, 2.4);
+    });
+    return 0.2126 * lin[0] + 0.7152 * lin[1] + 0.0722 * lin[2] > 0.4;
+  }
   function spineWidth(title) {
     let h = 0;
     for (const ch of String(title || '')) h = (h * 13 + ch.charCodeAt(0)) >>> 0;
@@ -2060,11 +2071,12 @@
       + 'gap:5px 3px;padding:0 6px 10px;border-bottom:4px solid #111;';
     modal.books.forEach((book, i) => {
       const w = spineWidth(book.title);
+      const light = isLightColor(book.spineColor);
       const el = document.createElement('button');
       el.type = 'button';
       el.title = book.title;          // 속성은 DOM API로 넣으므로 이스케이프가 따로 필요 없다
       el.style.cssText = 'position:relative;flex:none;height:200px;padding:0;'
-        + 'background:' + spineTint(book.title) + ';border:1px solid rgba(0,0,0,.45);'
+        + 'background:' + (book.spineColor || spineTint(book.title)) + ';border:1px solid rgba(0,0,0,.45);'
         + 'border-radius:2px 2px 0 0;overflow:hidden;cursor:pointer;'
         + 'box-shadow:inset -3px 0 6px rgba(0,0,0,.28), inset 3px 0 5px rgba(255,255,255,.14);'
         + 'transition:transform .12s;'
@@ -2087,7 +2099,9 @@
         + 'white-space:nowrap;overflow:hidden;text-overflow:ellipsis;'
         + 'font-family:"KoPubWorld Batang","Noto Serif KR",Batang,serif;'
         + 'font-size:' + spineFontSize(spineTitle(book.title), 200) + 'px;'
-        + 'font-weight:700;color:#fff;text-shadow:0 1px 2px rgba(0,0,0,.55)">'
+        + 'font-weight:700;'
+        + (light ? 'color:#1a1a1a;text-shadow:0 1px 1px rgba(255,255,255,.45)">'
+                 : 'color:#fff;text-shadow:0 1px 2px rgba(0,0,0,.55)">')
         + escHtml(spineTitle(book.title)) + '</i></span>' + img;
       el.addEventListener('click', () => { setModalView('slide'); goSlide(i); });
       shelf.appendChild(el);

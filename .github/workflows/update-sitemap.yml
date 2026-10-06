@@ -33,6 +33,8 @@ on:
       - 'generate.py'
       # 공유 미리보기 카드(og/*.jpg) — 그림을 바꾸면 모든 카드를 다시 그린다
       - 'tools/make_og.py'
+      # 책등 사진 없는 책의 표지 대표색 — 뽑는 규칙을 바꾸면 다시 칠한다
+      - 'tools/cover_colors.py'
       - 'tools/build_site.sh'
       - '.github/workflows/update-sitemap.yml'
 
@@ -71,7 +73,7 @@ jobs:
           git config user.name  "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
           commit() {
-            git add -A data.json sitemap.xml share/ group/ recommend/ author/ en/ s/ og/ data/og.json data/shortlinks.json data/en_slugs.json data/page_lastmod.json data/detail/ index.html updates.html robots.txt llms.txt feed.xml
+            git add -A data.json sitemap.xml share/ group/ recommend/ author/ en/ s/ og/ data/og.json data/cover_colors.json data/shortlinks.json data/en_slugs.json data/page_lastmod.json data/detail/ index.html updates.html robots.txt llms.txt feed.xml
             git diff --cached --quiet || git commit -m "chore: data.json·sitemap·share·index·en·s 자동 갱신 [$(date +%Y-%m-%d)]"
           }
           commit

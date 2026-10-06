@@ -347,8 +347,8 @@ EN_TR_NOTE_HTML = '  <p class="tr-note">' + EN_TR_NOTE_TEXT + '</p>\n'
 #   표지  https://image.yes24.com/goods/91901136/L
 #   책등  https://image.yes24.com/goods/91901136/side
 # 그래서 표지 URL만 있으면 책등 URL이 나온다. 다만 상품이 있다고 책등
-# 사진까지 있는 건 아니다(아래 NO_SPINE). 없으면 spine_tint()로 만든
-# 색 책등으로 대신한다.
+# 사진까지 있는 건 아니다(아래 NO_SPINE). 없으면 표지에서 가장 많이 쓰인
+# 색(spine_color)으로 칠한 색 책등으로 대신한다.
 
 YES24_ID_RE = re.compile(r'image\.yes24\.com/goods/(?:detail/)?(\d+)', re.I)
 
@@ -463,6 +463,39 @@ def spine_tint(title):
     sat = 32 + (h >> 9) % 26          # 32~57%
     lig = 26 + (h >> 17) % 22         # 26~47% — 흰 글자가 읽히는 범위
     return 'hsl(' + str(hue) + ',' + str(sat) + '%,' + str(lig) + '%)'
+
+
+def load_cover_colors():
+    """tools/cover_colors.py 가 채운 표 — 표지 URL → 표지 대표색("#rrggbb")."""
+    path = os.path.join('data', 'cover_colors.json')
+    if not os.path.exists(path):
+        return {}
+    try:
+        with open(path, encoding='utf-8') as fp:
+            doc = json.load(fp) or {}
+    except (json.JSONDecodeError, OSError) as e:
+        print('⚠️ data/cover_colors.json 읽기 실패 — 제목으로 만든 색을 씁니다: %s' % e)
+        return {}
+    return {u: c for u, c in (doc.get('colors') or {}).items()
+            if re.fullmatch(r'#[0-9a-fA-F]{6}', str(c or ''))}
+
+
+COVER_COLORS = load_cover_colors()
+
+
+def is_light_color(hex_color):
+    """밝은 바탕이면 True — 흰 제목이 안 읽히니 검은 글자로 바꾼다."""
+    r, g, b = (int(hex_color[i:i + 2], 16) / 255 for i in (1, 3, 5))
+    lin = [c / 12.92 if c <= 0.04045 else ((c + 0.055) / 1.055) ** 2.4 for c in (r, g, b)]
+    return 0.2126 * lin[0] + 0.7152 * lin[1] + 0.0722 * lin[2] > 0.4
+
+
+def spine_color(title, cover_url):
+    """색 책등 바탕색과 밝은지 여부. 표지 대표색이 있으면 그 색, 없으면 제목에서 만든 색."""
+    c = COVER_COLORS.get((cover_url or '').strip())
+    if c:
+        return c, is_light_color(c)
+    return spine_tint(title), False
 
 
 # 미리 연결해 둘 이미지 호스트. 표지를 예스24로 옮긴 뒤로 알라딘 표지는
@@ -939,14 +972,10 @@ SHELF_CSS = (
     '            height: 100%; width: auto; max-width: 80px; object-fit: fill; }\n'
     # 책등 이미지가 없거나 못 불러오면 색 책등 폭으로 돌아간다
     '    .sp.no-img, .sp.sp-fail { width: var(--w, 38px); }\n'
-    # 책등 사진이 없는 책은 표지를 잘라 책등으로 쓴다. 그림자는 은은하게, 제목은 세로로 얹는다.
-    "    .sp-c { position: absolute; inset: 0; z-index: 0; width: 100%; height: 100%; object-fit: cover; object-position: 50% 50%; }\n"
+    # 책등 사진이 없는 책은 표지 대표색 한 가지로 칠한다. 그림자는 은은하게, 제목은 세로로 얹는다.
     "    .sp.no-img { box-shadow: inset -2px 0 5px rgba(0,0,0,.14), inset 2px 0 4px rgba(255,255,255,.1); }\n"
-    "    .sp.no-img.has-cut::after { content: ''; position: absolute; inset: 0; z-index: 1; pointer-events: none;\n"
-    "        background: linear-gradient(90deg, rgba(255,255,255,.12), rgba(255,255,255,0) 25%, rgba(0,0,0,0) 65%, rgba(0,0,0,.14)),\n"
-    "                    rgba(0,0,0,.16); }\n"
-    "    .sp.no-img.has-cut .sp-t { z-index: 2; }\n"
-    "    .sp.no-img.has-cut.sp-fail::after, .sp.no-img.has-cut.sp-fail .sp-c { display: none; }\n"
+    # 표지가 밝은 색이면 흰 제목이 묻히므로 검은 글자로 바꾼다
+    "    .sp.sp-light .sp-t i { color: #1a1a1a; text-shadow: 0 1px 1px rgba(255,255,255,.45); }\n"
     # 최근 추가된 책 — 책등 위쪽을 띠로 두른다. 제목이 가리지 않게 여백을 준다.
     '    .sp-new { position: absolute; top: 0; left: 0; right: 0; z-index: 3; text-align: center;\n'
     '              font-size: 8px; line-height: 1; padding: 3px 0 2px;\n'
@@ -1471,6 +1500,9 @@ for _info in celebs.values():
         _sp = spine_image_url(_b['title'], _b['coverUrl'])
         if _sp:
             _b['spineUrl'] = _sp
+        _cc = COVER_COLORS.get((_b['coverUrl'] or '').strip())
+        if _cc:
+            _b['spineColor'] = _cc
 
 # comment/source/link은 직접 검증하고 고른 핵심 자료라 data.json 한 방에
 # 통째로 내려주지 않는다. 검색/추천/랭킹 등 화면 대부분에 필요한 나머지
@@ -1482,6 +1514,14 @@ DETAIL_DIR = 'data/detail'
 os.makedirs(DETAIL_DIR, exist_ok=True)
 
 LITE_BOOK_KEYS = ('title', 'author', 'publisher', 'coverUrl', 'spineUrl', 'title_en', 'author_en')
+# 있는 책에만 싣는 키 — 빈 값까지 다 적으면 data.json만 커진다
+LITE_BOOK_OPT_KEYS = ('spineColor',)
+
+
+def lite_book(b):
+    d = {k: b.get(k, '') for k in LITE_BOOK_KEYS}
+    d.update({k: b[k] for k in LITE_BOOK_OPT_KEYS if b.get(k)})
+    return d
 
 _kept_detail_files = set()
 for name, info in celebs.items():
@@ -1516,7 +1556,7 @@ data_json = {
         name: {
             'imageUrl': info['img'],
             'shortUrl': make_celeb_short_url(name),
-            'books':    [{k: b.get(k, '') for k in LITE_BOOK_KEYS} for b in info['books']],
+            'books':    [lite_book(b) for b in info['books']],
         }
         for name, info in celebs.items()
     }
@@ -2515,22 +2555,20 @@ for name, info in celebs.items():
         # 책등 한 칸 — 예스24 책등이 있으면 그 이미지를, 없으면 색 책등을 쓴다.
         # 이미지를 색 책등 위에 덮어두고 못 불러오면 스스로 사라지게 해서,
         # 자바스크립트 없이도 자연스럽게 색 책등으로 떨어진다.
+        # 색 책등은 표지에서 가장 많이 쓰인 색으로 칠한다(spine_color).
         _spine_url = spine_image_url(b['title'], b['coverUrl'])
-        # 책등 사진이 없는 책은 표지를 잘라 책등으로 쓴다(제목은 그 위에 세로로).
-        _cut = (not _spine_url) and (b['coverUrl'] or '').startswith('http')
+        _sp_color, _sp_light = spine_color(b['title'], b['coverUrl'])
         _spine_inner = (
-            ('<img class="sp-c" src="' + esc(b['coverUrl']) + '" alt="" loading="lazy" referrerpolicy="no-referrer">'
-             if _cut else '')
-            + '<span class="sp-t"><i>' + esc(spine_title(b['title'])) + '</i></span>'
+            '<span class="sp-t"><i>' + esc(spine_title(b['title'])) + '</i></span>'
             + ('<img class="sp-i" src="' + esc(_spine_url) + '" alt="" loading="lazy" '
                'referrerpolicy="no-referrer"' + SPINE_IMG_GUARD + '>'
                if _spine_url else '')
             + spine_new_badge(_added)
         )
-        _spine_style = ('--c:' + spine_tint(b['title'])
+        _spine_style = ('--c:' + _sp_color
                         + ';--w:' + str(spine_width(b['title'])) + 'px'
                         + ';--fs:' + str(spine_font_size(spine_title(b['title']))) + 'px')
-        _sp_cls = ('sp' if _spine_url else 'sp no-img') + (' has-cut' if _cut else '') + (' is-new' if _added else '')
+        _sp_cls = ('sp' if _spine_url else 'sp no-img') + (' sp-light' if _sp_light else '') + (' is-new' if _added else '')
         if aladin_url:
             spine_html += ('    <a class="' + _sp_cls + '" style="' + _spine_style + '" href="' + aladin_url
                            + '" rel="nofollow noopener noreferrer" target="_blank" title="'
@@ -4198,22 +4236,20 @@ for name, info in celebs.items():
                     + '</div>\n')
 
         # 책등 한 칸 — 한국어 페이지와 같은 규칙. 예스24 책등이 있으면 그 이미지를,
-        # 없으면 제목에서 만든 색 책등을 쓴다. 제목은 영문으로 적는다.
+        # 없으면 표지 대표색으로 칠한 색 책등을 쓴다. 제목은 영문으로 적는다.
         _sp_url = spine_image_url(b['title'], b['coverUrl'])
-        _cut = (not _sp_url) and (b['coverUrl'] or '').startswith('http')
+        _sp_color, _sp_light = spine_color(b['title'], b['coverUrl'])
         _sp_inner = (
-            ('<img class="sp-c" src="' + esc(b['coverUrl']) + '" alt="" loading="lazy" referrerpolicy="no-referrer">'
-             if _cut else '')
-            + '<span class="sp-t"><i>' + esc(spine_title(t_plain)) + '</i></span>'
+            '<span class="sp-t"><i>' + esc(spine_title(t_plain)) + '</i></span>'
             + ('<img class="sp-i" src="' + esc(_sp_url) + '" alt="" loading="lazy" '
                'referrerpolicy="no-referrer"' + SPINE_IMG_GUARD + '>'
                if _sp_url else '')
             + spine_new_badge(_added)
         )
-        _sp_style = ('--c:' + spine_tint(b['title'])
+        _sp_style = ('--c:' + _sp_color
                      + ';--w:' + str(spine_width(b['title'])) + 'px'
                      + ';--fs:' + str(spine_font_size(spine_title(t_plain))) + 'px')
-        _sp_cls = ('sp' if _sp_url else 'sp no-img') + (' has-cut' if _cut else '') + (' is-new' if _added else '')
+        _sp_cls = ('sp' if _sp_url else 'sp no-img') + (' sp-light' if _sp_light else '') + (' is-new' if _added else '')
         if aladin_url:
             en_spine_html += ('    <a class="' + _sp_cls + '" style="' + _sp_style + '" href="' + aladin_url
                               + '" rel="nofollow noopener noreferrer" target="_blank" title="'

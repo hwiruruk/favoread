@@ -83,6 +83,17 @@ function hashOf(str, mul) {
   for (const ch of String(str || '')) h = (Math.imul(h, mul) + ch.codePointAt(0)) >>> 0;
   return h;
 }
+/* 표지 대표색(spineColor, tools/cover_colors.py)이 밝으면 흰 제목이 묻히니 검은 글자로 쓴다.
+   generate.py의 is_light_color와 같은 기준. */
+function isLightColor(hex) {
+  const m = /^#([0-9a-f]{6})$/i.exec(hex || '');
+  if (!m) return false;
+  const lin = [0, 2, 4].map((i) => {
+    const c = parseInt(m[1].slice(i, i + 2), 16) / 255;
+    return c <= 0.04045 ? c / 12.92 : Math.pow((c + 0.055) / 1.055, 2.4);
+  });
+  return 0.2126 * lin[0] + 0.7152 * lin[1] + 0.0722 * lin[2] > 0.4;
+}
 function spineTint(title) {
   const h = hashOf(title, 31);
   return `hsl(${h % 360},${32 + (h >>> 9) % 26}%,${26 + (h >>> 17) % 22}%)`;
@@ -564,6 +575,8 @@ function addBook(ref, doLayout = true) {
             // 배치(tools/fetch_spines.py)가 찾아둔 책등이 있으면 그것,
             // 없으면 표지 URL에서 유도한다
             spine: ref.spineUrl || yes24SpineUrl(ref.coverUrl),
+            // 책등 사진이 없는 책은 표지 대표색으로 칠한다(tools/cover_colors.py)
+            color: ref.spineColor || '',
             x: 120, y: 700, w: 260, rot: 0 });
   if (doLayout) layoutBooks();
 }
@@ -658,11 +671,12 @@ function itemHTML(it) {
         ? `<img class="tg-spine-i" src="${esc(proxify(sp))}" alt="" onerror="this.remove()"
              onload="if(this.naturalWidth/this.naturalHeight>${SPINE_MAX_RATIO})this.remove()">`
         : '';
-      // 책등 사진이 없거나 못 불러오면 표지를 잘라 책등으로 쓴다(제목은 세로로 얹는다)
-      const cut = it.url && !it.url.startsWith('data:')
+      // 책등 사진이 없는 책은 표지 대표색으로 칠한다. 대표색을 모르는 책만
+      // 예전처럼 표지를 잘라 책등으로 쓴다(제목은 세로로 얹는다)
+      const cut = !it.color && it.url && !it.url.startsWith('data:')
         ? `<div class="tg-spine-c" style="background-image:url('${esc(proxify(it.url))}')"></div>` : '';
-      return `<div class="tg-item tg-spine${cut ? ' has-c' : ''}${selCls}" data-id="${it.id}"
-        style="${base}width:${w}px;height:${h}px;--c:${spineTint(it.title)}">${cut}
+      return `<div class="tg-item tg-spine${cut ? ' has-c' : ''}${isLightColor(it.color) ? ' tg-spine-light' : ''}${selCls}" data-id="${it.id}"
+        style="${base}width:${w}px;height:${h}px;--c:${it.color || spineTint(it.title)}">${cut}
         <span class="tg-spine-t" style="font-size:${Math.max(11, Math.round(w * 0.34))}px"><i>${esc(it.title)}</i></span>${img}
       </div>`;
     }
