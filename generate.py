@@ -1511,8 +1511,8 @@ print(f"📊 책 취향 통계 {len(TASTE)}명 / {len(celebs)}명 (책 정보 �
 TASTE_GENRE_COLOR = {
     '소설': '#fde047', '시': '#ddd6fe', '에세이': '#a7f3d0', '기타 문학': '#fbcfe8',
     '인문': '#fed7aa', '사회': '#bae6fd', '경제·경영': '#c7d2fe', '자기계발': '#fecaca',
-    '과학': '#99f6e4', '실용·생활': '#d9f99d', '예술': '#f5d0fe', '만화': '#fdba74',
-    '여행': '#a5f3fc', '어린이책': '#fef08a', '기타': '#e5e5e5',
+    '과학': '#99f6e4', '실용·생활': '#d6d3d1', '예술': '#f5d0fe', '만화': '#fdba74',
+    '여행': '#a5f3fc', '어린이책': '#bef264', '기타': '#f5f5f4',
 }
 TASTE_CSS = (
     '    .taste { margin: 16px 0; background: #fff; border: 2px solid #000; box-shadow: 4px 4px 0 0 #000; font-size: 14px; line-height: 1.6; }\n'
@@ -1607,8 +1607,8 @@ def taste_html(name, lang='ko'):
             pct = round(f['dom'] / f['of'] * 100) if f['of'] else 0
             tiles += _taste_tile('국내 · 번역서' if ko else 'Korean · Translated',
                                  '%d<small> : </small>%d' % (f['dom'], f['intl']), pct,
-                                 ('국내 작가 %d권 · 번역서 %d권' % (f['dom'], f['intl'])) if ko
-                                 else '%d by Korean authors · %d translated' % (f['dom'], f['intl']))
+                                 ('나라를 아는 문학 %d권 중 국내 작가 %d권 · 번역서 %d권' % (f['of'], f['dom'], f['intl'])) if ko
+                                 else 'Of %d literary books: %d Korean, %d translated' % (f['of'], f['dom'], f['intl']))
         else:
             label = {'recent': ('최근 2년 안에 나온 책', 'Released in the last 2 years'),
                      'thick': ('500쪽 이상', '500+ pages'),

@@ -126,17 +126,21 @@ def path_genre(path):
     if not p:
         return None
     g = _top(p[0])
+    if g == 'lit' and any(re.search(r'비평|이론|작가\s*탐구', x) for x in p[1:]):
+        return '인문'   # 소설/시/희곡 > 비평/창작/이론 — 글쓰기·문학 이론서
     if g == 'lit':
         return _lit(p[1:])
     if g == '만화' and any('노벨' in x for x in p[1:]):
         return '소설'   # 만화/라이트노벨 > 라이트노벨
+    if g == 'teen' and any('문학' in x for x in p[1:]):
+        return '소설'   # 청소년 > 청소년 문학 — 대부분 청소년 소설
     if g == 'teen':
         return _lit(p[1:]) or next((x for x in map(_top, reversed(p[1:])) if x and x not in ('lit', 'teen')), None)
     return g
 
 
 _DOM_RE = re.compile(r'한국')
-_INTL_RE = re.compile(r'영미|일본|중국|프랑스|독일|러시아|스페인|중남미|북유럽|동유럽|이탈리아|외국|기타\s*국가')
+_INTL_RE = re.compile(r'영미|일본|중국|프랑스|독일|러시아|스페인|중남미|북유럽|동유럽|이탈리아|외국|기타\s*국가|세계|서양')
 _LIT_TOP_RE = re.compile(r'소설|시/?희곡|문학|에세이')
 
 
@@ -169,11 +173,16 @@ def genre(cats):
     return None
 
 
+_KW_DEEPER = re.compile(r'장르소설|시/?희곡|테마소설|세계각국소설|고전문학')
+
+
 def book_keywords(cats):
-    """예스24 카테고리 경로들 → 그 책의 키워드 집합.
+    """예스24 카테고리 경로들 → 그 책의 키워드 목록.
     둘째 단계를 쓴다 (한국소설·영미소설·감성/가족 에세이·처세술/삶의 자세·한국사/한국문화).
-    '장르소설'·'시/희곡'은 너무 넓어서 그 아래 단계(SF·추리/미스터리·한국시·희곡)를 쓴다.
-    한국 장편소설/단편소설 같은 셋째 단계 길이 구분은 취향이 아니라서 버린다."""
+    장르소설·시/희곡·테마소설·세계각국소설·고전문학은 너무 넓어서 그 아래 단계(SF·한국 시·연애/사랑소설·
+    동유럽소설·서양 고전문학)를 쓰고, 아래 단계가 없으면 키워드로 치지 않는다.
+    한국 장편소설/단편소설 같은 셋째 단계 길이 구분, 어린이책의 학년·나이 구분(5-6학년·4-6세)은 버린다.
+    세종도서·추천 도서처럼 분야가 아닌 카테고리는 _top() 에 안 걸려 빠진다."""
     out = []
     for c in cats or []:
         p = [x.strip() for x in ((c.get('path') if isinstance(c, dict) else c) or []) if x and x.strip()]
@@ -182,11 +191,15 @@ def book_keywords(cats):
         if len(p) < 2 or _top(p[0]) is None:
             continue
         k = p[1]
-        if re.fullmatch(r'장르소설|시/?희곡', k.replace(' ', '')) and len(p) >= 3:
+        if _KW_DEEPER.fullmatch(k.replace(' ', '')):
+            if len(p) < 3:
+                continue
             k = p[2]
         elif _top(p[0]) == '만화' and not re.search(r'만화|웹툰|노벨', k):
             k += ' 만화'   # 만화 > 드라마 → '드라마 만화' (그냥 '드라마'면 TV 드라마로 읽힌다)
-        if k not in out:
+        if re.search(r'\d', k):
+            continue
+        if k.replace(' ', '') not in [x.replace(' ', '') for x in out]:   # '여행 에세이'·'여행에세이'는 하나로
             out.append(k)
     return out
 
@@ -225,7 +238,8 @@ def compute(books, bookinfo, this_year, subjects=None):
         flags[t] = (None if o is None else o == 'intl',) + flags[t][1:]
     for i, k in enumerate(_KEYS):
         known = [f[i] for f in flags.values() if f[i] is not None]
-        if len(known) < MIN_BOOKS or len(known) / n_all < MIN_COVERAGE:
+        # 국내·번역서는 나라가 적힌 문학·에세이 책만 알 수 있으니 그 책들 안에서 센다 (5권 이상이면 말한다)
+        if len(known) < MIN_BOOKS or (k != 'translated' and len(known) / n_all < MIN_COVERAGE):
             continue
         n, share = sum(known), sum(known) / len(known)
         if k == 'translated':
@@ -252,8 +266,9 @@ def compute(books, bookinfo, this_year, subjects=None):
             if not labels[t]:
                 continue   # '통계에서 뺌'으로 고른 책·분야를 모르는 책은 키워드도 세지 않는다
             for k in book_keywords(((subjects or {}).get(t) or {}).get('cats')):
-                kw[k] = kw.get(k, 0) + 1
-        keywords = [{'ko': k, 'n': n} for k, n in sorted(kw.items(), key=lambda x: (-x[1], x[0]))
+                key = k.replace(' ', '')
+                kw.setdefault(key, [k, 0])[1] += 1
+        keywords = [{'ko': k, 'n': n} for k, n in sorted(kw.values(), key=lambda x: (-x[1], x[0]))
                     if n >= MIN_KEYWORD_BOOKS][:MAX_KEYWORDS]
 
     # 작가 — 서로 다른 작품 수
@@ -286,13 +301,13 @@ def compute(books, bookinfo, this_year, subjects=None):
 
 
 _KO = {
-    'origin': '국내 작가의 책 {dom}권, 번역서 {intl}권이에요 ({of}권 중)',
+    'origin': '국내 작가의 책 {dom}권, 번역서 {intl}권이에요 (나라를 아는 문학 {of}권 중)',
     'recent': '최근 2년 안에 나온 책이 많아요: {of}권 중 {n}권({pct}%)',
     'thick': '두꺼운 책(500쪽 이상)이 많아요: {of}권 중 {n}권({pct}%)',
     'thin': '가벼운 분량(250쪽 이하)의 책이 많아요: {of}권 중 {n}권({pct}%)',
 }
 _EN = {
-    'origin': '{dom} books by Korean authors and {intl} in translation (of {of})',
+    'origin': '{dom} books by Korean authors and {intl} in translation (of {of} literary books with a known origin)',
     'recent': 'Favors recent releases (last 2 years): {n} of {of} ({pct}%)',
     'thick': 'Mostly long books (500+ pages): {n} of {of} ({pct}%)',
     'thin': 'Leans toward short books (250 pages or fewer): {n} of {of} ({pct}%)',
