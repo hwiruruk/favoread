@@ -2485,11 +2485,12 @@ for name, info in celebs.items():
         if b['publisher']: byline_parts.append(esc(b['publisher']))
         byline_html = ' · '.join(byline_parts)
 
-        # 출처
-        source_html = ''
+        # 책 정보(예스24) · 출처 — 표지·제목 링크를 모르는 사람도 바로 찾게 버튼으로 둔다
+        source_html = ('<a class="rl-source" href="' + esc(yes24_book_url(b['title'], raw_link, b['coverUrl']))
+                       + '" rel="nofollow noopener noreferrer" target="_blank" title="예스24에서 보기">📖 책 정보</a>')
         if b['source'] and b['source'].startswith('http'):
-            source_html = ('<a class="rl-source" href="' + esc(b['source'])
-                           + '" rel="nofollow noopener noreferrer" target="_blank">📺 출처 보기</a>')
+            source_html += (' <a class="rl-source" href="' + esc(b['source'])
+                            + '" rel="nofollow noopener noreferrer" target="_blank">📺 출처</a>')
 
         # 함께 추천한 다른 셀럽 (카드 안에 임베드)
         shared_html = ''
@@ -4172,10 +4173,13 @@ for name, info in celebs.items():
         a_en = b.get('author_en')
         author_text = esc(a_en) if a_en else esc(b['author'])
 
-        src_html = ''
+        # 책 정보(예스24) · 출처 — 한국어 페이지와 같은 자리. 한국 서점으로 가니 툴팁에 밝힌다.
+        src_html = ('<a class="rl-source" href="' + esc(yes24_book_url(b['title'], raw_link, b['coverUrl']))
+                    + '" rel="nofollow noopener noreferrer" target="_blank" '
+                    'title="View on YES24 (Korean bookstore)">📖 Book details</a>')
         if b['source'] and b['source'].startswith('http'):
-            src_html = ('<a class="rl-source" href="' + esc(b['source'])
-                        + '" rel="nofollow noopener noreferrer" target="_blank">📺 Source</a>')
+            src_html += (' <a class="rl-source" href="' + esc(b['source'])
+                         + '" rel="nofollow noopener noreferrer" target="_blank">📺 Source</a>')
 
         # 함께 추천한 다른 셀럽 — 한국어 페이지의 '👥 함께 추천한 셀럽'과 같은 자리
         en_shared_html = ''
