@@ -1498,10 +1498,9 @@ try:
 except (FileNotFoundError, json.JSONDecodeError):
     pass
 _taste_year = datetime.date.today().year
-_taste_base = _taste.site_baseline(celebs, _bookinfo_db, _taste_year, _subjects_db)
 TASTE = {}
 for _name, _info in celebs.items():
-    _t = _taste.compute(_info['books'], _bookinfo_db, _taste_base, _taste_year, _subjects_db)
+    _t = _taste.compute(_info['books'], _bookinfo_db, _taste_year, _subjects_db)
     if _t:
         TASTE[_name] = _t
 print(f"📊 책 취향 통계 {len(TASTE)}명 / {len(celebs)}명 (책 정보 확인 {len(_bookinfo_db)}권 · 분야 확인 {len(_subjects_db)}권)")
