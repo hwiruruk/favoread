@@ -1317,6 +1317,60 @@ def flags_for(book, cands, checked=True):
     return f
 
 
+# 사람이 정하는 칸. 합칠 때 실행 중에 사람이 바꾼 값이 있으면 그쪽을 남긴다
+HUMAN_KEYS = ('status', 'value', 'reviewed', 'memo', 'auto')
+
+
+def merge_into_latest(base, ours, latest):
+    """이번 실행이 바꾼 항목만 최신 파일(latest) 위에 얹는다.
+
+    조회가 길어지는 동안 편집기 저장이나 다른 실행이 같은 파일을 먼저 커밋할 수 있다.
+    git 의 줄 단위 rebase 는 그때 충돌로 멈춰서(2026-10-06), 항목 단위로 합친다.
+      · 이번 실행이 안 바꾼 항목(base == ours) → 최신 파일 것을 그대로 (남이 갱신한 걸 되돌리지 않게)
+      · 바꾼 항목 → 이번 조회 결과. 다만 그새 사람이 승인·메모를 바꿨으면 그 칸은 최신 파일 것을 남긴다
+    """
+    out = dict(latest)
+    changed = 0
+    for sec in ('titles', 'authors'):
+        b, o = base.get(sec) or {}, ours.get(sec) or {}
+        merged = dict(latest.get(sec) or {})
+        for k, ent in o.items():
+            if b.get(k) == ent:
+                continue
+            new = dict(ent)
+            cur = merged.get(k)
+            if cur is not None:
+                was = b.get(k) or {}
+                if any(cur.get(h) != was.get(h) for h in HUMAN_KEYS):
+                    for h in HUMAN_KEYS:
+                        if h in cur:
+                            new[h] = cur[h]
+                        else:
+                            new.pop(h, None)
+            if merged.get(k) != new:
+                merged[k] = new
+                changed += 1
+        if merged or sec in latest:
+            out[sec] = dict(sorted(merged.items()))
+    out['_comment'] = ours.get('_comment') or latest.get('_comment')
+    out['_updated'] = max(str(latest.get('_updated') or ''), str(ours.get('_updated') or '')) or None
+    return out, changed
+
+
+def merge_main(base_path, ours_path):
+    """--merge: 워크플로의 커밋 단계에서 부른다. 지금 OUT_PATH(최신 main)에 이번 결과를 합친다."""
+    def read(p):
+        if not p or not os.path.exists(p):
+            return {}
+        with open(p, encoding='utf-8') as f:
+            return json.load(f) or {}
+    out, changed = merge_into_latest(read(base_path), read(ours_path), read(OUT_PATH))
+    with open(OUT_PATH, 'w', encoding='utf-8') as f:
+        json.dump(out, f, ensure_ascii=False, indent=2)
+        f.write('\n')
+    print('최신 파일에 이번 조회 결과 %d건을 합쳤습니다' % changed)
+
+
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument('--limit', type=int, default=0)
@@ -1329,7 +1383,11 @@ def main():
     ap.add_argument('--author-limit', type=int, default=None,
                     help='이번에 새로 조회할 저자 수 (기본: --limit 과 같음, 0=무제한)')
     ap.add_argument('--skip-authors', action='store_true', help='저자 영문 이름은 조회하지 않는다')
+    ap.add_argument('--merge', nargs=2, metavar=('BASE', 'OURS'),
+                    help='조회하지 않고, 이번 실행 결과(OURS)에서 BASE 와 달라진 항목만 지금 파일에 합친다')
     args = ap.parse_args()
+    if args.merge:
+        return merge_main(*args.merge)
 
     ttb_key = os.environ.get('ALADIN_TTB_KEY', '').strip()
     only = {s.strip() for s in args.only.split(',') if s.strip()}
