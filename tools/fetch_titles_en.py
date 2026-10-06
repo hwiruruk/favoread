@@ -19,7 +19,9 @@
     Open Library        한국어판이 속한 작품   Goodreads처럼 여러 언어판을 한 작품으로 묶는다
     Open Library        후보 제목·저자의 영어판이 실제로 있는지 확인 (무료)
 
-모은 후보는 사람이 편집기(/editor/)의 '🔤 영문 제목 검수' 창에서 고른다.
+저자 영문 이름도 같은 방식으로 모아 같은 파일의 authors 에 넣는다 (아래 '저자 영문 이름' 참고).
+
+모은 후보는 사람이 편집기(/editor/)의 '🔤 영문 제목·저자 검수' 창에서 고른다.
 여기서 정하지 않는다. 다만 data.csv 에 이미 적힌 값이 후보와 똑같으면
 확인된 것으로 보고 자동 승인해 둔다 — 검수할 양을 줄이려고.
 
@@ -35,7 +37,9 @@
     --limit N      이번에 새로 조회할 책 수 (0=무제한)
     --dry-run      파일에 쓰지 않고 결과만 출력
     --refresh      이미 조회한 미검수 책도 다시 조회
-    --only 제목     이 제목(쉼표로 여러 개)만 조회. 이미 조회했어도 다시 한다
+    --only 제목     이 제목·저자(쉼표로 여러 개)만 조회. 이미 조회했어도 다시 한다
+    --author-limit N  이번에 새로 조회할 저자 수 (기본: --limit 과 같음)
+    --skip-authors  저자 영문 이름은 조회하지 않는다
     --sleep SEC    요청 사이 대기 (기본 0.5초)
 
 환경변수 (없어도 돈다)
@@ -52,6 +56,7 @@ import os
 import re
 import sys
 import time
+import unicodedata
 import urllib.error
 import urllib.parse
 import urllib.request
@@ -79,7 +84,10 @@ NOTE = (
     'status: pending(미검수) | approved(공식 영문판 제목 = value) | '
     'none(공식 영문판 없음 — value가 있으면 직역으로 * 을 붙여 노출, 비면 영문 페이지에서 뺌). '
     'pending이면 data.csv의 도서명_en 값을 그대로 쓴다. '
-    "편집기의 '🔤 영문 제목 검수' 창에서 검수한다."
+    'authors 는 저자 영문 이름 — 키는 data.csv 의 저자 칸 그대로. '
+    'status: pending(data.csv 의 저자_en 그대로) | approved(value 로 그 저자의 모든 행을 맞춤) | '
+    'none(공식 영문 표기 없음 — value 에 * 을 붙여 노출). '
+    "편집기의 '🔤 영문 제목 검수' 창에서 제목과 저자를 함께 검수한다."
 )
 
 # generate.py 의 en_title_problem() 과 같은 규칙. 둘을 같이 고친다.
@@ -741,6 +749,503 @@ def confidence(cands):
     return 'mid'
 
 
+# ── 저자 영문 이름 ───────────────────────────────────────────────────
+# data.csv 의 저자_en 은 행마다 손으로(또는 '직역*' 버튼으로) 적어 와서 같은 사람도 표기가 갈렸다.
+#   김영하   Kim Youngha * 12 · Kim Young-ha 9 · Kim Youngha 3
+#   정보라   Bora Chung 1 · Information * 1      ← 이름을 낱말로 번역
+#   이민진   Lee Minjin * 4 · Min Jin Lee 1      ← 공식 표기는 Min Jin Lee
+# 제목처럼 번역하지 않고, 영어판·인물 문서에 이미 적힌 이름을 모은다.
+#   위키데이터(책)   제목 후보로 찾은 책 항목의 저자(P50) 영어 이름표 — 책과 저자가 함께 맞아 가장 믿을 만하다
+#   Open Library     제목 후보로 찾은 영어판 작품의 저자 이름
+#   예스24           품목정보 '원서명/저자명' 의 저자 (Maugham, W. Somerset → W. Somerset Maugham)
+#   위키데이터(인물) 한국어 이름이 같고 직업이 작가·시인 등인 사람의 영어 이름표 (한 명일 때만)
+#   한국어 위키백과  저자 문서의 영어 문서 이름
+# Goodreads 는 자동 수집이 약관상 막혀 있어 편집기 검수 카드에 검색 링크로만 둔다.
+AUTHOR_LOOKUP_VERSION = 1
+
+# 위키데이터 직업(P106) 중 '글 쓰는 사람' 으로 볼 것. 같은 이름의 배우·운동선수를 거른다
+WD_WRITER_JOBS = {
+    'Q36180',     # writer
+    'Q482980',    # author
+    'Q6625963',   # novelist
+    'Q49757',     # poet
+    'Q4853732',   # children's writer
+    'Q11774202',  # essayist
+    'Q214917',    # playwright
+    'Q1930187',   # journalist
+    'Q333634',    # translator
+    'Q4263842',   # literary critic
+    'Q1607826',   # editor
+    'Q18844224',  # science fiction writer
+    'Q3589290',   # comics artist
+    'Q1114448',   # cartoonist
+    'Q715301',    # comics writer
+    'Q191633',    # manga artist (mangaka)
+    'Q644687',    # illustrator
+    'Q4964182',   # philosopher
+    'Q901',       # scientist
+    'Q1622272',   # university teacher
+    'Q201788',    # historian
+    'Q188094',    # economist
+    'Q212980',    # psychologist
+    'Q2306091',   # sociologist
+    'Q15980158',  # non-fiction writer
+    'Q28389',     # screenwriter
+    'Q12144794',  # prosaist
+    'Q24387326',  # web novelist
+}
+AUTHOR_SRC_RANK = {'wikipedia': 0, 'wikidata': 1, 'wikidata_book': 1, 'openlibrary': 2, 'yes24': 3}
+# 책과 함께 맞춘 출처 — 하나만으로도 '확실'
+AUTHOR_BOOK_SOURCES = {'wikidata_book', 'openlibrary', 'yes24'}
+
+# 저자 칸이 여러 사람이거나 엮은이·옮긴이 표시가 붙은 것 ('소피 칼, 폴 오스터', '박완서, 호원숙 편')
+MULTI_AUTHOR_RE = re.compile(r'[,·/&]|\s(?:외|등|등저|공저|편|엮음|글|그림|지음)\s*$|\s(?:외|등)\s')
+
+
+def ko_marks(author):
+    """저자 이름 조각('무라카미 하루키' → 무라카미, 하루키). 한 글자 조각은 오탐이 많아 뺀다."""
+    return [w for w in re.split(r'[\s,·/]+', re.sub(r'\([^)]*\)', ' ', author or '')) if len(w) >= 2]
+
+
+def is_multi_author(author):
+    return bool(MULTI_AUTHOR_RE.search(re.sub(r'\([^)]*\)', ' ', author or '').strip()))
+
+
+def name_key(s):
+    """영문 이름 비교용 — 대소문자·하이픈·띄어쓰기·악센트 차이는 같은 이름으로 본다.
+    Kim Young-ha = Kim Youngha = KIM YOUNG HA. 순서가 다른 Min Jin Lee / Lee Minjin 은 다른 표기다."""
+    s = unicodedata.normalize('NFKD', html.unescape(str(s or '')))
+    s = ''.join(c for c in s if not unicodedata.combining(c)).lower()
+    return re.sub(r'[^0-9a-z]+', '', s)
+
+
+def flip_name(s):
+    """'Maugham, W. Somerset' → 'W. Somerset Maugham'. 쉼표가 하나뿐일 때만 뒤집는다."""
+    s = re.sub(r'\s+', ' ', (s or '').strip(' ,;'))
+    parts = [p.strip() for p in s.split(',')]
+    if len(parts) == 2 and all(parts) and not re.search(r'\b(?:jr|sr|ii|iii)\.?$', parts[1], re.I):
+        return parts[1] + ' ' + parts[0]
+    return s
+
+
+def clean_person(s):
+    """위키 문서 이름의 꼬리 '(writer)', '(novelist)' 와 생몰년을 뗀다."""
+    s = html.unescape(str(s or ''))
+    s = re.sub(r'\s*\([^)]*\)\s*$', '', s)
+    s = re.sub(r'\s*,?\s*\d{3,4}\s*-\s*(?:\d{3,4})?\s*$', '', s)
+    return re.sub(r'\s+', ' ', s).strip(' ,;')
+
+
+def looks_name(s):
+    """영문 이름으로 쓸 만한가 — 라틴 문자, 숫자 없음, 지나치게 길지 않음."""
+    s = (s or '').strip()
+    return bool(s) and looks_english(s) and not re.search(r'\d', s) and len(s) <= 60
+
+
+def author_problem(value):
+    """영문 저자 값에서 사이트에 내보내면 안 되는 흔적. 없으면 None."""
+    v = plain(value)
+    if not v:
+        return None
+    if re.search(r'[가-힣ㄱ-ㅎㅏ-ㅣ]', v):
+        return '한글이 섞임'
+    if re.search(r'\(\s*or\b|\bor similar\b|\bunofficial\b', v, re.I):
+        return 'AI 설명 문구'
+    if v.startswith('?'):
+        return '? 미검수 표시'
+    return None
+
+
+def parse_yes24_author(page):
+    """예스24 품목정보 '원서명/저자명' 의 저자. 'The Moon and Sixpence/Maugham, W. Somerset'"""
+    m = YES24_PATTERNS[0][0].search(page or '')
+    if not m:
+        return None
+    v = tidy(m.group(1))
+    if '/' not in v:
+        return None
+    a = flip_name(tidy(v.rsplit('/', 1)[1]))
+    return a if looks_name(a) else None
+
+
+def wikidata_book_author(qid, author):
+    """제목 후보로 찾은 위키데이터 책 항목 → 저자(P50) 중 한국어 이름이 맞는 사람의 영어 이름표."""
+    marks = ko_marks(author)
+    if not marks:
+        return None, None
+    p = urllib.parse.urlencode({'action': 'wbgetentities', 'format': 'json', 'ids': qid,
+                                'props': 'claims'})
+    e = ((http_json(WIKIDATA_API + '?' + p) or {}).get('entities') or {}).get(qid) or {}
+    aids = _wd_claim_ids(e, 'P50')[:10]
+    if not aids:
+        return None, None
+    p = urllib.parse.urlencode({'action': 'wbgetentities', 'format': 'json', 'ids': '|'.join(aids),
+                                'props': 'labels|aliases', 'languages': 'ko|en'})
+    aents = (http_json(WIKIDATA_API + '?' + p) or {}).get('entities') or {}
+    for aid in aids:
+        a = aents.get(aid) or {}
+        ko = [((a.get('labels') or {}).get('ko') or {}).get('value') or '']
+        ko += [x.get('value') or '' for x in (a.get('aliases') or {}).get('ko') or []]
+        en = ((a.get('labels') or {}).get('en') or {}).get('value')
+        if en and any(m in ' '.join(ko) for m in marks):
+            return clean_person(en), 'https://www.wikidata.org/wiki/' + aid
+    return None, None
+
+
+def wikidata_person(author):
+    """한국어 이름이 같은 사람 가운데 직업이 글 쓰는 쪽인 사람의 영어 이름표. 둘 이상이면 받지 않는다."""
+    name = re.sub(r'\([^)]*\)', ' ', author or '').strip()
+    p = urllib.parse.urlencode({'action': 'wbsearchentities', 'format': 'json', 'type': 'item',
+                                'search': name, 'language': 'ko', 'uselang': 'ko', 'limit': '10'})
+    hits = (http_json(WIKIDATA_API + '?' + p) or {}).get('search') or []
+    want = norm_ko(name)
+    ids = [h['id'] for h in hits if norm_ko(h.get('label') or (h.get('match') or {}).get('text')) == want]
+    if not ids:
+        return None, None, None
+    p = urllib.parse.urlencode({'action': 'wbgetentities', 'format': 'json', 'ids': '|'.join(ids[:10]),
+                                'props': 'labels|claims', 'languages': 'en'})
+    ents = (http_json(WIKIDATA_API + '?' + p) or {}).get('entities') or {}
+    found = collections.OrderedDict()
+    for qid in ids:
+        e = ents.get(qid) or {}
+        if 'Q5' not in _wd_claim_ids(e, 'P31'):            # 사람
+            continue
+        if not set(_wd_claim_ids(e, 'P106')) & WD_WRITER_JOBS:
+            continue
+        en = clean_person(((e.get('labels') or {}).get('en') or {}).get('value'))
+        if en:
+            found.setdefault(name_key(en), (en, qid))
+    if len(found) == 1:
+        en, qid = next(iter(found.values()))
+        return en, 'https://www.wikidata.org/wiki/' + qid, None
+    if len(found) > 1:
+        return None, None, '위키데이터: 같은 이름의 작가가 %d명 — %s' % (
+            len(found), ', '.join(v[0] for v in found.values()))
+    return None, None, None
+
+
+# 한국어 위키백과 인물 문서 첫 문단에 나와야 하는 말 (같은 이름의 배우·운동선수를 거른다)
+KOWIKI_WRITER_RE = re.compile(r'작가|소설가|시인|저술가|수필가|저자|만화가|동화|평론가|철학자|사상가|극작가|'
+                              r'번역가|칼럼니스트|교수|학자|기자|에세이')
+
+
+def wikipedia_person(author, book_titles):
+    """한국어 위키백과의 저자 문서 → 영어 문서 이름.
+
+    문서 이름이 저자 이름과 같고('한강' 또는 '한강 (작가)'), 첫 문단에 이 저자의 책 제목이나
+    작가·시인 같은 말이 있어야 받는다. 같은 이름의 강·배우 문서가 걸리지 않게.
+    """
+    name = re.sub(r'\([^)]*\)', ' ', author or '').strip()
+    p = urllib.parse.urlencode({
+        'action': 'query', 'format': 'json', 'formatversion': '2',
+        'generator': 'search', 'gsrsearch': name + ' 작가',
+        'gsrlimit': '6', 'prop': 'langlinks|extracts', 'lllang': 'en', 'redirects': '1',
+        'exintro': '1', 'explaintext': '1', 'exlimit': 'max',
+    })
+    d = http_json('https://ko.wikipedia.org/w/api.php?' + p)
+    want = norm_ko(name)
+    titles = [norm_ko(t) for t in book_titles if len(norm_ko(t)) >= 2]
+    pages = sorted(((d or {}).get('query') or {}).get('pages') or [], key=lambda x: x.get('index', 99))
+    for pg in pages:
+        ko_title = pg.get('title') or ''
+        if norm_ko(re.sub(r'\s*\([^)]*\)\s*$', '', ko_title)) != want:
+            continue
+        intro = pg.get('extract') or ''
+        qual = re.search(r'\(([^)]*)\)\s*$', ko_title)
+        if qual and not KOWIKI_WRITER_RE.search(qual.group(1)):
+            continue
+        if not (any(t in norm_ko(intro) for t in titles) or KOWIKI_WRITER_RE.search(intro[:300])):
+            continue
+        for ll in pg.get('langlinks') or []:
+            en = clean_person(ll.get('title'))
+            if en and looks_name(en):
+                return en, 'https://ko.wikipedia.org/wiki/' + urllib.parse.quote(ko_title.replace(' ', '_'))
+    return None, None
+
+
+OL_WORK_RE = re.compile(r'openlibrary\.org/works/(OL\d+W)')
+
+
+def open_library_work_authors(work_id):
+    """Open Library 작품(work)의 저자 이름들."""
+    w = http_json('https://openlibrary.org/works/%s.json' % work_id)
+    out = []
+    for a in (w or {}).get('authors') or []:
+        key = ((a or {}).get('author') or {}).get('key') or ''
+        if not key.startswith('/authors/'):
+            continue
+        d = http_json('https://openlibrary.org%s.json' % key)
+        n = (d or {}).get('name') or (d or {}).get('personal_name')
+        if n:
+            out.append((flip_name(n), 'https://openlibrary.org' + key))
+    return out
+
+
+def chosen_candidate(ent):
+    """제목 검수 항목에서 '이 책의 영어판' 으로 볼 후보. 승인값과 같은 후보, 없으면 미검수의 첫 후보."""
+    cands = (ent or {}).get('candidates') or []
+    if not cands:
+        return None
+    if ent.get('status') == 'approved':
+        want = norm_en(ent.get('value'))
+        return next((c for c in cands if norm_en(c.get('title')) == want), None)
+    if ent.get('status') == 'none':
+        return None   # 공식 영문판이 없다고 본 책 — 후보의 저자도 믿지 않는다
+    return cands[0] if ent.get('confidence') == 'high' else None
+
+
+def lookup_author(author, book_titles, title_ents, sleep):
+    """(후보 목록, 메모). 네트워크가 전부 안 되면 Transient."""
+    found = []   # (name, source, url)
+    notes = []
+    reached = 0
+
+    # 1·2. 제목 후보로 찾은 책(위키데이터 항목·Open Library 작품)의 저자 — 책마다 두 곳까지만
+    wd_done = ol_done = 0
+    for ent in title_ents:
+        c = chosen_candidate(ent)
+        for u in (c or {}).get('urls') or []:
+            m = re.search(r'wikidata\.org/wiki/(Q\d+)', u)
+            if m and wd_done < 2:
+                wd_done += 1
+                try:
+                    n, url = wikidata_book_author(m.group(1), author)
+                    reached += 1
+                except Transient as e:
+                    n, url = None, None
+                    notes.append('위키데이터(책) 못 읽음: %s' % e)
+                time.sleep(sleep)
+                if n:
+                    found.append((n, 'wikidata_book', url))
+            m = OL_WORK_RE.search(u)
+            if m and ol_done < 2:
+                ol_done += 1
+                try:
+                    names = open_library_work_authors(m.group(1))
+                    reached += 1
+                except Transient as e:
+                    names = []
+                    notes.append('Open Library 못 읽음: %s' % e)
+                time.sleep(sleep)
+                # 작품에 저자가 여럿이면(원작자·각색자) 누가 이 저자인지 몰라 받지 않는다
+                if len(names) == 1 and looks_name(names[0][0]):
+                    found.append((names[0][0], 'openlibrary', names[0][1]))
+
+    # 3. 예스24 '원서명/저자명' — 원제가 있는 책(번역서)에서 한 권만
+    for ent in title_ents:
+        link = ent.get('_link')
+        if not (link and ent.get('original') and looks_english(ent.get('original'))):
+            continue
+        try:
+            m = YES24_GOODS_RE.search(link)
+            url = 'https://www.yes24.com/product/goods/' + m.group(1) if m else None
+            n = parse_yes24_author(http_get(url, ua=BROWSER_UA)) if url else None
+            reached += 1
+        except Transient as e:
+            n, url = None, None
+            notes.append('예스24 못 읽음: %s' % e)
+        time.sleep(sleep)
+        if n:
+            found.append((n, 'yes24', url))
+        break
+
+    # 4. 위키데이터 인물
+    try:
+        n, url, note = wikidata_person(author)
+        reached += 1
+    except Transient as e:
+        n, url, note = None, None, None
+        notes.append('위키데이터(인물) 못 읽음: %s' % e)
+    time.sleep(sleep)
+    if n:
+        found.append((n, 'wikidata', url))
+    if note:
+        notes.append(note)
+
+    # 5. 한국어 위키백과 인물 문서
+    try:
+        n, url = wikipedia_person(author, book_titles)
+        reached += 1
+    except Transient as e:
+        n, url = None, None
+        notes.append('위키백과 못 읽음: %s' % e)
+    time.sleep(sleep)
+    if n:
+        found.append((n, 'wikipedia', url))
+
+    if not reached:
+        raise Transient('; '.join(notes) or '조회할 곳이 없음')
+
+    groups = collections.OrderedDict()
+    for n, src, u in found:
+        if not looks_name(n):
+            continue
+        k = name_key(n)
+        g = groups.setdefault(k, {'name': n, 'sources': [], 'urls': []})
+        if src not in g['sources']:
+            g['sources'].append(src)
+        if u and u not in g['urls']:
+            g['urls'].append(u)
+        # 위키 쪽 표기(하이픈·대소문자가 정돈된 쪽)를 우선한다
+        best = min(AUTHOR_SRC_RANK.get(s, 9) for s in g['sources'])
+        if AUTHOR_SRC_RANK.get(src, 9) <= best:
+            g['name'] = n
+    cands = list(groups.values())
+    cands.sort(key=lambda c: (-(len(c['sources']) + (1 if set(c['sources']) & AUTHOR_BOOK_SOURCES else 0)),
+                              min(AUTHOR_SRC_RANK.get(s, 9) for s in c['sources'])))
+    return cands, notes
+
+
+def author_confidence(cands):
+    if not cands:
+        return 'none'
+    top = cands[0]
+    if len(top['sources']) >= 2 or set(top['sources']) & AUTHOR_BOOK_SOURCES:
+        return 'high'
+    return 'mid'
+
+
+def author_flags(a, cands, checked=True):
+    """저자 검수 우선순위를 가르는 표시."""
+    cur = a['csv']
+    f = []
+    if not cur:
+        f.append('csv_empty')
+    elif author_problem(cur):
+        f.append('csv_problem')
+    elif is_starred(cur):
+        f.append('csv_star')
+    # 하이픈·띄어쓰기만 달라도(Kim Youngha / Kim Young-ha) 사이트에는 다르게 나가니 갈린 것으로 본다
+    if len({re.sub(r'\s+', ' ', plain(v)) for v in a['csv_values'] if plain(v)}) > 1:
+        f.append('variants')
+    if cands and cur and name_key(plain(cur)) != name_key(cands[0]['name']):
+        f.append('conflict')
+    if a.get('multi'):
+        f.append('multi')
+    elif not checked:
+        f.append('unchecked')
+    elif not cands:
+        f.append('no_candidate')
+    return f
+
+
+def load_authors(books):
+    """책 목록에서 저자별로 data.csv 의 저자_en 값(행 수)과 책을 모은다."""
+    out = collections.OrderedDict()
+    for key, b in books.items():
+        name = b['author']
+        if not name:
+            continue
+        a = out.setdefault(name, {'author': name, 'csv_values': collections.Counter(),
+                                  'books': [], 'multi': is_multi_author(name)})
+        a['csv_values'].update(b['author_values'])
+        a['books'].append(key)
+    for a in out.values():
+        a['csv'] = a['csv_values'].most_common(1)[0][0] if a['csv_values'] else ''
+    return out
+
+
+def sync_authors(args, books, doc, only, today):
+    """저자 영문 이름 후보를 찾아 doc['authors'] 를 채운다. 사람이 정한 값은 그대로 둔다."""
+    authors = doc.setdefault('authors', {})
+    titles = doc['titles']
+    found = load_authors(books)
+    limit = args.author_limit if args.author_limit is not None else args.limit
+    done = hits = auto = errors = streak = 0
+    stop = False
+    for name, a in found.items():
+        ent = authors.get(name)
+        if not ent:
+            ent = authors[name] = {'author': name, 'csv': a['csv'], 'candidates': [],
+                                   'status': 'pending', 'value': ''}
+        ent['csv'] = a['csv']
+        ent['csv_values'] = dict(a['csv_values'].most_common())
+        ent['books'] = len(a['books'])
+        if ent.get('auto') and name_key(plain(a['csv'])) != name_key(ent.get('value')):
+            # 자동 승인의 근거(CSV 값 = 후보)가 사라졌다 → 다시 사람 몫
+            ent['status'] = 'pending'
+            ent['value'] = (ent.get('candidates') or [{}])[0].get('name', '')
+            ent.pop('auto', None)
+        if ent.get('status') == 'pending' or ent.get('auto'):
+            ent['flags'] = author_flags(a, ent.get('candidates') or [], bool(ent.get('checked')))
+        human = ent.get('status') in ('approved', 'none') and not ent.get('auto')
+
+        if args.no_lookup or args.skip_authors or a['multi']:
+            continue
+        if only:
+            if name not in only and not any(books[k]['title'] in only for k in a['books']):
+                continue
+        else:
+            if human:
+                continue
+            if (ent.get('checked') and ent.get('v', 1) >= AUTHOR_LOOKUP_VERSION
+                    and not args.refresh):
+                continue
+        if stop or (limit and done + errors >= limit):
+            continue
+
+        tents = []
+        for k in a['books']:
+            t = dict(titles.get(k) or {})
+            t['_link'] = books[k]['link']
+            tents.append(t)
+        try:
+            cands, notes = lookup_author(name, [books[k]['title'] for k in a['books']], tents, args.sleep)
+        except Transient as e:
+            errors += 1
+            streak += 1
+            print('  ✗ 저자 %s — 일시 오류, 다음에 다시: %s' % (name, e))
+            if streak >= 8:
+                stop = True
+                print('  ⚠ 연달아 %d번 실패 — 네트워크 문제로 보고 저자 조회를 멈춥니다' % streak)
+            continue
+        done += 1
+        streak = 0
+
+        new = {
+            'author': name, 'csv': a['csv'], 'csv_values': ent['csv_values'], 'books': ent['books'],
+            'candidates': cands,
+            'confidence': author_confidence(cands),
+            'flags': author_flags(a, cands),
+            'checked': today,
+            'v': AUTHOR_LOOKUP_VERSION,
+        }
+        if notes:
+            new['notes'] = notes
+        if human:
+            for k in ('status', 'value', 'reviewed', 'memo'):
+                if k in ent:
+                    new[k] = ent[k]
+        elif (cands and a['csv'] and not author_problem(a['csv'])
+              and name_key(plain(a['csv'])) == name_key(cands[0]['name'])
+              and (new['confidence'] == 'high' or not is_starred(a['csv']))):
+            # data.csv 에 가장 많이 적힌 값이 근거 있는 후보와 같다 → 후보의 표기로 승인.
+            # 같은 저자의 다른 행(Kim Youngha *)도 이 표기(Kim Young-ha)로 맞춰진다.
+            new['status'] = 'approved'
+            new['value'] = cands[0]['name']
+            new['auto'] = True
+            auto += 1
+        else:
+            new['status'] = 'pending'
+            new['value'] = cands[0]['name'] if cands else ''
+            if ent.get('memo'):
+                new['memo'] = ent['memo']
+        if cands:
+            hits += 1
+        authors[name] = new
+        mark = {'high': '●', 'mid': '◐', 'none': '○'}[new['confidence']]
+        print('  %s 저자 %s (지금 %s) → %s%s' % (
+            mark, name, a['csv'] or '-',
+            ' | '.join('%s (%s)' % (c['name'], '+'.join(c['sources'])) for c in cands) or '(후보 없음)',
+            '  [자동 승인]' if new.get('auto') else ''))
+
+    n = collections.Counter(v.get('status', 'pending') for v in authors.values())
+    print('\n저자 조회 %d명 · 후보 찾음 %d · 자동 승인 %d · 일시 오류 %d' % (done, hits, auto, errors))
+    print('저자 전체: 미검수 %d · 승인 %d · 공식 표기 없음 %d · 전체 %d' % (
+        n['pending'], n['approved'], n['none'], len(authors)))
+    doc['authors'] = dict(sorted(authors.items()))
+
+
 # ── 데이터 ───────────────────────────────────────────────────────────
 def load_books():
     """data.csv 에서 고유 도서(도서명|저자)를 모은다."""
@@ -768,13 +1273,16 @@ def load_books():
             continue
         key = t + '|' + get(c_author)
         b = books.setdefault(key, {'title': t, 'author': get(c_author), 'link': '',
-                                   'author_en': '', 'csv_values': collections.Counter()})
+                                   'author_en': '', 'csv_values': collections.Counter(),
+                                   'author_values': collections.Counter()})
         if not b['link'] and 'yes24' in get(c_link):
             b['link'] = get(c_link)
         if not b['author_en'] and get(c_author_en) and not get(c_author_en).startswith('?'):
             b['author_en'] = get(c_author_en)
         if get(c_title_en):
             b['csv_values'][get(c_title_en)] += 1
+        if get(c_author_en):
+            b['author_values'][get(c_author_en)] += 1
     for b in books.values():
         b['csv'] = b['csv_values'].most_common(1)[0][0] if b['csv_values'] else ''
         del b['csv_values']
@@ -818,6 +1326,9 @@ def main():
     ap.add_argument('--sleep', type=float, default=0.5)
     ap.add_argument('--no-lookup', action='store_true',
                     help='조회 없이 data.csv 의 책을 목록에만 올린다 (검수 창에 바로 뜨게)')
+    ap.add_argument('--author-limit', type=int, default=None,
+                    help='이번에 새로 조회할 저자 수 (기본: --limit 과 같음, 0=무제한)')
+    ap.add_argument('--skip-authors', action='store_true', help='저자 영문 이름은 조회하지 않는다')
     args = ap.parse_args()
 
     ttb_key = os.environ.get('ALADIN_TTB_KEY', '').strip()
@@ -827,6 +1338,11 @@ def main():
     books = load_books()
     doc = load_out()
     titles = doc['titles']
+    # 검수에서 승인한 저자 영문 이름이 있으면 영어판 확인(Open Library 저자 검색)에 그 이름을 쓴다
+    for b in books.values():
+        a = (doc.get('authors') or {}).get(b['author']) or {}
+        if a.get('status') == 'approved' and a.get('value'):
+            b['author_en'] = a['value']
 
     done = hits = auto = errors = streak = 0
     stop = False
@@ -942,10 +1458,14 @@ def main():
     print('파일 전체: 미검수 %d · 승인 %d · 공식판 없음 %d · 전체 %d' % (
         n['pending'], n['approved'], n['none'], len(titles)))
 
+    # 저자는 제목 후보(위키데이터 항목·Open Library 작품)를 근거로 쓰므로 제목 다음에 본다
+    print('\n── 저자 영문 이름 ──')
+    sync_authors(args, books, doc, only, today)
+
     if args.dry_run:
         print('--dry-run: 파일을 쓰지 않았습니다')
         return
-    doc['_comment'] = doc.get('_comment') or NOTE
+    doc['_comment'] = NOTE
     doc['_updated'] = today
     doc['titles'] = dict(sorted(titles.items()))
     os.makedirs(os.path.dirname(OUT_PATH), exist_ok=True)
