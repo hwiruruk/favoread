@@ -20,6 +20,9 @@
     Open Library        후보 제목·저자의 영어판이 실제로 있는지 확인 (무료)
 
 저자 영문 이름도 같은 방식으로 모아 같은 파일의 authors 에 넣는다 (아래 '저자 영문 이름' 참고).
+영문 페이지에 함께 적을 원제(ノルウェイの森)는 알라딘·예스24 값을 다듬어 titles 의 original 에,
+저자 원어 이름(村上春樹)은 위키데이터·한국어 위키백과에서 찾아 authors 의 native_candidates 에 넣는다
+(아래 '원제·저자 원어 이름' 참고).
 
 모은 후보는 사람이 편집기(/editor/)의 '🔤 영문 제목·저자 검수' 창에서 고른다.
 여기서 정하지 않는다. 다만 data.csv 에 이미 적힌 값이 후보와 똑같으면
@@ -87,7 +90,11 @@ NOTE = (
     'authors 는 저자 영문 이름 — 키는 data.csv 의 저자 칸 그대로. '
     'status: pending(data.csv 의 저자_en 그대로) | approved(value 로 그 저자의 모든 행을 맞춤) | '
     'none(공식 영문 표기 없음 — value 에 * 을 붙여 노출). '
-    "편집기의 '🔤 영문 제목 검수' 창에서 제목과 저자를 함께 검수한다."
+    "편집기의 '🔤 영문 제목 검수' 창에서 제목과 저자를 함께 검수한다. "
+    '영문 페이지에 함께 적는 원제: titles 의 original(알라딘·예스24 원제를 다듬은 것), '
+    'orig_status approved(orig_value 로) | none(원제를 적지 않음) | 없음(original 그대로). '
+    '저자 원어 이름: authors 의 native_candidates(위키데이터·위키백과 후보), '
+    'native_status approved(native_value 로) | none(적지 않음) | 없음(첫 후보 그대로).'
 )
 
 # generate.py 의 en_title_problem() 과 같은 규칙. 둘을 같이 고친다.
@@ -230,6 +237,30 @@ def tidy(s):
     s = re.sub(r'\s*\(\s*\d{4}\s*년?\s*\)\s*$', '', s)       # (1919년)
     s = re.sub(r'\s*\((?:개정판|번역|원서|paperback|hardcover)[^)]*\)\s*$', '', s, flags=re.I)
     return s.strip()
+
+
+# 알라딘 원제 칸에는 다른 칸 값이 섞여 온다 — 한국 책의 '초판출간 2008년',
+# 'Vios ke Politia tu Aleksi Zorba/ 영문판 Zorba the Greek' 처럼 영어판 제목을 덧붙인 것.
+ORIG_EXTRA_RE = re.compile(r'\s*/\s*(?:영문판|영어판|영역판|영문)')
+
+
+def clean_original(s):
+    """원제로 쓸 값. 원제가 아니면 ''. 영문 페이지에 원래 언어 제목으로 그대로 나간다."""
+    v = ORIG_EXTRA_RE.split(tidy(s))[0].strip(' /')
+    if not v or re.search(r'[가-힣ㄱ-ㅎㅏ-ㅣ]', v):
+        return ''
+    return v
+
+
+def script_lang(s):
+    """글자로 짐작한 언어. 가나 ja, 한자만 han(일본어·중국어 모름), 키릴 ru, 라틴 latin …"""
+    s = s or ''
+    for rx, lang in ((r'[\u3040-\u30ff]', 'ja'), (r'[\u4e00-\u9fff]', 'han'), (r'[\u0400-\u04ff]', 'ru'),
+                     (r'[\u0370-\u03ff]', 'el'), (r'[\u0590-\u05ff]', 'he'), (r'[\u0600-\u06ff]', 'ar'),
+                     (r'[\u0e00-\u0e7f]', 'th'), (r'[A-Za-z\u00c0-\u024f]', 'latin')):
+        if re.search(rx, s):
+            return lang
+    return ''
 
 
 # ── HTTP ─────────────────────────────────────────────────────────────
@@ -929,8 +960,8 @@ KOWIKI_WRITER_RE = re.compile(r'작가|소설가|시인|저술가|수필가|저�
                               r'번역가|칼럼니스트|교수|학자|기자|에세이')
 
 
-def wikipedia_person(author, book_titles):
-    """한국어 위키백과의 저자 문서 → 영어 문서 이름.
+def kowiki_person_pages(author, book_titles):
+    """한국어 위키백과에서 이 저자의 문서로 볼 만한 것들 (검색 순서대로).
 
     문서 이름이 저자 이름과 같고('한강' 또는 '한강 (작가)'), 첫 문단에 이 저자의 책 제목이나
     작가·시인 같은 말이 있어야 받는다. 같은 이름의 강·배우 문서가 걸리지 않게.
@@ -946,6 +977,7 @@ def wikipedia_person(author, book_titles):
     want = norm_ko(name)
     titles = [norm_ko(t) for t in book_titles if len(norm_ko(t)) >= 2]
     pages = sorted(((d or {}).get('query') or {}).get('pages') or [], key=lambda x: x.get('index', 99))
+    out = []
     for pg in pages:
         ko_title = pg.get('title') or ''
         if norm_ko(re.sub(r'\s*\([^)]*\)\s*$', '', ko_title)) != want:
@@ -956,10 +988,22 @@ def wikipedia_person(author, book_titles):
             continue
         if not (any(t in norm_ko(intro) for t in titles) or KOWIKI_WRITER_RE.search(intro[:300])):
             continue
+        out.append(pg)
+    return out
+
+
+def kowiki_url(title):
+    return 'https://ko.wikipedia.org/wiki/' + urllib.parse.quote((title or '').replace(' ', '_'))
+
+
+def wikipedia_person(author, book_titles):
+    """한국어 위키백과의 저자 문서 → 영어 문서 이름."""
+    for pg in kowiki_person_pages(author, book_titles):
+        ko_title = pg.get('title') or ''
         for ll in pg.get('langlinks') or []:
             en = clean_person(ll.get('title'))
             if en and looks_name(en):
-                return en, 'https://ko.wikipedia.org/wiki/' + urllib.parse.quote(ko_title.replace(' ', '_'))
+                return en, kowiki_url(ko_title)
     return None, None
 
 
@@ -1212,6 +1256,8 @@ def sync_authors(args, books, doc, only, today):
         }
         if notes:
             new['notes'] = notes
+        # 원어 이름은 sync_native() 몫 — 영문 이름을 다시 찾아도 그대로 둔다
+        new.update({k: v for k, v in ent.items() if k.startswith('native_')})
         if human:
             for k in ('status', 'value', 'reviewed', 'memo'):
                 if k in ent:
@@ -1244,6 +1290,227 @@ def sync_authors(args, books, doc, only, today):
     print('저자 전체: 미검수 %d · 승인 %d · 공식 표기 없음 %d · 전체 %d' % (
         n['pending'], n['approved'], n['none'], len(authors)))
     doc['authors'] = dict(sorted(authors.items()))
+
+
+# ── 원제·저자 원어 이름 ──────────────────────────────────────────────
+# 영문 페이지는 해외 독자용이라, 영어 제목·이름 옆에 원래 언어로 적힌 원제와 저자 이름을 붙인다
+# (Norwegian Wood — ノルウェイの森, Haruki Murakami — 村上春樹). 자기 나라 서점·도서관에서 바로 찾게.
+#   원제       알라딘·예스24 원제를 clean_original() 로 다듬어 titles 의 original 에 둔다
+#   저자 원어  위키데이터 '모국어 이름'(P1559), 없으면 국적 언어의 이름표.
+#              한국어 위키백과 첫 문단의 '(일본어: 村上 春樹, …' 도 함께 본다
+# 원제가 있는 책(번역서)의 저자만 찾는다. 한국 작가는 한국어 이름이 곧 원어 이름이다.
+# 사람이 검수 창에서 정하면 native_status/native_value 에 남고, 그 저자는 다시 찾지 않는다.
+NATIVE_LOOKUP_VERSION = 1
+
+# 국적(P27) → 이름표 언어. 모국어 이름(P1559)이 없는 사람만 이걸로 고른다
+WD_COUNTRY_LANG = {
+    'Q17': 'ja',                                                    # 일본
+    'Q148': 'zh', 'Q865': 'zh', 'Q8646': 'zh', 'Q13426199': 'zh',   # 중국·대만·홍콩·중화민국
+    'Q159': 'ru', 'Q15180': 'ru', 'Q34266': 'ru',                   # 러시아·소련·러시아 제국
+    'Q41': 'el', 'Q801': 'he', 'Q869': 'th', 'Q794': 'fa', 'Q212': 'uk',
+}
+# 한국어 위키백과 첫 문단의 원어 표기 '(일본어: 村上 春樹, 1949년 ~)' '(중국어 간체자: 刘慈欣, 정체자: …'
+KOWIKI_LANGS = {
+    '일본어': 'ja', '중국어': 'zh', '러시아어': 'ru', '그리스어': 'el', '현대 그리스어': 'el',
+    '히브리어': 'he', '아랍어': 'ar', '태국어': 'th', '페르시아어': 'fa', '우크라이나어': 'uk',
+    '독일어': 'de', '프랑스어': 'fr', '스페인어': 'es', '이탈리아어': 'it', '포르투갈어': 'pt',
+    '체코어': 'cs', '폴란드어': 'pl', '헝가리어': 'hu', '스웨덴어': 'sv', '노르웨이어': 'no',
+    '덴마크어': 'da', '네덜란드어': 'nl', '핀란드어': 'fi', '튀르키예어': 'tr', '터키어': 'tr',
+    '베트남어': 'vi', '영어': 'en',
+}
+KOWIKI_NATIVE_RE = re.compile(
+    r'(' + '|'.join(sorted(KOWIKI_LANGS, key=len, reverse=True)) + r')'
+    r'(?:\s*(?:간체자|번체자|정체자))?\s*:\s*([^,;()\[\]]+)')
+CJK = '぀-ヿ一-鿿'
+
+
+def native_clean(s):
+    """원어 이름으로 쓸 값. 일본어·중국어 이름은 성과 이름 사이 띄어쓰기를 뗀다 (村上 春樹 → 村上春樹)."""
+    v = html.unescape(str(s or ''))
+    v = re.sub(r'\s*\[[^\]]*\]', '', v).strip(' ,;:·')
+    if script_lang(v) in ('ja', 'han'):
+        v = re.sub(r'\s+[A-Za-z].*$', '', v)          # 뒤에 붙은 로마자 읽기
+        v = re.sub(r'(?<=[%s])\s+(?=[%s])' % (CJK, CJK), '', v)
+    v = re.sub(r'\s+', ' ', v).strip()
+    if not v or len(v) > 60 or re.search(r'[가-힣ㄱ-ㅎㅏ-ㅣ\d]', v):
+        return ''
+    return v
+
+
+def _hint_rank(name, hints):
+    """책 원제와 같은 글자로 적힌 이름이 먼저 (러시아 작가는 라틴 표기보다 키릴 표기)."""
+    sc = script_lang(name)
+    if sc in hints or (sc in ('ja', 'han') and hints & {'ja', 'han'}):
+        return 0
+    return 1
+
+
+def wikidata_native(qid, hints):
+    """위키데이터 인물 → (원어 이름, 언어). 모국어 이름(P1559)을 먼저, 없으면 국적 언어의 이름표."""
+    p = urllib.parse.urlencode({'action': 'wbgetentities', 'format': 'json', 'ids': qid,
+                                'props': 'labels|claims',
+                                'languages': '|'.join(sorted(set(WD_COUNTRY_LANG.values())))})
+    e = ((http_json(WIKIDATA_API + '?' + p) or {}).get('entities') or {}).get(qid) or {}
+    names = []
+    for c in (e.get('claims') or {}).get('P1559') or []:
+        v = ((c.get('mainsnak') or {}).get('datavalue') or {}).get('value') or {}
+        if not isinstance(v, dict):
+            continue
+        lang = (v.get('language') or '').lower()
+        n = native_clean(v.get('text'))
+        if n and lang.split('-')[0] != 'ko':
+            names.append((n, lang))
+    if names:
+        names.sort(key=lambda x: _hint_rank(x[0], hints))
+        return names[0]
+    labels = e.get('labels') or {}
+    for cid in _wd_claim_ids(e, 'P27'):
+        lang = WD_COUNTRY_LANG.get(cid)
+        n = native_clean(((labels.get(lang) or {}).get('value')) if lang else '')
+        if n:
+            return n, lang
+    return None, None
+
+
+def kowiki_native(intro):
+    """한국어 위키백과 첫 문단의 원어 표기 → (이름, 언어)."""
+    m = KOWIKI_NATIVE_RE.search((intro or '')[:250])
+    if not m:
+        return None, None
+    n = native_clean(m.group(2))
+    return (n, KOWIKI_LANGS[m.group(1)]) if n else (None, None)
+
+
+def kowiki_pages_by_title(title):
+    p = urllib.parse.urlencode({'action': 'query', 'format': 'json', 'formatversion': '2',
+                                'titles': title, 'prop': 'extracts', 'redirects': '1',
+                                'exintro': '1', 'explaintext': '1'})
+    return [pg for pg in ((http_json('https://ko.wikipedia.org/w/api.php?' + p) or {}).get('query') or {})
+            .get('pages') or [] if not pg.get('missing')]
+
+
+def lookup_native(author, ent, book_titles, hints, sleep):
+    """저자 원어 이름 후보와 메모. 네트워크가 전부 안 되면 Transient."""
+    found = []   # (name, lang, source, url)
+    notes = []
+    reached = 0
+    cands = ent.get('candidates') or []
+    # 영문 이름 후보가 가리키는 인물 — 승인했으면 그 이름의 후보, 아니면 첫 후보
+    if ent.get('status') in ('approved', 'none') and ent.get('value'):
+        use = [c for c in cands if name_key(c.get('name')) == name_key(plain(ent['value']))]
+    else:
+        use = cands[:1]
+    urls = [u for c in use for u in c.get('urls') or []]
+    qid = next((m.group(1) for m in (re.search(r'wikidata\.org/wiki/(Q\d+)', u) for u in urls) if m), None)
+    wtitle = next((urllib.parse.unquote(m.group(1)).replace('_', ' ')
+                   for m in (re.search(r'ko\.wikipedia\.org/wiki/([^?#]+)', u) for u in urls) if m), None)
+
+    if not qid:
+        try:
+            _, url, _ = wikidata_person(author)
+            reached += 1
+        except Transient as e:
+            url = None
+            notes.append('위키데이터(인물) 못 읽음: %s' % e)
+        time.sleep(sleep)
+        m = re.search(r'(Q\d+)', url or '')
+        qid = m.group(1) if m else None
+    if qid:
+        try:
+            n, lang = wikidata_native(qid, hints)
+            reached += 1
+        except Transient as e:
+            n, lang = None, None
+            notes.append('위키데이터 못 읽음: %s' % e)
+        time.sleep(sleep)
+        if n:
+            found.append((n, lang, 'wikidata', 'https://www.wikidata.org/wiki/' + qid))
+
+    try:
+        pages = kowiki_pages_by_title(wtitle) if wtitle else kowiki_person_pages(author, book_titles)
+        reached += 1
+    except Transient as e:
+        pages = []
+        notes.append('위키백과 못 읽음: %s' % e)
+    time.sleep(sleep)
+    if pages:
+        n, lang = kowiki_native(pages[0].get('extract'))
+        if n:
+            found.append((n, lang, 'wikipedia', kowiki_url(pages[0].get('title'))))
+
+    if not reached:
+        raise Transient('; '.join(notes) or '조회할 곳이 없음')
+
+    en = plain(ent.get('value')) or (cands[0]['name'] if cands else '') or plain(ent.get('csv'))
+    groups = collections.OrderedDict()
+    for n, lang, src, u in found:
+        # 라틴 문자 이름이 영어 이름과 같으면(Albert Camus) 덧붙일 까닭이 없다
+        if script_lang(n) == 'latin' and en and name_key(n) == name_key(en):
+            continue
+        g = groups.setdefault(re.sub(r'\s+', '', n).lower(),
+                              {'name': n, 'lang': lang, 'sources': [], 'urls': []})
+        if src not in g['sources']:
+            g['sources'].append(src)
+        if u and u not in g['urls']:
+            g['urls'].append(u)
+    out = list(groups.values())
+    out.sort(key=lambda c: (-len(c['sources']), _hint_rank(c['name'], hints),
+                            0 if 'wikidata' in c['sources'] else 1))
+    return out, notes
+
+
+def sync_native(args, books, doc, only, today):
+    """번역서 저자의 원어 이름 후보를 doc['authors'][저자]['native_candidates'] 에 채운다."""
+    authors = doc.setdefault('authors', {})
+    titles = doc['titles']
+    found = load_authors(books)
+    limit = args.author_limit if args.author_limit is not None else args.limit
+    done = hits = errors = streak = 0
+    stop = False
+    for name, a in found.items():
+        ent = authors.get(name)
+        if not ent or a['multi'] or args.no_lookup or args.skip_authors:
+            continue
+        # 원제가 있는 책(번역서)의 저자만. 원제 글자로 어느 언어 이름을 찾을지 짐작한다
+        hints = {script_lang((titles.get(k) or {}).get('original')) for k in a['books']} - {''}
+        if not hints:
+            continue
+        if only:
+            if name not in only and not any(books[k]['title'] in only for k in a['books']):
+                continue
+        else:
+            if ent.get('native_status') in ('approved', 'none'):
+                continue
+            if ent.get('native_v', 0) >= NATIVE_LOOKUP_VERSION and not args.refresh:
+                continue
+        if stop or (limit and done + errors >= limit):
+            continue
+        try:
+            cands, notes = lookup_native(name, ent, [books[k]['title'] for k in a['books']],
+                                         hints, args.sleep)
+        except Transient as e:
+            errors += 1
+            streak += 1
+            print('  ✗ 원어 이름 %s — 일시 오류, 다음에 다시: %s' % (name, e))
+            if streak >= 8:
+                stop = True
+                print('  ⚠ 연달아 %d번 실패 — 네트워크 문제로 보고 원어 이름 조회를 멈춥니다' % streak)
+            continue
+        done += 1
+        streak = 0
+        for k, v in (('native_candidates', cands), ('native_notes', notes)):
+            if v:
+                ent[k] = v
+            else:
+                ent.pop(k, None)
+        ent['native_checked'] = today
+        ent['native_v'] = NATIVE_LOOKUP_VERSION
+        if cands:
+            hits += 1
+        print('  %s 원어 %s → %s' % ('●' if cands else '○', name,
+                                    ' | '.join('%s [%s] (%s)' % (c['name'], c['lang'], '+'.join(c['sources']))
+                                               for c in cands) or '(후보 없음)'))
+    print('\n원어 이름 조회 %d명 · 후보 찾음 %d · 일시 오류 %d' % (done, hits, errors))
 
 
 # ── 데이터 ───────────────────────────────────────────────────────────
@@ -1318,7 +1585,8 @@ def flags_for(book, cands, checked=True):
 
 
 # 사람이 정하는 칸. 합칠 때 실행 중에 사람이 바꾼 값이 있으면 그쪽을 남긴다
-HUMAN_KEYS = ('status', 'value', 'reviewed', 'memo', 'auto')
+HUMAN_KEYS = ('status', 'value', 'reviewed', 'memo', 'auto',
+              'orig_status', 'orig_value', 'native_status', 'native_value')
 
 
 def merge_into_latest(base, ours, latest):
@@ -1414,6 +1682,12 @@ def main():
                                  'value': ''}
         # data.csv 쪽 값이 바뀌었으면 기록만 갱신한다 (조회는 안 함)
         ent['csv'] = b['csv']
+        if 'original' in ent:
+            orig = clean_original(ent['original'])
+            if orig:
+                ent['original'] = orig
+            else:
+                ent.pop('original')
         if ent.get('auto') and (norm_en(plain(b['csv'])) != norm_en(ent.get('value'))
                                 or ent.get('v', 1) < 2):
             # 버전 1(첫 실행)의 자동 승인은 믿지 않는다 ('모순' → Contradiction 이 이렇게 승인됐다)
@@ -1475,10 +1749,15 @@ def main():
             'checked': today,
             'v': LOOKUP_VERSION,
         }
+        orig = clean_original(orig)
         if orig:
             new['original'] = orig
         if notes:
             new['notes'] = notes
+        # 사람이 정한 원제는 제목 검수 상태와 따로 남는다
+        for k in ('orig_status', 'orig_value'):
+            if k in ent:
+                new[k] = ent[k]
 
         if human:
             # 사람이 정한 값은 두고 후보만 새로 붙인다
@@ -1519,6 +1798,9 @@ def main():
     # 저자는 제목 후보(위키데이터 항목·Open Library 작품)를 근거로 쓰므로 제목 다음에 본다
     print('\n── 저자 영문 이름 ──')
     sync_authors(args, books, doc, only, today)
+    # 원어 이름은 영문 이름 후보(위키데이터·위키백과 인물)를 근거로 쓰므로 그다음에 본다
+    print('\n── 저자 원어 이름 ──')
+    sync_native(args, books, doc, only, today)
 
     if args.dry_run:
         print('--dry-run: 파일을 쓰지 않았습니다')

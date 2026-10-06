@@ -2717,6 +2717,11 @@ commentsDlg.addEventListener('close', () => {
  * Kim Youngha * / Kim Young-ha 처럼 갈려 있어서, 위키데이터·Open Library·예스24·위키백과에
  * 적힌 이름을 후보로 모아 두고 제목 카드 아래에서 함께 고른다. 승인하면 그 저자의 모든 행이
  * 같은 표기로 맞춰진다. Goodreads 는 자동 수집이 막혀 있어 확인용 검색 링크만 단다.
+ *
+ * 원제(orig_*)와 저자 원어 이름(native_*)은 영문 페이지에서 영어 제목·이름 옆에 함께 나간다
+ * (ノルウェイの森, 村上春樹). 원제는 알라딘·예스24 값(original), 원어 이름은 위키데이터·위키백과
+ * 후보(native_candidates)가 입력칸에 미리 들어가고, 제목·저자를 승인할 때 같이 확정된다.
+ * 칸을 비우고 승인하면 none — 싣지 않는다. generate.py 의 resolve_original()·resolve_author_native() 참고.
  */
 const TITLES_PATH = 'data/titles_en.json';
 const Ttl = {
@@ -2744,6 +2749,13 @@ const AUT_FLAG = {
 };
 const AUT_SRC = { wikidata_book: '위키데이터(이 책의 저자)', openlibrary: 'Open Library 영어판', yes24: '예스24 원서 저자', wikidata: '위키데이터(인물)', wikipedia: '위키백과' };
 // 비교용 — 대소문자·하이픈·띄어쓰기·악센트 차이는 같은 이름 (tools/fetch_titles_en.py 의 name_key)
+const HANGUL_RE = /[가-힣ㄱ-ㅎㅏ-ㅣ]/;
+// 원제·원어 이름 칸 옆 상태 표시
+function origBadge(st, auto) {
+  if (st === 'approved') return '<span class="cmt-state s-approved">확정</span>';
+  if (st === 'none') return '<span class="cmt-state s-none">싣지 않음</span>';
+  return auto ? `<span class="muted small">${auto} · 미확정</span>` : '';
+}
 const nameKey = (s) => String(s || '').normalize('NFKD').replace(/[\u0300-\u036f]/g, '').toLowerCase().replace(/[^0-9a-z]+/g, '');
 function autProblem(v) {
   if (/[가-힣ㄱ-ㅎㅏ-ㅣ]/.test(v)) return '한글';
@@ -2974,11 +2986,13 @@ function ttlRows() {
         a_variants: ap && av.variants,
         a_star: ap && av.values.some(([x]) => /\*\s*$/.test(x)),
         a_nocand: ap && !(a.candidates || []).length,
+        a_native: !a.native_status && (a.native_candidates || []).length > 0,
         a_pending: ap, a_approved: !ap,
       }[f];
       if (!aok) continue;
       if (q) {
-        const hay = [name, a.value, ...av.values.map(([x]) => x), ...(a.candidates || []).map(c => c.name)]
+        const hay = [name, a.value, a.native_value, ...av.values.map(([x]) => x), ...(a.candidates || []).map(c => c.name),
+                     ...(a.native_candidates || []).map(c => c.name)]
           .join(' ').toLowerCase();
         if (!hay.includes(q)) continue;
       }
@@ -2998,11 +3012,12 @@ function ttlRows() {
       empty: pend && fl.includes('csv_empty'),
       nocand: pend && !cands.length,
       pending: pend, approved: st === 'approved', none: st === 'none', all: true,
+      orig: !v.orig_status && !!v.original,
     }[f];
     if (!ok) continue;
     if (q) {
       const a = Ttl.authors.get(v.author || '');
-      const hay = [k, v.csv, v.value, ...cands.map(c => c.title), a?.value,
+      const hay = [k, v.csv, v.value, v.original, v.orig_value, ...cands.map(c => c.title), a?.value,
                    ...[...(idx.get(v.author || '')?.values.keys() || [])]].join(' ').toLowerCase();
       if (!hay.includes(q)) continue;
     }
@@ -3085,7 +3100,13 @@ function renderTitlesList() {
         </button>`).join('')}</div>` : ''}
       ${(v.notes || []).length ? `<p class="cmt-note">⚠ ${esc(v.notes.join(' · '))}</p>` : ''}
       <div class="ttl-value">
+        <span class="ttl-lbl">영문 제목</span>
         <input type="text" data-f="value" placeholder="영문 제목 (공식판이 없으면 직역)">
+      </div>
+      <div class="ttl-value">
+        <span class="ttl-lbl" title="영문 페이지에 영어 제목과 함께 나가는 원서 제목">원제</span>
+        <input type="text" data-f="orig" placeholder="원서에 적힌 제목 그대로 (ノルウェイの森) — 한국 책이면 비워 두기">
+        ${origBadge(v.orig_status, v.original ? '알라딘·예스24' : '')}
       </div>
       <div class="ttl-links">
         ${link ? `<a href="${esc(link)}" target="_blank" rel="noopener">예스24 상품 ↗</a>` : ''}
@@ -3110,11 +3131,15 @@ function renderTitlesList() {
     const inp = card.querySelector('input[data-f="value"]');
     inp.value = v.value || (v.candidates?.[0]?.title) || stripStar(v.csv);
     markPicked(card, inp.value);
+    card.querySelector('input[data-f="orig"]').value = v.orig_status ? (v.orig_value || '') : (v.original || '');
     const ainp = card.querySelector('input[data-f="author"]');
     if (ainp) {
       const { ent: a, values } = autView(v.author || '', idx);
       ainp.value = stripStar(a.value) || a.candidates?.[0]?.name || stripStar(values[0]?.[0]);
       markPickedAuthor(card, ainp.value);
+      const ninp = card.querySelector('input[data-f="native"]');
+      ninp.value = a.native_status ? (a.native_value || '') : (a.native_candidates?.[0]?.name || '');
+      markPickedNative(card, ninp.value);
     }
     updateGrLinks(card);
   });
@@ -3129,6 +3154,7 @@ function autBlock(v, idx) {
   const { ent: a, values, books, variants } = autView(name, idx);
   const st = a.status || 'pending';
   const cands = a.candidates || [];
+  const ncands = a.native_candidates || [];
   const fl = new Set(st === 'pending' ? (a.flags || []) : []);
   if (st === 'pending' && variants) fl.add('variants');
   const flags = [...fl].map(f => AUT_FLAG[f]
@@ -3153,7 +3179,20 @@ function autBlock(v, idx) {
       </button>`).join('')}</div>` : ''}
     ${(a.notes || []).length ? `<p class="cmt-note">⚠ ${esc(a.notes.join(' · '))}</p>` : ''}
     <div class="ttl-value">
+      <span class="ttl-lbl">영문 이름</span>
       <input type="text" data-f="author" placeholder="영문 저자 (영어판·인물 문서에 적힌 표기)">
+    </div>
+    ${ncands.length ? `<div class="ttl-cands">${ncands.map((c, i) => `
+      <button type="button" class="ttl-cand" data-npick="${i}">
+        <span lang="${esc(c.lang || '')}">${esc(c.name)}</span>
+        <span class="src">원어 이름${c.lang ? ` (${esc(c.lang)})` : ''} · ${(c.sources || []).map(x => ({ wikidata: '위키데이터', wikipedia: '위키백과' })[x] || x).join(' + ')}</span>
+        ${(c.urls || []).map(u => `<a href="${esc(u)}" target="_blank" rel="noopener">근거 ↗</a>`).join('')}
+      </button>`).join('')}</div>` : ''}
+    ${(a.native_notes || []).length ? `<p class="cmt-note">⚠ ${esc(a.native_notes.join(' · '))}</p>` : ''}
+    <div class="ttl-value">
+      <span class="ttl-lbl" title="영문 페이지에 영어 이름과 함께 나가는 원래 언어 이름">원어 이름</span>
+      <input type="text" data-f="native" placeholder="원래 언어로 적힌 이름 (村上春樹) — 한국 작가·영어 이름과 같으면 비워 두기">
+      ${origBadge(a.native_status, ncands.length ? '위키데이터·위키백과' : '')}
     </div>
     <div class="ttl-links">
       <a data-gr="author" target="_blank" rel="noopener" title="저자 페이지에 적힌 이름 표기를 확인하세요">Goodreads 저자 ↗</a>
@@ -3189,6 +3228,21 @@ function markPickedAuthor(card, value) {
   });
 }
 
+function markPickedNative(card, value) {
+  const a = Ttl.authors.get(card.dataset.author || '');
+  card.querySelectorAll('[data-npick]').forEach(btn => {
+    const c = a?.native_candidates?.[+btn.dataset.npick];
+    btn.classList.toggle('picked', !!c && c.name === value);
+  });
+}
+
+// 원제·원어 이름 칸 → 확정(approved, 값) / 싣지 않음(none, 빈 칸). 보류하면 다시 자동 값으로
+function setOrigFields(it, prefix, act, val) {
+  if (act === 'pending') { delete it[prefix + '_status']; delete it[prefix + '_value']; return; }
+  it[prefix + '_status'] = val ? 'approved' : 'none';
+  it[prefix + '_value'] = val;
+}
+
 function setAutState(card, act, quiet) {
   const name = card.dataset.author || '';
   if (!name) return false;
@@ -3196,7 +3250,12 @@ function setAutState(card, act, quiet) {
   if (act !== 'pending' && !val) { toast('영문 저자가 비어 있습니다', 'err'); return false; }
   const bad = act !== 'pending' && autProblem(val);
   if (bad) { toast(`저자 이름에 ${bad}이(가) 섞여 있습니다`, 'err'); return false; }
+  const nat = (card.querySelector('input[data-f="native"]')?.value || '').trim();
+  if (act !== 'pending' && HANGUL_RE.test(nat)) {
+    toast('원어 이름에 한글이 섞여 있습니다. 한국 작가면 비워 두세요', 'err'); return false;
+  }
   const it = Ttl.authors.get(name) || { author: name, candidates: [] };
+  setOrigFields(it, 'native', act, nat);
   it.status = act;
   it.value = val;
   delete it.auto;
@@ -3225,6 +3284,11 @@ function setTtlState(card, act, quiet) {
   if (act === 'none' && !val) { toast('직역을 적거나, 영문 페이지에서 빼려면 "영문 숨김"을 누르세요', 'err'); return false; }
   const bad = (act === 'approved' || act === 'none') && ttlProblem(it.title, val);
   if (bad) { toast(`제목에 ${bad}이(가) 섞여 있습니다. 하나로 고쳐 주세요`, 'err'); return false; }
+  const orig = (card.querySelector('input[data-f="orig"]')?.value || '').trim();
+  if (act !== 'pending' && HANGUL_RE.test(orig)) {
+    toast('원제에 한글이 섞여 있습니다. 원서 제목만 적거나, 한국 책이면 비워 두세요', 'err'); return false;
+  }
+  setOrigFields(it, 'orig', act, orig);
   if (act === 'hide') { it.status = 'none'; it.value = ''; }
   else { it.status = act; it.value = enTitleCase(val); }
   delete it.auto;
@@ -3263,6 +3327,17 @@ $('#ttlList').addEventListener('click', (e) => {
     }
     return;
   }
+  const npick = e.target.closest('[data-npick]');
+  if (npick) {
+    const c = Ttl.authors.get(card.dataset.author || '')?.native_candidates?.[+npick.dataset.npick];
+    if (c) {
+      const inp = card.querySelector('input[data-f="native"]');
+      inp.value = c.name;
+      markPickedNative(card, c.name);
+      inp.focus();
+    }
+    return;
+  }
   const aact = e.target.dataset.aact;
   if (aact) { setAutState(card, aact); return; }
   const act = e.target.dataset.act;
@@ -3278,6 +3353,7 @@ $('#ttlList').addEventListener('input', (e) => {
   if (!card) return;
   if (e.target.dataset.f === 'value') markPicked(card, e.target.value.trim());
   if (e.target.dataset.f === 'author') markPickedAuthor(card, e.target.value.trim());
+  if (e.target.dataset.f === 'native') markPickedNative(card, e.target.value.trim());
   updateGrLinks(card);
 });
 
@@ -3286,9 +3362,16 @@ $('#ttlList').addEventListener('keydown', (e) => {
   const card = e.target.closest('.cmt-card');
   if (!card) return;
   e.preventDefault();
-  if (e.target.dataset.f === 'author') setAutState(card, 'approved');
+  if (['author', 'native'].includes(e.target.dataset.f)) setAutState(card, 'approved');
   else setTtlState(card, 'approved');
 });
+
+function copyOrigFields(base, mine, prefix) {
+  for (const f of [prefix + '_status', prefix + '_value']) {
+    if (f in mine) base[f] = mine[f];
+    else delete base[f];
+  }
+}
 
 async function saveTitles() {
   if (!Ttl.touched.size && !Ttl.touchedAuthors.size) return;
@@ -3317,6 +3400,7 @@ async function saveTitles() {
       base.value = mine.value;
       base.reviewed = mine.reviewed;
       delete base.auto;
+      copyOrigFields(base, mine, 'orig');
       doc.titles[k] = base;
     }
     doc.authors = doc.authors || {};
@@ -3327,6 +3411,7 @@ async function saveTitles() {
       base.value = mine.value;
       base.reviewed = mine.reviewed;
       delete base.auto;
+      copyOrigFields(base, mine, 'native');
       doc.authors[k] = base;
     }
     doc._updated = new Date().toISOString().slice(0, 10);

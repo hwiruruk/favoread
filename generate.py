@@ -323,28 +323,160 @@ def resolve_author_en(author_ko, csv_value):
 
 JA_KANA_RE = re.compile(r'[぀-ヿ]')
 JA_HANGUL_RE = re.compile(r'[가-힣]')
-# 알라딘 원제에 섞여 오는 옛 자체를 일본 서점에서 쓰는 표기로 바꾼다 (자주 나오는 것만)
-JA_OLD_KANJI = {ord(a): b for a, b in zip('歲體驗國學藝寫眞對戀傳廣澤黑關醫兒總續讀假莊惡獻燈禮團雜迹聽驛樣說邊靜',
-                                          '歳体験国学芸写真対恋伝広沢黒関医児総続読仮荘悪献灯礼団雑跡聴駅様説辺静')}
+# 알라딘 원제에 섞여 오는 옛 자체(한국 한자)를 일본 서점에서 쓰는 표기로 바꾼다 (자주 나오는 것만).
+# 이름에 그대로 쓰는 龍·德 같은 글자는 넣지 않는다.
+JA_OLD_KANJI = {ord(a): b for a, b in zip(
+    '歲體驗國學藝寫眞對戀傳廣澤黑關醫兒總續讀假莊惡獻燈禮團雜迹聽驛樣說邊靜'
+    '拔會圓氣與舊獨擧發實樂戰單營榮歸壞戲劍晝圖縣區變譯鐵點當黨聲處觀權兩亂佛來價參雙'
+    '寶將專帶彈從應擇收數斷條樓歷殘淺溫滿燒爭狀畫盡碎禪稱經繪繼臺藏蟲裝覺覽觸證豐賣轉辭遲醉釋錢險隱靈顯驅髮鬪默齒',
+    '歳体験国学芸写真対恋伝広沢黒関医児総続読仮荘悪献灯礼団雑跡聴駅様説辺静'
+    '抜会円気与旧独挙発実楽戦単営栄帰壊戯剣昼図県区変訳鉄点当党声処観権両乱仏来価参双'
+    '宝将専帯弾従応択収数断条楼歴残浅温満焼争状画尽砕禅称経絵継台蔵虫装覚覧触証豊売転辞遅酔釈銭険隠霊顕駆髪闘黙歯')}
 # 한자만 있는 원제 중 일본어가 아닌 것(한국 고전·중국 작가)의 저자. 나머지 한자 원제는 일본 책으로 본다.
 JA_NOT_JAPANESE_AUTHORS = {'이순신', '공자', '최술', '쯔진천', '류츠신', '위화', '천팅이'}
 
 
-def original_title_ja(title_ko, author_ko):
-    """일본어 원제. 없으면 ''.
+def script_lang(s):
+    """글자로 짐작한 언어. tools/fetch_titles_en.py 의 script_lang() 과 같다.
+    가나 ja, 한자만 han(일본어·중국어 모름), 키릴 ru, 라틴 latin …"""
+    s = s or ''
+    for rx, lang in ((r'[぀-ヿ]', 'ja'), (r'[一-鿿]', 'han'), (r'[Ѐ-ӿ]', 'ru'),
+                     (r'[Ͱ-Ͽ]', 'el'), (r'[֐-׿]', 'he'), (r'[؀-ۿ]', 'ar'),
+                     (r'[฀-๿]', 'th'), (r'[A-Za-zÀ-ɏ]', 'latin')):
+        if re.search(rx, s):
+            return lang
+    return ''
 
-    data/titles_en.json 의 original 은 알라딘·예스24가 적어 둔 원제 그대로다.
-    가나가 있으면 일본어. 한자만 있으면 저자가 JA_NOT_JAPANESE_AUTHORS 가 아닐 때만 일본어로 본다.
+
+NON_LATIN_LANGS = {'ja', 'zh', 'ru', 'uk', 'el', 'he', 'ar', 'fa', 'th'}
+
+
+def _guess_native_lang(text, author_ko, hint=''):
+    """글자와 단서(hint: 저자 원어 이름의 언어)로 언어 코드를 정한다. 모르면 ''."""
+    sc = script_lang(text)
+    base = (hint or '').split('-')[0]
+    if sc == 'han':
+        if base in ('ja', 'zh'):
+            return hint
+        return 'zh' if (author_ko or '').strip() in JA_NOT_JAPANESE_AUTHORS else 'ja'
+    if sc == 'latin':
+        return hint if base and base not in NON_LATIN_LANGS else ''
+    return sc
+
+
+def resolve_author_native(author_ko):
+    """저자 원어 이름 (이름, 언어). 없으면 None.
+
+    data/titles_en.json authors 의 native_status 가 approved 면 native_value,
+    none 이면 없음, 정하지 않았으면 위키데이터·위키백과에서 찾은 첫 후보(native_candidates).
     """
-    ent = TITLES_EN.get((title_ko or '') + '|' + (author_ko or '').strip())
-    orig = ((ent or {}).get('original') or '').strip()
-    if not orig or JA_HANGUL_RE.search(orig):
-        return ''
-    if not JA_KANA_RE.search(orig):
-        if not re.search(r'[\u4e00-\u9fff]', orig) or (author_ko or '').strip() in JA_NOT_JAPANESE_AUTHORS:
-            return ''
-    orig = re.sub(r'(?<=[゠-ヿ])[-\u2015\u2014]', 'ー', orig)   # ゴ-ルデン・パレ―ド → ゴールデン・パレード
-    return orig.translate(JA_OLD_KANJI)
+    ent = AUTHORS_EN.get((author_ko or '').strip()) or {}
+    st = ent.get('native_status')
+    cands = ent.get('native_candidates') or []
+    if st == 'none':
+        return None
+    v = ent.get('native_value') if st == 'approved' else (cands[0].get('name') if cands else '')
+    v = (v or '').strip()
+    if not v or JA_HANGUL_RE.search(v):
+        return None
+    lang = next((c.get('lang') for c in cands if c.get('name') == v and c.get('lang')), '')
+    if not lang:
+        sc = script_lang(v)
+        hint = next((c.get('lang') or '' for c in cands if script_lang(c.get('name')) == sc), '')
+        lang = _guess_native_lang(v, author_ko, hint) if sc in ('han', 'latin') else sc
+    return v, lang
+
+
+def resolve_original(title_ko, author_ko):
+    """원제 (제목, 언어). 없으면 None.
+
+    data/titles_en.json 의 orig_status 가 approved 면 orig_value, none 이면 없음,
+    정하지 않았으면 알라딘·예스24가 적어 둔 원제(original). 한글이 섞인 값은 원제가 아니다.
+    한자만 있는 원제는 저자 원어 이름의 언어로 일본어·중국어를 가르고, 그것도 없으면
+    JA_NOT_JAPANESE_AUTHORS 가 아닐 때 일본어로 본다.
+    """
+    ent = TITLES_EN.get((title_ko or '') + '|' + (author_ko or '').strip()) or {}
+    st = ent.get('orig_status')
+    if st == 'none':
+        return None
+    v = ((ent.get('orig_value') if st == 'approved' else ent.get('original')) or '').strip()
+    if not v or JA_HANGUL_RE.search(v):
+        return None
+    nat = resolve_author_native(author_ko)
+    sc = script_lang(v)
+    if sc == 'latin':
+        # 라틴 문자 원제는 영어·포르투갈어(Veronika decide morrer)를 글자로 못 가른다 — 모르면 비운다
+        lang = nat[1] if nat and script_lang(nat[0]) == 'latin' else ''
+    else:
+        lang = _guess_native_lang(v, author_ko, nat[1] if nat else '')
+    if lang == 'ja':
+        v = re.sub(r'(?<=[゠-ヿ])[-―—]', 'ー', v)   # ゴ-ルデン・パレ―ド → ゴールデン・パレード
+        v = v.translate(JA_OLD_KANJI)
+    return v, lang
+
+
+def original_title_ja(title_ko, author_ko):
+    """일본어 원제. 없으면 ''. 한국어 책 페이지 제목 옆에 붙인다."""
+    r = resolve_original(title_ko, author_ko)
+    return r[0] if r and r[1] == 'ja' else ''
+
+
+def _latin_key(s):
+    s = unicodedata.normalize('NFKD', html.unescape(str(s or '')))
+    return re.sub(r'[^0-9a-z]+', '', ''.join(c for c in s if not unicodedata.combining(c)).lower())
+
+
+# 영어 원제로 볼 낱말. 다른 언어에도 흔한 a·i·in·no·me·on·de 는 넣지 않는다 (A hora da estrela)
+EN_ORIG_WORDS = {
+    'the', 'of', 'and', 'an', 'to', 'is', 'are', 'was', 'be', 'will', 'can', 'not', 'never', 'let',
+    'you', 'your', 'my', 'we', 'our', 'he', 'she', 'his', 'her', 'they', 'their', 'it', 'its',
+    'for', 'with', 'at', 'from', 'by', 'this', 'that', 'all', 'how', 'what', 'why', 'who', 'when',
+    'where', 'there', 'do', "don't",
+    'one', 'two', 'three', 'four', 'five', 'six', 'seven', 'eight', 'nine', 'ten', 'twenty', 'thirty',
+    'forty', 'fifty', 'sixty', 'seventy', 'eighty', 'ninety', 'hundred', 'thousand', 'nineteen',
+}
+
+
+def _en_words(s):
+    return re.findall(r"[a-z][a-z']*", unicodedata.normalize('NFKD', html.unescape(str(s or ''))).lower())
+
+
+def is_english_original(orig, title_en):
+    """라틴 문자 원제가 영어인가. 영어 원서면 영문 제목과 나란히 둘 까닭이 없다
+    (The Martian / Martian, Fifty Shades of Grey, 1984 / Nineteen Eighty-Four)."""
+    if script_lang(orig) != 'latin' or EN_FOREIGN_RE.search(orig):
+        return False
+    a, b = _latin_key(orig), _latin_key(plain_en(title_en))
+    if not a or (b and (a.startswith(b) or b.startswith(a))):
+        return True
+    words = _en_words(orig)
+    if set(words) & EN_ORIG_WORDS:
+        return True
+    long_words = [w for w in words if len(w) >= 3]
+    en_words = set(_en_words(plain_en(title_en)))
+    return bool(long_words) and sum(w in en_words for w in long_words) / len(long_words) > 0.6
+
+
+def en_original(title_ko, author_ko, title_en):
+    """영문 페이지에서 영문 제목과 나란히 둘 원제 (제목, 언어). 영어 원서면 None."""
+    r = resolve_original(title_ko, author_ko)
+    if r and is_english_original(r[0], title_en):
+        return None
+    return r
+
+
+def en_author_native(author_ko, author_en):
+    """영문 페이지에 덧붙일 저자 원어 이름. 라틴 문자로 영어 이름과 같으면 None."""
+    r = resolve_author_native(author_ko)
+    if r and script_lang(r[0]) == 'latin' and _latin_key(r[0]) == _latin_key(plain_en(author_en)):
+        return None
+    return r
+
+
+def lang_span(r):
+    """(값, 언어) → <span lang="ja">村上春樹</span>. 글꼴(한자 자형)과 읽기 도구가 언어를 알게."""
+    v, lang = r
+    return '<span' + ((' lang="' + esc(lang) + '"') if lang else '') + '>' + esc(v) + '</span>'
 
 
 # 영문 셀럽/책 페이지(자체 <style> 사용)용 각주
@@ -4219,10 +4351,17 @@ for name, info in celebs.items():
                       + esc(b['title_en']) + '</a>')
         else:
             t_html = esc(b['title_en'])
+        # 영어 제목 | 원제 (한국어) — 해외 독자는 영어 다음으로 원제를 보고 원서를 찾는다
+        _orig = en_original(b['title'], b['author'], b['title_en'])
+        if _orig:
+            t_html += ' <span style="color:#666">| ' + lang_span(_orig) + '</span>'
         t_html += ' <span style="color:#888;font-size:12px;font-weight:400">(' + esc(b['title']) + ')</span>'
 
         a_en = b.get('author_en')
         author_text = esc(a_en) if a_en else esc(b['author'])
+        _nat = en_author_native(b['author'], a_en)
+        if _nat:
+            author_text += ' <span style="color:#888">(' + lang_span(_nat) + ')</span>'
 
         # 책 정보(예스24) · 출처 — 한국어 페이지와 같은 자리. 한국 서점으로 가니 툴팁에 밝힌다.
         src_html = ('<a class="rl-source" href="' + esc(yes24_book_url(b['title'], raw_link, b['coverUrl']))
@@ -4761,6 +4900,10 @@ for title, t_en in book_title_en.items():
     # 영문 작가 이름이 있으면 우선 사용
     author_en = book_author_en.get(title)
     author_display = author_en if author_en else binfo['author']
+    # 원제·저자 원어 이름 (ノルウェイの森 · 村上春樹) — 원서를 찾는 해외 독자용
+    orig = en_original(title, binfo['author'], t_en)
+    author_nat = en_author_native(binfo['author'], author_en) if author_display.strip() else None
+    author_html = esc(author_display) + ((' (' + lang_span(author_nat) + ')') if author_nat else '')
 
     # 책 제목·저자에만 해당. 함께 노출되는 인물 영문명의 *는 각주 대상이 아니다.
     en_show_tr_note = has_auto_translated(t_en, author_en)
@@ -4769,11 +4912,13 @@ for title, t_en in book_title_en.items():
         '@context': 'https://schema.org',
         '@type': 'Book',
         'name': t_en,
-        'alternateName': title,
+        'alternateName': [title, orig[0]] if orig else title,
         'url': page_url,
         'inLanguage': 'en',
         'description': str(n_celebs) + ' Korean celebrities have read this book.',
-        'author': {'@type': 'Person', 'name': author_display} if author_display.strip() else None,
+        'author': clean_none({'@type': 'Person', 'name': author_display,
+                              'alternateName': author_nat[0] if author_nat else None})
+                  if author_display.strip() else None,
         'publisher': {'@type': 'Organization', 'name': binfo['publisher']} if binfo['publisher'].strip() else None,
         'image': binfo['coverUrl'] if binfo['coverUrl'].startswith('http') else None,
     })
@@ -4788,6 +4933,7 @@ for title, t_en in book_title_en.items():
         '  <meta name="description" content="' + esc(desc_text) + '">\n'
         '  <meta name="keywords" content="'
         + esc(t_en) + ', ' + esc(t_en) + ' kpop, ' + esc(t_en) + ' korean celebrity, '
+        + ((esc(orig[0]) + ', ') if orig else '') + ((esc(author_nat[0]) + ', ') if author_nat else '')
         + 'books read by ' + esc(top_celebs_str) + ', '
         + ', '.join((esc(c) + ' books') for c in celeb_names_en[:3]) + ', '
         + 'kpop idol books, korean celebrity book recommendations, kpop reading list">\n'
@@ -4832,16 +4978,18 @@ for title, t_en in book_title_en.items():
         '    <span class="lang-btn active">EN</span>\n'
         '  </div>\n'
         '  <nav><a href="' + EN_BASE + '">← Favorbook Home</a> · <a href="' + EN_BASE + 'share/ranking.html">Most-read books ranking</a></nav>\n'
-        '  <h1>' + esc(t_en) + '</h1>\n'
+        '  <h1>' + esc(t_en)
+        + ((' <span style="color:#666">| ' + lang_span(orig) + '</span>') if orig else '') + '</h1>\n'
         '  <p class="meta">Korean: <strong>' + esc(title) + '</strong>'
-        + ((' · ' + esc(author_display)) if author_display.strip() else '')
+        + ((' · ' + author_html) if author_display.strip() else '')
         + ((' · ' + esc(binfo['publisher'])) if binfo['publisher'].strip() else '')
         + '</p>\n'
         '  <p class="heart-row">' + heart_btn_html(book_heart_key(title), 'Heart this book')
         + copy_btn_html(make_en_book_short_url(title), '🔗 Copy share link', 'Copied!') + '</p>\n'
         + cover_html
-        + '  <p class="intro">' + esc(t_en) + ' (Korean title: ' + esc(title) + ')'
-        + ((' by ' + esc(author_display)) if author_display.strip() else '')
+        + '  <p class="intro">' + esc(t_en) + ' (Korean title: ' + esc(title)
+        + (('; original title: ' + lang_span(orig)) if orig else '') + ')'
+        + ((' by ' + author_html) if author_display.strip() else '')
         + ' has been read or recommended by ' + str(n_celebs) + ' Korean celebrities, including '
         + esc(top_celebs_str) + '.'
         + (' Below, each entry shows where they mentioned it and what they said.'
@@ -5485,6 +5633,9 @@ for slug, t_en, t_ko in sorted(en_book_pages,
         'title': plain_en(t_en), 'title_ko': t_ko, 'slug': slug,
         'author': plain_en(book_author_en.get(t_ko) or binfo['author']),
         'author_ko': binfo['author'],
+        # 원제·저자 원어 이름(ノルウェイの森, 村上春樹)으로도 찾아지게
+        'orig': (resolve_original(t_ko, binfo['author']) or ('',))[0],
+        'author_orig': (resolve_author_native(binfo['author']) or ('',))[0],
         'cover': cover if cover.startswith('http') else '',
         'n': n_celebs,
         'readers': book_readers_en,
@@ -5896,7 +6047,7 @@ EN_SEARCH_JS = """<script>
     }
     if (moreWrap) moreWrap.classList.add("hidden");
     shownBooks = q.length < 2 ? [] : books.filter(function (b) {
-      return norm([b.title, b.title_ko, b.author, b.author_ko].join(" ")).indexOf(q) >= 0;
+      return norm([b.title, b.title_ko, b.author, b.author_ko, b.orig, b.author_orig].join(" ")).indexOf(q) >= 0;
     }).sort(function (a, b) { return b.n - a.n || a.title.localeCompare(b.title); }).slice(0, 12);
     hitsList.innerHTML = shownBooks.map(bookCard).join("");
     hitsCount.textContent = shownBooks.length + " book" + (shownBooks.length === 1 ? "" : "s");
