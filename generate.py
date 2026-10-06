@@ -5580,10 +5580,10 @@ if _en_feat:
         + '\n    </div>\n'
         '  </section>\n\n')
 
-# 제보 — 한국어 메인과 같은 구글 설문. 설문이 한국어라 영어로 적어도 된다고 알린다.
+# 제보 — 영문 전용 구글 설문.
 en_report_html = (
     '  <section id="report" class="w-full">\n'
-    '    <a href="https://forms.gle/Sd3ZQTahZNbUjbdz7" target="_blank" rel="noopener" '
+    '    <a href="https://forms.gle/ioosSU2D2V3CHg2h8" target="_blank" rel="noopener" '
     'class="block border-4 border-ink bg-neo-mint shadow-neo hover:shadow-neo-lg hover:-translate-y-1 transition-all p-5 sm:p-7 no-underline text-ink">\n'
     '      <div class="flex flex-col sm:flex-row sm:items-center gap-4 sm:gap-6">\n'
     '        <div class="text-4xl sm:text-5xl leading-none">📮</div>\n'
@@ -5591,7 +5591,7 @@ en_report_html = (
     '          <h2 class="text-xl sm:text-2xl font-black mb-2 word-break-keep">Know a book your fave read? Tell us</h2>\n'
     '          <p class="text-xs sm:text-sm font-bold leading-relaxed word-break-keep text-ink/80">'
     'YouTube, interviews, SNS — anywhere works. Leave the name, the book title and a source link, '
-    'and we will add it after checking. The form is in Korean, but answers in English are welcome.</p>\n'
+    'and we will add it after checking.</p>\n'
     '        </div>\n'
     '        <span class="font-sans font-bold text-xs sm:text-sm tracking-widest uppercase border-2 border-ink bg-neo-yellow shadow-neo-sm px-5 py-2 whitespace-nowrap self-start sm:self-auto">Send a tip →</span>\n'
     '      </div>\n'
