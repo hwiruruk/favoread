@@ -1,4 +1,4 @@
-"""셀럽별 '책 취향' 통계 — 분야·작가·번역서·출간 시기·분량·출판사를 세어 믿을 만한 것만 문장으로 돌려준다.
+"""셀럽별 '책 취향' 통계 — 분야·작가·번역서·출간 시기·분량을 세어 믿을 만한 것만 문장으로 돌려준다.
 
 generate.py 가 빌드 때 부른다. 네트워크도 모델도 쓰지 않는다.
 같은 입력이면 늘 같은 결과가 나온다.
@@ -12,20 +12,17 @@ generate.py 가 빌드 때 부른다. 네트워크도 모델도 쓰지 않는다
       ("번역서를 즐겨 읽는다"가 모두에게 해당하면 그 사람의 취향이 아니다)
     - 작가는 서로 다른 작품이 2권 이상일 때만 꼽는다 (한 권짜리 작가는 취향이 아니다)
       같은 시리즈의 권수 늘리기는 한 작품으로 센다
-    - 출판사는 3권 이상이고 비중 30% 이상일 때만 꼽는다
     - 분야는 분야를 아는 책이 5권 이상·70% 이상이면 많은 순으로 보여준다 (예스24 카테고리 → genre())
 
 책 정보(번역서·출간일·쪽수·시리즈)는 data/bookinfo.json (tools/fetch_bookinfo.py).
 분야는 data/categories.json (tools/fetch_categories.py — 예스24 카테고리).
-작가·출판사는 data.csv 에서 온다. 상수는 여기 한 곳에서만 고친다.
+작가는 data.csv 에서 온다. 출판사는 취향이 아니라서 세지 않는다. 상수는 여기 한 곳에서만 고친다.
 """
 import re
 
 MIN_BOOKS = 5            # 이 권수 미만이면 취향을 내지 않는다
 MIN_COVERAGE = 0.7       # 정보가 확인된 책 비율
 MIN_AUTHOR_WORKS = 2     # 작가로 꼽을 최소 작품 수 (시리즈는 1작품)
-MIN_PUB_BOOKS = 3        # 출판사로 꼽을 최소 권수
-MIN_PUB_SHARE = 0.30
 MAX_AUTHORS = 3
 NOTE_MAX = 90            # 참고 코멘트 최대 글자 수
 
@@ -251,23 +248,11 @@ def compute(books, bookinfo, baseline, this_year, subjects=None):
     authors.sort(key=lambda x: (-x['count'], x['author']))
     authors = authors[:MAX_AUTHORS]
 
-    # 출판사
-    pubs = {}
-    for t, b in uniq.items():
-        p = (b.get('publisher') or '').strip()
-        if p:
-            pubs.setdefault(p, []).append(t)
-    publisher = None
-    if pubs:
-        p, ts = max(pubs.items(), key=lambda x: (len(x[1]), x[0]))
-        if len(ts) >= MIN_PUB_BOOKS and len(ts) / n_all >= MIN_PUB_SHARE:
-            publisher = {'name': p, 'count': len(ts), 'titles': sorted(ts)}
-
-    if not facts and not authors and not publisher and not genres:
+    if not facts and not authors and not genres:
         return None
 
-    # 참고 코멘트 — 꼽힌 작가·출판사의 책 중 코멘트가 붙은 첫 권
-    picked = {t for a in authors for t in a['titles']} | set((publisher or {}).get('titles', []))
+    # 참고 코멘트 — 꼽힌 작가의 책 중 코멘트가 붙은 첫 권
+    picked = {t for a in authors for t in a['titles']}
     note = None
     for t in sorted(picked):
         c = (uniq[t].get('comment') or '').strip()
@@ -275,7 +260,7 @@ def compute(books, bookinfo, baseline, this_year, subjects=None):
             note = {'title': t, 'ko': _trim(c, NOTE_MAX),
                     'en': _trim(uniq[t].get('comment_en') or '', NOTE_MAX)}
             break
-    return {'n': n_all, 'facts': facts, 'authors': authors, 'publisher': publisher, 'note': note,
+    return {'n': n_all, 'facts': facts, 'authors': authors, 'note': note,
             'genres': genres, 'genre_of': genre_of}
 
 
@@ -307,8 +292,6 @@ def text_ko(t):
     if t['authors']:
         out.append('같은 작가를 여러 권 골랐어요: ' + ', '.join(
             '%s %d권' % (x['author'], x['count']) for x in t['authors']) + '.')
-    if t['publisher']:
-        out.append('%s 책이 %d권이에요.' % (t['publisher']['name'], t['publisher']['count']))
     return out
 
 
@@ -321,6 +304,4 @@ def text_en(t):
     if t['authors']:
         out.append('Returns to the same author: ' + ', '.join(
             '%s (%d books)' % (x['author_en'], x['count']) for x in t['authors']) + '.')
-    if t['publisher']:
-        out.append('%d books from %s.' % (t['publisher']['count'], t['publisher']['name']))
     return out
