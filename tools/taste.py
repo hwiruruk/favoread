@@ -34,6 +34,9 @@ MIN_PAGE_SHARE = 0.50
 
 # 분야 (data/categories.json — tools/fetch_categories.py)
 GENRE_TOP = 3            # 분야는 많은 순으로 이만큼까지 보여준다
+MIN_KEYWORD_BOOKS = 2    # 키워드(예스24 카테고리 아래 단계)는 이 권수 이상일 때만
+MAX_KEYWORDS = 8
+BIG_KEYWORD_BOOKS = 3    # 한 줄 요약에 넣는 키워드는 이 권수 이상
 
 _NO_AUTHOR = {'', '편집부', '저자 미상', '미상', '작자 미상', '엮음', '지음', '글', '그림'}
 
@@ -166,6 +169,28 @@ def genre(cats):
     return None
 
 
+def book_keywords(cats):
+    """예스24 카테고리 경로들 → 그 책의 키워드 집합.
+    둘째 단계를 쓴다 (한국소설·영미소설·감성/가족 에세이·처세술/삶의 자세·한국사/한국문화).
+    '장르소설'·'시/희곡'은 너무 넓어서 그 아래 단계(SF·추리/미스터리·한국시·희곡)를 쓴다.
+    한국 장편소설/단편소설 같은 셋째 단계 길이 구분은 취향이 아니라서 버린다."""
+    out = []
+    for c in cats or []:
+        p = [x.strip() for x in ((c.get('path') if isinstance(c, dict) else c) or []) if x and x.strip()]
+        if p and _MALLS.fullmatch(p[0].replace(' ', '')):
+            p = p[1:]
+        if len(p) < 2 or _top(p[0]) is None:
+            continue
+        k = p[1]
+        if re.fullmatch(r'장르소설|시/?희곡', k.replace(' ', '')) and len(p) >= 3:
+            k = p[2]
+        elif _top(p[0]) == '만화' and not re.search(r'만화|웹툰|노벨', k):
+            k += ' 만화'   # 만화 > 드라마 → '드라마 만화' (그냥 '드라마'면 TV 드라마로 읽힌다)
+        if k not in out:
+            out.append(k)
+    return out
+
+
 def _genre_of(subjects, t):
     """사람이 정한 분야(data/genres.json → genre_override)가 있으면 그걸, 없으면 예스24 카테고리로 정한다."""
     s = (subjects or {}).get(t) or {}
@@ -209,7 +234,7 @@ def compute(books, bookinfo, this_year, subjects=None):
             facts.append({'key': k, 'n': n, 'of': len(known), 'pct': round(share * 100)})
 
     # 분야 — 분야를 아는 책이 충분할 때만. 많은 순으로 보여준다
-    genres, genre_of = [], 0
+    genres, genre_all, keywords, genre_of = [], [], [], 0
     labels = {t: _genre_of(subjects, t) for t in uniq}
     known_g = [g for g in labels.values() if g]
     if len(known_g) >= MIN_BOOKS and len(known_g) / n_all >= MIN_COVERAGE:
@@ -219,6 +244,17 @@ def compute(books, bookinfo, this_year, subjects=None):
         genre_of = len(known_g)
         ranked = sorted(cnt.items(), key=lambda x: (-x[1], x[0][0]))
         genres = [{'ko': g[0], 'en': g[1], 'n': n} for g, n in ranked[:GENRE_TOP] if n >= 2 or n == genre_of]
+        genre_all = [{'ko': g[0], 'en': g[1], 'n': n} for g, n in ranked]
+
+        # 키워드 — 같은 키워드를 고른 책이 여러 권일 때만. 한 책이 여러 키워드에 들어갈 수 있다
+        kw = {}
+        for t in uniq:
+            if not labels[t]:
+                continue   # '통계에서 뺌'으로 고른 책·분야를 모르는 책은 키워드도 세지 않는다
+            for k in book_keywords(((subjects or {}).get(t) or {}).get('cats')):
+                kw[k] = kw.get(k, 0) + 1
+        keywords = [{'ko': k, 'n': n} for k, n in sorted(kw.items(), key=lambda x: (-x[1], x[0]))
+                    if n >= MIN_KEYWORD_BOOKS][:MAX_KEYWORDS]
 
     # 작가 — 서로 다른 작품 수
     by_author, en_name = {}, {}
@@ -246,7 +282,7 @@ def compute(books, bookinfo, this_year, subjects=None):
                     'en': _trim(uniq[t].get('comment_en') or '', NOTE_MAX)}
             break
     return {'n': n_all, 'facts': facts, 'authors': authors, 'note': note,
-            'genres': genres, 'genre_of': genre_of}
+            'genres': genres, 'genre_all': genre_all, 'keywords': keywords, 'genre_of': genre_of}
 
 
 _KO = {

@@ -1505,23 +1505,136 @@ for _name, _info in celebs.items():
         TASTE[_name] = _t
 print(f"📊 책 취향 통계 {len(TASTE)}명 / {len(celebs)}명 (책 정보 확인 {len(_bookinfo_db)}권 · 분야 확인 {len(_subjects_db)}권)")
 
+# 📊 독서 취향 카드 — 한 줄 요약 · 분야 막대 · 키워드 칩 · 숫자 타일.
+# 다른 셀럽이나 사이트 평균과 비교하지 않는다. 그 사람이 읽은 책을 그대로 센다.
+# 분야 색은 사이트에 이미 쓰는 파스텔. tools/taste.py 의 GENRE_EN 과 같은 분야 목록.
+TASTE_GENRE_COLOR = {
+    '소설': '#fde047', '시': '#ddd6fe', '에세이': '#a7f3d0', '기타 문학': '#fbcfe8',
+    '인문': '#fed7aa', '사회': '#bae6fd', '경제·경영': '#c7d2fe', '자기계발': '#fecaca',
+    '과학': '#99f6e4', '실용·생활': '#d9f99d', '예술': '#f5d0fe', '만화': '#fdba74',
+    '여행': '#a5f3fc', '어린이책': '#fef08a', '기타': '#e5e5e5',
+}
+TASTE_CSS = (
+    '    .taste { margin: 16px 0; background: #fff; border: 2px solid #000; box-shadow: 4px 4px 0 0 #000; font-size: 14px; line-height: 1.6; }\n'
+    '    .taste-head { display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 10px; padding: 10px 14px; background: #e0f2fe; border-bottom: 2px solid #000; }\n'
+    '    .taste-head h2 { margin: 0; padding: 0; border: 0; font-size: 16px; font-weight: 900; }\n'
+    '    .taste-head span { font-size: 12px; color: #333; }\n'
+    '    .taste-body { padding: 14px; display: grid; gap: 18px; }\n'
+    '    .taste-sum { margin: 0; font-size: 18px; font-weight: 900; line-height: 1.4; word-break: keep-all; }\n'
+    '    .taste-sum mark { background: linear-gradient(transparent 55%, #fde047 55%); color: inherit; padding: 0 2px; }\n'
+    '    .taste-label { margin: 0 0 6px; font-size: 12px; font-weight: 800; color: #555; }\n'
+    '    .taste-label small { font-weight: 600; }\n'
+    '    .taste-bar { display: flex; height: 28px; border: 2px solid #000; overflow: hidden; }\n'
+    '    .taste-bar span { min-width: 0; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 800; white-space: nowrap; overflow: hidden; border-right: 1.5px solid #000; }\n'
+    '    .taste-bar span:last-child { border-right: 0; }\n'
+    '    .taste-legend { list-style: none; padding: 0; margin: 8px 0 0; display: flex; flex-wrap: wrap; gap: 4px 14px; font-size: 13px; }\n'
+    '    .taste-legend li { display: flex; align-items: center; gap: 6px; }\n'
+    '    .taste-legend i { width: 12px; height: 12px; border: 1.5px solid #000; flex-shrink: 0; }\n'
+    '    .taste-chips { display: flex; flex-wrap: wrap; gap: 8px; }\n'
+    '    .taste-chip { display: inline-flex; align-items: baseline; gap: 6px; padding: 4px 10px; background: #fff; border: 2px solid #000; box-shadow: 2px 2px 0 0 #000; font-weight: 700; font-size: 14px; }\n'
+    '    .taste-chip.big { background: #fde047; font-size: 15px; }\n'
+    '    .taste-chip small { font-size: 12px; color: #555; font-weight: 600; }\n'
+    '    .taste-tiles { display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: 10px; }\n'
+    '    .taste-tile { border: 2px solid #000; background: #fff8e7; padding: 9px 12px; min-width: 0; }\n'
+    '    .taste-tile b { display: block; font-size: 12px; color: #555; }\n'
+    '    .taste-tile .v { font-family: "Space Grotesk", sans-serif; font-size: 24px; font-weight: 700; line-height: 1.25; font-variant-numeric: tabular-nums; }\n'
+    '    .taste-tile .v small { font-size: 14px; }\n'
+    '    .taste-tile .meter { height: 9px; border: 1.5px solid #000; background: #fff; margin: 6px 0 3px; }\n'
+    '    .taste-tile .meter i { display: block; height: 100%; background: #000; }\n'
+    '    .taste-tile p { margin: 0; font-size: 12px; color: #333; word-break: keep-all; }\n'
+    '    .taste-tile .who { font-size: 14px; font-weight: 800; margin-top: 2px; word-break: keep-all; }\n'
+    '    @media (max-width: 560px) { .taste-bar span:not(.wide) { font-size: 0; } .taste-sum { font-size: 16px; } }\n'
+    '    .taste-note { margin: 0; background: #fff7c2; border: 1.5px solid #000; padding: 7px 10px; font-size: 13px; word-break: keep-all; }\n'
+)
+
+
+def _taste_tile(label, value, pct, sub):
+    return ('      <div class="taste-tile"><b>' + esc(label) + '</b><div class="v">' + value + '</div>'
+            + (('<div class="meter" aria-hidden="true"><i style="width:%d%%"></i></div>' % pct) if pct is not None else '')
+            + '<p>' + esc(sub) + '</p></div>\n')
+
+
 def taste_html(name, lang='ko'):
     t = TASTE.get(name)
     if not t:
         return ''
-    if lang == 'ko':
-        lines, head = _taste.text_ko(t), '📊 독서 취향 (책 %d권 기준)' % t['n']
-        note = (('참고 코멘트 — 《' + t['note']['title'] + '》: ' + t['note']['ko']) if t['note'] else '')
-    else:
-        lines, head = _taste.text_en(t), 'Reading taste (from %d books)' % t['n']
-        note = (('From a comment on “' + (t['note']['title']) + '”: ' + t['note']['en'])
-                if t['note'] and t['note']['en'] else '')
-    if not lines:
+    ko = lang == 'ko'
+    gname = (lambda g: g['ko']) if ko else (lambda g: g['en'])
+    out = []
+
+    # 한 줄 요약 — 꾸미는 말 없이 권수 그대로
+    top_g = (t.get('genre_all') or [None])[0]
+    big_kw = [k for k in (t.get('keywords') or [])[:2] if k['n'] >= _taste.BIG_KEYWORD_BOOKS] if ko else []
+    if top_g:
+        if ko:
+            sm = '가장 많이 읽은 분야는 <mark>%s</mark> %d권' % (esc(top_g['ko']), top_g['n'])
+            if big_kw:
+                sm += ', 자주 고른 키워드는 ' + ' · '.join(
+                    '<mark>%s</mark> %d권' % (esc(k['ko']), k['n']) for k in big_kw)
+        else:
+            sm = 'Most-read genre: <mark>%s</mark> (%d books)' % (esc(top_g['en']), top_g['n'])
+        out.append('      <p class="taste-sum">' + sm + '</p>\n')
+
+    # 분야 막대
+    if t.get('genre_all'):
+        tot = t['genre_of']
+        segs = ''.join(
+            '<span%s style="flex:%d 0 0;background:%s" title="%s %d">%s</span>' % (
+                ' class="wide"' if g['n'] / tot >= 0.3 else '',
+                g['n'], TASTE_GENRE_COLOR.get(g['ko'], '#e5e5e5'), esc(gname(g)), g['n'],
+                ('%s %d%%' % (esc(gname(g)), round(g['n'] / tot * 100))) if g['n'] / tot >= 0.12 else '')
+            for g in t['genre_all'])
+        legend = ''.join('<li><i style="background:%s"></i>%s %d%s</li>' % (
+            TASTE_GENRE_COLOR.get(g['ko'], '#e5e5e5'), esc(gname(g)), g['n'], '권' if ko else '')
+            for g in t['genre_all'])
+        out.append('      <div>\n        <p class="taste-label">' + ('분야' if ko else 'Genres')
+                   + ' <small>' + (('분야를 아는 %d권' % tot) if ko else ('%d books with a known genre' % tot))
+                   + '</small></p>\n        <div class="taste-bar" role="img" aria-label="'
+                   + esc(', '.join('%s %d' % (gname(g), g['n']) for g in t['genre_all'])) + '">' + segs
+                   + '</div>\n        <ul class="taste-legend">' + legend + '</ul>\n      </div>\n')
+
+    # 키워드 칩 — 예스24 카테고리 이름이라 한국어 페이지에만
+    if ko and t.get('keywords'):
+        chips = ''.join('<span class="taste-chip%s">%s <small>%d권</small></span>' % (
+            ' big' if k in big_kw else '', esc(k['ko']), k['n']) for k in t['keywords'])
+        out.append('      <div>\n        <p class="taste-label">자주 고른 키워드 <small>예스24 카테고리 · %d권 이상</small></p>\n'
+                   '        <div class="taste-chips">%s</div>\n      </div>\n' % (_taste.MIN_KEYWORD_BOOKS, chips))
+
+    # 숫자 타일
+    tiles = ''
+    for f in t['facts']:
+        if f['key'] == 'origin':
+            pct = round(f['dom'] / f['of'] * 100) if f['of'] else 0
+            tiles += _taste_tile('국내 · 번역서' if ko else 'Korean · Translated',
+                                 '%d<small> : </small>%d' % (f['dom'], f['intl']), pct,
+                                 ('국내 작가 %d권 · 번역서 %d권' % (f['dom'], f['intl'])) if ko
+                                 else '%d by Korean authors · %d translated' % (f['dom'], f['intl']))
+        else:
+            label = {'recent': ('최근 2년 안에 나온 책', 'Released in the last 2 years'),
+                     'thick': ('500쪽 이상', '500+ pages'),
+                     'thin': ('250쪽 이하', '250 pages or fewer')}[f['key']][0 if ko else 1]
+            tiles += _taste_tile(label, '%d<small>%%</small>' % f['pct'], f['pct'],
+                                 ('%d권 중 %d권' % (f['of'], f['n'])) if ko else '%d of %d' % (f['n'], f['of']))
+    if t['authors']:
+        tiles += ('      <div class="taste-tile"><b>' + ('여러 권 고른 작가' if ko else 'Authors picked more than once')
+                  + '</b>' + ''.join('<div class="who">%s %d%s</div>' % (
+                      esc(a['author'] if ko else a['author_en']), a['count'], '권' if ko else '')
+                      for a in t['authors'])
+                  + (('<p>' + esc(' '.join('《%s》' % x for x in t['authors'][0]['titles'][:3])) + '</p>') if ko else '')
+                  + '</div>\n')
+    if tiles:
+        out.append('      <div class="taste-tiles">\n' + tiles + '      </div>\n')
+
+    if ko and t['note']:
+        out.append('      <p class="taste-note">💬 《' + esc(t['note']['title']) + '》 — ' + esc(t['note']['ko']) + '</p>\n')
+    elif not ko and t['note'] and t['note']['en']:
+        out.append('      <p class="taste-note">💬 “' + esc(t['note']['title']) + '” — ' + esc(t['note']['en']) + '</p>\n')
+    if not out:
         return ''
-    return ('  <section class="taste">\n    <h2>' + esc(head) + '</h2>\n'
-            + ''.join('    <p>' + esc(l) + '</p>\n' for l in lines)
-            + (('    <p class="taste-note">' + esc(note) + '</p>\n') if note else '')
-            + '  </section>\n')
+    head = ('📊 독서 취향', '책 %d권 기준' % t['n']) if ko else ('📊 Reading taste', 'from %d books' % t['n'])
+    return ('  <section class="taste" aria-label="' + esc(head[0]) + '">\n'
+            '    <header class="taste-head"><h2>' + head[0] + '</h2><span>' + head[1] + '</span></header>\n'
+            '    <div class="taste-body">\n' + ''.join(out) + '    </div>\n  </section>\n')
 
 print(f"CSV 파싱 완료: {len(celebs)}명")
 if EN_TITLE_SKIPPED:
@@ -2935,10 +3048,7 @@ for name, info in celebs.items():
         '    .bc-author { font-size: 12px; color: #555; margin-bottom: 6px; }\n'
         '    .bc-badge { display: inline-block; font-size: 11px; background: #fde047; border: 1px solid #000; padding: 1px 6px; font-weight: 700; }\n'
         '    .celeb-bio { margin: 4px 0 8px; padding: 6px 10px; background: #fff8e7; border-left: 4px solid #000; font-size: 14px; line-height: 1.45; color: #222; }\n'
-        '    .taste { margin: 16px 0; padding: 12px 14px; background: #e0f2fe; border: 2px solid #000; box-shadow: 3px 3px 0 0 #000; font-size: 14px; line-height: 1.6; }\n'
-        '    .taste h2 { margin: 0 0 6px; font-size: 15px; }\n'
-        '    .taste p { margin: 2px 0; }\n'
-        '    .taste .taste-note { margin-top: 6px; font-size: 13px; color: #444; }\n'
+        + TASTE_CSS
         + SHELF_CSS +
         '    .reading-list { list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 14px; counter-reset: rl; }\n'
         '    .rl-item { position: relative; background: #fff; border: 2px solid #000; box-shadow: 4px 4px 0 0 #000; padding: 14px 14px 14px 52px; transition: transform .12s, box-shadow .12s; }\n'
@@ -4686,10 +4796,7 @@ for name, info in celebs.items():
         '    h2 { font-size: 19px; margin: 32px 0 12px; padding-bottom: 4px; border-bottom: 2px solid #000; font-weight: 800; }\n'
         '    .intro { background: #fff; border: 2px solid #000; box-shadow: 4px 4px 0 0 #000; padding: 14px 16px; margin: 16px 0 24px; font-size: 15px; }\n'
         '    .celeb-bio { margin: 4px 0 8px; padding: 6px 10px; background: #fff8e7; border-left: 4px solid #000; font-size: 14px; line-height: 1.45; color: #222; }\n'
-        '    .taste { margin: 16px 0; padding: 12px 14px; background: #e0f2fe; border: 2px solid #000; box-shadow: 3px 3px 0 0 #000; font-size: 14px; line-height: 1.6; }\n'
-        '    .taste h2 { margin: 0 0 6px; font-size: 15px; }\n'
-        '    .taste p { margin: 2px 0; }\n'
-        '    .taste .taste-note { margin-top: 6px; font-size: 13px; color: #444; }\n'
+        + TASTE_CSS +
         '    .celeb-alias { margin: 2px 0 0; font-size: 12px; color: #888; }\n'
         '    .pfaq { margin-top: 40px; }\n'
         '    .pfaq-q { background: #fff; border: 2px solid #000; box-shadow: 3px 3px 0 0 #000; padding: 12px 14px; margin-bottom: 12px; }\n'
