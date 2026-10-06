@@ -219,8 +219,9 @@ def d4l_call(path, params, key):
     d = http_json(D4L_URL + path + '?' + qs)
     res = d.get('response') or {}
     err = res.get('error')
-    if err and re.search(r'해당하는\s*도서가\s*없', str(err)):
-        # 정보나루에 없는 책 — 그 책만 빈 결과로 넘긴다 (2026-10-03 실행에서 이걸로 정보나루가 꺼져 100권을 놓쳤다)
+    if err and re.search(r'ISBN|해당하는\s*도서가\s*없', str(err)):
+        # 그 책만의 문제 — 그 책만 빈 결과로 넘긴다. 키·한도 오류에는 ISBN 이란 말이 없다.
+        # 'ISBN에 해당하는 도서가 없습니다.'(10-03, 100권 놓침) · 'ISBN을 확인해 주시기 바랍니다.'(10-06, 200권 놓침)
         return {}
     if err:
         # 키 활성화 전·키 오류·하루 한도 초과 — 이번 실행에서는 정보나루를 끈다
