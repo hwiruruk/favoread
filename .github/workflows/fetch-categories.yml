@@ -1,0 +1,118 @@
+name: Fetch Book Categories
+
+# '책 취향' 통계(셀럽 페이지의 📊 독서 취향)에 쓸 책 분야를
+# 예스24 카테고리(국내도서 > 소설/시/희곡 > 한국소설 …)에서 받아 data/categories.json 에 채운다.
+# 설명은 tools/TASTE.md.
+#
+# 자동으로 돈다 — 분야를 모르는 책이 10권 넘게 쌓였을 때만 조회한다.
+# 책마다 예스24 상품 페이지를 한 번 받으니 한 번에 800권씩, 책 사이 1초씩 쉰다.
+# 처음엔 1,600권이 넘어 이틀에 걸쳐 채워진다 (손으로 여러 번 돌려도 된다).
+#
+# 손으로 돌리기: Actions → Fetch Book Categories → Run workflow
+#
+# Secret (Settings → Secrets and variables → Actions) — 없어도 돈다:
+#   YES24_PROXY 또는 YES24_API_KEY   있으면 API 응답에 카테고리가 있는지도 본다 (책등·책 정보 워크플로와 같은 값)
+
+on:
+  workflow_dispatch:
+    inputs:
+      limit:
+        description: '이번에 조회할 책 수 (0 = 전부)'
+        required: false
+        default: '800'
+        type: string
+      refresh:
+        description: '지난번에 못 찾은 책도 다시 조회'
+        required: false
+        default: false
+        type: boolean
+  schedule:
+    # 매일 03:47 UTC (KST 12:47) — 책 정보 워크플로(12:17) 뒤에
+    - cron: '47 3 * * *'
+
+env:
+  MIN_BATCH: 10   # 분야를 모르는 책이 이 권수 이상 모이면 자동 실행
+  AUTO_LIMIT: 800 # 자동 실행 때 한 번에 조회할 책 수
+
+jobs:
+  categories:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pull-requests: write
+
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: actions/setup-python@v6
+        with:
+          python-version: '3.12'
+
+      # 아직 머지 안 한 지난 PR이 있으면 거기 받아둔 것부터 이어서 받는다 (같은 책을 또 받지 않게)
+      - name: 머지 전 PR의 결과 이어받기
+        run: |
+          if git fetch --depth=1 origin chore/categories 2>/dev/null; then
+            git checkout FETCH_HEAD -- data/categories.json 2>/dev/null && echo "chore/categories 의 data/categories.json 에서 이어서 받습니다." || true
+          fi
+
+      - name: 조회할 책이 충분히 모였는지 확인
+        id: gate
+        run: |
+          ARGS=""
+          if [ "${{ github.event.inputs.refresh }}" = "true" ]; then ARGS="--refresh"; fi
+          N=$(python3 tools/fetch_categories.py --count $ARGS)
+          echo "분야를 모르는 책: ${N}권 (자동 실행 기준 ${MIN_BATCH}권)"
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ] && [ "$N" -gt 0 ]; then
+            echo "run=true" >> $GITHUB_OUTPUT
+          elif [ "$N" -ge "$MIN_BATCH" ]; then
+            echo "run=true" >> $GITHUB_OUTPUT
+          else
+            echo "run=false" >> $GITHUB_OUTPUT
+            echo "기준 미달 — 이번엔 건너뜁니다."
+          fi
+
+      - name: 카테고리 받기
+        if: steps.gate.outputs.run == 'true'
+        env:
+          YES24_PROXY: ${{ secrets.YES24_PROXY }}
+          YES24_API_KEY: ${{ secrets.YES24_API_KEY }}
+        run: |
+          LIMIT="${{ github.event.inputs.limit }}"
+          if [ -z "$LIMIT" ]; then LIMIT="$AUTO_LIMIT"; fi
+          ARGS=""
+          if [ "$LIMIT" != "0" ]; then ARGS="$ARGS --limit $LIMIT"; fi
+          if [ "${{ github.event.inputs.refresh }}" = "true" ]; then ARGS="$ARGS --refresh"; fi
+          python3 tools/fetch_categories.py $ARGS
+
+      - name: 바뀐 게 있는지 확인
+        if: steps.gate.outputs.run == 'true'
+        id: diff
+        run: |
+          if git diff --quiet -- data/categories.json && [ -z "$(git ls-files --others --exclude-standard data/categories.json)" ]; then
+            echo "changed=false" >> $GITHUB_OUTPUT
+          else
+            echo "changed=true" >> $GITHUB_OUTPUT
+          fi
+
+      - name: PR 만들기
+        if: steps.diff.outputs.changed == 'true'
+        uses: peter-evans/create-pull-request@v8
+        with:
+          commit-message: "chore: 책 분야 수집 — 예스24 카테고리 (독서 취향 통계용)"
+          title: "chore: 책 분야 수집 — 예스24 카테고리 (독서 취향 통계용)"
+          body: |
+            ## 책 분야 수집
+
+            `tools/fetch_categories.py` 가 예스24에서 받은 책 카테고리입니다.
+            바뀐 파일은 `data/categories.json` 하나예요.
+            머지하면 사이트 갱신 워크플로가 돌면서 셀럽 페이지 📊 독서 취향에 분야 줄이 붙습니다.
+
+            ### 확인할 것
+            - `cats` — 예스24 카테고리 경로. 첫 경로가 예스24 대표 분류이고, 분야는 이걸로 정합니다
+              (규칙은 tools/taste.py 의 `path_genre()`, 표는 tools/TASTE.md)
+            - `from` — 어디서 받았는지 (api 예스24 API 응답 · page 상품 페이지)
+            - `misses` — 예스24에 없거나 카테고리가 없는 책. 그 책은 분야 통계에서 빠집니다
+            - 분야가 틀린 책은 편집기 🏷️ 분야 검수에서 고치면 됩니다
+          branch: chore/categories
+          delete-branch: true
+          base: ${{ github.ref_name }}

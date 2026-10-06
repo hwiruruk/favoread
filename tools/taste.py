@@ -13,10 +13,10 @@ generate.py 가 빌드 때 부른다. 네트워크도 모델도 쓰지 않는다
     - 작가는 서로 다른 작품이 2권 이상일 때만 꼽는다 (한 권짜리 작가는 취향이 아니다)
       같은 시리즈의 권수 늘리기는 한 작품으로 센다
     - 출판사는 3권 이상이고 비중 30% 이상일 때만 꼽는다
-    - 분야는 분야를 아는 책이 5권 이상·70% 이상이면 많은 순으로 보여준다 (KDC → genre())
+    - 분야는 분야를 아는 책이 5권 이상·70% 이상이면 많은 순으로 보여준다 (예스24 카테고리 → genre())
 
 책 정보(번역서·출간일·쪽수·시리즈)는 data/bookinfo.json (tools/fetch_bookinfo.py).
-분야(KDC)는 data/subjects.json (tools/fetch_subjects.py — 국립중앙도서관·도서관 정보나루).
+분야는 data/categories.json (tools/fetch_categories.py — 예스24 카테고리).
 작가·출판사는 data.csv 에서 온다. 상수는 여기 한 곳에서만 고친다.
 """
 import re
@@ -36,7 +36,7 @@ THICK_PAGES = 500        # 이 쪽수 이상이면 두꺼운 책
 THIN_PAGES = 250         # 이 쪽수 이하면 얇은 책
 MIN_PAGE_SHARE = 0.50
 
-# 분야 (data/subjects.json — tools/fetch_subjects.py)
+# 분야 (data/categories.json — tools/fetch_categories.py)
 GENRE_TOP = 3            # 분야는 많은 순으로 이만큼까지 보여준다
 GENRE_GAP = 0.20         # 한 분야 비중이 사이트 평균보다 이만큼 높으면 따로 말한다
 MIN_GENRE_BOOKS = 3      # 그 분야 책이 이 권수 이상일 때만
@@ -78,46 +78,83 @@ GENRE_EN = {
 }
 GENRE_EXCLUDE = '제외'   # 검수에서 '통계에서 뺌'을 고른 책
 
-_FORM = {'1': ('시', 'Poetry'), '3': ('소설', 'Fiction'),
-         '4': ('에세이', 'Essays'), '6': ('에세이', 'Essays'), '8': ('에세이', 'Essays')}
+# 예스24 카테고리 → 분야. 국내도서 바로 아래 분류 이름(공백 뺀 것)을 위에서부터 맞춰 본다.
+# editor/app.js 의 Y24_TOP 과 같은 표 (같이 고칠 것)
+_Y24_TOP = [
+    (r'소설|시/?희곡|문학', 'lit'),
+    (r'에세이', '에세이'),
+    (r'만화|라이트노벨', '만화'),
+    (r'자기계발', '자기계발'),
+    (r'경제|경영', '경제·경영'),
+    (r'인문|역사|종교|인물|철학', '인문'),
+    (r'사회|정치', '사회'),
+    (r'과학|IT|모바일|컴퓨터', '과학'),
+    (r'가정|살림|건강|취미|요리|외국어|사전|레저|스포츠', '실용·생활'),
+    (r'예술|대중문화', '예술'),
+    (r'여행', '여행'),
+    (r'어린이|유아', '어린이책'),
+    (r'청소년', 'teen'),
+    (r'잡지|수험|자격증|참고서|교재|전집|대학', '기타'),
+]
+_MALLS = re.compile(r'국내도서|외국도서|eBook|중고', re.I)
 
 
-def genre(kdc, add_code=''):
-    """KDC 분류번호 → (분야, 영문). 서점 분류에 가깝게 묶는다. 모르면 None.
-    문학(8xx)은 셋째 자리가 형식이다: 1 시 · 2 희곡 · 3 소설 · 4 수필 · 6 일기·서간·기행 · 8 르포·기타(산문).
-    셋째 자리가 0이면(810 한국문학처럼 나라만 있고 형식이 없음) 형식을 모르니 None —
-    부가기호 끝 세 자리로 분류를 대신할 때 흔하다. 89x·8x9(기타 언어 문학)도 셋째 자리가 형식이 아니라 None.
-    부가기호 첫 자리가 7이면 아동 도서라 '어린이책'으로 따로 센다."""
-    if re.sub(r'\D', '', add_code or '')[:1] == '7':
-        return ('어린이책', "Children's books")
-    c = re.sub(r'\D', '', kdc or '')[:3]
-    if len(c) < 3:
+def _lit(names):
+    """문학 아래 분류 이름들 → 소설·시·에세이·기타 문학. 가장 자세한 단계부터 본다. 모르면 None."""
+    for x in reversed(names):
+        n = x.replace(' ', '')
+        if re.search(r'소설|노벨', n):
+            return '소설'
+        if re.search(r'에세이|수필', n):
+            return '에세이'
+        if n.endswith('희곡') and '시' not in n[:-2]:
+            return '기타 문학'
+        if n.endswith('시') or n.startswith('시/') or re.search(r'시집|시조', n):
+            return '시'
+    return None
+
+
+def _top(name):
+    n = name.replace(' ', '')
+    return next((g for pat, g in _Y24_TOP if re.search(pat, n, re.I)), None)
+
+
+def path_genre(path):
+    """예스24 카테고리 경로 하나(['국내도서', '소설/시/희곡', '한국소설', ...]) → 분야 이름. 모르면 None.
+    문학은 아래 단계(한국소설·한국시·한국에세이)까지 봐야 형식을 안다.
+    청소년은 아래 단계로 다시 맞춘다 (청소년 소설 → 소설, 청소년 인문 → 인문)."""
+    p = [x.strip() for x in path or [] if x and x.strip()]
+    if p and _MALLS.fullmatch(p[0].replace(' ', '')):
+        p = p[1:]
+    if not p:
         return None
-    if c == '657':
-        return ('만화', 'Comics')
-    if c[0] == '8':
-        if c[1] in '09' or c[2] in '09':
-            return None
-        return _FORM.get(c[2], ('기타 문학', 'Other literature'))
-    if c == '199':
-        return ('자기계발', 'Self-help')
-    if c[0] in '127' or (c[0] == '9' and c[1] != '8'):
-        return ('인문', 'Humanities')
-    if c[:2] == '98':
-        return ('여행', 'Travel')
-    if c[:2] == '32':
-        return ('경제·경영', 'Business')
-    return {'3': ('사회', 'Society'), '4': ('과학', 'Science'), '5': ('실용·생활', 'Practical'),
-            '6': ('예술', 'Arts')}.get(c[0], ('기타', 'Other'))
+    g = _top(p[0])
+    if g == 'lit':
+        return _lit(p[1:])
+    if g == '만화' and any('노벨' in x for x in p[1:]):
+        return '소설'   # 만화/라이트노벨 > 라이트노벨
+    if g == 'teen':
+        return _lit(p[1:]) or next((x for x in map(_top, reversed(p[1:])) if x and x not in ('lit', 'teen')), None)
+    return g
+
+
+def genre(cats):
+    """예스24 카테고리 경로 목록 → (분야, 영문). 예스24가 먼저 적은 경로(대표 분류)부터 보고
+    분야를 정할 수 있는 첫 경로를 쓴다. 모르면 None."""
+    for c in cats or []:
+        g = path_genre(c.get('path') if isinstance(c, dict) else c)
+        if g:
+            return (g, GENRE_EN.get(g, g))
+    return None
 
 
 def _genre_of(subjects, t):
-    """사람이 정한 분야(data/genres.json → genre_override)가 있으면 그걸, 없으면 KDC로 정한다."""
+    """사람이 정한 분야(data/genres.json → genre_override)가 있으면 그걸, 없으면 예스24 카테고리로 정한다."""
     s = (subjects or {}).get(t) or {}
     g = s.get('genre_override')
     if g:
         return None if g == GENRE_EXCLUDE else (g, GENRE_EN.get(g, g))
-    return genre(s.get('kdc'), s.get('add_code'))
+    return genre(s.get('cats'))
 
 
 def site_baseline(celebs, bookinfo, this_year, subjects=None):
@@ -152,7 +189,7 @@ def _trim(text, n):
 def compute(books, bookinfo, baseline, this_year, subjects=None):
     """books: 그 셀럽의 책 목록(dict: title, author, publisher, comment, ...).
     bookinfo: {제목: 책 정보}. baseline: site_baseline() 결과.
-    subjects: {제목: 분야} (data/subjects.json). 없으면 분야 줄이 빠진다.
+    subjects: {제목: 카테고리} (data/categories.json). 없으면 분야 줄이 빠진다.
     믿을 만한 게 없으면 None."""
     uniq = {}
     for b in books:
