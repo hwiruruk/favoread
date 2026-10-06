@@ -24,7 +24,6 @@ MIN_BOOKS = 5            # 이 권수 미만이면 취향을 내지 않는다
 MIN_COVERAGE = 0.7       # 정보가 확인된 책 비율
 MIN_AUTHOR_WORKS = 2     # 작가로 꼽을 최소 작품 수 (시리즈는 1작품)
 MAX_AUTHORS = 3
-NOTE_MAX = 90            # 참고 코멘트 최대 글자 수
 
 RECENT_YEARS = 2         # '최근 출간'으로 볼 기간
 MIN_RECENT_SHARE = 0.50
@@ -213,11 +212,6 @@ def _genre_of(subjects, t):
     return genre(s.get('cats'))
 
 
-def _trim(text, n):
-    text = re.sub(r'\s*\((출처|Source):[^)]*\)\s*$', '', (text or '').strip())
-    return text if len(text) <= n else text[:n - 1].rstrip() + '…'
-
-
 def compute(books, bookinfo, this_year, subjects=None):
     """books: 그 셀럽의 책 목록(dict: title, author, publisher, comment, ...).
     bookinfo: {제목: 책 정보}.
@@ -287,16 +281,7 @@ def compute(books, bookinfo, this_year, subjects=None):
     if not facts and not authors and not genres:
         return None
 
-    # 참고 코멘트 — 꼽힌 작가의 책 중 코멘트가 붙은 첫 권
-    picked = {t for a in authors for t in a['titles']}
-    note = None
-    for t in sorted(picked):
-        c = (uniq[t].get('comment') or '').strip()
-        if c:
-            note = {'title': t, 'ko': _trim(c, NOTE_MAX),
-                    'en': _trim(uniq[t].get('comment_en') or '', NOTE_MAX)}
-            break
-    return {'n': n_all, 'facts': facts, 'authors': authors, 'note': note,
+    return {'n': n_all, 'facts': facts, 'authors': authors,
             'genres': genres, 'genre_all': genre_all, 'keywords': keywords, 'genre_of': genre_of}
 
 
