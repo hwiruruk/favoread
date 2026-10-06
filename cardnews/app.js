@@ -1565,7 +1565,8 @@ function bookSpines(sel, sq) {
            onerror="this.parentNode.classList.add('cn-sp-fail');this.remove()"
            onload="if(this.naturalWidth/this.naturalHeight>${SPINE_MAX_RATIO}){this.parentNode.classList.add('cn-sp-fail');this.remove()}">`
       : '';
-    return `<div class="cn-sp${sp ? '' : ' cn-sp-noimg'}" style="--w:${w}px;height:${h}px;--c:${spineTint(t)}">
+    const c = b.ref.spineColor || spineTint(t);          // 표지 대표색이 있으면 그 색으로
+    return `<div class="cn-sp${sp ? '' : ' cn-sp-noimg'}${isLightColor(b.ref.spineColor) ? ' cn-sp-light' : ''}" style="--w:${w}px;height:${h}px;--c:${c}">
       <span class="cn-sp-t" style="font-size:${Math.max(9, Math.round(w * 0.34))}px"><i>${esc(t)}</i></span>${img}
     </div>`;
   }).join('');
@@ -1797,6 +1798,17 @@ function hashOf(str, mul) {
   let h = 0;
   for (const ch of String(str || '')) h = (Math.imul(h, mul) + ch.codePointAt(0)) >>> 0;
   return h;
+}
+/* 표지 대표색(spineColor, tools/cover_colors.py)이 밝으면 흰 제목이 묻히니 검은 글자로 쓴다.
+   generate.py의 is_light_color와 같은 기준. */
+function isLightColor(hex) {
+  const m = /^#([0-9a-f]{6})$/i.exec(hex || '');
+  if (!m) return false;
+  const lin = [0, 2, 4].map((i) => {
+    const c = parseInt(m[1].slice(i, i + 2), 16) / 255;
+    return c <= 0.04045 ? c / 12.92 : Math.pow((c + 0.055) / 1.055, 2.4);
+  });
+  return 0.2126 * lin[0] + 0.7152 * lin[1] + 0.0722 * lin[2] > 0.4;
 }
 function spineTint(title) {
   const h = hashOf(title, 31);
