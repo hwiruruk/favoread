@@ -257,7 +257,8 @@ def script_lang(s):
     s = s or ''
     for rx, lang in ((r'[\u3040-\u30ff]', 'ja'), (r'[\u4e00-\u9fff]', 'han'), (r'[\u0400-\u04ff]', 'ru'),
                      (r'[\u0370-\u03ff]', 'el'), (r'[\u0590-\u05ff]', 'he'), (r'[\u0600-\u06ff]', 'ar'),
-                     (r'[\u0e00-\u0e7f]', 'th'), (r'[A-Za-z\u00c0-\u024f]', 'latin')):
+                     (r'[\u0e00-\u0e7f]', 'th'), (r'[\u0980-\u09ff]', 'bn'), (r'[\u0900-\u097f]', 'hi'),
+                     (r'[A-Za-z\u00c0-\u024f]', 'latin')):
         if re.search(rx, s):
             return lang
     return ''
@@ -1299,8 +1300,13 @@ def sync_authors(args, books, doc, only, today):
 #   저자 원어  위키데이터 '모국어 이름'(P1559), 없으면 국적 언어의 이름표.
 #              한국어 위키백과 첫 문단의 '(일본어: 村上 春樹, …' 도 함께 본다
 # 원제가 있는 책(번역서)의 저자만 찾는다. 한국 작가는 한국어 이름이 곧 원어 이름이다.
+# 라틴 문자 이름은 받지 않는다. 영어권·유럽 작가의 '모국어 이름'은 본명·전체 이름이라
+# (George Orwell → Eric Arthur Blair, Agatha Christie → Dame Agatha Mary Clarissa …)
+# 영어 이름 옆에 붙이면 오히려 헷갈린다. 2026-10-06 첫 실행에서 156명 중 70여 명이 이랬다.
 # 사람이 검수 창에서 정하면 native_status/native_value 에 남고, 그 저자는 다시 찾지 않는다.
-NATIVE_LOOKUP_VERSION = 1
+#   2: 라틴 문자 이름 제외, 모국어 이름(본명)보다 그 언어의 이름표(필명) 우선 (平井太郎 → 江戸川乱歩),
+#      위키백과의 가나 읽기 괄호를 걷어 냄 (夏(なつ)目(め) → 夏目漱石)
+NATIVE_LOOKUP_VERSION = 2
 
 # 국적(P27) → 이름표 언어. 모국어 이름(P1559)이 없는 사람만 이걸로 고른다
 WD_COUNTRY_LANG = {
@@ -1322,6 +1328,10 @@ KOWIKI_NATIVE_RE = re.compile(
     r'(' + '|'.join(sorted(KOWIKI_LANGS, key=len, reverse=True)) + r')'
     r'(?:\s*(?:간체자|번체자|정체자))?\s*:\s*([^,;()\[\]]+)')
 CJK = '぀-ヿ一-鿿'
+# 위키데이터에서 함께 받을 이름표 언어 (모국어 이름의 언어와 국적 언어)
+WD_LABEL_LANGS = 'ja|zh|zh-hans|zh-hant|zh-cn|zh-tw|ru|uk|el|grc|he|ar|fa|th|bn|hi'
+# 위키백과 첫 문단의 읽기 괄호 '夏目(なつめ) 漱石(そうせき)', '(ひがしの けいご)'
+KANA_READING_RE = re.compile(r'\s*[(（][぀-ヿー・\s]+[)）]')
 
 
 def native_clean(s):
@@ -1330,6 +1340,13 @@ def native_clean(s):
     v = re.sub(r'\s*\[[^\]]*\]', '', v).strip(' ,;:·')
     if script_lang(v) in ('ja', 'han'):
         v = re.sub(r'\s+[A-Za-z].*$', '', v)          # 뒤에 붙은 로마자 읽기
+        # 한자 이름 뒤에 띄어 쓴 히라가나 읽기 '小川 洋子 おがわ ようこ' (群 ようこ 처럼 이름 자체인 건 둔다)
+        toks = v.split()
+        kana = [i for i, t in enumerate(toks) if re.fullmatch(r'[぀-ゟ]+', t)]
+        if len(kana) >= 2 and kana == list(range(kana[0], len(toks))) and kana[0] >= 1 \
+                and all(re.search(r'[一-鿿]', t) for t in toks[:kana[0]]):
+            toks = toks[:kana[0]]
+        v = ' '.join(toks)
         v = re.sub(r'(?<=[%s])\s+(?=[%s])' % (CJK, CJK), '', v)
     v = re.sub(r'\s+', ' ', v).strip()
     if not v or len(v) > 60 or re.search(r'[가-힣ㄱ-ㅎㅏ-ㅣ\d]', v):
@@ -1346,39 +1363,58 @@ def _hint_rank(name, hints):
 
 
 def wikidata_native(qid, hints):
-    """위키데이터 인물 → (원어 이름, 언어). 모국어 이름(P1559)을 먼저, 없으면 국적 언어의 이름표."""
+    """위키데이터 인물 → (원어 이름, 언어). 라틴 문자 이름은 받지 않는다.
+
+    모국어 이름(P1559)의 언어를 따르되, 그 언어의 이름표가 있으면 이름표를 쓴다.
+    모국어 이름은 본명일 때가 많다 (江戸川乱歩 → 平井太郎, 新海誠 → 新津誠).
+    모국어 이름이 없으면 국적 언어의 이름표를, 책 원제와 같은 글자일 때만 쓴다
+    (러시아 제국에서 태어난 Joseph Conrad 에게 키릴 이름이 붙지 않게).
+    """
     p = urllib.parse.urlencode({'action': 'wbgetentities', 'format': 'json', 'ids': qid,
-                                'props': 'labels|claims',
-                                'languages': '|'.join(sorted(set(WD_COUNTRY_LANG.values())))})
+                                'props': 'labels|claims', 'languages': WD_LABEL_LANGS})
     e = ((http_json(WIKIDATA_API + '?' + p) or {}).get('entities') or {}).get(qid) or {}
+    labels = e.get('labels') or {}
+
+    def label(lang):
+        for k in (lang, (lang or '').split('-')[0]):
+            v = ((labels.get(k) or {}).get('value')) if k else None
+            if v:
+                return v
+        return None
+
     names = []
     for c in (e.get('claims') or {}).get('P1559') or []:
         v = ((c.get('mainsnak') or {}).get('datavalue') or {}).get('value') or {}
         if not isinstance(v, dict):
             continue
         lang = (v.get('language') or '').lower()
-        n = native_clean(v.get('text'))
-        if n and lang.split('-')[0] != 'ko':
+        if lang.split('-')[0] == 'ko':
+            continue
+        text = native_clean(v.get('text'))
+        lab = native_clean(label(lang))
+        n = lab if lab and script_lang(lab) == script_lang(text) else text
+        if n and script_lang(n) != 'latin':
             names.append((n, lang))
     if names:
         names.sort(key=lambda x: _hint_rank(x[0], hints))
         return names[0]
-    labels = e.get('labels') or {}
     for cid in _wd_claim_ids(e, 'P27'):
         lang = WD_COUNTRY_LANG.get(cid)
-        n = native_clean(((labels.get(lang) or {}).get('value')) if lang else '')
-        if n:
+        n = native_clean(label(lang)) if lang else ''
+        if n and _hint_rank(n, hints) == 0:
             return n, lang
     return None, None
 
 
 def kowiki_native(intro):
     """한국어 위키백과 첫 문단의 원어 표기 → (이름, 언어)."""
-    m = KOWIKI_NATIVE_RE.search((intro or '')[:250])
+    m = KOWIKI_NATIVE_RE.search(KANA_READING_RE.sub('', (intro or '')[:300]))
     if not m:
         return None, None
     n = native_clean(m.group(2))
-    return (n, KOWIKI_LANGS[m.group(1)]) if n else (None, None)
+    if not n or script_lang(n) == 'latin':
+        return None, None
+    return n, KOWIKI_LANGS[m.group(1)]
 
 
 def kowiki_pages_by_title(title):
@@ -1427,7 +1463,14 @@ def lookup_native(author, ent, book_titles, hints, sleep):
             found.append((n, lang, 'wikidata', 'https://www.wikidata.org/wiki/' + qid))
 
     try:
-        pages = kowiki_pages_by_title(wtitle) if wtitle else kowiki_person_pages(author, book_titles)
+        if wtitle:
+            pages = kowiki_pages_by_title(wtitle)
+        else:
+            # 영문 이름 후보로 이어진 문서가 아니면, 첫 문단에 이 저자의 책 제목이 있어야 같은 사람으로 본다
+            # ('작가·만화가' 같은 말만으로는 동명이인이 걸린다 — 사사키 후미오 → ささきふみお)
+            marks = [norm_ko(t) for t in book_titles if len(norm_ko(t)) >= 2]
+            pages = [pg for pg in kowiki_person_pages(author, book_titles)
+                     if any(m in norm_ko(pg.get('extract')) for m in marks)]
         reached += 1
     except Transient as e:
         pages = []
@@ -1441,11 +1484,9 @@ def lookup_native(author, ent, book_titles, hints, sleep):
     if not reached:
         raise Transient('; '.join(notes) or '조회할 곳이 없음')
 
-    en = plain(ent.get('value')) or (cands[0]['name'] if cands else '') or plain(ent.get('csv'))
     groups = collections.OrderedDict()
     for n, lang, src, u in found:
-        # 라틴 문자 이름이 영어 이름과 같으면(Albert Camus) 덧붙일 까닭이 없다
-        if script_lang(n) == 'latin' and en and name_key(n) == name_key(en):
+        if script_lang(n) == 'latin':   # 영어권·유럽 작가의 본명·전체 이름 (위 설명)
             continue
         g = groups.setdefault(re.sub(r'\s+', '', n).lower(),
                               {'name': n, 'lang': lang, 'sources': [], 'urls': []})
@@ -1469,7 +1510,16 @@ def sync_native(args, books, doc, only, today):
     stop = False
     for name, a in found.items():
         ent = authors.get(name)
-        if not ent or a['multi'] or args.no_lookup or args.skip_authors:
+        if not ent:
+            continue
+        if ent.get('native_candidates'):
+            # 조회 없이도 매번 — 예전 방식으로 받은 라틴 문자 이름은 바로 뺀다
+            kept = [c for c in ent['native_candidates'] if script_lang(c.get('name')) != 'latin']
+            if kept:
+                ent['native_candidates'] = kept
+            else:
+                ent.pop('native_candidates')
+        if a['multi'] or args.no_lookup or args.skip_authors:
             continue
         # 원제가 있는 책(번역서)의 저자만. 원제 글자로 어느 언어 이름을 찾을지 짐작한다
         hints = {script_lang((titles.get(k) or {}).get('original')) for k in a['books']} - {''}
