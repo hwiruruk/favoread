@@ -1516,7 +1516,14 @@ TASTE_GENRE_COLOR = {
 }
 TASTE_CSS = (
     '    .taste { margin: 16px 0; background: #fff; border: 2px solid #000; box-shadow: 4px 4px 0 0 #000; font-size: 14px; line-height: 1.6; }\n'
-    '    .taste-head { display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 10px; padding: 10px 14px; background: #e0f2fe; border-bottom: 2px solid #000; }\n'
+    '    .taste-head { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 10px; padding: 10px 14px; background: #e0f2fe; cursor: pointer; list-style: none; }\n'
+    '    .taste-head::-webkit-details-marker { display: none; }\n'
+    '    .taste-head:hover { background: #fde047; }\n'
+    '    .taste-head:focus-visible { outline: 3px solid #2563eb; outline-offset: 2px; }\n'
+    '    .taste[open] > .taste-head { border-bottom: 2px solid #000; }\n'
+    '    .taste-open { margin-left: auto; padding: 3px 10px; font-size: 12px; font-weight: 800; background: #fff; border: 2px solid #000; box-shadow: 2px 2px 0 0 #000; white-space: nowrap; }\n'
+    '    .taste-open::after { content: attr(data-show); }\n'
+    '    .taste[open] .taste-open::after { content: attr(data-hide); }\n'
     '    .taste-head h2 { margin: 0; padding: 0; border: 0; font-size: 16px; font-weight: 900; }\n'
     '    .taste-head span { font-size: 12px; color: #333; }\n'
     '    .taste-body { padding: 14px; display: grid; gap: 18px; }\n'
@@ -1554,7 +1561,8 @@ def _taste_tile(label, value, pct, sub):
             + '<p>' + esc(sub) + '</p></div>\n')
 
 
-def taste_html(name, lang='ko'):
+def taste_html(name, lang='ko', who=''):
+    """접힌 카드 — '○○의 독서 취향이 궁금하다면?'을 누르면 펼쳐진다. who: 본문에 쓰는 이름."""
     t = TASTE.get(name)
     if not t:
         return ''
@@ -1631,10 +1639,14 @@ def taste_html(name, lang='ko'):
         out.append('      <p class="taste-note">💬 “' + esc(t['note']['title']) + '” — ' + esc(t['note']['en']) + '</p>\n')
     if not out:
         return ''
-    head = ('📊 독서 취향', '책 %d권 기준' % t['n']) if ko else ('📊 Reading taste', 'from %d books' % t['n'])
-    return ('  <section class="taste" aria-label="' + esc(head[0]) + '">\n'
-            '    <header class="taste-head"><h2>' + head[0] + '</h2><span>' + head[1] + '</span></header>\n'
-            '    <div class="taste-body">\n' + ''.join(out) + '    </div>\n  </section>\n')
+    who = who or short_name(name)
+    head = (('📊 %s의 독서 취향이 궁금하다면?' % esc(who), '책 %d권 기준' % t['n']) if ko
+            else ("📊 Curious about %s's reading taste?" % esc(who), 'from %d books' % t['n']))
+    return ('  <details class="taste">\n'
+            '    <summary class="taste-head"><h2>' + head[0] + '</h2><span>' + head[1] + '</span>'
+            '<b class="taste-open" aria-hidden="true" data-show="' + ('펼쳐 보기 ▾' if ko else 'Show ▾')
+            + '" data-hide="' + ('접기 ▴' if ko else 'Hide ▴') + '"></b></summary>\n'
+            '    <div class="taste-body">\n' + ''.join(out) + '    </div>\n  </details>\n')
 
 print(f"CSV 파싱 완료: {len(celebs)}명")
 if EN_TITLE_SKIPPED:
@@ -4908,7 +4920,7 @@ for name, info in celebs.items():
                            'Could not create the image. Please try again.',
                            _name_pl + ' — ' + str(n) + ' books', '_transparent')
         + (EN_TR_NOTE_HTML if en_show_tr_note else '')
-        + taste_html(name, 'en')
+        + taste_html(name, 'en', _name_pl)
         + en_taste_html
         + en_related_html
         + '  <section class="pfaq">\n'
