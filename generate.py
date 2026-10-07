@@ -4776,7 +4776,8 @@ for name, info in celebs.items():
     en_kw.append(name + ' 책')
     for _r in _roles:
         en_kw += EN_ROLE_INFO[_r]['kw']
-    en_kw += ['korean celebrity books', 'korean celebrity reading list', 'books from korea']
+    en_kw += ['korean celebrity books', 'korean celebrity reading list', 'books from korea',
+              'korean celebrity book archive']
     _seen_kw = set()
     en_kw = [k for k in en_kw if not (k.lower() in _seen_kw or _seen_kw.add(k.lower()))]
 
@@ -5246,7 +5247,7 @@ for title, t_en in book_title_en.items():
         + ((esc(orig[0]) + ', ') if orig else '') + ((esc(author_nat[0]) + ', ') if author_nat else '')
         + 'books read by ' + esc(top_celebs_str) + ', '
         + ', '.join((esc(c) + ' books') for c in celeb_names_en[:3]) + ', '
-        + 'kpop idol books, korean celebrity book recommendations, kpop reading list">\n'
+        + 'kpop idol books, korean celebrity book recommendations, kpop reading list, korean celebrity book archive">\n'
         + ('  <meta name="robots" content="index, follow, max-image-preview:large">\n'
            if indexable else '  <meta name="robots" content="noindex, follow">\n') +
         '  <meta property="og:title" content="' + esc(title_text) + '">\n'
@@ -5658,7 +5659,7 @@ for _role in sorted(en_role_members, key=lambda r: -len(en_role_members[r])):
         '  <meta name="description" content="' + esc(c_desc) + '">\n'
         '  <meta name="keywords" content="'
         + esc(', '.join(info_r['kw'] + ['korean celebrity books', 'books from korea',
-                                        'what korean stars read'])) + '">\n'
+                                        'what korean stars read', 'korean celebrity book archive'])) + '">\n'
         '  <meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1">\n'
         '  <meta property="og:title" content="' + esc(c_title) + '">\n'
         '  <meta property="og:description" content="' + esc(c_desc) + '">\n'
@@ -6406,7 +6407,7 @@ en_index = (
     '  <meta name="viewport" content="width=device-width, initial-scale=1.0">\n'
     '  <title>What K-pop Idols &amp; K-Drama Actors Read | Favorbook</title>\n'
     '  <meta name="description" content="A searchable archive of what Korean stars read — K-pop idols (BTS, aespa, IVE, NewJeans), K-drama and K-movie actors, directors and musicians. Every book traced to its source.">\n'
-    '  <meta name="keywords" content="korean celebrity books, korean actor books, k-drama actor books, k-movie actor books, what korean actors read, korean drama star reading list, kdrama books, korean actress books, korean film director books, korean star book recommendations, books from korea, kpop idol books, what bts reads, BTS reading list, RM book recommendations, IU books, what kpop idols read, kpop star reading, korean celebrity books, k-drama actor books, IVE books, NewJeans reading list, SEVENTEEN books, kpop idol favorite books, korean idol book recommendations, kpop reading list, books read by kpop idols, korean drama actor reading list, kdrama books, kpop fandom books, kpop star book archive, kpop star reading, kpop idol reading list, korean celebrity reading archive, what do kpop idols read">\n'
+    '  <meta name="keywords" content="korean celebrity books, korean actor books, k-drama actor books, k-movie actor books, what korean actors read, korean drama star reading list, kdrama books, korean actress books, korean film director books, korean star book recommendations, books from korea, kpop idol books, what bts reads, BTS reading list, RM book recommendations, IU books, what kpop idols read, kpop star reading, korean celebrity books, k-drama actor books, IVE books, NewJeans reading list, SEVENTEEN books, kpop idol favorite books, korean idol book recommendations, kpop reading list, books read by kpop idols, korean drama actor reading list, kdrama books, kpop fandom books, kpop star book archive, kpop star reading, kpop idol reading list, korean celebrity reading archive, what do kpop idols read, book archive, korean celebrity book archive, kpop idol book archive, kdrama actor book archive">\n'
     '  <meta name="referrer" content="no-referrer">\n'
     '\n'
     '  <link rel="icon" href="' + BASE + 'favicon.svg" type="image/svg+xml">\n'
