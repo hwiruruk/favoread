@@ -2729,10 +2729,27 @@ const Ttl = {
   touched: new Set(),   // 이번에 손댄 키 — 저장할 때 최신 파일 위에 이것만 덮는다
   authors: new Map(),   // 저자(한국어) -> entry
   touchedAuthors: new Set(),
+  drafts: new Map(),    // "도서명|저자" -> { value, source } — 자동 번역 초안. 승인 전에는 사이트에 나가지 않는다
+  translating: false,
   loaded: false,
   dirty: false,
   shown: 60,
 };
+const DRAFTS_LS = 'favoread.ttlDrafts';
+function loadDrafts() {
+  try { for (const [k, v] of Object.entries(JSON.parse(localStorage.getItem(DRAFTS_LS) || '{}'))) Ttl.drafts.set(k, v); }
+  catch (e) { /* 저장소를 못 쓰면 이번 창에서만 유지 */ }
+}
+function saveDrafts() {
+  try { localStorage.setItem(DRAFTS_LS, JSON.stringify(Object.fromEntries(Ttl.drafts))); } catch (e) { /* 무시 */ }
+}
+const ADRAFTS_LS = 'favoread.autDrafts';
+Ttl.authorDrafts = new Map();   // 저자(한국어) -> { value, source } — 저자 로마자 자동 번역 초안
+try { for (const [k, v] of Object.entries(JSON.parse(localStorage.getItem(ADRAFTS_LS) || '{}'))) Ttl.authorDrafts.set(k, v); } catch (e) { /* 무시 */ }
+function saveAuthorDrafts() {
+  try { localStorage.setItem(ADRAFTS_LS, JSON.stringify(Object.fromEntries(Ttl.authorDrafts))); } catch (e) { /* 무시 */ }
+}
+loadDrafts();
 const titlesDlg = $('#titlesDialog');
 const TTL_LABEL = { pending: '미검수', approved: '승인', none: '공식판 없음' };
 const TTL_FLAG = {
@@ -2987,6 +3004,7 @@ function ttlRows() {
         a_star: ap && av.values.some(([x]) => /\*\s*$/.test(x)),
         a_nocand: ap && !(a.candidates || []).length,
         a_native: !a.native_status && (a.native_candidates || []).length > 0,
+        a_draft: ap && Ttl.authorDrafts.has(name),
         a_pending: ap, a_approved: !ap,
       }[f];
       if (!aok) continue;
@@ -3011,6 +3029,7 @@ function ttlRows() {
       star: pend && fl.includes('csv_star'),
       empty: pend && fl.includes('csv_empty'),
       nocand: pend && !cands.length,
+      draft: pend && Ttl.drafts.has(k),
       pending: pend, approved: st === 'approved', none: st === 'none', all: true,
       orig: !v.orig_status && !!v.original,
     }[f];
@@ -3060,7 +3079,10 @@ function renderTitlesList() {
   const na = autCounts(idx);
   $('#ttlCount').textContent =
     `이 목록 ${rows.length} · 제목 미검수 ${n.pending} · 승인 ${n.approved} · 공식판 없음 ${n.none}` +
-    ` · 저자 미검수 ${na.pending} · 승인 ${na.approved}`;
+    ` · 저자 미검수 ${na.pending} · 승인 ${na.approved}` +
+    (Ttl.drafts.size ? ` · 제목 초안 ${Ttl.drafts.size}` : '') +
+    (Ttl.authorDrafts.size ? ` · 저자 초안 ${Ttl.authorDrafts.size}` : '');
+  updateDraftButtons();
 
   const box = $('#ttlList');
   if (!rows.length) {
@@ -3073,6 +3095,8 @@ function renderTitlesList() {
   }
   const page = rows.slice(0, Ttl.shown);
   box.innerHTML = page.map(([k, v]) => {
+    // 저자 필터: 저자 카드만. 제목 승인 버튼이 없으니 저자만 승인하다 제목까지 승인될 일이 없다
+    if ($('#ttlFilter').value.startsWith('a_')) return authorOnlyCard(k, v, idx);
     const st = v.status || 'pending';
     const cands = v.candidates || [];
     const { link, author_en } = bookLinkFor(v.title);
@@ -3086,7 +3110,7 @@ function renderTitlesList() {
         ${conf}
         <b>${esc(v.title)}</b><span class="muted"> · ${esc(v.author || '')}</span>
         <span class="cmt-state s-${st}">${TTL_LABEL[st] || st}${v.auto ? ' (자동)' : ''}</span>
-        ${flags}
+        ${flags}${st === 'pending' && Ttl.drafts.has(k) ? '<span class="ttl-flag draft" title="자동 번역 초안 — 확인 후 확정해야 사이트에 나갑니다">번역 초안</span>' : ''}
         <span class="cmt-spacer"></span>
       </div>
       <p class="ttl-csv">지금 data.csv: <b>${v.csv ? esc(v.csv) : '(비어 있음)'}</b>
@@ -3102,6 +3126,7 @@ function renderTitlesList() {
       <div class="ttl-value">
         <span class="ttl-lbl">영문 제목</span>
         <input type="text" data-f="value" placeholder="영문 제목 (공식판이 없으면 직역)">
+        <button type="button" class="btn small" data-act="trans" title="한국어 제목을 자동 번역해 입력칸에 넣습니다 (초안 — 확정해야 반영)">🌐 번역</button>
       </div>
       <div class="ttl-value">
         <span class="ttl-lbl" title="영문 페이지에 영어 제목과 함께 나가는 원서 제목">원제</span>
@@ -3116,12 +3141,15 @@ function renderTitlesList() {
       <div class="cmt-actions">
         <button type="button" class="btn small ok" data-act="approved" title="공식 영문판 제목으로 확정">승인</button>
         <button type="button" class="btn small ok" data-act="both" title="아래 저자 영문 이름까지 한 번에 승인">제목·저자 함께 승인</button>
-        <button type="button" class="btn small" data-act="none" title="공식 영문판이 없음 — 입력한 직역에 * 을 붙여 노출">공식판 없음 (직역*)</button>
+        <button type="button" class="btn small ${Ttl.drafts.has(k) ? 'ok' : ''}" data-act="none" title="공식 영문판이 없음 — 입력한 직역에 * 을 붙여 노출">${Ttl.drafts.has(k) ? '직역 확정 (*)' : '공식판 없음 (직역*)'}</button>
         <button type="button" class="btn small" data-act="hide" title="영문 페이지에서 이 책을 뺌">영문 숨김</button>
         <button type="button" class="btn small" data-act="pending">보류</button>
         <span class="muted small">Ctrl+Enter = 승인</span>
       </div>
-      ${autBlock(v, idx)}
+      <details class="ttl-author-wrap" open>
+        <summary>저자 영문 <span class="muted small">— 제목과 따로 승인합니다</span></summary>
+        ${autBlock(v, idx)}
+      </details>
     </article>`;
   }).join('');
 
@@ -3129,13 +3157,15 @@ function renderTitlesList() {
   page.forEach(([k, v], i) => {
     const card = box.children[i];
     const inp = card.querySelector('input[data-f="value"]');
-    inp.value = v.value || (v.candidates?.[0]?.title) || stripStar(v.csv);
-    markPicked(card, inp.value);
-    card.querySelector('input[data-f="orig"]').value = v.orig_status ? (v.orig_value || '') : (v.original || '');
+    if (inp) {
+      inp.value = v.value || Ttl.drafts.get(k)?.value || (v.candidates?.[0]?.title) || stripStar(v.csv);
+      markPicked(card, inp.value);
+      card.querySelector('input[data-f="orig"]').value = v.orig_status ? (v.orig_value || '') : (v.original || '');
+    }
     const ainp = card.querySelector('input[data-f="author"]');
     if (ainp) {
       const { ent: a, values } = autView(v.author || '', idx);
-      ainp.value = stripStar(a.value) || a.candidates?.[0]?.name || stripStar(values[0]?.[0]);
+      ainp.value = stripStar(a.value) || Ttl.authorDrafts.get(v.author || '')?.value || a.candidates?.[0]?.name || stripStar(values[0]?.[0]);
       markPickedAuthor(card, ainp.value);
       const ninp = card.querySelector('input[data-f="native"]');
       ninp.value = a.native_status ? (a.native_value || '') : (a.native_candidates?.[0]?.name || '');
@@ -3145,6 +3175,148 @@ function renderTitlesList() {
   });
   $('#ttlMoreBtn').classList.toggle('hidden', rows.length <= Ttl.shown);
   $('#ttlMoreBtn').textContent = `더 보기 (${rows.length - Ttl.shown}건 남음)`;
+}
+
+// 저자 필터 전용 카드 — 이 저자의 책 목록(참고용)과 저자 영문 칸만 있다
+function authorOnlyCard(k, v, idx) {
+  const name = v.author || '';
+  const titles = [...(idx.get(name)?.titles || [])];
+  const list = titles.slice(0, 4).map(t => `「${esc(t)}」`).join(' ') + (titles.length > 4 ? ` 외 ${titles.length - 4}권` : '');
+  return `<article class="cmt-card ${Ttl.authors.get(name)?.status || 'pending'}" data-key="${esc(k)}" data-author="${esc(name)}">
+    <p class="ttl-csv">이 저자의 책: ${list || '(없음)'} <span class="muted">— 저자만 승인합니다. 책 제목은 바뀌지 않습니다.</span></p>
+    ${autBlock(v, idx)}
+  </article>`;
+}
+
+// 자동 번역 초안 ------------------------------------------------------------
+// 영문 제목이 비고 후보도 없는 책을 번역해 입력칸 초안으로 만든다. 사람이 확정(직역*)해야 반영된다.
+function ttlNeedsDraft(k, v) {
+  return (v.status || 'pending') === 'pending' && !(v.candidates || []).length
+    && !stripStar(v.csv) && !stripStar(v.value) && !Ttl.drafts.has(k);
+}
+
+async function draftTitle(titleKo) {
+  const r = await EnEnrich.translateKoEn(titleKo);
+  if (!r || !r.text) return null;
+  const value = enTitleCase(stripStar(r.text).replace(/[.。]+$/, ''));
+  if (!value || ttlProblem(titleKo, value)) return null;
+  return { value, source: r.source };
+}
+
+// 저자: 영문 이름이 비고 후보도 없는 저자를 로마자로 번역한다 (한국 이름은 성 앞 순서로 교정)
+function autNeedsDraft(name, av) {
+  const a = av.ent;
+  return (a.status || 'pending') === 'pending' && !(a.candidates || []).length
+    && !av.values.some(([x]) => stripStar(x)) && !stripStar(a.value) && !Ttl.authorDrafts.has(name);
+}
+
+async function draftAuthor(nameKo) {
+  const r = await EnEnrich.translateKoEn(nameKo);
+  if (!r || !r.text) return null;
+  const value = fixKoreanNameOrder(nameKo, toTitleCase(stripStar(r.text).replace(/[.。]+$/, '')));
+  if (!value || autProblem(value)) return null;
+  return { value, source: r.source };
+}
+
+function updateDraftButtons() {
+  const isAut = $('#ttlFilter').value.startsWith('a_');
+  const rows = ttlRows();
+  const need = isAut ? rows.filter(([k, v, av]) => autNeedsDraft(v.author || '', av)).length
+                     : rows.filter(([k, v]) => ttlNeedsDraft(k, v)).length;
+  const auto = $('#ttlAutoBtn');
+  auto.disabled = false;
+  auto.textContent = Ttl.translating ? '■ 번역 중지'
+    : `🌐 빈 ${isAut ? '저자' : '제목'} 자동 번역${need ? ` (${need})` : ''}`;
+  const draftsHere = isAut ? rows.filter(([k, v]) => Ttl.authorDrafts.has(v.author || '')).length
+                           : rows.filter(([k]) => Ttl.drafts.has(k)).length;
+  $('#ttlConfirmDraftsBtn').classList.toggle('hidden', !draftsHere);
+  $('#ttlConfirmDraftsBtn').textContent = `초안 ${draftsHere}건 ${isAut ? '로마자' : '직역'}(*)으로 확정`;
+}
+
+async function autoTranslateTitles() {
+  if (Ttl.translating) { Ttl.translating = false; return; }
+  const isAut = $('#ttlFilter').value.startsWith('a_');
+  const what = isAut ? '저자' : '제목';
+  const targets = (isAut
+    ? ttlRows().filter(([k, v, av]) => autNeedsDraft(v.author || '', av)).map(([k, v]) => [v.author, v.author])
+    : ttlRows().filter(([k, v]) => ttlNeedsDraft(k, v)).map(([k, v]) => [k, v.title]));
+  if (!targets.length) {
+    toast(`번역할 빈 ${what}이(가) 없습니다 — 필터를 ${isAut ? '"저자: 후보 없음 · 미조회"' : '"영문 제목 빈 칸"'}으로 바꿔 보세요`, 'err');
+    return;
+  }
+  if (!confirm(`영문 ${what}이(가) 빈 ${targets.length}건을 자동 번역해 초안으로 만듭니다.\n초안은 확정하기 전에는 사이트에 나가지 않습니다. 진행할까요?`)) return;
+  Ttl.translating = true;
+  updateDraftButtons();
+  let done = 0, fail = 0, next = 0;
+  const drafts = isAut ? Ttl.authorDrafts : Ttl.drafts;
+  const worker = async () => {
+    while (Ttl.translating && next < targets.length) {
+      const [key, ko] = targets[next++];
+      try {
+        const d = await (isAut ? draftAuthor(ko) : draftTitle(ko));
+        if (d) drafts.set(key, d); else fail++;
+      } catch (e) { fail++; }
+      done++;
+      setTtlStatus(`번역 중 ${done}/${targets.length}` + (fail ? ` · 실패 ${fail}` : ''));
+      await new Promise(r => setTimeout(r, 150));
+    }
+  };
+  await Promise.all([worker(), worker(), worker()]);
+  const stopped = done < targets.length;
+  Ttl.translating = false;
+  isAut ? saveAuthorDrafts() : saveDrafts();
+  setTtlStatus('');
+  toast(`${stopped ? '중지 — ' : ''}초안 ${done - fail}건 만듦` + (fail ? ` · ${fail}건은 번역 실패` : '') + ' — 검수 후 확정하세요', fail && done === fail ? 'err' : 'ok');
+  $('#ttlFilter').value = isAut ? 'a_draft' : 'draft';
+  Ttl.shown = 60;
+  renderTitlesList();
+}
+
+// 화면 목록의 초안을 한꺼번에 직역(*)으로 확정 — 카드에서 고친 값이 아니라 초안 값을 쓴다
+function confirmDrafts() {
+  if ($('#ttlFilter').value.startsWith('a_')) { confirmAuthorDrafts(); return; }
+  const rows = ttlRows().filter(([k]) => Ttl.drafts.has(k));
+  if (!rows.length) return;
+  if (!confirm(`번역 초안 ${rows.length}건을 "공식판 없음 (직역*)"으로 확정합니다.\n끝에 *이 붙어 영문 페이지에 나갑니다. 훑어보셨나요?`)) return;
+  const today = new Date().toISOString().slice(0, 10);
+  const keys = new Set();
+  for (const [k, v] of rows) {
+    v.status = 'none';
+    v.value = Ttl.drafts.get(k).value;
+    v.reviewed = today;
+    delete v.auto;
+    Ttl.drafts.delete(k);
+    markTtlDirty(k);
+    keys.add(k);
+  }
+  saveDrafts();
+  if (applyTitlesToBooks(keys)) { renderSidebar(); renderDetail(); }
+  toast(`${keys.size}건 직역(*) 확정 — 저장 버튼을 눌러 주세요`, 'ok');
+  renderTitlesList();
+}
+
+function confirmAuthorDrafts() {
+  const rows = ttlRows().filter(([k, v]) => Ttl.authorDrafts.has(v.author || ''));
+  if (!rows.length) return;
+  if (!confirm(`저자 번역 초안 ${rows.length}명을 "공식 표기 없음 (로마자*)"으로 확정합니다.\n끝에 *이 붙어 그 저자의 모든 책에 반영됩니다. 훑어보셨나요?`)) return;
+  const today = new Date().toISOString().slice(0, 10);
+  const names = new Set();
+  for (const [, v] of rows) {
+    const name = v.author;
+    const it = Ttl.authors.get(name) || { author: name, candidates: [] };
+    it.status = 'none';
+    it.value = Ttl.authorDrafts.get(name).value;
+    it.reviewed = today;
+    delete it.auto;
+    Ttl.authors.set(name, it);
+    Ttl.authorDrafts.delete(name);
+    markTtlDirty(name, true);
+    names.add(name);
+  }
+  saveAuthorDrafts();
+  if (applyAuthorsToBooks(names)) { renderSidebar(); renderDetail(); }
+  toast(`저자 ${names.size}명 로마자(*) 확정 — 저장 버튼을 눌러 주세요`, 'ok');
+  renderTitlesList();
 }
 
 // 카드 아래쪽 저자 영문 이름 칸. 승인하면 이 저자의 모든 책(행)이 같은 표기가 된다
@@ -3166,7 +3338,7 @@ function autBlock(v, idx) {
       ${conf}
       <b>저자 영문</b><span class="muted"> · ${esc(name)} · 책 ${books}권${books > 1 ? ' (승인하면 모두 이 표기로)' : ''}</span>
       <span class="cmt-state s-${st}">${AUT_LABEL[st] || st}${a.auto ? ' (자동)' : ''}</span>
-      ${flags}
+      ${flags}${st === 'pending' && Ttl.authorDrafts.has(name) ? '<span class="ttl-flag draft" title="자동 번역 초안 — 확인 후 확정해야 사이트에 나갑니다">번역 초안</span>' : ''}
     </div>
     <p class="ttl-csv">지금 data.csv: ${values.length
       ? values.map(([x, n]) => `<b>${esc(x)}</b>${values.length > 1 ? ` <span class="muted">${n}줄</span>` : ''}`).join(' · ')
@@ -3181,6 +3353,7 @@ function autBlock(v, idx) {
     <div class="ttl-value">
       <span class="ttl-lbl">영문 이름</span>
       <input type="text" data-f="author" placeholder="영문 저자 (영어판·인물 문서에 적힌 표기)">
+      <button type="button" class="btn small" data-aact="trans" title="한국어 이름을 로마자로 자동 번역해 입력칸에 넣습니다 (초안 — 확정해야 반영)">🌐 번역</button>
     </div>
     ${ncands.length ? `<div class="ttl-cands">${ncands.map((c, i) => `
       <button type="button" class="ttl-cand" data-npick="${i}">
@@ -3202,7 +3375,7 @@ function autBlock(v, idx) {
     </div>
     <div class="cmt-actions">
       <button type="button" class="btn small ok" data-aact="approved" title="이 저자의 모든 행을 이 표기로 맞춤">저자 승인</button>
-      <button type="button" class="btn small" data-aact="none" title="영어판·공식 표기가 없음 — 입력한 로마자 표기에 * 을 붙여 노출">공식 표기 없음 (로마자*)</button>
+      <button type="button" class="btn small ${Ttl.authorDrafts.has(name) ? 'ok' : ''}" data-aact="none" title="영어판·공식 표기가 없음 — 입력한 로마자 표기에 * 을 붙여 노출">${Ttl.authorDrafts.has(name) ? '로마자 확정 (*)' : '공식 표기 없음 (로마자*)'}</button>
       <button type="button" class="btn small" data-aact="pending">보류</button>
     </div>
   </div>`;
@@ -3260,10 +3433,15 @@ function setAutState(card, act, quiet) {
   it.value = val;
   delete it.auto;
   it.reviewed = new Date().toISOString().slice(0, 10);
+  if (act !== 'pending' && Ttl.authorDrafts.delete(name)) saveAuthorDrafts();
   Ttl.authors.set(name, it);
   markTtlDirty(name, true);
   if (applyAuthorsToBooks(new Set([name]))) { renderSidebar(); renderDetail(); }
-  if (!quiet) renderTitlesList();
+  if (!quiet) {
+    const n = autIndex().get(name)?.titles.size || 0;
+    toast(`저자 ${AUT_LABEL[act] || act} — 책 ${n}권의 저자 표기만 바뀌고 제목은 그대로입니다`, 'ok');
+    renderTitlesList();
+  }
   return true;
 }
 
@@ -3293,9 +3471,15 @@ function setTtlState(card, act, quiet) {
   else { it.status = act; it.value = enTitleCase(val); }
   delete it.auto;
   it.reviewed = new Date().toISOString().slice(0, 10);
+  if (act !== 'pending' && Ttl.drafts.delete(key)) saveDrafts();
   markTtlDirty(key);
   if (applyTitlesToBooks(new Set([key]))) { renderSidebar(); renderDetail(); }
-  if (!quiet) renderTitlesList();
+  if (!quiet) {
+    const as = Ttl.authors.get(it.author || '')?.status || 'pending';
+    toast(`제목 ${TTL_LABEL[act === 'hide' ? 'none' : act] || act}` +
+      (act === 'hide' ? ' (영문 숨김)' : '') + ` · 저자는 ${AUT_LABEL[as] || as} 상태 그대로`, 'ok');
+    renderTitlesList();
+  }
   return true;
 }
 
@@ -3339,11 +3523,60 @@ $('#ttlList').addEventListener('click', (e) => {
     return;
   }
   const aact = e.target.dataset.aact;
+  if (aact === 'trans') {
+    const btn = e.target;
+    const name = card.dataset.author || '';
+    btn.disabled = true;
+    const prev = btn.textContent;
+    btn.textContent = '번역 중…';
+    draftAuthor(name).then(d => {
+      if (!d) { toast('번역 결과를 얻지 못했습니다 — 직접 입력해 주세요', 'err'); return; }
+      Ttl.authorDrafts.set(name, d);
+      saveAuthorDrafts();
+      const inp = card.querySelector('input[data-f="author"]');
+      inp.value = d.value;
+      markPickedAuthor(card, d.value);
+      updateGrLinks(card);
+      const head = card.querySelector('.ttl-author .cmt-head');
+      if (head && !head.querySelector('.ttl-flag.draft')) {
+        head.insertAdjacentHTML('beforeend', '<span class="ttl-flag draft" title="자동 번역 초안 — 확인 후 확정해야 사이트에 나갑니다">번역 초안</span>');
+      }
+      inp.focus();
+      toast(`번역 초안 (${d.source}): ${d.value} — 맞으면 "공식 표기 없음 (로마자*)"으로 확정`, 'ok');
+    }).catch(err => toast('번역 실패: ' + err.message, 'err'))
+      .finally(() => { btn.disabled = false; btn.textContent = prev; });
+    return;
+  }
   if (aact) { setAutState(card, aact); return; }
   const act = e.target.dataset.act;
+  if (act === 'trans') {
+    const btn = e.target;
+    const it = Ttl.items.get(card.dataset.key);
+    if (!it) return;
+    btn.disabled = true;
+    const prev = btn.textContent;
+    btn.textContent = '번역 중…';
+    draftTitle(it.title).then(d => {
+      if (!d) { toast('번역 결과를 얻지 못했습니다 — 직접 입력해 주세요', 'err'); return; }
+      Ttl.drafts.set(card.dataset.key, d);
+      saveDrafts();
+      const inp = card.querySelector('input[data-f="value"]');
+      inp.value = d.value;
+      markPicked(card, d.value);
+      updateGrLinks(card);
+      if (!card.querySelector('.ttl-flag.draft')) {
+        card.querySelector('.cmt-head .cmt-spacer')?.insertAdjacentHTML('beforebegin',
+          '<span class="ttl-flag draft" title="자동 번역 초안 — 확인 후 확정해야 사이트에 나갑니다">번역 초안</span>');
+      }
+      inp.focus();
+      toast(`번역 초안 (${d.source}): ${d.value} — 맞으면 "공식판 없음 (직역*)"으로 확정`, 'ok');
+    }).catch(err => toast('번역 실패: ' + err.message, 'err'))
+      .finally(() => { btn.disabled = false; btn.textContent = prev; });
+    return;
+  }
   if (act === 'both') {
     // 제목이 막히면(문제 있는 값) 저자도 건드리지 않는다
-    if (setTtlState(card, 'approved', true)) setAutState(card, 'approved', true);
+    if (setTtlState(card, 'approved', true) && setAutState(card, 'approved', true)) toast('제목과 저자를 함께 승인했습니다', 'ok');
     renderTitlesList();
   } else if (act) setTtlState(card, act);
 });
@@ -3482,6 +3715,8 @@ $('#ttlApplyPasteBtn').addEventListener('click', () => {
 
 $('#titlesBtn').addEventListener('click', openTitlesDialog);
 $('#ttlSaveBtn').addEventListener('click', saveTitles);
+$('#ttlAutoBtn').addEventListener('click', autoTranslateTitles);
+$('#ttlConfirmDraftsBtn').addEventListener('click', confirmDrafts);
 $('#ttlFilter').addEventListener('change', () => { Ttl.shown = 60; renderTitlesList(); });
 $('#ttlSearch').addEventListener('input', () => { Ttl.shown = 60; renderTitlesList(); });
 $('#ttlMoreBtn').addEventListener('click', () => { Ttl.shown += 60; renderTitlesList(); });
