@@ -2316,11 +2316,18 @@ function splitCmtKey(k) {
 function cmtNeedsPolish(v) {
   if ((v.status || 'pending') !== 'pending') return false;
   const memo = (v.memo || '').trim();
-  if (!memo) return false;
   const ko = (v.ko || '').trim();
+  // 1단계에서 OK 한 대목은 메모 없이도 인용·앞뒤 문단을 근거로 쓴다
+  if (!memo) return !ko && v.pick === 'ok' && !!(v.quote || v.context);
   if (!ko) return true;
   const ai = v.ai;
   return !!ai && ko === (ai.ko || '').trim() && memo !== (ai.memo || '').trim();
+}
+
+// 1단계(대목 고르기) 검수 대기: 수집기가 떠온 대목이 있고, 문장도 메모도 없고, 아직 OK/제외를 안 한 것
+function cmtIsPickPending(v) {
+  return (v.status || 'pending') === 'pending' && v.pick !== 'ok'
+    && !(v.ko || '').trim() && !(v.memo || '').trim() && !!(v.quote || v.context);
 }
 
 // AI가 다듬은 문장을 사람이 아직 손대지 않은 채 승인 대기 중인 것
@@ -2386,7 +2393,11 @@ function cmtRows() {
       if (k === Cmt.focus) rows.push([k, v]);
       continue;
     }
-    if (f === 'unwritten') {
+    if (f === 'pick') {
+      if (!cmtIsPickPending(v)) continue;
+    } else if (f === 'write') {
+      if (status !== 'pending' || !(v.ko || '').trim()) continue;
+    } else if (f === 'unwritten') {
       if (status !== 'pending' || (v.ko || '').trim()) continue;
     } else if (f === 'memo') {
       // 내가 메모는 해뒀고 아직 문장이 안 된 것 — Claude 에게 넘길 줄
@@ -2407,11 +2418,21 @@ function cmtRows() {
 
 function renderCommentsList() {
   const n = cmtCounts();
-  let tidy = 0, ai = 0;
-  for (const v of Cmt.items.values()) { if (cmtNeedsPolish(v)) tidy++; if (cmtIsAiDraft(v)) ai++; }
+  let tidy = 0, ai = 0, pick = 0, write = 0;
+  for (const v of Cmt.items.values()) {
+    if (cmtNeedsPolish(v)) tidy++;
+    if (cmtIsAiDraft(v)) ai++;
+    if (cmtIsPickPending(v)) pick++;
+    if ((v.status || 'pending') === 'pending' && (v.ko || '').trim()) write++;
+  }
+  const stage = $('#cmtFilter').value;
+  $('#cmtStage1').classList.toggle('on', stage === 'pick');
+  $('#cmtStage2').classList.toggle('on', stage === 'write');
+  $('#cmtStage1').textContent = `① 대목 고르기 검수 (${pick})`;
+  $('#cmtStage2').textContent = `② 문장 검수 (${write})`;
   $('#cmtCount').textContent =
     `미검수 ${n.pending} · 승인 ${n.approved} · 반려 ${n.rejected} · 전체 ${n.total}` +
-    (ai ? ` · ✨ AI 초안 ${ai}` : '') + (tidy ? ` · 다듬을 메모 ${tidy}` : '');
+    (tidy ? ` · ✨ AI가 쓸 차례 ${tidy}` : '');
   if (Cmt.focus) {
     $('#cmtCount').innerHTML += ' · <button type="button" class="btn small" id="cmtUnfocusBtn">전체 목록으로</button>';
   }
@@ -2422,6 +2443,8 @@ function renderCommentsList() {
     box.innerHTML = '<p class="muted small" style="padding:18px 4px;">해당하는 항목이 없습니다.</p>';
     return;
   }
+
+  if ($('#cmtFilter').value === 'pick' && !Cmt.focus) { renderPickCards(box, rows); return; }
 
   box.innerHTML = rows.map(([k, v]) => {
     const [celeb, title] = splitCmtKey(k);
@@ -2480,6 +2503,50 @@ function renderCommentsList() {
   });
 }
 
+
+/* 1단계 카드 — 문장은 아직 쓰지 않는다. 앞뒤 문단에서 책 제목·저자가 같이 나오는 대목을
+ * 눈으로 확인하고 'OK' 하면 2단계에서 AI 가 그 대목만 근거로 문장을 쓴다. */
+function cmtHighlight(text, quote, terms) {
+  const src = String(text || '');
+  const q = (quote || '').trim();
+  const alts = [q, ...terms].filter(t => t && t.length >= 2)
+    .sort((a, b) => b.length - a.length)
+    .map(t => t.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'));
+  if (!alts.length) return esc(src);
+  return src.split(new RegExp('(' + alts.join('|') + ')')).map((part, i) => {
+    if (i % 2 === 0) return esc(part);
+    return part === q ? `<mark class="q">${esc(part)}</mark>` : `<mark>${esc(part)}</mark>`;
+  }).join('');
+}
+
+function renderPickCards(box, rows) {
+  box.innerHTML = rows.map(([k, v]) => {
+    const [celeb, title] = splitCmtKey(k);
+    const book = (State.celebs.get(celeb) || { books: [] }).books.find(b => b.title === title);
+    const author = (book && book.author) || '';
+    const sub = title.split(/\s*[:：\-–]\s*/)[0];
+    const terms = [title, sub, celeb, author].filter(Boolean);
+    const body = v.context || v.quote || '';
+    return `<article class="cmt-card pending" data-key="${esc(k)}">
+      <div class="cmt-head">
+        <b>${esc(celeb)}</b><span class="muted"> · </span>${esc(title)}
+        ${author ? `<span class="muted small">· ${esc(author)}</span>` : ''}
+        ${v.outlet ? `<span class="muted small">· ${esc(v.outlet)}</span>` : ''}
+        ${v.date ? `<span class="muted small">${esc(v.date)}</span>` : ''}
+        <span class="cmt-spacer"></span>
+        ${v.source ? `<a class="btn small" href="${esc(v.source)}" target="_blank" rel="noopener">출처 열기 ↗</a>` : ''}
+      </div>
+      <p class="cmt-pick-ctx">${cmtHighlight(body, v.context ? v.quote : '', terms)}</p>
+      <p class="muted small">노란 칠 = 책 제목·저자·이름, 파란 칠 = 수집기가 근거로 고른 문장. 제목과 이름이 같이 나오고 추천 이유가 읽히면 OK 입니다.</p>
+      <div class="cmt-actions">
+        <button type="button" class="btn small ok" data-act="pick-ok">👍 이 대목 OK</button>
+        <button type="button" class="btn small danger" data-act="rejected">🚫 쓸 만한 대목 아님</button>
+        <span class="muted small">OK 한 것만 ✨ AI 작성 요청에 담깁니다</span>
+      </div>
+    </article>`;
+  }).join('');
+}
+
 function setCmtState(key, status) {
   const it = Cmt.items.get(key);
   if (!it) return;
@@ -2507,6 +2574,14 @@ $('#cmtList').addEventListener('click', (e) => {
   const act = e.target.dataset.act;
   const card = e.target.closest('.cmt-card');
   if (!act || !card) return;
+  if (act === 'pick-ok') {
+    const it = Cmt.items.get(card.dataset.key);
+    if (!it) return;
+    it.pick = 'ok';
+    markCmtDirty();
+    renderCommentsList();
+    return;
+  }
   setCmtState(card.dataset.key, act);
 });
 
@@ -2610,7 +2685,7 @@ $('#cmtApplyPasteBtn').addEventListener('click', () => {
   if (!hit) { toast('맞는 키가 없습니다 (key 가 "연예인|도서명" 이어야 합니다)', 'err'); return; }
   markCmtDirty();
   Cmt.focus = null;
-  $('#cmtFilter').value = 'ai';
+  $('#cmtFilter').value = 'write';
   renderCommentsList();
   renderDetail();
   $('#cmtPaste').value = '';
@@ -2643,10 +2718,11 @@ async function openCommentFor(celeb, book) {
  * ✨ AI 초안 표시가 붙는다. 읽어보고 승인하면 나간다. */
 const CMT_POLISH_GUIDE = `한국 셀럽의 추천 도서를 모아 보여주는 사이트 favorbook.co.kr 의 코멘트를 다듬어 주세요.
 책마다 "이 사람이 왜 이 책을 추천했는지"를 한 줄로 붙입니다.
-아래 항목마다 편집자가 출처를 직접 읽고 남긴 메모(memo)가 있습니다. 이걸 사이트에 실을 한국어·영어 문장으로 옮겨 주세요.
+아래 항목마다 편집자가 출처를 직접 읽고 남긴 메모(memo)가 있거나, 메모 없이 편집자가 "이 대목으로 쓰자"고 OK 한 원문 대목(quote·context)이 있습니다. 이걸 사이트에 실을 한국어·영어 문장으로 옮겨 주세요.
 
 지킬 것
-- 근거는 memo 입니다. quote·context 는 고유명사나 사실을 확인하는 데만 쓰고, memo 에 없는 이유나 감상을 지어내지 마세요.
+- memo 가 있으면 근거는 memo 입니다. quote·context 는 고유명사나 사실을 확인하는 데만 쓰고, memo 에 없는 이유나 감상을 지어내지 마세요.
+- memo 가 없고 basis 만 있으면 quote·context 가 근거입니다. 그 대목에 실제로 적힌 이유·감상만 옮기고, 거기 없는 건 지어내지 마세요. 이유가 없고 언급만 있으면 grade "B" 로 관계만 적습니다.
 - ko: 1~2문장, 120자 안팎. 셀럽 이름으로 시작하지 말고 전해 듣는 말투로 끝냅니다("~했대요", "~했어요", "~래요"). 끝에 "(출처: 매체명)".
 - en: ko 와 같은 내용을 자연스러운 영어 한 문장으로. 끝에 "(Source: 매체 영문명)" (씨네21 → Cine21, 보그 → Vogue Korea, 네이버 블로그 → Naver Blog). 매체를 모르면 source 주소로 판단합니다.
 - memo 가 원문을 길게 붙여넣은 것이면 추천 이유가 담긴 핵심만 추리고, 따옴표 인용을 그대로 옮기지 말고 풀어 씁니다.
@@ -2668,12 +2744,14 @@ $('#cmtPolishBtn').addEventListener('click', async () => {
   if (!Cmt.loaded) return;
   // 지금 화면에서 쓴 메모 그대로 담는다 (저장 안 해도 된다)
   const items = [...Cmt.items].filter(([, v]) => cmtNeedsPolish(v)).map(([k, v]) => {
-    const o = { key: k, outlet: v.outlet || '', source: v.source || '', memo: (v.memo || '').trim() };
+    const memo = (v.memo || '').trim();
+    const o = { key: k, outlet: v.outlet || '', source: v.source || '' };
+    if (memo) o.memo = memo; else o.basis = '메모 없음 — 사람이 OK 한 quote·context 를 근거로 쓸 것';
     if (v.quote) o.quote = v.quote;
     if (v.context) o.context = v.context;
     return o;
   });
-  if (!items.length) { toast('다듬을 메모가 없습니다 (메모를 쓰고 한국어 칸은 비워두세요)', 'err'); return; }
+  if (!items.length) { toast('AI가 쓸 항목이 없습니다 (① 대목 고르기에서 OK 하거나 메모를 쓰세요)', 'err'); return; }
   const text = CMT_POLISH_GUIDE + JSON.stringify(items, null, 1);
   try { await copyToClipboard(text); }
   catch (e) { toast('복사 실패: ' + e.message, 'err'); return; }
@@ -2686,6 +2764,8 @@ $('#cmtPolishBtn').addEventListener('click', async () => {
 
 $('#commentsBtn').addEventListener('click', openCommentsDialog);
 $('#cmtSaveBtn').addEventListener('click', saveComments);
+$('#cmtStage1').addEventListener('click', () => { $('#cmtFilter').value = 'pick'; Cmt.focus = null; renderCommentsList(); });
+$('#cmtStage2').addEventListener('click', () => { $('#cmtFilter').value = 'write'; Cmt.focus = null; renderCommentsList(); });
 $('#cmtFilter').addEventListener('change', () => { Cmt.focus = null; renderCommentsList(); });
 $('#cmtSearch').addEventListener('input', () => { Cmt.focus = null; renderCommentsList(); });
 $('#cmtCount').addEventListener('click', (e) => {
