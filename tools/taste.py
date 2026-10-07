@@ -172,6 +172,49 @@ def genre(cats):
     return None
 
 
+# 키워드(예스24 카테고리) 영어 이름 — 영문 셀럽 페이지의 키워드 칩에 쓴다.
+# 공백을 뺀 이름으로 찾는다. 여기 없는 키워드는 영문 카드에서 빠진다 (카드에 새 키워드가 보이면 여기 더한다).
+KEYWORD_EN = {k.replace(' ', ''): v for k, v in {
+    '한국 에세이': 'Korean Essays', '한국소설': 'Korean Fiction', '영미소설': 'English-language Fiction',
+    '일본소설': 'Japanese Fiction', '한국 시': 'Korean Poetry', '프랑스소설': 'French Fiction',
+    '외국 에세이': 'Essays in Translation', '인문/교양': 'General Humanities', '독일소설': 'German Fiction',
+    '처세술/삶의 자세': 'Life Advice', '심리': 'Psychology', '영화와 드라마 원작': 'Adapted for Screen',
+    '연애/사랑소설': 'Love Stories', '추리/미스터리': 'Mystery', 'SF': 'Science Fiction',
+    '사회비평/비판': 'Social Criticism', '서양 고전문학': 'Western Classics', '공포/스릴러': 'Horror & Thriller',
+    '세계의 시': 'World Poetry', '스페인/중남미소설': 'Spanish & Latin American Fiction',
+    '희곡/시나리오': 'Plays & Screenplays', '삶의 자세와 지혜': 'Life Wisdom', '서양철학': 'Western Philosophy',
+    '예술일반/예술사': 'Art History', '영화/드라마': 'Film & TV', '청소년 문학': 'Young Adult',
+    '로맨스 만화': 'Romance Comics', '성공학/경력관리': 'Success & Careers', '드라마 만화': 'Drama Comics',
+    '여성/젠더': 'Women & Gender', '생명과학': 'Life Sciences', '명사/연예인 에세이': 'Celebrity Essays',
+    '과학': 'Science', '철학/사상': 'Philosophy & Thought', '경제/경제학': 'Economics', '역사': 'History',
+    '미술': 'Fine Art', '천문학': 'Astronomy', '물리학': 'Physics', '어린이 문학': "Children's Literature",
+    '사회학': 'Sociology', '유아 그림책': 'Picture Books', '여성 에세이': "Women's Essays",
+    '세계사/세계문화': 'World History', '일기/편지글': 'Diaries & Letters', '소설': 'Fiction',
+    '동양철학': 'Eastern Philosophy', '동물 에세이': 'Animal Essays', '문학인': 'Writers on Writers',
+    '비평/창작/이론': 'Literary Criticism', '로맨스': 'Romance', '어른을 위한 동화/우화': 'Fables for Adults',
+    '한국사/한국문화': 'Korean History', '그림 에세이': 'Illustrated Essays', '글쓰기': 'Writing',
+    'CEO/비즈니스맨': 'Business Leaders', '경영관리/전략/경영학': 'Management & Strategy',
+    '연극/공연': 'Theater', '판타지': 'Fantasy', '인간관계': 'Relationships',
+    '주제로 읽는 인문학': 'Humanities by Theme', '명상/치유 에세이': 'Healing Essays',
+    '여행 에세이': 'Travel Essays', '동양사/동양문화': 'Asian History', '투자/재테크': 'Investing',
+    '창조적사고/두뇌계발': 'Creative Thinking', '기타 국가의 소설': 'Fiction from Other Countries',
+    '판타지 만화': 'Fantasy Comics', '스포츠 만화': 'Sports Comics', '뇌과학': 'Brain Science',
+    '에세이': 'Essays', '주제로 읽는 역사': 'History by Theme', '누리과정 생활주제': 'Early Learning',
+    # 아직 카드에는 없지만 곧 나올 만한 것
+    '성장소설/가족소설': 'Coming-of-age & Family', '동유럽소설': 'Eastern European Fiction',
+    '북유럽소설': 'Nordic Fiction', '러시아소설': 'Russian Fiction', '이탈리아소설': 'Italian Fiction',
+    '중국소설': 'Chinese Fiction', '웹툰': 'Webtoons', '감성/가족 에세이': 'Family Essays',
+    '연애/사랑 에세이': 'Love Essays', '휴먼 에세이': 'Human Stories', '예술 에세이': 'Essays on Art',
+    '사회 에세이': 'Social Essays', '자연 에세이': 'Nature Essays', '한국 고전문학': 'Korean Classics',
+    '동양 고전문학': 'Asian Classics', '신화와 설화': 'Myths & Legends', '정치/외교': 'Politics',
+    '음악': 'Music', '사진': 'Photography', '건축': 'Architecture', '디자인': 'Design', '요리': 'Cooking',
+}.items()}
+
+
+def keyword_en(ko):
+    return KEYWORD_EN.get((ko or '').replace(' ', ''), '')
+
+
 _KW_DEEPER = re.compile(r'장르소설|시/?희곡|테마소설|세계각국소설|고전문학')
 
 
@@ -260,10 +303,10 @@ def compute(books, bookinfo, this_year, subjects=None):
             if not labels[t]:
                 continue   # '통계에서 뺌'으로 고른 책·분야를 모르는 책은 키워드도 세지 않는다
             for k in book_keywords(((subjects or {}).get(t) or {}).get('cats')):
-                key = k.replace(' ', '')
-                kw.setdefault(key, [k, 0])[1] += 1
-        keywords = [{'ko': k, 'n': n} for k, n in sorted(kw.values(), key=lambda x: (-x[1], x[0]))
-                    if n >= MIN_KEYWORD_BOOKS][:MAX_KEYWORDS]
+                kw.setdefault(k.replace(' ', ''), [k, []])[1].append(t)
+        keywords = [{'ko': k, 'en': keyword_en(k), 'n': len(ts), 'titles': ts}
+                    for k, ts in sorted(kw.values(), key=lambda x: (-len(x[1]), x[0]))
+                    if len(ts) >= MIN_KEYWORD_BOOKS][:MAX_KEYWORDS]
 
     # 작가 — 서로 다른 작품 수
     by_author, en_name = {}, {}

@@ -1542,7 +1542,20 @@ TASTE_CSS = (
     '    .taste-legend li { display: flex; align-items: center; gap: 6px; }\n'
     '    .taste-legend i { width: 12px; height: 12px; border: 1.5px solid #000; flex-shrink: 0; }\n'
     '    .taste-chips { display: flex; flex-wrap: wrap; gap: 8px; }\n'
-    '    .taste-chip { display: inline-flex; align-items: baseline; gap: 6px; padding: 4px 10px; background: #fff; border: 2px solid #000; box-shadow: 2px 2px 0 0 #000; font-weight: 700; font-size: 14px; }\n'
+    '    .taste-kw { position: relative; display: inline-block; }\n'
+    '    .taste-chip { display: inline-flex; align-items: baseline; gap: 6px; padding: 4px 10px; background: #fff; border: 2px solid #000; box-shadow: 2px 2px 0 0 #000; font: inherit; font-weight: 700; font-size: 14px; color: #000; cursor: pointer; }\n'
+    '    .taste-chip:focus-visible { outline: 3px solid #2563eb; outline-offset: 2px; }\n'
+    '    .taste-kw.open .taste-chip { transform: translate(2px,2px); box-shadow: none; }\n'
+    '    .kw-pop { display: none; position: absolute; top: calc(100% + 8px); left: 0; z-index: 30; width: 340px; max-width: calc(100vw - 32px);\n'
+    '              grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 8px 6px; padding: 9px; background: #fff; border: 2px solid #000; box-shadow: 4px 4px 0 0 #000; }\n'
+    '    .kw-pop::before { content: ""; position: absolute; left: 0; right: 0; top: -10px; height: 10px; }\n'
+    '    @media (hover: hover) { .taste-kw:hover .kw-pop { display: grid; } }\n'
+    '    .taste-kw.open .kw-pop { display: grid; }\n'
+    '    .kw-pop a { display: block; min-width: 0; color: #000; text-decoration: none; font-size: 11px; font-weight: 700; line-height: 1.3; }\n'
+    '    .kw-pop a:hover span { text-decoration: underline; }\n'
+    '    .kw-pop img, .kw-pop .kw-nocv { display: flex; align-items: center; justify-content: center; width: 100%; aspect-ratio: 2/3; object-fit: cover; border: 1.5px solid #000; background: #f4f4f0; font-style: normal; font-size: 22px; margin-bottom: 4px; }\n'
+    '    .kw-pop span { display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; word-break: keep-all; }\n'
+    '    .kw-pop em { grid-column: 1 / -1; font-style: normal; font-size: 12px; color: #555; text-align: right; }\n'
     '    .taste-chip.big { background: #fde047; font-size: 15px; }\n'
     '    .taste-chip small { font-size: 12px; color: #555; font-weight: 600; }\n'
     '    .taste-tiles { display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: 10px; }\n'
@@ -1559,14 +1572,56 @@ TASTE_CSS = (
 )
 
 
+TASTE_POP_MAX = 8   # 키워드 말풍선에 보여 줄 책 수 (4권씩 두 줄)
+
+# 키워드 말풍선 — PC는 마우스를 올리면 CSS 로 뜨고, 누르면(휴대폰) 열고 닫는다.
+# 화면 오른쪽 밖으로 나가면 왼쪽으로 당긴다. 바깥을 누르거나 책을 고르면 닫는다.
+TASTE_JS = (
+    '  <script>\n'
+    '  (function () {\n'
+    '    var kws = document.querySelectorAll(".taste-kw");\n'
+    '    function place(kw) {\n'
+    '      var pop = kw.querySelector(".kw-pop");\n'
+    '      if (!pop) return;\n'
+    '      pop.style.left = "0px";\n'
+    '      var r = pop.getBoundingClientRect(), over = r.right - (document.documentElement.clientWidth - 12);\n'
+    '      if (over > 0) pop.style.left = (-Math.min(over, kw.getBoundingClientRect().left - 12)) + "px";\n'
+    '    }\n'
+    '    function closeAll(except) {\n'
+    '      [].forEach.call(kws, function (k) {\n'
+    '        if (k !== except) { k.classList.remove("open"); k.firstChild.setAttribute("aria-expanded", "false"); }\n'
+    '      });\n'
+    '    }\n'
+    '    [].forEach.call(kws, function (kw) {\n'
+    '      kw.addEventListener("mouseenter", function () { place(kw); });\n'
+    '      kw.firstChild.addEventListener("click", function (e) {\n'
+    '        e.stopPropagation();\n'
+    '        var on = !kw.classList.contains("open");\n'
+    '        closeAll(kw);\n'
+    '        kw.classList.toggle("open", on);\n'
+    '        kw.firstChild.setAttribute("aria-expanded", on ? "true" : "false");\n'
+    '        if (on) place(kw);\n'
+    '      });\n'
+    '    });\n'
+    '    document.addEventListener("click", function (e) {\n'
+    '      if (!e.target.closest(".kw-pop")) closeAll(null);\n'
+    '      else if (e.target.closest("a")) closeAll(null);\n'
+    '    });\n'
+    '    document.addEventListener("keydown", function (e) { if (e.key === "Escape") closeAll(null); });\n'
+    '  })();\n'
+    '  </script>\n'
+)
+
+
 def _taste_tile(label, value, pct, sub):
     return ('      <div class="taste-tile"><b>' + esc(label) + '</b><div class="v">' + value + '</div>'
             + (('<div class="meter" aria-hidden="true"><i style="width:%d%%"></i></div>' % pct) if pct is not None else '')
             + '<p>' + esc(sub) + '</p></div>\n')
 
 
-def taste_html(name, lang='ko', who=''):
-    """접힌 카드 — '○○의 독서 취향이 궁금하다면?'을 누르면 펼쳐진다. who: 본문에 쓰는 이름."""
+def taste_html(name, lang='ko', who='', refs=None):
+    """접힌 카드 — '○○의 독서 취향이 궁금하다면?'을 누르면 펼쳐진다. who: 본문에 쓰는 이름.
+    refs: {한국어 제목: (독서 리스트 칸 id, 보여 줄 제목, 표지 URL)} — 키워드 말풍선에 쓴다."""
     t = TASTE.get(name)
     if not t:
         return ''
@@ -1576,7 +1631,9 @@ def taste_html(name, lang='ko', who=''):
 
     # 한 줄 요약 — 꾸미는 말 없이 권수 그대로
     top_g = (t.get('genre_all') or [None])[0]
-    big_kw = [k for k in (t.get('keywords') or [])[:2] if k['n'] >= _taste.BIG_KEYWORD_BOOKS] if ko else []
+    kws = [k for k in (t.get('keywords') or []) if ko or k['en']]   # 영어 이름이 없는 키워드는 영문에서 뺀다
+    kname = (lambda k: k['ko']) if ko else (lambda k: k['en'])
+    big_kw = [k for k in kws[:2] if k['n'] >= _taste.BIG_KEYWORD_BOOKS]
     if top_g:
         if ko:
             sm = '가장 많이 읽은 분야는 <mark>%s</mark> %d권' % (esc(top_g['ko']), top_g['n'])
@@ -1585,6 +1642,9 @@ def taste_html(name, lang='ko', who=''):
                     '<mark>%s</mark> %d권' % (esc(k['ko']), k['n']) for k in big_kw)
         else:
             sm = 'Most-read genre: <mark>%s</mark> (%d books)' % (esc(top_g['en']), top_g['n'])
+            if big_kw:
+                sm += ', frequent keywords: ' + ' · '.join(
+                    '<mark>%s</mark> (%d)' % (esc(k['en']), k['n']) for k in big_kw)
         out.append('      <p class="taste-sum">' + sm + '</p>\n')
 
     # 분야 막대
@@ -1605,12 +1665,27 @@ def taste_html(name, lang='ko', who=''):
                    + esc(', '.join('%s %d' % (gname(g), g['n']) for g in t['genre_all'])) + '">' + segs
                    + '</div>\n        <ul class="taste-legend">' + legend + '</ul>\n      </div>\n')
 
-    # 키워드 칩 — 예스24 카테고리 이름이라 한국어 페이지에만
-    if ko and t.get('keywords'):
-        chips = ''.join('<span class="taste-chip%s">%s <small>%d권</small></span>' % (
-            ' big' if k in big_kw else '', esc(k['ko']), k['n']) for k in t['keywords'])
-        out.append('      <div>\n        <p class="taste-label">자주 고른 키워드 <small>예스24 카테고리 · %d권 이상</small></p>\n'
-                   '        <div class="taste-chips">%s</div>\n      </div>\n' % (_taste.MIN_KEYWORD_BOOKS, chips))
+    # 키워드 칩 — 마우스를 올리거나(휴대폰은 누르면) 그 키워드의 책 표지·제목이 말풍선으로 뜬다
+    if kws:
+        refs = refs or {}
+        chips = ''
+        for k in kws:
+            books = [refs.get(x) for x in k['titles'] if refs.get(x)]
+            pop = ''.join(
+                '<a href="#%s">%s<span>%s</span></a>' % (
+                    rid, ('<img src="%s" alt="" loading="lazy">' % esc(cv)) if (cv or '').startswith('http')
+                    else '<i class="kw-nocv">📕</i>', esc(title))
+                for rid, title, cv in books[:TASTE_POP_MAX])
+            if len(books) > TASTE_POP_MAX:
+                pop += '<em>' + (('+%d권 더' % (len(books) - TASTE_POP_MAX)) if ko
+                                 else ('+%d more' % (len(books) - TASTE_POP_MAX))) + '</em>'
+            chips += ('<span class="taste-kw"><button type="button" class="taste-chip%s" aria-expanded="false">%s <small>%d%s</small></button>'
+                      '%s</span>' % (' big' if k in big_kw else '', esc(kname(k)), k['n'], '권' if ko else '',
+                                     ('<span class="kw-pop">' + pop + '</span>') if pop else ''))
+        out.append('      <div>\n        <p class="taste-label">'
+                   + (('자주 고른 키워드 <small>예스24 카테고리 · %d권 이상 · 누르면 책이 보여요</small>' % _taste.MIN_KEYWORD_BOOKS) if ko
+                      else ('Frequent keywords <small>bookstore categories · %d+ books · tap to see the books</small>' % _taste.MIN_KEYWORD_BOOKS))
+                   + '</p>\n        <div class="taste-chips">' + chips + '</div>\n      </div>\n')
 
     # 숫자 타일
     tiles = ''
@@ -1646,7 +1721,7 @@ def taste_html(name, lang='ko', who=''):
             '    <summary class="taste-head"><h2>' + head[0] + '</h2><span>' + head[1] + '</span>'
             '<b class="taste-open" aria-hidden="true" data-show="' + ('펼쳐 보기 ▾' if ko else 'Show ▾')
             + '" data-hide="' + ('접기 ▴' if ko else 'Hide ▴') + '"></b></summary>\n'
-            '    <div class="taste-body">\n' + ''.join(out) + '    </div>\n  </details>\n')
+            '    <div class="taste-body">\n' + ''.join(out) + '    </div>\n  </details>\n' + TASTE_JS)
 
 print(f"CSV 파싱 완료: {len(celebs)}명")
 if EN_TITLE_SKIPPED:
@@ -2747,6 +2822,7 @@ for name, info in celebs.items():
     book_cards_html = ''   # 카드 그리드 (표 대체)
     spine_html = ''        # 책등 보기
     cover_tiles = []       # 표지 보기
+    taste_refs = {}        # 독서 취향 키워드 말풍선 — 제목 → (리스트 칸 id, 제목, 표지)
     shared_count = 0       # 다른 셀럽과 공유된 책 권수 (섹션 헤더용)
     # 책장·목록은 가나다 순. 최근 추가된 책은 위쪽 NEW 칸에 따로 모은다.
     list_books = sorted(books, key=lambda x: title_sort_key(x['title']))
@@ -2847,6 +2923,7 @@ for name, info in celebs.items():
             spine_html += ('    <span class="' + _sp_cls + '" style="' + _spine_style + '" title="'
                            + esc(b['title']) + '">' + _spine_inner + '</span>\n')
         cover_tiles.append(cover_tile(b['title'], b['coverUrl'], aladin_url, _added, b['title'] + ' 표지'))
+        taste_refs[b['title']] = ('b' + str(i+1), b['title'], b['coverUrl'])
 
         _card = (
             '    <li class="rl-item" id="b' + str(i+1) + '">\n'
@@ -3150,7 +3227,7 @@ for name, info in celebs.items():
         + cover_shelf_html(cover_tiles) +
         '    </div>\n'
         + covers_more_html(len(cover_tiles), 'ko')
-        + taste_html(name, 'ko') +
+        + taste_html(name, 'ko', refs=taste_refs) +
         '    <ol class="reading-list" id="rlist">\n'
         + book_cards_html +
         '    </ol>\n'
@@ -4435,6 +4512,7 @@ for name, info in celebs.items():
     rows = ''
     en_spine_html = ''
     en_cover_tiles = []
+    en_taste_refs = {}
     # 영문 페이지는 영문 제목 알파벳 순
     en_list_books = sorted(en_books, key=lambda x: title_sort_key(plain_en(x['title_en'])))
     en_new_items = []
@@ -4532,6 +4610,7 @@ for name, info in celebs.items():
             en_spine_html += ('    <span class="' + _sp_cls + '" style="' + _sp_style + '" title="'
                               + esc(t_plain) + '">' + _sp_inner + '</span>\n')
         en_cover_tiles.append(cover_tile(t_plain, b['coverUrl'], aladin_url, _added, alt_text))
+        en_taste_refs[b['title']] = ('b' + str(i+1), t_plain, b['coverUrl'])
 
         _card = (
             '    <li class="rl-item" id="b' + str(i+1) + '">\n'
@@ -4911,7 +4990,7 @@ for name, info in celebs.items():
         '    <div class="covers" id="covers">\n' + cover_shelf_html(en_cover_tiles) +
         '    </div>\n'
         + covers_more_html(len(en_cover_tiles), 'en')
-        + taste_html(name, 'en', _name_pl) +
+        + taste_html(name, 'en', _name_pl, en_taste_refs) +
         '    <ol class="reading-list" id="rlist">\n' + rows +
         '    </ol>\n'
         '    </div>\n'
