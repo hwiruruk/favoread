@@ -691,7 +691,20 @@
     .taste-legend li { display: flex; align-items: center; gap: 6px; }
     .taste-legend i { width: 12px; height: 12px; border: 1.5px solid #000; flex-shrink: 0; }
     .taste-chips { display: flex; flex-wrap: wrap; gap: 8px; }
-    .taste-chip { display: inline-flex; align-items: baseline; gap: 6px; padding: 4px 10px; background: #fff; border: 2px solid #000; box-shadow: 2px 2px 0 0 #000; font-weight: 700; font-size: 14px; }
+    .taste-kw { position: relative; display: inline-block; }
+    .taste-chip { display: inline-flex; align-items: baseline; gap: 6px; padding: 4px 10px; background: #fff; border: 2px solid #000; box-shadow: 2px 2px 0 0 #000; font: inherit; font-weight: 700; font-size: 14px; color: #000; cursor: pointer; }
+    .taste-chip:focus-visible { outline: 3px solid #2563eb; outline-offset: 2px; }
+    .taste-kw.open .taste-chip { transform: translate(2px,2px); box-shadow: none; }
+    .kw-pop { display: none; position: absolute; top: calc(100% + 8px); left: 0; z-index: 30; width: 340px; max-width: calc(100vw - 32px);
+              grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 8px 6px; padding: 9px; background: #fff; border: 2px solid #000; box-shadow: 4px 4px 0 0 #000; }
+    .kw-pop::before { content: ""; position: absolute; left: 0; right: 0; top: -10px; height: 10px; }
+    @media (hover: hover) { .taste-kw:hover .kw-pop { display: grid; } }
+    .taste-kw.open .kw-pop { display: grid; }
+    .kw-pop a { display: block; min-width: 0; color: #000; text-decoration: none; font-size: 11px; font-weight: 700; line-height: 1.3; }
+    .kw-pop a:hover span { text-decoration: underline; }
+    .kw-pop img, .kw-pop .kw-nocv { display: flex; align-items: center; justify-content: center; width: 100%; aspect-ratio: 2/3; object-fit: cover; border: 1.5px solid #000; background: #f4f4f0; font-style: normal; font-size: 22px; margin-bottom: 4px; }
+    .kw-pop span { display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; word-break: keep-all; }
+    .kw-pop em { grid-column: 1 / -1; font-style: normal; font-size: 12px; color: #555; text-align: right; }
     .taste-chip.big { background: #fde047; font-size: 15px; }
     .taste-chip small { font-size: 12px; color: #555; font-weight: 600; }
     .taste-tiles { display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: 10px; }
@@ -943,8 +956,8 @@
         <ul class="taste-legend"><li><i style="background:#fde047"></i>소설 14권</li><li><i style="background:#ddd6fe"></i>시 5권</li><li><i style="background:#a7f3d0"></i>에세이 5권</li><li><i style="background:#fed7aa"></i>인문 4권</li><li><i style="background:#bae6fd"></i>사회 1권</li><li><i style="background:#d6d3d1"></i>실용·생활 1권</li></ul>
       </div>
       <div>
-        <p class="taste-label">자주 고른 키워드 <small>예스24 카테고리 · 2권 이상</small></p>
-        <div class="taste-chips"><span class="taste-chip big">일본소설 <small>4권</small></span><span class="taste-chip big">한국 시 <small>4권</small></span><span class="taste-chip">스페인/중남미소설 <small>3권</small></span><span class="taste-chip">영미소설 <small>3권</small></span><span class="taste-chip">한국 에세이 <small>3권</small></span><span class="taste-chip">독일소설 <small>2권</small></span><span class="taste-chip">서양 고전문학 <small>2권</small></span><span class="taste-chip">세계의 시 <small>2권</small></span></div>
+        <p class="taste-label">자주 고른 키워드 <small>예스24 카테고리 · 2권 이상 · 누르면 책이 보여요</small></p>
+        <div class="taste-chips"><span class="taste-kw"><button type="button" class="taste-chip big" aria-expanded="false">일본소설 <small>4권</small></button><span class="kw-pop"><a href="#b11"><img src="https://image.yes24.com/goods/13946987/L" alt="" loading="lazy"><span>도쿄기담집</span></a><a href="#b13"><img src="https://image.yes24.com/goods/127914251/L" alt="" loading="lazy"><span>바람의 노래를 들어라</span></a><a href="#b14"><img src="https://image.yes24.com/goods/374091/L" alt="" loading="lazy"><span>밤의 거미원숭이</span></a><a href="#b29"><img src="https://image.yes24.com/goods/14382339/L" alt="" loading="lazy"><span>회전목마의 데드 히트</span></a></span></span><span class="taste-kw"><button type="button" class="taste-chip big" aria-expanded="false">한국 시 <small>4권</small></button><span class="kw-pop"><a href="#b7"><img src="https://image.yes24.com/goods/108590831/L" alt="" loading="lazy"><span>꽃샘바람에 흔들린다면 너는 꽃</span></a><a href="#b20"><img src="https://image.yes24.com/goods/26932917/L" alt="" loading="lazy"><span>외눈박이 물고기의 사랑</span></a><a href="#b23"><img src="https://image.yes24.com/goods/172501401/L" alt="" loading="lazy"><span>읽는 슬픔, 말하는 사랑</span></a><a href="#b28"><img src="https://image.yes24.com/goods/107489763/L" alt="" loading="lazy"><span>햇볕 쬐기</span></a></span></span><span class="taste-kw"><button type="button" class="taste-chip" aria-expanded="false">스페인/중남미소설 <small>3권</small></button><span class="kw-pop"><a href="#b1"><img src="https://image.yes24.com/goods/1385150/L" alt="" loading="lazy"><span>11분</span></a><a href="#b8"><img src="https://image.yes24.com/goods/1398241/L" alt="" loading="lazy"><span>네루다의 우편배달부</span></a><a href="#b12"><img src="https://image.yes24.com/goods/15205532/L" alt="" loading="lazy"><span>돈키호테</span></a></span></span><span class="taste-kw"><button type="button" class="taste-chip" aria-expanded="false">영미소설 <small>3권</small></button><span class="kw-pop"><a href="#b2"><img src="https://image.yes24.com/goods/372300/L" alt="" loading="lazy"><span>1984</span></a><a href="#b10"><img src="https://image.yes24.com/goods/135880/L" alt="" loading="lazy"><span>달과 6펜스</span></a><a href="#b22"><img src="https://image.yes24.com/goods/17378/L" alt="" loading="lazy"><span>인간의 굴레에서</span></a></span></span><span class="taste-kw"><button type="button" class="taste-chip" aria-expanded="false">한국 에세이 <small>3권</small></button><span class="kw-pop"><a href="#b4"><img src="https://image.yes24.com/goods/102908354/L" alt="" loading="lazy"><span>거짓의 조금</span></a><a href="#b23"><img src="https://image.yes24.com/goods/172501401/L" alt="" loading="lazy"><span>읽는 슬픔, 말하는 사랑</span></a><a href="#b3"><img src="https://image.yes24.com/goods/115535055/L" alt="" loading="lazy"><span>poco a poco 포코 아 포코</span></a></span></span><span class="taste-kw"><button type="button" class="taste-chip" aria-expanded="false">독일소설 <small>2권</small></button><span class="kw-pop"><a href="#b16"><img src="https://image.yes24.com/goods/3620143/L" alt="" loading="lazy"><span>서부전선 이상없다</span></a><a href="#b27"><img src="https://image.yes24.com/goods/144889199/L" alt="" loading="lazy"><span>페터 카멘친트</span></a></span></span><span class="taste-kw"><button type="button" class="taste-chip" aria-expanded="false">서양 고전문학 <small>2권</small></button><span class="kw-pop"><a href="#b6"><img src="https://image.yes24.com/goods/96651059/L" alt="" loading="lazy"><span>구토</span></a><a href="#b27"><img src="https://image.yes24.com/goods/144889199/L" alt="" loading="lazy"><span>페터 카멘친트</span></a></span></span><span class="taste-kw"><button type="button" class="taste-chip" aria-expanded="false">세계의 시 <small>2권</small></button><span class="kw-pop"><a href="#b15"><img src="https://image.yes24.com/goods/83527299/L" alt="" loading="lazy"><span>사물의 편</span></a><a href="#b19"><img src="https://image.yes24.com/goods/27558484/L" alt="" loading="lazy"><span>악의 꽃</span></a></span></span></div>
       </div>
       <div class="taste-tiles">
       <div class="taste-tile"><b>국내 · 번역서</b><div class="v">6<small> : </small>18</div><div class="meter" aria-hidden="true"><i style="width:25%"></i></div><p>나라를 아는 문학 24권 중 국내 작가 6권 · 번역서 18권</p></div>
@@ -953,6 +966,39 @@
       </div>
     </div>
   </details>
+  <script>
+  (function () {
+    var kws = document.querySelectorAll(".taste-kw");
+    function place(kw) {
+      var pop = kw.querySelector(".kw-pop");
+      if (!pop) return;
+      pop.style.left = "0px";
+      var r = pop.getBoundingClientRect(), over = r.right - (document.documentElement.clientWidth - 12);
+      if (over > 0) pop.style.left = (-Math.min(over, kw.getBoundingClientRect().left - 12)) + "px";
+    }
+    function closeAll(except) {
+      [].forEach.call(kws, function (k) {
+        if (k !== except) { k.classList.remove("open"); k.firstChild.setAttribute("aria-expanded", "false"); }
+      });
+    }
+    [].forEach.call(kws, function (kw) {
+      kw.addEventListener("mouseenter", function () { place(kw); });
+      kw.firstChild.addEventListener("click", function (e) {
+        e.stopPropagation();
+        var on = !kw.classList.contains("open");
+        closeAll(kw);
+        kw.classList.toggle("open", on);
+        kw.firstChild.setAttribute("aria-expanded", on ? "true" : "false");
+        if (on) place(kw);
+      });
+    });
+    document.addEventListener("click", function (e) {
+      if (!e.target.closest(".kw-pop")) closeAll(null);
+      else if (e.target.closest("a")) closeAll(null);
+    });
+    document.addEventListener("keydown", function (e) { if (e.key === "Escape") closeAll(null); });
+  })();
+  </script>
     <ol class="reading-list" id="rlist">
     <li class="rl-item" id="b1">
       <span class="rl-num">1</span>

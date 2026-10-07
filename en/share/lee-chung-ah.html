@@ -886,7 +886,20 @@
     .taste-legend li { display: flex; align-items: center; gap: 6px; }
     .taste-legend i { width: 12px; height: 12px; border: 1.5px solid #000; flex-shrink: 0; }
     .taste-chips { display: flex; flex-wrap: wrap; gap: 8px; }
-    .taste-chip { display: inline-flex; align-items: baseline; gap: 6px; padding: 4px 10px; background: #fff; border: 2px solid #000; box-shadow: 2px 2px 0 0 #000; font-weight: 700; font-size: 14px; }
+    .taste-kw { position: relative; display: inline-block; }
+    .taste-chip { display: inline-flex; align-items: baseline; gap: 6px; padding: 4px 10px; background: #fff; border: 2px solid #000; box-shadow: 2px 2px 0 0 #000; font: inherit; font-weight: 700; font-size: 14px; color: #000; cursor: pointer; }
+    .taste-chip:focus-visible { outline: 3px solid #2563eb; outline-offset: 2px; }
+    .taste-kw.open .taste-chip { transform: translate(2px,2px); box-shadow: none; }
+    .kw-pop { display: none; position: absolute; top: calc(100% + 8px); left: 0; z-index: 30; width: 340px; max-width: calc(100vw - 32px);
+              grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 8px 6px; padding: 9px; background: #fff; border: 2px solid #000; box-shadow: 4px 4px 0 0 #000; }
+    .kw-pop::before { content: ""; position: absolute; left: 0; right: 0; top: -10px; height: 10px; }
+    @media (hover: hover) { .taste-kw:hover .kw-pop { display: grid; } }
+    .taste-kw.open .kw-pop { display: grid; }
+    .kw-pop a { display: block; min-width: 0; color: #000; text-decoration: none; font-size: 11px; font-weight: 700; line-height: 1.3; }
+    .kw-pop a:hover span { text-decoration: underline; }
+    .kw-pop img, .kw-pop .kw-nocv { display: flex; align-items: center; justify-content: center; width: 100%; aspect-ratio: 2/3; object-fit: cover; border: 1.5px solid #000; background: #f4f4f0; font-style: normal; font-size: 22px; margin-bottom: 4px; }
+    .kw-pop span { display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; word-break: keep-all; }
+    .kw-pop em { grid-column: 1 / -1; font-style: normal; font-size: 12px; color: #555; text-align: right; }
     .taste-chip.big { background: #fde047; font-size: 15px; }
     .taste-chip small { font-size: 12px; color: #555; font-weight: 600; }
     .taste-tiles { display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: 10px; }
@@ -1062,7 +1075,7 @@
       </div>
     </div>
     <details class="new-sec">
-      <summary class="new-sec-h"><span class="rl-new-tag">NEW</span> New in the last 10 days (19 books) <span class="new-sec-more" data-show="Show" data-hide="Hide"></span></summary>
+      <summary class="new-sec-h"><span class="rl-new-tag">NEW</span> New in the last 10 days (18 books) <span class="new-sec-more" data-show="Show" data-hide="Hide"></span></summary>
       <div class="new-tiles">
         <a class="new-tile" href="#b4"><span class="nt-cover"><img src="https://image.yes24.com/goods/97179414/L" alt="Becoming Beauvoir by Kate Kirkpatrick — book cover" loading="lazy"></span><span class="nt-title">Becoming Beauvoir</span></a>
         <a class="new-tile" href="#b8"><span class="nt-cover"><img src="https://image.yes24.com/goods/182810962/L" alt="How to Breathe Through A Wound by Kim Jinyoung — book cover" loading="lazy"></span><span class="nt-title">How to Breathe Through A Wound</span></a>
@@ -1082,7 +1095,6 @@
         <a class="new-tile" href="#b36"><span class="nt-cover"><img src="https://image.yes24.com/goods/66322614/L" alt="Trembling and Shaking by Kim Sang-Wook — book cover" loading="lazy"></span><span class="nt-title">Trembling and Shaking</span></a>
         <a class="new-tile" href="#b37"><span class="nt-cover"><img src="https://image.yes24.com/goods/66421/L" alt="Vagabond by Takehiko Inoue — book cover" loading="lazy"></span><span class="nt-title">Vagabond</span></a>
         <a class="new-tile" href="#b40"><span class="nt-cover"><img src="https://image.yes24.com/goods/66573/L" alt="Zzang by Lim Jae-won — book cover" loading="lazy"></span><span class="nt-title">Zzang</span></a>
-        <a class="new-tile" href="#b16"><span class="nt-cover"><img src="https://image.yes24.com/goods/147069400/L" alt="Morning Piano by Kim Jinyoung — book cover" loading="lazy"></span><span class="nt-title">Morning Piano</span></a>
       </div>
     </details>
     <div id="shelf-area" class="show-covers covers-collapsed">
@@ -1102,7 +1114,7 @@
     <a class="sp is-new" style="--c:hsl(344,53%,26%);--w:44px;--fs:15px" href="https://www.yes24.com/product/goods/129367072" rel="nofollow noopener noreferrer" target="_blank" title="Le sixième sommeil"><span class="sp-t"><i>Le sixième sommeil</i></span><img class="sp-i" src="https://image.yes24.com/goods/129367072/side" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.parentNode.classList.add('sp-fail');this.remove()" onload="if(this.naturalWidth/this.naturalHeight>0.4){this.parentNode.classList.add('sp-fail');this.remove()}"><span class="sp-new" data-added="2026-10-03">NEW</span></a>
     <a class="sp is-new" style="--c:hsl(268,40%,31%);--w:32px;--fs:15px" href="https://www.yes24.com/product/goods/20743957" rel="nofollow noopener noreferrer" target="_blank" title="Love Ontology"><span class="sp-t"><i>Love Ontology</i></span><img class="sp-i" src="https://image.yes24.com/goods/20743957/side" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.parentNode.classList.add('sp-fail');this.remove()" onload="if(this.naturalWidth/this.naturalHeight>0.4){this.parentNode.classList.add('sp-fail');this.remove()}"><span class="sp-new" data-added="2026-10-03">NEW</span></a>
     <a class="sp is-new" style="--c:hsl(108,33%,35%);--w:44px;--fs:15px" href="https://www.yes24.com/product/goods/89468227" rel="nofollow noopener noreferrer" target="_blank" title="Marina&#x27;s Eyes"><span class="sp-t"><i>Marina&#x27;s Eyes</i></span><img class="sp-i" src="https://image.yes24.com/goods/89468227/side" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.parentNode.classList.add('sp-fail');this.remove()" onload="if(this.naturalWidth/this.naturalHeight>0.4){this.parentNode.classList.add('sp-fail');this.remove()}"><span class="sp-new" data-added="2026-10-03">NEW</span></a>
-    <a class="sp is-new" style="--c:hsl(36,37%,42%);--w:39px;--fs:15px" href="https://www.yes24.com/product/goods/147069400" rel="nofollow noopener noreferrer" target="_blank" title="Morning Piano"><span class="sp-t"><i>Morning Piano</i></span><img class="sp-i" src="https://image.yes24.com/goods/147069400/side" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.parentNode.classList.add('sp-fail');this.remove()" onload="if(this.naturalWidth/this.naturalHeight>0.4){this.parentNode.classList.add('sp-fail');this.remove()}"><span class="sp-new" data-added="2026-09-26">NEW</span></a>
+    <a class="sp" style="--c:hsl(36,37%,42%);--w:39px;--fs:15px" href="https://www.yes24.com/product/goods/147069400" rel="nofollow noopener noreferrer" target="_blank" title="Morning Piano"><span class="sp-t"><i>Morning Piano</i></span><img class="sp-i" src="https://image.yes24.com/goods/147069400/side" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.parentNode.classList.add('sp-fail');this.remove()" onload="if(this.naturalWidth/this.naturalHeight>0.4){this.parentNode.classList.add('sp-fail');this.remove()}"></a>
     <a class="sp" style="--c:hsl(280,51%,27%);--w:44px;--fs:15px" href="https://www.yes24.com/product/goods/101347574" rel="nofollow noopener noreferrer" target="_blank" title="Murakami T"><span class="sp-t"><i>Murakami T</i></span><img class="sp-i" src="https://image.yes24.com/goods/101347574/side" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.parentNode.classList.add('sp-fail');this.remove()" onload="if(this.naturalWidth/this.naturalHeight>0.4){this.parentNode.classList.add('sp-fail');this.remove()}"></a>
     <a class="sp" style="--c:hsl(252,48%,39%);--w:33px;--fs:15px" href="https://www.yes24.com/product/goods/122141152" rel="nofollow noopener noreferrer" target="_blank" title="Parade"><span class="sp-t"><i>Parade</i></span><img class="sp-i" src="https://image.yes24.com/goods/122141152/side" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.parentNode.classList.add('sp-fail');this.remove()" onload="if(this.naturalWidth/this.naturalHeight>0.4){this.parentNode.classList.add('sp-fail');this.remove()}"></a>
     <a class="sp no-img" style="--c:#e10043;--w:34px;--fs:15px" href="https://www.yes24.com/product/goods/9154438" rel="nofollow noopener noreferrer" target="_blank" title="Paradise Kiss"><span class="sp-t"><i>Paradise Kiss</i></span></a>
@@ -1174,11 +1186,15 @@
   <details class="taste">
     <summary class="taste-head"><h2>📊 Curious about Lee Chung-ah's reading taste?</h2><span>from 41 books</span><b class="taste-open" aria-hidden="true" data-show="Show ▾" data-hide="Hide ▴"></b></summary>
     <div class="taste-body">
-      <p class="taste-sum">Most-read genre: <mark>Fiction</mark> (11 books)</p>
+      <p class="taste-sum">Most-read genre: <mark>Fiction</mark> (11 books), frequent keywords: <mark>Essays in Translation</mark> (6) · <mark>Romance Comics</mark> (5)</p>
       <div>
         <p class="taste-label">Genres <small>41 books with a known genre</small></p>
         <div class="taste-bar" role="img" aria-label="Fiction 11, Comics 8, Essays 7, Humanities 5, Arts 3, Poetry 2, Self-help 2, Science 1, Society 1, Practical 1"><span style="flex:11 0 0;background:#fde047" title="Fiction 11">Fiction 27%</span><span style="flex:8 0 0;background:#fdba74" title="Comics 8">Comics 20%</span><span style="flex:7 0 0;background:#a7f3d0" title="Essays 7">Essays 17%</span><span style="flex:5 0 0;background:#fed7aa" title="Humanities 5">Humanities 12%</span><span style="flex:3 0 0;background:#f5d0fe" title="Arts 3"></span><span style="flex:2 0 0;background:#ddd6fe" title="Poetry 2"></span><span style="flex:2 0 0;background:#fecaca" title="Self-help 2"></span><span style="flex:1 0 0;background:#99f6e4" title="Science 1"></span><span style="flex:1 0 0;background:#bae6fd" title="Society 1"></span><span style="flex:1 0 0;background:#d6d3d1" title="Practical 1"></span></div>
         <ul class="taste-legend"><li><i style="background:#fde047"></i>Fiction 11</li><li><i style="background:#fdba74"></i>Comics 8</li><li><i style="background:#a7f3d0"></i>Essays 7</li><li><i style="background:#fed7aa"></i>Humanities 5</li><li><i style="background:#f5d0fe"></i>Arts 3</li><li><i style="background:#ddd6fe"></i>Poetry 2</li><li><i style="background:#fecaca"></i>Self-help 2</li><li><i style="background:#99f6e4"></i>Science 1</li><li><i style="background:#bae6fd"></i>Society 1</li><li><i style="background:#d6d3d1"></i>Practical 1</li></ul>
+      </div>
+      <div>
+        <p class="taste-label">Frequent keywords <small>bookstore categories · 2+ books · tap to see the books</small></p>
+        <div class="taste-chips"><span class="taste-kw"><button type="button" class="taste-chip big" aria-expanded="false">Essays in Translation <small>6</small></button><span class="kw-pop"><a href="#b1"><img src="https://image.yes24.com/goods/154168402/L" alt="" loading="lazy"><span>All the Beauty in the World: The Metropolitan Museum of Art and Me</span></a><a href="#b17"><img src="https://image.yes24.com/goods/101347574/L" alt="" loading="lazy"><span>Murakami T</span></a><a href="#b30"><img src="https://image.yes24.com/goods/118980871/L" alt="" loading="lazy"><span>The Pencil in a Sailor Suit</span></a><a href="#b9"><img src="https://image.yes24.com/goods/66998695/L" alt="" loading="lazy"><span>Journal De Deuil</span></a><a href="#b11"><img src="https://image.yes24.com/goods/208514/L" alt="" loading="lazy"><span>L&#x27;ouvrière qui cousait l&#x27;anus des rats</span></a><a href="#b7"><img src="https://image.yes24.com/goods/235166/L" alt="" loading="lazy"><span>Freude Am Garten</span></a></span></span><span class="taste-kw"><button type="button" class="taste-chip big" aria-expanded="false">Romance Comics <small>5</small></button><span class="kw-pop"><a href="#b35"><img src="https://image.yes24.com/goods/11818029/L" alt="" loading="lazy"><span>Tokyo Crazy Paradise</span></a><a href="#b25"><img src="https://image.yes24.com/goods/387046/L" alt="" loading="lazy"><span>Subaru</span></a><a href="#b19"><img src="https://image.yes24.com/goods/9154438/L" alt="" loading="lazy"><span>Paradise Kiss</span></a><a href="#b22"><img src="https://image.yes24.com/goods/3678445/L" alt="" loading="lazy"><span>Red River</span></a></span></span><span class="taste-kw"><button type="button" class="taste-chip" aria-expanded="false">French Fiction <small>5</small></button><span class="kw-pop"><a href="#b10"><img src="https://image.yes24.com/goods/2876081/L" alt="" loading="lazy"><span>L&#x27;Arbre des Possibles</span></a><a href="#b26"><img src="https://image.yes24.com/goods/30547371/L" alt="" loading="lazy"><span>The Course of Love</span></a><a href="#b32"><img src="https://image.yes24.com/goods/122850131/L" alt="" loading="lazy"><span>The Ultimate Secret</span></a><a href="#b21"><img src="https://image.yes24.com/goods/1760/L" alt="" loading="lazy"><span>Ramsès</span></a><a href="#b13"><img src="https://image.yes24.com/goods/129367072/L" alt="" loading="lazy"><span>Le sixième sommeil</span></a></span></span><span class="taste-kw"><button type="button" class="taste-chip" aria-expanded="false">Fine Art <small>3</small></button><span class="kw-pop"><a href="#b15"><img src="https://image.yes24.com/goods/89468227/L" alt="" loading="lazy"><span>Marina&#x27;s Eyes</span></a><a href="#b6"><img src="https://image.yes24.com/goods/12466017/L" alt="" loading="lazy"><span>Dust Child</span></a><a href="#b5"><img src="https://image.yes24.com/goods/6072784/L" alt="" loading="lazy"><span>Diego et Frida</span></a></span></span><span class="taste-kw"><button type="button" class="taste-chip" aria-expanded="false">Western Philosophy <small>3</small></button><span class="kw-pop"><a href="#b12"><img src="https://image.yes24.com/goods/89761901/L" alt="" loading="lazy"><span>Le Noir: Éclats d&#x27;une non-couleur</span></a><a href="#b28"><img src="https://image.yes24.com/goods/69618792/L" alt="" loading="lazy"><span>The Essays (Montaigne)</span></a><a href="#b8"><img src="https://image.yes24.com/goods/182810962/L" alt="" loading="lazy"><span>How to Breathe Through A Wound</span></a></span></span><span class="taste-kw"><button type="button" class="taste-chip" aria-expanded="false">English-language Fiction <small>3</small></button><span class="kw-pop"><a href="#b3"><img src="https://image.yes24.com/goods/145217021/L" alt="" loading="lazy"><span>Baumgartner</span></a><a href="#b27"><img src="https://image.yes24.com/goods/124517887/L" alt="" loading="lazy"><span>The Disappeared</span></a><a href="#b34"><img src="https://image.yes24.com/goods/31170/L" alt="" loading="lazy"><span>To Kill a Mockingbird</span></a></span></span><span class="taste-kw"><button type="button" class="taste-chip" aria-expanded="false">Life Advice <small>2</small></button><span class="kw-pop"><a href="#b24"><img src="https://image.yes24.com/goods/130200909/L" alt="" loading="lazy"><span>Steadily, Long, Without Getting Tired</span></a><a href="#b31"><img src="https://image.yes24.com/goods/27832734/L" alt="" loading="lazy"><span>The Simple Life</span></a></span></span><span class="taste-kw"><button type="button" class="taste-chip" aria-expanded="false">Korean Poetry <small>2</small></button><span class="kw-pop"><a href="#b38"><img src="https://image.yes24.com/goods/118755285/L" alt="" loading="lazy"><span>What Does Sand Say?</span></a><a href="#b20"><img src="https://image.yes24.com/goods/118785759/L" alt="" loading="lazy"><span>Pronoun for None</span></a></span></span></div>
       </div>
       <div class="taste-tiles">
       <div class="taste-tile"><b>Korean · Translated</b><div class="v">4<small> : </small>16</div><div class="meter" aria-hidden="true"><i style="width:20%"></i></div><p>Of 20 literary books: 4 Korean, 16 translated</p></div>
@@ -1186,6 +1202,39 @@
       </div>
     </div>
   </details>
+  <script>
+  (function () {
+    var kws = document.querySelectorAll(".taste-kw");
+    function place(kw) {
+      var pop = kw.querySelector(".kw-pop");
+      if (!pop) return;
+      pop.style.left = "0px";
+      var r = pop.getBoundingClientRect(), over = r.right - (document.documentElement.clientWidth - 12);
+      if (over > 0) pop.style.left = (-Math.min(over, kw.getBoundingClientRect().left - 12)) + "px";
+    }
+    function closeAll(except) {
+      [].forEach.call(kws, function (k) {
+        if (k !== except) { k.classList.remove("open"); k.firstChild.setAttribute("aria-expanded", "false"); }
+      });
+    }
+    [].forEach.call(kws, function (kw) {
+      kw.addEventListener("mouseenter", function () { place(kw); });
+      kw.firstChild.addEventListener("click", function (e) {
+        e.stopPropagation();
+        var on = !kw.classList.contains("open");
+        closeAll(kw);
+        kw.classList.toggle("open", on);
+        kw.firstChild.setAttribute("aria-expanded", on ? "true" : "false");
+        if (on) place(kw);
+      });
+    });
+    document.addEventListener("click", function (e) {
+      if (!e.target.closest(".kw-pop")) closeAll(null);
+      else if (e.target.closest("a")) closeAll(null);
+    });
+    document.addEventListener("keydown", function (e) { if (e.key === "Escape") closeAll(null); });
+  })();
+  </script>
     <ol class="reading-list" id="rlist">
     <li class="rl-item" id="b1">
       <span class="rl-num">1</span>
@@ -1344,7 +1393,7 @@
     </li>
     <li class="rl-item" id="b16">
       <span class="rl-num">16</span>
-      <a class="rl-cover" href="https://www.yes24.com/product/goods/147069400" rel="nofollow noopener noreferrer" target="_blank" aria-label="Morning Piano — buy or read more"><span class="rl-new" data-added="2026-09-26">NEW</span><img src="https://image.yes24.com/goods/147069400/L" alt="Morning Piano by Kim Jinyoung — book cover" loading="lazy"></a>
+      <a class="rl-cover" href="https://www.yes24.com/product/goods/147069400" rel="nofollow noopener noreferrer" target="_blank" aria-label="Morning Piano — buy or read more"><img src="https://image.yes24.com/goods/147069400/L" alt="Morning Piano by Kim Jinyoung — book cover" loading="lazy"></a>
       <div class="rl-meta">
         <div class="rl-title"><a href="https://www.yes24.com/product/goods/147069400" rel="nofollow noopener noreferrer" target="_blank">Morning Piano *</a> <span style="color:#888;font-size:12px;font-weight:400">(아침의 피아노)</span></div>
         <div class="rl-byline">Kim Jinyoung *</div>

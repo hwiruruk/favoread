@@ -328,7 +328,20 @@
     .taste-legend li { display: flex; align-items: center; gap: 6px; }
     .taste-legend i { width: 12px; height: 12px; border: 1.5px solid #000; flex-shrink: 0; }
     .taste-chips { display: flex; flex-wrap: wrap; gap: 8px; }
-    .taste-chip { display: inline-flex; align-items: baseline; gap: 6px; padding: 4px 10px; background: #fff; border: 2px solid #000; box-shadow: 2px 2px 0 0 #000; font-weight: 700; font-size: 14px; }
+    .taste-kw { position: relative; display: inline-block; }
+    .taste-chip { display: inline-flex; align-items: baseline; gap: 6px; padding: 4px 10px; background: #fff; border: 2px solid #000; box-shadow: 2px 2px 0 0 #000; font: inherit; font-weight: 700; font-size: 14px; color: #000; cursor: pointer; }
+    .taste-chip:focus-visible { outline: 3px solid #2563eb; outline-offset: 2px; }
+    .taste-kw.open .taste-chip { transform: translate(2px,2px); box-shadow: none; }
+    .kw-pop { display: none; position: absolute; top: calc(100% + 8px); left: 0; z-index: 30; width: 340px; max-width: calc(100vw - 32px);
+              grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 8px 6px; padding: 9px; background: #fff; border: 2px solid #000; box-shadow: 4px 4px 0 0 #000; }
+    .kw-pop::before { content: ""; position: absolute; left: 0; right: 0; top: -10px; height: 10px; }
+    @media (hover: hover) { .taste-kw:hover .kw-pop { display: grid; } }
+    .taste-kw.open .kw-pop { display: grid; }
+    .kw-pop a { display: block; min-width: 0; color: #000; text-decoration: none; font-size: 11px; font-weight: 700; line-height: 1.3; }
+    .kw-pop a:hover span { text-decoration: underline; }
+    .kw-pop img, .kw-pop .kw-nocv { display: flex; align-items: center; justify-content: center; width: 100%; aspect-ratio: 2/3; object-fit: cover; border: 1.5px solid #000; background: #f4f4f0; font-style: normal; font-size: 22px; margin-bottom: 4px; }
+    .kw-pop span { display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; word-break: keep-all; }
+    .kw-pop em { grid-column: 1 / -1; font-style: normal; font-size: 12px; color: #555; text-align: right; }
     .taste-chip.big { background: #fde047; font-size: 15px; }
     .taste-chip small { font-size: 12px; color: #555; font-weight: 600; }
     .taste-tiles { display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: 10px; }
@@ -535,11 +548,48 @@
         <div class="taste-bar" role="img" aria-label="Essays 3, Fiction 2, Humanities 2, Poetry 1, Arts 1"><span class="wide" style="flex:3 0 0;background:#a7f3d0" title="Essays 3">Essays 33%</span><span style="flex:2 0 0;background:#fde047" title="Fiction 2">Fiction 22%</span><span style="flex:2 0 0;background:#fed7aa" title="Humanities 2">Humanities 22%</span><span style="flex:1 0 0;background:#ddd6fe" title="Poetry 1"></span><span style="flex:1 0 0;background:#f5d0fe" title="Arts 1"></span></div>
         <ul class="taste-legend"><li><i style="background:#a7f3d0"></i>Essays 3</li><li><i style="background:#fde047"></i>Fiction 2</li><li><i style="background:#fed7aa"></i>Humanities 2</li><li><i style="background:#ddd6fe"></i>Poetry 1</li><li><i style="background:#f5d0fe"></i>Arts 1</li></ul>
       </div>
+      <div>
+        <p class="taste-label">Frequent keywords <small>bookstore categories · 2+ books · tap to see the books</small></p>
+        <div class="taste-chips"><span class="taste-kw"><button type="button" class="taste-chip" aria-expanded="false">General Humanities <small>2</small></button><span class="kw-pop"><a href="#b8"><img src="https://image.yes24.com/goods/188694737/L" alt="" loading="lazy"><span>The Plain Reader: Essays on Making a Simple Life</span></a><a href="#b7"><img src="https://image.yes24.com/goods/77672909/L" alt="" loading="lazy"><span>The Denial of Death</span></a></span></span><span class="taste-kw"><button type="button" class="taste-chip" aria-expanded="false">Korean Essays <small>2</small></button><span class="kw-pop"><a href="#b9"><img src="https://image.yes24.com/goods/92729657/L" alt="" loading="lazy"><span>Walking and Dating</span></a><a href="#b1"><img src="https://image.yes24.com/goods/42702060/L" alt="" loading="lazy"><span>Although Crying Would Not Change Anything</span></a></span></span><span class="taste-kw"><button type="button" class="taste-chip" aria-expanded="false">Korean Fiction <small>2</small></button><span class="kw-pop"><a href="#b5"><img src="https://image.yes24.com/goods/22885785/L" alt="" loading="lazy"><span>Princess Deokhye</span></a><a href="#b4"><img src="https://image.yes24.com/goods/79181360/L" alt="" loading="lazy"><span>Now to My Sister</span></a></span></span></div>
+      </div>
       <div class="taste-tiles">
       <div class="taste-tile"><b>Korean · Translated</b><div class="v">5<small> : </small>1</div><div class="meter" aria-hidden="true"><i style="width:83%"></i></div><p>Of 6 literary books: 5 Korean, 1 translated</p></div>
       </div>
     </div>
   </details>
+  <script>
+  (function () {
+    var kws = document.querySelectorAll(".taste-kw");
+    function place(kw) {
+      var pop = kw.querySelector(".kw-pop");
+      if (!pop) return;
+      pop.style.left = "0px";
+      var r = pop.getBoundingClientRect(), over = r.right - (document.documentElement.clientWidth - 12);
+      if (over > 0) pop.style.left = (-Math.min(over, kw.getBoundingClientRect().left - 12)) + "px";
+    }
+    function closeAll(except) {
+      [].forEach.call(kws, function (k) {
+        if (k !== except) { k.classList.remove("open"); k.firstChild.setAttribute("aria-expanded", "false"); }
+      });
+    }
+    [].forEach.call(kws, function (kw) {
+      kw.addEventListener("mouseenter", function () { place(kw); });
+      kw.firstChild.addEventListener("click", function (e) {
+        e.stopPropagation();
+        var on = !kw.classList.contains("open");
+        closeAll(kw);
+        kw.classList.toggle("open", on);
+        kw.firstChild.setAttribute("aria-expanded", on ? "true" : "false");
+        if (on) place(kw);
+      });
+    });
+    document.addEventListener("click", function (e) {
+      if (!e.target.closest(".kw-pop")) closeAll(null);
+      else if (e.target.closest("a")) closeAll(null);
+    });
+    document.addEventListener("keydown", function (e) { if (e.key === "Escape") closeAll(null); });
+  })();
+  </script>
     <ol class="reading-list" id="rlist">
     <li class="rl-item" id="b1">
       <span class="rl-num">1</span>

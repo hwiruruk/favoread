@@ -238,7 +238,20 @@
     .taste-legend li { display: flex; align-items: center; gap: 6px; }
     .taste-legend i { width: 12px; height: 12px; border: 1.5px solid #000; flex-shrink: 0; }
     .taste-chips { display: flex; flex-wrap: wrap; gap: 8px; }
-    .taste-chip { display: inline-flex; align-items: baseline; gap: 6px; padding: 4px 10px; background: #fff; border: 2px solid #000; box-shadow: 2px 2px 0 0 #000; font-weight: 700; font-size: 14px; }
+    .taste-kw { position: relative; display: inline-block; }
+    .taste-chip { display: inline-flex; align-items: baseline; gap: 6px; padding: 4px 10px; background: #fff; border: 2px solid #000; box-shadow: 2px 2px 0 0 #000; font: inherit; font-weight: 700; font-size: 14px; color: #000; cursor: pointer; }
+    .taste-chip:focus-visible { outline: 3px solid #2563eb; outline-offset: 2px; }
+    .taste-kw.open .taste-chip { transform: translate(2px,2px); box-shadow: none; }
+    .kw-pop { display: none; position: absolute; top: calc(100% + 8px); left: 0; z-index: 30; width: 340px; max-width: calc(100vw - 32px);
+              grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 8px 6px; padding: 9px; background: #fff; border: 2px solid #000; box-shadow: 4px 4px 0 0 #000; }
+    .kw-pop::before { content: ""; position: absolute; left: 0; right: 0; top: -10px; height: 10px; }
+    @media (hover: hover) { .taste-kw:hover .kw-pop { display: grid; } }
+    .taste-kw.open .kw-pop { display: grid; }
+    .kw-pop a { display: block; min-width: 0; color: #000; text-decoration: none; font-size: 11px; font-weight: 700; line-height: 1.3; }
+    .kw-pop a:hover span { text-decoration: underline; }
+    .kw-pop img, .kw-pop .kw-nocv { display: flex; align-items: center; justify-content: center; width: 100%; aspect-ratio: 2/3; object-fit: cover; border: 1.5px solid #000; background: #f4f4f0; font-style: normal; font-size: 22px; margin-bottom: 4px; }
+    .kw-pop span { display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; word-break: keep-all; }
+    .kw-pop em { grid-column: 1 / -1; font-style: normal; font-size: 12px; color: #555; text-align: right; }
     .taste-chip.big { background: #fde047; font-size: 15px; }
     .taste-chip small { font-size: 12px; color: #555; font-weight: 600; }
     .taste-tiles { display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: 10px; }
@@ -413,19 +426,12 @@
         <button type="button" class="sh-cap" id="shelf-cap-clear" title="Download as a PNG with a transparent background">⤓ Transparent</button>
       </div>
     </div>
-    <details class="new-sec">
-      <summary class="new-sec-h"><span class="rl-new-tag">NEW</span> New in the last 10 days (2 books) <span class="new-sec-more" data-show="Show" data-hide="Hide"></span></summary>
-      <div class="new-tiles">
-        <a class="new-tile" href="#b2"><span class="nt-cover"><img src="https://image.yes24.com/goods/129060701/L" alt="How Much Am I Worth by 6411&#x27;s Voice — book cover" loading="lazy"></span><span class="nt-title">How Much Am I Worth</span></a>
-        <a class="new-tile" href="#b4"><span class="nt-cover"><img src="https://image.yes24.com/goods/26835886/L" alt="Where Will the Bus Trip End? by Henrik Valnes — book cover" loading="lazy"></span><span class="nt-title">Where Will the Bus Trip End?</span></a>
-      </div>
-    </details>
     <div id="shelf-area" class="show-covers">
     <div class="shelf" id="shelf">
     <a class="sp" style="--c:hsl(125,46%,46%);--w:39px;--fs:15px" href="https://www.yes24.com/product/goods/110581220" rel="nofollow noopener noreferrer" target="_blank" title="Art of Resistance"><span class="sp-t"><i>Art of Resistance</i></span><img class="sp-i" src="https://image.yes24.com/goods/110581220/side" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.parentNode.classList.add('sp-fail');this.remove()" onload="if(this.naturalWidth/this.naturalHeight>0.4){this.parentNode.classList.add('sp-fail');this.remove()}"></a>
-    <a class="sp is-new" style="--c:hsl(321,35%,44%);--w:36px;--fs:15px" href="https://www.yes24.com/product/goods/129060701" rel="nofollow noopener noreferrer" target="_blank" title="How Much Am I Worth"><span class="sp-t"><i>How Much Am I Worth</i></span><img class="sp-i" src="https://image.yes24.com/goods/129060701/side" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.parentNode.classList.add('sp-fail');this.remove()" onload="if(this.naturalWidth/this.naturalHeight>0.4){this.parentNode.classList.add('sp-fail');this.remove()}"><span class="sp-new" data-added="2026-09-26">NEW</span></a>
+    <a class="sp" style="--c:hsl(321,35%,44%);--w:36px;--fs:15px" href="https://www.yes24.com/product/goods/129060701" rel="nofollow noopener noreferrer" target="_blank" title="How Much Am I Worth"><span class="sp-t"><i>How Much Am I Worth</i></span><img class="sp-i" src="https://image.yes24.com/goods/129060701/side" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.parentNode.classList.add('sp-fail');this.remove()" onload="if(this.naturalWidth/this.naturalHeight>0.4){this.parentNode.classList.add('sp-fail');this.remove()}"></a>
     <a class="sp no-img" style="--c:#e4563d;--w:33px;--fs:15px" href="https://www.yes24.com/product/goods/375372" rel="nofollow noopener noreferrer" target="_blank" title="Shooting an Elephant"><span class="sp-t"><i>Shooting an Elephant</i></span></a>
-    <a class="sp is-new" style="--c:hsl(172,55%,28%);--w:39px;--fs:13px" href="https://www.yes24.com/product/goods/26835886" rel="nofollow noopener noreferrer" target="_blank" title="Where Will the Bus Trip End?"><span class="sp-t"><i>Where Will the Bus Trip End?</i></span><img class="sp-i" src="https://image.yes24.com/goods/26835886/side" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.parentNode.classList.add('sp-fail');this.remove()" onload="if(this.naturalWidth/this.naturalHeight>0.4){this.parentNode.classList.add('sp-fail');this.remove()}"><span class="sp-new" data-added="2026-09-26">NEW</span></a>
+    <a class="sp" style="--c:hsl(172,55%,28%);--w:39px;--fs:13px" href="https://www.yes24.com/product/goods/26835886" rel="nofollow noopener noreferrer" target="_blank" title="Where Will the Bus Trip End?"><span class="sp-t"><i>Where Will the Bus Trip End?</i></span><img class="sp-i" src="https://image.yes24.com/goods/26835886/side" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.parentNode.classList.add('sp-fail');this.remove()" onload="if(this.naturalWidth/this.naturalHeight>0.4){this.parentNode.classList.add('sp-fail');this.remove()}"></a>
     </div>
     <div class="covers" id="covers">
     <a class="cv" href="https://www.yes24.com/product/goods/110581220" rel="nofollow noopener noreferrer" target="_blank" title="Art of Resistance"><img src="https://image.yes24.com/goods/110581220/L" alt="Art of Resistance by Joe Rippon, Amnesty International Editor-In-Chief — book cover" loading="lazy"></a>
@@ -447,7 +453,7 @@
     </li>
     <li class="rl-item" id="b2">
       <span class="rl-num">2</span>
-      <a class="rl-cover" href="https://www.yes24.com/product/goods/129060701" rel="nofollow noopener noreferrer" target="_blank" aria-label="How Much Am I Worth — buy or read more"><span class="rl-new" data-added="2026-09-26">NEW</span><img src="https://image.yes24.com/goods/129060701/L" alt="How Much Am I Worth by 6411&#x27;s Voice — book cover" loading="lazy"></a>
+      <a class="rl-cover" href="https://www.yes24.com/product/goods/129060701" rel="nofollow noopener noreferrer" target="_blank" aria-label="How Much Am I Worth — buy or read more"><img src="https://image.yes24.com/goods/129060701/L" alt="How Much Am I Worth by 6411&#x27;s Voice — book cover" loading="lazy"></a>
       <div class="rl-meta">
         <div class="rl-title"><a href="https://www.yes24.com/product/goods/129060701" rel="nofollow noopener noreferrer" target="_blank">How Much Am I Worth *</a> <span style="color:#888;font-size:12px;font-weight:400">(나는 얼마짜리입니까)</span></div>
         <div class="rl-byline">6411&#x27;s Voice *</div>
@@ -468,7 +474,7 @@
     </li>
     <li class="rl-item" id="b4">
       <span class="rl-num">4</span>
-      <a class="rl-cover" href="https://www.yes24.com/product/goods/26835886" rel="nofollow noopener noreferrer" target="_blank" aria-label="Where Will the Bus Trip End? — buy or read more"><span class="rl-new" data-added="2026-09-26">NEW</span><img src="https://image.yes24.com/goods/26835886/L" alt="Where Will the Bus Trip End? by Henrik Valnes — book cover" loading="lazy"></a>
+      <a class="rl-cover" href="https://www.yes24.com/product/goods/26835886" rel="nofollow noopener noreferrer" target="_blank" aria-label="Where Will the Bus Trip End? — buy or read more"><img src="https://image.yes24.com/goods/26835886/L" alt="Where Will the Bus Trip End? by Henrik Valnes — book cover" loading="lazy"></a>
       <div class="rl-meta">
         <div class="rl-title"><a href="https://www.yes24.com/product/goods/26835886" rel="nofollow noopener noreferrer" target="_blank">Where Will the Bus Trip End? *</a> <span style="color:#888;font-size:12px;font-weight:400">(버스 여행의 끝은 어디일까요)</span></div>
         <div class="rl-byline">Henrik Valnes *</div>
