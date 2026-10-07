@@ -2569,6 +2569,67 @@ def source_summary(urls):
     return ('출처는 ' + ', '.join(parts) + '이에요.') if parts else ''
 
 
+# ── 스페셜 땡스투 ────────────────────────────────────────────────────
+# 한 셀럽의 책 여러 권이 같은 출처에서 나오면(같은 글·영상, 또는 X 한 계정의 여러 타래)
+# 책마다 같은 링크를 되풀이하지 않고 페이지 맨 아래에 작게 모아 고마움을 표시한다.
+THANKS_MIN_BOOKS = 5
+_THANKS_NAMES = {
+    'youtube.com': 'YouTube', 'youtu.be': 'YouTube', 'instagram.com': 'Instagram',
+    'theqoo.net': '더쿠', 'dcinside.com': '디시인사이드', 'yes24.com': 'YES24',
+    'kyobobook.co.kr': '교보문고', 'aladin.co.kr': '알라딘', 'naver.com': 'Naver Blog',
+    'tistory.com': 'Tistory', 'tiktok.com': 'TikTok', 'daum.net': 'Daum Cafe',
+    'hankyung.com': '한국경제', 'sedaily.com': '서울경제', 'chosun.com': '조선일보',
+    'joongang.co.kr': '중앙일보', 'seoul.co.kr': '서울신문', 'notion.site': 'Notion',
+    'marieclairekorea.com': '마리끌레르', 'harpersbazaar.co.kr': '하퍼스 바자',
+    'allurekorea.com': '얼루어 코리아', 'singleskorea.com': '싱글즈',
+    'millie.co.kr': '밀리의 서재', 'postype.com': 'Postype', 'hatenadiary.com': 'Hatena',
+    'fastpapermag.com': 'FASTPAPER',
+}
+
+
+def _thanks_key(url):
+    """같은 출처끼리 묶는 열쇠. X는 계정 하나로, 나머지는 주소 그대로."""
+    p = urlparse(url or '')
+    host = p.netloc.lower()
+    for pre in ('www.', 'm.', 'mobile.'):
+        if host.startswith(pre):
+            host = host[len(pre):]
+    if host in ('x.com', 'twitter.com'):
+        handle = p.path.strip('/').split('/')[0]
+        if handle and handle.lower() not in ('i', 'intent', 'share', 'search', 'home'):
+            return 'x:' + handle.lower(), '@' + handle, 'https://x.com/' + handle
+        return None
+    if not host:
+        return None
+    label = next((n for h, n in _THANKS_NAMES.items() if host == h or host.endswith('.' + h)), host)
+    return url, label, url
+
+
+def thanks_sources(books, min_books=THANKS_MIN_BOOKS):
+    """[(표시 이름, 링크)] — 책 5권 이상이 같은 출처인 것만, 많은 순."""
+    groups = {}
+    for b in books:
+        src = (b.get('source') or '').strip()
+        if not src.startswith('http'):
+            continue
+        k = _thanks_key(src)
+        if not k:
+            continue
+        g = groups.setdefault(k[0], [0, k[1], k[2]])
+        g[0] += 1
+    out = sorted(groups.values(), key=lambda g: (-g[0], g[1]))
+    return [(g[1], g[2]) for g in out if g[0] >= min_books]
+
+
+def thanks_html(books):
+    items = thanks_sources(books)
+    if not items:
+        return ''
+    links = ', '.join('<a href="' + esc(u) + '" rel="nofollow noopener noreferrer" target="_blank">'
+                      + esc(n) + '</a>' for n, u in items)
+    return '    <p class="thanks">Special thanks to ' + links + '</p>\n'
+
+
 def date_ko(iso):
     try:
         d = datetime.date.fromisoformat(iso)
@@ -3181,6 +3242,8 @@ for name, info in celebs.items():
         '    .together-btn { display: inline-block; padding: 9px 16px; background: #fde047; border: 2px solid #000; box-shadow: 3px 3px 0 0 #000; font-size: 13px; font-weight: 700; color: #000; text-decoration: none; transition: transform .1s, box-shadow .1s; }\n'
         '    .together-btn:hover { transform: translate(-1px,-1px); box-shadow: 5px 5px 0 0 #000; background: #fff; text-decoration: none; }\n'
         '    footer { margin-top: 48px; padding-top: 16px; border-top: 2px solid #000; font-size: 13px; color: #666; }\n'
+        '    footer .thanks { margin: 12px 0 0; font-size: 11px; color: #999; }\n'
+        '    footer .thanks a { color: #888; }\n'
         '  </style>\n'
         '</head>\n'
         '<body>\n'
@@ -3267,6 +3330,7 @@ for name, info in celebs.items():
         + pager_section
         + '  <footer>\n'
         '    <p>이 페이지의 독서 기록은 유튜브·인터뷰·SNS 등 공개된 출처를 기반으로 정리됐어요.</p>\n'
+        + thanks_html(books) +
         '  </footer>\n'
         '\n'
         + NEW_BADGE_JS
@@ -4935,6 +4999,8 @@ for name, info in celebs.items():
         '    a { color: #2563eb; text-decoration: none; }\n'
         '    a:hover { text-decoration: underline; }\n'
         '    footer { margin-top: 48px; padding-top: 16px; border-top: 2px solid #000; font-size: 13px; color: #666; }\n'
+        '    footer .thanks { margin: 12px 0 0; font-size: 11px; color: #999; }\n'
+        '    footer .thanks a { color: #888; }\n'
         + (EN_TR_NOTE_CSS if en_show_tr_note else '')
         + '  </style>\n'
         '</head>\n'
@@ -5020,6 +5086,7 @@ for name, info in celebs.items():
         '    <p>Curated from public Korean-language sources. Korean original page: <a href="'
         + esc(ko_url) + '" hreflang="ko">' + esc(name) + '</a>.</p>\n'
         '    <p><a href="' + EN_BASE + '">Browse more Korean celebrity book lists →</a></p>\n'
+        + thanks_html(en_books) +
         '  </footer>\n'
         + NEW_BADGE_JS
         + COPY_BTN_JS + HEART_JS +
