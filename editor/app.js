@@ -2325,6 +2325,9 @@ function cmtNeedsPolish(v) {
 }
 
 // 1단계(대목 고르기) 검수 대기: 수집기가 떠온 대목이 있고, 문장도 메모도 없고, 아직 OK/제외를 안 한 것
+// 목록·짧은 언급(점수 0~1)은 이유가 없어 나중에 따로 본다
+const cmtIsListType = (v) => (v.score || 0) < 2;
+
 function cmtIsPickPending(v) {
   return (v.status || 'pending') === 'pending' && v.pick !== 'ok'
     && !(v.ko || '').trim() && !(v.memo || '').trim() && !!(v.quote || v.context);
@@ -2394,7 +2397,9 @@ function cmtRows() {
       continue;
     }
     if (f === 'pick') {
-      if (!cmtIsPickPending(v)) continue;
+      if (!cmtIsPickPending(v) || cmtIsListType(v)) continue;
+    } else if (f === 'picklist') {
+      if (!cmtIsPickPending(v) || !cmtIsListType(v)) continue;
     } else if (f === 'write') {
       if (status !== 'pending' || !(v.ko || '').trim()) continue;
     } else if (f === 'unwritten') {
@@ -2422,11 +2427,11 @@ function renderCommentsList() {
   for (const v of Cmt.items.values()) {
     if (cmtNeedsPolish(v)) tidy++;
     if (cmtIsAiDraft(v)) ai++;
-    if (cmtIsPickPending(v)) pick++;
+    if (cmtIsPickPending(v) && !cmtIsListType(v)) pick++;
     if ((v.status || 'pending') === 'pending' && (v.ko || '').trim()) write++;
   }
   const stage = $('#cmtFilter').value;
-  $('#cmtStage1').classList.toggle('on', stage === 'pick');
+  $('#cmtStage1').classList.toggle('on', (stage === 'pick' || stage === 'picklist'));
   $('#cmtStage2').classList.toggle('on', stage === 'write');
   $('#cmtStage1').textContent = `① 대목 고르기 검수 (${pick})`;
   $('#cmtStage2').textContent = `② 문장 검수 (${write})`;
@@ -2444,7 +2449,7 @@ function renderCommentsList() {
     return;
   }
 
-  if ($('#cmtFilter').value === 'pick' && !Cmt.focus) { renderPickCards(box, rows); return; }
+  if (['pick', 'picklist'].includes($('#cmtFilter').value) && !Cmt.focus) { renderPickCards(box, rows); return; }
 
   box.innerHTML = rows.map(([k, v]) => {
     const [celeb, title] = splitCmtKey(k);
