@@ -1905,6 +1905,8 @@ data_json = {
             'imageUrl': info['img'],
             'shortUrl': make_celeb_short_url(name),
             'books':    [lite_book(b) for b in info['books']],
+            # 영문 공유 카드에 쓴다 (tools/make_og.py)
+            **({'nameEn': plain_en(info['name_en'])} if info.get('name_en') else {}),
         }
         for name, info in celebs.items()
     }
@@ -2482,11 +2484,12 @@ except (FileNotFoundError, json.JSONDecodeError):
     OG_CARDS = {}
 
 
-def og_card(name):
-    """(이미지 주소, 너비, 높이) 또는 None"""
+def og_card(name, lang='ko'):
+    """(이미지 주소, 너비, 높이) 또는 None. lang='en' 이면 영문 카드."""
     c = OG_CARDS.get(name) or {}
-    if c.get('file') and os.path.exists(c['file']):
-        return BASE + c['file'] + '?v=' + c.get('fp', ''), 1200, 630
+    file, fp = (c.get('file_en'), c.get('fp_en')) if lang == 'en' else (c.get('file'), c.get('fp'))
+    if file and os.path.exists(file):
+        return BASE + file + '?v=' + (fp or ''), 1200, 630
     return None
 
 
@@ -4501,6 +4504,8 @@ for name, info in celebs.items():
     page_url = make_en_celeb_url(name_en)
     ko_url   = make_celeb_url(name)
     img      = info['img']
+    # 공유 미리보기는 영문 리딩 리스트 카드 (tools/make_og.py). 아직 없으면 셀럽 사진.
+    _og_img, _og_w, _og_h = og_card(name, 'en') or (img, 600, 600)
     n        = len(en_books)
 
     # 책 행 (영문 제목 + 한국어 원제 부기)
@@ -4842,12 +4847,15 @@ for name, info in celebs.items():
         '  <meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1">\n'
         '  <meta property="og:title" content="' + esc(title_text) + '">\n'
         '  <meta property="og:description" content="' + esc(desc_text) + '">\n'
-        '  <meta property="og:image" content="' + esc(img) + '">\n'
+        '  <meta property="og:image" content="' + esc(_og_img) + '">\n'
+        '  <meta property="og:image:width" content="' + str(_og_w) + '">\n'
+        '  <meta property="og:image:height" content="' + str(_og_h) + '">\n'
         '  <meta property="og:url" content="' + esc(page_url) + '">\n'
         '  <meta property="og:type" content="profile">\n'
         '  <meta property="og:locale" content="en_US">\n'
         '  <meta property="og:site_name" content="Favorbook">\n'
         '  <meta name="twitter:card" content="summary_large_image">\n'
+        '  <meta name="twitter:image" content="' + esc(_og_img) + '">\n'
         '  <link rel="canonical" href="' + esc(page_url) + '">\n'
         '  <link rel="alternate" hreflang="en" href="' + esc(page_url) + '">\n'
         '  <link rel="alternate" hreflang="ko" href="' + esc(ko_url) + '">\n'
