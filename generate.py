@@ -6022,8 +6022,8 @@ EN_MODAL_HTML = """<div id="en-modal" class="hidden fixed inset-0 z-50 bg-black/
       <div><h2 id="en-m-name" class="text-xl font-black leading-tight"></h2>
       <p id="en-m-sub" class="font-sans text-xs text-muted"></p></div>
     </div>
-    <ol id="en-m-books" class="flex flex-col gap-2 mb-5"></ol>
-    <a id="en-m-full" href="#" class="block text-center font-sans font-bold text-sm border-2 border-ink bg-neo-yellow shadow-neo-sm px-4 py-2 hover:-translate-y-0.5 transition-all">Full reading list with sources →</a>
+    <a id="en-m-full" href="#" class="block text-center font-sans font-bold text-sm border-2 border-ink bg-neo-yellow shadow-neo-sm px-4 py-2 mb-4 hover:-translate-y-0.5 transition-all">Full reading list with sources →</a>
+    <ol id="en-m-books" class="flex flex-col gap-2"></ol>
     <div class="flex justify-between mt-4">
       <button type="button" id="en-m-prev" class="px-3 py-1.5 border-2 border-ink bg-white shadow-neo-sm font-sans font-bold text-xs disabled:opacity-30">← Prev</button>
       <span id="en-m-pos" class="font-sans text-xs text-muted self-center"></span>
