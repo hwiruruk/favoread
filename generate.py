@@ -638,10 +638,15 @@ COVER_COLORS = load_cover_colors()
 
 
 def is_light_color(hex_color):
-    """밝은 바탕이면 True — 흰 제목이 안 읽히니 검은 글자로 바꾼다."""
+    """밝은 바탕이면 True — 흰 제목이 안 읽히니 검은 글자로 바꾼다.
+
+    기준 0.179는 흰 글자와 검은 글자의 대비가 같아지는 밝기다. 이보다 밝으면
+    검은 글자가 더 잘 읽힌다. 예전 기준(0.4)에서는 중간 톤 바탕에 흰 글자가
+    올라가 흐릿했다.
+    """
     r, g, b = (int(hex_color[i:i + 2], 16) / 255 for i in (1, 3, 5))
     lin = [c / 12.92 if c <= 0.04045 else ((c + 0.055) / 1.055) ** 2.4 for c in (r, g, b)]
-    return 0.2126 * lin[0] + 0.7152 * lin[1] + 0.0722 * lin[2] > 0.4
+    return 0.2126 * lin[0] + 0.7152 * lin[1] + 0.0722 * lin[2] > 0.179
 
 
 def spine_color(title, cover_url):
@@ -1112,11 +1117,14 @@ SHELF_CSS = (
     '            justify-content: center; padding: 14px 2px; overflow: hidden; }\n'
     # 책등 제목은 바탕(세리프)으로 — 시스템 고딕은 책등에 얹으면 안내문처럼 보인다.
     # 굵기 500이라 kopubworld.css의 medium 한 벌만 받는다(364KB, swap).
+    # 바탕체 획이 가늘어 검은 책등에서는 흐려 보인다. 같은 색 외곽선으로 획을 살짝
+    # 두껍게 하고, 바깥에 촘촘한 그림자를 둘러 중간 톤 바탕에서도 글자를 띄운다.
     '    .sp-t i { writing-mode: vertical-rl; text-orientation: mixed; font-style: normal;\n'
     '              white-space: nowrap; overflow: hidden; text-overflow: ellipsis;\n'
     '              font-family: "KoPubWorld Batang", "Noto Serif KR", Batang, serif;\n'
     '              font-size: var(--fs, 15px); font-weight: 500; letter-spacing: .01em; color: #fff;\n'
-    '              text-shadow: 0 1px 2px rgba(0,0,0,.55); }\n'
+    '              -webkit-text-stroke: .35px currentColor;\n'
+    '              text-shadow: 0 0 1px rgba(0,0,0,.9), 0 1px 2px rgba(0,0,0,.7); }\n'
     '    .sp-i { position: relative; z-index: 1; display: block;\n'
     '            height: 100%; width: auto; max-width: 92px; object-fit: fill; }\n'
     # 책등 이미지가 없거나 못 불러오면 색 책등 폭으로 돌아간다
@@ -1124,7 +1132,7 @@ SHELF_CSS = (
     # 책등 사진이 없는 책은 표지 대표색 한 가지로 칠한다. 그림자는 은은하게, 제목은 세로로 얹는다.
     "    .sp.no-img { box-shadow: inset -2px 0 5px rgba(0,0,0,.14), inset 2px 0 4px rgba(255,255,255,.1); }\n"
     # 표지가 밝은 색이면 흰 제목이 묻히므로 검은 글자로 바꾼다
-    "    .sp.sp-light .sp-t i { color: #1a1a1a; text-shadow: 0 1px 1px rgba(255,255,255,.45); }\n"
+    "    .sp.sp-light .sp-t i { color: #111; text-shadow: 0 0 1px rgba(255,255,255,.8), 0 1px 1px rgba(255,255,255,.5); }\n"
     # 이미지로 저장하는 동안에는 NEW 표시와 함께 추천한 셀럽 목록을 뺀다
     '    .is-capturing .rl-new, .is-capturing .rl-shared, .is-capturing .rl-comment { display: none !important; }\n'
     # 좁은 화면에서는 한 줄에 너무 적게 들어가므로 조금 줄인다
