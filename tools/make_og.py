@@ -237,6 +237,129 @@ def render(name, books, offline):
     return im, all_ok
 
 
+# 사이트 대표 카드 — 메인·목록 페이지처럼 셀럽 한 명이 아닌 페이지의 og:image.
+# X는 카드 왼쪽 아래에 제목을 덮어 쓰므로 그 자리엔 중요한 글자를 두지 않는다.
+SITE_CARDS = {'ko': 'og/_site.jpg', 'en': 'og/_site-en.jpg'}
+FONT_EN = os.path.join(ROOT, 'assets', 'fonts', 'space-grotesk-latin.woff2')
+
+
+def font_en(size, weight='Bold'):
+    k = ('en', size, weight)
+    if k not in _fonts:
+        f = ImageFont.truetype(FONT_EN, size)
+        f.set_variation_by_name(weight)
+        _fonts[k] = f
+    return _fonts[k]
+
+
+def render_site(lang, n_celebs, n_books, covers, offline):
+    """→ (Image, 모든 표지를 받았는지)"""
+    im = Image.new('RGB', (W, H), PAPER)
+    d = ImageDraw.Draw(im)
+
+    all_ok = True
+    for i in reversed(range(min(len(covers), len(SLOTS)))):
+        x, y, w, h, ang = SLOTS[i]
+        tile, ok = cover_tile(covers[i], w, h, offline)
+        all_ok = all_ok and ok
+        rot = tile.rotate(-ang, resample=Image.BICUBIC, expand=True)
+        im.paste(rot, (x - (rot.width - tile.width) // 2, y - (rot.height - tile.height) // 2), rot)
+
+    ko = lang == 'ko'
+    LX, LW = 66, 520
+    # 수는 내림해서 적는다 — 셀럽 한 명 늘 때마다 카드를 다시 그리지 않게
+    celebs_txt = f'{n_celebs // 10 * 10:,}+'
+    books_txt = f'{n_books // 100 * 100:,}+'
+    if ko:
+        brand, f_brand = '최애의 독서', font(24)
+        head, f_head = ['내 최애는', '무슨 책을 읽을까?'], font(68)
+        rows = [('아이돌·배우·셀럽', celebs_txt.replace('+', '명+')),
+                ('읽은 책·추천 책', books_txt.replace('+', '권+'))]
+        f_row, f_url = font(32), font(22, bold=False)
+        lead = '인터뷰·방송·SNS 출처와 함께'
+        f_lead = font(24, bold=False)
+    else:
+        brand, f_brand = 'Favorbook', font_en(26)
+        head, f_head = ['What K-pop idols', '& K-drama actors', 'are reading'], font_en(56)
+        rows = [('Korean stars', celebs_txt), ('books, with sources', books_txt)]
+        f_row, f_url = font_en(30, 'Medium'), font_en(22, 'Medium')
+        lead, f_lead = '', None
+
+    # 배지 + 주소
+    bw = text_w(d, brand, f_brand)
+    d.rectangle((LX + 4, 58 + 4, LX + bw + 28 + 4, 58 + 44 + 4), fill=INK)
+    d.rectangle((LX, 58, LX + bw + 28, 58 + 44), fill=YELLOW, outline=INK, width=3)
+    d.text((LX + 14, 80), brand, font=f_brand, fill=INK, anchor='lm')
+    d.text((LX + bw + 52, 80), 'favorbook.co.kr', font=f_url, fill=GREY, anchor='lm')
+
+    # 큰 제목 — 넘치면 줄인다
+    size = f_head.size
+    mk = (lambda s: font(s)) if ko else (lambda s: font_en(s))
+    while size > 40 and max(text_w(d, s, mk(size)) for s in head) > LW:
+        size -= 2
+    fh = mk(size)
+    y = 150
+    for s in head:
+        d.text((LX, y), s, font=fh, fill=INK)
+        y += round(size * 1.22)
+    y += 30
+
+    # 숫자 줄: 한국어는 '설명 [수]', 영어는 '[수] 설명'
+    for label, num in rows:
+        nw = text_w(d, num, f_row)
+        if ko:
+            d.text((LX, y), label, font=f_row, fill=INK)
+            nx = LX + text_w(d, label, f_row) + 14
+            d.rectangle((nx, y - 4, nx + nw + 20, y + 42), fill=INK)
+            d.text((nx + 10, y), num, font=f_row, fill=YELLOW)
+        else:
+            d.rectangle((LX, y - 4, LX + nw + 20, y + 40), fill=INK)
+            d.text((LX + 10, y), num, font=f_row, fill=YELLOW)
+            d.text((LX + nw + 34, y), label, font=f_row, fill=INK)
+        y += 58
+    if lead:
+        d.text((LX, y + 6), lead, font=f_lead, fill=GREY)
+
+    d.rectangle((0, 0, W - 1, H - 1), outline=INK, width=10)
+    return im, all_ok
+
+
+def make_site_cards(celebs, read_count, offline):
+    """사이트 대표 카드 두 장. 가장 많이 읽힌 책 표지 5장을 깐다.
+    표지를 다 받았을 때만 덮어쓴다 (한 장이라도 빠지면 있던 카드를 둔다)."""
+    pool = [b for info in celebs.values() for b in info['books']]
+    cands, seen = [], set()
+    for b in sorted(pool, key=lambda b: (-read_count.get(b['title'].strip(), 0), title_sort_key(b['title']))):
+        t = b['title'].strip()
+        if t in seen or not (b.get('coverUrl') or '').startswith('http'):
+            continue
+        seen.add(t)
+        cands.append(b)
+        if len(cands) == 3 * len(SLOTS):
+            break
+    # 받히는 표지부터 쓴다. 다 안 받히면(표지 서버 장애) 앞에서부터 색 표지로.
+    if not offline:
+        with ThreadPoolExecutor(max_workers=8) as ex:
+            list(ex.map(lambda b: fetch_cover(b['coverUrl'], False), cands))
+    got = [b for b in cands if _cover_cache.get(b['coverUrl']) is not None]
+    covers = (got if len(got) >= len(SLOTS) else cands)[:len(SLOTS)]
+    n_books = len({b['title'].strip() for b in pool})
+    changed = 0
+    for lang, rel in SITE_CARDS.items():
+        im, ok = render_site(lang, len(celebs), n_books, covers, offline)
+        path = os.path.join(ROOT, rel)
+        if not ok and os.path.exists(path):
+            continue
+        buf = io.BytesIO()
+        im.save(buf, 'JPEG', quality=88, optimize=True, progressive=True)
+        old = open(path, 'rb').read() if os.path.exists(path) else b''
+        if buf.getvalue() != old:
+            with open(path, 'wb') as f:
+                f.write(buf.getvalue())
+            changed += 1
+    return changed
+
+
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument('--only', help='이 셀럽만')
@@ -296,6 +419,8 @@ def main():
         im.save(os.path.join(ROOT, rel), 'JPEG', quality=85, optimize=True, progressive=True)
         index[name] = {'file': rel, 'fp': fp, 'complete': ok}
     drawn = len(todo)
+    if not args.only:
+        drawn += make_site_cards(celebs, read_count, args.offline)
 
     # 사라진 셀럽의 카드는 지운다
     for name in [n for n in index if n not in celebs]:

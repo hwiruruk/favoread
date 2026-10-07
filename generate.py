@@ -2,6 +2,9 @@ import csv, datetime, os, json, re, html, subprocess, io, hashlib
 from urllib.parse import quote, urlparse
 
 BASE = "https://favorbook.co.kr/"
+# 사이트 대표 공유 카드 (tools/make_og.py 가 그린다). 셀럽 한 명이 아닌 페이지의 og:image.
+OG_SITE = BASE + 'og/_site.jpg'
+OG_SITE_EN = BASE + 'og/_site-en.jpg'
 
 # ── Google Analytics 4 (gtag.js) ─────────────────────────────────
 # 공개 페이지 <head> 최상단에 공통으로 삽입되는 측정 태그.
@@ -1424,7 +1427,7 @@ with open("data.csv", encoding="utf-8") as f:
 
         img_url = get(C['img'])
         if not img_url.startswith('http'):
-            img_url = BASE + 'og-image.jpg'
+            img_url = OG_SITE
 
         name_en   = clean_en(get(C['name_en']))   if C['name_en']   is not None else None
         title_en  = clean_en(get(C['title_en']))  if C['title_en']  is not None else None
@@ -3414,13 +3417,13 @@ for title, binfo in book_celebs.items():
         + ('  <meta property="og:image" content="' + esc(binfo['coverUrl']) + '">\n'
            '  <meta property="og:image:alt" content="' + esc(title) + ' 표지">\n'
            if binfo['coverUrl'] and binfo['coverUrl'].startswith('http')
-           else '  <meta property="og:image" content="' + BASE + 'og-image.jpg">\n')
+           else '  <meta property="og:image" content="' + OG_SITE + '">\n')
         + '  <meta name="twitter:card" content="summary">\n'
         '  <meta name="twitter:title" content="' + esc(title) + ' | ' + str(celeb_count) + '명의 셀럽이 읽은 책">\n'
         '  <meta name="twitter:description" content="' + celeb_names_str + ' 등 ' + str(celeb_count) + '명이 읽은 책">\n'
         + ('  <meta name="twitter:image" content="' + esc(binfo['coverUrl']) + '">\n'
            if binfo['coverUrl'] and binfo['coverUrl'].startswith('http')
-           else '  <meta name="twitter:image" content="' + BASE + 'og-image.jpg">\n')
+           else '  <meta name="twitter:image" content="' + OG_SITE + '">\n')
         + '  <link rel="canonical" href="' + esc(page_url) + '">\n'
         + book_hreflang +
         '  <link rel="icon" href="' + BASE + 'favicon.svg" type="image/svg+xml">\n'
@@ -3585,7 +3588,7 @@ for _g in sorted(ko_groups.values(), key=lambda g: g['ko']):
         '  <meta property="og:type" content="website">\n'
         '  <meta property="og:locale" content="ko_KR">\n'
         '  <meta property="og:site_name" content="최애의 독서">\n'
-        '  <meta property="og:image" content="' + BASE + 'og-image.jpg">\n'
+        '  <meta property="og:image" content="' + OG_SITE + '">\n'
         '  <meta name="twitter:card" content="summary_large_image">\n'
         '  <link rel="canonical" href="' + esc(gurl) + '">\n'
         '  <link rel="icon" href="' + BASE + 'favicon.svg" type="image/svg+xml">\n'
@@ -3743,7 +3746,7 @@ def _hub_page(url, path, title, desc, h1, intro, ranked, list_title, people, peo
         '  <meta property="og:type" content="website">\n'
         '  <meta property="og:locale" content="ko_KR">\n'
         '  <meta property="og:site_name" content="최애의 독서">\n'
-        '  <meta property="og:image" content="' + BASE + 'og-image.jpg">\n'
+        '  <meta property="og:image" content="' + OG_SITE + '">\n'
         '  <meta name="twitter:card" content="summary_large_image">\n'
         '  <link rel="canonical" href="' + esc(url) + '">\n'
         '  <link rel="icon" href="' + BASE + 'favicon.svg" type="image/svg+xml">\n'
@@ -4050,7 +4053,7 @@ for a in sorted(author_pages, key=lambda x: (-len(author_mentions[x]), x)):
     ld = clean_none(ld)
     first_cover = next((book_celebs.get(t, {}).get('coverUrl') for t, _ in ranked
                         if (book_celebs.get(t, {}).get('coverUrl') or '').startswith('http')),
-                       BASE + 'og-image.jpg')
+                       OG_SITE)
     page = (
         _author_head(title, desc, url, ld, first_cover)
         + '  <div class="hero">\n'
@@ -4112,7 +4115,7 @@ _ai_ld = clean_none([
 ])
 write_if_changed('author/index.html', (
     _author_head('작가별 연예인 추천책 · 그들이 많이 읽은 작가 ' + str(len(author_index)) + '명',
-                 _ai_desc, AUTHOR_HUB_URL, _ai_ld, BASE + 'og-image.jpg')
+                 _ai_desc, AUTHOR_HUB_URL, _ai_ld, OG_SITE)
     + '  <div class="hero">\n'
     '    <h1>그들이 많이 읽은 작가</h1>\n'
     '    <p>그들이 읽었거나 추천한 책을 작가별로 모았어요. 언급이 ' + str(AUTHOR_MIN_MENTIONS)
@@ -5554,7 +5557,7 @@ for _role in sorted(en_role_members, key=lambda r: -len(en_role_members[r])):
         '  <meta property="og:type" content="website">\n'
         '  <meta property="og:locale" content="en_US">\n'
         '  <meta property="og:site_name" content="Favorbook">\n'
-        '  <meta property="og:image" content="' + BASE + 'og-image.jpg">\n'
+        '  <meta property="og:image" content="' + OG_SITE_EN + '">\n'
         '  <meta name="twitter:card" content="summary_large_image">\n'
         '  <link rel="canonical" href="' + esc(curl) + '">\n'
         '  <link rel="icon" href="' + BASE + 'favicon.svg" type="image/svg+xml">\n'
@@ -5713,7 +5716,7 @@ write_if_changed('en/share/ranking.html', (
     '  <meta property="og:url" content="' + en_rank_url + '">\n'
     '  <meta property="og:type" content="website">\n'
     '  <meta property="og:locale" content="en_US">\n'
-    '  <meta property="og:image" content="' + BASE + 'og-image.jpg">\n'
+    '  <meta property="og:image" content="' + OG_SITE_EN + '">\n'
     '  <link rel="canonical" href="' + en_rank_url + '">\n'
     '  <link rel="alternate" hreflang="en" href="' + en_rank_url + '">\n'
     '  <link rel="alternate" hreflang="ko" href="' + BASE + 'share/ranking.html">\n'
@@ -5950,7 +5953,7 @@ en_index_jsonld = json.dumps({
                       'Korean Celebrity Book Archive'],
     'url': EN_BASE,
     'description': 'What Korean stars are reading — K-pop idols (BTS, IVE, SEVENTEEN, NewJeans), K-drama and K-movie actors, directors and musicians, with the interview, YouTube or SNS source behind every book.',
-    'image': BASE + 'og-image.jpg',
+    'image': OG_SITE_EN,
     'inLanguage': 'en-US',
 }, ensure_ascii=False, indent=2)
 
@@ -6306,7 +6309,7 @@ en_index = (
     '  <meta property="og:description" content="A searchable archive of what Korean stars read — K-pop idols, K-drama and K-movie actors, directors and musicians, with a source for every book.">\n'
     '  <meta property="og:type" content="website">\n'
     '  <meta property="og:url" content="' + EN_BASE + '">\n'
-    '  <meta property="og:image" content="' + BASE + 'og-image.jpg">\n'
+    '  <meta property="og:image" content="' + OG_SITE_EN + '">\n'
     '  <meta property="og:image:width" content="1200">\n'
     '  <meta property="og:image:height" content="630">\n'
     '  <meta property="og:image:alt" content="Favorbook — what K-pop idols, K-drama actors and Korean celebrities are reading">\n'
@@ -6316,7 +6319,7 @@ en_index = (
     '  <meta name="twitter:card" content="summary_large_image">\n'
     '  <meta name="twitter:title" content="What K-pop Idols &amp; K-Drama Actors Read | Favorbook">\n'
     '  <meta name="twitter:description" content="The Korean star book archive — reading lists from K-pop idols, K-drama and K-movie actors, directors and musicians.">\n'
-    '  <meta name="twitter:image" content="' + BASE + 'og-image.jpg">\n'
+    '  <meta name="twitter:image" content="' + OG_SITE_EN + '">\n'
     '\n'
     '  <link rel="canonical" href="' + EN_BASE + '">\n'
     '  <link rel="alternate" hreflang="en" href="' + EN_BASE + '">\n'
@@ -6670,14 +6673,14 @@ ranking_page = (
     '  <meta property="og:type" content="website">\n'
     '  <meta property="og:site_name" content="최애의 독서">\n'
     '  <meta property="og:locale" content="ko_KR">\n'
-    '  <meta property="og:image" content="' + BASE + 'og-image.jpg">\n'
+    '  <meta property="og:image" content="' + OG_SITE + '">\n'
     '  <meta property="og:image:width" content="1200">\n'
     '  <meta property="og:image:height" content="630">\n'
     '  <meta property="og:image:alt" content="셀럽 독서 랭킹 - 최애의 독서">\n'
     '  <meta name="twitter:card" content="summary_large_image">\n'
     '  <meta name="twitter:title" content="셀럽 독서 랭킹 | 최애의 독서">\n'
     '  <meta name="twitter:description" content="셀럽이 가장 많이 읽은 책·저자·출판사 랭킹">\n'
-    '  <meta name="twitter:image" content="' + BASE + 'og-image.jpg">\n'
+    '  <meta name="twitter:image" content="' + OG_SITE + '">\n'
     '  <meta name="twitter:image:alt" content="셀럽 독서 랭킹 - 최애의 독서">\n'
     '\n'
     '  <link rel="canonical" href="' + ranking_url + '">\n'
