@@ -2679,16 +2679,23 @@ def book_indexable(title, lang='ko'):
 
 
 def related_books(title, pool, limit=6):
-    """같은 셀럽이 함께 읽은 다른 책 — 겹치는 셀럽이 많은 순. pool 안에서만 고른다."""
-    mine = set(book_celebs[title]['celebs'])
+    """같은 분야에서 많이 읽힌 다른 책 — (분야, [책]). 읽은 셀럽 수 많은 순, 같은 저자 책은 뺀다.
+    분야를 모르거나 같은 분야 책이 2권 미만이면 (None, [])."""
+    g = _taste._genre_of(_subjects_db, title)
+    if not g:
+        return None, []
+    author = (book_celebs[title]['author'] or '').strip()
     scored = []
     for t in pool:
         if t == title:
             continue
-        n = len(mine & set(book_celebs[t]['celebs']))
-        if n:
-            scored.append((-n, -len(book_celebs[t]['celebs']), t))
-    return [t for _, _, t in sorted(scored)[:limit]]
+        if author and (book_celebs[t]['author'] or '').strip() == author:
+            continue
+        gt = _taste._genre_of(_subjects_db, t)
+        if gt and gt[0] == g[0]:
+            scored.append((-len(book_celebs[t]['celebs']), t))
+    out = [t for _, t in sorted(scored)[:limit]]
+    return (g, out) if len(out) >= 2 else (None, [])
 
 
 def same_author_books(title, pool, limit=6):
@@ -3328,12 +3335,12 @@ for title, binfo in book_celebs.items():
             + ' <span class="by">· ' + str(len(book_celebs[t]['celebs'])) + '명</span></li>'
             for t in ts)
     _same = same_author_books(title, books_with_pages)
-    _rel = [t for t in related_books(title, books_with_pages) if t not in _same]
+    _rel_g, _rel = related_books(title, books_with_pages)
     more_html = ''
     if _same:
         more_html += ('  <h2>같은 저자의 다른 책</h2>\n  <ul>\n' + _book_links(_same) + '\n  </ul>\n')
     if _rel:
-        more_html += ('  <h2>이 셀럽들이 함께 읽은 책</h2>\n  <ul>\n' + _book_links(_rel) + '\n  </ul>\n')
+        more_html += ('  <h2>' + esc(_rel_g[0]) + ' 분야에서 많이 읽힌 책</h2>\n  <ul>\n' + _book_links(_rel) + '\n  </ul>\n')
 
     cover_html = ''
     if binfo['coverUrl'] and binfo['coverUrl'].startswith('http'):
@@ -5068,12 +5075,12 @@ for title, t_en in book_title_en.items():
             + ' <span class="by">(' + esc(t) + ') · ' + str(len(book_celebs[t]['celebs'])) + ' celebrities</span></li>'
             for t in ts)
     _same = same_author_books(title, en_book_pool)
-    _rel = [t for t in related_books(title, en_book_pool) if t not in _same]
+    _rel_g, _rel = related_books(title, en_book_pool)
     en_more_html = ''
     if _same:
         en_more_html += ('  <h2>More by the same author</h2>\n  <ul>\n' + _en_book_links(_same) + '\n  </ul>\n')
     if _rel:
-        en_more_html += ('  <h2>Also read by these celebrities</h2>\n  <ul>\n' + _en_book_links(_rel) + '\n  </ul>\n')
+        en_more_html += ('  <h2>Most read in ' + esc(_rel_g[1]) + '</h2>\n  <ul>\n' + _en_book_links(_rel) + '\n  </ul>\n')
 
     cover_html = ''
     if binfo['coverUrl'] and binfo['coverUrl'].startswith('http'):
