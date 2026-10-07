@@ -669,20 +669,20 @@ def image_preconnect(*parts):
     return out
 
 
-SPINE_H = 270                        # 책등 높이는 모두 같게
+SPINE_H = 310                        # 책등 높이는 모두 같게
 
 
 def spine_width(title):
     """두께도 책마다 조금씩. 얇은 책 두꺼운 책이 섞여야 책장처럼 보인다.
 
-    예스24 책등 사진이 붙는 책은 사진 비율대로 폭이 정해지고 대개 25~45px이다.
-    사진이 없어 색 책등으로 그리는 책만 이 값을 쓰므로, 옆에 나란히 섰을 때
-    혼자 뚱뚱해 보이지 않게 그 범위에 맞춘다.
+    예스24 책등 사진이 붙는 책은 사진 비율대로 폭이 정해진다.
+    사진이 없어 색 책등으로 그리는 책만 이 값을 쓴다. 실제 책은 높이가 두께의
+    10배 남짓이라, 그보다 넓으면 책등이 납작하고 뭉툭해 보인다.
     """
     h = 0
     for ch in (title or ''):
         h = (h * 13 + ord(ch)) & 0xFFFFFFFF
-    return 30 + h % 15                # 30~44px
+    return 24 + h % 10                # 24~33px
 
 
 # 책등에 적는 제목 — 서점 목록 제목을 그대로 쓰면 부제까지 다 들어가
@@ -1118,35 +1118,27 @@ SHELF_CSS = (
     '              font-size: var(--fs, 15px); font-weight: 500; letter-spacing: .01em; color: #fff;\n'
     '              text-shadow: 0 1px 2px rgba(0,0,0,.55); }\n'
     '    .sp-i { position: relative; z-index: 1; display: block;\n'
-    '            height: 100%; width: auto; max-width: 80px; object-fit: fill; }\n'
+    '            height: 100%; width: auto; max-width: 92px; object-fit: fill; }\n'
     # 책등 이미지가 없거나 못 불러오면 색 책등 폭으로 돌아간다
-    '    .sp.no-img, .sp.sp-fail { width: var(--w, 38px); }\n'
+    '    .sp.no-img, .sp.sp-fail { width: var(--w, 28px); }\n'
     # 책등 사진이 없는 책은 표지 대표색 한 가지로 칠한다. 그림자는 은은하게, 제목은 세로로 얹는다.
     "    .sp.no-img { box-shadow: inset -2px 0 5px rgba(0,0,0,.14), inset 2px 0 4px rgba(255,255,255,.1); }\n"
     # 표지가 밝은 색이면 흰 제목이 묻히므로 검은 글자로 바꾼다
     "    .sp.sp-light .sp-t i { color: #1a1a1a; text-shadow: 0 1px 1px rgba(255,255,255,.45); }\n"
-    # 최근 추가된 책 — 책등 위쪽을 띠로 두른다. 제목이 가리지 않게 여백을 준다.
-    '    .sp-new { position: absolute; top: 0; left: 0; right: 0; z-index: 3; text-align: center;\n'
-    '              font-size: 8px; line-height: 1; padding: 3px 0 2px;\n'
-    '              border-bottom: 1px solid rgba(0,0,0,.55); }\n'
-    '    .sp.is-new .sp-t { padding-top: 22px; }\n'
     # 이미지로 저장하는 동안에는 NEW 표시와 함께 추천한 셀럽 목록을 뺀다
-    '    .is-capturing .sp-new, .is-capturing .rl-new, .is-capturing .rl-shared, .is-capturing .rl-comment { display: none !important; }\n'
-    '    .is-capturing .sp.is-new .sp-t { padding-top: 14px; }\n'
+    '    .is-capturing .rl-new, .is-capturing .rl-shared, .is-capturing .rl-comment { display: none !important; }\n'
     # 좁은 화면에서는 한 줄에 너무 적게 들어가므로 조금 줄인다
-    # 좁은 화면에서는 책등을 낮추므로 글자도 그 비율(205/270)만큼 줄인다
+    # 좁은 화면에서는 책등을 낮추므로 글자도 그 비율(235/310)만큼 줄인다
     '    @media (max-width: 700px) { .covers { grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 16px 14px; }\n'
     '                                 .show-covers.covers-collapsed .covers .cv:nth-child(n+13) { display: none; } }\n'
     '    @media (max-width: 480px) { .covers { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 14px 12px; }\n'
     '                                 .show-covers.covers-collapsed .covers .cv:nth-child(n+10) { display: none; }\n'
     '                                 .show-covers.covers-collapsed .covers-more { height: 120px; margin-top: -142px; }\n'
-    '                                 .shelf { --sh-h: 205px; }\n'
-    '                                 .sp.no-img, .sp.sp-fail { width: calc(var(--w, 38px) * .88); }\n'
-    '                                 .sp-i { max-width: 61px; }\n'
+    '                                 .shelf { --sh-h: 235px; }\n'
+    '                                 .sp.no-img, .sp.sp-fail { width: calc(var(--w, 28px) * .88); }\n'
+    '                                 .sp-i { max-width: 70px; }\n'
     '                                 .sp-t i { font-size: calc(var(--fs, 15px) * .76); }\n'
-    '                                 .sp-t { padding: 10px 2px; }\n'
-    '                                 .sp.is-new .sp-t { padding-top: 18px; }\n'
-    '                                 .is-capturing .sp.is-new .sp-t { padding-top: 10px; } }\n'
+    '                                 .sp-t { padding: 10px 2px; } }\n'
 )
 
 def make_en_celeb_url(name_en):
@@ -2119,11 +2111,6 @@ def new_tile(num, title, cover_url, alt):
             + '<span class="nt-title">' + esc(title) + '</span></a>\n')
 
 
-def spine_new_badge(added):
-    """책등 위쪽에 걸치는 띠."""
-    return ('<span class="sp-new" data-added="' + added + '">NEW</span>') if added else ''
-
-
 def cover_new_badge(added):
     """표지 왼쪽 위 모서리 스티커."""
     return ('<span class="rl-new" data-added="' + added + '">NEW</span>') if added else ''
@@ -2138,13 +2125,11 @@ NEW_BADGE_JS = (
     # 빌드 때와 같은 기준으로 세야 한다 — 시각이 아니라 날짜 단위로 뺀다.
     # 시각으로 재면 '7일 전 새벽에 추가'가 7.9일이 되어 하루 일찍 사라진다.
     '  var today = new Date(); today.setHours(0, 0, 0, 0);\n'
-    '  document.querySelectorAll(".sp-new[data-added], .rl-new[data-added]").forEach(function (el) {\n'
+    '  document.querySelectorAll(".rl-new[data-added]").forEach(function (el) {\n'
     '    var t = Date.parse(el.getAttribute("data-added") + "T00:00:00");\n'
     '    if (isNaN(t)) return;\n'
     '    if (Math.round((today - t) / 86400000) <= DAYS) return;\n'
-    '    var p = el.parentNode;\n'
     '    el.remove();\n'
-    '    if (p && p.classList) p.classList.remove("is-new");\n'
     '  });\n'
     '})();\n'
     '</script>\n'
@@ -2153,7 +2138,7 @@ NEW_BADGE_JS = (
 # 표지(목록 보기) 스티커 — 한국어·영문 페이지가 함께 쓴다
 NEW_BADGE_CSS = (
     '    .rl-cover { position: relative; }\n'
-    '    .rl-new, .sp-new { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;\n'
+    '    .rl-new { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;\n'
     '             font-weight: 800; letter-spacing: .06em; background: #fde047; color: #000;\n'
     '             pointer-events: none; }\n'
     '    .rl-new { position: absolute; top: 0; left: 0; z-index: 2; font-size: 9px; line-height: 1;\n'
@@ -2909,12 +2894,11 @@ for name, info in celebs.items():
             + ('<img class="sp-i" src="' + esc(_spine_url) + '" alt="" loading="lazy" '
                'referrerpolicy="no-referrer"' + SPINE_IMG_GUARD + '>'
                if _spine_url else '')
-            + spine_new_badge(_added)
         )
         _spine_style = ('--c:' + _sp_color
                         + ';--w:' + str(spine_width(b['title'])) + 'px'
                         + ';--fs:' + str(spine_font_size(spine_title(b['title']))) + 'px')
-        _sp_cls = ('sp' if _spine_url else 'sp no-img') + (' sp-light' if _sp_light else '') + (' is-new' if _added else '')
+        _sp_cls = ('sp' if _spine_url else 'sp no-img') + (' sp-light' if _sp_light else '')
         if aladin_url:
             spine_html += ('    <a class="' + _sp_cls + '" style="' + _spine_style + '" href="' + aladin_url
                            + '" rel="nofollow noopener noreferrer" target="_blank" title="'
@@ -4596,12 +4580,11 @@ for name, info in celebs.items():
             + ('<img class="sp-i" src="' + esc(_sp_url) + '" alt="" loading="lazy" '
                'referrerpolicy="no-referrer"' + SPINE_IMG_GUARD + '>'
                if _sp_url else '')
-            + spine_new_badge(_added)
         )
         _sp_style = ('--c:' + _sp_color
                      + ';--w:' + str(spine_width(b['title'])) + 'px'
                      + ';--fs:' + str(spine_font_size(spine_title(t_plain))) + 'px')
-        _sp_cls = ('sp' if _sp_url else 'sp no-img') + (' sp-light' if _sp_light else '') + (' is-new' if _added else '')
+        _sp_cls = ('sp' if _sp_url else 'sp no-img') + (' sp-light' if _sp_light else '')
         if aladin_url:
             en_spine_html += ('    <a class="' + _sp_cls + '" style="' + _sp_style + '" href="' + aladin_url
                               + '" rel="nofollow noopener noreferrer" target="_blank" title="'
