@@ -4736,7 +4736,7 @@ for name, info in celebs.items():
 
     # 제목에 이름을 세 번 넣으면 구글이 키워드 반복으로 보고 제목을 갈아치운다.
     # 한 번만 쓰고, 검색어와 맞닿는 말(reading list · books)만 남긴다.
-    title_text = _name_pl + ' Books — Full Reading List (' + str(n) + ')'
+    title_text = _name_pl + ' Books — Reading List Archive (' + str(n) + ')'
 
     # 설명도 이름 한 번. 대신 실제 책 제목 세 권을 넣는다 —
     # 구글이 meta description을 버리고 본문에서 목록을 긁어가던 자리를
@@ -5122,7 +5122,7 @@ for name, info in celebs.items():
         + '  <footer>\n'
         '    <p>Curated from public Korean-language sources. Korean original page: <a href="'
         + esc(ko_url) + '" hreflang="ko">' + esc(name) + '</a>.</p>\n'
-        '    <p><a href="' + EN_BASE + '">Browse more Korean celebrity book lists →</a></p>\n'
+        '    <p><a href="' + EN_BASE + '">Browse the full Korean celebrity book archive →</a></p>\n'
         + thanks_html(en_books, 'en') +
         '  </footer>\n'
         + NEW_BADGE_JS
@@ -5608,7 +5608,7 @@ for _role in sorted(en_role_members, key=lambda r: -len(en_role_members[r])):
         if r != _role and en_role_members.get(r))
 
     n_people, n_books = len(members), len(cbooks)
-    c_title = 'What ' + hub_name + ' Read — Books & Reading Lists'
+    c_title = 'What ' + hub_name + ' Read — Books & Reading List Archive'
     picks = [t for t, _ in ranked[:2]]
     c_desc = (str(n_people) + ' ' + hub_lower + ' and the ' + str(n_books)
               + ' books they have read or recommended'
