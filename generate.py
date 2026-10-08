@@ -6854,7 +6854,20 @@ print("✅ 랭킹 페이지 생성: share/ranking.html")
 
 generated_celeb_paths = {'share/' + safe_filename(n) + '.html' for n in celebs.keys()}
 generated_book_paths  = {'share/book/' + fn + '.html' for fn, _ in book_pages}
-keep_top_level = generated_celeb_paths | {'share/ranking.html'}
+# 이름 표기가 바뀐 셀럽의 옛 한글 주소 → 새 주소 (서치콘솔에서 404로 잡혔던 것들).
+# 새 주소가 실제로 있을 때만 이동 페이지를 남긴다.
+KO_CELEB_MOVED = {
+    '테오(P1하모니)': '테오(P원하모니)',
+    '정은지': '정은지(에이핑크)',
+}
+ko_moved_paths = set()
+for _old, _new in KO_CELEB_MOVED.items():
+    if _new in celebs:
+        _op = 'share/' + safe_filename(_old) + '.html'
+        write_moved_page(_op, BASE + 'share/' + quote(safe_filename(_new), safe='') + '.html', 'ko')
+        ko_moved_paths.add(_op)
+
+keep_top_level = generated_celeb_paths | {'share/ranking.html'} | ko_moved_paths
 
 removed = 0
 for f in os.listdir('share'):
