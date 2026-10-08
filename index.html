@@ -459,6 +459,10 @@
       <button id="btn-grid" class="font-sans font-bold text-[10px] sm:text-xs tracking-widest uppercase border-2 border-ink bg-neo-yellow shadow-neo-sm px-5 py-2 hover:-translate-y-0.5 transition-all">■ GRID</button>
       <button id="btn-list" class="font-sans font-bold text-[10px] sm:text-xs tracking-widest uppercase border-2 border-ink bg-white hover:bg-neo-yellow shadow-neo-sm px-5 py-2 hover:-translate-y-0.5 transition-all">≡ LIST</button>
     </div>
+    <div class="flex justify-center gap-3">
+      <button id="btn-sort-random" class="font-sans font-bold text-[10px] sm:text-xs tracking-widest border-2 border-ink bg-neo-yellow shadow-neo-sm px-5 py-2 hover:-translate-y-0.5 transition-all">🎲 랜덤순</button>
+      <button id="btn-sort-abc" class="font-sans font-bold text-[10px] sm:text-xs tracking-widest border-2 border-ink bg-white hover:bg-neo-yellow shadow-neo-sm px-5 py-2 hover:-translate-y-0.5 transition-all">가나다·ABC순</button>
+    </div>
 
     <!-- 검색 중에만 보이는 줄 — 결과 수와 '전체 보기' -->
     <div id="search-bar" class="hidden flex items-center justify-center gap-3 flex-wrap">
@@ -518,7 +522,6 @@
     <!-- 핫 카드와 셀럽 카드가 똑같이 생겨서, 제목이 없으면 핫 목록이 이어지는 것처럼 보인다 -->
     <div id="grid-head" class="border-t-4 border-ink pt-12 md:pt-16 mb-6 md:mb-8">
       <h2 class="text-2xl md:text-3xl font-black mb-2 word-break-keep">👀 셀럽 둘러보기<span id="grid-count" class="font-sans text-base md:text-lg font-bold text-muted ml-2"></span></h2>
-      <p class="text-sm md:text-base font-bold text-muted word-break-keep">카드를 누르면 읽은 책을 볼 수 있어요. 순서는 들어올 때마다 바뀌어요.</p>
     </div>
     <div id="grid-container" class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-x-4 sm:gap-x-6 gap-y-8 sm:gap-y-12"></div>
     <div id="empty-state" class="hidden text-center py-20 text-ink font-sans font-bold tracking-widest">No results found.</div>
@@ -1353,6 +1356,7 @@
   let renderIndex = 0;
   const CHUNK_SIZE = 24; 
   let viewMode = 'grid'; // 'grid' | 'list'
+  let sortMode = 'random'; // 'random' | 'abc'
 
   /* ── DOM ────────────────────────────────────────────────── */
   const D = {
@@ -1391,6 +1395,8 @@
     floatMenus: document.getElementById('floating-menus'),
     btnGrid:    document.getElementById('btn-grid'),
     btnList:    document.getElementById('btn-list'),
+    btnSortRandom: document.getElementById('btn-sort-random'),
+    btnSortAbc:    document.getElementById('btn-sort-abc'),
     
     // 자동화 추가 영역
     featuredSection:  document.getElementById('featured'),
@@ -1487,6 +1493,16 @@
       D.grid.className = 'flex flex-col gap-3 max-w-2xl mx-auto w-full';
     }
     
+    filterEntries(D.search.value);
+  }
+
+  function setSortMode(mode) {
+    if (sortMode === mode) return;
+    sortMode = mode;
+    const on = mode === 'abc' ? D.btnSortAbc : D.btnSortRandom;
+    const off = mode === 'abc' ? D.btnSortRandom : D.btnSortAbc;
+    on.classList.replace('bg-white', 'bg-neo-yellow');
+    off.classList.replace('bg-neo-yellow', 'bg-white');
     filterEntries(D.search.value);
   }
 
@@ -1760,7 +1776,7 @@
   function filterEntries(kw = '') {
     const q = nk(kw);
     
-    let currentEntries = viewMode === 'list'
+    let currentEntries = sortMode === 'abc'
       ? [...entries].sort((a, b) => a[0].localeCompare(b[0], 'ko'))
       : entries;
 
@@ -2379,6 +2395,8 @@
     
     D.btnGrid.addEventListener('click', () => setViewMode('grid'));
     D.btnList.addEventListener('click', () => setViewMode('list'));
+    D.btnSortRandom.addEventListener('click', () => setSortMode('random'));
+    D.btnSortAbc.addEventListener('click', () => setSortMode('abc'));
     
     D.loadBtn.addEventListener('click', () => renderNextChunk());
     
