@@ -986,6 +986,7 @@ function openBookDialog(book, index) {
   };
   for (const [id, v] of Object.entries(fields)) $('#' + id).value = v || '';
   $('#bookCoverPreview').src = book?.cover || '';
+  $('#bookMemo').value = (book && Cmt.get(State.selected, book.title)?.memo) || '';
   $('#yes24Results').innerHTML = '';
   $('#yes24Query').value = book?.title || '';
   $('#yes24ItemId').value = book?.link || '';
@@ -1071,6 +1072,8 @@ $('#bookForm').addEventListener('submit', (e) => {
   setDirty(true);
   bookDlg.close();
   renderDetail(); renderSidebar();
+  const memo = $('#bookMemo').value.trim();
+  if (memo || Cmt.get(ed.celebName, title)) saveBookMemo(ed.celebName, title, memo, data.source);
   // '적용 + 다음 책' — 같은 셀럽에 여러 권을 넣을 때 창을 다시 열 필요 없이 이어서 추가
   if (isNew && applyNext) {
     openBookDialog(null, null);
@@ -2356,34 +2359,62 @@ async function openCommentsDialog() {
   if (!State.celebs.size) { toast('먼저 ↻ 불러오기로 CSV를 가져오세요', 'err'); return; }
 
   if (!Cmt.loaded) {
-    setCmtStatus('불러오는 중…');
     commentsDlg.showModal();
-    try {
-      const { content, sha } = await Gh.getFile(COMMENTS_PATH, { allowMissing: true });
-      if (content) {
-        const j = JSON.parse(content);
-        _cmtDoc = j;
-        for (const [k, v] of Object.entries(j.comments || {})) {
-          // 수집기가 쓴 칸(context·score·outlet)까지 그대로 들고 있는다
-          Cmt.items.set(k, Object.assign({}, v, {
-            ko: v.ko || '', en: v.en || '', status: v.status || 'pending',
-          }));
-        }
-      }
-      Cmt.sha = sha;
-      Cmt.loaded = true;
-      setCmtStatus(sha ? `sha ${sha.slice(0, 7)}` : '아직 파일이 없습니다 (저장하면 새로 만듭니다)');
-      renderDetail();   // 책 카드에 검수 뱃지를 붙인다
-    } catch (err) {
-      setCmtStatus('');
-      toast('코멘트 불러오기 실패: ' + err.message, 'err');
-      return;
-    }
+    if (!(await loadCmtFile())) return;
   } else {
     commentsDlg.showModal();
   }
   $('#cmtSaveBtn').disabled = !Cmt.dirty;
   renderCommentsList();
+}
+
+/* data/comments.json 을 한 번만 불러온다. 책 등록 창의 메모도 이걸로 먼저 받아 둔다. */
+async function loadCmtFile() {
+  if (Cmt.loaded) return true;
+  setCmtStatus('불러오는 중…');
+  try {
+    const { content, sha } = await Gh.getFile(COMMENTS_PATH, { allowMissing: true });
+    if (content) {
+      const j = JSON.parse(content);
+      _cmtDoc = j;
+      for (const [k, v] of Object.entries(j.comments || {})) {
+        // 수집기가 쓴 칸(context·score·outlet)까지 그대로 들고 있는다
+        Cmt.items.set(k, Object.assign({}, v, {
+          ko: v.ko || '', en: v.en || '', status: v.status || 'pending',
+        }));
+      }
+    }
+    Cmt.sha = sha;
+    Cmt.loaded = true;
+    setCmtStatus(sha ? `sha ${sha.slice(0, 7)}` : '아직 파일이 없습니다 (저장하면 새로 만듭니다)');
+    renderDetail();   // 책 카드에 검수 뱃지를 붙인다
+    return true;
+  } catch (err) {
+    setCmtStatus('');
+    toast('코멘트 불러오기 실패: ' + err.message, 'err');
+    return false;
+  }
+}
+
+/* 책 등록·편집 창에서 쓴 메모를 코멘트 검수 항목에 넣는다 (AI가 나중에 다듬는다) */
+async function saveBookMemo(celeb, title, memo, source) {
+  if (!Config.token) { toast('메모는 GitHub Token 설정 후에 저장돼요', 'err'); return; }
+  if (!(await loadCmtFile())) return;
+  const key = Cmt.key(celeb, title);
+  const it = Cmt.items.get(key);
+  if (it) {
+    if ((it.memo || '').trim() === memo) return;
+    it.memo = memo;
+    delete it._new;
+  } else {
+    if (!memo) return;
+    Cmt.items.set(key, {
+      ko: '', en: '', memo, source: isHttp(source) ? source : '',
+      outlet: '', grade: '', evidence: 'manual', note: '', status: 'pending',
+    });
+  }
+  markCmtDirty();
+  renderDetail();
 }
 
 function cmtRows() {
