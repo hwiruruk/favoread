@@ -5922,6 +5922,35 @@ for slug, name_en, name_ko in en_celeb_pages:
     )
 en_celeb_grid = '\n'.join(en_celeb_cards)
 
+# 가장 많은 책을 읽은 셀럽 18명 (데스크톱 6열 × 3줄). 한국어 메인의 '내 최애가 읽은 책'과 같은 구성.
+# 영문 책 권수 기준으로 뽑고, 같으면 영문 이름순.
+EN_TOP_READERS = 18
+en_top_cards = []
+_top = sorted(
+    en_celeb_pages,
+    key=lambda x: (-sum(1 for b in celebs[x[2]]['books'] if b.get('title_en')), x[1].lower())
+)[:EN_TOP_READERS]
+for slug, name_en, name_ko in _top:
+    info = celebs[name_ko]
+    _titles = [b['title_en'] for b in info['books'] if b.get('title_en')]
+    _n = len(_titles)
+    _summary = ' · '.join(_titles[:2]) + (' & more' if _n > 2 else '')
+    en_top_cards.append(
+        '      <a href="share/' + slug + '.html" class="border-2 border-ink bg-white shadow-neo flex flex-col group overflow-hidden no-underline text-ink">\n'
+        '        <div class="w-full aspect-square bg-paper-dark border-b-2 border-ink overflow-hidden">\n'
+        '          <img src="' + esc(info['img']) + '" alt="' + esc(name_en) + ' profile" loading="lazy" '
+        'class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" referrerpolicy="no-referrer">\n'
+        '        </div>\n'
+        '        <div class="p-3 text-center flex-1 flex flex-col justify-center bg-white">\n'
+        '          <p class="font-black text-sm mb-1 truncate">' + esc(name_en) + '</p>\n'
+        '          <p class="font-sans font-bold text-[10px] bg-neo-yellow border border-ink px-1.5 py-0.5 inline-block mx-auto mb-2 shadow-neo-sm">'
+        + str(_n) + ' book' + ('s' if _n != 1 else '') + '</p>\n'
+        '          <p class="text-[10px] text-muted truncate">' + esc(_summary) + '</p>\n'
+        '        </div>\n'
+        '      </a>'
+    )
+en_top_grid = '\n'.join(en_top_cards)
+
 # 셀럽 검색용: 영문명 → (slug, 영문명) 매핑. 책 검색 결과에서 '누가 읽었는지' 보여줄 때 쓴다.
 en_celeb_by_ko = {name_ko: (slug, name_en) for slug, name_en, name_ko in en_celeb_pages}
 
@@ -6288,7 +6317,7 @@ EN_SEARCH_JS = """<script>
   var books = JSON.parse(document.getElementById("en-search-books-data").textContent);
   var byKo = {};
   people.forEach(function (p) { byKo[p.ko] = p; });
-  var HIDE = ["about", "featured", "categories", "groups", "books", "ranking-link", "report", "faq"];
+  var HIDE = ["about", "featured", "categories", "groups", "books", "top-readers", "ranking-link", "report", "faq"];
   var bookText = {};   // 셀럽 → 읽은 책 제목·작가 (data.json을 받은 뒤 채운다)
   var loaded = false, timer = null;
 
@@ -6603,9 +6632,15 @@ en_index = (
     + ('  <section id="celebs" class="w-full">\n'
        '    <div class="flex flex-wrap items-center justify-between gap-x-4 gap-y-3 mb-2">\n'
        '      <h2 class="text-2xl md:text-3xl font-black word-break-keep">Browse Celebrities (' + str(len(en_celeb_pages)) + ')</h2>\n'
+       '      <div class="flex flex-wrap items-center gap-2 sm:gap-3">\n'
+       '      <div class="flex gap-1.5">\n'
+       '        <button type="button" id="celeb-view-grid" class="font-sans font-bold text-[10px] sm:text-xs tracking-wide border-2 border-ink shadow-neo-sm px-2.5 sm:px-3 py-1.5 hover:-translate-y-0.5 transition-all bg-neo-yellow">■ GRID</button>\n'
+       '        <button type="button" id="celeb-view-list" class="font-sans font-bold text-[10px] sm:text-xs tracking-wide border-2 border-ink shadow-neo-sm px-2.5 sm:px-3 py-1.5 hover:-translate-y-0.5 transition-all bg-white hover:bg-neo-yellow">≡ LIST</button>\n'
+       '      </div>\n'
        '      <div class="flex gap-1.5">\n'
        '        <button type="button" id="celeb-sort-random" class="font-sans font-bold text-[10px] sm:text-xs tracking-wide border-2 border-ink shadow-neo-sm px-2.5 sm:px-3 py-1.5 hover:-translate-y-0.5 transition-all bg-neo-yellow">🎲 Random</button>\n'
        '        <button type="button" id="celeb-sort-abc" class="font-sans font-bold text-[10px] sm:text-xs tracking-wide border-2 border-ink shadow-neo-sm px-2.5 sm:px-3 py-1.5 hover:-translate-y-0.5 transition-all bg-white hover:bg-neo-yellow">A–Z</button>\n'
+       '      </div>\n'
        '      </div>\n'
        '    </div>\n'
        '    <p class="text-sm md:text-base font-bold text-muted mb-8 word-break-keep">Click a card to see their reading list.</p>\n'
@@ -6646,6 +6681,22 @@ en_index = (
        '        btn.textContent = "▼ Show more (" + left + " left)";\n'
        '        document.getElementById("celeb-more-wrap").classList.toggle("hidden", left <= 0);\n'
        '      }\n'
+       '      var GRID_CLS = "grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-x-4 sm:gap-x-6 gap-y-8 sm:gap-y-12";\n'
+       '      var LIST_CLS = "flex flex-col gap-3 max-w-2xl mx-auto w-full";\n'
+       '      var CARD_LIST = ["flex-row", "items-center", "bg-white", "border-2", "border-ink", "shadow-neo-sm", "px-4", "py-3"];\n'
+       '      function setView(list) {\n'
+       '        grid.className = (list ? LIST_CLS : GRID_CLS) + (grid.classList.contains("searching") ? " searching" : "");\n'
+       '        cards.forEach(function (c) {\n'
+       '          CARD_LIST.forEach(function (k) { c.classList.toggle(k, list); });\n'
+       '          c.classList.toggle("flex-col", !list);\n'
+       '          c.firstElementChild.classList.toggle("hidden", list);\n'
+       '          c.lastElementChild.classList.toggle("flex-1", list);\n'
+       '          c.lastElementChild.classList.toggle("mt-2", !list);\n'
+       '        });\n'
+       '        sortBtn("celeb-view-grid", !list); sortBtn("celeb-view-list", list);\n'
+       '      }\n'
+       '      document.getElementById("celeb-view-grid").addEventListener("click", function () { setView(false); });\n'
+       '      document.getElementById("celeb-view-list").addEventListener("click", function () { setView(true); });\n'
        '      btn.addEventListener("click", more);\n'
        '      more();\n'
        '    })();\n'
@@ -6654,6 +6705,13 @@ en_index = (
        else '  <section class="border-t-4 border-ink pt-12 md:pt-16 text-center">\n'
        '    <p class="font-bold text-muted">No English profiles available yet. <a href="' + BASE + '" hreflang="ko" class="underline decoration-2 hover:text-ink">Browse the full Korean archive →</a></p>\n'
        '  </section>\n\n')
+    + (('  <section id="top-readers" class="border-t-4 border-ink pt-12 md:pt-16 w-full">\n'
+        '    <h2 class="text-2xl md:text-3xl font-black mb-2 word-break-keep">So many books read by my fave 😍</h2>\n'
+        '    <p class="text-sm md:text-base font-bold text-muted mb-8 word-break-keep">Meet the stars with the most books on record (not everyone shares what they read, so take it as a rough guide 😅)</p>\n'
+        '    <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4 md:gap-6">\n'
+        + en_top_grid + '\n'
+        '    </div>\n'
+        '  </section>\n\n') if en_top_cards else '')
     + ('  <section id="books" class="border-t-4 border-ink pt-12 md:pt-16 w-full">\n'
        '    <h2 class="text-2xl md:text-3xl font-black mb-2 word-break-keep">Books Read by 2+ Celebrities</h2>\n'
        '    <p class="text-sm md:text-base font-bold text-muted mb-8 word-break-keep">Titles that appear across multiple reading lists (' + str(len(en_book_pages)) + ' books).</p>\n'

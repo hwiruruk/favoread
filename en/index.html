@@ -461,9 +461,15 @@
   <section id="celebs" class="w-full">
     <div class="flex flex-wrap items-center justify-between gap-x-4 gap-y-3 mb-2">
       <h2 class="text-2xl md:text-3xl font-black word-break-keep">Browse Celebrities (495)</h2>
+      <div class="flex flex-wrap items-center gap-2 sm:gap-3">
+      <div class="flex gap-1.5">
+        <button type="button" id="celeb-view-grid" class="font-sans font-bold text-[10px] sm:text-xs tracking-wide border-2 border-ink shadow-neo-sm px-2.5 sm:px-3 py-1.5 hover:-translate-y-0.5 transition-all bg-neo-yellow">■ GRID</button>
+        <button type="button" id="celeb-view-list" class="font-sans font-bold text-[10px] sm:text-xs tracking-wide border-2 border-ink shadow-neo-sm px-2.5 sm:px-3 py-1.5 hover:-translate-y-0.5 transition-all bg-white hover:bg-neo-yellow">≡ LIST</button>
+      </div>
       <div class="flex gap-1.5">
         <button type="button" id="celeb-sort-random" class="font-sans font-bold text-[10px] sm:text-xs tracking-wide border-2 border-ink shadow-neo-sm px-2.5 sm:px-3 py-1.5 hover:-translate-y-0.5 transition-all bg-neo-yellow">🎲 Random</button>
         <button type="button" id="celeb-sort-abc" class="font-sans font-bold text-[10px] sm:text-xs tracking-wide border-2 border-ink shadow-neo-sm px-2.5 sm:px-3 py-1.5 hover:-translate-y-0.5 transition-all bg-white hover:bg-neo-yellow">A–Z</button>
+      </div>
       </div>
     </div>
     <p class="text-sm md:text-base font-bold text-muted mb-8 word-break-keep">Click a card to see their reading list.</p>
@@ -4956,10 +4962,213 @@
         btn.textContent = "▼ Show more (" + left + " left)";
         document.getElementById("celeb-more-wrap").classList.toggle("hidden", left <= 0);
       }
+      var GRID_CLS = "grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-x-4 sm:gap-x-6 gap-y-8 sm:gap-y-12";
+      var LIST_CLS = "flex flex-col gap-3 max-w-2xl mx-auto w-full";
+      var CARD_LIST = ["flex-row", "items-center", "bg-white", "border-2", "border-ink", "shadow-neo-sm", "px-4", "py-3"];
+      function setView(list) {
+        grid.className = (list ? LIST_CLS : GRID_CLS) + (grid.classList.contains("searching") ? " searching" : "");
+        cards.forEach(function (c) {
+          CARD_LIST.forEach(function (k) { c.classList.toggle(k, list); });
+          c.classList.toggle("flex-col", !list);
+          c.firstElementChild.classList.toggle("hidden", list);
+          c.lastElementChild.classList.toggle("flex-1", list);
+          c.lastElementChild.classList.toggle("mt-2", !list);
+        });
+        sortBtn("celeb-view-grid", !list); sortBtn("celeb-view-list", list);
+      }
+      document.getElementById("celeb-view-grid").addEventListener("click", function () { setView(false); });
+      document.getElementById("celeb-view-list").addEventListener("click", function () { setView(true); });
       btn.addEventListener("click", more);
       more();
     })();
     </script>
+  </section>
+
+  <section id="top-readers" class="border-t-4 border-ink pt-12 md:pt-16 w-full">
+    <h2 class="text-2xl md:text-3xl font-black mb-2 word-break-keep">So many books read by my fave 😍</h2>
+    <p class="text-sm md:text-base font-bold text-muted mb-8 word-break-keep">Meet the stars with the most books on record (not everyone shares what they read, so take it as a rough guide 😅)</p>
+    <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4 md:gap-6">
+      <a href="share/jinyoung-got7.html" class="border-2 border-ink bg-white shadow-neo flex flex-col group overflow-hidden no-underline text-ink">
+        <div class="w-full aspect-square bg-paper-dark border-b-2 border-ink overflow-hidden">
+          <img src="https://i.namu.wiki/i/aYmZqfEqwSxKPmZ711jhB5hCq6iQ0cFUF0EzkBbrvI0RXrFdVWL1S2MkSB3w-bGvYMGiLcsjAtMaq86DZuj6Gg.webp" alt="Jinyoung (GOT7) profile" loading="lazy" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" referrerpolicy="no-referrer">
+        </div>
+        <div class="p-3 text-center flex-1 flex flex-col justify-center bg-white">
+          <p class="font-black text-sm mb-1 truncate">Jinyoung (GOT7)</p>
+          <p class="font-sans font-bold text-[10px] bg-neo-yellow border border-ink px-1.5 py-0.5 inline-block mx-auto mb-2 shadow-neo-sm">89 books</p>
+          <p class="text-[10px] text-muted truncate">+ 1 Cm · 1Q84 &amp; more</p>
+        </div>
+      </a>
+      <a href="share/iu.html" class="border-2 border-ink bg-white shadow-neo flex flex-col group overflow-hidden no-underline text-ink">
+        <div class="w-full aspect-square bg-paper-dark border-b-2 border-ink overflow-hidden">
+          <img src="https://upload.wikimedia.org/wikipedia/commons/6/69/250718_Lee_Ji-eun_%28%EC%9D%B4%EC%A7%80%EC%9D%80%29.png" alt="IU profile" loading="lazy" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" referrerpolicy="no-referrer">
+        </div>
+        <div class="p-3 text-center flex-1 flex flex-col justify-center bg-white">
+          <p class="font-black text-sm mb-1 truncate">IU</p>
+          <p class="font-sans font-bold text-[10px] bg-neo-yellow border border-ink px-1.5 py-0.5 inline-block mx-auto mb-2 shadow-neo-sm">87 books</p>
+          <p class="text-[10px] text-muted truncate">Don&#x27;t Worry * · Martial Law Night &amp; more</p>
+        </div>
+      </a>
+      <a href="share/joo-ji-hoon.html" class="border-2 border-ink bg-white shadow-neo flex flex-col group overflow-hidden no-underline text-ink">
+        <div class="w-full aspect-square bg-paper-dark border-b-2 border-ink overflow-hidden">
+          <img src="https://img1.daumcdn.net/thumb/R800x0/?scode=mtistory2&amp;fname=https%3A%2F%2Fblog.kakaocdn.net%2Fdna%2FFjrJy%2FbtsL51d9hWY%2FAAAAAAAAAAAAAAAAAAAAAIxkhw5LRhVsu1-VkyJdXiErwO7lqU2HV6O15XbSNi0s%2Fimg.webp%3Fcredential%3DyqXZFxpELC7KVnFOS48ylbz2pIh7yKj8%26expires%3D1790780399%26allow_ip%3D%26allow_referer%3D%26signature%3DDYj4ZTDUEj43bgW3NhM58SgPVAU%253D" alt="Joo Ji hoon profile" loading="lazy" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" referrerpolicy="no-referrer">
+        </div>
+        <div class="p-3 text-center flex-1 flex flex-col justify-center bg-white">
+          <p class="font-black text-sm mb-1 truncate">Joo Ji hoon</p>
+          <p class="font-sans font-bold text-[10px] bg-neo-yellow border border-ink px-1.5 py-0.5 inline-block mx-auto mb-2 shadow-neo-sm">81 books</p>
+          <p class="text-[10px] text-muted truncate">A Pound of Sorrow * · July 24th Street * &amp; more</p>
+        </div>
+      </a>
+      <a href="share/park-sohyuntriples.html" class="border-2 border-ink bg-white shadow-neo flex flex-col group overflow-hidden no-underline text-ink">
+        <div class="w-full aspect-square bg-paper-dark border-b-2 border-ink overflow-hidden">
+          <img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTAjfmWKL1MlFKXKI9lmp0FEB2Q03_2SP6qHYattELDKMVTNY0fQezuhhcp&amp;s=10" alt="Park SoHyun(tripleS) profile" loading="lazy" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" referrerpolicy="no-referrer">
+        </div>
+        <div class="p-3 text-center flex-1 flex flex-col justify-center bg-white">
+          <p class="font-black text-sm mb-1 truncate">Park SoHyun(tripleS)</p>
+          <p class="font-sans font-bold text-[10px] bg-neo-yellow border border-ink px-1.5 py-0.5 inline-block mx-auto mb-2 shadow-neo-sm">69 books</p>
+          <p class="text-[10px] text-muted truncate">The Lady with the Dog · Outspoken and Introverted * &amp; more</p>
+        </div>
+      </a>
+      <a href="share/karina-aespa.html" class="border-2 border-ink bg-white shadow-neo flex flex-col group overflow-hidden no-underline text-ink">
+        <div class="w-full aspect-square bg-paper-dark border-b-2 border-ink overflow-hidden">
+          <img src="https://upload.wikimedia.org/wikipedia/commons/f/fb/Karina_at_Love_Your_W_event_2025.jpg" alt="Karina (aespa) profile" loading="lazy" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" referrerpolicy="no-referrer">
+        </div>
+        <div class="p-3 text-center flex-1 flex flex-col justify-center bg-white">
+          <p class="font-black text-sm mb-1 truncate">Karina (aespa)</p>
+          <p class="font-sans font-bold text-[10px] bg-neo-yellow border border-ink px-1.5 py-0.5 inline-block mx-auto mb-2 shadow-neo-sm">58 books</p>
+          <p class="text-[10px] text-muted truncate">The Masked Mountain Villa Murder Case · The Language of Winter &amp; more</p>
+        </div>
+      </a>
+      <a href="share/seolhyun.html" class="border-2 border-ink bg-white shadow-neo flex flex-col group overflow-hidden no-underline text-ink">
+        <div class="w-full aspect-square bg-paper-dark border-b-2 border-ink overflow-hidden">
+          <img src="https://upload.wikimedia.org/wikipedia/commons/8/82/180503_AOA_%EC%84%A4%ED%98%84_%EB%B0%B1%EC%83%81%EC%98%88%EC%88%A0%EB%8C%80%EC%83%81_%283%29.jpg?_=20181213082829" alt="Seolhyun profile" loading="lazy" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" referrerpolicy="no-referrer">
+        </div>
+        <div class="p-3 text-center flex-1 flex flex-col justify-center bg-white">
+          <p class="font-black text-sm mb-1 truncate">Seolhyun</p>
+          <p class="font-sans font-bold text-[10px] bg-neo-yellow border border-ink px-1.5 py-0.5 inline-block mx-auto mb-2 shadow-neo-sm">55 books</p>
+          <p class="text-[10px] text-muted truncate">Where the Crawdads Sing · Individualist Manifesto &amp; more</p>
+        </div>
+      </a>
+      <a href="share/huh-yunjin-le-sserafim.html" class="border-2 border-ink bg-white shadow-neo flex flex-col group overflow-hidden no-underline text-ink">
+        <div class="w-full aspect-square bg-paper-dark border-b-2 border-ink overflow-hidden">
+          <img src="https://upload.wikimedia.org/wikipedia/commons/2/20/Huh_Yunjin_of_Le_Sserafim%2C_January_10%2C_2025.png" alt="Huh Yunjin (LE SSERAFIM) profile" loading="lazy" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" referrerpolicy="no-referrer">
+        </div>
+        <div class="p-3 text-center flex-1 flex flex-col justify-center bg-white">
+          <p class="font-black text-sm mb-1 truncate">Huh Yunjin (LE SSERAFIM)</p>
+          <p class="font-sans font-bold text-[10px] bg-neo-yellow border border-ink px-1.5 py-0.5 inline-block mx-auto mb-2 shadow-neo-sm">51 books</p>
+          <p class="text-[10px] text-muted truncate">2025 16th Young Writer Award Collection of Winning Works · Madman &amp; more</p>
+        </div>
+      </a>
+      <a href="share/ha-hyun-sang.html" class="border-2 border-ink bg-white shadow-neo flex flex-col group overflow-hidden no-underline text-ink">
+        <div class="w-full aspect-square bg-paper-dark border-b-2 border-ink overflow-hidden">
+          <img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTl-MTnFf62nuGbmLmpBDW0BriThiKhQgwuGqEchQ9wnw&amp;s=10" alt="Ha Hyun Sang profile" loading="lazy" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" referrerpolicy="no-referrer">
+        </div>
+        <div class="p-3 text-center flex-1 flex flex-col justify-center bg-white">
+          <p class="font-black text-sm mb-1 truncate">Ha Hyun Sang</p>
+          <p class="font-sans font-bold text-[10px] bg-neo-yellow border border-ink px-1.5 py-0.5 inline-block mx-auto mb-2 shadow-neo-sm">47 books</p>
+          <p class="text-[10px] text-muted truncate">1984 · Lectures &amp; more</p>
+        </div>
+      </a>
+      <a href="share/park-jung-min.html" class="border-2 border-ink bg-white shadow-neo flex flex-col group overflow-hidden no-underline text-ink">
+        <div class="w-full aspect-square bg-paper-dark border-b-2 border-ink overflow-hidden">
+          <img src="https://upload.wikimedia.org/wikipedia/commons/3/38/20210915%E2%80%94Park_Jeong-min_%EB%B0%95%EC%A0%95%EB%AF%BC%2C_costumed_photo_shoot%2C_Marie_Claire_Korea_screenshot_%2800m13s%29_%28cropped%29.jpg" alt="Park Jung-min profile" loading="lazy" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" referrerpolicy="no-referrer">
+        </div>
+        <div class="p-3 text-center flex-1 flex flex-col justify-center bg-white">
+          <p class="font-black text-sm mb-1 truncate">Park Jung-min</p>
+          <p class="font-sans font-bold text-[10px] bg-neo-yellow border border-ink px-1.5 py-0.5 inline-block mx-auto mb-2 shadow-neo-sm">47 books</p>
+          <p class="text-[10px] text-muted truncate">Kyung-ae&#x27;s Heart · Kim Sang-Wook’S Quantum Studies * &amp; more</p>
+        </div>
+      </a>
+      <a href="share/faker.html" class="border-2 border-ink bg-white shadow-neo flex flex-col group overflow-hidden no-underline text-ink">
+        <div class="w-full aspect-square bg-paper-dark border-b-2 border-ink overflow-hidden">
+          <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/1/1a/Faker_2020_interview.jpg/500px-Faker_2020_interview.jpg" alt="Faker profile" loading="lazy" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" referrerpolicy="no-referrer">
+        </div>
+        <div class="p-3 text-center flex-1 flex flex-col justify-center bg-white">
+          <p class="font-black text-sm mb-1 truncate">Faker</p>
+          <p class="font-sans font-bold text-[10px] bg-neo-yellow border border-ink px-1.5 py-0.5 inline-block mx-auto mb-2 shadow-neo-sm">41 books</p>
+          <p class="text-[10px] text-muted truncate">1Q84 · We Have the Technology: How Biohackers, Foodies, Physicians, and Scientists Are Transforming Human Perception, One Sense at a Time &amp; more</p>
+        </div>
+      </a>
+      <a href="share/lee-chung-ah.html" class="border-2 border-ink bg-white shadow-neo flex flex-col group overflow-hidden no-underline text-ink">
+        <div class="w-full aspect-square bg-paper-dark border-b-2 border-ink overflow-hidden">
+          <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/7/70/Lee_Chung-ah_20260126.png/960px-Lee_Chung-ah_20260126.png" alt="Lee Chung-ah profile" loading="lazy" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" referrerpolicy="no-referrer">
+        </div>
+        <div class="p-3 text-center flex-1 flex flex-col justify-center bg-white">
+          <p class="font-black text-sm mb-1 truncate">Lee Chung-ah</p>
+          <p class="font-sans font-bold text-[10px] bg-neo-yellow border border-ink px-1.5 py-0.5 inline-block mx-auto mb-2 shadow-neo-sm">41 books</p>
+          <p class="text-[10px] text-muted truncate">Le Noir: Éclats d&#x27;une non-couleur · Steadily, Long, Without Getting Tired &amp; more</p>
+        </div>
+      </a>
+      <a href="share/lee-seol.html" class="border-2 border-ink bg-white shadow-neo flex flex-col group overflow-hidden no-underline text-ink">
+        <div class="w-full aspect-square bg-paper-dark border-b-2 border-ink overflow-hidden">
+          <img src="https://i.namu.wiki/i/Ynj_FBozDaa78njwBr1JZvMwNDqrih1VMeKahmUvoZJoLpo0k8ygg_dHhG67pVUA9dmQqAqBvUO_mviGG264Ng.webp" alt="Lee Seol profile" loading="lazy" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" referrerpolicy="no-referrer">
+        </div>
+        <div class="p-3 text-center flex-1 flex flex-col justify-center bg-white">
+          <p class="font-black text-sm mb-1 truncate">Lee Seol</p>
+          <p class="font-sans font-bold text-[10px] bg-neo-yellow border border-ink px-1.5 py-0.5 inline-block mx-auto mb-2 shadow-neo-sm">39 books</p>
+          <p class="text-[10px] text-muted truncate">Lonely Castle in the Mirror · Winter Vacation &amp; more</p>
+        </div>
+      </a>
+      <a href="share/hong-kyung.html" class="border-2 border-ink bg-white shadow-neo flex flex-col group overflow-hidden no-underline text-ink">
+        <div class="w-full aspect-square bg-paper-dark border-b-2 border-ink overflow-hidden">
+          <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/7/74/Hong_Kyung_in_2020.jpg/500px-Hong_Kyung_in_2020.jpg" alt="Hong Kyung profile" loading="lazy" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" referrerpolicy="no-referrer">
+        </div>
+        <div class="p-3 text-center flex-1 flex flex-col justify-center bg-white">
+          <p class="font-black text-sm mb-1 truncate">Hong Kyung</p>
+          <p class="font-sans font-bold text-[10px] bg-neo-yellow border border-ink px-1.5 py-0.5 inline-block mx-auto mb-2 shadow-neo-sm">38 books</p>
+          <p class="text-[10px] text-muted truncate">2020 11th Young Writer Award Collection of Winning Works * · 2021 12th Young Writer Award Collection of Winning Works &amp; more</p>
+        </div>
+      </a>
+      <a href="share/hanroro.html" class="border-2 border-ink bg-white shadow-neo flex flex-col group overflow-hidden no-underline text-ink">
+        <div class="w-full aspect-square bg-paper-dark border-b-2 border-ink overflow-hidden">
+          <img src="https://i.namu.wiki/i/zkytN-fCMJc1H7sk1hmtqpdMQx-rMODG_91iquwRaPEd9IfiBe1BFZfEXcvzvUgD8OFMSGloZ7gSM8e0uDa7BA.webp" alt="Hanroro profile" loading="lazy" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" referrerpolicy="no-referrer">
+        </div>
+        <div class="p-3 text-center flex-1 flex flex-col justify-center bg-white">
+          <p class="font-black text-sm mb-1 truncate">Hanroro</p>
+          <p class="font-sans font-bold text-[10px] bg-neo-yellow border border-ink px-1.5 py-0.5 inline-block mx-auto mb-2 shadow-neo-sm">37 books</p>
+          <p class="text-[10px] text-muted truncate">A Quiet Embrace * · Axiomatic &amp; more</p>
+        </div>
+      </a>
+      <a href="share/jiung-p1harmony.html" class="border-2 border-ink bg-white shadow-neo flex flex-col group overflow-hidden no-underline text-ink">
+        <div class="w-full aspect-square bg-paper-dark border-b-2 border-ink overflow-hidden">
+          <img src="https://kr.cafe24obs.com/data/celeb-image/ePBwVCGK6JPNH2XR5gYn.webp" alt="JIUNG (P1Harmony) profile" loading="lazy" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" referrerpolicy="no-referrer">
+        </div>
+        <div class="p-3 text-center flex-1 flex flex-col justify-center bg-white">
+          <p class="font-black text-sm mb-1 truncate">JIUNG (P1Harmony)</p>
+          <p class="font-sans font-bold text-[10px] bg-neo-yellow border border-ink px-1.5 py-0.5 inline-block mx-auto mb-2 shadow-neo-sm">32 books</p>
+          <p class="text-[10px] text-muted truncate">Noble and Vulgar · Goethe Said Everything &amp; more</p>
+        </div>
+      </a>
+      <a href="share/jonghyun-shinee.html" class="border-2 border-ink bg-white shadow-neo flex flex-col group overflow-hidden no-underline text-ink">
+        <div class="w-full aspect-square bg-paper-dark border-b-2 border-ink overflow-hidden">
+          <img src="https://simkung.net/wp-content/uploads/2018/11/shinee-jonghyun-720x549.jpg" alt="Jonghyun (SHINee) profile" loading="lazy" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" referrerpolicy="no-referrer">
+        </div>
+        <div class="p-3 text-center flex-1 flex flex-col justify-center bg-white">
+          <p class="font-black text-sm mb-1 truncate">Jonghyun (SHINee)</p>
+          <p class="font-sans font-bold text-[10px] bg-neo-yellow border border-ink px-1.5 py-0.5 inline-block mx-auto mb-2 shadow-neo-sm">31 books</p>
+          <p class="text-[10px] text-muted truncate">Les fourmis · The Black Cat &amp; more</p>
+        </div>
+      </a>
+      <a href="share/cha-woo-min.html" class="border-2 border-ink bg-white shadow-neo flex flex-col group overflow-hidden no-underline text-ink">
+        <div class="w-full aspect-square bg-paper-dark border-b-2 border-ink overflow-hidden">
+          <img src="https://img.hankyung.com/photo/202312/01.35431151.1.jpg" alt="Cha Woo-min profile" loading="lazy" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" referrerpolicy="no-referrer">
+        </div>
+        <div class="p-3 text-center flex-1 flex flex-col justify-center bg-white">
+          <p class="font-black text-sm mb-1 truncate">Cha Woo-min</p>
+          <p class="font-sans font-bold text-[10px] bg-neo-yellow border border-ink px-1.5 py-0.5 inline-block mx-auto mb-2 shadow-neo-sm">30 books</p>
+          <p class="text-[10px] text-muted truncate">Onze Minutos · 1984 &amp; more</p>
+        </div>
+      </a>
+      <a href="share/jun-hyo-seong.html" class="border-2 border-ink bg-white shadow-neo flex flex-col group overflow-hidden no-underline text-ink">
+        <div class="w-full aspect-square bg-paper-dark border-b-2 border-ink overflow-hidden">
+          <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/a/ae/Jun_Hyo-seong_in_August_2023.png/500px-Jun_Hyo-seong_in_August_2023.png" alt="Jun Hyo-seong profile" loading="lazy" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" referrerpolicy="no-referrer">
+        </div>
+        <div class="p-3 text-center flex-1 flex flex-col justify-center bg-white">
+          <p class="font-black text-sm mb-1 truncate">Jun Hyo-seong</p>
+          <p class="font-sans font-bold text-[10px] bg-neo-yellow border border-ink px-1.5 py-0.5 inline-block mx-auto mb-2 shadow-neo-sm">30 books</p>
+          <p class="text-[10px] text-muted truncate">Page 1 Korean History 365 * · Individualist Manifesto &amp; more</p>
+        </div>
+      </a>
+    </div>
   </section>
 
   <section id="books" class="border-t-4 border-ink pt-12 md:pt-16 w-full">
@@ -9026,7 +9235,7 @@
   var books = JSON.parse(document.getElementById("en-search-books-data").textContent);
   var byKo = {};
   people.forEach(function (p) { byKo[p.ko] = p; });
-  var HIDE = ["about", "featured", "categories", "groups", "books", "ranking-link", "report", "faq"];
+  var HIDE = ["about", "featured", "categories", "groups", "books", "top-readers", "ranking-link", "report", "faq"];
   var bookText = {};   // 셀럽 → 읽은 책 제목·작가 (data.json을 받은 뒤 채운다)
   var loaded = false, timer = null;
 
