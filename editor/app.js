@@ -2802,6 +2802,24 @@ $('#commentsBtn').addEventListener('click', openCommentsDialog);
 $('#cmtSaveBtn').addEventListener('click', saveComments);
 $('#cmtStage1').addEventListener('click', () => { $('#cmtFilter').value = 'pick'; Cmt.focus = null; renderCommentsList(); });
 $('#cmtStage2').addEventListener('click', () => { $('#cmtFilter').value = 'write'; Cmt.focus = null; renderCommentsList(); });
+
+/* 영어에서 셀럽을 they/them/their 로 받은 미검수 문장을 비워, AI 요청 복사 단계로 되돌린다.
+ * 지침이 바뀌기 전에 받은 답을 다시 쓰게 하려는 것이라 ko·en·ai 를 함께 비우고, 메모·인용·출처는 둔다.
+ * 승인·반려된 항목은 건드리지 않는다. */
+const CMT_THEY_RE = /\b(they|them|their|theirs|themselves)\b/i;
+$('#cmtResetThey').addEventListener('click', () => {
+  const hits = [...Cmt.items.entries()].filter(([, it]) =>
+    (it.status || 'pending') === 'pending' && (it.ko || '').trim() && CMT_THEY_RE.test(it.en || ''));
+  if (!hits.length) { toast('they 가 들어간 미검수 문장이 없습니다', 'ok'); return; }
+  if (!confirm(`영어에 they 가 들어간 미검수 문장 ${hits.length}건의 ko·en 을 비우고 AI 요청 단계로 되돌립니다.\n(메모·인용·출처는 그대로, 승인·반려 항목은 건드리지 않습니다)`)) return;
+  for (const [, it] of hits) { it.ko = ''; it.en = ''; delete it.ai; }
+  markCmtDirty();
+  Cmt.focus = null;
+  $('#cmtFilter').value = 'tidy';
+  renderCommentsList();
+  renderDetail();
+  toast(`↩ ${hits.length}건을 되돌렸습니다 — ✨ AI 요청 복사로 다시 다듬고 저장하세요`, 'ok');
+});
 $('#cmtFilter').addEventListener('change', () => { Cmt.focus = null; renderCommentsList(); });
 $('#cmtSearch').addEventListener('input', () => { Cmt.focus = null; renderCommentsList(); });
 $('#cmtCount').addEventListener('click', (e) => {
