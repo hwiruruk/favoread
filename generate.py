@@ -3648,9 +3648,11 @@ for _g in sorted(ko_groups.values(), key=lambda g: g['ko']):
     name = _g['ko']
     n_members, n_books = len(members), len(gbooks)
     picks = [t for t, _ in ranked[:3]]
-    g_title = name + ' 멤버들이 읽은 책 · 추천 책 ' + str(n_books) + '권'
-    g_desc = (name + ' 멤버 ' + str(n_members) + '명이 읽고 추천한 책 ' + str(n_books) + '권'
-              + ((' — ' + ', '.join(picks)) if picks else '')
+    # 서치콘솔에서 '코르티스 책', '에스파 책 추천'처럼 그룹명 + 책 검색이 실제로 들어와
+    # 제목 앞에 같은 표현을 둔다.
+    g_title = name + ' 책 추천 · 멤버들이 읽은 책 ' + str(n_books) + '권'
+    g_desc = (name + ' 책 추천 한눈에 — 멤버 ' + str(n_members) + '명이 읽고 추천한 책 ' + str(n_books) + '권'
+              + ((': ' + ', '.join(picks)) if picks else '')
               + '. 멤버별 독서 기록과 출처를 한곳에 모았어요.')
     g_ld = clean_none({
         '@context': 'https://schema.org',
@@ -6853,7 +6855,20 @@ print("✅ 랭킹 페이지 생성: share/ranking.html")
 
 generated_celeb_paths = {'share/' + safe_filename(n) + '.html' for n in celebs.keys()}
 generated_book_paths  = {'share/book/' + fn + '.html' for fn, _ in book_pages}
-keep_top_level = generated_celeb_paths | {'share/ranking.html'}
+# 이름 표기가 바뀐 셀럽의 옛 한글 주소 → 새 주소 (서치콘솔에서 404로 잡혔던 것들).
+# 새 주소가 실제로 있을 때만 이동 페이지를 남긴다.
+KO_CELEB_MOVED = {
+    '테오(P1하모니)': '테오(P원하모니)',
+    '정은지': '정은지(에이핑크)',
+}
+ko_moved_paths = set()
+for _old, _new in KO_CELEB_MOVED.items():
+    if _new in celebs:
+        _op = 'share/' + safe_filename(_old) + '.html'
+        write_moved_page(_op, BASE + 'share/' + quote(safe_filename(_new), safe='') + '.html', 'ko')
+        ko_moved_paths.add(_op)
+
+keep_top_level = generated_celeb_paths | {'share/ranking.html'} | ko_moved_paths
 
 removed = 0
 for f in os.listdir('share'):
@@ -7282,6 +7297,23 @@ if en_celeb_pages or en_book_pages:
             '    <priority>0.5</priority>',
             '  </url>',
         ]
+
+# 같은 URL이 두 번 실리지 않도록 <url> 블록 단위로 중복을 걷어낸다.
+_dedup, _seen_loc, _blk, _in_blk = [], set(), [], False
+for _ln in lines:
+    if _ln.strip() == '<url>':
+        _in_blk, _blk = True, [_ln]
+    elif _in_blk:
+        _blk.append(_ln)
+        if _ln.strip() == '</url>':
+            _loc = next((x.strip() for x in _blk if x.strip().startswith('<loc>')), '')
+            if _loc not in _seen_loc:
+                _seen_loc.add(_loc)
+                _dedup.extend(_blk)
+            _in_blk = False
+    else:
+        _dedup.append(_ln)
+lines = _dedup
 
 lines.append('</urlset>')
 save_page_lastmod()
