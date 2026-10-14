@@ -3614,34 +3614,47 @@ for _g in sorted(ko_groups.values(), key=lambda g: g['ko']):
     def _short(n):
         return _GROUP_SUFFIX_RE.sub('', n).strip() or n
 
-    member_cards = ''
-    for _n in members:
+    # 멤버 선택 칩 (전체 + 멤버별). 눌러서 그 멤버가 읽은 책만 걸러 본다.
+    member_cards = (
+        '    <li><button type="button" class="gm on" data-m="" aria-pressed="true">\n'
+        '      <span class="gm-all">전체</span>\n'
+        '      <span class="gm-n">전체 보기</span>\n'
+        '      <span class="gm-c">' + str(len(gbooks)) + '권</span>\n'
+        '    </button></li>\n'
+    )
+    for _i, _n in enumerate(members):
         img = celebs[_n]['img']
         member_cards += (
-            '    <li class="gm"><a href="' + esc(make_celeb_url(_n)) + '">\n'
+            '    <li><button type="button" class="gm" data-m="' + str(_i) + '" data-name="' + esc(_short(_n))
+            + '" data-url="' + esc(make_celeb_url(_n)) + '" aria-pressed="false">\n'
             + (('      <img src="' + esc(img) + '" alt="' + esc(_n) + ' 사진" loading="lazy" referrerpolicy="no-referrer">\n')
-               if img.startswith('http') else '')
+               if img.startswith('http') else '      <span class="gm-all">' + esc(_short(_n)[:1]) + '</span>\n')
             + '      <span class="gm-n">' + esc(_short(_n)) + '</span>\n'
             '      <span class="gm-c">' + str(len(celebs[_n]['books'])) + '권</span>\n'
-            '    </a></li>\n'
+            '    </button></li>\n'
         )
 
-    LIMIT = 60
+    # 책 표지 격자. 표지 위주로 보여주고, 읽은 멤버는 data-r(멤버 번호)로 달아 둔다.
+    member_idx = {n: i for i, n in enumerate(members)}
     book_rows = ''
-    for t, info in ranked[:LIMIT]:
-        who = ', '.join('<a href="' + esc(make_celeb_url(r)) + '">' + esc(_short(r)) + '</a>'
-                        for r in info['readers'])
-        # 책 제목은 예스24 책 정보로 보낸다
-        # 옆의 작은 링크는 사이트 안의 책 페이지(이 책을 읽은 사람 모두)로
-        t_html = ('<a href="' + esc(yes24_book_url(t, info['link'], info['cover']))
-                  + '" rel="nofollow noopener noreferrer" target="_blank">' + esc(t) + '</a>')
-        if t in books_with_pages:
-            t_html += ' <a class="gb-l" href="' + esc(make_book_url(t)) + '">읽은 사람 모두 보기</a>'
+    for t, info in ranked:
+        who = ''.join('<a href="' + esc(make_celeb_url(r)) + '">' + esc(_short(r)) + '</a>'
+                      for r in info['readers'])
+        cover = info['cover'] if (info['cover'] or '').startswith('http') else ''
+        book_href = yes24_book_url(t, info['link'], info['cover'])
+        # 표지·제목은 예스24 책 정보로 보낸다
+        cover_html = (('<img src="' + esc(cover) + '" alt="' + esc(t) + ' 표지" loading="lazy" referrerpolicy="no-referrer">')
+                      if cover else '<span class="gb-no">' + esc(t) + '</span>')
+        more = (('      <a class="gb-l" href="' + esc(make_book_url(t)) + '">읽은 사람 모두 보기</a>\n')
+                if t in books_with_pages else '')
         book_rows += (
-            '    <li class="gb">\n'
-            '      <span class="gb-t">' + t_html + '</span>\n'
+            '    <li class="gb" data-r=" ' + ' '.join(str(member_idx[r]) for r in info['readers']) + ' ">\n'
+            '      <a class="gb-c" href="' + esc(book_href) + '" rel="nofollow noopener noreferrer" target="_blank" title="'
+            + esc(t) + '">' + cover_html + '</a>\n'
+            '      <a class="gb-t" href="' + esc(book_href) + '" rel="nofollow noopener noreferrer" target="_blank">' + esc(t) + '</a>\n'
             + (('      <span class="gb-a">' + esc(info['author']) + '</span>\n') if info['author'] else '')
             + '      <span class="gb-w">' + who + '</span>\n'
+            + more +
             '    </li>\n'
         )
 
@@ -3674,6 +3687,7 @@ for _g in sorted(ko_groups.values(), key=lambda g: g['ko']):
             ],
         },
     })
+    GM_ON = (style + ';') if style else 'background: #ffe58a;'
     color_note = (('<p class="gc">공식 색 · ' + esc(gc['name']) + '</p>\n') if gc else '')
     page = (
         '<!DOCTYPE html>\n'
@@ -3706,18 +3720,28 @@ for _g in sorted(ko_groups.values(), key=lambda g: g['ko']):
         '    .hero p { margin: 0; font-size: 15px; }\n'
         '    .hero .gc { margin-top: 8px; font-size: 12px; font-weight: 700; opacity: .85; }\n'
         '    h2 { font-size: 19px; margin: 32px 0 12px; padding-bottom: 4px; border-bottom: 2px solid #000; font-weight: 800; }\n'
-        '    .members { list-style: none; padding: 0; margin: 0; display: grid; grid-template-columns: repeat(auto-fill, minmax(110px, 1fr)); gap: 12px; }\n'
-        '    .gm a { display: block; color: #000; text-align: center; }\n'
-        '    .gm a:hover { text-decoration: none; }\n'
-        '    .gm img { width: 100%; aspect-ratio: 1/1; object-fit: cover; border: 2px solid #000; box-shadow: 2px 2px 0 0 #000; display: block; background: #f4f4f0; }\n'
+        '    .members { list-style: none; padding: 0; margin: 0; display: grid; grid-template-columns: repeat(auto-fill, minmax(92px, 1fr)); gap: 10px; }\n'
+        '    .gm { width: 100%; font: inherit; color: #000; text-align: center; cursor: pointer; background: #fff; border: 2px solid #000; box-shadow: 2px 2px 0 0 #000; padding: 6px 4px 8px; }\n'
+        '    .gm:hover { transform: translate(-1px,-1px); box-shadow: 3px 3px 0 0 #000; }\n'
+        '    .gm.on { box-shadow: none; transform: translate(2px,2px); ' + GM_ON + ' }\n'
+        '    .gm img, .gm-all { width: 100%; aspect-ratio: 1/1; object-fit: cover; border: 2px solid #000; display: block; background: #f4f4f0; }\n'
+        '    .gm-all { display: flex; align-items: center; justify-content: center; font-weight: 900; font-size: 20px; }\n'
         '    .gm-n { display: block; font-weight: 800; font-size: 13px; margin-top: 6px; line-height: 1.25; }\n'
-        '    .gm-c { display: block; font-size: 11px; color: #666; }\n'
-        '    .books { padding: 0; margin: 0; }\n'
-        '    .gb { background: #fff; border: 2px solid #000; box-shadow: 3px 3px 0 0 #000; padding: 10px 12px; margin-bottom: 10px; list-style: none; }\n'
-        '    .gb-t { display: block; font-weight: 800; font-size: 15px; line-height: 1.3; }\n'
-        '    .gb-l { font-size: 12px; font-weight: 600; margin-left: 6px; white-space: nowrap; }\n'
-        '    .gb-a { display: block; font-size: 12px; color: #555; }\n'
-        '    .gb-w { display: block; font-size: 12px; margin-top: 3px; }\n'
+        '    .gm-c { display: block; font-size: 11px; opacity: .7; }\n'
+        '    .pick { display: none; margin: 14px 0 0; font-size: 14px; font-weight: 700; }\n'
+        '    .pick.show { display: block; }\n'
+        '    .books { list-style: none; padding: 0; margin: 14px 0 0; display: grid; grid-template-columns: repeat(auto-fill, minmax(128px, 1fr)); gap: 18px 14px; }\n'
+        '    .gb { list-style: none; min-width: 0; }\n'
+        '    .gb[hidden] { display: none; }\n'
+        '    .gb-c { display: block; aspect-ratio: 2/3; border: 2px solid #000; box-shadow: 3px 3px 0 0 #000; background: #f4f4f0; overflow: hidden; }\n'
+        '    .gb-c:hover { transform: translate(-1px,-1px); box-shadow: 4px 4px 0 0 #000; }\n'
+        '    .gb-c img { width: 100%; height: 100%; object-fit: cover; display: block; }\n'
+        '    .gb-no { display: flex; height: 100%; align-items: center; justify-content: center; padding: 8px; text-align: center; font-weight: 800; font-size: 13px; color: #333; }\n'
+        '    .gb-t { display: block; margin-top: 8px; font-weight: 800; font-size: 13px; line-height: 1.3; color: #111; }\n'
+        '    .gb-a { display: block; font-size: 11px; color: #666; }\n'
+        '    .gb-w { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 4px; }\n'
+        '    .gb-w a { font-size: 11px; font-weight: 700; color: #000; background: #ffe58a; border: 1.5px solid #000; padding: 0 6px; border-radius: 99px; line-height: 1.6; }\n'
+        '    .gb-l { display: inline-block; margin-top: 4px; font-size: 11px; font-weight: 600; }\n'
         '    footer { margin-top: 40px; padding-top: 16px; border-top: 2px solid #000; font-size: 12px; color: #666; }\n'
         '  </style>\n'
         '</head>\n'
@@ -3732,16 +3756,47 @@ for _g in sorted(ko_groups.values(), key=lambda g: g['ko']):
         + '. 책마다 인터뷰·유튜브·SNS 출처를 확인할 수 있어요.</p>\n'
         '    ' + color_note +
         '  </div>\n'
-        '  <h2>멤버</h2>\n'
-        '  <ul class="members">\n' + member_cards + '  </ul>\n'
-        '  <h2>멤버들이 읽은 책</h2>\n'
-        '  <ul class="books">\n' + book_rows + '  </ul>\n'
-        + (('  <p>여러 멤버가 읽은 책부터 ' + str(LIMIT) + '권을 보여드려요. 전체 목록은 멤버 페이지에서 볼 수 있어요.</p>\n')
-           if len(ranked) > LIMIT else '')
+        '  <h2>멤버별로 보기</h2>\n'
+        '  <ul class="members" id="members">\n' + member_cards + '  </ul>\n'
+        '  <p class="pick" id="pick"></p>\n'
+        '  <h2 id="books-h">멤버들이 읽은 책</h2>\n'
+        '  <ul class="books" id="books">\n' + book_rows + '  </ul>\n'
         + '  <footer>\n'
         '    <p>공개된 인터뷰·방송·SNS를 바탕으로 정리했어요. '
         '<a href="' + BASE + '">다른 셀럽·아이돌이 읽은 책 보기 →</a></p>\n'
         '  </footer>\n'
+        '  <script>\n'
+        '  (function () {\n'
+        '    var chips = document.querySelectorAll(".gm"), cards = document.querySelectorAll(".gb"),\n'
+        '        pick = document.getElementById("pick"), head = document.getElementById("books-h");\n'
+        '    function show(m, name, url) {\n'
+        '      var n = 0;\n'
+        '      cards.forEach(function (c) {\n'
+        '        var ok = m === "" || c.getAttribute("data-r").indexOf(" " + m + " ") > -1;\n'
+        '        c.hidden = !ok; if (ok) n++;\n'
+        '      });\n'
+        '      chips.forEach(function (b) {\n'
+        '        var on = b.getAttribute("data-m") === m;\n'
+        '        b.classList.toggle("on", on); b.setAttribute("aria-pressed", on);\n'
+        '      });\n'
+        '      head.textContent = m === "" ? "멤버들이 읽은 책" : name + " · 읽은 책 " + n + "권";\n'
+        '      if (m === "") { pick.className = "pick"; pick.textContent = ""; return; }\n'
+        '      pick.className = "pick show";\n'
+        '      pick.innerHTML = "";\n'
+        '      var a = document.createElement("a"); a.href = url; a.textContent = name + " 페이지에서 출처와 코멘트 보기 →";\n'
+        '      pick.appendChild(a);\n'
+        '    }\n'
+        '    chips.forEach(function (b) {\n'
+        '      b.addEventListener("click", function () {\n'
+        '        var m = b.getAttribute("data-m");\n'
+        '        show(m, b.getAttribute("data-name"), b.getAttribute("data-url"));\n'
+        '        try { history.replaceState(null, "", m === "" ? location.pathname : "#" + encodeURIComponent(b.getAttribute("data-name"))); } catch (e) {}\n'
+        '      });\n'
+        '    });\n'
+        '    var h = decodeURIComponent(location.hash.slice(1));\n'
+        '    if (h) chips.forEach(function (b) { if (b.getAttribute("data-name") === h) b.click(); });\n'
+        '  })();\n'
+        '  </script>\n'
         '</body>\n'
         '</html>'
     )
