@@ -46,6 +46,7 @@ const Cmt = {
   items: new Map(),     // "연예인|도서명" -> { ko, en, source, grade, evidence, note, status }
   sha: null,
   loaded: false,
+  base: new Map(),      // 불러온 시점의 값 서명 — 백업할 변경분을 가린다
   dirty: false,
   focus: null,          // 책 목록의 💬 메모로 연 항목 — 이것 하나만 보여준다
   key: (celeb, title) => `${celeb}|${title}`,
@@ -1722,7 +1723,8 @@ async function saveDraft({ quiet = false } = {}) {
     State.hasDraft = true;
     setDirty(false);
     setStatus(`드래프트 저장됨 · ${stamp()} · 사이트에는 아직 안 나감`);
-    if (!quiet) toast('드래프트에 저장됨 — 🚀 발행을 눌러야 사이트에 반영됩니다', 'ok');
+    if (Cmt.dirty) toast('도서만 저장됐어요. 코멘트·메모는 💬 코멘트 검수 창에서 따로 저장해야 합니다', 'err');
+    else if (!quiet) toast('드래프트에 저장됨 — 🚀 발행을 눌러야 사이트에 반영됩니다', 'ok');
     return true;
   } catch (err) {
     if (created) await Gh.deleteBranch(draft).catch(() => {});
@@ -2301,7 +2303,35 @@ const CMT_LABEL = { pending: '미검수', approved: '승인', rejected: '반려'
 
 function setCmtStatus(msg) { $('#cmtStatus').textContent = msg || ''; }
 
+/* 저장 전 변경분을 브라우저에 백업한다. 탭을 닫거나 새로고침해도 다음에 열 때 복원된다
+ * (메모는 💬 코멘트 검수 창에서 저장해야 GitHub에 올라가고, 드래프트 저장에는 안 들어간다). */
+const CMT_BACKUP_LS = 'favoread.cmtBackup';
+const cmtSig = (v) => JSON.stringify([v.memo || '', v.ko || '', v.en || '', v.status || 'pending']);
+function backupCmt() {
+  try {
+    const changed = {};
+    for (const [k, v] of Cmt.items) {
+      if (Cmt.base.get(k) === cmtSig(v)) continue;
+      if (v._new && !(v.memo || '').trim() && !(v.ko || '').trim() && !(v.en || '').trim()) continue;
+      changed[k] = v;
+    }
+    if (Object.keys(changed).length) localStorage.setItem(CMT_BACKUP_LS, JSON.stringify(changed));
+    else localStorage.removeItem(CMT_BACKUP_LS);
+  } catch (e) { /* 무시 */ }
+}
+function clearCmtBackup() { try { localStorage.removeItem(CMT_BACKUP_LS); } catch (e) { /* 무시 */ } }
+function restoreCmtBackup() {
+  let bk;
+  try { bk = JSON.parse(localStorage.getItem(CMT_BACKUP_LS) || 'null'); } catch (e) { return; }
+  const keys = bk ? Object.keys(bk) : [];
+  if (!keys.length) return;
+  for (const k of keys) Cmt.items.set(k, Object.assign({}, Cmt.items.get(k) || {}, bk[k]));
+  markCmtDirty();
+  toast(`저장 안 된 코멘트·메모 ${keys.length}건을 복원했습니다 — 💬 코멘트 검수 창에서 저장하세요`, 'err');
+}
+
 function markCmtDirty() {
+  backupCmt();
   Cmt.dirty = true;
   $('#cmtSaveBtn').disabled = false;
   setCmtStatus('미저장 변경 있음');
@@ -2386,6 +2416,8 @@ async function loadCmtFile() {
     }
     Cmt.sha = sha;
     Cmt.loaded = true;
+    Cmt.base = new Map([...Cmt.items].map(([k, v]) => [k, cmtSig(v)]));
+    restoreCmtBackup();
     setCmtStatus(sha ? `sha ${sha.slice(0, 7)}` : '아직 파일이 없습니다 (저장하면 새로 만듭니다)');
     renderDetail();   // 책 카드에 검수 뱃지를 붙인다
     return true;
@@ -2661,6 +2693,8 @@ async function saveComments() {
     const { sha } = await Gh.putFile({ content, sha: Cmt.sha, message, path: COMMENTS_PATH });
     Cmt.sha = sha;
     Cmt.dirty = false;
+    Cmt.base = new Map([...Cmt.items].map(([k, v]) => [k, cmtSig(v)]));
+    clearCmtBackup();
     if (!State.dirty) window.onbeforeunload = null;
     setCmtStatus(sha ? `저장 완료 · sha ${sha.slice(0, 7)}` : '저장 완료');
     toast(`코멘트 저장됨 — 승인 ${n.approved}건`, 'ok');
@@ -4474,5 +4508,7 @@ $('#uniSearch').addEventListener('input', renderUnifyList);
     setStatus('설정을 입력한 뒤 ↻ 불러오기로 시작하세요.');
   } else {
     reloadFromGithub();
+    // 저장 못 한 메모 백업이 있으면 코멘트 파일을 받아 바로 복원한다
+    try { if (localStorage.getItem(CMT_BACKUP_LS)) loadCmtFile(); } catch (e) { /* 무시 */ }
   }
 })();
