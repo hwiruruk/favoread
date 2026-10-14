@@ -97,18 +97,28 @@
     .hero p { margin: 0; font-size: 15px; }
     .hero .gc { margin-top: 8px; font-size: 12px; font-weight: 700; opacity: .85; }
     h2 { font-size: 19px; margin: 32px 0 12px; padding-bottom: 4px; border-bottom: 2px solid #000; font-weight: 800; }
-    .members { list-style: none; padding: 0; margin: 0; display: grid; grid-template-columns: repeat(auto-fill, minmax(110px, 1fr)); gap: 12px; }
-    .gm a { display: block; color: #000; text-align: center; }
-    .gm a:hover { text-decoration: none; }
-    .gm img { width: 100%; aspect-ratio: 1/1; object-fit: cover; border: 2px solid #000; box-shadow: 2px 2px 0 0 #000; display: block; background: #f4f4f0; }
+    .members { list-style: none; padding: 0; margin: 0; display: grid; grid-template-columns: repeat(auto-fill, minmax(92px, 1fr)); gap: 10px; }
+    .gm { width: 100%; font: inherit; color: #000; text-align: center; cursor: pointer; background: #fff; border: 2px solid #000; box-shadow: 2px 2px 0 0 #000; padding: 6px 4px 8px; }
+    .gm:hover { transform: translate(-1px,-1px); box-shadow: 3px 3px 0 0 #000; }
+    .gm.on { box-shadow: none; transform: translate(2px,2px); background: #ffe58a; }
+    .gm img, .gm-all { width: 100%; aspect-ratio: 1/1; object-fit: cover; border: 2px solid #000; display: block; background: #f4f4f0; }
+    .gm-all { display: flex; align-items: center; justify-content: center; font-weight: 900; font-size: 20px; }
     .gm-n { display: block; font-weight: 800; font-size: 13px; margin-top: 6px; line-height: 1.25; }
-    .gm-c { display: block; font-size: 11px; color: #666; }
-    .books { padding: 0; margin: 0; }
-    .gb { background: #fff; border: 2px solid #000; box-shadow: 3px 3px 0 0 #000; padding: 10px 12px; margin-bottom: 10px; list-style: none; }
-    .gb-t { display: block; font-weight: 800; font-size: 15px; line-height: 1.3; }
-    .gb-l { font-size: 12px; font-weight: 600; margin-left: 6px; white-space: nowrap; }
-    .gb-a { display: block; font-size: 12px; color: #555; }
-    .gb-w { display: block; font-size: 12px; margin-top: 3px; }
+    .gm-c { display: block; font-size: 11px; opacity: .7; }
+    .pick { display: none; margin: 14px 0 0; font-size: 14px; font-weight: 700; }
+    .pick.show { display: block; }
+    .books { list-style: none; padding: 0; margin: 14px 0 0; display: grid; grid-template-columns: repeat(auto-fill, minmax(128px, 1fr)); gap: 18px 14px; }
+    .gb { list-style: none; min-width: 0; }
+    .gb[hidden] { display: none; }
+    .gb-c { display: block; aspect-ratio: 2/3; border: 2px solid #000; box-shadow: 3px 3px 0 0 #000; background: #f4f4f0; overflow: hidden; }
+    .gb-c:hover { transform: translate(-1px,-1px); box-shadow: 4px 4px 0 0 #000; }
+    .gb-c img { width: 100%; height: 100%; object-fit: cover; display: block; }
+    .gb-no { display: flex; height: 100%; align-items: center; justify-content: center; padding: 8px; text-align: center; font-weight: 800; font-size: 13px; color: #333; }
+    .gb-t { display: block; margin-top: 8px; font-weight: 800; font-size: 13px; line-height: 1.3; color: #111; }
+    .gb-a { display: block; font-size: 11px; color: #666; }
+    .gb-w { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 4px; }
+    .gb-w a { font-size: 11px; font-weight: 700; color: #000; background: #ffe58a; border: 1.5px solid #000; padding: 0 6px; border-radius: 99px; line-height: 1.6; }
+    .gb-l { display: inline-block; margin-top: 4px; font-size: 11px; font-weight: 600; }
     footer { margin-top: 40px; padding-top: 16px; border-top: 2px solid #000; font-size: 12px; color: #666; }
   </style>
 </head>
@@ -118,54 +128,97 @@
     <h1>마마무 멤버들이 읽은 책</h1>
     <p>마마무 멤버 4명이 읽거나 추천한 책 <strong>4권</strong>. 책마다 인터뷰·유튜브·SNS 출처를 확인할 수 있어요.</p>
       </div>
-  <h2>멤버</h2>
-  <ul class="members">
-    <li class="gm"><a href="https://favorbook.co.kr/share/%EB%AC%B8%EB%B3%84%28%EB%A7%88%EB%A7%88%EB%AC%B4%29.html">
+  <h2>멤버별로 보기</h2>
+  <ul class="members" id="members">
+    <li><button type="button" class="gm on" data-m="" aria-pressed="true">
+      <span class="gm-all">전체</span>
+      <span class="gm-n">전체 보기</span>
+      <span class="gm-c">4권</span>
+    </button></li>
+    <li><button type="button" class="gm" data-m="0" data-name="문별" data-url="https://favorbook.co.kr/share/%EB%AC%B8%EB%B3%84%28%EB%A7%88%EB%A7%88%EB%AC%B4%29.html" aria-pressed="false">
       <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/2/20/Mamamoo_Moonbyul_in_2024_%281%29_03.jpg/500px-Mamamoo_Moonbyul_in_2024_%281%29_03.jpg" alt="문별(마마무) 사진" loading="lazy" referrerpolicy="no-referrer">
       <span class="gm-n">문별</span>
       <span class="gm-c">1권</span>
-    </a></li>
-    <li class="gm"><a href="https://favorbook.co.kr/share/%EC%86%94%EB%9D%BC%28%EB%A7%88%EB%A7%88%EB%AC%B4%29.html">
+    </button></li>
+    <li><button type="button" class="gm" data-m="1" data-name="솔라" data-url="https://favorbook.co.kr/share/%EC%86%94%EB%9D%BC%28%EB%A7%88%EB%A7%88%EB%AC%B4%29.html" aria-pressed="false">
       <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/a/ad/180519_%EC%86%94%EB%9D%BC_02_%28cropped%29.jpg/960px-180519_%EC%86%94%EB%9D%BC_02_%28cropped%29.jpg" alt="솔라(마마무) 사진" loading="lazy" referrerpolicy="no-referrer">
       <span class="gm-n">솔라</span>
       <span class="gm-c">1권</span>
-    </a></li>
-    <li class="gm"><a href="https://favorbook.co.kr/share/%ED%99%94%EC%82%AC%28%EB%A7%88%EB%A7%88%EB%AC%B4%29.html">
+    </button></li>
+    <li><button type="button" class="gm" data-m="2" data-name="화사" data-url="https://favorbook.co.kr/share/%ED%99%94%EC%82%AC%28%EB%A7%88%EB%A7%88%EB%AC%B4%29.html" aria-pressed="false">
       <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/5/58/20230918_Hwasa_%28%ED%99%94%EC%82%AC%29.jpg/960px-20230918_Hwasa_%28%ED%99%94%EC%82%AC%29.jpg?_=20230918113231" alt="화사(마마무) 사진" loading="lazy" referrerpolicy="no-referrer">
       <span class="gm-n">화사</span>
       <span class="gm-c">1권</span>
-    </a></li>
-    <li class="gm"><a href="https://favorbook.co.kr/share/%ED%9C%98%EC%9D%B8%28%EB%A7%88%EB%A7%88%EB%AC%B4%29.html">
+    </button></li>
+    <li><button type="button" class="gm" data-m="3" data-name="휘인" data-url="https://favorbook.co.kr/share/%ED%9C%98%EC%9D%B8%28%EB%A7%88%EB%A7%88%EB%AC%B4%29.html" aria-pressed="false">
       <img src="https://upload.wikimedia.org/wikipedia/commons/0/0f/Wheein_2023.jpg" alt="휘인(마마무) 사진" loading="lazy" referrerpolicy="no-referrer">
       <span class="gm-n">휘인</span>
       <span class="gm-c">1권</span>
-    </a></li>
+    </button></li>
   </ul>
-  <h2>멤버들이 읽은 책</h2>
-  <ul class="books">
-    <li class="gb">
-      <span class="gb-t"><a href="https://www.yes24.com/product/goods/33136484" rel="nofollow noopener noreferrer" target="_blank">그까짓 사람, 그래도 사람</a></span>
+  <p class="pick" id="pick"></p>
+  <h2 id="books-h">멤버들이 읽은 책</h2>
+  <ul class="books" id="books">
+    <li class="gb" data-r=" 0 ">
+      <a class="gb-c" href="https://www.yes24.com/product/goods/33136484" rel="nofollow noopener noreferrer" target="_blank" title="그까짓 사람, 그래도 사람"><img src="https://image.yes24.com/goods/33136484/L" alt="그까짓 사람, 그래도 사람 표지" loading="lazy" referrerpolicy="no-referrer"></a>
+      <a class="gb-t" href="https://www.yes24.com/product/goods/33136484" rel="nofollow noopener noreferrer" target="_blank">그까짓 사람, 그래도 사람</a>
       <span class="gb-a">설레다</span>
       <span class="gb-w"><a href="https://favorbook.co.kr/share/%EB%AC%B8%EB%B3%84%28%EB%A7%88%EB%A7%88%EB%AC%B4%29.html">문별</a></span>
     </li>
-    <li class="gb">
-      <span class="gb-t"><a href="https://www.yes24.com/product/goods/66319026" rel="nofollow noopener noreferrer" target="_blank">김도훈 작곡법</a></span>
+    <li class="gb" data-r=" 1 ">
+      <a class="gb-c" href="https://www.yes24.com/product/goods/66319026" rel="nofollow noopener noreferrer" target="_blank" title="김도훈 작곡법"><img src="https://image.yes24.com/goods/66319026/L" alt="김도훈 작곡법 표지" loading="lazy" referrerpolicy="no-referrer"></a>
+      <a class="gb-t" href="https://www.yes24.com/product/goods/66319026" rel="nofollow noopener noreferrer" target="_blank">김도훈 작곡법</a>
       <span class="gb-a">김도훈</span>
       <span class="gb-w"><a href="https://favorbook.co.kr/share/%EC%86%94%EB%9D%BC%28%EB%A7%88%EB%A7%88%EB%AC%B4%29.html">솔라</a></span>
     </li>
-    <li class="gb">
-      <span class="gb-t"><a href="https://www.yes24.com/product/goods/22490949" rel="nofollow noopener noreferrer" target="_blank">나의 상처는 돌 너의 상처는 꽃</a></span>
+    <li class="gb" data-r=" 3 ">
+      <a class="gb-c" href="https://www.yes24.com/product/goods/22490949" rel="nofollow noopener noreferrer" target="_blank" title="나의 상처는 돌 너의 상처는 꽃"><img src="https://image.yes24.com/goods/22490949/L" alt="나의 상처는 돌 너의 상처는 꽃 표지" loading="lazy" referrerpolicy="no-referrer"></a>
+      <a class="gb-t" href="https://www.yes24.com/product/goods/22490949" rel="nofollow noopener noreferrer" target="_blank">나의 상처는 돌 너의 상처는 꽃</a>
       <span class="gb-a">류시화</span>
       <span class="gb-w"><a href="https://favorbook.co.kr/share/%ED%9C%98%EC%9D%B8%28%EB%A7%88%EB%A7%88%EB%AC%B4%29.html">휘인</a></span>
     </li>
-    <li class="gb">
-      <span class="gb-t"><a href="https://www.yes24.com/product/goods/30387696" rel="nofollow noopener noreferrer" target="_blank">언어의 온도</a> <a class="gb-l" href="https://favorbook.co.kr/share/book/%EC%96%B8%EC%96%B4%EC%9D%98%20%EC%98%A8%EB%8F%84.html">읽은 사람 모두 보기</a></span>
+    <li class="gb" data-r=" 2 ">
+      <a class="gb-c" href="https://www.yes24.com/product/goods/30387696" rel="nofollow noopener noreferrer" target="_blank" title="언어의 온도"><img src="https://image.yes24.com/goods/30387696/L" alt="언어의 온도 표지" loading="lazy" referrerpolicy="no-referrer"></a>
+      <a class="gb-t" href="https://www.yes24.com/product/goods/30387696" rel="nofollow noopener noreferrer" target="_blank">언어의 온도</a>
       <span class="gb-a">이기주</span>
       <span class="gb-w"><a href="https://favorbook.co.kr/share/%ED%99%94%EC%82%AC%28%EB%A7%88%EB%A7%88%EB%AC%B4%29.html">화사</a></span>
+      <a class="gb-l" href="https://favorbook.co.kr/share/book/%EC%96%B8%EC%96%B4%EC%9D%98%20%EC%98%A8%EB%8F%84.html">읽은 사람 모두 보기</a>
     </li>
   </ul>
   <footer>
     <p>공개된 인터뷰·방송·SNS를 바탕으로 정리했어요. <a href="https://favorbook.co.kr/">다른 셀럽·아이돌이 읽은 책 보기 →</a></p>
   </footer>
+  <script>
+  (function () {
+    var chips = document.querySelectorAll(".gm"), cards = document.querySelectorAll(".gb"),
+        pick = document.getElementById("pick"), head = document.getElementById("books-h");
+    function show(m, name, url) {
+      var n = 0;
+      cards.forEach(function (c) {
+        var ok = m === "" || c.getAttribute("data-r").indexOf(" " + m + " ") > -1;
+        c.hidden = !ok; if (ok) n++;
+      });
+      chips.forEach(function (b) {
+        var on = b.getAttribute("data-m") === m;
+        b.classList.toggle("on", on); b.setAttribute("aria-pressed", on);
+      });
+      head.textContent = m === "" ? "멤버들이 읽은 책" : name + " · 읽은 책 " + n + "권";
+      if (m === "") { pick.className = "pick"; pick.textContent = ""; return; }
+      pick.className = "pick show";
+      pick.innerHTML = "";
+      var a = document.createElement("a"); a.href = url; a.textContent = name + " 페이지에서 출처와 코멘트 보기 →";
+      pick.appendChild(a);
+    }
+    chips.forEach(function (b) {
+      b.addEventListener("click", function () {
+        var m = b.getAttribute("data-m");
+        show(m, b.getAttribute("data-name"), b.getAttribute("data-url"));
+        try { history.replaceState(null, "", m === "" ? location.pathname : "#" + encodeURIComponent(b.getAttribute("data-name"))); } catch (e) {}
+      });
+    });
+    var h = decodeURIComponent(location.hash.slice(1));
+    if (h) chips.forEach(function (b) { if (b.getAttribute("data-name") === h) b.click(); });
+  })();
+  </script>
 </body>
 </html>

@@ -88,18 +88,28 @@
     .hero p { margin: 0; font-size: 15px; }
     .hero .gc { margin-top: 8px; font-size: 12px; font-weight: 700; opacity: .85; }
     h2 { font-size: 19px; margin: 32px 0 12px; padding-bottom: 4px; border-bottom: 2px solid #000; font-weight: 800; }
-    .members { list-style: none; padding: 0; margin: 0; display: grid; grid-template-columns: repeat(auto-fill, minmax(110px, 1fr)); gap: 12px; }
-    .gm a { display: block; color: #000; text-align: center; }
-    .gm a:hover { text-decoration: none; }
-    .gm img { width: 100%; aspect-ratio: 1/1; object-fit: cover; border: 2px solid #000; box-shadow: 2px 2px 0 0 #000; display: block; background: #f4f4f0; }
+    .members { list-style: none; padding: 0; margin: 0; display: grid; grid-template-columns: repeat(auto-fill, minmax(92px, 1fr)); gap: 10px; }
+    .gm { width: 100%; font: inherit; color: #000; text-align: center; cursor: pointer; background: #fff; border: 2px solid #000; box-shadow: 2px 2px 0 0 #000; padding: 6px 4px 8px; }
+    .gm:hover { transform: translate(-1px,-1px); box-shadow: 3px 3px 0 0 #000; }
+    .gm.on { box-shadow: none; transform: translate(2px,2px); background: #ffe58a; }
+    .gm img, .gm-all { width: 100%; aspect-ratio: 1/1; object-fit: cover; border: 2px solid #000; display: block; background: #f4f4f0; }
+    .gm-all { display: flex; align-items: center; justify-content: center; font-weight: 900; font-size: 20px; }
     .gm-n { display: block; font-weight: 800; font-size: 13px; margin-top: 6px; line-height: 1.25; }
-    .gm-c { display: block; font-size: 11px; color: #666; }
-    .books { padding: 0; margin: 0; }
-    .gb { background: #fff; border: 2px solid #000; box-shadow: 3px 3px 0 0 #000; padding: 10px 12px; margin-bottom: 10px; list-style: none; }
-    .gb-t { display: block; font-weight: 800; font-size: 15px; line-height: 1.3; }
-    .gb-l { font-size: 12px; font-weight: 600; margin-left: 6px; white-space: nowrap; }
-    .gb-a { display: block; font-size: 12px; color: #555; }
-    .gb-w { display: block; font-size: 12px; margin-top: 3px; }
+    .gm-c { display: block; font-size: 11px; opacity: .7; }
+    .pick { display: none; margin: 14px 0 0; font-size: 14px; font-weight: 700; }
+    .pick.show { display: block; }
+    .books { list-style: none; padding: 0; margin: 14px 0 0; display: grid; grid-template-columns: repeat(auto-fill, minmax(128px, 1fr)); gap: 18px 14px; }
+    .gb { list-style: none; min-width: 0; }
+    .gb[hidden] { display: none; }
+    .gb-c { display: block; aspect-ratio: 2/3; border: 2px solid #000; box-shadow: 3px 3px 0 0 #000; background: #f4f4f0; overflow: hidden; }
+    .gb-c:hover { transform: translate(-1px,-1px); box-shadow: 4px 4px 0 0 #000; }
+    .gb-c img { width: 100%; height: 100%; object-fit: cover; display: block; }
+    .gb-no { display: flex; height: 100%; align-items: center; justify-content: center; padding: 8px; text-align: center; font-weight: 800; font-size: 13px; color: #333; }
+    .gb-t { display: block; margin-top: 8px; font-weight: 800; font-size: 13px; line-height: 1.3; color: #111; }
+    .gb-a { display: block; font-size: 11px; color: #666; }
+    .gb-w { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 4px; }
+    .gb-w a { font-size: 11px; font-weight: 700; color: #000; background: #ffe58a; border: 1.5px solid #000; padding: 0 6px; border-radius: 99px; line-height: 1.6; }
+    .gb-l { display: inline-block; margin-top: 4px; font-size: 11px; font-weight: 600; }
     footer { margin-top: 40px; padding-top: 16px; border-top: 2px solid #000; font-size: 12px; color: #666; }
   </style>
 </head>
@@ -109,83 +119,106 @@
     <h1>뉴진스 멤버들이 읽은 책</h1>
     <p>뉴진스 멤버 3명이 읽거나 추천한 책 <strong>12권</strong>. 책마다 인터뷰·유튜브·SNS 출처를 확인할 수 있어요.</p>
       </div>
-  <h2>멤버</h2>
-  <ul class="members">
-    <li class="gm"><a href="https://favorbook.co.kr/share/%EB%8B%A4%EB%8B%88%EC%97%98%28%EB%89%B4%EC%A7%84%EC%8A%A4%29.html">
+  <h2>멤버별로 보기</h2>
+  <ul class="members" id="members">
+    <li><button type="button" class="gm on" data-m="" aria-pressed="true">
+      <span class="gm-all">전체</span>
+      <span class="gm-n">전체 보기</span>
+      <span class="gm-c">12권</span>
+    </button></li>
+    <li><button type="button" class="gm" data-m="0" data-name="다니엘" data-url="https://favorbook.co.kr/share/%EB%8B%A4%EB%8B%88%EC%97%98%28%EB%89%B4%EC%A7%84%EC%8A%A4%29.html" aria-pressed="false">
       <img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTcMCZqP_23GxwH4p9e1A8YdBDN2xg-gdRK5SU3htZ_jw&amp;s=10" alt="다니엘(뉴진스) 사진" loading="lazy" referrerpolicy="no-referrer">
       <span class="gm-n">다니엘</span>
       <span class="gm-c">2권</span>
-    </a></li>
-    <li class="gm"><a href="https://favorbook.co.kr/share/%EB%AF%BC%EC%A7%80%28%EB%89%B4%EC%A7%84%EC%8A%A4%29.html">
+    </button></li>
+    <li><button type="button" class="gm" data-m="1" data-name="민지" data-url="https://favorbook.co.kr/share/%EB%AF%BC%EC%A7%80%28%EB%89%B4%EC%A7%84%EC%8A%A4%29.html" aria-pressed="false">
       <img src="https://upload.wikimedia.org/wikipedia/commons/7/70/20230905_Minji_%28NewJeans%29.jpg" alt="민지(뉴진스) 사진" loading="lazy" referrerpolicy="no-referrer">
       <span class="gm-n">민지</span>
       <span class="gm-c">4권</span>
-    </a></li>
-    <li class="gm"><a href="https://favorbook.co.kr/share/%ED%95%98%EB%8B%88%28%EB%89%B4%EC%A7%84%EC%8A%A4%29.html">
+    </button></li>
+    <li><button type="button" class="gm" data-m="2" data-name="하니" data-url="https://favorbook.co.kr/share/%ED%95%98%EB%8B%88%28%EB%89%B4%EC%A7%84%EC%8A%A4%29.html" aria-pressed="false">
       <img src="https://upload.wikimedia.org/wikipedia/commons/2/24/Hanni_OLENS_2.jpg" alt="하니(뉴진스) 사진" loading="lazy" referrerpolicy="no-referrer">
       <span class="gm-n">하니</span>
       <span class="gm-c">6권</span>
-    </a></li>
+    </button></li>
   </ul>
-  <h2>멤버들이 읽은 책</h2>
-  <ul class="books">
-    <li class="gb">
-      <span class="gb-t"><a href="https://www.yes24.com/product/goods/102501741" rel="nofollow noopener noreferrer" target="_blank">Connections</a></span>
+  <p class="pick" id="pick"></p>
+  <h2 id="books-h">멤버들이 읽은 책</h2>
+  <ul class="books" id="books">
+    <li class="gb" data-r=" 2 ">
+      <a class="gb-c" href="https://www.yes24.com/product/goods/102501741" rel="nofollow noopener noreferrer" target="_blank" title="Connections"><img src="https://image.yes24.com/goods/102501741/L" alt="Connections 표지" loading="lazy" referrerpolicy="no-referrer"></a>
+      <a class="gb-t" href="https://www.yes24.com/product/goods/102501741" rel="nofollow noopener noreferrer" target="_blank">Connections</a>
       <span class="gb-a">Karl Deisseroth</span>
       <span class="gb-w"><a href="https://favorbook.co.kr/share/%ED%95%98%EB%8B%88%28%EB%89%B4%EC%A7%84%EC%8A%A4%29.html">하니</a></span>
     </li>
-    <li class="gb">
-      <span class="gb-t"><a href="https://www.yes24.com/product/goods/59070026" rel="nofollow noopener noreferrer" target="_blank">곰돌이 푸, 행복한 일은 매일 있어</a> <a class="gb-l" href="https://favorbook.co.kr/share/book/%EA%B3%B0%EB%8F%8C%EC%9D%B4%20%ED%91%B8%2C%20%ED%96%89%EB%B3%B5%ED%95%9C%20%EC%9D%BC%EC%9D%80%20%EB%A7%A4%EC%9D%BC%20%EC%9E%88%EC%96%B4.html">읽은 사람 모두 보기</a></span>
+    <li class="gb" data-r=" 1 ">
+      <a class="gb-c" href="https://www.yes24.com/product/goods/59070026" rel="nofollow noopener noreferrer" target="_blank" title="곰돌이 푸, 행복한 일은 매일 있어"><img src="https://image.yes24.com/goods/59070026/L" alt="곰돌이 푸, 행복한 일은 매일 있어 표지" loading="lazy" referrerpolicy="no-referrer"></a>
+      <a class="gb-t" href="https://www.yes24.com/product/goods/59070026" rel="nofollow noopener noreferrer" target="_blank">곰돌이 푸, 행복한 일은 매일 있어</a>
       <span class="gb-a">곰돌이 푸</span>
       <span class="gb-w"><a href="https://favorbook.co.kr/share/%EB%AF%BC%EC%A7%80%28%EB%89%B4%EC%A7%84%EC%8A%A4%29.html">민지</a></span>
+      <a class="gb-l" href="https://favorbook.co.kr/share/book/%EA%B3%B0%EB%8F%8C%EC%9D%B4%20%ED%91%B8%2C%20%ED%96%89%EB%B3%B5%ED%95%9C%20%EC%9D%BC%EC%9D%80%20%EB%A7%A4%EC%9D%BC%20%EC%9E%88%EC%96%B4.html">읽은 사람 모두 보기</a>
     </li>
-    <li class="gb">
-      <span class="gb-t"><a href="https://www.yes24.com/product/goods/147563743" rel="nofollow noopener noreferrer" target="_blank">궤도</a> <a class="gb-l" href="https://favorbook.co.kr/share/book/%EA%B6%A4%EB%8F%84.html">읽은 사람 모두 보기</a></span>
+    <li class="gb" data-r=" 2 ">
+      <a class="gb-c" href="https://www.yes24.com/product/goods/147563743" rel="nofollow noopener noreferrer" target="_blank" title="궤도"><img src="https://image.yes24.com/goods/147563743/L" alt="궤도 표지" loading="lazy" referrerpolicy="no-referrer"></a>
+      <a class="gb-t" href="https://www.yes24.com/product/goods/147563743" rel="nofollow noopener noreferrer" target="_blank">궤도</a>
       <span class="gb-a">서맨사 하비</span>
       <span class="gb-w"><a href="https://favorbook.co.kr/share/%ED%95%98%EB%8B%88%28%EB%89%B4%EC%A7%84%EC%8A%A4%29.html">하니</a></span>
+      <a class="gb-l" href="https://favorbook.co.kr/share/book/%EA%B6%A4%EB%8F%84.html">읽은 사람 모두 보기</a>
     </li>
-    <li class="gb">
-      <span class="gb-t"><a href="https://www.yes24.com/product/goods/23630397" rel="nofollow noopener noreferrer" target="_blank">라플라스의 마녀</a> <a class="gb-l" href="https://favorbook.co.kr/share/book/%EB%9D%BC%ED%94%8C%EB%9D%BC%EC%8A%A4%EC%9D%98%20%EB%A7%88%EB%85%80.html">읽은 사람 모두 보기</a></span>
+    <li class="gb" data-r=" 1 ">
+      <a class="gb-c" href="https://www.yes24.com/product/goods/23630397" rel="nofollow noopener noreferrer" target="_blank" title="라플라스의 마녀"><img src="https://image.yes24.com/goods/23630397/L" alt="라플라스의 마녀 표지" loading="lazy" referrerpolicy="no-referrer"></a>
+      <a class="gb-t" href="https://www.yes24.com/product/goods/23630397" rel="nofollow noopener noreferrer" target="_blank">라플라스의 마녀</a>
+      <span class="gb-a">히가시노 게이고</span>
+      <span class="gb-w"><a href="https://favorbook.co.kr/share/%EB%AF%BC%EC%A7%80%28%EB%89%B4%EC%A7%84%EC%8A%A4%29.html">민지</a></span>
+      <a class="gb-l" href="https://favorbook.co.kr/share/book/%EB%9D%BC%ED%94%8C%EB%9D%BC%EC%8A%A4%EC%9D%98%20%EB%A7%88%EB%85%80.html">읽은 사람 모두 보기</a>
+    </li>
+    <li class="gb" data-r=" 1 ">
+      <a class="gb-c" href="https://www.yes24.com/product/goods/68832866" rel="nofollow noopener noreferrer" target="_blank" title="마력의 태동"><img src="https://image.yes24.com/goods/68832866/L" alt="마력의 태동 표지" loading="lazy" referrerpolicy="no-referrer"></a>
+      <a class="gb-t" href="https://www.yes24.com/product/goods/68832866" rel="nofollow noopener noreferrer" target="_blank">마력의 태동</a>
       <span class="gb-a">히가시노 게이고</span>
       <span class="gb-w"><a href="https://favorbook.co.kr/share/%EB%AF%BC%EC%A7%80%28%EB%89%B4%EC%A7%84%EC%8A%A4%29.html">민지</a></span>
     </li>
-    <li class="gb">
-      <span class="gb-t"><a href="https://www.yes24.com/product/goods/68832866" rel="nofollow noopener noreferrer" target="_blank">마력의 태동</a></span>
-      <span class="gb-a">히가시노 게이고</span>
-      <span class="gb-w"><a href="https://favorbook.co.kr/share/%EB%AF%BC%EC%A7%80%28%EB%89%B4%EC%A7%84%EC%8A%A4%29.html">민지</a></span>
-    </li>
-    <li class="gb">
-      <span class="gb-t"><a href="https://www.yes24.com/product/goods/160468074" rel="nofollow noopener noreferrer" target="_blank">블루 시스터스</a></span>
+    <li class="gb" data-r=" 2 ">
+      <a class="gb-c" href="https://www.yes24.com/product/goods/160468074" rel="nofollow noopener noreferrer" target="_blank" title="블루 시스터스"><img src="https://image.yes24.com/goods/160468074/L" alt="블루 시스터스 표지" loading="lazy" referrerpolicy="no-referrer"></a>
+      <a class="gb-t" href="https://www.yes24.com/product/goods/160468074" rel="nofollow noopener noreferrer" target="_blank">블루 시스터스</a>
       <span class="gb-a">코코 멜러스</span>
       <span class="gb-w"><a href="https://favorbook.co.kr/share/%ED%95%98%EB%8B%88%28%EB%89%B4%EC%A7%84%EC%8A%A4%29.html">하니</a></span>
     </li>
-    <li class="gb">
-      <span class="gb-t"><a href="https://www.yes24.com/product/goods/134605179" rel="nofollow noopener noreferrer" target="_blank">사랑에 대해 내가 아는 모든 것</a> <a class="gb-l" href="https://favorbook.co.kr/share/book/%EC%82%AC%EB%9E%91%EC%97%90%20%EB%8C%80%ED%95%B4%20%EB%82%B4%EA%B0%80%20%EC%95%84%EB%8A%94%20%EB%AA%A8%EB%93%A0%20%EA%B2%83.html">읽은 사람 모두 보기</a></span>
+    <li class="gb" data-r=" 2 ">
+      <a class="gb-c" href="https://www.yes24.com/product/goods/134605179" rel="nofollow noopener noreferrer" target="_blank" title="사랑에 대해 내가 아는 모든 것"><img src="https://image.yes24.com/goods/134605179/L" alt="사랑에 대해 내가 아는 모든 것 표지" loading="lazy" referrerpolicy="no-referrer"></a>
+      <a class="gb-t" href="https://www.yes24.com/product/goods/134605179" rel="nofollow noopener noreferrer" target="_blank">사랑에 대해 내가 아는 모든 것</a>
       <span class="gb-a">돌리 앨더튼</span>
       <span class="gb-w"><a href="https://favorbook.co.kr/share/%ED%95%98%EB%8B%88%28%EB%89%B4%EC%A7%84%EC%8A%A4%29.html">하니</a></span>
+      <a class="gb-l" href="https://favorbook.co.kr/share/book/%EC%82%AC%EB%9E%91%EC%97%90%20%EB%8C%80%ED%95%B4%20%EB%82%B4%EA%B0%80%20%EC%95%84%EB%8A%94%20%EB%AA%A8%EB%93%A0%20%EA%B2%83.html">읽은 사람 모두 보기</a>
     </li>
-    <li class="gb">
-      <span class="gb-t"><a href="https://www.yes24.com/product/goods/63046466" rel="nofollow noopener noreferrer" target="_blank">샤넬 디자인</a></span>
+    <li class="gb" data-r=" 2 ">
+      <a class="gb-c" href="https://www.yes24.com/product/goods/63046466" rel="nofollow noopener noreferrer" target="_blank" title="샤넬 디자인"><img src="https://image.yes24.com/goods/63046466/L" alt="샤넬 디자인 표지" loading="lazy" referrerpolicy="no-referrer"></a>
+      <a class="gb-t" href="https://www.yes24.com/product/goods/63046466" rel="nofollow noopener noreferrer" target="_blank">샤넬 디자인</a>
       <span class="gb-a">엠마 박스터 라이터</span>
       <span class="gb-w"><a href="https://favorbook.co.kr/share/%ED%95%98%EB%8B%88%28%EB%89%B4%EC%A7%84%EC%8A%A4%29.html">하니</a></span>
     </li>
-    <li class="gb">
-      <span class="gb-t"><a href="https://www.yes24.com/product/goods/3029625" rel="nofollow noopener noreferrer" target="_blank">순수의 시대</a></span>
+    <li class="gb" data-r=" 1 ">
+      <a class="gb-c" href="https://www.yes24.com/product/goods/3029625" rel="nofollow noopener noreferrer" target="_blank" title="순수의 시대"><img src="https://image.yes24.com/goods/3029625/L" alt="순수의 시대 표지" loading="lazy" referrerpolicy="no-referrer"></a>
+      <a class="gb-t" href="https://www.yes24.com/product/goods/3029625" rel="nofollow noopener noreferrer" target="_blank">순수의 시대</a>
       <span class="gb-a">이디스 워튼</span>
       <span class="gb-w"><a href="https://favorbook.co.kr/share/%EB%AF%BC%EC%A7%80%28%EB%89%B4%EC%A7%84%EC%8A%A4%29.html">민지</a></span>
     </li>
-    <li class="gb">
-      <span class="gb-t"><a href="https://www.yes24.com/product/goods/95551579" rel="nofollow noopener noreferrer" target="_blank">신뢰 연습</a></span>
+    <li class="gb" data-r=" 0 ">
+      <a class="gb-c" href="https://www.yes24.com/product/goods/95551579" rel="nofollow noopener noreferrer" target="_blank" title="신뢰 연습"><img src="https://image.yes24.com/goods/95551579/L" alt="신뢰 연습 표지" loading="lazy" referrerpolicy="no-referrer"></a>
+      <a class="gb-t" href="https://www.yes24.com/product/goods/95551579" rel="nofollow noopener noreferrer" target="_blank">신뢰 연습</a>
       <span class="gb-a">수전 최</span>
       <span class="gb-w"><a href="https://favorbook.co.kr/share/%EB%8B%A4%EB%8B%88%EC%97%98%28%EB%89%B4%EC%A7%84%EC%8A%A4%29.html">다니엘</a></span>
     </li>
-    <li class="gb">
-      <span class="gb-t"><a href="https://www.yes24.com/product/goods/145066541" rel="nofollow noopener noreferrer" target="_blank">오렌지 The Orange</a> <a class="gb-l" href="https://favorbook.co.kr/share/book/%EC%98%A4%EB%A0%8C%EC%A7%80%20The%20Orange.html">읽은 사람 모두 보기</a></span>
+    <li class="gb" data-r=" 2 ">
+      <a class="gb-c" href="https://www.yes24.com/product/goods/145066541" rel="nofollow noopener noreferrer" target="_blank" title="오렌지 The Orange"><img src="https://image.yes24.com/goods/145066541/L" alt="오렌지 The Orange 표지" loading="lazy" referrerpolicy="no-referrer"></a>
+      <a class="gb-t" href="https://www.yes24.com/product/goods/145066541" rel="nofollow noopener noreferrer" target="_blank">오렌지 The Orange</a>
       <span class="gb-a">웬디 코프</span>
       <span class="gb-w"><a href="https://favorbook.co.kr/share/%ED%95%98%EB%8B%88%28%EB%89%B4%EC%A7%84%EC%8A%A4%29.html">하니</a></span>
+      <a class="gb-l" href="https://favorbook.co.kr/share/book/%EC%98%A4%EB%A0%8C%EC%A7%80%20The%20Orange.html">읽은 사람 모두 보기</a>
     </li>
-    <li class="gb">
-      <span class="gb-t"><a href="https://www.yes24.com/product/goods/83041929" rel="nofollow noopener noreferrer" target="_blank">클락 댄스</a></span>
+    <li class="gb" data-r=" 0 ">
+      <a class="gb-c" href="https://www.yes24.com/product/goods/83041929" rel="nofollow noopener noreferrer" target="_blank" title="클락 댄스"><img src="https://image.yes24.com/goods/83041929/L" alt="클락 댄스 표지" loading="lazy" referrerpolicy="no-referrer"></a>
+      <a class="gb-t" href="https://www.yes24.com/product/goods/83041929" rel="nofollow noopener noreferrer" target="_blank">클락 댄스</a>
       <span class="gb-a">앤 타일러</span>
       <span class="gb-w"><a href="https://favorbook.co.kr/share/%EB%8B%A4%EB%8B%88%EC%97%98%28%EB%89%B4%EC%A7%84%EC%8A%A4%29.html">다니엘</a></span>
     </li>
@@ -193,5 +226,37 @@
   <footer>
     <p>공개된 인터뷰·방송·SNS를 바탕으로 정리했어요. <a href="https://favorbook.co.kr/">다른 셀럽·아이돌이 읽은 책 보기 →</a></p>
   </footer>
+  <script>
+  (function () {
+    var chips = document.querySelectorAll(".gm"), cards = document.querySelectorAll(".gb"),
+        pick = document.getElementById("pick"), head = document.getElementById("books-h");
+    function show(m, name, url) {
+      var n = 0;
+      cards.forEach(function (c) {
+        var ok = m === "" || c.getAttribute("data-r").indexOf(" " + m + " ") > -1;
+        c.hidden = !ok; if (ok) n++;
+      });
+      chips.forEach(function (b) {
+        var on = b.getAttribute("data-m") === m;
+        b.classList.toggle("on", on); b.setAttribute("aria-pressed", on);
+      });
+      head.textContent = m === "" ? "멤버들이 읽은 책" : name + " · 읽은 책 " + n + "권";
+      if (m === "") { pick.className = "pick"; pick.textContent = ""; return; }
+      pick.className = "pick show";
+      pick.innerHTML = "";
+      var a = document.createElement("a"); a.href = url; a.textContent = name + " 페이지에서 출처와 코멘트 보기 →";
+      pick.appendChild(a);
+    }
+    chips.forEach(function (b) {
+      b.addEventListener("click", function () {
+        var m = b.getAttribute("data-m");
+        show(m, b.getAttribute("data-name"), b.getAttribute("data-url"));
+        try { history.replaceState(null, "", m === "" ? location.pathname : "#" + encodeURIComponent(b.getAttribute("data-name"))); } catch (e) {}
+      });
+    });
+    var h = decodeURIComponent(location.hash.slice(1));
+    if (h) chips.forEach(function (b) { if (b.getAttribute("data-name") === h) b.click(); });
+  })();
+  </script>
 </body>
 </html>
