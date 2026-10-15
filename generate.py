@@ -1152,6 +1152,24 @@ SHELF_CSS = (
     '                                 .sp-t { padding: 10px 2px; } }\n'
 )
 
+# 일본어·중국어 표기 — 본문에는 드러내지 않고 Person의 alternateName과 meta keywords에만 쓴다.
+# 실제 쓰이는 이름 표기만 data/names_ja_zh.json에 손으로 넣는다(없는 셀럽은 건너뜀).
+try:
+    with open('data/names_ja_zh.json', encoding='utf-8') as _f:
+        NAMES_JA_ZH = json.load(_f)
+except OSError:
+    NAMES_JA_ZH = {}
+
+def ja_zh_names(name):
+    e = NAMES_JA_ZH.get(name) or {}
+    out = []
+    for k in ('ja', 'zh-CN', 'zh-TW'):
+        for v in e.get(k, []):
+            if v and v not in out:
+                out.append(v)
+    return out
+
+
 def make_en_celeb_url(name_en):
     return BASE + 'en/share/' + safe_en_filename(name_en) + '.html'
 
@@ -2834,11 +2852,12 @@ for name, info in celebs.items():
 
     # meta keywords는 구글이 쓰지 않고, 수십 개를 반복하면 스팸처럼 보일 수 있다.
     # 서치콘솔에 실제로 들어오는 검색어 몇 개만 남긴다.
+    _alt = ja_zh_names(name)
     keyword_variants = ', '.join([
         esc(name) + ' 추천 책', esc(name) + ' 읽은 책', esc(name) + ' 책 추천',
         esc(name) + ' 인생책', esc(name) + ' 독서',
         '연예인 추천책', '최애의 독서',
-    ])
+    ] + [esc(a) for a in _alt])
 
     # 서치콘솔(12개월): '이름 책 (추천)'·'추천 책'이 대부분이고 '독서 기록'은 검색어에 없다.
     # 제목은 '추천 책 · 읽은 책 · 독서 기록'. 권수는 검색어에 안 쓰이고 책이 늘 때마다
@@ -2861,6 +2880,7 @@ for name, info in celebs.items():
             'name': name,
             'image': img,
             'description': name + '의 인생책과 추천 도서 ' + str(n_books) + '권 전체 목록',
+            'alternateName': _alt or None,
             'memberOf': ({'@type': 'MusicGroup' if is_idol(name) else 'Organization',
                           'name': _group['ko'], 'url': make_group_url(_group)}
                          if _group else None),
