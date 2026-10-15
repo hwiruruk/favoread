@@ -148,7 +148,7 @@ function setDirty(v) {
   const badge = $('#dirtyBadge');
   badge.classList.toggle('hidden', !v);
   if (v) badge.textContent = '미저장 변경';
-  window.onbeforeunload = v ? () => '저장되지 않은 변경이 있습니다.' : null;
+  window.onbeforeunload = (v || Cmt.dirty) ? () => '저장되지 않은 변경이 있습니다.' : null;
   updateDraftUi();
 }
 
@@ -1694,6 +1694,10 @@ async function reloadFromGithub({ ask = true } = {}) {
 
 /* 📝 드래프트 저장 — 사이트에는 안 나간다 */
 async function saveDraft({ quiet = false } = {}) {
+  // 책 등록 창에서 쓴 메모 등 저장 안 된 코멘트도 함께 저장한다 (data/comments.json)
+  if (Cmt.dirty && Cmt.loaded && Config.token) {
+    if (!(await saveComments({ auto: true }))) toast('코멘트·메모 저장에 실패했어요 — 💬 코멘트 검수 창에서 다시 저장하세요', 'err');
+  }
   if (!State.dirty) return true;
   if (!Config.token) { toast('GitHub Token을 먼저 설정하세요', 'err'); settingsDlg.showModal(); return false; }
   const draft = Config.draftBranch;
@@ -1723,7 +1727,7 @@ async function saveDraft({ quiet = false } = {}) {
     State.hasDraft = true;
     setDirty(false);
     setStatus(`드래프트 저장됨 · ${stamp()} · 사이트에는 아직 안 나감`);
-    if (Cmt.dirty) toast('도서만 저장됐어요. 코멘트·메모는 💬 코멘트 검수 창에서 따로 저장해야 합니다', 'err');
+    if (Cmt.dirty) toast('도서는 저장됐지만 코멘트·메모 저장에 실패했어요 — 💬 코멘트 검수 창에서 다시 저장하세요', 'err');
     else if (!quiet) toast('드래프트에 저장됨 — 🚀 발행을 눌러야 사이트에 반영됩니다', 'ok');
     return true;
   } catch (err) {
@@ -1920,7 +1924,7 @@ $('#pubList').addEventListener('click', (e) => {
 document.addEventListener('keydown', (e) => {
   if ((e.ctrlKey || e.metaKey) && !e.shiftKey && !e.altKey && e.key.toLowerCase() === 's') {
     e.preventDefault();
-    if (State.dirty) saveDraft();
+    if (State.dirty || Cmt.dirty) saveDraft();
   }
 });
 $('#sortBtn').addEventListener('click', () => {
@@ -2661,7 +2665,7 @@ $('#cmtList').addEventListener('keydown', (e) => {
   setCmtState(card.dataset.key, 'approved');
 });
 
-async function saveComments() {
+async function saveComments({ auto = false } = {}) {
   const comments = {};
   for (const [k, v] of Cmt.items) {
     // 💬 메모로 열기만 하고 아무것도 안 쓴 항목은 파일에 남기지 않는다
@@ -2682,9 +2686,10 @@ async function saveComments() {
   const content = JSON.stringify(payload, null, 2) + '\n';
 
   const n = cmtCounts();
-  const message = prompt('커밋 메시지',
-    `코멘트 검수 — 승인 ${n.approved} / 반려 ${n.rejected} / 미검수 ${n.pending}`);
-  if (!message) return;
+  const defMsg = `코멘트 검수 — 승인 ${n.approved} / 반려 ${n.rejected} / 미검수 ${n.pending}`;
+  // 드래프트 저장에 딸려 저장할 때는 묻지 않는다
+  const message = auto ? defMsg : prompt('커밋 메시지', defMsg);
+  if (!message) return false;
 
   const btn = $('#cmtSaveBtn');
   btn.disabled = true;
@@ -2698,10 +2703,12 @@ async function saveComments() {
     if (!State.dirty) window.onbeforeunload = null;
     setCmtStatus(sha ? `저장 완료 · sha ${sha.slice(0, 7)}` : '저장 완료');
     toast(`코멘트 저장됨 — 승인 ${n.approved}건`, 'ok');
+    return true;
   } catch (err) {
     setCmtStatus('');
     toast(err.message, 'err');
     btn.disabled = false;
+    return false;
   }
 }
 
