@@ -3743,7 +3743,7 @@ for _g in sorted(ko_groups.values(), key=lambda g: g['ko']):
         '    .members { list-style: none; padding: 0; margin: 0; display: grid; grid-template-columns: repeat(auto-fill, minmax(92px, 1fr)); gap: 10px; }\n'
         '    .gm { width: 100%; font: inherit; color: #000; text-align: center; cursor: pointer; background: #fff; border: 2px solid #000; box-shadow: 2px 2px 0 0 #000; padding: 6px 4px 8px; }\n'
         '    .gm:hover { transform: translate(-1px,-1px); box-shadow: 3px 3px 0 0 #000; }\n'
-        '    .gm.on { box-shadow: none; transform: translate(2px,2px); ' + GM_ON + ' }\n'
+        '    .gm.on { box-shadow: 2px 2px 0 0 #000; ' + GM_ON + ' }\n'
         '    .gm img, .gm-all { width: 100%; aspect-ratio: 1/1; object-fit: cover; border: 2px solid #000; display: block; background: #f4f4f0; }\n'
         '    .gm-all { display: flex; align-items: center; justify-content: center; font-weight: 900; font-size: 20px; }\n'
         '    .gm-n { display: block; font-weight: 800; font-size: 13px; margin-top: 6px; line-height: 1.25; }\n'
