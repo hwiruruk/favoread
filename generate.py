@@ -3011,7 +3011,7 @@ for name, info in celebs.items():
                 )
                 shared_html = (
                     '\n      <div class="rl-shared">'
-                    '<span class="rl-shared-label">👥 함께 추천한 셀럽 '
+                    '<span class="rl-shared-label">👥 이 책을 읽은 다른 셀럽 '
                     + str(len(other_celebs)) + '명:</span> '
                     + chips +
                     '</div>'
@@ -3120,7 +3120,7 @@ for name, info in celebs.items():
         related_section = (
             '  <section class="related-celebs">\n'
             '    <h2>🤝 책 취향이 겹치는 셀럽</h2>\n'
-            '    <p class="muted">같은 책을 함께 추천한 다른 셀럽이에요. 숫자는 공통 도서 권수.</p>\n'
+            '    <p class="muted">같은 책을 읽은 다른 셀럽이에요. 숫자는 공통 도서 권수.</p>\n'
             '    <div class="related-celeb-list">\n'
             + chips +
             '    </div>\n'
@@ -3339,7 +3339,7 @@ for name, info in celebs.items():
         '      </div>\n'
         '    </div>\n'
         + new_block(new_items)
-        + (('    <p class="muted">' + str(shared_count) + '권은 다른 셀럽도 함께 추천한 책이에요. 아래 목록에서 함께 추천한 셀럽 이름을 볼 수 있어요.</p>\n')
+        + (('    <p class="muted">' + str(shared_count) + '권은 다른 셀럽도 읽은 책이에요. 아래 목록에서 이 책을 읽은 셀럽 이름을 볼 수 있어요.</p>\n')
            if shared_count else '')
         + '    <div id="shelf-area" class="show-covers' + covers_collapsed_class(len(cover_tiles)) + '">\n'
         '    <div class="shelf" id="shelf">\n'
@@ -4753,7 +4753,7 @@ for name, info in celebs.items():
             src_html += (' <a class="rl-source" href="' + esc(b['source'])
                          + '" rel="nofollow noopener noreferrer" target="_blank">📺 Source</a>')
 
-        # 함께 추천한 다른 셀럽 — 한국어 페이지의 '👥 함께 추천한 셀럽'과 같은 자리
+        # 함께 추천한 다른 셀럽 — 한국어 페이지의 '👥 이 책을 읽은 다른 셀럽'과 같은 자리
         en_shared_html = ''
         _bt = b['title'].strip()
         if _bt in books_with_pages:
@@ -4762,7 +4762,7 @@ for name, info in celebs.items():
                 _en_bslug = (safe_en_filename(book_title_en[_bt])
                              if _bt in book_title_en else '')
                 en_shared_html = (
-                    '        <div class="rl-shared"><span class="rl-shared-label">👥 Also recommended by '
+                    '        <div class="rl-shared"><span class="rl-shared-label">👥 Also read by '
                     + str(len(_others)) + ':</span> '
                     + ''.join(en_celeb_link(c, 'rl-celeb-chip') for c in _others)
                     + ((' <a class="rl-book-link" href="' + EN_BASE + 'share/book/' + _en_bslug
