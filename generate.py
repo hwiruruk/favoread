@@ -5,6 +5,7 @@ BASE = "https://favorbook.co.kr/"
 # 사이트 대표 공유 카드 (tools/make_og.py 가 그린다). 셀럽 한 명이 아닌 페이지의 og:image.
 OG_SITE = BASE + 'og/_site.jpg'
 OG_SITE_EN = BASE + 'og/_site-en.jpg'
+NO_PHOTO = BASE + 'assets/no-photo.svg'
 
 # ── Google Analytics 4 (gtag.js) ─────────────────────────────────
 # 공개 페이지 <head> 최상단에 공통으로 삽입되는 측정 태그.
@@ -1445,7 +1446,7 @@ with open("data.csv", encoding="utf-8") as f:
 
         img_url = get(C['img'])
         if not img_url.startswith('http'):
-            img_url = OG_SITE
+            img_url = NO_PHOTO   # 사진이 없으면 사이트 공유 카드 대신 회색 이미지
 
         name_en   = clean_en(get(C['name_en']))   if C['name_en']   is not None else None
         title_en  = clean_en(get(C['title_en']))  if C['title_en']  is not None else None
