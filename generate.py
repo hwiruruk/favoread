@@ -4814,7 +4814,7 @@ for name, info in celebs.items():
 
     # 제목에 이름을 세 번 넣으면 구글이 키워드 반복으로 보고 제목을 갈아치운다.
     # 한 번만 쓰고, 검색어와 맞닿는 말(reading list · books)만 남긴다.
-    title_text = _name_pl + ' Books — Reading List Archive (' + str(n) + ')'
+    title_text = 'What Does ' + _name_pl + ' Read? Reading List & Books (' + str(n) + ')'
 
     # 설명도 이름 한 번. 대신 실제 책 제목 세 권을 넣는다 —
     # 구글이 meta description을 버리고 본문에서 목록을 긁어가던 자리를
@@ -5687,6 +5687,9 @@ for _role in sorted(en_role_members, key=lambda r: -len(en_role_members[r])):
 
     n_people, n_books = len(members), len(cbooks)
     c_title = 'What ' + hub_name + ' Read — Books & Reading List Archive'
+    if hub_name == 'K-Pop Idols':
+        # 'kpop idol read' 류 검색어: 하이픈 없는 표기와 동사 read를 제목에 같이 둔다.
+        c_title = 'What Do Kpop Idols Read? K-Pop Idol Reading List & Books'
     picks = [t for t, _ in ranked[:2]]
     c_desc = (str(n_people) + ' ' + hub_lower + ' and the ' + str(n_books)
               + ' books they have read or recommended'
@@ -5787,6 +5790,9 @@ for _role in sorted(en_role_members, key=lambda r: -len(en_role_members[r])):
         + ' books in all'
         + ((', ' + str(len(shared)) + ' of them read by more than one person') if shared else '')
         + '. Each entry links to the interview, YouTube video or SNS post it came from.</p>\n'
+        + (('    <p>Looking for a kpop idol reading list? This page collects what kpop idols read, '
+            'from BTS, SEVENTEEN, IVE and aespa members to solo singers, with the source '
+            'for every book.</p>\n') if hub_name == 'K-Pop Idols' else '')
         + ('    <p>These are Korean stars, so most of the books are Korean editions. '
            'Where an official English translation exists it is shown; otherwise the Korean '
            'title is kept next to a working translation so you can search for it directly.</p>\n')
@@ -6512,7 +6518,7 @@ en_index = (
     '<head>\n' + GA_TAG +
     '  <meta charset="UTF-8">\n'
     '  <meta name="viewport" content="width=device-width, initial-scale=1.0">\n'
-    '  <title>What K-pop Idols &amp; K-Drama Actors Read | Favorbook</title>\n'
+    '  <title>What Do Kpop Idols Read? K-pop Idol &amp; K-Drama Actor Book Lists | Favorbook</title>\n'
     '  <meta name="description" content="A searchable archive of what Korean stars read — K-pop idols (BTS, aespa, IVE, NewJeans), K-drama and K-movie actors, directors and musicians. Every book traced to its source.">\n'
     '  <meta name="keywords" content="korean celebrity books, korean actor books, k-drama actor books, k-movie actor books, what korean actors read, korean drama star reading list, kdrama books, korean actress books, korean film director books, korean star book recommendations, books from korea, kpop idol books, what bts reads, BTS reading list, RM book recommendations, IU books, what kpop idols read, kpop star reading, korean celebrity books, k-drama actor books, IVE books, NewJeans reading list, SEVENTEEN books, kpop idol favorite books, korean idol book recommendations, kpop reading list, books read by kpop idols, korean drama actor reading list, kdrama books, kpop fandom books, kpop star book archive, kpop star reading, kpop idol reading list, korean celebrity reading archive, what do kpop idols read, book archive, korean celebrity book archive, kpop idol book archive, kdrama actor book archive">\n'
     '  <meta name="referrer" content="no-referrer">\n'
