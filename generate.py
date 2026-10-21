@@ -26,19 +26,8 @@ TODAY = datetime.date.today().isoformat()
 # 변경된 파일 추적: path → True/False (이번 실행에서 내용이 바뀐 경우 True)
 changed_files = {}
 
-def add_theme_assets(path, content):
-    """모든 HTML 페이지 <head> 끝에 다크 모드 CSS/JS를 넣는다 (assets/theme.css, theme.js).
-    파일 위치마다 상대 경로가 달라서 깊이만큼 ../ 를 붙인다."""
-    if not path.endswith('.html') or 'assets/theme.js' in content or '</head>' not in content:
-        return content
-    up = '../' * path.replace('\\', '/').count('/')
-    tag = ('  <link rel="stylesheet" href="' + up + 'assets/theme.css">\n'
-           '  <script src="' + up + 'assets/theme.js"></script>\n')
-    return content.replace('</head>', tag + '</head>', 1)
-
 def write_if_changed(path, content):
     """기존 파일 내용과 동일하면 쓰지 않음. lastmod 정확도용."""
-    content = add_theme_assets(path, content)
     try:
         with open(path, 'r', encoding='utf-8') as f:
             if f.read() == content:
