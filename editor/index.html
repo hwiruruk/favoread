@@ -25,6 +25,7 @@
     <button id="sortBtn" class="btn" title="모든 셀럽의 추천 도서를 도서명·저자 가나다순으로 정렬">🔤 정렬</button>
     <button id="missingBtn" class="btn" title="영문 누락된 셀럽·책 목록 (TSV 복사 → AI 의뢰 → 일괄 적용)">📋 누락 영문</button>
     <button id="featuredBtn" class="btn" title="메인 상단에 고정 노출할 &apos;요즘 핫한 사람&apos; 한 줄 지정">🔥 핫한 사람</button>
+    <button id="pinnedBtn" class="btn" title="셀럽이 최근 추천한 책을 골라 메인에 고정 (책 표지 + 셀럽 사진)">📌 추천책 고정</button>
     <button id="titlesBtn" class="btn" title="원제·위키백과에서 찾은 공식 영문판 제목과 저자 영문 이름 후보를 검수 (승인한 값이 영문 페이지에 나감)">🔤 영문 제목·저자 검수</button>
     <button id="genresBtn" class="btn" title="도서관 분류로 소설·에세이 등을 정하지 못한 책을 직접 골라 줌 (독서 취향 통계에 쓰임)">🏷️ 분야 검수</button>
     <button id="unifyBtn" class="btn" title="같은 책인데 영문 제목이나 한국어 제목이 갈린 경우를 찾아 하나로 맞춤">📚 책 이름 통일</button>
@@ -309,6 +310,48 @@
     <span id="featuredStatus" class="status"></span>
     <button type="button" class="btn" data-close>닫기</button>
     <button type="button" id="featuredSaveBtn" class="btn primary">💾 GitHub에 저장</button>
+  </footer>
+</dialog>
+
+<!-- 메인 고정 "셀럽이 최근 추천한 책" 편집 -->
+<dialog id="pinnedDialog" class="modal" style="width: min(820px, 96vw);">
+  <header class="modal-head">
+    <h3>📌 메인에 고정할 셀럽 추천책</h3>
+    <button type="button" class="x" data-close>✕</button>
+  </header>
+
+  <div class="modal-body" style="max-height: calc(90vh - 130px);">
+    <p class="muted small">
+      셀럽과 그 셀럽의 책을 하나씩 골라 두면 <b>메인에 책 표지와 셀럽 사진이 함께 나오는 카드</b>로 고정됩니다.
+      최대 6개까지 넣을 수 있고, <b>하나도 고르지 않으면 메인에서 이 섹션이 보이지 않아요.</b>
+      <code>data/pinned_books.json</code>에 따로 저장되며 data.csv와 별개로 이 창의 저장 버튼으로 바로 커밋됩니다.
+    </p>
+
+    <label>섹션 제목
+      <input id="pinnedTitle" type="text" placeholder="📌 셀럽이 최근 추천한 책">
+    </label>
+    <label>섹션 설명 (한 줄, 비워도 됨)
+      <input id="pinnedSubtitle" type="text" placeholder="요즘 셀럽이 직접 추천한 책이에요.">
+    </label>
+
+    <h4 style="margin-top: 18px;">고정된 책 <span id="pinnedCount" class="muted small"></span></h4>
+    <ul id="pinnedItems" class="featured-picks"></ul>
+
+    <h4 style="margin-top: 18px;">책 추가</h4>
+    <div class="row">
+      <input id="pinnedSearch" type="search" placeholder="① 셀럽 이름으로 검색…">
+    </div>
+    <div id="pinnedCelebResults" class="featured-results"></div>
+    <div id="pinnedBookPicker" class="pinned-book-picker" hidden>
+      <h4 id="pinnedBookHead" style="margin: 12px 0 6px;"></h4>
+      <div id="pinnedBookResults" class="pinned-book-grid"></div>
+    </div>
+  </div>
+
+  <footer class="modal-foot">
+    <span id="pinnedStatus" class="status"></span>
+    <button type="button" class="btn" data-close>닫기</button>
+    <button type="button" id="pinnedSaveBtn" class="btn primary">💾 GitHub에 저장</button>
   </footer>
 </dialog>
 

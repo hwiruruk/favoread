@@ -26,8 +26,19 @@ TODAY = datetime.date.today().isoformat()
 # 변경된 파일 추적: path → True/False (이번 실행에서 내용이 바뀐 경우 True)
 changed_files = {}
 
+def add_theme_assets(path, content):
+    """모든 HTML 페이지 <head> 끝에 다크 모드 CSS/JS를 넣는다 (assets/theme.css, theme.js).
+    파일 위치마다 상대 경로가 달라서 깊이만큼 ../ 를 붙인다."""
+    if not path.endswith('.html') or 'assets/theme.js' in content or '</head>' not in content:
+        return content
+    up = '../' * path.replace('\\', '/').count('/')
+    tag = ('  <link rel="stylesheet" href="' + up + 'assets/theme.css">\n'
+           '  <script src="' + up + 'assets/theme.js"></script>\n')
+    return content.replace('</head>', tag + '</head>', 1)
+
 def write_if_changed(path, content):
     """기존 파일 내용과 동일하면 쓰지 않음. lastmod 정확도용."""
+    content = add_theme_assets(path, content)
     try:
         with open(path, 'r', encoding='utf-8') as f:
             if f.read() == content:
@@ -2410,6 +2421,88 @@ def _inject_featured(html_text, title, subtitle, picks):
 featured_title, featured_subtitle, featured_picks = load_featured(celebs)
 idx_html = _inject_featured(idx_html, featured_title, featured_subtitle, featured_picks)
 
+# ── 3.6b. 메인 고정 "셀럽이 최근 추천한 책" ─────────────────────────
+# data/pinned_books.json 에 편집기에서 직접 고른 (셀럽, 책) 짝을 메인에 노출한다.
+# 카드(표지+셀럽 사진)는 index.html의 JS가 그리고, 여기서는 크롤러용 정적 링크만 넣는다.
+# 고른 게 없으면 섹션과 스크롤 탭이 숨겨진 채로 둔다.
+
+PINNED_PATH = os.path.join('data', 'pinned_books.json')
+
+
+def load_pinned(celebs_by_name):
+    """pinned_books.json을 읽어 (title, subtitle, items) 반환. 없으면 items=[]"""
+    if not os.path.exists(PINNED_PATH):
+        return '', '', []
+    try:
+        with open(PINNED_PATH, encoding='utf-8') as fp:
+            raw = json.load(fp)
+    except (json.JSONDecodeError, OSError) as e:
+        print(f"⚠️ {PINNED_PATH} 읽기 실패 — 추천책 섹션을 건너뜁니다: {e}")
+        return '', '', []
+
+    items = []
+    for it in (raw.get('items') or []):
+        if not isinstance(it, dict):
+            continue
+        name = (it.get('celeb') or '').strip()
+        title = (it.get('book') or '').strip()
+        if not name or not title:
+            continue
+        c = celebs_by_name.get(name)
+        if not c:
+            print(f"⚠️ 추천책 고정의 '{name}' 은(는) 데이터에 없는 이름이라 건너뜁니다")
+            continue
+        book = next((b for b in c['books'] if b['title'] == title), None)
+        if not book:
+            print(f"⚠️ 추천책 고정의 '{name}' 에게 '{title}' 책이 없어 건너뜁니다")
+            continue
+        if any(x['celeb'] == name and x['book'] == title for x in items):
+            continue
+        items.append({
+            'celeb': name,
+            'book':  title,
+            'author': book.get('author', ''),
+            'badge': (it.get('badge') or '').strip(),
+            'note':  (it.get('note') or '').strip(),
+        })
+    return (raw.get('title') or '').strip(), (raw.get('subtitle') or '').strip(), items[:6]
+
+
+def _inject_pinned(html_text, title, subtitle, items):
+    cards = []
+    for it in items:
+        href = 'share/' + quote(safe_filename(it['celeb']), safe='') + '.html'
+        cards.append(
+            '      <a href="' + href + '" class="pinned-card flex flex-col border-2 border-ink '
+            'bg-white shadow-neo p-4 no-underline text-ink">\n'
+            '        <span class="font-black text-base">' + esc(it['book']) + '</span>\n'
+            '        <span class="text-xs text-muted mt-1">' + esc(it['celeb']) + '의 추천'
+            + ((' · ' + esc(it['author'])) if it['author'] else '') + '</span>\n'
+            '      </a>'
+        )
+    inner = '\n'.join(cards)
+
+    sec_cls = 'w-full' if items else 'w-full hidden'
+    html_text = re.sub(r'<section id="pinned" class="[^"]*">',
+                       lambda m: '<section id="pinned" class="' + sec_cls + '">', html_text, count=1)
+    tab_cls = 'spy-tab spy-tab-pinned' if items else 'spy-tab spy-tab-pinned hidden'
+    html_text = re.sub(r'(<a href="#pinned" data-spy="pinned" class=")[^"]*(">)',
+                       lambda m: m.group(1) + tab_cls + m.group(2), html_text)
+    if title:
+        html_text = re.sub(r'(<h2 id="pinned-title"[^>]*>).*?(</h2>)',
+                           lambda m: m.group(1) + esc(title) + m.group(2),
+                           html_text, count=1, flags=re.DOTALL)
+    html_text = re.sub(r'(<p id="pinned-subtitle"[^>]*>).*?(</p>)',
+                       lambda m: m.group(1) + esc(subtitle) + m.group(2),
+                       html_text, count=1, flags=re.DOTALL)
+    return re.sub(r'(<div id="pinned-container"[^>]*>).*?(</div>\s*</section>)',
+                  lambda m: m.group(1) + ('\n' + inner + '\n    ' if inner else '') + m.group(2),
+                  html_text, count=1, flags=re.DOTALL)
+
+
+pinned_title, pinned_subtitle, pinned_items = load_pinned(celebs)
+idx_html = _inject_pinned(idx_html, pinned_title, pinned_subtitle, pinned_items)
+
 idx_html = _inject_updates_banner(idx_html, update_entries)
 
 # 그룹으로 찾기 — 한국어 메인. 그룹 공식 색으로 박스를 칠한다.
@@ -2449,6 +2542,11 @@ if featured_picks:
           + ', '.join(p['name'] for p in featured_picks))
 else:
     print("ℹ️ 메인 고정 인물 없음 (data/featured.json) — 섹션 숨김")
+if pinned_items:
+    print("✅ 메인 고정 추천책 " + str(len(pinned_items)) + "권: "
+          + ', '.join(i['celeb'] + '·' + i['book'] for i in pinned_items))
+else:
+    print("ℹ️ 메인 고정 추천책 없음 (data/pinned_books.json) — 섹션 숨김")
 print(f"✅ index.html 정적 목록 갱신: {len(sorted_names)}명")
 print(f"✅ updates.html 생성 ({len(update_entries)} 항목)")
 

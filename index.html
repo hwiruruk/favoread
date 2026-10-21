@@ -319,11 +319,13 @@
 
     /* 모바일 sticky 탭이 anchor jump 시 가리지 않도록 scroll-margin-top */
     @media (max-width: 767px) {
-      #hero, #about, #search, #featured, #grid, #seo-top-readers, #common-books, #all-celebs, #join {
+      #hero, #about, #search, #featured, #pinned, #grid, #seo-top-readers, #common-books, #all-celebs, #join {
         scroll-margin-top: 60px;
       }
     }
   </style>
+  <link rel="stylesheet" href="assets/theme.css">
+  <script src="assets/theme.js"></script>
 </head>
 
 <body class="font-serif relative selection:bg-neo-yellow selection:text-ink">
@@ -379,6 +381,7 @@
   <a href="#about" data-spy="about" class="spy-tab">소개</a>
   <a href="#search" data-spy="search" class="spy-tab">검색</a>
   <a href="#featured" data-spy="featured" class="spy-tab spy-tab-featured">핫</a>
+  <a href="#pinned" data-spy="pinned" class="spy-tab spy-tab-pinned hidden">추천</a>
   <a href="#grid" data-spy="grid" class="spy-tab">셀럽</a>
   <a href="#seo-top-readers" data-spy="seo-top-readers" class="spy-tab">TOP</a>
   <a href="#common-books" data-spy="common-books" class="spy-tab">책</a>
@@ -393,6 +396,7 @@
     <a href="#about" data-spy="about" class="spy-tab">소개</a>
     <a href="#search" data-spy="search" class="spy-tab">검색</a>
     <a href="#featured" data-spy="featured" class="spy-tab spy-tab-featured">핫</a>
+    <a href="#pinned" data-spy="pinned" class="spy-tab spy-tab-pinned hidden">추천</a>
     <a href="#grid" data-spy="grid" class="spy-tab">셀럽</a>
     <a href="#seo-top-readers" data-spy="seo-top-readers" class="spy-tab">TOP</a>
     <a href="#common-books" data-spy="common-books" class="spy-tab">책</a>
@@ -500,6 +504,19 @@
     </div>
   </section>
   <!-- featured:end -->
+
+  <!-- pinned:start (data/pinned_books.json → generate.py가 정적 주입, JS가 책+셀럽 카드로 교체. 비어 있으면 숨김) -->
+  <section id="pinned" class="w-full hidden">
+    <div class="flex items-end justify-between gap-3 mb-4 md:mb-6">
+      <div>
+        <h2 id="pinned-title" class="text-2xl md:text-3xl font-black word-break-keep">📌 셀럽이 최근 추천한 책</h2>
+        <p id="pinned-subtitle" class="text-sm md:text-base font-bold text-muted word-break-keep mt-1"></p>
+      </div>
+      <span class="hidden sm:inline-block font-sans font-bold text-[10px] tracking-widest uppercase border-2 border-ink bg-neo-yellow shadow-neo-sm px-3 py-1 whitespace-nowrap">PINNED</span>
+    </div>
+    <div id="pinned-container" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 md:gap-4"></div>
+  </section>
+  <!-- pinned:end -->
 
   <!-- 책 제목으로 검색하면 그 책과 읽은 셀럽을 먼저 보여준다 -->
   <section id="book-hits" class="hidden w-full">
@@ -1421,6 +1438,7 @@
   /* ── CONFIG ─────────────────────────────────────────────── */
   const DATA_URL  = 'data.json';
   const FEATURED_URL = 'data/featured.json';
+  const PINNED_URL   = 'data/pinned_books.json';
   const WIKI_API  = 'https://ko.wikipedia.org/w/api.php';
   const BASE_PATH = window.location.pathname;
   // 카드의 href는 정적 셀럽 페이지(/share/*.html)로 둔다. 클릭은 모달이 가로채고,
@@ -1440,6 +1458,7 @@
   let celebMap = {};
   let entries  = [];
   let featured = null;   // data/featured.json (없으면 null)
+  let pinned   = null;   // data/pinned_books.json (없으면 null)
   let modal    = { open: false, name: '', books: [], idx: 0, view: 'slide' };
   
   let filteredEntries = [];
@@ -1493,6 +1512,10 @@
     featuredWrap:     document.getElementById('featured-container'),
     featuredTitle:    document.getElementById('featured-title'),
     featuredSubtitle: document.getElementById('featured-subtitle'),
+    pinnedSection:    document.getElementById('pinned'),
+    pinnedWrap:       document.getElementById('pinned-container'),
+    pinnedTitle:      document.getElementById('pinned-title'),
+    pinnedSubtitle:   document.getElementById('pinned-subtitle'),
     topReaders: document.getElementById('top-readers-container'),
     commonBooks: document.getElementById('common-books-container'),
     allCelebs: document.getElementById('all-celebs-container'),
@@ -1623,6 +1646,17 @@
       if (!r.ok) return null;
       const j = await r.json();
       if (!j || !Array.isArray(j.picks)) return null;
+      return j;
+    } catch { return null; }
+  }
+
+  /* data/pinned_books.json — '셀럽이 최근 추천한 책' 고정 목록. featured와 같은 이유로 실패하면 null. */
+  async function loadPinned() {
+    try {
+      const r = await fetch(PINNED_URL, { cache: 'no-cache' });
+      if (!r.ok) return null;
+      const j = await r.json();
+      if (!j || !Array.isArray(j.items)) return null;
       return j;
     } catch { return null; }
   }
@@ -1844,7 +1878,7 @@
      검색창과 결과 사이에 '요즘 핫한 사람'이 끼어 있어서
      이름을 쳐도 결과를 보려면 한참 스크롤해야 했다. 검색 중에는 그 사이 칸과
      아래쪽 둘러보기 칸을 접어 결과가 검색창 바로 밑에 오게 한다. */
-  const SEARCH_HIDDEN = ['featured', 'grid-head', 'join',
+  const SEARCH_HIDDEN = ['featured', 'pinned', 'grid-head', 'join',
                          'seo-top-readers', 'common-books', 'all-celebs'];
 
   function setSearchMode(on, { bookCount = 0, celebCount = 0, hideGrid = false } = {}) {
@@ -2291,6 +2325,71 @@
     tabs.forEach(t => t.classList.remove('hidden'));
   }
 
+  /* 에디터에서 직접 고른 '셀럽이 최근 추천한 책'. 책 표지 + 셀럽 사진을 한 카드에 겹쳐 보여준다.
+   * 고른 게 없거나 (셀럽, 책) 짝이 데이터에 없으면 그 칸은 빠지고, 하나도 안 남으면 섹션과 탭을 숨긴다. */
+  function renderPinned() {
+    const tabs = document.querySelectorAll('.spy-tab-pinned');
+    const hide = () => {
+      if (D.pinnedSection) D.pinnedSection.classList.add('hidden');
+      tabs.forEach(t => t.classList.add('hidden'));
+    };
+    if (!D.pinnedSection || !D.pinnedWrap) return;
+    if (!pinned) return hide();
+
+    const norm = (t) => String(t || '').replace(/\s+/g, '').toLowerCase();
+    const items = [];
+    for (const raw of pinned.items) {
+      const it = raw || {};
+      const data = celebMap[it.celeb];
+      if (!data) continue;
+      const book = data.books.find(b => b.title === it.book) || data.books.find(b => norm(b.title) === norm(it.book));
+      if (!book) continue;
+      items.push({ name: it.celeb, data, book, badge: it.badge || '', note: it.note || '' });
+      if (items.length >= 6) break;
+    }
+    if (!items.length) return hide();
+
+    if (pinned.title) D.pinnedTitle.textContent = pinned.title;
+    D.pinnedSubtitle.textContent = pinned.subtitle || '';
+    D.pinnedSubtitle.classList.toggle('hidden', !pinned.subtitle);
+
+    D.pinnedWrap.innerHTML = '';
+    items.forEach(({ name, data, book, badge, note }) => {
+      const card = document.createElement('a');
+      card.href = celebShareUrl(name);
+      card.dataset.name = name;
+      card.className = 'pinned-card group flex gap-4 border-2 border-ink bg-white shadow-neo hover:shadow-neo-lg hover:-translate-y-1 transition-all p-4 cursor-pointer no-underline text-ink';
+
+      const cover = book.coverUrl
+        ? `<img src="${escHtml(book.coverUrl)}" alt="${escHtml(book.title)} 표지" loading="lazy" referrerpolicy="no-referrer" class="w-full h-full object-cover">`
+        : `<div class="w-full h-full flex items-center justify-center p-2 text-center font-black text-xs bg-neo-yellow">${escHtml(book.title)}</div>`;
+      const face = data.imageUrl
+        ? `<img src="${escHtml(data.imageUrl)}" alt="${escHtml(name)}" loading="lazy" referrerpolicy="no-referrer" class="w-full h-full object-cover">`
+        : `<div class="w-full h-full flex items-center justify-center font-sans font-bold text-[8px] text-muted">PHOTO</div>`;
+      const badgeHtml = badge
+        ? `<span class="inline-block font-sans font-bold text-[9px] tracking-widest uppercase border-2 border-ink bg-neo-pink px-1.5 py-0.5 shadow-neo-sm mb-2">${escHtml(badge)}</span>`
+        : '';
+
+      card.innerHTML = `
+        <div class="pinned-art relative flex-shrink-0 w-[104px] md:w-[116px] pb-5 pr-5">
+          <div class="aspect-[2/3] border-2 border-ink bg-paper-dark shadow-neo-sm overflow-hidden">${cover}</div>
+          <div class="pinned-face absolute right-0 bottom-0 w-14 h-14 rounded-full border-2 border-ink bg-paper-dark overflow-hidden shadow-neo-sm">${face}</div>
+        </div>
+        <div class="min-w-0 flex-1 flex flex-col justify-center">
+          ${badgeHtml}
+          <p class="font-sans font-bold text-[10px] tracking-widest text-muted mb-1 truncate">${escHtml(name)}의 추천</p>
+          <p class="font-black text-base leading-snug word-break-keep line-clamp-2">${escHtml(book.title)}</p>
+          <p class="text-xs text-muted mt-1 truncate">${escHtml(book.author || '')}</p>
+          ${note ? `<p class="text-xs font-bold mt-2 word-break-keep line-clamp-3 border-l-4 border-ink pl-2">${escHtml(note)}</p>` : ''}
+        </div>`;
+
+      D.pinnedWrap.appendChild(card);
+    });
+
+    D.pinnedSection.classList.remove('hidden');
+    tabs.forEach(t => t.classList.remove('hidden'));
+  }
+
   // '여러 명이 읽은 책' 더보기 — 누를 때마다 20권씩 더 펼친다
   function setupCommonBooksMore(total) {
     const box = D.commonBooks;
@@ -2318,6 +2417,7 @@
 
   function renderDynamicSections() {
     renderFeatured();
+    renderPinned();
 
     // 1. 내 최애가 읽은 책 (18명으로 3줄)
     const topCelebs = [...entries]
@@ -2424,9 +2524,10 @@
     setStatus('loading', 'Loading data...');
 
     try {
-      const [celebData, featuredData] = await Promise.all([loadData(), loadFeatured()]);
+      const [celebData, featuredData, pinnedData] = await Promise.all([loadData(), loadFeatured(), loadPinned()]);
       celebMap = celebData;
       featured = featuredData;
+      pinned   = pinnedData;
       entries  = Object.entries(celebMap).sort(() => Math.random() - .5);
       filterEntries(); 
       // 책은 제목의 공백·대소문자를 무시하고 중복 없이 센다
@@ -2644,7 +2745,7 @@
 <script>
 // Scroll-spy: 현재 보이는 섹션의 탭에 .active 부여
 (function() {
-  const ids = ['hero', 'about', 'search', 'featured', 'grid', 'seo-top-readers', 'common-books', 'all-celebs', 'join'];
+  const ids = ['hero', 'about', 'search', 'featured', 'pinned', 'grid', 'seo-top-readers', 'common-books', 'all-celebs', 'join'];
   const sections = ids.map(id => document.getElementById(id)).filter(Boolean);
   const tabs = document.querySelectorAll('.spy-tab');
   if (!sections.length || !tabs.length) return;
