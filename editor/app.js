@@ -2279,6 +2279,200 @@ $('#featuredBtn').addEventListener('click', openFeaturedDialog);
 $('#featuredSaveBtn').addEventListener('click', saveFeatured);
 $('#featuredSearch').addEventListener('input', (e) => renderFeaturedResults(e.target.value));
 
+/* -------------------- Pinned ("셀럽이 최근 추천한 책") --------------------
+ * 메인에 책 표지 + 셀럽 사진 카드로 고정할 (셀럽, 책) 짝 목록.
+ * featured.json과 같은 이유로 data.csv와 섞지 않고 data/pinned_books.json 에 따로 저장한다.
+ * 하나도 고르지 않으면 메인에서 섹션이 통째로 숨겨진다. */
+const PINNED_PATH = 'data/pinned_books.json';
+const PINNED_MAX  = 6;
+
+const pinnedDlg = $('#pinnedDialog');
+let _pinned = { title: '', subtitle: '', items: [], sha: null, loaded: false, celeb: '' };
+
+function setPinnedStatus(msg) { $('#pinnedStatus').textContent = msg || ''; }
+
+async function openPinnedDialog() {
+  if (!Config.token) { toast('GitHub Token을 먼저 설정하세요', 'err'); settingsDlg.showModal(); return; }
+  if (!State.celebs.size) { toast('먼저 ↻ 불러오기로 CSV를 가져오세요', 'err'); return; }
+
+  if (!_pinned.loaded) {
+    setPinnedStatus('불러오는 중…');
+    pinnedDlg.showModal();
+    try {
+      const { content, sha } = await Gh.getFile(PINNED_PATH, { allowMissing: true });
+      if (content) {
+        const j = JSON.parse(content);
+        _pinned.title    = j.title || '';
+        _pinned.subtitle = j.subtitle || '';
+        _pinned.items    = (j.items || []).map(x => ({
+          celeb: x.celeb || '', book: x.book || '', badge: x.badge || '', note: x.note || '',
+        })).filter(x => x.celeb && x.book);
+      }
+      _pinned.sha = sha;
+      _pinned.loaded = true;
+      setPinnedStatus(sha ? `sha ${sha.slice(0, 7)}` : '새 파일로 생성됩니다');
+    } catch (err) {
+      setPinnedStatus('');
+      toast('추천책 고정 목록 불러오기 실패: ' + err.message, 'err');
+      return;
+    }
+  } else {
+    pinnedDlg.showModal();
+  }
+
+  $('#pinnedTitle').value    = _pinned.title;
+  $('#pinnedSubtitle').value = _pinned.subtitle;
+  $('#pinnedSearch').value   = '';
+  _pinned.celeb = '';
+  $('#pinnedBookPicker').hidden = true;
+  renderPinnedItems();
+  renderPinnedCelebResults('');
+}
+
+function renderPinnedItems() {
+  const ul = $('#pinnedItems');
+  $('#pinnedCount').textContent = `${_pinned.items.length}권 / 최대 ${PINNED_MAX}권`;
+
+  if (!_pinned.items.length) {
+    ul.innerHTML = '<li class="muted small">아직 고정한 책이 없습니다. 아래에서 셀럽을 찾아 책을 고르세요. ' +
+                   '비워두면 메인에서 섹션 전체가 숨겨집니다.</li>';
+    return;
+  }
+
+  ul.innerHTML = _pinned.items.map((it, i) => {
+    const c = State.celebs.get(it.celeb);
+    const b = c?.books.find(x => x.title === it.book);
+    const missing = (c && b) ? '' : ' <span class="badge">데이터에 없음</span>';
+    return `
+      <li class="featured-pick" data-i="${i}">
+        <span class="featured-pick-rank">${i + 1}</span>
+        <span class="pinned-item-art">
+          <img class="pinned-item-cover" src="${esc(b?.cover || '')}" alt="" referrerpolicy="no-referrer">
+          <img class="pinned-item-face" src="${esc(c?.img || '')}" alt="" referrerpolicy="no-referrer">
+        </span>
+        <span class="featured-pick-name">${esc(it.book)}${missing}
+          <span class="muted small">${esc(it.celeb)}</span>
+        </span>
+        <input class="featured-pick-badge" type="text" maxlength="8"
+               placeholder="뱃지" value="${esc(it.badge)}" data-pbadge="${i}">
+        <input class="pinned-item-note" type="text" maxlength="80"
+               placeholder="한 줄 코멘트 (선택)" value="${esc(it.note)}" data-pnote="${i}">
+        <button type="button" class="btn small" data-pup="${i}" ${i === 0 ? 'disabled' : ''}>↑</button>
+        <button type="button" class="btn small" data-pdown="${i}" ${i === _pinned.items.length - 1 ? 'disabled' : ''}>↓</button>
+        <button type="button" class="btn small danger" data-pdel="${i}">삭제</button>
+      </li>`;
+  }).join('');
+
+  ul.querySelectorAll('[data-pup]').forEach(b => b.addEventListener('click', () => {
+    const i = +b.dataset.pup;
+    [_pinned.items[i - 1], _pinned.items[i]] = [_pinned.items[i], _pinned.items[i - 1]];
+    renderPinnedItems();
+  }));
+  ul.querySelectorAll('[data-pdown]').forEach(b => b.addEventListener('click', () => {
+    const i = +b.dataset.pdown;
+    [_pinned.items[i + 1], _pinned.items[i]] = [_pinned.items[i], _pinned.items[i + 1]];
+    renderPinnedItems();
+  }));
+  ul.querySelectorAll('[data-pdel]').forEach(b => b.addEventListener('click', () => {
+    _pinned.items.splice(+b.dataset.pdel, 1);
+    renderPinnedItems();
+    if (_pinned.celeb) renderPinnedBooks(_pinned.celeb);
+  }));
+  ul.querySelectorAll('[data-pbadge]').forEach(inp => inp.addEventListener('input', () => {
+    _pinned.items[+inp.dataset.pbadge].badge = inp.value.trim();
+  }));
+  ul.querySelectorAll('[data-pnote]').forEach(inp => inp.addEventListener('input', () => {
+    _pinned.items[+inp.dataset.pnote].note = inp.value.trim();
+  }));
+}
+
+function renderPinnedCelebResults(query) {
+  const box = $('#pinnedCelebResults');
+  const q = (query || '').trim().toLowerCase();
+  const hits = State.order
+    .filter(n => State.celebs.get(n).books.length)
+    .filter(n => !q || n.toLowerCase().includes(q)
+              || (State.celebs.get(n)?.name_en || '').toLowerCase().includes(q))
+    .slice(0, 40);
+
+  if (!hits.length) {
+    box.innerHTML = '<p class="muted small">검색 결과가 없습니다.</p>';
+    return;
+  }
+  box.innerHTML = hits.map(n => `<button type="button" class="featured-add" data-pceleb="${esc(n)}">
+      ${esc(n)} <span class="muted small">${State.celebs.get(n).books.length}권</span>
+    </button>`).join('');
+  box.querySelectorAll('[data-pceleb]').forEach(b => b.addEventListener('click', () => {
+    _pinned.celeb = b.dataset.pceleb;
+    renderPinnedBooks(_pinned.celeb);
+  }));
+}
+
+function renderPinnedBooks(name) {
+  const c = State.celebs.get(name);
+  const wrap = $('#pinnedBookPicker');
+  if (!c) { wrap.hidden = true; return; }
+  wrap.hidden = false;
+  $('#pinnedBookHead').textContent = `② ${name}의 책 — 고정할 책을 누르세요`;
+
+  const taken = new Set(_pinned.items.filter(x => x.celeb === name).map(x => x.book));
+  $('#pinnedBookResults').innerHTML = c.books.map((b, i) => `
+    <button type="button" class="pinned-book-add" data-pbook="${i}" ${taken.has(b.title) ? 'disabled' : ''}>
+      <img src="${esc(b.cover || '')}" alt="" loading="lazy" referrerpolicy="no-referrer">
+      <span>${esc(b.title)}</span>
+    </button>`).join('');
+
+  $('#pinnedBookResults').querySelectorAll('[data-pbook]').forEach(btn => btn.addEventListener('click', () => {
+    if (_pinned.items.length >= PINNED_MAX) {
+      toast(`최대 ${PINNED_MAX}권까지만 고정할 수 있습니다`, 'err');
+      return;
+    }
+    const b = c.books[+btn.dataset.pbook];
+    _pinned.items.push({ celeb: name, book: b.title, badge: '', note: '' });
+    renderPinnedItems();
+    renderPinnedBooks(name);
+  }));
+}
+
+async function savePinned() {
+  _pinned.title    = $('#pinnedTitle').value.trim();
+  _pinned.subtitle = $('#pinnedSubtitle').value.trim();
+
+  const unknown = _pinned.items.filter(x => !State.celebs.get(x.celeb)?.books.some(b => b.title === x.book));
+  if (unknown.length && !confirm(
+    `다음 책은 현재 데이터에 없어 메인에서 그냥 빠집니다:\n${unknown.map(x => `${x.celeb} — ${x.book}`).join('\n')}\n\n그래도 저장할까요?`
+  )) return;
+
+  const payload = {
+    title:    _pinned.title,
+    subtitle: _pinned.subtitle,
+    items:    _pinned.items.map(x => ({ celeb: x.celeb, book: x.book, badge: x.badge || '', note: x.note || '' })),
+  };
+  const content = JSON.stringify(payload, null, 2) + '\n';
+  const message = prompt('커밋 메시지',
+    `메인 고정 추천책 ${payload.items.length}권 업데이트 (${new Date().toISOString().slice(0, 16).replace('T', ' ')})`);
+  if (!message) return;
+
+  const btn = $('#pinnedSaveBtn');
+  btn.disabled = true;
+  setPinnedStatus('저장 중…');
+  try {
+    const { sha } = await Gh.putFile({ content, sha: _pinned.sha, message, path: PINNED_PATH });
+    _pinned.sha = sha;
+    setPinnedStatus(sha ? `저장 완료 · sha ${sha.slice(0, 7)}` : '저장 완료');
+    toast('추천책 고정 저장됨 — 다음 빌드에서 메인에 반영됩니다', 'ok');
+  } catch (err) {
+    setPinnedStatus('');
+    toast(err.message, 'err');
+  } finally {
+    btn.disabled = false;
+  }
+}
+
+$('#pinnedBtn').addEventListener('click', openPinnedDialog);
+$('#pinnedSaveBtn').addEventListener('click', savePinned);
+$('#pinnedSearch').addEventListener('input', (e) => renderPinnedCelebResults(e.target.value));
+
 /* -------------------- 코멘트 검수 (data/comments.json) --------------------
  *
  * 출처를 읽고 자동으로 뽑아낸 "왜 이 책을 추천했는지" 초안을 한 건씩 넘겨보며

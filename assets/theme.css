@@ -1,0 +1,40 @@
+/* 다크 모드 — 모든 페이지 공용.
+ * 페이지마다 색을 16진수로 직접 박아 둔 곳이 많아서(수천 개 생성 페이지), 색 변수 대신
+ * 화면 전체를 한 번 뒤집고 사진·영상만 다시 뒤집어 원래 색으로 돌려놓는 방식을 쓴다.
+ * 켜고 끄는 건 assets/theme.js 가 <html data-theme="dark"> 로 한다. */
+html[data-theme="dark"] {
+  filter: invert(1) hue-rotate(180deg) brightness(.92) contrast(.94);
+  background: #fff; /* 뒤집히면 검정. 문서가 짧아도 아래 빈 곳이 하얗게 비지 않게 */
+}
+html[data-theme="dark"] img,
+html[data-theme="dark"] video,
+html[data-theme="dark"] picture,
+html[data-theme="dark"] canvas,
+html[data-theme="dark"] iframe,
+html[data-theme="dark"] [style*="background-image"],
+html[data-theme="dark"] .no-dark-invert {
+  filter: invert(1) hue-rotate(180deg);
+}
+/* 사진이 겹겹이 들어 있는 칸은 안쪽 사진까지 또 뒤집히지 않게 한 번만 되돌린다 */
+html[data-theme="dark"] [style*="background-image"] img,
+html[data-theme="dark"] picture img,
+html[data-theme="dark"] .no-dark-invert img {
+  filter: none;
+}
+
+/* 토글 버튼 */
+#theme-toggle {
+  position: fixed; right: 12px; bottom: 12px; z-index: 60;
+  width: 44px; height: 44px; padding: 0;
+  display: flex; align-items: center; justify-content: center;
+  background: #fde047; color: #000;
+  border: 3px solid #000; box-shadow: 3px 3px 0 0 #000;
+  cursor: pointer; transition: transform .1s, box-shadow .1s;
+}
+#theme-toggle:hover { transform: translate(-1px, -1px); box-shadow: 4px 4px 0 0 #000; }
+#theme-toggle:active { transform: none; box-shadow: none; }
+#theme-toggle svg { width: 22px; height: 22px; fill: none; stroke: #000; stroke-width: 2.4; stroke-linecap: round; stroke-linejoin: round; }
+#theme-toggle .ic-sun { display: none; }
+html[data-theme="dark"] #theme-toggle .ic-sun { display: block; }
+html[data-theme="dark"] #theme-toggle .ic-moon { display: none; }
+@media print { #theme-toggle { display: none; } }
