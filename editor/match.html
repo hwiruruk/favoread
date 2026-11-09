@@ -7,68 +7,127 @@
 <meta name="robots" content="noindex,nofollow">
 <link rel="icon" href="../favicon.svg" type="image/svg+xml">
 <style>
-  :root { --ink:#000; --bg:#fffdf5; --yellow:#fde047; --pink:#fbcfe8; --mint:#bbf7d0; }
+  :root { --ink:#000; --bg:#fffdf5; --yellow:#fde047; --pink:#fbcfe8; --mint:#bbf7d0; --sky:#bae6fd; }
   * { box-sizing: border-box; }
-  body { margin:0; background:var(--bg); color:var(--ink); font-family:-apple-system,"Pretendard","Noto Sans KR",sans-serif; line-height:1.55; }
+  body { margin:0; background:var(--bg); color:var(--ink); font-family:-apple-system,"Pretendard","Noto Sans KR",sans-serif; line-height:1.5; }
   a { color:inherit; }
   .wrap { max-width:720px; margin:0 auto; padding:0 16px 80px; }
-  .topbar { border-bottom:3px solid #000; background:var(--yellow); padding:12px 16px; }
+  .topbar { border-bottom:3px solid #000; background:var(--yellow); padding:12px 16px; font-size:13px; }
   .topbar a { font-weight:800; text-decoration:none; }
-  h1 { font-size:26px; margin:28px 0 6px; line-height:1.25; }
-  .lead { margin:0 0 20px; color:#333; }
-  .box { border:3px solid #000; box-shadow:4px 4px 0 0 #000; background:#fff; padding:16px; margin:18px 0; }
-  .steps { display:flex; gap:8px; font-size:13px; font-weight:700; margin-bottom:12px; }
-  .steps span { padding:3px 10px; border:2px solid #000; background:var(--pink); }
-  input[type=search] { width:100%; padding:12px; font-size:16px; border:3px solid #000; background:#fff; }
+  h1 { font-size:26px; margin:26px 0 6px; line-height:1.25; }
+  .lead { margin:0 0 16px; color:#333; }
+  .box { border:3px solid #000; box-shadow:4px 4px 0 0 #000; background:#fff; padding:16px; margin:16px 0; }
+  .tabs { display:flex; gap:8px; margin:0 0 4px; }
+  .tabs button { flex:1; padding:10px; font-size:14px; font-weight:800; border:3px solid #000; background:#fff; cursor:pointer; }
+  .tabs button[aria-selected=true] { background:var(--yellow); box-shadow:3px 3px 0 0 #000; }
+  .btn { display:block; width:100%; padding:14px; font-size:16px; font-weight:800; background:var(--yellow); border:3px solid #000; box-shadow:4px 4px 0 0 #000; cursor:pointer; margin-top:14px; }
+  .btn:disabled { background:#ddd; box-shadow:none; cursor:not-allowed; color:#777; }
+  .btn:not(:disabled):hover { transform:translate(-1px,-1px); box-shadow:6px 6px 0 0 #000; }
+  .btn.ghost { background:#fff; box-shadow:none; font-size:14px; padding:10px; }
+  .hide { display:none !important; }
+
+  /* 월드컵 */
+  .prog { display:flex; align-items:center; gap:10px; font-weight:800; font-size:14px; }
+  .bar { flex:1; height:12px; border:2px solid #000; background:#fff; }
+  .bar i { display:block; height:100%; background:var(--pink); width:0; transition:width .25s; }
+  .vs { display:grid; grid-template-columns:1fr 1fr; gap:14px; margin-top:14px; position:relative; }
+  .vs::after { content:'VS'; position:absolute; left:50%; top:34%; transform:translate(-50%,-50%); background:#000; color:var(--yellow); font-weight:900; padding:4px 8px; font-size:14px; z-index:2; }
+  .bk { border:3px solid #000; background:#fff; padding:8px; cursor:pointer; text-align:center; font:inherit; box-shadow:4px 4px 0 0 #000; transition:transform .12s, background .12s; }
+  .bk:hover, .bk:focus-visible { transform:translate(-2px,-2px) rotate(-1deg); background:var(--yellow); outline:none; box-shadow:6px 6px 0 0 #000; }
+  .bk.won { background:var(--mint); transform:scale(1.04); }
+  .bk.lost { opacity:.35; transform:scale(.96); }
+  .cv { position:relative; width:100%; aspect-ratio:2/3; background:var(--pink); border:2px solid #000; display:flex; align-items:center; justify-content:center; padding:10px; font-weight:800; font-size:14px; overflow:hidden; }
+  .cv img { position:absolute; inset:0; width:100%; height:100%; object-fit:cover; }
+  .bk .t { margin-top:10px; font-weight:800; font-size:15px; line-height:1.3; word-break:keep-all; }
+  .bk .a { font-size:12px; color:#555; margin-top:2px; }
+  .skip { margin-top:14px; text-align:center; }
+  .skip button { background:none; border:0; text-decoration:underline; font-size:13px; color:#555; cursor:pointer; }
+
+  /* 내 책장 */
+  .shelf { display:grid; grid-template-columns:repeat(5,1fr); gap:8px; margin-top:12px; }
+  .shelf .it { align-self:start; position:relative; border:0; background:none; padding:0; cursor:pointer; font:inherit; text-align:center; }
+  .shelf .cv { padding:4px; font-size:10px; }
+  .shelf .it.king .cv { outline:4px solid var(--yellow); box-shadow:0 0 0 7px #000; }
+  .shelf .tt { font-size:11px; font-weight:700; margin-top:4px; line-height:1.25; word-break:keep-all; }
+  .crown { position:absolute; top:-12px; left:50%; transform:translateX(-50%); z-index:3; font-size:11px; white-space:nowrap; font-weight:900; background:#000; color:var(--yellow); padding:1px 6px; }
+
+  /* 직접 고르기 */
+  input[type=search] { width:100%; padding:12px; font-size:16px; border:3px solid #000; background:#fff; margin-top:8px; }
   .sug { list-style:none; margin:6px 0 0; padding:0; border:2px solid #000; max-height:300px; overflow:auto; background:#fff; }
   .sug:empty { display:none; }
-  .sug li button { width:100%; text-align:left; background:#fff; border:0; border-bottom:1px solid #ddd; padding:10px 12px; font-size:14px; cursor:pointer; display:flex; gap:10px; align-items:center; }
-  .sug li button:hover, .sug li button:focus { background:var(--yellow); outline:none; }
-  .sug img { width:32px; height:46px; object-fit:cover; border:1px solid #000; background:#eee; flex:none; }
+  .sug li button { width:100%; text-align:left; background:#fff; border:0; border-bottom:1px solid #ddd; padding:10px 12px; font-size:14px; cursor:pointer; }
+  .sug li button:hover { background:var(--yellow); }
   .sug small { color:#666; display:block; }
   .chips { display:flex; flex-wrap:wrap; gap:8px; margin:12px 0 0; padding:0; list-style:none; }
   .chip { display:flex; gap:6px; align-items:center; padding:5px 6px 5px 10px; border:2px solid #000; background:var(--mint); font-size:13px; font-weight:700; }
-  .chip button { border:0; background:#000; color:#fff; width:20px; height:20px; cursor:pointer; line-height:1; }
+  .chip button { border:0; background:#000; color:#fff; width:20px; height:20px; cursor:pointer; }
   .count { font-size:13px; color:#555; margin-top:8px; }
-  .go { width:100%; margin-top:14px; padding:14px; font-size:16px; font-weight:800; background:var(--yellow); border:3px solid #000; box-shadow:4px 4px 0 0 #000; cursor:pointer; }
-  .go:disabled { background:#ddd; box-shadow:none; cursor:not-allowed; color:#777; }
-  .go:not(:disabled):hover { transform:translate(-1px,-1px); box-shadow:6px 6px 0 0 #000; }
-  .res { display:flex; gap:14px; align-items:flex-start; }
-  .rank { font-size:30px; font-weight:900; width:34px; flex:none; }
-  .pic { width:72px; height:72px; border:3px solid #000; object-fit:cover; flex:none; background:#eee; }
-  .res h2 { margin:0; font-size:18px; }
-  .pct { display:inline-block; margin-left:8px; padding:1px 8px; background:var(--yellow); border:2px solid #000; font-size:13px; }
-  .why { margin:6px 0 0; font-size:13px; color:#333; }
-  .why b { font-weight:800; }
-  .covers { display:flex; gap:6px; margin-top:8px; flex-wrap:wrap; }
-  .covers img { height:64px; border:2px solid #000; }
-  .note { font-size:12px; color:#666; margin-top:24px; }
-  .empty { padding:12px; background:#fee2e2; border:2px solid #000; }
   .pop { font-size:13px; margin-top:10px; }
   .pop button { margin:3px 4px 0 0; padding:3px 9px; border:2px solid #000; background:#fff; font-size:12px; cursor:pointer; }
-  .pop button:hover { background:var(--yellow); }
+
+  /* 결과 */
+  .res { display:flex; gap:14px; align-items:flex-start; }
+  .rank { font-size:30px; font-weight:900; width:30px; flex:none; }
+  .pic { width:72px; height:72px; border:3px solid #000; object-fit:cover; flex:none; background:#eee; }
+  .res h3 { margin:0; font-size:18px; }
+  .pct { display:inline-block; margin:4px 0 0; padding:1px 8px; background:var(--yellow); border:2px solid #000; font-size:13px; font-weight:700; }
+  .why { margin:6px 0 0; font-size:13px; color:#333; }
+  .shared { display:flex; gap:10px; margin-top:10px; flex-wrap:wrap; }
+  .shared .m { width:84px; text-align:center; font-size:11px; font-weight:700; line-height:1.25; word-break:keep-all; }
+  .shared .cv { padding:4px; font-size:10px; margin-bottom:4px; }
+  .empty { padding:12px; background:#fee2e2; border:2px solid #000; }
+  .note { font-size:12px; color:#666; margin-top:24px; }
+  @media (min-width:560px) { .shelf { grid-template-columns:repeat(10,1fr); } }
 </style>
 </head>
 <body>
 <header class="topbar"><a href="./">← 편집기</a> · 비공개 테스트 페이지 (검색·사이트맵에 노출되지 않음)</header>
 <main class="wrap">
   <h1>내 책 취향과 닮은 연예인 찾기</h1>
-  <p class="lead">좋아하는 책을 고르면, 같은 책을 읽은 연예인 중 취향이 가장 비슷한 사람을 찾아드려요.</p>
+  <p class="lead">표지에 끌리는 대로 고르면, 같은 책을 읽은 연예인 중 취향이 가장 비슷한 사람을 찾아드려요.</p>
 
-  <section class="box" aria-label="책 고르기">
-    <div class="steps"><span>1 책 고르기</span><span>2 결과 보기</span></div>
+  <div class="tabs" role="tablist">
+    <button role="tab" id="tabCup" aria-selected="true">📚 책 월드컵</button>
+    <button role="tab" id="tabSearch" aria-selected="false">🔎 직접 고르기</button>
+  </div>
+
+  <!-- 월드컵 -->
+  <section id="cup" class="box">
+    <div id="cupIntro">
+      <b style="font-size:18px">표지 두 장 중에 더 끌리는 책은?</b>
+      <p style="margin:8px 0 0;color:#333">읽었는지는 상관없어요. 제목과 표지만 보고 10번 고르면 내 책장 10권이 만들어져요.</p>
+      <button class="btn" id="cupStart" disabled>월드컵 시작하기</button>
+    </div>
+
+    <div id="cupPlay" class="hide">
+      <div class="prog"><span id="cupNo">1 / 10</span><div class="bar"><i id="cupBar"></i></div></div>
+      <div class="vs" id="vs"></div>
+      <div class="skip"><button id="cupSkip">둘 다 별로예요 · 다른 책 보기</button></div>
+    </div>
+
+    <div id="cupKing" class="hide">
+      <b style="font-size:18px">내 책장 10권 완성!</b>
+      <p style="margin:6px 0 0;color:#333">이 중 딱 한 권만 꼽는다면? 고른 책은 점수를 2배로 반영해요.</p>
+      <div class="shelf" id="shelf"></div>
+      <button class="btn" id="cupGo">결과 보기</button>
+      <button class="btn ghost" id="cupAgain">다시 하기</button>
+    </div>
+  </section>
+
+  <!-- 직접 고르기 -->
+  <section id="manual" class="box hide">
     <label for="q" style="font-weight:800">좋아하는 책 (1~10권)</label>
     <input id="q" type="search" placeholder="책 제목이나 작가를 검색해요" autocomplete="off">
-    <ul id="sug" class="sug" role="listbox"></ul>
+    <ul id="sug" class="sug"></ul>
     <div class="pop" id="pop"></div>
     <ul id="chips" class="chips"></ul>
     <div class="count" id="count">0 / 10권</div>
-    <button id="go" class="go" disabled>취향 닮은 연예인 찾기</button>
+    <button id="go" class="btn" disabled>취향 닮은 연예인 찾기</button>
   </section>
 
   <section id="out" aria-live="polite"></section>
 
-  <p class="note">최애의 독서에 모인 연예인 독서 기록을 바탕으로 계산해요. 같은 책을 고른 것이 가장 큰 점수이고, 같은 작가의 다른 책도 조금 반영돼요. 많은 사람이 읽은 책보다 드문 책이 겹칠수록 점수가 높아요. 선택한 책은 서버로 보내지 않고 이 브라우저에서만 계산해요.</p>
+  <p class="note">최애의 독서에 모인 연예인 독서 기록으로 계산해요. 같은 책이 가장 큰 점수이고 같은 작가의 다른 책도 조금 반영돼요. 많은 사람이 읽은 책보다 드문 책이 겹칠수록 점수가 높아요. 선택한 책은 서버로 보내지 않고 이 브라우저에서만 계산해요.</p>
 </main>
 
 <script>
@@ -76,14 +135,13 @@
   var MAX = 10;
   var norm = function (s) { return (s || '').toLowerCase().replace(/[\s\-·:：,.!?'"’‘“”()\[\]~*]/g, ''); };
   var esc = function (s) { return String(s == null ? '' : s).replace(/[&<>"]/g, function (c) { return ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'})[c]; }); };
+  var $ = function (id) { return document.getElementById(id); };
+  var cover = function (b) { // 이미지가 안 뜨면 제목이 보이도록 글자를 깔아 둔다
+    return '<div class="cv">' + esc(b.title) + (b.cover ? '<img src="' + esc(b.cover) + '" alt="" loading="lazy" onerror="this.remove()">' : '') + '</div>';
+  };
 
-  var books = {};      // key -> {key,title,author,cover,df}
-  var celebs = [];     // {name,img,url,keys:Set,authors:Set}
-  var authorDf = {};
-  var picked = [];     // book keys
-  var $q = document.getElementById('q'), $sug = document.getElementById('sug'),
-      $chips = document.getElementById('chips'), $count = document.getElementById('count'),
-      $go = document.getElementById('go'), $out = document.getElementById('out'), $pop = document.getElementById('pop');
+  var books = {}, celebs = [], authorDf = {}, pool = [];
+  var picked = [], weight = {};
 
   fetch('../data.json').then(function (r) { return r.json(); }).then(function (d) {
     Object.keys(d.celebs).forEach(function (name) {
@@ -92,7 +150,7 @@
         var k = norm(b.title); if (!k) return;
         keys.add(k);
         var a = norm(b.author); if (a) auth.add(a);
-        var e = books[k] || (books[k] = { key: k, title: b.title, author: b.author, cover: b.coverUrl, df: 0, na: norm(b.author) });
+        var e = books[k] || (books[k] = { key: k, title: b.title, author: b.author, cover: b.coverUrl, df: 0, na: a });
         if (!e.cover && b.coverUrl) e.cover = b.coverUrl;
       });
       if (!keys.size) return;
@@ -100,38 +158,96 @@
       auth.forEach(function (a) { authorDf[a] = (authorDf[a] || 0) + 1; });
       celebs.push({ name: name, img: c.imageUrl, url: c.shortUrl, keys: keys, authors: auth });
     });
+    // 월드컵 후보: 표지가 있고 4명 이상이 읽은, 알아볼 만한 책
+    pool = Object.keys(books).map(function (k) { return books[k]; }).filter(function (b) { return b.cover && b.df >= 4; });
+    $('cupStart').disabled = false;
+    $('cupStart').textContent = '월드컵 시작하기 (후보 ' + pool.length + '권)';
     var top = Object.keys(books).map(function (k) { return books[k]; }).sort(function (a, b) { return b.df - a.df; }).slice(0, 8);
-    $pop.innerHTML = '인기 책: ' + top.map(function (b) { return '<button data-k="' + esc(b.key) + '">' + esc(b.title) + '</button>'; }).join('');
-    $q.placeholder = '책 제목이나 작가를 검색해요 (' + Object.keys(books).length.toLocaleString() + '권)';
-  }).catch(function () { $out.innerHTML = '<p class="empty">데이터를 불러오지 못했어요. 잠시 뒤 다시 시도해 주세요.</p>'; });
+    $('pop').innerHTML = '인기 책: ' + top.map(function (b) { return '<button data-k="' + esc(b.key) + '">' + esc(b.title) + '</button>'; }).join('');
+  }).catch(function () { $('out').innerHTML = '<p class="empty">데이터를 불러오지 못했어요. 잠시 뒤 다시 시도해 주세요.</p>'; });
 
   var idf = function (df) { return Math.log((celebs.length + 1) / df) + 1; };
+  var wt = function (k) { return weight[k] || 1; };
 
+  /* ---------- 탭 ---------- */
+  function tab(which) {
+    var cup = which === 'cup';
+    $('tabCup').setAttribute('aria-selected', cup); $('tabSearch').setAttribute('aria-selected', !cup);
+    $('cup').classList.toggle('hide', !cup); $('manual').classList.toggle('hide', cup);
+    $('out').innerHTML = '';
+  }
+  $('tabCup').onclick = function () { tab('cup'); };
+  $('tabSearch').onclick = function () { tab('search'); };
+
+  /* ---------- 월드컵 ---------- */
+  var round = 0, seen = {}, pair = [], locked = false;
+  function show(id) { ['cupIntro', 'cupPlay', 'cupKing'].forEach(function (x) { $(x).classList.toggle('hide', x !== id); }); }
+  function draw() {
+    var left = pool.filter(function (b) { return !seen[b.key]; });
+    for (var tries = 0; tries < 50; tries++) {
+      var a = left[Math.floor(Math.random() * left.length)], b = left[Math.floor(Math.random() * left.length)];
+      if (a && b && a !== b && !(a.na && a.na === b.na)) return [a, b];
+    }
+    return null;
+  }
+  function nextPair() {
+    pair = draw(); locked = false;
+    if (!pair) { finishCup(); return; }
+    pair.forEach(function (b) { seen[b.key] = 1; });
+    $('cupNo').textContent = (round + 1) + ' / ' + MAX;
+    $('cupBar').style.width = (round / MAX * 100) + '%';
+    $('vs').innerHTML = pair.map(function (b, i) {
+      return '<button class="bk" data-i="' + i + '">' + cover(b) + '<div class="t">' + esc(b.title) + '</div><div class="a">' + esc(b.author) + '</div></button>';
+    }).join('');
+  }
+  function startCup() { round = 0; seen = {}; picked = []; weight = {}; $('out').innerHTML = ''; show('cupPlay'); nextPair(); }
+  function finishCup() {
+    $('cupBar').style.width = '100%';
+    $('shelf').innerHTML = picked.map(function (k) {
+      return '<button class="it" data-king="' + esc(k) + '">' + cover(books[k]) + '<div class="tt">' + esc(books[k].title) + '</div></button>';
+    }).join('');
+    show('cupKing');
+  }
+  $('cupStart').onclick = startCup;
+  $('cupAgain').onclick = startCup;
+  $('cupSkip').onclick = function () { if (!locked) nextPair(); };
+  $('vs').addEventListener('click', function (e) {
+    var t = e.target.closest('.bk'); if (!t || locked) return;
+    locked = true;
+    var i = +t.getAttribute('data-i'), cards = $('vs').children;
+    cards[i].classList.add('won'); cards[1 - i].classList.add('lost');
+    picked.push(pair[i].key); round++;
+    setTimeout(function () { if (round >= MAX) finishCup(); else nextPair(); }, 380);
+  });
+  $('shelf').addEventListener('click', function (e) {
+    var t = e.target.closest('[data-king]'); if (!t) return;
+    var k = t.getAttribute('data-king'), was = t.classList.contains('king');
+    Array.prototype.forEach.call($('shelf').children, function (c) { c.classList.remove('king'); var cr = c.querySelector('.crown'); if (cr) cr.remove(); });
+    weight = {};
+    if (!was) { t.classList.add('king'); t.insertAdjacentHTML('afterbegin', '<span class="crown">인생 책</span>'); weight[k] = 2; }
+  });
+  $('cupGo').onclick = function () { showResults(); };
+
+  /* ---------- 직접 고르기 ---------- */
   function renderChips() {
-    $chips.innerHTML = picked.map(function (k) {
+    $('chips').innerHTML = picked.map(function (k) {
       return '<li class="chip">' + esc(books[k].title) + '<button data-rm="' + esc(k) + '" aria-label="' + esc(books[k].title) + ' 빼기">×</button></li>';
     }).join('');
-    $count.textContent = picked.length + ' / ' + MAX + '권';
-    $go.disabled = picked.length < 1;
+    $('count').textContent = picked.length + ' / ' + MAX + '권';
+    $('go').disabled = picked.length < 1;
   }
   function add(k) {
     if (!books[k] || picked.indexOf(k) >= 0 || picked.length >= MAX) return;
-    picked.push(k); renderChips(); $q.value = ''; $sug.innerHTML = '';
+    picked.push(k); renderChips(); $('q').value = ''; $('sug').innerHTML = '';
   }
-
-  $q.addEventListener('input', function () {
-    var t = norm($q.value);
-    if (!t) { $sug.innerHTML = ''; return; }
-    var hit = Object.keys(books).filter(function (k) {
-      return picked.indexOf(k) < 0 && (k.indexOf(t) >= 0 || books[k].na.indexOf(t) >= 0);
-    }).sort(function (a, b) {
-      var sa = books[a].key.indexOf(t) === 0 ? 0 : 1, sb = books[b].key.indexOf(t) === 0 ? 0 : 1;
-      return sa - sb || books[b].df - books[a].df;
-    }).slice(0, 8);
-    $sug.innerHTML = hit.map(function (k) {
-      var b = books[k];
-      return '<li><button data-k="' + esc(k) + '">' + (b.cover ? '<img src="' + esc(b.cover) + '" alt="" loading="lazy">' : '') +
-        '<span>' + esc(b.title) + '<small>' + esc(b.author) + ' · ' + b.df + '명이 읽음</small></span></button></li>';
+  $('tabSearch').addEventListener('click', function () { picked = []; weight = {}; renderChips(); });
+  $('q').addEventListener('input', function () {
+    var t = norm(this.value);
+    if (!t) { $('sug').innerHTML = ''; return; }
+    var hit = Object.keys(books).filter(function (k) { return picked.indexOf(k) < 0 && (k.indexOf(t) >= 0 || books[k].na.indexOf(t) >= 0); })
+      .sort(function (a, b) { var sa = a.indexOf(t) === 0 ? 0 : 1, sb = b.indexOf(t) === 0 ? 0 : 1; return sa - sb || books[b].df - books[a].df; }).slice(0, 8);
+    $('sug').innerHTML = hit.map(function (k) {
+      var b = books[k]; return '<li><button data-k="' + esc(k) + '">' + esc(b.title) + '<small>' + esc(b.author) + ' · ' + b.df + '명이 읽음</small></button></li>';
     }).join('');
   });
   document.addEventListener('click', function (e) {
@@ -139,40 +255,40 @@
     var r = e.target.closest('[data-rm]');
     if (r) { picked = picked.filter(function (k) { return k !== r.getAttribute('data-rm'); }); renderChips(); }
   });
+  $('go').onclick = function () { showResults(); };
 
-  $go.addEventListener('click', function () {
-    var uAuth = {}; picked.forEach(function (k) { if (books[k].na) uAuth[books[k].na] = 1; });
-    var uw = 0; picked.forEach(function (k) { uw += Math.pow(idf(books[k].df), 2); });
+  /* ---------- 결과 ---------- */
+  function showResults() {
+    var uw = 0; picked.forEach(function (k) { uw += wt(k) * Math.pow(idf(books[k].df), 2); });
     var rows = celebs.map(function (c) {
-      var shared = [], dot = 0, sameAuth = [];
+      var shared = [], sameAuth = [], dot = 0;
       picked.forEach(function (k) {
-        if (c.keys.has(k)) { shared.push(k); dot += Math.pow(idf(books[k].df), 2); }
-        else if (books[k].na && c.authors.has(books[k].na)) { sameAuth.push(k); dot += 0.35 * idf(books[k].df) * idf(authorDf[books[k].na] || 1); }
+        if (c.keys.has(k)) { shared.push(k); dot += wt(k) * Math.pow(idf(books[k].df), 2); }
+        else if (books[k].na && c.authors.has(books[k].na)) { sameAuth.push(k); dot += wt(k) * 0.35 * idf(books[k].df) * idf(authorDf[books[k].na] || 1); }
       });
       if (!shared.length && !sameAuth.length) return null;
-      // 코사인 유사도: 책이 많은 사람이 무조건 유리하지 않도록 책장 크기로 나눈다
       var cw = 0; c.keys.forEach(function (k) { cw += Math.pow(idf(books[k].df), 2); });
       var cos = dot / Math.sqrt(uw * cw);
-      // 내 책이 얼마나 겹쳤나(coverage)를 우선하고, 책장이 작아 우연히 맞은 사람은 cos 로 가려낸다
-      var score = (dot / uw) * (0.7 + 0.3 * cos);
-      return { c: c, shared: shared, sameAuth: sameAuth, score: score };
-    }).filter(Boolean).sort(function (a, b) {
-      return b.score - a.score || b.shared.length - a.shared.length;
-    });
-    if (!rows.length) { $out.innerHTML = '<p class="empty">고른 책을 읽은 연예인이 아직 없어요. 다른 책도 골라 보세요.</p>'; return; }
-    $out.innerHTML = '<h2 style="margin:28px 0 0">취향이 닮은 연예인 TOP ' + Math.min(5, rows.length) + '</h2>' +
+      // 내 책이 얼마나 겹쳤나를 우선하고, 책장이 작아 우연히 맞은 사람은 cos 로 가려낸다
+      return { c: c, shared: shared, sameAuth: sameAuth, score: (dot / uw) * (0.7 + 0.3 * cos) };
+    }).filter(Boolean).sort(function (a, b) { return b.score - a.score || b.shared.length - a.shared.length; });
+
+    var again = '<button class="btn ghost" onclick="document.getElementById(\'tabCup\').click();document.getElementById(\'cupStart\').click()">월드컵 다시 하기</button>';
+    if (!rows.length) { $('out').innerHTML = '<p class="empty">고른 책을 읽은 연예인이 아직 없어요. 다시 골라 보세요.</p>' + again; return; }
+    $('out').innerHTML = '<h2 style="margin:28px 0 0">취향이 닮은 연예인 TOP ' + Math.min(5, rows.length) + '</h2>' +
       rows.slice(0, 5).map(function (r, i) {
         var why = '';
-        if (r.shared.length) why += '<b>같은 책 ' + r.shared.length + '권</b> · ' + r.shared.map(function (k) { return esc(books[k].title); }).join(', ');
-        if (r.sameAuth.length) why += (why ? '<br>' : '') + '<b>같은 작가</b> · ' + r.sameAuth.map(function (k) { return esc(books[k].author); }).join(', ');
-        var covers = r.shared.map(function (k) { return books[k].cover ? '<img src="' + esc(books[k].cover) + '" alt="' + esc(books[k].title) + '">' : ''; }).join('');
+        if (r.sameAuth.length) why = '같은 작가 · ' + r.sameAuth.map(function (k) { return esc(books[k].author); }).filter(function (v, j, a) { return a.indexOf(v) === j; }).join(', ');
         return '<article class="box"><div class="res"><div class="rank">' + (i + 1) + '</div>' +
           (r.c.img ? '<img class="pic" src="' + esc(r.c.img) + '" alt="' + esc(r.c.name) + '" loading="lazy" referrerpolicy="no-referrer">' : '') +
-          '<div><h2><a href="' + esc(r.c.url) + '">' + esc(r.c.name) + '</a><span class="pct">내 책 ' + picked.length + '권 중 ' + r.shared.length + '권 겹침</span></h2>' +
-          '<p class="why">' + why + '</p><div class="covers">' + covers + '</div></div></div></article>';
-      }).join('');
-    $out.scrollIntoView({ behavior: 'smooth' });
-  });
+          '<div><h3><a href="' + esc(r.c.url) + '">' + esc(r.c.name) + '</a></h3>' +
+          '<span class="pct">내 책 ' + picked.length + '권 중 ' + r.shared.length + '권 겹침</span>' +
+          (why ? '<p class="why">' + why + '</p>' : '') + '</div></div>' +
+          (r.shared.length ? '<div class="shared">' + r.shared.map(function (k) { return '<div class="m">' + cover(books[k]) + esc(books[k].title) + '</div>'; }).join('') + '</div>' : '') +
+          '</article>';
+      }).join('') + again;
+    $('out').scrollIntoView({ behavior: 'smooth' });
+  }
 })();
 </script>
 </body>
