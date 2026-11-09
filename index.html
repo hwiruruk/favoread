@@ -311,6 +311,8 @@
       background: #000;
       color: #fff;
     }
+    /* 독서 취향 매칭(/match/) 입구 탭 — 눈에 띄게 노란색 */
+    .spy-tab-match:not(.active) { background: #fde047; }
     @media (min-width: 768px) {
       #side-tabs .spy-tab { min-width: 56px; text-align: center; }
     }
@@ -319,7 +321,7 @@
 
     /* 모바일 sticky 탭이 anchor jump 시 가리지 않도록 scroll-margin-top */
     @media (max-width: 767px) {
-      #hero, #about, #search, #featured, #pinned, #grid, #seo-top-readers, #common-books, #all-celebs, #join {
+      #hero, #about, #search, #match, #featured, #pinned, #grid, #seo-top-readers, #common-books, #all-celebs, #join {
         scroll-margin-top: 60px;
       }
     }
@@ -378,6 +380,7 @@
   <a href="#hero" data-spy="hero" class="spy-tab active">홈</a>
   <a href="#about" data-spy="about" class="spy-tab">소개</a>
   <a href="#search" data-spy="search" class="spy-tab">검색</a>
+  <a href="#match" data-spy="match" class="spy-tab spy-tab-match">취향</a>
   <a href="#featured" data-spy="featured" class="spy-tab spy-tab-featured">핫</a>
   <a href="#pinned" data-spy="pinned" class="spy-tab spy-tab-pinned hidden">추천</a>
   <a href="#grid" data-spy="grid" class="spy-tab">셀럽</a>
@@ -393,6 +396,7 @@
     <a href="#hero" data-spy="hero" class="spy-tab active">홈</a>
     <a href="#about" data-spy="about" class="spy-tab">소개</a>
     <a href="#search" data-spy="search" class="spy-tab">검색</a>
+    <a href="#match" data-spy="match" class="spy-tab spy-tab-match">취향</a>
     <a href="#featured" data-spy="featured" class="spy-tab spy-tab-featured">핫</a>
     <a href="#pinned" data-spy="pinned" class="spy-tab spy-tab-pinned hidden">추천</a>
     <a href="#grid" data-spy="grid" class="spy-tab">셀럽</a>
@@ -464,6 +468,28 @@
       <button id="btn-clear-search" class="font-sans font-bold text-[10px] sm:text-xs tracking-widest uppercase border-2 border-ink bg-white hover:bg-neo-pink shadow-neo-sm px-4 py-1.5 hover:-translate-y-0.5 transition-all">✕ 전체 보기</button>
     </div>
   </section>
+
+  <!-- match-cta:start (독서 취향 매칭 입구 · 한국어 메인에만 둔다) -->
+  <section id="match" class="max-w-xl mx-auto w-full">
+    <a href="match/" onclick="window.gtag &amp;&amp; gtag('event','match_banner_click')"
+       class="block relative border-4 border-ink bg-neo-pink shadow-neo p-4 sm:p-5 no-underline text-ink hover:shadow-neo-lg hover:-translate-y-0.5 transition-all">
+      <span class="absolute -top-3 right-3 bg-ink text-neo-yellow font-sans font-black text-[10px] tracking-widest px-2 py-0.5">NEW</span>
+      <h2 class="text-xl sm:text-2xl font-black leading-snug word-break-keep">내 독서 취향이 비슷한<br>연예인은 누구?</h2>
+      <p class="text-xs sm:text-sm font-bold text-ink/80 mt-1 word-break-keep">표지만 보고 10번 고르면, 같은 책을 읽은 연예인을 찾아드려요.</p>
+      <div class="flex items-center justify-center gap-3 my-4" aria-hidden="true">
+        <img src="https://image.yes24.com/goods/92901787/L" alt="어린왕자" loading="lazy" referrerpolicy="no-referrer"
+             class="w-24 sm:w-28 aspect-[2/3] object-cover border-2 border-ink shadow-neo-sm text-[11px] font-black text-center" style="background:#bfdbfe">
+        <span class="bg-ink text-neo-yellow font-sans font-black text-xs px-2 py-1">VS</span>
+        <img src="https://image.yes24.com/goods/8759796/L" alt="모순" loading="lazy" referrerpolicy="no-referrer"
+             class="w-24 sm:w-28 aspect-[2/3] object-cover border-2 border-ink shadow-neo-sm text-[11px] font-black text-center" style="background:#fecaca">
+      </div>
+      <div class="flex items-center justify-between gap-3 flex-wrap">
+        <span class="font-sans font-black text-xs sm:text-sm bg-ink text-neo-yellow border-2 border-ink px-4 py-2">독서 월드컵 시작 →</span>
+        <span class="text-[11px] sm:text-xs font-bold text-ink/70">약 1분 · 로그인 없음</span>
+      </div>
+    </a>
+  </section>
+  <!-- match-cta:end -->
 
   <!-- featured:start (data/featured.json → generate.py가 정적 주입, JS가 사진 카드로 교체) -->
   <section id="featured" class="w-full">
@@ -1930,7 +1956,7 @@
      검색창과 결과 사이에 '요즘 핫한 사람'이 끼어 있어서
      이름을 쳐도 결과를 보려면 한참 스크롤해야 했다. 검색 중에는 그 사이 칸과
      아래쪽 둘러보기 칸을 접어 결과가 검색창 바로 밑에 오게 한다. */
-  const SEARCH_HIDDEN = ['featured', 'pinned', 'grid-head', 'join',
+  const SEARCH_HIDDEN = ['match', 'featured', 'pinned', 'grid-head', 'join',
                          'seo-top-readers', 'common-books', 'all-celebs'];
 
   function setSearchMode(on, { bookCount = 0, celebCount = 0, hideGrid = false } = {}) {
@@ -2797,7 +2823,7 @@
 <script>
 // Scroll-spy: 현재 보이는 섹션의 탭에 .active 부여
 (function() {
-  const ids = ['hero', 'about', 'search', 'featured', 'pinned', 'grid', 'seo-top-readers', 'common-books', 'all-celebs', 'join'];
+  const ids = ['hero', 'about', 'search', 'match', 'featured', 'pinned', 'grid', 'seo-top-readers', 'common-books', 'all-celebs', 'join'];
   const sections = ids.map(id => document.getElementById(id)).filter(Boolean);
   const tabs = document.querySelectorAll('.spy-tab');
   if (!sections.length || !tabs.length) return;
