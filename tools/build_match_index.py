@@ -1,4 +1,4 @@
-"""책 취향 매칭 페이지(editor/match.html)용 분야 색인 — editor/match-books.json.
+"""책 취향 매칭 페이지(match/index.html)용 분야 색인 — match/match-books.json.
 
 { "도서명": "분야" } 만 담는다. 분야는 tools/taste.py 와 같은 규칙(편집기 분야 검수 data/genres.json 우선,
 없으면 예스24 카테고리)으로 정한다. 모르는 책은 담지 않고, 페이지는 '기타'로 묶는다.
@@ -29,7 +29,7 @@ def main():
         g = taste._genre_of(subjects, t)
         if g:
             out[t] = g[0]
-    path = os.path.join(ROOT, 'editor', 'match-books.json')
+    path = os.path.join(ROOT, 'match', 'match-books.json')
     body = json.dumps({'genres': out}, ensure_ascii=False, sort_keys=True, separators=(',', ':')) + '\n'
     try:
         if open(path, encoding='utf-8').read() == body:
@@ -38,7 +38,7 @@ def main():
         pass
     with open(path, 'w', encoding='utf-8') as f:
         f.write(body)
-    print(f'editor/match-books.json {len(out)}권')
+    print(f'match/match-books.json {len(out)}권')
 
 
 if __name__ == '__main__':

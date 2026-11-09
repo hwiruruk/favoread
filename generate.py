@@ -7363,6 +7363,12 @@ lines = [
     '    <changefreq>monthly</changefreq>',
     '    <priority>0.6</priority>',
     '  </url>',
+    '  <url>',
+    '    <loc>' + BASE + 'match/</loc>',
+    '    <lastmod>' + lastmod_for('match/index.html') + '</lastmod>',
+    '    <changefreq>monthly</changefreq>',
+    '    <priority>0.7</priority>',
+    '  </url>',
 ]
 
 # 아이돌·연예인 추천책 모음
