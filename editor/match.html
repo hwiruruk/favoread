@@ -99,6 +99,16 @@
   .shared { display:flex; gap:10px; margin-top:10px; flex-wrap:wrap; }
   .shared .m { width:84px; text-align:center; font-size:11px; font-weight:700; line-height:1.25; word-break:keep-all; }
   .shared .cv { padding:4px; font-size:10px; margin-bottom:4px; }
+  .hl { margin-top:22px; border:4px solid #000; box-shadow:6px 6px 0 0 #000; background:var(--mint); padding:18px 16px; text-align:center; }
+  .hl.hot { background:var(--pink); }
+  .hl-tag { display:inline-block; background:#000; color:var(--yellow); font-weight:900; font-size:14px; padding:3px 12px; }
+  .hl-name { font-size:32px; font-weight:900; margin:8px 0 2px; line-height:1.2; word-break:keep-all; }
+  .hl-sub { font-size:14px; font-weight:700; }
+  .hl-sub b { background:var(--yellow); padding:0 5px; border:2px solid #000; }
+  .hl-hint { margin-top:10px; font-size:12px; color:#333; }
+  .pct2 { display:inline-block; font-size:13px; font-weight:900; }
+  .said { margin:6px 0 0; font-size:13px; }
+  .said b { font-weight:900; }
   .empty { padding:12px; background:#fee2e2; border:2px solid #000; }
   .note { font-size:12px; color:#666; margin-top:24px; }
   @media (min-width:560px) { .shelf { grid-template-columns:repeat(10,1fr); } .grid { grid-template-columns:repeat(4,1fr); } }
@@ -385,16 +395,37 @@
 
     var again = '<button class="btn ghost" onclick="document.getElementById(\'tabCup\').click();document.getElementById(\'cupStart\').click()">월드컵 다시 하기</button>';
     if (!rows.length) { $('out').innerHTML = '<p class="empty">고른 책을 읽은 연예인이 아직 없어요. 다시 골라 보세요.</p>' + again; return; }
-    var unit = pickedAuthors.length ? '선택' : '책', n = total();
-    $('out').innerHTML = '<h2 style="margin:28px 0 0">취향이 닮은 연예인 TOP ' + Math.min(5, rows.length) + '</h2>' +
+    var n = total(), cnt = pickedAuthors.length ? '개' : '권';
+    // 일치율별 한 줄 — 고른 게 5개 미만이면 우연히 100%가 나오기 쉬워서 최상위 문구는 아끼고 정확도 안내를 붙인다
+    var TIERS = [
+      { min: 0.8, tag: '혹시 본인이세요? 🫢', line: '책장이 거의 복붙이에요', cls: 'hot' },
+      { min: 0.6, tag: '책장 쌍둥이 👯', line: '같은 서랍에서 꺼낸 수준이에요', cls: 'hot' },
+      { min: 0.4, tag: '취향 친구 후보 🤝', line: '같이 독서모임 해도 되겠어요', cls: '' },
+      { min: 0.2, tag: '은근 통하는 사이 👀', line: '겹치는 책이 은근 많아요', cls: '' },
+      { min: 0,   tag: '접점 발견 🔍',     line: '이 책만큼은 통했어요', cls: '' }
+    ];
+    var tierOf = function (rate) {
+      var t = TIERS.filter(function (x) { return rate >= x.min; })[0];
+      if (n < 5 && t === TIERS[0]) t = TIERS[2];       // 적게 골랐으면 '본인' · '쌍둥이'는 아낀다
+      if (n < 5 && t === TIERS[1]) t = TIERS[2];
+      return t;
+    };
+    var rateOf = function (r) { return (r.shared.length + r.authHit.length) / n; };
+    var top1 = rows[0], t1 = tierOf(rateOf(top1)), p1 = Math.round(rateOf(top1) * 100);
+    var headline = '<div class="hl ' + t1.cls + '"><div class="hl-tag">' + t1.tag + '</div>' +
+      '<div class="hl-name">' + esc(top1.c.name) + '</div>' +
+      '<div class="hl-sub">내 책장과 <b>' + p1 + '%</b> 겹쳐요 · ' + t1.line + '</div>' +
+      (n < 5 ? '<div class="hl-hint">💡 5' + cnt + ' 이상 고르면 더 정확해져요</div>' : '') + '</div>';
+    $('out').innerHTML = headline + '<h2 style="margin:22px 0 0">취향이 닮은 연예인 TOP ' + Math.min(5, rows.length) + '</h2>' +
       rows.slice(0, 5).map(function (r, i) {
-        var why = [];
+        var why = [], m = r.shared.length + r.authHit.length, rate = rateOf(r), t = tierOf(rate);
         r.authHit.forEach(function (a) { why.push('작가 ' + esc(authors[a].name) + ' · ' + esc((r.c.byAuthor[a] || []).slice(0, 3).join(', '))); });
-        if (r.sameAuth.length) why.push('같은 작가 · ' + r.sameAuth.map(function (x) { return esc(authors[x.a].name); }).filter(function (v, j, x) { return x.indexOf(v) === j; }).join(', '));
+        if (r.sameAuth.length) why.push('같은 작가 · ' + r.sameAuth.map(function (x) { return esc(authors[x.a].name); }).filter(function (v, j, y) { return y.indexOf(v) === j; }).join(', '));
         return '<article class="box"><div class="res"><div class="rank">' + (i + 1) + '</div>' +
           (r.c.img ? '<img class="pic" src="' + esc(r.c.img) + '" alt="' + esc(r.c.name) + '" loading="lazy" referrerpolicy="no-referrer">' : '') +
           '<div><h3><a href="' + esc(r.c.url) + '">' + esc(r.c.name) + '</a></h3>' +
-          '<span class="pct">내 ' + unit + ' ' + n + (pickedAuthors.length ? '개' : '권') + ' 중 ' + (r.shared.length + r.authHit.length) + (pickedAuthors.length ? '개' : '권') + ' 겹침</span>' +
+          '<span class="pct">' + t.tag + '</span> <span class="pct2">' + Math.round(rate * 100) + '%</span>' +
+          '<p class="said"><b>' + esc(r.c.name) + '님</b>은 내가 고른 ' + (pickedAuthors.length ? '' : '책 ') + n + cnt + ' 중 <b>' + m + cnt + '</b>' + (cnt === '권' ? '을' : '를') + ' 읽었어요</p>' +
           (why.length ? '<p class="why">' + why.join('<br>') + '</p>' : '') + '</div></div>' +
           (r.shared.length ? '<div class="shared">' + r.shared.map(function (k) { return '<div class="m">' + cover(books[k]) + esc(books[k].title) + '</div>'; }).join('') + '</div>' : '') +
           '</article>';
