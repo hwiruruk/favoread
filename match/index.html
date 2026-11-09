@@ -1,0 +1,186 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>내 책 취향과 닮은 연예인 찾기 | 최애의 독서</title>
+<meta name="description" content="내가 좋아하는 책을 고르면, 같은 책을 읽은 연예인 중 독서 취향이 가장 비슷한 사람을 찾아드려요.">
+<link rel="canonical" href="https://favorbook.co.kr/match/">
+<link rel="icon" href="../favicon.svg" type="image/svg+xml">
+<meta property="og:type" content="website">
+<meta property="og:title" content="내 책 취향과 닮은 연예인 찾기 | 최애의 독서">
+<meta property="og:description" content="좋아하는 책 몇 권만 고르면, 취향이 비슷한 연예인을 알려드려요.">
+<meta property="og:url" content="https://favorbook.co.kr/match/">
+<meta property="og:image" content="https://favorbook.co.kr/og/_site.jpg">
+<meta name="twitter:card" content="summary_large_image">
+<style>
+  :root { --ink:#000; --bg:#fffdf5; --yellow:#fde047; --pink:#fbcfe8; --mint:#bbf7d0; }
+  * { box-sizing: border-box; }
+  body { margin:0; background:var(--bg); color:var(--ink); font-family:-apple-system,"Pretendard","Noto Sans KR",sans-serif; line-height:1.55; }
+  a { color:inherit; }
+  .wrap { max-width:720px; margin:0 auto; padding:0 16px 80px; }
+  .topbar { border-bottom:3px solid #000; background:var(--yellow); padding:12px 16px; }
+  .topbar a { font-weight:800; text-decoration:none; }
+  h1 { font-size:26px; margin:28px 0 6px; line-height:1.25; }
+  .lead { margin:0 0 20px; color:#333; }
+  .box { border:3px solid #000; box-shadow:4px 4px 0 0 #000; background:#fff; padding:16px; margin:18px 0; }
+  .steps { display:flex; gap:8px; font-size:13px; font-weight:700; margin-bottom:12px; }
+  .steps span { padding:3px 10px; border:2px solid #000; background:var(--pink); }
+  input[type=search] { width:100%; padding:12px; font-size:16px; border:3px solid #000; background:#fff; }
+  .sug { list-style:none; margin:6px 0 0; padding:0; border:2px solid #000; max-height:300px; overflow:auto; background:#fff; }
+  .sug:empty { display:none; }
+  .sug li button { width:100%; text-align:left; background:#fff; border:0; border-bottom:1px solid #ddd; padding:10px 12px; font-size:14px; cursor:pointer; display:flex; gap:10px; align-items:center; }
+  .sug li button:hover, .sug li button:focus { background:var(--yellow); outline:none; }
+  .sug img { width:32px; height:46px; object-fit:cover; border:1px solid #000; background:#eee; flex:none; }
+  .sug small { color:#666; display:block; }
+  .chips { display:flex; flex-wrap:wrap; gap:8px; margin:12px 0 0; padding:0; list-style:none; }
+  .chip { display:flex; gap:6px; align-items:center; padding:5px 6px 5px 10px; border:2px solid #000; background:var(--mint); font-size:13px; font-weight:700; }
+  .chip button { border:0; background:#000; color:#fff; width:20px; height:20px; cursor:pointer; line-height:1; }
+  .count { font-size:13px; color:#555; margin-top:8px; }
+  .go { width:100%; margin-top:14px; padding:14px; font-size:16px; font-weight:800; background:var(--yellow); border:3px solid #000; box-shadow:4px 4px 0 0 #000; cursor:pointer; }
+  .go:disabled { background:#ddd; box-shadow:none; cursor:not-allowed; color:#777; }
+  .go:not(:disabled):hover { transform:translate(-1px,-1px); box-shadow:6px 6px 0 0 #000; }
+  .res { display:flex; gap:14px; align-items:flex-start; }
+  .rank { font-size:30px; font-weight:900; width:34px; flex:none; }
+  .pic { width:72px; height:72px; border:3px solid #000; object-fit:cover; flex:none; background:#eee; }
+  .res h2 { margin:0; font-size:18px; }
+  .pct { display:inline-block; margin-left:8px; padding:1px 8px; background:var(--yellow); border:2px solid #000; font-size:13px; }
+  .why { margin:6px 0 0; font-size:13px; color:#333; }
+  .why b { font-weight:800; }
+  .covers { display:flex; gap:6px; margin-top:8px; flex-wrap:wrap; }
+  .covers img { height:64px; border:2px solid #000; }
+  .note { font-size:12px; color:#666; margin-top:24px; }
+  .empty { padding:12px; background:#fee2e2; border:2px solid #000; }
+  .pop { font-size:13px; margin-top:10px; }
+  .pop button { margin:3px 4px 0 0; padding:3px 9px; border:2px solid #000; background:#fff; font-size:12px; cursor:pointer; }
+  .pop button:hover { background:var(--yellow); }
+</style>
+</head>
+<body>
+<header class="topbar"><a href="../">← 최애의 독서</a></header>
+<main class="wrap">
+  <h1>내 책 취향과 닮은 연예인 찾기</h1>
+  <p class="lead">좋아하는 책을 고르면, 같은 책을 읽은 연예인 중 취향이 가장 비슷한 사람을 찾아드려요.</p>
+
+  <section class="box" aria-label="책 고르기">
+    <div class="steps"><span>1 책 고르기</span><span>2 결과 보기</span></div>
+    <label for="q" style="font-weight:800">좋아하는 책 (1~10권)</label>
+    <input id="q" type="search" placeholder="책 제목이나 작가를 검색해요" autocomplete="off">
+    <ul id="sug" class="sug" role="listbox"></ul>
+    <div class="pop" id="pop"></div>
+    <ul id="chips" class="chips"></ul>
+    <div class="count" id="count">0 / 10권</div>
+    <button id="go" class="go" disabled>취향 닮은 연예인 찾기</button>
+  </section>
+
+  <section id="out" aria-live="polite"></section>
+
+  <p class="note">최애의 독서에 모인 연예인 독서 기록을 바탕으로 계산해요. 같은 책을 고른 것이 가장 큰 점수이고, 같은 작가의 다른 책도 조금 반영돼요. 많은 사람이 읽은 책보다 드문 책이 겹칠수록 점수가 높아요. 선택한 책은 서버로 보내지 않고 이 브라우저에서만 계산해요.</p>
+</main>
+
+<script>
+(function () {
+  var MAX = 10;
+  var norm = function (s) { return (s || '').toLowerCase().replace(/[\s\-·:：,.!?'"’‘“”()\[\]~*]/g, ''); };
+  var esc = function (s) { return String(s == null ? '' : s).replace(/[&<>"]/g, function (c) { return ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'})[c]; }); };
+
+  var books = {};      // key -> {key,title,author,cover,df}
+  var celebs = [];     // {name,img,url,keys:Set,authors:Set}
+  var authorDf = {};
+  var picked = [];     // book keys
+  var $q = document.getElementById('q'), $sug = document.getElementById('sug'),
+      $chips = document.getElementById('chips'), $count = document.getElementById('count'),
+      $go = document.getElementById('go'), $out = document.getElementById('out'), $pop = document.getElementById('pop');
+
+  fetch('../data.json').then(function (r) { return r.json(); }).then(function (d) {
+    Object.keys(d.celebs).forEach(function (name) {
+      var c = d.celebs[name], keys = new Set(), auth = new Set();
+      (c.books || []).forEach(function (b) {
+        var k = norm(b.title); if (!k) return;
+        keys.add(k);
+        var a = norm(b.author); if (a) auth.add(a);
+        var e = books[k] || (books[k] = { key: k, title: b.title, author: b.author, cover: b.coverUrl, df: 0, na: norm(b.author) });
+        if (!e.cover && b.coverUrl) e.cover = b.coverUrl;
+      });
+      if (!keys.size) return;
+      keys.forEach(function (k) { books[k].df++; });
+      auth.forEach(function (a) { authorDf[a] = (authorDf[a] || 0) + 1; });
+      celebs.push({ name: name, img: c.imageUrl, url: c.shortUrl, keys: keys, authors: auth });
+    });
+    var top = Object.keys(books).map(function (k) { return books[k]; }).sort(function (a, b) { return b.df - a.df; }).slice(0, 8);
+    $pop.innerHTML = '인기 책: ' + top.map(function (b) { return '<button data-k="' + esc(b.key) + '">' + esc(b.title) + '</button>'; }).join('');
+    $q.placeholder = '책 제목이나 작가를 검색해요 (' + Object.keys(books).length.toLocaleString() + '권)';
+  }).catch(function () { $out.innerHTML = '<p class="empty">데이터를 불러오지 못했어요. 잠시 뒤 다시 시도해 주세요.</p>'; });
+
+  var idf = function (df) { return Math.log((celebs.length + 1) / df) + 1; };
+
+  function renderChips() {
+    $chips.innerHTML = picked.map(function (k) {
+      return '<li class="chip">' + esc(books[k].title) + '<button data-rm="' + esc(k) + '" aria-label="' + esc(books[k].title) + ' 빼기">×</button></li>';
+    }).join('');
+    $count.textContent = picked.length + ' / ' + MAX + '권';
+    $go.disabled = picked.length < 1;
+  }
+  function add(k) {
+    if (!books[k] || picked.indexOf(k) >= 0 || picked.length >= MAX) return;
+    picked.push(k); renderChips(); $q.value = ''; $sug.innerHTML = '';
+  }
+
+  $q.addEventListener('input', function () {
+    var t = norm($q.value);
+    if (!t) { $sug.innerHTML = ''; return; }
+    var hit = Object.keys(books).filter(function (k) {
+      return picked.indexOf(k) < 0 && (k.indexOf(t) >= 0 || books[k].na.indexOf(t) >= 0);
+    }).sort(function (a, b) {
+      var sa = books[a].key.indexOf(t) === 0 ? 0 : 1, sb = books[b].key.indexOf(t) === 0 ? 0 : 1;
+      return sa - sb || books[b].df - books[a].df;
+    }).slice(0, 8);
+    $sug.innerHTML = hit.map(function (k) {
+      var b = books[k];
+      return '<li><button data-k="' + esc(k) + '">' + (b.cover ? '<img src="' + esc(b.cover) + '" alt="" loading="lazy">' : '') +
+        '<span>' + esc(b.title) + '<small>' + esc(b.author) + ' · ' + b.df + '명이 읽음</small></span></button></li>';
+    }).join('');
+  });
+  document.addEventListener('click', function (e) {
+    var t = e.target.closest('[data-k]'); if (t) add(t.getAttribute('data-k'));
+    var r = e.target.closest('[data-rm]');
+    if (r) { picked = picked.filter(function (k) { return k !== r.getAttribute('data-rm'); }); renderChips(); }
+  });
+
+  $go.addEventListener('click', function () {
+    var uAuth = {}; picked.forEach(function (k) { if (books[k].na) uAuth[books[k].na] = 1; });
+    var uw = 0; picked.forEach(function (k) { uw += Math.pow(idf(books[k].df), 2); });
+    var rows = celebs.map(function (c) {
+      var shared = [], dot = 0, sameAuth = [];
+      picked.forEach(function (k) {
+        if (c.keys.has(k)) { shared.push(k); dot += Math.pow(idf(books[k].df), 2); }
+        else if (books[k].na && c.authors.has(books[k].na)) { sameAuth.push(k); dot += 0.35 * idf(books[k].df) * idf(authorDf[books[k].na] || 1); }
+      });
+      if (!shared.length && !sameAuth.length) return null;
+      // 코사인 유사도: 책이 많은 사람이 무조건 유리하지 않도록 책장 크기로 나눈다
+      var cw = 0; c.keys.forEach(function (k) { cw += Math.pow(idf(books[k].df), 2); });
+      var cos = dot / Math.sqrt(uw * cw);
+      // 내 책이 얼마나 겹쳤나(coverage)를 우선하고, 책장이 작아 우연히 맞은 사람은 cos 로 가려낸다
+      var score = (dot / uw) * (0.7 + 0.3 * cos);
+      return { c: c, shared: shared, sameAuth: sameAuth, score: score };
+    }).filter(Boolean).sort(function (a, b) {
+      return b.score - a.score || b.shared.length - a.shared.length;
+    });
+    if (!rows.length) { $out.innerHTML = '<p class="empty">고른 책을 읽은 연예인이 아직 없어요. 다른 책도 골라 보세요.</p>'; return; }
+    $out.innerHTML = '<h2 style="margin:28px 0 0">취향이 닮은 연예인 TOP ' + Math.min(5, rows.length) + '</h2>' +
+      rows.slice(0, 5).map(function (r, i) {
+        var why = '';
+        if (r.shared.length) why += '<b>같은 책 ' + r.shared.length + '권</b> · ' + r.shared.map(function (k) { return esc(books[k].title); }).join(', ');
+        if (r.sameAuth.length) why += (why ? '<br>' : '') + '<b>같은 작가</b> · ' + r.sameAuth.map(function (k) { return esc(books[k].author); }).join(', ');
+        var covers = r.shared.map(function (k) { return books[k].cover ? '<img src="' + esc(books[k].cover) + '" alt="' + esc(books[k].title) + '">' : ''; }).join('');
+        return '<article class="box"><div class="res"><div class="rank">' + (i + 1) + '</div>' +
+          (r.c.img ? '<img class="pic" src="' + esc(r.c.img) + '" alt="' + esc(r.c.name) + '" loading="lazy" referrerpolicy="no-referrer">' : '') +
+          '<div><h2><a href="' + esc(r.c.url) + '">' + esc(r.c.name) + '</a><span class="pct">내 책 ' + picked.length + '권 중 ' + r.shared.length + '권 겹침</span></h2>' +
+          '<p class="why">' + why + '</p><div class="covers">' + covers + '</div></div></div></article>';
+      }).join('');
+    $out.scrollIntoView({ behavior: 'smooth' });
+  });
+})();
+</script>
+</body>
+</html>
