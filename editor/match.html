@@ -148,7 +148,7 @@
 
     <div class="browse">
       <h2>연예인이 많이 고른 책</h2>
-      <p class="sub">분야를 고르고 표지를 눌러 담아요. 숫자는 이 책을 읽은 연예인 수예요.</p>
+      <p class="sub">분야를 고르고 표지를 눌러 담아요. 숫자는 이 책을 읽은 연예인 수예요. (누가 읽었는지는 결과에서 알려드려요)</p>
       <div class="gen" id="gen"></div>
       <div class="grid" id="grid"></div>
       <button class="btn ghost more hide" id="more">더 보기</button>
@@ -171,7 +171,7 @@
     return '<div class="cv">' + esc(b.title) + (b.cover ? '<img src="' + esc(b.cover) + '" alt="" loading="lazy" onerror="this.remove()">' : '') + '</div>';
   };
 
-  var books = {}, celebs = [], authorDf = {}, authors = {}, bookCelebs = {}, pool = [], genreOf = {};
+  var books = {}, celebs = [], authorDf = {}, authors = {}, pool = [], genreOf = {};
   var picked = [], pickedAuthors = [], weight = {};
 
   Promise.all([
@@ -190,7 +190,7 @@
         if (!e.cover && b.coverUrl) e.cover = b.coverUrl;
       });
       if (!keys.size) return;
-      keys.forEach(function (k) { books[k].df++; (bookCelebs[k] = bookCelebs[k] || []).push(name); });
+      keys.forEach(function (k) { books[k].df++; });
       auth.forEach(function (a) { authorDf[a] = (authorDf[a] || 0) + 1; });
       celebs.push({ name: name, img: c.imageUrl, url: c.shortUrl, keys: keys, authors: auth, byAuthor: byAuthor });
     });
@@ -339,9 +339,8 @@
     if (reset) shown = PAGE;
     var all = listFor(gSel);
     $('grid').innerHTML = all.slice(0, shown).map(function (b) {
-      var who = bookCelebs[b.key] || [];
       return '<button class="pk' + (picked.indexOf(b.key) >= 0 ? ' on' : '') + '" data-k="' + esc(b.key) + '"><span class="n">' + b.df + '명</span>' + cover(b) +
-        '<div class="t">' + esc(b.title) + '</div><div class="w">' + esc(who.slice(0, 2).join(', ')) + (who.length > 2 ? ' 외 ' + (who.length - 2) + '명' : '') + '</div></button>';
+        '<div class="t">' + esc(b.title) + '</div><div class="w">' + esc(b.author) + '</div></button>';
     }).join('');
     $('more').classList.toggle('hide', all.length <= shown);
   }
