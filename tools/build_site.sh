@@ -8,6 +8,7 @@
 set -e
 cd "$(dirname "$0")/.."
 python3 generate.py
+python3 tools/build_match_index.py || echo "⚠️ 매칭 분야 색인 실패 — 있던 색인으로 계속"
 before=$(sha1sum data/og.json data/cover_colors.json 2>/dev/null || true)
 python3 tools/cover_colors.py || echo "⚠️ 표지 대표색 뽑기 실패 — 있던 색으로 계속"
 python3 tools/make_og.py || echo "⚠️ OG 카드 생성 실패 — 있던 카드로 계속"
