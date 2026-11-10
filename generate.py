@@ -2836,6 +2836,13 @@ def celeb_page_data(name):
                         key=lambda x: json.dumps(x, ensure_ascii=False, sort_keys=True)),
     }
 
+def ld_datetime(d):
+    """구조화 데이터용 날짜: 'YYYY-MM-DD' → 'YYYY-MM-DDT00:00:00+09:00' (Google은 시간·시간대 포함 ISO 8601 요구)."""
+    if not d:
+        return None
+    return d + 'T00:00:00+09:00' if len(d) == 10 else d
+
+
 def celeb_page_lastmod(path, name):
     return content_lastmod(path, celeb_page_data(name),
                            lambda: _seed_date((name, b['title']) for b in celebs[name]['books']))
@@ -2962,7 +2969,7 @@ for name, info in celebs.items():
         'name': page_title,
         'url': page_url,
         'description': name + '의 인생책과 추천 도서 ' + str(n_books) + '권',
-        'dateModified': page_updated or None,
+        'dateModified': ld_datetime(page_updated),
         'mainEntity': {
             '@type': 'Person',
             'name': name,
@@ -4285,7 +4292,7 @@ for a in sorted(author_pages, key=lambda x: (-len(author_mentions[x]), x)):
             'url': url,
             'inLanguage': 'ko',
             'description': desc,
-            'dateModified': updated or None,
+            'dateModified': ld_datetime(updated),
             'about': {'@type': 'Person', 'name': a},
             'isPartOf': {'@type': 'WebSite', 'name': '최애의 독서', 'url': BASE},
             'mainEntity': {
