@@ -23,11 +23,13 @@
     .bar nav a:hover { color:var(--ink); text-decoration:underline; text-underline-offset:4px; }
     .logo { font-family:var(--serif); font-weight:700; font-size:17px; display:flex; align-items:center; gap:8px; }
     .logo::before { content:""; width:9px; height:9px; border-radius:50%; background:var(--yellow); box-shadow:0 0 0 1px var(--ink) inset; }
-    .bar .right { justify-self:end; }
+    .bar .right { justify-self:end; display:flex; align-items:center; gap:10px; min-width:0; }
     .chip { font-size:10px; font-weight:700; letter-spacing:.1em; border:1px solid var(--ink); padding:2px 7px; border-radius:99px; }
     @media (max-width:720px) {
       .bar { grid-template-columns:auto 1fr; row-gap:12px; }
       .bar nav { grid-column:1/-1; grid-row:2; overflow-x:auto; scrollbar-width:none; }
+      .bar .right { grid-column:1/-1; grid-row:3; justify-self:stretch; }
+      .bar .right .chip { display:none; }
     }
     .hero { text-align:center; padding:clamp(28px,4vw,56px) 20px clamp(28px,3vw,40px); }
     .eyebrow { font-size:11px; font-weight:700; letter-spacing:.14em; color:var(--muted); margin:0 0 14px; }
@@ -126,7 +128,7 @@
   <header class="bar">
     <nav aria-label="주요 메뉴"><a href="https://favorbook.co.kr/test/idol.html">아이돌</a><a href="https://favorbook.co.kr/test/actor.html">배우</a><a href="https://favorbook.co.kr/test/author.html">작가</a><a href="https://favorbook.co.kr/test/ranking.html">랭킹</a><a href="https://favorbook.co.kr/match/">취향 월드컵</a></nav>
     <a class="logo" href="https://favorbook.co.kr/test/">최애의 독서</a>
-    <div class="right"><span class="chip">TEST</span></div>
+    <div class="right"><div class="site-search sm"></div><span class="chip">TEST</span></div>
   </header>
   <main>
     <div class="hero">
@@ -1542,5 +1544,6 @@
     }, true);
   })();
   </script>
+  <script src="https://favorbook.co.kr/test/search.js" defer></script>
 </body>
 </html>

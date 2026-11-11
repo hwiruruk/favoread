@@ -74,26 +74,6 @@
     transition: transform .15s;
   }
   .pill:hover { transform: translateY(-2px); }
-  .search { position: relative; width: min(340px, 100%); }
-  .search input {
-    width: 100%; font: inherit; font-size: 14px;
-    padding: 12px 20px; border-radius: 99px;
-    border: 1px solid #cfccc4; background: #fff; color: var(--ink);
-    outline: none;
-  }
-  .search input:focus { border-color: var(--ink); }
-  .results {
-    position: absolute; z-index: 20; top: calc(100% + 6px); left: 0; right: 0;
-    background: #fff; border: 1px solid var(--ink); border-radius: 16px;
-    text-align: left; overflow: hidden; display: none;
-    box-shadow: 0 12px 32px rgba(0,0,0,.12);
-  }
-  .results.open { display: block; }
-  .results a { display: flex; justify-content: space-between; gap: 12px; padding: 10px 16px; font-size: 14px; }
-  .results a:hover, .results a.on { background: #faf6dc; }
-  .results small { color: var(--muted); white-space: nowrap; }
-  .results .none { padding: 12px 16px; font-size: 13px; color: var(--muted); }
-
   /* 흐르는 띠 */
   .rail { overflow: hidden; width: 100%; }
   .track { display: flex; width: max-content; will-change: transform; animation: flow var(--dur, 80s) linear infinite; }
@@ -127,6 +107,37 @@
   .rail-label a { color: var(--ink); letter-spacing: 0; font-size: 12px; }
   .rail-label a:hover { text-decoration: underline; text-underline-offset: 4px; }
   .gap { height: clamp(20px, 3vw, 36px); }
+
+  /* 구역 공통 */
+  .block { max-width: 1120px; margin: 0 auto; padding: clamp(48px, 7vw, 88px) clamp(16px, 4vw, 48px) 0; }
+  .block-head { display: flex; justify-content: space-between; align-items: flex-end; gap: 16px; margin-bottom: 24px; }
+  .block-head h2 { font-family: var(--serif); font-weight: 700; font-size: clamp(20px, 2.4vw, 26px); margin: 0 0 6px; }
+  .block-head p { margin: 0; font-size: 13px; color: var(--muted); word-break: keep-all; }
+  .block-head a { font-size: 12px; font-weight: 700; white-space: nowrap; }
+  .block-head a:hover { text-decoration: underline; text-underline-offset: 4px; }
+
+  /* 요즘 핫한 사람 */
+  .hot { display: grid; grid-template-columns: repeat(6, 1fr); gap: clamp(10px, 1.6vw, 20px); }
+  .hot a { display: block; min-width: 0; }
+  .ph { position: relative; display: block; aspect-ratio: 3 / 4; background: #f1efe9; overflow: hidden; }
+  .ph img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; object-position: 50% 20%; transition: transform .35s ease; }
+  a:hover .ph img { transform: scale(1.04); }
+  .ph i { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; font-style: normal; font-family: var(--serif); font-size: 28px; color: #b5b0a3; }
+  .hot b, .top b { display: block; font-family: var(--serif); font-size: 15px; margin-top: 10px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .hot small, .top small { display: block; font-size: 12px; color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .n { display: inline-block; font-size: 11px; font-weight: 700; background: var(--yellow); border-radius: 99px; padding: 1px 8px; margin: 4px 0 3px; }
+  @media (max-width: 820px) { .hot { grid-template-columns: repeat(3, 1fr); } }
+
+  /* 책을 가장 많이 읽은 사람 */
+  .top { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(6, 1fr); gap: clamp(20px, 3vw, 32px) clamp(10px, 1.6vw, 20px); }
+  .top li { min-width: 0; }
+  .top a { display: block; }
+  .top .rk { position: absolute; z-index: 1; left: 0; top: 0; background: #111; color: #fff; font-size: 11px; font-weight: 700; padding: 3px 8px; }
+  .top li:nth-child(-n+3) .rk { background: var(--yellow); color: #111; }
+  @media (max-width: 820px) { .top { grid-template-columns: repeat(3, 1fr); } }
+  .more { text-align: center; margin: 28px 0 0; }
+  .ghost { font: inherit; font-size: 13px; font-weight: 700; padding: 10px 22px; border-radius: 99px; border: 1px solid #cfccc4; background: #fff; color: var(--ink); cursor: pointer; }
+  .ghost:hover { border-color: var(--ink); }
 
   @media (prefers-reduced-motion: reduce) {
     .track { animation: none; }
@@ -163,10 +174,7 @@
     <p class="count" id="count">&nbsp;</p>
     <div class="actions">
       <a class="pill" href="/match/">독서 취향 월드컵 →</a>
-      <div class="search">
-        <input id="q" type="search" autocomplete="off" placeholder="최애 이름이나 책 제목 검색" aria-label="최애 이름이나 책 제목 검색">
-        <div class="results" id="results"></div>
-      </div>
+      <div class="site-search"></div>
     </div>
   </section>
 
@@ -177,6 +185,22 @@
 
   <p class="rail-label"><span>THEIR READERS</span><a href="/test/celeb.html">셀럽 전체 보기 →</a></p>
   <div class="rail faces reverse" id="rail-faces"><div class="track"></div></div>
+
+  <section class="block" id="hot" hidden>
+    <div class="block-head">
+      <div><h2 id="hot-title">요즘 핫한 사람</h2><p id="hot-sub">지금 가장 화제인 인물을 직접 골라 고정해 뒀어요.</p></div>
+    </div>
+    <div class="hot" id="hot-list"></div>
+  </section>
+
+  <section class="block" id="top">
+    <div class="block-head">
+      <div><h2>책을 가장 많이 읽은 사람</h2><p>확인된 책이 많은 순서예요. 모든 사람이 읽은 책을 인증하지는 않으니 참고만 해 주세요.</p></div>
+      <a href="/test/celeb.html">셀럽 전체 보기 →</a>
+    </div>
+    <ol class="top" id="top-list"></ol>
+    <p class="more"><button type="button" class="ghost" id="top-more">더 보기</button></p>
+  </section>
 </main>
 
 <footer>
@@ -253,37 +277,45 @@
           '<span class="cap"><b>' + esc(n) + '</b>' + celebs[n].books.length + '권</span>' +
         '</a>');
     };
-    fetch('/data/featured.json').then((r) => r.json())
-      .then((f) => fillFaces((f.picks || []).map((p) => p.name)))
-      .catch(() => fillFaces([]));
-
-    // 검색: 이름과 책 제목을 함께 찾아 해당 페이지로 보낸다.
-    const q = document.getElementById('q');
-    const box = document.getElementById('results');
-    const norm = (s) => s.toLowerCase().replace(/\s+/g, '');
-    const index = names.map((n) => ({ key: norm(n + (celebs[n].nameEn || '')), label: n, meta: celebs[n].books.length + '권', href: celebUrl(n) }))
-      .concat(bookList.filter((b) => b.readers.length >= 2).map((b) => ({ key: norm(b.title), label: b.title, meta: b.readers.length + '명이 읽음', href: bookUrl(b.title) })));
-    const show = () => {
-      const term = norm(q.value);
-      if (!term) { box.classList.remove('open'); return; }
-      const hits = index.filter((x) => x.key.includes(term))
-        .sort((a, b) => (a.key.startsWith(term) ? 0 : 1) - (b.key.startsWith(term) ? 0 : 1)).slice(0, 8);
-      box.innerHTML = hits.length
-        ? hits.map((h) => '<a href="' + h.href + '"><span>' + esc(h.label) + '</span><small>' + h.meta + '</small></a>').join('')
-        : '<div class="none">찾는 결과가 없어요. 다른 이름이나 제목으로 검색해 보세요.</div>';
-      box.classList.add('open');
+    // 사람 카드 한 장. 사진이 없거나 깨지면 이름 첫 글자만 남는다.
+    const card = (n, rank) => {
+      const bs = celebs[n].books || [];
+      return '<a href="' + celebUrl(n) + '"><span class="ph">' +
+        (rank ? '<span class="rk">' + rank + '</span>' : '') +
+        '<i>' + esc(n.slice(0, 1)) + '</i>' +
+        (celebs[n].imageUrl ? '<img src="' + esc(celebs[n].imageUrl) + '" alt="' + esc(n) + '" loading="lazy" referrerpolicy="no-referrer" onerror="this.remove()">' : '') +
+        '</span><b>' + esc(n) + '</b><span class="n">' + bs.length + '권</span>' +
+        '<small>' + esc(bs.slice(0, 2).map((b) => b.title).join(' · ')) + '</small></a>';
     };
-    q.addEventListener('input', show);
-    q.addEventListener('focus', show);
-    q.addEventListener('keydown', (e) => {
-      if (e.key === 'Enter') { const a = box.querySelector('a'); if (a) location.href = a.href; }
-      if (e.key === 'Escape') box.classList.remove('open');
-    });
-    document.addEventListener('click', (e) => { if (!e.target.closest('.search')) box.classList.remove('open'); });
+
+    // 요즘 핫한 사람: 편집기에서 고정해 둔 인물(data/featured.json). 없으면 구역을 숨긴 채 둔다.
+    fetch('/data/featured.json').then((r) => r.json()).then((f) => {
+      const picks = (f.picks || []).map((p) => p.name).filter((n) => celebs[n]);
+      fillFaces(picks);
+      if (!picks.length) return;
+      if (f.title) document.getElementById('hot-title').textContent = f.title.replace(/^[^가-힣A-Za-z0-9]+/, '');
+      if (f.subtitle) document.getElementById('hot-sub').textContent = f.subtitle;
+      document.getElementById('hot-list').innerHTML = picks.slice(0, 6).map((n) => card(n)).join('');
+      document.getElementById('hot').hidden = false;
+    }).catch(() => fillFaces([]));
+
+    // 책을 가장 많이 읽은 사람: 12명 먼저, '더 보기'로 12명씩 60위까지.
+    const ranked = names.slice().sort((a, b) => celebs[b].books.length - celebs[a].books.length || a.localeCompare(b)).slice(0, 60);
+    const topList = document.getElementById('top-list');
+    const topMore = document.getElementById('top-more');
+    let shown = 0;
+    const showMore = () => {
+      topList.insertAdjacentHTML('beforeend', ranked.slice(shown, shown + 12).map((n, i) => '<li>' + card(n, shown + i + 1) + '</li>').join(''));
+      shown += 12;
+      if (shown >= ranked.length) topMore.parentNode.remove();
+    };
+    topMore.addEventListener('click', showMore);
+    showMore();
   }).catch(() => {
     document.getElementById('count').textContent = '데이터를 불러오지 못했어요. 새로고침해 주세요.';
   });
 })();
 </script>
+<script src="/test/search.js" defer></script>
 </body>
 </html>

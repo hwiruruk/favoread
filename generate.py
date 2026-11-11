@@ -4121,11 +4121,13 @@ V2_CSS = '''
     .bar nav a:hover { color:var(--ink); text-decoration:underline; text-underline-offset:4px; }
     .logo { font-family:var(--serif); font-weight:700; font-size:17px; display:flex; align-items:center; gap:8px; }
     .logo::before { content:""; width:9px; height:9px; border-radius:50%; background:var(--yellow); box-shadow:0 0 0 1px var(--ink) inset; }
-    .bar .right { justify-self:end; }
+    .bar .right { justify-self:end; display:flex; align-items:center; gap:10px; min-width:0; }
     .chip { font-size:10px; font-weight:700; letter-spacing:.1em; border:1px solid var(--ink); padding:2px 7px; border-radius:99px; }
     @media (max-width:720px) {
       .bar { grid-template-columns:auto 1fr; row-gap:12px; }
       .bar nav { grid-column:1/-1; grid-row:2; overflow-x:auto; scrollbar-width:none; }
+      .bar .right { grid-column:1/-1; grid-row:3; justify-self:stretch; }
+      .bar .right .chip { display:none; }
     }
     .hero { text-align:center; padding:clamp(28px,4vw,56px) 20px clamp(28px,3vw,40px); }
     .eyebrow { font-size:11px; font-weight:700; letter-spacing:.14em; color:var(--muted); margin:0 0 14px; }
@@ -4313,7 +4315,7 @@ def _v2_write(path, title, eyebrow, h1, lead, hero_extra, band_titles, sections,
         '<a href="' + V2_TEST + 'actor.html">배우</a><a href="' + V2_TEST + 'author.html">작가</a>'
         '<a href="' + V2_TEST + 'ranking.html">랭킹</a><a href="' + BASE + 'match/">취향 월드컵</a></nav>\n'
         '    <a class="logo" href="' + V2_TEST + '">최애의 독서</a>\n'
-        '    <div class="right"><span class="chip">TEST</span></div>\n'
+        '    <div class="right"><div class="site-search sm"></div><span class="chip">TEST</span></div>\n'
         '  </header>\n'
         '  <main>\n'
         '    <div class="hero">\n'
@@ -4346,7 +4348,8 @@ def _v2_write(path, title, eyebrow, h1, lead, hero_extra, band_titles, sections,
         '    }, true);\n'
         '  })();\n'
         '  </script>\n') if band_items else '')
-        + '</body>\n</html>\n'
+        + '  <script src="' + V2_TEST + 'search.js" defer></script>\n'
+        '</body>\n</html>\n'
     )
     # 테스트 페이지라 write_if_changed(수정일·사이트맵 추적)를 거치지 않는다.
     os.makedirs(os.path.dirname(path), exist_ok=True)
