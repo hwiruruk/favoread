@@ -1,0 +1,289 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<title>최애의 독서 — 디자인 테스트</title>
+<link rel="icon" href="/favicon.svg" type="image/svg+xml">
+<link rel="preconnect" href="https://image.yes24.com">
+<link rel="stylesheet" href="/assets/fonts/space-grotesk.css">
+<link rel="stylesheet" href="/assets/fonts/kopubworld.css">
+<style>
+  :root {
+    --ink: #111;
+    --muted: #777;
+    --line: #e6e4de;
+    --paper: #fff;
+    --yellow: #fde047;
+    --serif: "KoPubWorld Batang", serif;
+    --sans: "Space Grotesk", "KoPubWorld Dotum", sans-serif;
+    --cover-h: clamp(170px, 19vw, 280px);
+    --face-h: clamp(120px, 15vw, 200px);
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; }
+  body {
+    background: var(--paper);
+    color: var(--ink);
+    font-family: var(--sans);
+    -webkit-font-smoothing: antialiased;
+    overflow-x: hidden;
+  }
+  a { color: inherit; text-decoration: none; }
+
+  /* 상단 바 */
+  .bar {
+    display: grid;
+    grid-template-columns: 1fr auto 1fr;
+    align-items: center;
+    padding: 18px clamp(16px, 4vw, 48px);
+    font-size: 13px;
+  }
+  .bar nav { display: flex; gap: clamp(12px, 2vw, 28px); white-space: nowrap; }
+  .bar nav a { color: #444; }
+  .bar nav a:hover { color: var(--ink); text-decoration: underline; text-underline-offset: 4px; }
+  .logo { font-family: var(--serif); font-weight: 700; font-size: 17px; display: flex; align-items: center; gap: 8px; }
+  .logo::before { content: ""; width: 9px; height: 9px; border-radius: 50%; background: var(--yellow); box-shadow: 0 0 0 1px var(--ink) inset; }
+  .bar .right { justify-self: end; display: flex; gap: 10px; align-items: center; color: var(--muted); }
+  .test-chip { font-size: 10px; font-weight: 700; letter-spacing: .1em; border: 1px solid var(--ink); color: var(--ink); padding: 2px 7px; border-radius: 99px; }
+  @media (max-width: 720px) {
+    .bar { grid-template-columns: auto 1fr; row-gap: 12px; }
+    .bar nav { grid-column: 1 / -1; grid-row: 2; overflow-x: auto; scrollbar-width: none; }
+    .bar nav::-webkit-scrollbar { display: none; }
+  }
+
+  /* 히어로 */
+  .hero { text-align: center; padding: clamp(32px, 5vw, 64px) 20px clamp(32px, 4vw, 48px); }
+  .hero h1 {
+    font-family: var(--serif);
+    font-weight: 500;
+    font-size: clamp(28px, 4.4vw, 54px);
+    line-height: 1.35;
+    letter-spacing: -.02em;
+    margin: 0;
+    word-break: keep-all;
+  }
+  .hero .count { margin: 18px 0 0; font-size: 12px; font-weight: 700; letter-spacing: .14em; color: var(--muted); }
+  .actions { margin-top: 28px; display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; align-items: center; }
+  .pill {
+    display: inline-flex; align-items: center; gap: 6px;
+    background: var(--yellow); color: var(--ink);
+    font-weight: 700; font-size: 14px;
+    padding: 12px 22px; border-radius: 99px;
+    transition: transform .15s;
+  }
+  .pill:hover { transform: translateY(-2px); }
+  .search { position: relative; width: min(340px, 100%); }
+  .search input {
+    width: 100%; font: inherit; font-size: 14px;
+    padding: 12px 20px; border-radius: 99px;
+    border: 1px solid #cfccc4; background: #fff; color: var(--ink);
+    outline: none;
+  }
+  .search input:focus { border-color: var(--ink); }
+  .results {
+    position: absolute; z-index: 20; top: calc(100% + 6px); left: 0; right: 0;
+    background: #fff; border: 1px solid var(--ink); border-radius: 16px;
+    text-align: left; overflow: hidden; display: none;
+    box-shadow: 0 12px 32px rgba(0,0,0,.12);
+  }
+  .results.open { display: block; }
+  .results a { display: flex; justify-content: space-between; gap: 12px; padding: 10px 16px; font-size: 14px; }
+  .results a:hover, .results a.on { background: #faf6dc; }
+  .results small { color: var(--muted); white-space: nowrap; }
+  .results .none { padding: 12px 16px; font-size: 13px; color: var(--muted); }
+
+  /* 흐르는 띠 */
+  .rail { overflow: hidden; width: 100%; }
+  .track { display: flex; width: max-content; will-change: transform; animation: flow var(--dur, 80s) linear infinite; }
+  .rail.reverse .track { animation-direction: reverse; }
+  .rail:hover .track, .rail:focus-within .track { animation-play-state: paused; }
+  @keyframes flow { from { transform: translateX(0); } to { transform: translateX(-50%); } }
+
+  .item { position: relative; flex: none; display: block; overflow: hidden; background: #f1efe9; }
+  .item img { display: block; width: 100%; height: 100%; object-fit: cover; transition: transform .35s ease; }
+  .item:hover img { transform: scale(1.04); }
+  .covers .item { height: var(--cover-h); width: calc(var(--cover-h) * .68); }
+  .faces .item { height: var(--face-h); width: calc(var(--face-h) * .78); }
+
+  .cap {
+    position: absolute; left: 0; right: 0; bottom: 0;
+    padding: 28px 10px 9px;
+    color: #fff; font-size: 12px; line-height: 1.35;
+    background: linear-gradient(transparent, rgba(0,0,0,.78));
+    word-break: keep-all;
+  }
+  .cap b { display: block; font-family: var(--serif); font-weight: 700; font-size: 13px; }
+  .covers .cap { opacity: 0; transition: opacity .2s; }
+  .covers .item:hover .cap, .covers .item:focus-visible .cap { opacity: 1; }
+  .faces .cap { padding-top: 22px; font-size: 11px; }
+
+  .rail-label {
+    display: flex; justify-content: space-between; align-items: baseline;
+    padding: 0 clamp(16px, 4vw, 48px); margin: 0 0 10px;
+    font-size: 11px; font-weight: 700; letter-spacing: .14em; color: var(--muted);
+  }
+  .rail-label a { color: var(--ink); letter-spacing: 0; font-size: 12px; }
+  .rail-label a:hover { text-decoration: underline; text-underline-offset: 4px; }
+  .gap { height: clamp(20px, 3vw, 36px); }
+
+  @media (prefers-reduced-motion: reduce) {
+    .track { animation: none; }
+    .rail { overflow-x: auto; }
+  }
+
+  footer {
+    margin-top: clamp(40px, 6vw, 80px);
+    border-top: 1px solid var(--line);
+    padding: 22px clamp(16px, 4vw, 48px) 40px;
+    font-size: 12px; color: var(--muted);
+    display: flex; gap: 16px; justify-content: space-between; flex-wrap: wrap;
+  }
+  footer a { color: var(--ink); text-decoration: underline; text-underline-offset: 3px; }
+</style>
+</head>
+<body>
+
+<header class="bar">
+  <nav aria-label="주요 메뉴">
+    <a href="/recommend/idol.html">아이돌</a>
+    <a href="/recommend/actor.html">배우</a>
+    <a href="/author/">작가</a>
+    <a href="/share/ranking.html">랭킹</a>
+    <a href="/match/">취향 월드컵</a>
+  </nav>
+  <a class="logo" href="/test/">최애의 독서</a>
+  <div class="right"><span class="test-chip">TEST</span><span>KR / <a href="/en/">EN</a></span></div>
+</header>
+
+<main>
+  <section class="hero">
+    <h1>당신이 좋아하는 사람이<br>읽은 책을 모았습니다</h1>
+    <p class="count" id="count">&nbsp;</p>
+    <div class="actions">
+      <a class="pill" href="/match/">독서 취향 월드컵 →</a>
+      <div class="search">
+        <input id="q" type="search" autocomplete="off" placeholder="최애 이름이나 책 제목 검색" aria-label="최애 이름이나 책 제목 검색">
+        <div class="results" id="results"></div>
+      </div>
+    </div>
+  </section>
+
+  <p class="rail-label"><span>THEIR BOOKS</span><a href="/share/ranking.html">많이 읽힌 책 전체 보기 →</a></p>
+  <div class="rail covers" id="rail-covers"><div class="track"></div></div>
+
+  <div class="gap"></div>
+
+  <p class="rail-label"><span>THEIR READERS</span><a href="/">셀럽 전체 보기 →</a></p>
+  <div class="rail faces reverse" id="rail-faces"><div class="track"></div></div>
+</main>
+
+<footer>
+  <span>디자인 테스트 페이지입니다. 검색 엔진에 노출되지 않아요.</span>
+  <a href="/">기존 홈으로 돌아가기</a>
+</footer>
+
+<script>
+(() => {
+  const COVER_COUNT = 30;   // 윗줄에 흐르는 책 수
+  const FACE_COUNT  = 30;   // 아랫줄에 흐르는 셀럽 수
+  const SEC_PER_ITEM = 4.5; // 한 장이 지나가는 데 걸리는 시간(초). 크게 하면 느려진다.
+
+  const esc = (s) => String(s).replace(/[&<>"']/g, (c) => ({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' }[c]));
+  const celebUrl = (name) => '/share/' + encodeURIComponent(name.replace(/[\/\\]/g, '_')) + '.html';
+  const bookUrl  = (title) => '/share/book/' + encodeURIComponent(title.replace(/[\/\\:"?]/g, '_')) + '.html';
+  const shuffle = (a) => { for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; };
+
+  // 띠 하나를 채운다. 같은 묶음을 두 번 이어 붙여 -50% 지점에서 끊김 없이 되돌아간다.
+  function fillRail(id, items, render) {
+    const track = document.querySelector('#' + id + ' .track');
+    const html = items.map((it, i) => render(it, i)).join('');
+    track.innerHTML = html + html;
+    track.style.setProperty('--dur', (items.length * SEC_PER_ITEM) + 's');
+    // 두 번째 묶음은 화면 낭독기·탭 이동에서 뺀다.
+    [...track.children].slice(items.length).forEach((el) => { el.setAttribute('aria-hidden', 'true'); el.tabIndex = -1; });
+    // 깨진 이미지는 양쪽 묶음에서 같이 빼야 이음매가 어긋나지 않는다.
+    track.querySelectorAll('img').forEach((img) => {
+      img.addEventListener('error', () => {
+        const key = img.closest('.item').dataset.k;
+        track.querySelectorAll('.item[data-k="' + key + '"]').forEach((el) => el.remove());
+        track.style.setProperty('--dur', (track.children.length / 2 * SEC_PER_ITEM) + 's');
+      });
+    });
+  }
+
+  fetch('/data.json').then((r) => r.json()).then((data) => {
+    const celebs = data.celebs || {};
+    const names = Object.keys(celebs);
+
+    // 책별로 읽은 사람을 모은다.
+    const books = new Map();
+    for (const name of names) {
+      for (const b of celebs[name].books || []) {
+        if (!b.title) continue;
+        let e = books.get(b.title);
+        if (!e) books.set(b.title, e = { title: b.title, author: b.author || '', coverUrl: '', readers: [] });
+        if (!e.coverUrl && b.coverUrl) e.coverUrl = b.coverUrl;
+        if (!e.readers.includes(name)) e.readers.push(name);
+      }
+    }
+    const bookList = [...books.values()];
+
+    document.getElementById('count').textContent =
+      names.length.toLocaleString() + ' STARS · ' + bookList.length.toLocaleString() + ' BOOKS';
+
+    // 윗줄: 여러 명이 읽은 책 상위권에서 매번 다르게 뽑는다. (책 페이지는 2명 이상 읽은 책에만 있다)
+    const popular = bookList.filter((b) => b.readers.length >= 2 && b.coverUrl)
+      .sort((a, b) => b.readers.length - a.readers.length).slice(0, 90);
+    fillRail('rail-covers', shuffle(popular).slice(0, COVER_COUNT), (b, i) =>
+      '<a class="item" data-k="' + i + '" href="' + bookUrl(b.title) + '">' +
+        '<img src="' + esc(b.coverUrl) + '" alt="' + esc(b.title) + ' 표지" referrerpolicy="no-referrer" decoding="async">' +
+        '<span class="cap"><b>' + esc(b.title) + '</b>' + b.readers.length + '명이 읽었어요</span>' +
+      '</a>');
+
+    // 아랫줄: 직접 고른 화제 인물을 앞에 두고, 나머지는 책이 5권 이상인 사람 중에서 뽑는다.
+    const hasPhoto = (n) => celebs[n] && celebs[n].imageUrl;
+    const fillFaces = (picks) => {
+      const first = picks.filter(hasPhoto);
+      const rest = shuffle(names.filter((n) => hasPhoto(n) && !first.includes(n) && (celebs[n].books || []).length >= 5));
+      fillRail('rail-faces', first.concat(rest).slice(0, FACE_COUNT), (n, i) =>
+        '<a class="item" data-k="' + i + '" href="' + celebUrl(n) + '">' +
+          '<img src="' + esc(celebs[n].imageUrl) + '" alt="' + esc(n) + '" referrerpolicy="no-referrer" decoding="async">' +
+          '<span class="cap"><b>' + esc(n) + '</b>' + celebs[n].books.length + '권</span>' +
+        '</a>');
+    };
+    fetch('/data/featured.json').then((r) => r.json())
+      .then((f) => fillFaces((f.picks || []).map((p) => p.name)))
+      .catch(() => fillFaces([]));
+
+    // 검색: 이름과 책 제목을 함께 찾아 해당 페이지로 보낸다.
+    const q = document.getElementById('q');
+    const box = document.getElementById('results');
+    const norm = (s) => s.toLowerCase().replace(/\s+/g, '');
+    const index = names.map((n) => ({ key: norm(n + (celebs[n].nameEn || '')), label: n, meta: celebs[n].books.length + '권', href: celebUrl(n) }))
+      .concat(bookList.filter((b) => b.readers.length >= 2).map((b) => ({ key: norm(b.title), label: b.title, meta: b.readers.length + '명이 읽음', href: bookUrl(b.title) })));
+    const show = () => {
+      const term = norm(q.value);
+      if (!term) { box.classList.remove('open'); return; }
+      const hits = index.filter((x) => x.key.includes(term))
+        .sort((a, b) => (a.key.startsWith(term) ? 0 : 1) - (b.key.startsWith(term) ? 0 : 1)).slice(0, 8);
+      box.innerHTML = hits.length
+        ? hits.map((h) => '<a href="' + h.href + '"><span>' + esc(h.label) + '</span><small>' + h.meta + '</small></a>').join('')
+        : '<div class="none">찾는 결과가 없어요. 다른 이름이나 제목으로 검색해 보세요.</div>';
+      box.classList.add('open');
+    };
+    q.addEventListener('input', show);
+    q.addEventListener('focus', show);
+    q.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') { const a = box.querySelector('a'); if (a) location.href = a.href; }
+      if (e.key === 'Escape') box.classList.remove('open');
+    });
+    document.addEventListener('click', (e) => { if (!e.target.closest('.search')) box.classList.remove('open'); });
+  }).catch(() => {
+    document.getElementById('count').textContent = '데이터를 불러오지 못했어요. 새로고침해 주세요.';
+  });
+})();
+</script>
+</body>
+</html>
