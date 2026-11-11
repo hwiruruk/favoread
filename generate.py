@@ -4101,6 +4101,307 @@ _hub_page(
       '배우 추천책 모음, 가수 추천책 모음 페이지에서 배우·가수가 추천한 책을 따로 볼 수 있어요.')],
 )
 
+# ── 5.41. 새 디자인 시안 (테스트) — test/*.html ──────────────────────
+# 홈 시안(test/index.html)과 같은 톤(흰 바탕·명조 제목·노란 알약·흐르는 표지 띠)으로
+# 모음 페이지들을 다시 짠 것. 표지와 인물 사진을 넣었다. 공식 페이지는 그대로 두고
+# test/ 아래에만 내보낸다. noindex, 사이트맵·수정일 추적에도 넣지 않는다.
+# 확정되면 공식 페이지 본문을 이 구성으로 바꾸고 이 블록(과 5.9)은 지운다.
+V2_TEST = BASE + 'test/'
+V2_CSS = '''
+    :root { --ink:#111; --muted:#777; --line:#e6e4de; --yellow:#fde047;
+      --serif:"KoPubWorld Batang",serif; --sans:"Space Grotesk","KoPubWorld Dotum",sans-serif;
+      --cover-h:clamp(140px,15vw,220px); --pad:clamp(16px,4vw,48px); }
+    * { box-sizing:border-box; }
+    html,body { margin:0; }
+    body { background:#fff; color:var(--ink); font-family:var(--sans); -webkit-font-smoothing:antialiased; overflow-x:hidden; word-break:keep-all; line-height:1.55; }
+    a { color:inherit; text-decoration:none; }
+    .bar { display:grid; grid-template-columns:1fr auto 1fr; align-items:center; padding:18px var(--pad); font-size:13px; }
+    .bar nav { display:flex; gap:clamp(12px,2vw,28px); white-space:nowrap; }
+    .bar nav a { color:#444; }
+    .bar nav a:hover { color:var(--ink); text-decoration:underline; text-underline-offset:4px; }
+    .logo { font-family:var(--serif); font-weight:700; font-size:17px; display:flex; align-items:center; gap:8px; }
+    .logo::before { content:""; width:9px; height:9px; border-radius:50%; background:var(--yellow); box-shadow:0 0 0 1px var(--ink) inset; }
+    .bar .right { justify-self:end; }
+    .chip { font-size:10px; font-weight:700; letter-spacing:.1em; border:1px solid var(--ink); padding:2px 7px; border-radius:99px; }
+    @media (max-width:720px) {
+      .bar { grid-template-columns:auto 1fr; row-gap:12px; }
+      .bar nav { grid-column:1/-1; grid-row:2; overflow-x:auto; scrollbar-width:none; }
+    }
+    .hero { text-align:center; padding:clamp(28px,4vw,56px) 20px clamp(28px,3vw,40px); }
+    .eyebrow { font-size:11px; font-weight:700; letter-spacing:.14em; color:var(--muted); margin:0 0 14px; }
+    .hero h1 { font-family:var(--serif); font-weight:500; font-size:clamp(28px,4vw,48px); line-height:1.3; letter-spacing:-.02em; margin:0; }
+    .hero p.lead { max-width:560px; margin:16px auto 0; font-size:15px; color:#444; }
+    .hero p.lead strong { color:var(--ink); background:linear-gradient(transparent 60%, var(--yellow) 60%); }
+    .tabs { margin-top:24px; display:inline-flex; gap:6px; flex-wrap:wrap; justify-content:center; }
+    .tabs a { font-size:13px; font-weight:700; padding:9px 18px; border-radius:99px; border:1px solid #cfccc4; }
+    .tabs a:hover { border-color:var(--ink); }
+    .tabs a.on { background:var(--yellow); border-color:var(--yellow); }
+    .rail { overflow:hidden; width:100%; }
+    .track { display:flex; width:max-content; animation:flow var(--dur,100s) linear infinite; }
+    .rail:hover .track { animation-play-state:paused; }
+    @keyframes flow { from { transform:translateX(0); } to { transform:translateX(-50%); } }
+    .item { position:relative; flex:none; display:block; overflow:hidden; background:#f1efe9; height:var(--cover-h); width:calc(var(--cover-h)*.68); }
+    .item img { display:block; width:100%; height:100%; object-fit:cover; }
+    .cap { position:absolute; left:0; right:0; bottom:0; padding:28px 10px 9px; color:#fff; font-size:12px; line-height:1.35; background:linear-gradient(transparent,rgba(0,0,0,.78)); opacity:0; transition:opacity .2s; }
+    .cap b { display:block; font-family:var(--serif); font-size:13px; }
+    .item:hover .cap { opacity:1; }
+    @media (prefers-reduced-motion:reduce) { .track { animation:none; } .rail { overflow-x:auto; } }
+    main section { max-width:1120px; margin:0 auto; padding:clamp(40px,6vw,72px) var(--pad) 0; }
+    h2 { font-family:var(--serif); font-weight:700; font-size:clamp(20px,2.4vw,26px); margin:0 0 6px; }
+    .sub { margin:0 0 24px; font-size:13px; color:var(--muted); }
+    ol { list-style:none; margin:0; padding:0; }
+    .cv { display:block; flex:none; background:#f1efe9; overflow:hidden; }
+    .cv img { display:block; width:100%; height:100%; object-fit:cover; }
+    .nocv { display:flex; height:100%; align-items:center; justify-content:center; padding:6px; font-family:var(--serif); font-size:11px; text-align:center; color:#666; }
+    h3 { font-family:var(--serif); font-weight:700; margin:0; line-height:1.35; }
+    h3 a:hover, .who a:hover { text-decoration:underline; text-underline-offset:3px; }
+    .au { margin:2px 0 0; font-size:12px; color:var(--muted); }
+    .who { margin:8px 0 0; font-size:12px; color:#555; line-height:1.7; }
+    .rk { font-weight:700; font-size:13px; color:var(--muted); font-variant-numeric:tabular-nums; }
+    .faces { display:flex; align-items:center; flex-wrap:wrap; row-gap:4px; padding-left:8px; }
+    .av { position:relative; flex:none; width:30px; height:30px; border-radius:50%; overflow:hidden; background:#ece9e1; border:2px solid #fff; margin-left:-8px; display:inline-flex; align-items:center; justify-content:center; }
+    .av i { font-style:normal; font-size:11px; font-weight:700; color:#8a8578; }
+    .av img { position:absolute; inset:0; width:100%; height:100%; object-fit:cover; object-position:50% 20%; }
+    .av.more { font-size:10px; font-weight:700; color:#555; }
+    .cnt { font-size:12px; font-weight:700; margin:0 16px 0 -8px; background:var(--yellow); padding:2px 8px; border-radius:99px; }
+    .top3 { display:grid; grid-template-columns:repeat(3,1fr); gap:clamp(16px,2.5vw,32px); }
+    .top3 li { display:flex; gap:16px; min-width:0; }
+    .top3 .cv { aspect-ratio:2/2.9; width:38%; max-width:150px; align-self:flex-start; }
+    .top3 .tx { min-width:0; flex:1; }
+    .top3 .rk { display:inline-block; font-size:12px; letter-spacing:.1em; color:var(--ink); background:var(--yellow); border-radius:99px; padding:2px 10px; margin-bottom:8px; }
+    .top3 .rk::before { content:"TOP "; }
+    .top3 h3 { font-size:clamp(18px,2vw,22px); }
+    .top3 .n { margin:10px 0 8px; font-size:13px; font-weight:700; }
+    .top3 .av { width:36px; height:36px; }
+    .list { display:grid; grid-template-columns:repeat(2,1fr); column-gap:clamp(24px,4vw,56px); margin-top:clamp(32px,4vw,48px); border-top:1px solid var(--ink); }
+    .list li { display:flex; gap:14px; padding:16px 0; border-bottom:1px solid var(--line); min-width:0; }
+    .list .rk { width:22px; flex:none; padding-top:2px; }
+    .list .cv { width:60px; height:87px; }
+    .list .tx { min-width:0; flex:1; }
+    .list h3 { font-size:16px; }
+    .list .faces { margin-top:8px; }
+    .list .who { display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden; }
+    @media (max-width:820px) {
+      .top3 { grid-template-columns:1fr; }
+      .list { grid-template-columns:1fr; }
+    }
+    .grps { display:grid; grid-template-columns:repeat(auto-fill,minmax(150px,1fr)); gap:8px; }
+    .grp { border:1px solid #cfccc4; border-radius:12px; padding:11px 14px; display:flex; flex-direction:column; transition:transform .15s; }
+    .grp:hover { transform:translateY(-2px); }
+    .grp b { font-family:var(--serif); font-size:15px; }
+    .grp small { font-size:11px; opacity:.75; }
+    .people { display:grid; grid-template-columns:repeat(auto-fill,minmax(170px,1fr)); gap:4px 12px; }
+    .person { display:flex; align-items:center; gap:10px; padding:7px 8px; border-radius:99px; min-width:0; }
+    .person:hover { background:#faf6dc; }
+    .av.lg { width:42px; height:42px; margin:0; border:0; }
+    .av.lg i { font-size:14px; }
+    .person span:last-child { min-width:0; display:flex; flex-direction:column; line-height:1.3; }
+    .person b { font-size:13px; font-weight:700; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+    .person small { font-size:11px; color:var(--muted); }
+    .qa { border-top:1px solid var(--line); padding:16px 0; max-width:760px; }
+    .qa h3 { font-size:15px; }
+    .qa p { margin:6px 0 0; font-size:14px; color:#444; }
+    footer { margin-top:clamp(48px,6vw,80px); border-top:1px solid var(--line); padding:22px var(--pad) 40px; font-size:12px; color:var(--muted); }
+    footer a { color:var(--ink); text-decoration:underline; text-underline-offset:3px; }
+    .list.one { grid-template-columns:1fr; }
+    .strip { display:flex; gap:6px; margin-top:10px; }
+    .strip .cv { width:44px; height:64px; }
+    .meta { margin:4px 0 0; font-size:12px; color:#555; }
+    .cards { display:grid; grid-template-columns:repeat(auto-fill,minmax(160px,1fr)); gap:clamp(20px,3vw,36px) clamp(16px,2.5vw,28px); }
+    .card { display:block; min-width:0; }
+    .card .fan { display:flex; gap:4px; background:#f6f4ee; padding:16px 14px 0; height:150px; align-items:flex-end; overflow:hidden; }
+    .card .fan .cv { flex:1; height:124px; transition:transform .25s; }
+    .card:hover .fan .cv { transform:translateY(-6px); }
+    .card .rk { display:block; margin-top:12px; }
+    .card h3 { font-size:18px; margin-top:2px; }
+    .card:hover h3 { text-decoration:underline; text-underline-offset:3px; }
+    .jump { margin-top:24px; display:inline-flex; gap:6px; flex-wrap:wrap; justify-content:center; }
+    .jump a { font-size:13px; font-weight:700; padding:9px 18px; border-radius:99px; border:1px solid #cfccc4; }
+    .jump a:hover { background:var(--yellow); border-color:var(--yellow); }
+'''
+
+
+def _v2_face(n, cls='av'):
+    img = celebs[n].get('img') or ''
+    pic = ('<img src="' + esc(img) + '" alt="" loading="lazy" referrerpolicy="no-referrer" '
+           'onerror="this.remove()">') if img.startswith('http') else ''
+    return '<span class="' + cls + '" title="' + esc(n) + '"><i>' + esc(n[:1]) + '</i>' + pic + '</span>'
+
+
+def _v2_cover(t):
+    cv = (book_celebs.get(t) or {}).get('coverUrl') or ''
+    return cv if cv.startswith('http') else ''
+
+
+def _v2_cover_img(t):
+    cv = _v2_cover(t)
+    if not cv:
+        return '<span class="nocv">' + esc(t) + '</span>'
+    return ('<img src="' + esc(cv) + '" alt="' + esc(t) + ' 표지" loading="lazy" '
+            'referrerpolicy="no-referrer" onerror="this.remove()">')
+
+
+def _v2_book_link(t, inner, cls=''):
+    c = (' class="' + cls + '"') if cls else ''
+    if t in books_with_pages:
+        return '<a' + c + ' href="' + esc(make_book_url(t)) + '">' + inner + '</a>'
+    return '<span' + c + '>' + inner + '</span>'
+
+
+def _v2_who(readers):
+    return ', '.join('<a href="' + esc(make_celeb_url(r)) + '">' + esc(r) + '</a>' for r in readers)
+
+
+def _v2_book_rows(rows, who_label):
+    """rows: [(제목, 저자, [읽은 사람])]. 1~3위는 큰 카드, 나머지는 2단 목록."""
+    top3 = ''
+    for i, (t, author, rd) in enumerate(rows[:3]):
+        top3 += (
+            '      <li>\n'
+            '        ' + _v2_book_link(t, _v2_cover_img(t), 'cv') + '\n'
+            '        <div class="tx">\n'
+            '          <span class="rk">' + str(i + 1) + '</span>\n'
+            '          <h3>' + _v2_book_link(t, esc(t)) + '</h3>\n'
+            + (('          <p class="au">' + esc(author) + '</p>\n') if author else '')
+            + '          <p class="n">' + who_label + ' ' + str(len(rd)) + '명이 읽었어요</p>\n'
+            '          <div class="faces">' + ''.join(_v2_face(r) for r in rd[:12])
+            + (('<span class="av more">+' + str(len(rd) - 12) + '</span>') if len(rd) > 12 else '') + '</div>\n'
+            '          <p class="who">' + _v2_who(rd) + '</p>\n'
+            '        </div>\n'
+            '      </li>\n')
+    rest = ''
+    for i, (t, author, rd) in enumerate(rows[3:], start=4):
+        more = ('<span class="av more">+' + str(len(rd) - 5) + '</span>') if len(rd) > 5 else ''
+        rest += (
+            '      <li>\n'
+            '        <span class="rk">' + str(i) + '</span>\n'
+            '        ' + _v2_book_link(t, _v2_cover_img(t), 'cv') + '\n'
+            '        <div class="tx">\n'
+            '          <h3>' + _v2_book_link(t, esc(t)) + '</h3>\n'
+            + (('          <p class="au">' + esc(author) + '</p>\n') if author else '')
+            + '          <div class="faces"><span class="cnt">' + str(len(rd)) + '명</span>'
+            + ''.join(_v2_face(r) for r in rd[:5]) + more + '</div>\n'
+            '          <p class="who">' + _v2_who(rd) + '</p>\n'
+            '        </div>\n'
+            '      </li>\n')
+    return ('      <ol class="top3">\n' + top3 + '      </ol>\n'
+            + (('      <ol class="list" start="4">\n' + rest + '      </ol>\n') if rest else ''))
+
+
+def _v2_write(path, title, eyebrow, h1, lead, hero_extra, band_titles, sections, old_url):
+    """새 디자인 공통 틀: 상단 바 · 제목 · 흐르는 표지 띠 · 본문 · 바닥글."""
+    band_items = [t for t in band_titles if _v2_cover(t) and t in books_with_pages][:24]
+    band = ''.join(
+        '<a class="item" data-k="' + str(i) + '" href="' + esc(make_book_url(t)) + '">'
+        '<img src="' + esc(_v2_cover(t)) + '" alt="' + esc(t) + ' 표지" referrerpolicy="no-referrer" decoding="async">'
+        '<span class="cap"><b>' + esc(t) + '</b>' + str(len(book_celebs[t]['celebs'])) + '명이 읽었어요</span></a>'
+        for i, t in enumerate(band_items))
+    page = (
+        '<!DOCTYPE html>\n<html lang="ko">\n<head>\n'
+        '  <meta charset="utf-8">\n'
+        '  <meta name="viewport" content="width=device-width, initial-scale=1">\n'
+        '  <meta name="robots" content="noindex, nofollow">\n'
+        '  <title>' + esc(title) + ' — 디자인 테스트 | 최애의 독서</title>\n'
+        '  <link rel="icon" href="' + BASE + 'favicon.svg" type="image/svg+xml">\n'
+        '  <link rel="preconnect" href="https://image.yes24.com">\n'
+        '  <link rel="stylesheet" href="' + BASE + 'assets/fonts/space-grotesk.css">\n'
+        '  <link rel="stylesheet" href="' + BASE + 'assets/fonts/kopubworld.css">\n'
+        '  <style>' + V2_CSS + '  </style>\n'
+        '</head>\n<body>\n'
+        '  <header class="bar">\n'
+        '    <nav aria-label="주요 메뉴"><a href="' + V2_TEST + 'idol.html">아이돌</a>'
+        '<a href="' + V2_TEST + 'actor.html">배우</a><a href="' + V2_TEST + 'author.html">작가</a>'
+        '<a href="' + V2_TEST + 'ranking.html">랭킹</a><a href="' + BASE + 'match/">취향 월드컵</a></nav>\n'
+        '    <a class="logo" href="' + V2_TEST + '">최애의 독서</a>\n'
+        '    <div class="right"><span class="chip">TEST</span></div>\n'
+        '  </header>\n'
+        '  <main>\n'
+        '    <div class="hero">\n'
+        '      <p class="eyebrow">' + esc(eyebrow) + '</p>\n'
+        '      <h1>' + esc(h1) + '</h1>\n'
+        + ''.join('      <p class="lead">' + p + '</p>\n' for p in lead)
+        + hero_extra +
+        '    </div>\n'
+        + (('    <div class="rail" id="band"><div class="track" style="--dur:' + str(len(band_items) * 5) + 's">'
+            + band + band + '</div></div>\n') if band_items else '')
+        + ''.join(
+            '    <section' + ((' id="' + sid + '"') if sid else '') + '>\n      <h2>' + esc(h2) + '</h2>\n'
+            + (('      <p class="sub">' + esc(sub) + '</p>\n') if sub else '') + body + '    </section>\n'
+            for sid, h2, sub, body in sections)
+        + '  </main>\n'
+        '  <footer>디자인 테스트 페이지입니다. 검색 엔진에 노출되지 않아요. '
+        '<a href="' + old_url + '">기존 페이지 보기</a> · '
+        '<a href="https://forms.gle/Sd3ZQTahZNbUjbdz7">빠진 책 제보하기</a></footer>\n'
+        + ((
+        '  <script>\n'
+        '  // 흐르는 띠는 같은 묶음을 두 번 이어 붙인 것이라, 깨진 표지는 양쪽에서 같이 뺀다.\n'
+        '  (function () {\n'
+        '    var t = document.querySelector("#band .track");\n'
+        '    var half = t.children.length / 2;\n'
+        '    [].slice.call(t.children, half).forEach(function (el) { el.setAttribute("aria-hidden", "true"); el.tabIndex = -1; });\n'
+        '    t.addEventListener("error", function (e) {\n'
+        '      var it = e.target.closest && e.target.closest(".item"); if (!it) return;\n'
+        '      [].forEach.call(t.querySelectorAll(\'.item[data-k="\' + it.dataset.k + \'"]\'), function (el) { el.remove(); });\n'
+        '      t.style.setProperty("--dur", (t.children.length / 2 * 5) + "s");\n'
+        '    }, true);\n'
+        '  })();\n'
+        '  </script>\n') if band_items else '')
+        + '</body>\n</html>\n'
+    )
+    # 테스트 페이지라 write_if_changed(수정일·사이트맵 추적)를 거치지 않는다.
+    os.makedirs(os.path.dirname(path), exist_ok=True)
+    with open(path, 'w', encoding='utf-8') as _f:
+        _f.write(page)
+
+
+def _hub_page_v2(tab, eyebrow, h1, lead, ranked, list_title, people, people_title, groups, faq,
+                 who_label, old_url):
+    """추천책 모음(아이돌·배우·가수·전체)의 새 디자인판 → test/<tab>.html"""
+    rows = [(t, info['author'], info['readers']) for t, info in ranked[:80]]
+    tabs = ('      <div class="tabs">' + ''.join(
+        '<a href="' + V2_TEST + k + '.html"' + (' class="on" aria-current="page"' if k == tab else '') + '>' + lbl + '</a>'
+        for k, lbl in (('idol', '아이돌'), ('actor', '배우'), ('musician', '가수'), ('celeb', '전체'))) + '</div>\n')
+    groups_html = ''
+    for g in groups:
+        style, _fg = group_box_style(g['en'])
+        groups_html += ('      <a class="grp" href="' + esc(make_group_url(g)) + '"'
+                        + ((' style="' + style + '"') if style else '') + '><b>' + esc(g['ko']) + '</b>'
+                        '<small>' + str(len(g['members'])) + '명 · ' + str(g['n_books']) + '권</small></a>\n')
+    people_html = ''.join(
+        '      <a class="person" href="' + esc(make_celeb_url(n)) + '">' + _v2_face(n, 'av lg')
+        + '<span><b>' + esc(n) + '</b><small>' + str(len(celebs[n]['books'])) + '권</small></span></a>\n'
+        for n in people)
+    faq_html = ''.join('      <div class="qa"><h3>' + esc(q) + '</h3><p>' + esc(a) + '</p></div>\n' for q, a in faq)
+    sections = [('', list_title, '여러 명이 함께 읽은 책부터 ' + str(len(rows)) + '권을 순서대로 보여드려요.',
+                 _v2_book_rows(rows, who_label))]
+    if groups_html:
+        sections.append(('', '그룹별 추천 도서', '박스 색은 그룹 공식 색이에요.',
+                         '      <div class="grps">\n' + groups_html + '      </div>\n'))
+    sections.append(('', people_title, '이름을 누르면 그 사람이 읽은 책을 모두 볼 수 있어요.',
+                     '      <div class="people">\n' + people_html + '      </div>\n'))
+    sections.append(('', '자주 묻는 질문', '', faq_html))
+    _v2_write('test/' + tab + '.html', h1, eyebrow, h1, lead, tabs, [t for t, _a, _r in rows], sections, old_url)
+
+
+def _v2_faq(label, picks):
+    return [(label + ' 추천책은 어떤 기준으로 모았나요?',
+             label + '가 직접 추천한 책은 물론, 방송·인터뷰·유튜브·SNS에서 읽었다고 말하거나 언급한 책, '
+             '화보나 일상 사진에 포착된 책까지 출처와 함께 모았어요. 본인이 쓴 책이나 출연작의 원작은 넣지 않아요.'),
+            (label + '가 가장 많이 추천한 책은 무엇인가요?',
+             ('지금 기준으로 ' + ', '.join(picks) + ' 순으로 많이 언급됐어요.') if picks else '아직 집계 중이에요.')]
+
+
+_hub_page_v2(
+    'idol', 'RECOMMENDED BY IDOLS', '아이돌 추천책 모음',
+    ['K-POP 아이돌 <strong>' + str(len(idol_names)) + '명</strong>이 인터뷰·유튜브·SNS에서 읽었다고 밝히거나 '
+     '추천한 책 <strong>' + str(len(_idol_ranked)) + '권</strong>을 모았어요.'],
+    _idol_ranked, '아이돌이 가장 많이 추천한 책',
+    idol_names, '책을 추천한 아이돌 ' + str(len(idol_names)) + '명',
+    [g for g in sorted(ko_groups.values(), key=lambda g: (-g['n_books'], g['ko']))
+     if g['members'][0] in idol_names],
+    _v2_faq('아이돌', _idol_picks), '아이돌', IDOL_HUB_URL,
+)
+
 # 연예인 추천책 (아이돌 포함 전체)
 _all_ranked = _hub_books(list(celebs))
 _all_picks = [t for t, _ in _all_ranked[:3]]
@@ -7100,6 +7401,88 @@ ranking_page = (
 
 write_if_changed('share/ranking.html', ranking_page)
 print("✅ 랭킹 페이지 생성: share/ranking.html")
+
+# ── 6.1. 새 디자인 시안 (테스트) — 배우·가수·전체·작가·랭킹 ─────────────
+# 틀은 5.41의 _v2_write. 여기서는 필요한 집계(직업별 이름, 작가 목록, 랭킹)가
+# 모두 끝난 뒤라 한꺼번에 내보낸다.
+for _tab, _eyebrow, _label, _names, _who, _old in (
+    ('actor', 'RECOMMENDED BY ACTORS', '배우', actor_names, '드라마·영화 배우', ACTOR_HUB_URL),
+    ('musician', 'RECOMMENDED BY MUSICIANS', '가수', musician_names, '가수·싱어송라이터·뮤지션', MUSICIAN_HUB_URL),
+    ('celeb', 'RECOMMENDED BY STARS', '연예인', sorted(celebs, key=lambda x: x.lower()),
+     '배우·가수·아이돌·방송인 등 연예인', CELEB_HUB_URL),
+):
+    _ranked = _hub_books(_names)
+    _hub_page_v2(
+        _tab, _eyebrow, _label + ' 추천책 모음',
+        [_who + ' <strong>' + str(len(_names)) + '명</strong>이 인터뷰·방송·SNS에서 읽었다고 밝히거나 '
+         '추천한 책 <strong>' + str(len(_ranked)) + '권</strong>을 모았어요.'],
+        _ranked, _label + '가 가장 많이 추천한 책' if _tab != 'celeb' else '연예인이 가장 많이 추천한 책',
+        _names, '책을 추천한 ' + _label + ' ' + str(len(_names)) + '명',
+        [], _v2_faq(_label, [t for t, _ in _ranked[:3]]), _label, _old,
+    )
+
+# 작가·출판사별로 책을 묶는다 (책마다 읽은 사람 수 순)
+_v2_by_author, _v2_by_pub = {}, {}
+for _t, _bi in book_celebs.items():
+    if (_bi.get('author') or '').strip():
+        _v2_by_author.setdefault(_bi['author'].strip(), []).append(_t)
+    if (_bi.get('publisher') or '').strip():
+        _v2_by_pub.setdefault(_bi['publisher'].strip(), []).append(_t)
+for _m in (_v2_by_author, _v2_by_pub):
+    for _k in _m:
+        _m[_k].sort(key=lambda t: (-len(book_celebs[t]['celebs']), title_sort_key(t)))
+
+
+def _v2_strip(titles, n=5):
+    return ('<div class="strip">' + ''.join(_v2_book_link(t, _v2_cover_img(t), 'cv') for t in titles[:n])
+            + '</div>') if titles else ''
+
+
+# 작가 목록 → test/author.html
+_v2_author_cards = ''.join(
+    '      <a class="card" href="' + esc(make_author_url(a)) + '">'
+    '<div class="fan">' + ''.join('<span class="cv">' + _v2_cover_img(t) + '</span>'
+                                  for t in _v2_by_author.get(a, [])[:3]) + '</div>'
+    '<span class="rk">' + str(i + 1) + '</span><h3>' + esc(a) + '</h3>'
+    '<p class="meta">' + str(nc) + '명이 읽음 · 책 ' + str(nb) + '권</p>'
+    '<p class="au">가장 많이 읽힌 책 『' + esc(top) + '』</p></a>\n'
+    for i, (a, nc, _nm, nb, top, _u) in enumerate(author_index))
+_v2_write(
+    'test/author.html', '그들이 많이 읽은 작가', 'MOST-READ AUTHORS', '그들이 많이 읽은 작가',
+    ['그들이 읽었거나 추천한 책을 작가별로 모았어요. 언급이 ' + str(AUTHOR_MIN_MENTIONS) + '번 이상인 작가 <strong>'
+     + str(len(author_index)) + '명</strong>이고, 가장 많이 언급된 작가는 '
+     + ', '.join(esc(a) for a, *_r in author_index[:3]) + ' 순이에요.'],
+    '', [top for _a, _nc, _nm, _nb, top, _u in author_index],
+    [('', '작가 목록', '작가를 누르면 그 작가의 책과 읽은 사람을 볼 수 있어요.',
+      '      <div class="cards">\n' + _v2_author_cards + '      </div>\n')],
+    AUTHOR_HUB_URL)
+
+# 랭킹 → test/ranking.html
+_v2_rank_authors = ''.join(
+    '      <li><span class="rk">' + str(i + 1) + '</span><div class="tx"><h3>'
+    + (('<a href="' + esc(make_author_url(a)) + '">' + esc(a) + '</a>') if a in author_pages else esc(a))
+    + '</h3><p class="meta"><span class="cnt" style="margin:0">' + str(c) + '회</span></p>'
+    + _v2_strip(_v2_by_author.get(a, [])) + '</div></li>\n'
+    for i, (a, c) in enumerate(top_authors_list))
+_v2_rank_pubs = ''.join(
+    '      <li><span class="rk">' + str(i + 1) + '</span><div class="tx"><h3>' + esc(p)
+    + '</h3><p class="meta"><span class="cnt" style="margin:0">' + str(c) + '회</span></p>'
+    + _v2_strip(_v2_by_pub.get(p, [])) + '</div></li>\n'
+    for i, (p, c) in enumerate(top_publishers_list))
+_v2_write(
+    'test/ranking.html', '셀럽 독서 랭킹', 'RANKING', '셀럽 독서 랭킹',
+    ['셀럽 <strong>' + str(len(celebs)) + '명</strong>의 독서 기록에서 가장 많이 읽힌 책, 저자, 출판사를 뽑았어요.'],
+    '      <div class="jump"><a href="#books">책 TOP 30</a><a href="#authors">저자 TOP 20</a>'
+    '<a href="#publishers">출판사 TOP 15</a></div>\n',
+    [t for t, _bi in top_books],
+    [('books', '가장 많이 읽힌 책 TOP 30', '읽은 셀럽이 많은 순서예요.',
+      _v2_book_rows([(t, bi['author'], bi['celebs']) for t, bi in top_books], '셀럽')),
+     ('authors', '가장 많이 읽힌 저자 TOP 20', '횟수는 그 저자의 책이 언급된 횟수예요.',
+      '      <ol class="list">\n' + _v2_rank_authors + '      </ol>\n'),
+     ('publishers', '가장 많이 읽힌 출판사 TOP 15', '횟수는 그 출판사의 책이 언급된 횟수예요.',
+      '      <ol class="list">\n' + _v2_rank_pubs + '      </ol>\n')],
+    BASE + 'share/ranking.html')
+print("✅ 새 디자인 시안: test/idol·actor·musician·celeb·author·ranking.html")
 
 # ── 6.5. 고아(orphan) share 파일 정리 ────────────────────────────────
 #
