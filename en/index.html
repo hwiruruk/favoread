@@ -122,6 +122,8 @@
 }
   </script>
 
+  <link rel="stylesheet" href="https://favorbook.co.kr/assets/v2/theme.css">
+  <script src="https://favorbook.co.kr/assets/v2/theme.js"></script>
   <script src="https://cdn.tailwindcss.com"></script>
   <link rel="stylesheet" href="https://favorbook.co.kr/assets/fonts/space-grotesk.css">
   <link rel="stylesheet" href="https://favorbook.co.kr/assets/fonts/kopubworld.css">
@@ -134,20 +136,26 @@
             serif: ['"KoPubWorld Batang"', 'serif'],
             sans:  ['"Space Grotesk"', '"KoPubWorld Dotum"', 'sans-serif'],
           },
+          // 색은 assets/v2/theme.css의 변수를 쓴다 (한국어 홈 index.html과 같은 값).
           colors: {
-            ink:        '#000000',
-            paper:      '#ffffff',
-            'paper-dark': '#f4f4f0',
-            muted:      '#666666',
-            'neo-mint':   '#a7f3d0',
-            'neo-pink':   '#fbcfe8',
+            ink:        'rgb(var(--ink-rgb) / <alpha-value>)',
+            black:      'rgb(var(--ink-rgb) / <alpha-value>)',
+            paper:      'rgb(var(--bg-rgb) / <alpha-value>)',
+            white:      'rgb(var(--bg-rgb) / <alpha-value>)',
+            'paper-dark': 'rgb(var(--card-rgb) / <alpha-value>)',
+            muted:      'rgb(var(--muted-rgb) / <alpha-value>)',
+            'neo-mint':   'rgb(var(--card-rgb) / <alpha-value>)',
+            'neo-pink':   'rgb(var(--card-rgb) / <alpha-value>)',
             'neo-yellow': '#fde047',
           },
+          borderColor: { ink: 'rgb(var(--border-rgb) / <alpha-value>)' },
+          borderWidth: { 2: '1px', 4: '1px' },
           boxShadow: {
-            neo:    '4px 4px 0px 0px rgba(0,0,0,1)',
-            'neo-lg': '8px 8px 0px 0px rgba(0,0,0,1)',
-            'neo-sm': '2px 2px 0px 0px rgba(0,0,0,1)',
+            neo:    'none',
+            'neo-lg': '0 16px 40px rgb(0 0 0 / .14)',
+            'neo-sm': 'none',
           },
+          fontWeight: { black: '700', bold: '500' },
         }
       }
     }
@@ -156,26 +164,13 @@
   <style>
     html, body { min-height: 100%; }
     body {
-      background-color: #fcfaf5;
-      color: #000;
+      background-color: var(--bg);
+      color: var(--ink);
       -webkit-font-smoothing: antialiased;
     }
-    ::selection { background: #fde047; color: #000; }
+    ::selection { background: #fde047; color: #111; }
     .word-break-keep { word-break: keep-all; }
 
-    /* Scroll-spy tabs (Neo-brutalism) */
-    .spy-tab {
-      display: inline-block; padding: 6px 10px;
-      background: #fff; border: 2px solid #000;
-      box-shadow: 2px 2px 0 0 #000;
-      font-family: 'Space Grotesk', sans-serif;
-      font-weight: 700; font-size: 11px; letter-spacing: .05em;
-      text-decoration: none; color: #000; white-space: nowrap;
-      transition: transform .1s, box-shadow .1s, background .1s;
-      flex-shrink: 0;
-    }
-    .spy-tab:hover { transform: translate(-1px,-1px); box-shadow: 3px 3px 0 0 #000; background: #fde047; }
-    .spy-tab.active { background: #000; color: #fff; }
     @media (min-width: 768px) { #side-tabs .spy-tab { min-width: 64px; text-align: center; } }
     .scrollbar-hide::-webkit-scrollbar { display: none; }
     .scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }
@@ -183,8 +178,15 @@
       #hero, #search, #about, #featured, #categories, #groups, #celebs, #books { scroll-margin-top: 60px; }
     }
   </style>
+  <link rel="stylesheet" href="https://favorbook.co.kr/assets/v2/home.css">
 </head>
 <body class="font-serif relative selection:bg-neo-yellow selection:text-ink">
+
+<header class="bar">
+  <nav aria-label="Main menu"><a href="https://favorbook.co.kr/en/category/kpop-idols.html">Idols</a><a href="https://favorbook.co.kr/en/category/k-drama-actors.html">Actors</a><a href="https://favorbook.co.kr/en/category/korean-musicians.html">Musicians</a><a href="https://favorbook.co.kr/en/share/ranking.html">Ranking</a></nav>
+  <a class="logo" href="https://favorbook.co.kr/en/">Favorbook</a>
+  <div class="right"><a class="lang" href="https://favorbook.co.kr/" hreflang="ko">한국어</a></div>
+</header>
 
 <!-- Scroll-spy 사이드 탭 (데스크탑) -->
 <nav id="side-tabs" class="hidden md:flex fixed left-4 lg:left-6 top-1/2 -translate-y-1/2 z-30 flex-col gap-2 pointer-events-auto">
@@ -210,18 +212,13 @@
 
 <main class="max-w-5xl mx-auto px-4 sm:px-6 py-12 md:py-24 flex flex-col gap-12 md:gap-16">
 
-  <header id="hero" class="flex flex-col items-center pt-6 md:pt-0 text-center">
-    <h1 class="text-4xl sm:text-5xl md:text-6xl font-black tracking-tight mb-3 text-ink">Favorbook</h1>
-    <p class="text-ink font-sans font-bold text-sm sm:text-base tracking-wide mb-3">What your fave K-pop idol or K-drama actor is reading📕</p>
-    <p class="text-muted text-xs sm:text-sm mb-6 max-w-xl mx-auto px-4 word-break-keep">Verified reading lists from Korean stars — K-pop idols (BTS, IVE, NewJeans, SEVENTEEN), K-drama and K-movie actors, film directors and musicians — sourced from interviews, YouTube, and SNS.</p>
-    <p class="text-ink font-sans font-bold text-xs sm:text-sm tracking-[.15em] mb-6 uppercase bg-neo-yellow border-2 border-ink px-4 py-1 shadow-neo-sm">Archive of their reads</p>
-    <div class="flex items-center gap-2 text-[10px] sm:text-xs font-sans font-bold tracking-wider text-ink border-2 border-ink bg-white px-3 py-1.5 shadow-neo-sm">
-      <span class="w-2 h-2 rounded-full bg-ink"></span>
+  <header id="hero" class="hero-home flex flex-col items-center">
+    <p class="eyebrow">Favorbook · Archive of their reads</p>
+    <h1>Books your favorite<br>Korean stars have read</h1>
+    <p class="text-muted text-sm sm:text-base mt-5 max-w-xl mx-auto px-4 word-break-keep">Verified reading lists from Korean stars — K-pop idols (BTS, IVE, NewJeans, SEVENTEEN), K-drama and K-movie actors, film directors and musicians — sourced from interviews, YouTube, and SNS.</p>
+    <div class="count flex items-center gap-2">
+      <span id="status-dot" class="w-2 h-2 rounded-full"></span>
       <span>568 STARS ⭐ · 2,481 BOOKS 📚</span>
-    </div>
-    <div class="flex gap-2 mt-5">
-      <a href="https://favorbook.co.kr/" hreflang="ko" class="px-4 py-1.5 bg-white border-2 border-ink shadow-neo-sm hover:bg-neo-yellow hover:-translate-y-0.5 transition-all font-sans font-bold text-xs tracking-widest text-ink">KOR</a>
-      <span class="px-4 py-1.5 bg-ink text-paper border-2 border-ink shadow-neo-sm font-sans font-bold text-xs tracking-widest">ENG</span>
     </div>
     <div class="flex flex-wrap justify-center gap-2 mt-4">
       <a href="updates.html" class="px-3 py-1.5 bg-white border-2 border-ink shadow-neo-sm hover:bg-neo-yellow hover:-translate-y-0.5 transition-all font-sans font-bold text-[11px] sm:text-xs text-ink">🆕 Nov 13 · 23 books added →</a>

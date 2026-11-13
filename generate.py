@@ -2361,7 +2361,7 @@ def _inject_featured(html_text, title, subtitle, picks):
                 'bg-white shadow-neo px-3 py-4 text-center no-underline text-ink">\n'
                 '        <span class="font-black text-sm">' + esc(n) + '</span>' + badge + '\n'
                 '        <span class="text-[10px] text-muted mt-1">'
-                + str(len(celebs[n]['books'])) + ' records</span>\n'
+                + str(len(celebs[n]['books'])) + '권</span>\n'
                 '      </a>'
             )
         inner = '\n'.join(cards)
@@ -3935,7 +3935,6 @@ print(f"✅ /group/ 그룹 페이지: {len(ko_group_pages)}개")
 # 스타일과 스크립트는 assets/v2/ 에 있다(theme.css 색 변수, site.css 구성 요소,
 # theme.js 화면 전환, search.js 검색, shuffle.js 들어올 때마다 다른 표지).
 V2_ASSETS = BASE + 'assets/v2/'
-V2_TEST = BASE + 'test/'
 
 # 지금 만들고 있는 페이지의 언어. 영문 페이지를 만드는 동안만 'en'으로 바꾼다.
 # 아래 도우미들이 이 값을 보고 이름·제목·주소를 고른다.
@@ -4100,15 +4099,14 @@ def _v2_nav():
             '<a href="' + BASE + 'match/">취향 월드컵</a>')
 
 
-def _v2_page(head, eyebrow, h1, lead, hero_extra, sections, alt_url='', home=False, test=False):
+def _v2_page(head, eyebrow, h1, lead, hero_extra, sections, alt_url=''):
     """새 디자인 페이지 한 장을 HTML 문자열로 돌려준다.
 
     head     '<!DOCTYPE html>'부터 </head> 직전까지. 제목·설명·canonical·구조화 데이터 등
              검색용 정보는 부르는 쪽이 예전 그대로 만든다. 여기서는 스타일만 붙인다.
     h1       HTML 그대로 들어간다(줄바꿈 <br> 가능).
     sections [(id, 제목, 한 줄 설명, 본문 HTML)]
-    alt_url  다른 언어판 주소. home은 검색창을 제목 아래에 크게 두는 홈 모양,
-             test는 아직 공식 반영 전인 시안(TEST 표시)."""
+    alt_url  다른 언어판 주소."""
     en = _v2_lang == 'en'
     alt = (('<a class="lang" href="' + alt_url + '" hreflang="' + ('ko' if en else 'en') + '">'
             + ('한국어' if en else 'EN') + '</a>') if alt_url else '')
@@ -4123,13 +4121,12 @@ def _v2_page(head, eyebrow, h1, lead, hero_extra, sections, alt_url='', home=Fal
         '</head>\n<body>\n'
         '  <header class="bar">\n'
         '    <nav aria-label="' + ('Main menu' if en else '주요 메뉴') + '">' + _v2_nav() + '</nav>\n'
-        '    <a class="logo" href="' + ((V2_TEST + ('en/' if en else '')) if test else (EN_BASE if en else BASE)) + '">'
+        '    <a class="logo" href="' + (EN_BASE if en else BASE) + '">'
         + ('Favorbook' if en else '최애의 독서') + '</a>\n'
-        '    <div class="right">' + ('' if home else '<div class="site-search sm"></div>')
-        + ('<span class="chip">TEST</span>' if test else '') + alt + '</div>\n'
+        '    <div class="right"><div class="site-search sm"></div>' + alt + '</div>\n'
         '  </header>\n'
         '  <main>\n'
-        '    <div class="hero' + (' home' if home else '') + '">\n'
+        '    <div class="hero">\n'
         + (('      <p class="eyebrow">' + esc(eyebrow) + '</p>\n') if eyebrow else '')
         + '      <h1>' + h1 + '</h1>\n'
         + ''.join('      <p class="lead">' + p + '</p>\n' for p in lead)
@@ -6162,52 +6159,6 @@ for _t in book_title_en:
         ('Read by ' + str(len(_rd))) if len(_rd) >= 2 else ('Read by ' + _v2_cname(_rd[0])),
         _v2_burl(_t) or _v2_curl(_rd[0]), 1, len(_rd)])
 write_if_changed('assets/v2/search-en.json', json.dumps(_v2_en_index, ensure_ascii=False, separators=(',', ':')))
-
-# ── 영문 홈 시안 (test/en/index.html) ─────────────────────────────────
-# 홈은 아직 공식 반영 전이라 test/ 아래에 둔다. noindex, 사이트맵·수정일 추적에도 넣지 않는다.
-
-
-def _v2_en_person(n, rank=0):
-    img = celebs[n].get('img') or ''
-    return ('<a href="' + esc(_v2_curl(n)) + '"><span class="ph">'
-            + (('<span class="rk">' + str(rank) + '</span>') if rank else '')
-            + '<i>' + esc(_v2_cname(n)[:1]) + '</i>'
-            + (('<img src="' + esc(img) + '" alt="' + esc(_v2_cname(n)) + '" loading="lazy" '
-                'referrerpolicy="no-referrer" onerror="this.remove()">') if img.startswith('http') else '')
-            + '</span><b>' + esc(_v2_cname(n)) + '</b><span class="cnt">' + str(_v2_en_count(n)) + ' books</span><small>'
-            + esc(' · '.join(_v2_bname(b['title'].strip()) for b in celebs[n]['books'] if b.get('title_en'))[:80])
-            + '</small></a>\n')
-
-
-_v2_en_books = [t for t, bi in sorted(book_celebs.items(), key=lambda x: (-len(x[1]['celebs']), x[0]))
-                if t in en_books_with_pages and _v2_cover(t)][:60]
-_v2_en_books = sorted(_v2_en_books, key=lambda t: hashlib.md5(t.encode('utf-8')).hexdigest())
-_v2_en_bgrid = ('      <div class="bgrid" data-pick="16">\n' + ''.join(
-    '      <a' + (' class="hid"' if i >= 16 else '') + ' href="' + esc(_v2_burl(t)) + '"><span class="cv">'
-    + _v2_cover_img(t) + '</span><b>' + esc(_v2_bname(t)) + '</b><small>Read by '
-    + str(len(book_celebs[t]['celebs'])) + '</small></a>\n' for i, t in enumerate(_v2_en_books)) + '      </div>\n')
-_v2_en_hot = [p['name'] for p in featured_picks if p['name'] in en_celeb_pos][:6]
-os.makedirs('test/en', exist_ok=True)
-with open('test/en/index.html', 'w', encoding='utf-8') as _f:
-    _f.write(_v2_page(
-        '<!DOCTYPE html>\n<html lang="en">\n<head>\n'
-        '  <meta charset="utf-8">\n'
-        '  <meta name="viewport" content="width=device-width, initial-scale=1">\n'
-        '  <meta name="robots" content="noindex, nofollow">\n'
-        '  <title>Favorbook — design test</title>\n'
-        '  <link rel="icon" href="' + BASE + 'favicon.svg" type="image/svg+xml">\n',
-        '', 'Books your favorite<br>Korean stars have read', [],
-        '      <p class="count">' + format(len(en_celeb_order), ',') + ' STARS · '
-        + format(len(book_title_en), ',') + ' BOOKS</p>\n      <div class="site-search"></div>\n',
-        [('', 'Books many stars have read', 'A different pick every visit, from books read by two or more stars.',
-          _v2_en_bgrid)]
-        + ([('', 'Trending now', 'People everyone is talking about right now, hand-picked.',
-             '      <div class="pgrid">\n' + ''.join('      ' + _v2_en_person(n) for n in _v2_en_hot) + '      </div>\n')]
-           if _v2_en_hot else [])
-        + [('', 'Longest reading lists', 'Ranked by confirmed books. Not everyone shares what they read, so take it lightly.',
-            '      <div class="pgrid">\n'
-            + ''.join('      ' + _v2_en_person(n, i + 1) for i, n in enumerate(_en_top_readers[:12])) + '      </div>\n')],
-        V2_TEST, home=True, test=True))
 _v2_lang = 'ko'
 
 
@@ -6785,6 +6736,11 @@ EN_SEARCH_JS = """<script>
 </script>
 """
 
+# 상단 메뉴는 새 디자인 영문 페이지들과 같은 것을 쓴다.
+_v2_lang = 'en'
+_en_home_nav = _v2_nav()
+_v2_lang = 'ko'
+
 en_index = (
     '<!DOCTYPE html>\n'
     '<html lang="en">\n'
@@ -6831,6 +6787,8 @@ en_index = (
     '  <script type="application/ld+json">\n  ' + en_index_jsonld + '\n  </script>\n'
     '  <script type="application/ld+json">\n  ' + en_faq_jsonld + '\n  </script>\n'
     '\n'
+    '  <link rel="stylesheet" href="' + V2_ASSETS + 'theme.css">\n'
+    '  <script src="' + V2_ASSETS + 'theme.js"></script>\n'
     '  <script src="https://cdn.tailwindcss.com"></script>\n'
     '  <link rel="stylesheet" href="' + BASE + 'assets/fonts/space-grotesk.css">\n'
     '  <link rel="stylesheet" href="' + BASE + 'assets/fonts/kopubworld.css">\n'
@@ -6843,20 +6801,26 @@ en_index = (
     '            serif: [\'"KoPubWorld Batang"\', \'serif\'],\n'
     '            sans:  [\'"Space Grotesk"\', \'"KoPubWorld Dotum"\', \'sans-serif\'],\n'
     '          },\n'
+    '          // 색은 assets/v2/theme.css의 변수를 쓴다 (한국어 홈 index.html과 같은 값).\n'
     '          colors: {\n'
-    '            ink:        \'#000000\',\n'
-    '            paper:      \'#ffffff\',\n'
-    '            \'paper-dark\': \'#f4f4f0\',\n'
-    '            muted:      \'#666666\',\n'
-    '            \'neo-mint\':   \'#a7f3d0\',\n'
-    '            \'neo-pink\':   \'#fbcfe8\',\n'
+    '            ink:        \'rgb(var(--ink-rgb) / <alpha-value>)\',\n'
+    '            black:      \'rgb(var(--ink-rgb) / <alpha-value>)\',\n'
+    '            paper:      \'rgb(var(--bg-rgb) / <alpha-value>)\',\n'
+    '            white:      \'rgb(var(--bg-rgb) / <alpha-value>)\',\n'
+    '            \'paper-dark\': \'rgb(var(--card-rgb) / <alpha-value>)\',\n'
+    '            muted:      \'rgb(var(--muted-rgb) / <alpha-value>)\',\n'
+    '            \'neo-mint\':   \'rgb(var(--card-rgb) / <alpha-value>)\',\n'
+    '            \'neo-pink\':   \'rgb(var(--card-rgb) / <alpha-value>)\',\n'
     '            \'neo-yellow\': \'#fde047\',\n'
     '          },\n'
+    '          borderColor: { ink: \'rgb(var(--border-rgb) / <alpha-value>)\' },\n'
+    '          borderWidth: { 2: \'1px\', 4: \'1px\' },\n'
     '          boxShadow: {\n'
-    '            neo:    \'4px 4px 0px 0px rgba(0,0,0,1)\',\n'
-    '            \'neo-lg\': \'8px 8px 0px 0px rgba(0,0,0,1)\',\n'
-    '            \'neo-sm\': \'2px 2px 0px 0px rgba(0,0,0,1)\',\n'
+    '            neo:    \'none\',\n'
+    '            \'neo-lg\': \'0 16px 40px rgb(0 0 0 / .14)\',\n'
+    '            \'neo-sm\': \'none\',\n'
     '          },\n'
+    '          fontWeight: { black: \'700\', bold: \'500\' },\n'
     '        }\n'
     '      }\n'
     '    }\n'
@@ -6865,26 +6829,13 @@ en_index = (
     '  <style>\n'
     '    html, body { min-height: 100%; }\n'
     '    body {\n'
-    '      background-color: #fcfaf5;\n'
-    '      color: #000;\n'
+    '      background-color: var(--bg);\n'
+    '      color: var(--ink);\n'
     '      -webkit-font-smoothing: antialiased;\n'
     '    }\n'
-    '    ::selection { background: #fde047; color: #000; }\n'
+    '    ::selection { background: #fde047; color: #111; }\n'
     '    .word-break-keep { word-break: keep-all; }\n'
     '\n'
-    '    /* Scroll-spy tabs (Neo-brutalism) */\n'
-    '    .spy-tab {\n'
-    '      display: inline-block; padding: 6px 10px;\n'
-    '      background: #fff; border: 2px solid #000;\n'
-    '      box-shadow: 2px 2px 0 0 #000;\n'
-    '      font-family: \'Space Grotesk\', sans-serif;\n'
-    '      font-weight: 700; font-size: 11px; letter-spacing: .05em;\n'
-    '      text-decoration: none; color: #000; white-space: nowrap;\n'
-    '      transition: transform .1s, box-shadow .1s, background .1s;\n'
-    '      flex-shrink: 0;\n'
-    '    }\n'
-    '    .spy-tab:hover { transform: translate(-1px,-1px); box-shadow: 3px 3px 0 0 #000; background: #fde047; }\n'
-    '    .spy-tab.active { background: #000; color: #fff; }\n'
     '    @media (min-width: 768px) { #side-tabs .spy-tab { min-width: 64px; text-align: center; } }\n'
     '    .scrollbar-hide::-webkit-scrollbar { display: none; }\n'
     '    .scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }\n'
@@ -6892,8 +6843,15 @@ en_index = (
     '      #hero, #search, #about, #featured, #categories, #groups, #celebs, #books { scroll-margin-top: 60px; }\n'
     '    }\n'
     '  </style>\n'
+    '  <link rel="stylesheet" href="' + V2_ASSETS + 'home.css">\n'
     '</head>\n'
     '<body class="font-serif relative selection:bg-neo-yellow selection:text-ink">\n'
+    '\n'
+    '<header class="bar">\n'
+    '  <nav aria-label="Main menu">' + _en_home_nav + '</nav>\n'
+    '  <a class="logo" href="' + EN_BASE + '">Favorbook</a>\n'
+    '  <div class="right"><a class="lang" href="' + BASE + '" hreflang="ko">한국어</a></div>\n'
+    '</header>\n'
     '\n'
     '<!-- Scroll-spy 사이드 탭 (데스크탑) -->\n'
     '<nav id="side-tabs" class="hidden md:flex fixed left-4 lg:left-6 top-1/2 -translate-y-1/2 z-30 flex-col gap-2 pointer-events-auto">\n'
@@ -6919,22 +6877,17 @@ en_index = (
     '\n'
     '<main class="max-w-5xl mx-auto px-4 sm:px-6 py-12 md:py-24 flex flex-col gap-12 md:gap-16">\n'
     '\n'
-    '  <header id="hero" class="flex flex-col items-center pt-6 md:pt-0 text-center">\n'
-    '    <h1 class="text-4xl sm:text-5xl md:text-6xl font-black tracking-tight mb-3 text-ink">Favorbook</h1>\n'
-    '    <p class="text-ink font-sans font-bold text-sm sm:text-base tracking-wide mb-3">What your fave K-pop idol or K-drama actor is reading📕</p>\n'
-    '    <p class="text-muted text-xs sm:text-sm mb-6 max-w-xl mx-auto px-4 word-break-keep">Verified reading lists from Korean stars — K-pop idols (BTS, IVE, NewJeans, SEVENTEEN), K-drama and K-movie actors, film directors and musicians — sourced from interviews, YouTube, and SNS.</p>\n'
-    '    <p class="text-ink font-sans font-bold text-xs sm:text-sm tracking-[.15em] mb-6 uppercase bg-neo-yellow border-2 border-ink px-4 py-1 shadow-neo-sm">Archive of their reads</p>\n'
-    '    <div class="flex items-center gap-2 text-[10px] sm:text-xs font-sans font-bold tracking-wider text-ink border-2 border-ink bg-white px-3 py-1.5 shadow-neo-sm">\n'
-    '      <span class="w-2 h-2 rounded-full bg-ink"></span>\n'
+    '  <header id="hero" class="hero-home flex flex-col items-center">\n'
+    '    <p class="eyebrow">Favorbook · Archive of their reads</p>\n'
+    '    <h1>Books your favorite<br>Korean stars have read</h1>\n'
+    '    <p class="text-muted text-sm sm:text-base mt-5 max-w-xl mx-auto px-4 word-break-keep">Verified reading lists from Korean stars — K-pop idols (BTS, IVE, NewJeans, SEVENTEEN), K-drama and K-movie actors, film directors and musicians — sourced from interviews, YouTube, and SNS.</p>\n'
+    '    <div class="count flex items-center gap-2">\n'
+    '      <span id="status-dot" class="w-2 h-2 rounded-full"></span>\n'
     '      <span>' + format(len(en_celeb_pages), ',') + ' STARS ⭐ · '
     + format(len({re.sub(r'\s+', '', b['title']).lower()
                   for _, _, n in en_celeb_pages
                   for b in celebs[n]['books'] if b.get('title_en')}), ',')
     + ' BOOKS 📚</span>\n'
-    '    </div>\n'
-    '    <div class="flex gap-2 mt-5">\n'
-    '      <a href="' + BASE + '" hreflang="ko" class="px-4 py-1.5 bg-white border-2 border-ink shadow-neo-sm hover:bg-neo-yellow hover:-translate-y-0.5 transition-all font-sans font-bold text-xs tracking-widest text-ink">KOR</a>\n'
-    '      <span class="px-4 py-1.5 bg-ink text-paper border-2 border-ink shadow-neo-sm font-sans font-bold text-xs tracking-widest">ENG</span>\n'
     '    </div>\n'
     + en_hero_links +
     '  </header>\n'
