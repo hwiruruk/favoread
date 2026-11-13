@@ -124,6 +124,8 @@
   }
   </script>
 
+  <link rel="stylesheet" href="/assets/v2/theme.css">
+  <script src="/assets/v2/theme.js"></script>
   <script src="https://cdn.tailwindcss.com"></script>
   <link rel="stylesheet" href="assets/fonts/space-grotesk.css">
   <link rel="stylesheet" href="assets/fonts/kopubworld.css">
@@ -139,20 +141,28 @@
             serif: ['"KoPubWorld Batang"', 'serif'],
             sans:  ['"Space Grotesk"', '"KoPubWorld Dotum"', 'sans-serif'],
           },
+          // 색은 assets/v2/theme.css의 변수를 쓴다 — 밝은/어두운 화면에 따라 함께 바뀐다.
+          // white·black도 바탕·글자색에 묶어 두어 bg-white, text-black 같은 클래스가 화면 전환을 따라간다.
           colors: {
-            ink:        '#000000',
-            paper:      '#ffffff',
-            'paper-dark': '#f4f4f0',
-            muted:      '#666666',
-            'neo-mint':   '#a7f3d0',
-            'neo-pink':   '#fbcfe8',
+            ink:        'rgb(var(--ink-rgb) / <alpha-value>)',
+            black:      'rgb(var(--ink-rgb) / <alpha-value>)',
+            paper:      'rgb(var(--bg-rgb) / <alpha-value>)',
+            white:      'rgb(var(--bg-rgb) / <alpha-value>)',
+            'paper-dark': 'rgb(var(--card-rgb) / <alpha-value>)',
+            muted:      'rgb(var(--muted-rgb) / <alpha-value>)',
+            'neo-mint':   'rgb(var(--card-rgb) / <alpha-value>)',
+            'neo-pink':   'rgb(var(--card-rgb) / <alpha-value>)',
             'neo-yellow': '#fde047',
           },
+          // 테두리는 가는 회색 선 하나로, 그림자는 올렸을 때만 옅게.
+          borderColor: { ink: 'rgb(var(--border-rgb) / <alpha-value>)' },
+          borderWidth: { 2: '1px', 4: '1px' },
           boxShadow: {
-            neo:    '4px 4px 0px 0px rgba(0,0,0,1)',
-            'neo-lg': '8px 8px 0px 0px rgba(0,0,0,1)',
-            'neo-sm': '2px 2px 0px 0px rgba(0,0,0,1)',
+            neo:    'none',
+            'neo-lg': '0 16px 40px rgb(0 0 0 / .14)',
+            'neo-sm': 'none',
           },
+          fontWeight: { black: '700', bold: '500' },
           keyframes: {
             fadeIn: {
               '0%':   { opacity: '0', transform: 'translateY(15px)' },
@@ -172,17 +182,12 @@
   <style>
     html, body { min-height: 100%; }
     body {
-      background-color: #fcfaf5;
-      color: #000;
+      background-color: var(--bg);
+      color: var(--ink);
       -webkit-font-smoothing: antialiased;
       overflow-x: hidden;
     }
-    ::selection        { background: #fde047; color: #000; }
-    ::-webkit-scrollbar { width: 12px; }
-    ::-webkit-scrollbar-track { background: #fcfaf5; border-left: 2px solid #000; }
-    ::-webkit-scrollbar-thumb { background: #fde047; border: 2px solid #000; }
-    ::-webkit-scrollbar-thumb:hover { background: #000; }
-    html { scrollbar-color: #fde047 #fcfaf5; scrollbar-width: thin; }
+    ::selection        { background: #fde047; color: #111; }
 
     .celeb-portrait { transition: transform .4s ease, filter .4s ease; }
     .group:hover .celeb-portrait { transform: scale(1.05); filter: brightness(1.05); }
@@ -208,7 +213,7 @@
         max-height: 90svh;
         height: auto;
         border-radius: 16px 16px 0 0;
-        border: 2px solid #000;
+        border: 1px solid var(--border);
         border-bottom: none;
         flex-direction: column !important;
         overflow: hidden;
@@ -220,7 +225,7 @@
         flex-direction: row !important;
         align-items: flex-start !important;
         justify-content: flex-start !important;
-        border-bottom: 2px solid #000 !important;
+        border-bottom: 1px solid var(--border) !important;
         border-right: none !important;
         padding: 16px !important;
         gap: 14px !important;
@@ -229,7 +234,7 @@
         width: 56px !important;
         height: 76px !important;
         flex-shrink: 0;
-        border: 1.5px solid #000;
+        border: 1px solid var(--border);
         margin-bottom: 0 !important;
       }
       #modal-meta {
@@ -277,7 +282,7 @@
       display: inline-flex; align-items: center; gap: 3px;
       font-family: 'Space Grotesk', sans-serif;
       font-size: 10px; font-weight: 700; letter-spacing: .08em;
-      color: #000; border-bottom: 1.5px solid #000;
+      color: var(--ink); border-bottom: 1px solid var(--ink);
       padding-bottom: 1px; text-decoration: none;
       transition: opacity .15s;
     }
@@ -285,34 +290,6 @@
     
     .word-break-keep { word-break: keep-all; }
 
-    /* Scroll-spy 탭 (Neo-brutalism) */
-    .spy-tab {
-      display: inline-block;
-      padding: 6px 10px;
-      background: #fff;
-      border: 2px solid #000;
-      box-shadow: 2px 2px 0 0 #000;
-      font-family: 'Space Grotesk', sans-serif;
-      font-weight: 700;
-      font-size: 11px;
-      letter-spacing: .05em;
-      text-decoration: none;
-      color: #000;
-      white-space: nowrap;
-      transition: transform .1s, box-shadow .1s, background .1s;
-      flex-shrink: 0;
-    }
-    .spy-tab:hover {
-      transform: translate(-1px, -1px);
-      box-shadow: 3px 3px 0 0 #000;
-      background: #fde047;
-    }
-    .spy-tab.active {
-      background: #000;
-      color: #fff;
-    }
-    /* 독서 취향 매칭(/match/) 입구 탭 — 눈에 띄게 노란색 */
-    .spy-tab-match:not(.active) { background: #fde047; }
     @media (min-width: 768px) {
       #side-tabs .spy-tab { min-width: 56px; text-align: center; }
     }
@@ -326,9 +303,22 @@
       }
     }
   </style>
+  <link rel="stylesheet" href="/assets/v2/home.css">
 </head>
 
 <body class="font-serif relative selection:bg-neo-yellow selection:text-ink">
+
+<header class="bar">
+  <nav aria-label="주요 메뉴">
+    <a href="/recommend/idol.html">아이돌</a>
+    <a href="/recommend/actor.html">배우</a>
+    <a href="/author/">작가</a>
+    <a href="/share/ranking.html">랭킹</a>
+    <a href="/match/">취향 월드컵</a>
+  </nav>
+  <a class="logo" href="/">최애의 독서</a>
+  <div class="right"><a class="lang" href="/en/" hreflang="en">EN</a></div>
+</header>
 
 <div id="floating-menus" class="absolute top-[64px] right-3 md:top-8 md:right-8 z-[40] flex flex-col items-end gap-3 md:gap-4 transition-opacity duration-300">
 
@@ -409,20 +399,13 @@
 
 <main id="app-root" class="max-w-5xl mx-auto px-4 sm:px-6 pt-12 md:pt-24 flex flex-col gap-12 md:gap-16">
 
-  <header id="hero" class="flex flex-col items-center opacity-0 animate-fade-in pt-10 md:pt-0">
-    <h1 class="text-4xl sm:text-5xl md:text-6xl font-black tracking-tight mb-3 text-ink text-center">최애의 독서</h1>
-    <p class="text-ink font-sans font-bold text-sm sm:text-base tracking-wide mb-3 text-center">당신이 좋아하는, 그들이 읽은 책📕</p>
-    <p class="text-muted text-xs sm:text-sm mb-6 text-center max-w-xl mx-auto px-4 word-break-keep"><a href="/recommend/idol.html" class="underline decoration-2 hover:text-ink">아이돌 추천책</a> · 셀럽 인생책을 한곳에서 만나보세요</p>
-    
-    <p class="text-ink font-sans font-bold text-xs sm:text-sm tracking-[.15em] mb-8 uppercase bg-neo-yellow border-2 border-ink px-4 py-1 shadow-neo-sm text-center">Archive of their reads</p>
-    <div id="status-indicator" class="flex items-center gap-2 text-[10px] sm:text-xs font-sans font-bold tracking-wider text-ink border-2 border-ink bg-white px-3 py-1.5 shadow-neo-sm">
+  <header id="hero" class="hero-home flex flex-col items-center opacity-0 animate-fade-in">
+    <p class="eyebrow">최애의 독서 · Archive of their reads</p>
+    <h1>당신이 좋아하는,<br>그들의 책</h1>
+    <p class="text-muted text-sm sm:text-base mt-5 text-center max-w-xl mx-auto px-4 word-break-keep"><a href="/recommend/idol.html" class="underline hover:text-ink">아이돌 추천책</a> · 셀럽 인생책을 한곳에서 만나보세요</p>
+    <div id="status-indicator" class="count flex items-center gap-2">
       <span id="status-dot" class="w-2 h-2 rounded-full bg-ink animate-pulse"></span>
       <span id="status-text">Loading...</span>
-    </div>
-
-    <div class="flex gap-2 mt-5">
-      <span class="px-4 py-1.5 bg-ink text-paper border-2 border-ink shadow-neo-sm font-sans font-bold text-xs tracking-widest">KOR</span>
-      <a href="/en/" hreflang="en" class="px-4 py-1.5 bg-white border-2 border-ink shadow-neo-sm hover:bg-neo-yellow hover:-translate-y-0.5 transition-all font-sans font-bold text-xs tracking-widest text-ink">ENG</a>
     </div>
   </header>
 
@@ -459,7 +442,7 @@
   <section id="search" class="max-w-xl mx-auto w-full opacity-0 animate-fade-in-delayed flex flex-col gap-4">
     <input id="search-input" type="text"
       class="w-full bg-white border-2 border-ink shadow-neo px-4 sm:px-6 py-3 sm:py-4 text-center text-base sm:text-lg focus:outline-none focus:shadow-neo-lg focus:-translate-y-1 transition-all placeholder:text-muted/50 tracking-wide font-sans font-bold"
-      placeholder="Search name, title, author, publisher">
+      placeholder="최애 이름, 책 제목, 작가, 출판사로 검색">
     
 
     <!-- 검색 중에만 보이는 줄 — 결과 수와 '전체 보기' -->
@@ -503,27 +486,27 @@
     <div id="featured-container" class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3 md:gap-4">
       <a href="share/%EC%B9%B4%EB%A6%AC%EB%82%98%28%EC%97%90%EC%8A%A4%ED%8C%8C%29.html" class="flex flex-col justify-center border-2 border-ink bg-white shadow-neo px-3 py-4 text-center no-underline text-ink">
         <span class="font-black text-sm">카리나(에스파)</span>
-        <span class="text-[10px] text-muted mt-1">58 records</span>
+        <span class="text-[10px] text-muted mt-1">58권</span>
       </a>
       <a href="share/%EA%B9%80%EC%84%A4%ED%98%84.html" class="flex flex-col justify-center border-2 border-ink bg-white shadow-neo px-3 py-4 text-center no-underline text-ink">
         <span class="font-black text-sm">김설현</span>
-        <span class="text-[10px] text-muted mt-1">55 records</span>
+        <span class="text-[10px] text-muted mt-1">55권</span>
       </a>
       <a href="share/%EC%A3%BC%ED%9B%88%28%EC%BD%94%EB%A5%B4%ED%8B%B0%EC%8A%A4%29.html" class="flex flex-col justify-center border-2 border-ink bg-white shadow-neo px-3 py-4 text-center no-underline text-ink">
         <span class="font-black text-sm">주훈(코르티스)</span>
-        <span class="text-[10px] text-muted mt-1">11 records</span>
+        <span class="text-[10px] text-muted mt-1">11권</span>
       </a>
       <a href="share/%EC%95%84%EC%9D%B4%EC%9C%A0.html" class="flex flex-col justify-center border-2 border-ink bg-white shadow-neo px-3 py-4 text-center no-underline text-ink">
         <span class="font-black text-sm">아이유</span>
-        <span class="text-[10px] text-muted mt-1">87 records</span>
+        <span class="text-[10px] text-muted mt-1">87권</span>
       </a>
       <a href="share/%EC%A7%84%EC%98%81%28%EA%B0%93%EC%84%B8%EB%B8%90%29.html" class="flex flex-col justify-center border-2 border-ink bg-white shadow-neo px-3 py-4 text-center no-underline text-ink">
         <span class="font-black text-sm">진영(갓세븐)</span>
-        <span class="text-[10px] text-muted mt-1">142 records</span>
+        <span class="text-[10px] text-muted mt-1">142권</span>
       </a>
       <a href="share/%EB%B0%95%EC%A7%80%ED%9B%88.html" class="flex flex-col justify-center border-2 border-ink bg-white shadow-neo px-3 py-4 text-center no-underline text-ink">
         <span class="font-black text-sm">박지훈</span>
-        <span class="text-[10px] text-muted mt-1">9 records</span>
+        <span class="text-[10px] text-muted mt-1">9권</span>
       </a>
     </div>
   </section>
@@ -2041,7 +2024,7 @@
           <div class="p-3 sm:p-5 flex flex-col items-center group-hover:bg-neo-mint transition-colors duration-200">
             <h3 class="text-base sm:text-xl font-bold tracking-tight mb-1 sm:mb-2 text-ink text-center line-clamp-1">${name}</h3>
             <div class="flex items-center justify-center gap-1.5">
-              <p class="text-[8px] sm:text-[10px] tracking-widest text-ink uppercase font-sans font-bold bg-white border border-ink px-1.5 sm:px-2 py-0.5">${data.books.length} records</p>
+              <p class="text-[8px] sm:text-[10px] tracking-widest text-ink uppercase font-sans font-bold bg-white border border-ink px-1.5 sm:px-2 py-0.5">${data.books.length}권</p>
               ${heartCount}
             </div>
             <p class="text-[9px] sm:text-[10px] text-muted mt-1.5 sm:mt-2 text-center line-clamp-1 w-full px-1">${bookPreview}${moreCount}</p>
@@ -2054,7 +2037,7 @@
           <h3 class="text-base sm:text-lg font-bold tracking-tight text-ink group-hover:underline decoration-2 underline-offset-4">${name}</h3>
           <div class="flex items-center gap-2 flex-shrink-0">
             ${heartCount}
-            <p class="text-[9px] sm:text-xs tracking-widest text-ink uppercase font-sans font-bold bg-neo-yellow border border-ink px-2 py-1">${data.books.length} records</p>
+            <p class="text-[9px] sm:text-xs tracking-widest text-ink uppercase font-sans font-bold bg-neo-yellow border border-ink px-2 py-1">${data.books.length}권</p>
           </div>
         `;
       }
@@ -2116,7 +2099,7 @@
     const shareHref = `share/${encodeURIComponent(safeFn)}.html`;
     D.mNameLink.href = shareHref;
     if (D.bookshelfBtn) D.bookshelfBtn.href = shareHref;
-    D.mCount.textContent = `${data.books.length} records`;
+    D.mCount.textContent = `${data.books.length}권`;
     if (D.heartBtn) {
       D.heartBtn.setAttribute('data-heart', 'c:' + name);
       D.heartBtn.setAttribute('aria-label', name + '에게 하트');
@@ -2394,7 +2377,7 @@
         </div>
         <div class="p-2.5 text-center flex-1 flex flex-col justify-center group-hover:bg-neo-mint transition-colors">
           <p class="font-black text-sm mb-1 truncate">${escHtml(name)}</p>
-          <p class="font-sans font-bold text-[9px] bg-neo-yellow border border-ink px-1.5 py-0.5 inline-block mx-auto mb-1.5 shadow-neo-sm">${data.books.length} records</p>
+          <p class="font-sans font-bold text-[9px] bg-neo-yellow border border-ink px-1.5 py-0.5 inline-block mx-auto mb-1.5 shadow-neo-sm">${data.books.length}권</p>
           <p class="text-[10px] text-muted line-clamp-1">${escHtml(note)}</p>
         </div>`;
 
@@ -2530,7 +2513,7 @@
           </div>
           <div class="p-3 text-center flex-1 flex flex-col justify-center bg-white z-10 relative">
             <p class="font-black text-sm mb-1 truncate">${escHtml(name)}</p>
-            <p class="font-sans font-bold text-[10px] bg-neo-yellow border border-ink px-1.5 py-0.5 inline-block mx-auto mb-2 shadow-neo-sm">${data.books.length} records</p>
+            <p class="font-sans font-bold text-[10px] bg-neo-yellow border border-ink px-1.5 py-0.5 inline-block mx-auto mb-2 shadow-neo-sm">${data.books.length}권</p>
             <p class="text-[10px] text-muted truncate">${escHtml(bookSummary)}</p>
           </div>`;
 
