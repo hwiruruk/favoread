@@ -18,8 +18,11 @@
     btn.className = 'theme-btn';
     var paint = function () {
       var dark = root.getAttribute('data-theme') === 'dark';
-      btn.textContent = dark ? '☀ 밝게' : '☾ 어둡게';
-      btn.setAttribute('aria-label', dark ? '밝은 화면으로 바꾸기' : '어두운 화면으로 바꾸기');
+      var en = root.lang === 'en';
+      btn.textContent = dark ? (en ? '☀ Light' : '☀ 밝게') : (en ? '☾ Dark' : '☾ 어둡게');
+      btn.setAttribute('aria-label', dark
+        ? (en ? 'Switch to light mode' : '밝은 화면으로 바꾸기')
+        : (en ? 'Switch to dark mode' : '어두운 화면으로 바꾸기'));
     };
     btn.addEventListener('click', function () {
       var next = root.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
