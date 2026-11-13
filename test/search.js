@@ -8,17 +8,17 @@
   var css = document.createElement('style');
   css.textContent =
     '.site-search{position:relative;width:min(340px,100%)}' +
-    '.site-search input{width:100%;font:inherit;font-size:14px;padding:12px 20px;border-radius:99px;border:1px solid #cfccc4;background:#fff;color:#111;outline:none;-webkit-appearance:none}' +
-    '.site-search input:focus{border-color:#111}' +
+    '.site-search input{width:100%;font:inherit;font-size:14px;padding:12px 20px;border-radius:99px;border:1px solid var(--border);background:var(--bg);color:var(--ink);outline:none;-webkit-appearance:none}' +
+    '.site-search input:focus{border-color:var(--ink)}' +
     '.site-search.sm{width:min(220px,100%)}' +
     '.site-search.sm input{font-size:13px;padding:8px 16px}' +
-    '.ss-box{position:absolute;z-index:50;top:calc(100% + 6px);right:0;width:max(100%,300px);max-width:calc(100vw - 32px);background:#fff;border:1px solid #111;border-radius:16px;text-align:left;overflow:hidden;display:none;box-shadow:0 12px 32px rgba(0,0,0,.12)}' +
+    '.ss-box{position:absolute;z-index:50;top:calc(100% + 6px);right:0;width:max(100%,300px);max-width:calc(100vw - 32px);background:var(--bg);border:1px solid var(--ink);border-radius:16px;text-align:left;overflow:hidden;display:none;box-shadow:0 12px 32px rgba(0,0,0,.12)}' +
     '.ss-box.open{display:block}' +
-    '.ss-box a{display:flex;justify-content:space-between;align-items:baseline;gap:12px;padding:10px 16px;font-size:14px;color:#111;text-decoration:none}' +
-    '.ss-box a:hover,.ss-box a.on{background:#faf6dc}' +
+    '.ss-box a{display:flex;justify-content:space-between;align-items:baseline;gap:12px;padding:10px 16px;font-size:14px;color:var(--ink);text-decoration:none}' +
+    '.ss-box a:hover,.ss-box a.on{background:var(--hover)}' +
     '.ss-box a span{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}' +
-    '.ss-box small{color:#777;white-space:nowrap;font-size:12px}' +
-    '.ss-box .none{padding:12px 16px;font-size:13px;color:#777}' +
+    '.ss-box small{color:var(--muted);white-space:nowrap;font-size:12px}' +
+    '.ss-box .none{padding:12px 16px;font-size:13px;color:var(--muted)}' +
     '@media (max-width:720px){.site-search.sm{width:100%}.ss-box{left:0;right:auto}}';
   document.head.appendChild(css);
 
@@ -27,10 +27,23 @@
   var celebUrl = function (n) { return '/share/' + encodeURIComponent(n.replace(/[\/\\]/g, '_')) + '.html'; };
   var bookUrl = function (t) { return '/share/book/' + encodeURIComponent(t.replace(/[\/\\:"?]/g, '_')) + '.html'; };
 
+  // 영문판(<html lang="en">)은 생성기가 만들어 둔 영문 색인을 쓴다.
+  var EN = document.documentElement.lang === 'en';
+  var T = EN
+    ? { ph: 'Search a star or a book', loading: 'Loading…', fail: 'Search is unavailable right now. Please try again shortly.', none: 'No results. Try another name or title.' }
+    : { ph: '최애 이름이나 책 제목 검색', loading: '불러오는 중이에요…', fail: '검색 데이터를 불러오지 못했어요. 잠시 뒤 다시 시도해 주세요.', none: '찾는 결과가 없어요. 다른 이름이나 제목으로 검색해 보세요.' };
+
   var index = null, loading = null;
   function load() {
     if (index) return Promise.resolve(index);
     if (loading) return loading;
+    if (EN) {
+      loading = fetch('/test/en/search.json').then(function (r) { return r.json(); }).then(function (rows) {
+        index = rows.map(function (r) { return { label: r[0], key: r[1], meta: r[2], href: r[3], rank: r[4], n: r[5] }; });
+        return index;
+      });
+      return loading;
+    }
     loading = fetch('/data.json').then(function (r) { return r.json(); }).then(function (data) {
       var celebs = data.celebs || {}, books = {}, list = [];
       Object.keys(celebs).forEach(function (n) {
@@ -73,7 +86,7 @@
 
   [].forEach.call(slots, function (slot) {
     slot.innerHTML =
-      '<input type="search" autocomplete="off" placeholder="최애 이름이나 책 제목 검색" aria-label="최애 이름이나 책 제목 검색">' +
+      '<input type="search" autocomplete="off" placeholder="' + T.ph + '" aria-label="' + T.ph + '">' +
       '<div class="ss-box" role="listbox"></div>';
     var q = slot.querySelector('input'), box = slot.querySelector('.ss-box'), on = -1;
 
@@ -82,15 +95,15 @@
       on = -1;
       if (!term) { box.classList.remove('open'); return; }
       if (!index) {
-        box.innerHTML = '<div class="none">불러오는 중이에요…</div>';
+        box.innerHTML = '<div class="none">' + T.loading + '</div>';
         box.classList.add('open');
-        load().then(render, function () { box.innerHTML = '<div class="none">검색 데이터를 불러오지 못했어요. 잠시 뒤 다시 시도해 주세요.</div>'; });
+        load().then(render, function () { box.innerHTML = '<div class="none">' + T.fail + '</div>'; });
         return;
       }
       var hits = find(term);
       box.innerHTML = hits.length
         ? hits.map(function (h) { return '<a href="' + h.href + '"><span>' + esc(h.label) + '</span><small>' + esc(h.meta) + '</small></a>'; }).join('')
-        : '<div class="none">찾는 결과가 없어요. 다른 이름이나 제목으로 검색해 보세요.</div>';
+        : '<div class="none">' + T.none + '</div>';
       box.classList.add('open');
     }
     function move(d) {

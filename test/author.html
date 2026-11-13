@@ -9,17 +9,18 @@
   <link rel="preconnect" href="https://image.yes24.com">
   <link rel="stylesheet" href="https://favorbook.co.kr/assets/fonts/space-grotesk.css">
   <link rel="stylesheet" href="https://favorbook.co.kr/assets/fonts/kopubworld.css">
+  <link rel="stylesheet" href="https://favorbook.co.kr/test/theme.css">
+  <script src="https://favorbook.co.kr/test/theme.js"></script>
   <style>
-    :root { --ink:#111; --muted:#777; --line:#e6e4de; --yellow:#fde047;
-      --serif:"KoPubWorld Batang",serif; --sans:"Space Grotesk","KoPubWorld Dotum",sans-serif;
-      --cover-h:clamp(140px,15vw,220px); --pad:clamp(16px,4vw,48px); }
+    :root { --serif:"KoPubWorld Batang",serif; --sans:"Space Grotesk","KoPubWorld Dotum",sans-serif;
+      --pad:clamp(16px,4vw,48px); }
     * { box-sizing:border-box; }
     html,body { margin:0; }
-    body { background:#fff; color:var(--ink); font-family:var(--sans); -webkit-font-smoothing:antialiased; overflow-x:hidden; word-break:keep-all; line-height:1.55; }
+    body { background:var(--bg); color:var(--ink); font-family:var(--sans); -webkit-font-smoothing:antialiased; overflow-x:hidden; word-break:keep-all; line-height:1.55; }
     a { color:inherit; text-decoration:none; }
     .bar { display:grid; grid-template-columns:1fr auto 1fr; align-items:center; padding:18px var(--pad); font-size:13px; }
     .bar nav { display:flex; gap:clamp(12px,2vw,28px); white-space:nowrap; }
-    .bar nav a { color:#444; }
+    .bar nav a { color:var(--soft); }
     .bar nav a:hover { color:var(--ink); text-decoration:underline; text-underline-offset:4px; }
     .logo { font-family:var(--serif); font-weight:700; font-size:17px; display:flex; align-items:center; gap:8px; }
     .logo::before { content:""; width:9px; height:9px; border-radius:50%; background:var(--yellow); box-shadow:0 0 0 1px var(--ink) inset; }
@@ -34,45 +35,35 @@
     .hero { text-align:center; padding:clamp(28px,4vw,56px) 20px clamp(28px,3vw,40px); }
     .eyebrow { font-size:11px; font-weight:700; letter-spacing:.14em; color:var(--muted); margin:0 0 14px; }
     .hero h1 { font-family:var(--serif); font-weight:500; font-size:clamp(28px,4vw,48px); line-height:1.3; letter-spacing:-.02em; margin:0; }
-    .hero p.lead { max-width:560px; margin:16px auto 0; font-size:15px; color:#444; }
+    .hero p.lead { max-width:560px; margin:16px auto 0; font-size:15px; color:var(--soft); }
     .hero p.lead strong { color:var(--ink); background:linear-gradient(transparent 60%, var(--yellow) 60%); }
     .tabs { margin-top:24px; display:inline-flex; gap:6px; flex-wrap:wrap; justify-content:center; }
-    .tabs a { font-size:13px; font-weight:700; padding:9px 18px; border-radius:99px; border:1px solid #cfccc4; }
+    .tabs a { font-size:13px; font-weight:700; padding:9px 18px; border-radius:99px; border:1px solid var(--border); }
     .tabs a:hover { border-color:var(--ink); }
-    .tabs a.on { background:var(--yellow); border-color:var(--yellow); }
-    .rail { overflow:hidden; width:100%; }
-    .track { display:flex; width:max-content; animation:flow var(--dur,100s) linear infinite; }
-    .rail:hover .track { animation-play-state:paused; }
-    @keyframes flow { from { transform:translateX(0); } to { transform:translateX(-50%); } }
-    .item { position:relative; flex:none; display:block; overflow:hidden; background:#f1efe9; height:var(--cover-h); width:calc(var(--cover-h)*.68); }
-    .item img { display:block; width:100%; height:100%; object-fit:cover; }
-    .cap { position:absolute; left:0; right:0; bottom:0; padding:28px 10px 9px; color:#fff; font-size:12px; line-height:1.35; background:linear-gradient(transparent,rgba(0,0,0,.78)); opacity:0; transition:opacity .2s; }
-    .cap b { display:block; font-family:var(--serif); font-size:13px; }
-    .item:hover .cap { opacity:1; }
-    @media (prefers-reduced-motion:reduce) { .track { animation:none; } .rail { overflow-x:auto; } }
+    .tabs a.on { background:var(--yellow); border-color:var(--yellow); color:var(--on-yellow); }
     main section { max-width:1120px; margin:0 auto; padding:clamp(40px,6vw,72px) var(--pad) 0; }
     h2 { font-family:var(--serif); font-weight:700; font-size:clamp(20px,2.4vw,26px); margin:0 0 6px; }
     .sub { margin:0 0 24px; font-size:13px; color:var(--muted); }
     ol { list-style:none; margin:0; padding:0; }
-    .cv { display:block; flex:none; background:#f1efe9; overflow:hidden; }
+    .cv { display:block; flex:none; background:var(--ph); overflow:hidden; }
     .cv img { display:block; width:100%; height:100%; object-fit:cover; }
-    .nocv { display:flex; height:100%; align-items:center; justify-content:center; padding:6px; font-family:var(--serif); font-size:11px; text-align:center; color:#666; }
+    .nocv { display:flex; height:100%; align-items:center; justify-content:center; padding:6px; font-family:var(--serif); font-size:11px; text-align:center; color:var(--soft); }
     h3 { font-family:var(--serif); font-weight:700; margin:0; line-height:1.35; }
     h3 a:hover, .who a:hover { text-decoration:underline; text-underline-offset:3px; }
     .au { margin:2px 0 0; font-size:12px; color:var(--muted); }
-    .who { margin:8px 0 0; font-size:12px; color:#555; line-height:1.7; }
+    .who { margin:8px 0 0; font-size:12px; color:var(--soft); line-height:1.7; }
     .rk { font-weight:700; font-size:13px; color:var(--muted); font-variant-numeric:tabular-nums; }
     .faces { display:flex; align-items:center; flex-wrap:wrap; row-gap:4px; padding-left:8px; }
-    .av { position:relative; flex:none; width:30px; height:30px; border-radius:50%; overflow:hidden; background:#ece9e1; border:2px solid #fff; margin-left:-8px; display:inline-flex; align-items:center; justify-content:center; }
-    .av i { font-style:normal; font-size:11px; font-weight:700; color:#8a8578; }
+    .av { position:relative; flex:none; width:30px; height:30px; border-radius:50%; overflow:hidden; background:var(--ph); border:2px solid var(--bg); margin-left:-8px; display:inline-flex; align-items:center; justify-content:center; }
+    .av i { font-style:normal; font-size:11px; font-weight:700; color:var(--ph-ink); }
     .av img { position:absolute; inset:0; width:100%; height:100%; object-fit:cover; object-position:50% 20%; }
-    .av.more { font-size:10px; font-weight:700; color:#555; }
-    .cnt { font-size:12px; font-weight:700; margin:0 16px 0 -8px; background:var(--yellow); padding:2px 8px; border-radius:99px; }
+    .av.more { font-size:10px; font-weight:700; color:var(--soft); }
+    .cnt { font-size:12px; font-weight:700; margin:0 16px 0 -8px; background:var(--yellow); color:var(--on-yellow); padding:2px 8px; border-radius:99px; }
     .top3 { display:grid; grid-template-columns:repeat(3,1fr); gap:clamp(16px,2.5vw,32px); }
     .top3 li { display:flex; gap:16px; min-width:0; }
     .top3 .cv { aspect-ratio:2/2.9; width:38%; max-width:150px; align-self:flex-start; }
     .top3 .tx { min-width:0; flex:1; }
-    .top3 .rk { display:inline-block; font-size:12px; letter-spacing:.1em; color:var(--ink); background:var(--yellow); border-radius:99px; padding:2px 10px; margin-bottom:8px; }
+    .top3 .rk { display:inline-block; font-size:12px; letter-spacing:.1em; color:var(--on-yellow); background:var(--yellow); border-radius:99px; padding:2px 10px; margin-bottom:8px; }
     .top3 .rk::before { content:"TOP "; }
     .top3 h3 { font-size:clamp(18px,2vw,22px); }
     .top3 .n { margin:10px 0 8px; font-size:13px; font-weight:700; }
@@ -90,45 +81,65 @@
       .list { grid-template-columns:1fr; }
     }
     .grps { display:grid; grid-template-columns:repeat(auto-fill,minmax(150px,1fr)); gap:8px; }
-    .grp { border:1px solid #cfccc4; border-radius:12px; padding:11px 14px; display:flex; flex-direction:column; transition:transform .15s; }
+    .grp { border:1px solid var(--border); border-radius:12px; padding:11px 14px; display:flex; flex-direction:column; transition:transform .15s; }
     .grp:hover { transform:translateY(-2px); }
     .grp b { font-family:var(--serif); font-size:15px; }
     .grp small { font-size:11px; opacity:.75; }
     .people { display:grid; grid-template-columns:repeat(auto-fill,minmax(170px,1fr)); gap:4px 12px; }
     .person { display:flex; align-items:center; gap:10px; padding:7px 8px; border-radius:99px; min-width:0; }
-    .person:hover { background:#faf6dc; }
+    .person:hover { background:var(--hover); }
     .av.lg { width:42px; height:42px; margin:0; border:0; }
     .av.lg i { font-size:14px; }
+    .av.xl { width:64px; height:64px; margin:0; border:0; }
+    .av.xl i { font-size:20px; }
+    .hid { display:none !important; }
+    .lang { font-size:12px; font-weight:700; white-space:nowrap; text-decoration:underline; text-underline-offset:3px; }
+    .hero.home h1 { font-size:clamp(28px,4.4vw,54px); line-height:1.35; }
+    .hero.home .site-search { margin:28px auto 0; text-align:left; }
+    .count { margin:18px 0 0; font-size:12px; font-weight:700; letter-spacing:.14em; color:var(--muted); }
+    .bgrid { display:grid; grid-template-columns:repeat(8,1fr); gap:clamp(16px,2.4vw,28px) clamp(8px,1.4vw,18px); }
+    .bgrid a, .pgrid a { display:block; min-width:0; }
+    .bgrid .cv { aspect-ratio:2/2.9; }
+    .bgrid b { font-family:var(--serif); font-size:13px; line-height:1.35; margin-top:8px; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden; }
+    .bgrid small, .pgrid small { display:block; font-size:11px; color:var(--muted); margin-top:2px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+    .pgrid { display:grid; grid-template-columns:repeat(6,1fr); gap:clamp(20px,3vw,32px) clamp(10px,1.6vw,20px); }
+    .ph { position:relative; display:block; aspect-ratio:3/4; background:var(--ph); overflow:hidden; }
+    .ph img { position:absolute; inset:0; width:100%; height:100%; object-fit:cover; object-position:50% 20%; }
+    .ph i { position:absolute; inset:0; display:flex; align-items:center; justify-content:center; font-style:normal; font-family:var(--serif); font-size:28px; color:var(--ph-ink); }
+    .ph .rk { position:absolute; z-index:1; left:0; top:0; background:var(--ink); color:var(--bg); font-size:11px; padding:3px 8px; }
+    .pgrid b { display:block; font-family:var(--serif); font-size:15px; margin-top:10px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+    .pgrid .cnt { display:inline-block; margin:4px 0 3px; font-size:11px; padding:1px 8px; }
+    @media (max-width:820px) { .bgrid { grid-template-columns:repeat(4,1fr); } .bgrid[data-pick] a:nth-child(n+9) { display:none; } .pgrid { grid-template-columns:repeat(3,1fr); } }
     .person span:last-child { min-width:0; display:flex; flex-direction:column; line-height:1.3; }
     .person b { font-size:13px; font-weight:700; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
     .person small { font-size:11px; color:var(--muted); }
     .qa { border-top:1px solid var(--line); padding:16px 0; max-width:760px; }
     .qa h3 { font-size:15px; }
-    .qa p { margin:6px 0 0; font-size:14px; color:#444; }
+    .qa p { margin:6px 0 0; font-size:14px; color:var(--soft); }
     footer { margin-top:clamp(48px,6vw,80px); border-top:1px solid var(--line); padding:22px var(--pad) 40px; font-size:12px; color:var(--muted); }
     footer a { color:var(--ink); text-decoration:underline; text-underline-offset:3px; }
     .list.one { grid-template-columns:1fr; }
     .strip { display:flex; gap:6px; margin-top:10px; }
     .strip .cv { width:44px; height:64px; }
-    .meta { margin:4px 0 0; font-size:12px; color:#555; }
+    .meta { margin:4px 0 0; font-size:12px; color:var(--soft); }
     .cards { display:grid; grid-template-columns:repeat(auto-fill,minmax(160px,1fr)); gap:clamp(20px,3vw,36px) clamp(16px,2.5vw,28px); }
     .card { display:block; min-width:0; }
-    .card .fan { display:flex; gap:4px; background:#f6f4ee; padding:16px 14px 0; height:150px; align-items:flex-end; overflow:hidden; }
+    .card .fan { display:flex; gap:4px; background:var(--card); padding:16px 14px 0; height:150px; align-items:flex-end; overflow:hidden; }
     .card .fan .cv { flex:1; height:124px; transition:transform .25s; }
     .card:hover .fan .cv { transform:translateY(-6px); }
     .card .rk { display:block; margin-top:12px; }
     .card h3 { font-size:18px; margin-top:2px; }
     .card:hover h3 { text-decoration:underline; text-underline-offset:3px; }
     .jump { margin-top:24px; display:inline-flex; gap:6px; flex-wrap:wrap; justify-content:center; }
-    .jump a { font-size:13px; font-weight:700; padding:9px 18px; border-radius:99px; border:1px solid #cfccc4; }
-    .jump a:hover { background:var(--yellow); border-color:var(--yellow); }
+    .jump a { font-size:13px; font-weight:700; padding:9px 18px; border-radius:99px; border:1px solid var(--border); }
+    .jump a:hover { background:var(--yellow); border-color:var(--yellow); color:var(--on-yellow); }
   </style>
 </head>
 <body>
   <header class="bar">
     <nav aria-label="주요 메뉴"><a href="https://favorbook.co.kr/test/idol.html">아이돌</a><a href="https://favorbook.co.kr/test/actor.html">배우</a><a href="https://favorbook.co.kr/test/author.html">작가</a><a href="https://favorbook.co.kr/test/ranking.html">랭킹</a><a href="https://favorbook.co.kr/match/">취향 월드컵</a></nav>
     <a class="logo" href="https://favorbook.co.kr/test/">최애의 독서</a>
-    <div class="right"><div class="site-search sm"></div><span class="chip">TEST</span></div>
+    <div class="right"><div class="site-search sm"></div><span class="chip">TEST</span><a class="lang" href="https://favorbook.co.kr/test/en/">EN</a></div>
   </header>
   <main>
     <div class="hero">
@@ -136,7 +147,6 @@
       <h1>그들이 많이 읽은 작가</h1>
       <p class="lead">그들이 읽었거나 추천한 책을 작가별로 모았어요. 언급이 10번 이상인 작가 <strong>52명</strong>이고, 가장 많이 언급된 작가는 무라카미 하루키, 한강, 히가시노 게이고 순이에요.</p>
     </div>
-    <div class="rail" id="band"><div class="track" style="--dur:120s"><a class="item" data-k="0" href="https://favorbook.co.kr/share/book/%EB%85%B8%EB%A5%B4%EC%9B%A8%EC%9D%B4%EC%9D%98%20%EC%88%B2.html"><img src="https://image.yes24.com/goods/44499829/L" alt="노르웨이의 숲 표지" referrerpolicy="no-referrer" decoding="async"><span class="cap"><b>노르웨이의 숲</b>19명이 읽었어요</span></a><a class="item" data-k="1" href="https://favorbook.co.kr/share/book/%EC%86%8C%EB%85%84%EC%9D%B4%20%EC%98%A8%EB%8B%A4.html"><img src="https://image.yes24.com/goods/13137546/L" alt="소년이 온다 표지" referrerpolicy="no-referrer" decoding="async"><span class="cap"><b>소년이 온다</b>18명이 읽었어요</span></a><a class="item" data-k="2" href="https://favorbook.co.kr/share/book/%EB%82%98%EB%AF%B8%EC%95%BC%20%EC%9E%A1%ED%99%94%EC%A0%90%EC%9D%98%20%EA%B8%B0%EC%A0%81.html"><img src="https://image.yes24.com/goods/116586056/L" alt="나미야 잡화점의 기적 표지" referrerpolicy="no-referrer" decoding="async"><span class="cap"><b>나미야 잡화점의 기적</b>15명이 읽었어요</span></a><a class="item" data-k="3" href="https://favorbook.co.kr/share/book/%EB%8D%B0%EB%AF%B8%EC%95%88.html"><img src="https://image.yes24.com/goods/176787/L" alt="데미안 표지" referrerpolicy="no-referrer" decoding="async"><span class="cap"><b>데미안</b>23명이 읽었어요</span></a><a class="item" data-k="4" href="https://favorbook.co.kr/share/book/%EA%B5%AC%EC%9D%98%20%EC%A6%9D%EB%AA%85.html"><img src="https://image.yes24.com/goods/118578901/L" alt="구의 증명 표지" referrerpolicy="no-referrer" decoding="async"><span class="cap"><b>구의 증명</b>15명이 읽었어요</span></a><a class="item" data-k="5" href="https://favorbook.co.kr/share/book/%EB%B0%94%EA%B9%A5%EC%9D%80%20%EC%97%AC%EB%A6%84.html"><img src="https://image.yes24.com/goods/42798224/L" alt="바깥은 여름 표지" referrerpolicy="no-referrer" decoding="async"><span class="cap"><b>바깥은 여름</b>9명이 읽었어요</span></a><a class="item" data-k="6" href="https://favorbook.co.kr/share/book/%ED%8C%8C%ED%94%BC%EC%9A%A9.html"><img src="https://image.yes24.com/goods/123860016/L" alt="파피용 표지" referrerpolicy="no-referrer" decoding="async"><span class="cap"><b>파피용</b>5명이 읽었어요</span></a><a class="item" data-k="7" href="https://favorbook.co.kr/share/book/%EC%82%B4%EC%9D%B8%EC%9E%90%EC%9D%98%20%EA%B8%B0%EC%96%B5%EB%B2%95.html"><img src="https://image.yes24.com/goods/91901136/L" alt="살인자의 기억법 표지" referrerpolicy="no-referrer" decoding="async"><span class="cap"><b>살인자의 기억법</b>7명이 읽었어요</span></a><a class="item" data-k="8" href="https://favorbook.co.kr/share/book/%EC%96%B4%EB%A6%B0%EC%99%95%EC%9E%90.html"><img src="https://image.yes24.com/goods/92901787/L" alt="어린왕자 표지" referrerpolicy="no-referrer" decoding="async"><span class="cap"><b>어린왕자</b>22명이 읽었어요</span></a><a class="item" data-k="9" href="https://favorbook.co.kr/share/book/%EC%A0%88%EC%B0%BD.html"><img src="https://image.yes24.com/goods/153497469/L" alt="절창 표지" referrerpolicy="no-referrer" decoding="async"><span class="cap"><b>절창</b>5명이 읽었어요</span></a><a class="item" data-k="10" href="https://favorbook.co.kr/share/book/%EA%BD%83%EC%9D%84%20%EB%B3%B4%EB%93%AF%20%EB%84%88%EB%A5%BC%20%EB%B3%B8%EB%8B%A4.html"><img src="https://image.yes24.com/goods/24259730/L" alt="꽃을 보듯 너를 본다 표지" referrerpolicy="no-referrer" decoding="async"><span class="cap"><b>꽃을 보듯 너를 본다</b>8명이 읽었어요</span></a><a class="item" data-k="11" href="https://favorbook.co.kr/share/book/%EC%9D%B8%EA%B0%84%20%EC%8B%A4%EA%B2%A9.html"><img src="https://image.yes24.com/goods/1387488/L" alt="인간 실격 표지" referrerpolicy="no-referrer" decoding="async"><span class="cap"><b>인간 실격</b>19명이 읽었어요</span></a><a class="item" data-k="12" href="https://favorbook.co.kr/share/book/%EC%A2%8B%EC%9D%80%EC%A7%80%20%EB%82%98%EC%81%9C%EC%A7%80%20%EB%88%84%EA%B0%80%20%EC%95%84%EB%8A%94%EA%B0%80.html"><img src="https://image.yes24.com/goods/69752765/L" alt="좋은지 나쁜지 누가 아는가 표지" referrerpolicy="no-referrer" decoding="async"><span class="cap"><b>좋은지 나쁜지 누가 아는가</b>5명이 읽었어요</span></a><a class="item" data-k="13" href="https://favorbook.co.kr/share/book/%EC%99%9C%20%EB%82%98%EB%8A%94%20%EB%84%88%EB%A5%BC%20%EC%82%AC%EB%9E%91%ED%95%98%EB%8A%94%EA%B0%80.html"><img src="https://image.yes24.com/goods/115275383/L" alt="왜 나는 너를 사랑하는가 표지" referrerpolicy="no-referrer" decoding="async"><span class="cap"><b>왜 나는 너를 사랑하는가</b>9명이 읽었어요</span></a><a class="item" data-k="14" href="https://favorbook.co.kr/share/book/%EB%AA%A8%EC%88%9C.html"><img src="https://image.yes24.com/goods/8759796/L" alt="모순 표지" referrerpolicy="no-referrer" decoding="async"><span class="cap"><b>모순</b>19명이 읽었어요</span></a><a class="item" data-k="15" href="https://favorbook.co.kr/share/book/%EC%B0%B8%EC%9D%84%20%EC%88%98%20%EC%97%86%EB%8A%94%20%EC%A1%B4%EC%9E%AC%EC%9D%98%20%EA%B0%80%EB%B2%BC%EC%9B%80.html"><img src="https://image.yes24.com/goods/61933303/L" alt="참을 수 없는 존재의 가벼움 표지" referrerpolicy="no-referrer" decoding="async"><span class="cap"><b>참을 수 없는 존재의 가벼움</b>14명이 읽었어요</span></a><a class="item" data-k="16" href="https://favorbook.co.kr/share/book/%EC%95%84%EB%AA%AC%EB%93%9C.html"><img src="https://image.yes24.com/goods/119697570/L" alt="아몬드 표지" referrerpolicy="no-referrer" decoding="async"><span class="cap"><b>아몬드</b>16명이 읽었어요</span></a><a class="item" data-k="17" href="https://favorbook.co.kr/share/book/%EC%97%B0%EA%B8%88%EC%88%A0%EC%82%AC.html"><img src="https://image.yes24.com/goods/240525/L" alt="연금술사 표지" referrerpolicy="no-referrer" decoding="async"><span class="cap"><b>연금술사</b>10명이 읽었어요</span></a><a class="item" data-k="18" href="https://favorbook.co.kr/share/book/%EB%A1%9C%EB%AF%B8%EC%98%A4%EC%99%80%20%EC%A4%84%EB%A6%AC%EC%97%A3.html"><img src="https://image.yes24.com/goods/2869777/L" alt="로미오와 줄리엣 표지" referrerpolicy="no-referrer" decoding="async"><span class="cap"><b>로미오와 줄리엣</b>5명이 읽었어요</span></a><a class="item" data-k="19" href="https://favorbook.co.kr/share/book/%ED%94%BC%ED%94%84%ED%8B%B0%20%ED%94%BC%ED%94%8C.html"><img src="https://image.yes24.com/goods/103102524/L" alt="피프티 피플 표지" referrerpolicy="no-referrer" decoding="async"><span class="cap"><b>피프티 피플</b>5명이 읽었어요</span></a><a class="item" data-k="20" href="https://favorbook.co.kr/share/book/%EA%B7%B8%20%EB%A7%8E%EB%8D%98%20%EC%8B%B1%EC%95%84%EB%8A%94%20%EB%88%84%EA%B0%80%20%EB%8B%A4%20%EB%A8%B9%EC%97%88%EC%9D%84%EA%B9%8C.html"><img src="https://image.yes24.com/goods/6259976/L" alt="그 많던 싱아는 누가 다 먹었을까 표지" referrerpolicy="no-referrer" decoding="async"><span class="cap"><b>그 많던 싱아는 누가 다 먹었을까</b>6명이 읽었어요</span></a><a class="item" data-k="21" href="https://favorbook.co.kr/share/book/%EC%87%BC%EC%BD%94%EC%9D%98%20%EB%AF%B8%EC%86%8C.html"><img src="https://image.yes24.com/goods/29288225/L" alt="쇼코의 미소 표지" referrerpolicy="no-referrer" decoding="async"><span class="cap"><b>쇼코의 미소</b>7명이 읽었어요</span></a><a class="item" data-k="22" href="https://favorbook.co.kr/share/book/%EA%B5%AC%ED%95%B4%EC%A4%98.html"><img src="https://image.yes24.com/goods/106228269/L" alt="구해줘 표지" referrerpolicy="no-referrer" decoding="async"><span class="cap"><b>구해줘</b>5명이 읽었어요</span></a><a class="item" data-k="23" href="https://favorbook.co.kr/share/book/%EC%9A%B4%EB%8B%A4%EA%B3%A0%20%EB%8B%AC%EB%9D%BC%EC%A7%80%EB%8A%94%20%EC%9D%BC%EC%9D%80%20%EC%95%84%EB%AC%B4%EA%B2%83%EB%8F%84%20%EC%97%86%EA%B2%A0%EC%A7%80%EB%A7%8C.html"><img src="https://image.yes24.com/goods/42702060/L" alt="운다고 달라지는 일은 아무것도 없겠지만 표지" referrerpolicy="no-referrer" decoding="async"><span class="cap"><b>운다고 달라지는 일은 아무것도 없겠지만</b>9명이 읽었어요</span></a><a class="item" data-k="0" href="https://favorbook.co.kr/share/book/%EB%85%B8%EB%A5%B4%EC%9B%A8%EC%9D%B4%EC%9D%98%20%EC%88%B2.html"><img src="https://image.yes24.com/goods/44499829/L" alt="노르웨이의 숲 표지" referrerpolicy="no-referrer" decoding="async"><span class="cap"><b>노르웨이의 숲</b>19명이 읽었어요</span></a><a class="item" data-k="1" href="https://favorbook.co.kr/share/book/%EC%86%8C%EB%85%84%EC%9D%B4%20%EC%98%A8%EB%8B%A4.html"><img src="https://image.yes24.com/goods/13137546/L" alt="소년이 온다 표지" referrerpolicy="no-referrer" decoding="async"><span class="cap"><b>소년이 온다</b>18명이 읽었어요</span></a><a class="item" data-k="2" href="https://favorbook.co.kr/share/book/%EB%82%98%EB%AF%B8%EC%95%BC%20%EC%9E%A1%ED%99%94%EC%A0%90%EC%9D%98%20%EA%B8%B0%EC%A0%81.html"><img src="https://image.yes24.com/goods/116586056/L" alt="나미야 잡화점의 기적 표지" referrerpolicy="no-referrer" decoding="async"><span class="cap"><b>나미야 잡화점의 기적</b>15명이 읽었어요</span></a><a class="item" data-k="3" href="https://favorbook.co.kr/share/book/%EB%8D%B0%EB%AF%B8%EC%95%88.html"><img src="https://image.yes24.com/goods/176787/L" alt="데미안 표지" referrerpolicy="no-referrer" decoding="async"><span class="cap"><b>데미안</b>23명이 읽었어요</span></a><a class="item" data-k="4" href="https://favorbook.co.kr/share/book/%EA%B5%AC%EC%9D%98%20%EC%A6%9D%EB%AA%85.html"><img src="https://image.yes24.com/goods/118578901/L" alt="구의 증명 표지" referrerpolicy="no-referrer" decoding="async"><span class="cap"><b>구의 증명</b>15명이 읽었어요</span></a><a class="item" data-k="5" href="https://favorbook.co.kr/share/book/%EB%B0%94%EA%B9%A5%EC%9D%80%20%EC%97%AC%EB%A6%84.html"><img src="https://image.yes24.com/goods/42798224/L" alt="바깥은 여름 표지" referrerpolicy="no-referrer" decoding="async"><span class="cap"><b>바깥은 여름</b>9명이 읽었어요</span></a><a class="item" data-k="6" href="https://favorbook.co.kr/share/book/%ED%8C%8C%ED%94%BC%EC%9A%A9.html"><img src="https://image.yes24.com/goods/123860016/L" alt="파피용 표지" referrerpolicy="no-referrer" decoding="async"><span class="cap"><b>파피용</b>5명이 읽었어요</span></a><a class="item" data-k="7" href="https://favorbook.co.kr/share/book/%EC%82%B4%EC%9D%B8%EC%9E%90%EC%9D%98%20%EA%B8%B0%EC%96%B5%EB%B2%95.html"><img src="https://image.yes24.com/goods/91901136/L" alt="살인자의 기억법 표지" referrerpolicy="no-referrer" decoding="async"><span class="cap"><b>살인자의 기억법</b>7명이 읽었어요</span></a><a class="item" data-k="8" href="https://favorbook.co.kr/share/book/%EC%96%B4%EB%A6%B0%EC%99%95%EC%9E%90.html"><img src="https://image.yes24.com/goods/92901787/L" alt="어린왕자 표지" referrerpolicy="no-referrer" decoding="async"><span class="cap"><b>어린왕자</b>22명이 읽었어요</span></a><a class="item" data-k="9" href="https://favorbook.co.kr/share/book/%EC%A0%88%EC%B0%BD.html"><img src="https://image.yes24.com/goods/153497469/L" alt="절창 표지" referrerpolicy="no-referrer" decoding="async"><span class="cap"><b>절창</b>5명이 읽었어요</span></a><a class="item" data-k="10" href="https://favorbook.co.kr/share/book/%EA%BD%83%EC%9D%84%20%EB%B3%B4%EB%93%AF%20%EB%84%88%EB%A5%BC%20%EB%B3%B8%EB%8B%A4.html"><img src="https://image.yes24.com/goods/24259730/L" alt="꽃을 보듯 너를 본다 표지" referrerpolicy="no-referrer" decoding="async"><span class="cap"><b>꽃을 보듯 너를 본다</b>8명이 읽었어요</span></a><a class="item" data-k="11" href="https://favorbook.co.kr/share/book/%EC%9D%B8%EA%B0%84%20%EC%8B%A4%EA%B2%A9.html"><img src="https://image.yes24.com/goods/1387488/L" alt="인간 실격 표지" referrerpolicy="no-referrer" decoding="async"><span class="cap"><b>인간 실격</b>19명이 읽었어요</span></a><a class="item" data-k="12" href="https://favorbook.co.kr/share/book/%EC%A2%8B%EC%9D%80%EC%A7%80%20%EB%82%98%EC%81%9C%EC%A7%80%20%EB%88%84%EA%B0%80%20%EC%95%84%EB%8A%94%EA%B0%80.html"><img src="https://image.yes24.com/goods/69752765/L" alt="좋은지 나쁜지 누가 아는가 표지" referrerpolicy="no-referrer" decoding="async"><span class="cap"><b>좋은지 나쁜지 누가 아는가</b>5명이 읽었어요</span></a><a class="item" data-k="13" href="https://favorbook.co.kr/share/book/%EC%99%9C%20%EB%82%98%EB%8A%94%20%EB%84%88%EB%A5%BC%20%EC%82%AC%EB%9E%91%ED%95%98%EB%8A%94%EA%B0%80.html"><img src="https://image.yes24.com/goods/115275383/L" alt="왜 나는 너를 사랑하는가 표지" referrerpolicy="no-referrer" decoding="async"><span class="cap"><b>왜 나는 너를 사랑하는가</b>9명이 읽었어요</span></a><a class="item" data-k="14" href="https://favorbook.co.kr/share/book/%EB%AA%A8%EC%88%9C.html"><img src="https://image.yes24.com/goods/8759796/L" alt="모순 표지" referrerpolicy="no-referrer" decoding="async"><span class="cap"><b>모순</b>19명이 읽었어요</span></a><a class="item" data-k="15" href="https://favorbook.co.kr/share/book/%EC%B0%B8%EC%9D%84%20%EC%88%98%20%EC%97%86%EB%8A%94%20%EC%A1%B4%EC%9E%AC%EC%9D%98%20%EA%B0%80%EB%B2%BC%EC%9B%80.html"><img src="https://image.yes24.com/goods/61933303/L" alt="참을 수 없는 존재의 가벼움 표지" referrerpolicy="no-referrer" decoding="async"><span class="cap"><b>참을 수 없는 존재의 가벼움</b>14명이 읽었어요</span></a><a class="item" data-k="16" href="https://favorbook.co.kr/share/book/%EC%95%84%EB%AA%AC%EB%93%9C.html"><img src="https://image.yes24.com/goods/119697570/L" alt="아몬드 표지" referrerpolicy="no-referrer" decoding="async"><span class="cap"><b>아몬드</b>16명이 읽었어요</span></a><a class="item" data-k="17" href="https://favorbook.co.kr/share/book/%EC%97%B0%EA%B8%88%EC%88%A0%EC%82%AC.html"><img src="https://image.yes24.com/goods/240525/L" alt="연금술사 표지" referrerpolicy="no-referrer" decoding="async"><span class="cap"><b>연금술사</b>10명이 읽었어요</span></a><a class="item" data-k="18" href="https://favorbook.co.kr/share/book/%EB%A1%9C%EB%AF%B8%EC%98%A4%EC%99%80%20%EC%A4%84%EB%A6%AC%EC%97%A3.html"><img src="https://image.yes24.com/goods/2869777/L" alt="로미오와 줄리엣 표지" referrerpolicy="no-referrer" decoding="async"><span class="cap"><b>로미오와 줄리엣</b>5명이 읽었어요</span></a><a class="item" data-k="19" href="https://favorbook.co.kr/share/book/%ED%94%BC%ED%94%84%ED%8B%B0%20%ED%94%BC%ED%94%8C.html"><img src="https://image.yes24.com/goods/103102524/L" alt="피프티 피플 표지" referrerpolicy="no-referrer" decoding="async"><span class="cap"><b>피프티 피플</b>5명이 읽었어요</span></a><a class="item" data-k="20" href="https://favorbook.co.kr/share/book/%EA%B7%B8%20%EB%A7%8E%EB%8D%98%20%EC%8B%B1%EC%95%84%EB%8A%94%20%EB%88%84%EA%B0%80%20%EB%8B%A4%20%EB%A8%B9%EC%97%88%EC%9D%84%EA%B9%8C.html"><img src="https://image.yes24.com/goods/6259976/L" alt="그 많던 싱아는 누가 다 먹었을까 표지" referrerpolicy="no-referrer" decoding="async"><span class="cap"><b>그 많던 싱아는 누가 다 먹었을까</b>6명이 읽었어요</span></a><a class="item" data-k="21" href="https://favorbook.co.kr/share/book/%EC%87%BC%EC%BD%94%EC%9D%98%20%EB%AF%B8%EC%86%8C.html"><img src="https://image.yes24.com/goods/29288225/L" alt="쇼코의 미소 표지" referrerpolicy="no-referrer" decoding="async"><span class="cap"><b>쇼코의 미소</b>7명이 읽었어요</span></a><a class="item" data-k="22" href="https://favorbook.co.kr/share/book/%EA%B5%AC%ED%95%B4%EC%A4%98.html"><img src="https://image.yes24.com/goods/106228269/L" alt="구해줘 표지" referrerpolicy="no-referrer" decoding="async"><span class="cap"><b>구해줘</b>5명이 읽었어요</span></a><a class="item" data-k="23" href="https://favorbook.co.kr/share/book/%EC%9A%B4%EB%8B%A4%EA%B3%A0%20%EB%8B%AC%EB%9D%BC%EC%A7%80%EB%8A%94%20%EC%9D%BC%EC%9D%80%20%EC%95%84%EB%AC%B4%EA%B2%83%EB%8F%84%20%EC%97%86%EA%B2%A0%EC%A7%80%EB%A7%8C.html"><img src="https://image.yes24.com/goods/42702060/L" alt="운다고 달라지는 일은 아무것도 없겠지만 표지" referrerpolicy="no-referrer" decoding="async"><span class="cap"><b>운다고 달라지는 일은 아무것도 없겠지만</b>9명이 읽었어요</span></a></div></div>
     <section>
       <h2>작가 목록</h2>
       <p class="sub">작가를 누르면 그 작가의 책과 읽은 사람을 볼 수 있어요.</p>
@@ -197,19 +207,7 @@
     </section>
   </main>
   <footer>디자인 테스트 페이지입니다. 검색 엔진에 노출되지 않아요. <a href="https://favorbook.co.kr/author/">기존 페이지 보기</a> · <a href="https://forms.gle/Sd3ZQTahZNbUjbdz7">빠진 책 제보하기</a></footer>
-  <script>
-  // 흐르는 띠는 같은 묶음을 두 번 이어 붙인 것이라, 깨진 표지는 양쪽에서 같이 뺀다.
-  (function () {
-    var t = document.querySelector("#band .track");
-    var half = t.children.length / 2;
-    [].slice.call(t.children, half).forEach(function (el) { el.setAttribute("aria-hidden", "true"); el.tabIndex = -1; });
-    t.addEventListener("error", function (e) {
-      var it = e.target.closest && e.target.closest(".item"); if (!it) return;
-      [].forEach.call(t.querySelectorAll('.item[data-k="' + it.dataset.k + '"]'), function (el) { el.remove(); });
-      t.style.setProperty("--dur", (t.children.length / 2 * 5) + "s");
-    }, true);
-  })();
-  </script>
   <script src="https://favorbook.co.kr/test/search.js" defer></script>
+  <script src="https://favorbook.co.kr/test/shuffle.js" defer></script>
 </body>
 </html>
