@@ -1,7 +1,7 @@
-// 새 디자인 시안의 밝은/어두운 화면 전환. <head>에서 바로 실행해 화면이 깜빡이지 않게 한다.
+// 새 디자인의 밝은/어두운 화면 전환. <head>에서 바로 실행해 화면이 깜빡이지 않게 한다.
 // 고른 값은 이 브라우저에 기억한다. 주소 뒤에 ?theme=dark / ?theme=light 를 붙여도 된다.
 (function () {
-  var KEY = 'favorbook-test-theme';
+  var KEY = 'favorbook-theme';
   var root = document.documentElement;
   var stored = null;
   try { stored = localStorage.getItem(KEY); } catch (e) {}
