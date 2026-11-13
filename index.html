@@ -527,7 +527,7 @@
   <!-- pinned:end -->
 
   <!-- 책 제목으로 검색하면 그 책과 읽은 셀럽을 먼저 보여준다 -->
-  <section id="book-hits" class="hidden w-full">
+  <section id="book-hits" class="hidden w-full pb-12">
     <div class="flex items-end justify-between gap-3 mb-4">
       <h2 id="book-hits-title" class="text-xl md:text-2xl font-black word-break-keep">📚 검색한 책</h2>
       <span id="book-hits-count" class="font-sans font-bold text-[10px] sm:text-xs tracking-widest text-muted"></span>
@@ -1919,10 +1919,11 @@
         <a href="${escHtml(celebShareUrl(n))}"
           class="font-sans font-bold text-[10px] sm:text-xs border-2 border-ink bg-white shadow-neo-sm px-2.5 py-1 hover:bg-neo-mint hover:-translate-y-0.5 transition-all text-ink no-underline">
           ${escHtml(n)}</a>`).join('');
+      // 표지는 잘리지 않게 원래 비율 그대로 보여 준다(칸 높이는 표지를 따라간다).
       const cover = b.coverUrl
         ? `<img src="${escHtml(b.coverUrl)}" alt="${escHtml(b.title)} 표지" loading="lazy" referrerpolicy="no-referrer"
-             class="w-full h-full object-cover">`
-        : `<div class="w-full h-full bg-paper-dark flex items-center justify-center text-2xl">📕</div>`;
+             class="block w-full h-auto">`
+        : `<div class="w-full aspect-[2/3] bg-paper-dark flex items-center justify-center text-2xl">📕</div>`;
       const meta = [b.author, b.publisher].filter(Boolean).join(' · ');
       // 책 페이지가 있는 책(2명 이상)은 표지와 제목을 눌러 이동한다. 1명뿐인 책은 페이지가 없다.
       const bookHref = b.celebs.length >= 2 ? escHtml(bookShareUrl(b.title)) : '';
@@ -1930,7 +1931,7 @@
         ? `<a href="${bookHref}" class="${cls} hover:underline decoration-2 underline-offset-4">${inner}</a>` : inner;
       return `
         <div class="flex gap-3 sm:gap-4 bg-white border-2 border-ink shadow-neo p-3 sm:p-4">
-          <div class="w-[62px] sm:w-[74px] flex-none aspect-[2/3] border-2 border-ink overflow-hidden bg-paper-dark">${bookHref ? `<a href="${bookHref}" class="block w-full h-full" aria-label="${escHtml(b.title)} 책 페이지">${cover}</a>` : cover}</div>
+          <div class="w-[62px] sm:w-[74px] flex-none self-start border-2 border-ink overflow-hidden bg-paper-dark">${bookHref ? `<a href="${bookHref}" class="block w-full" aria-label="${escHtml(b.title)} 책 페이지">${cover}</a>` : cover}</div>
           <div class="min-w-0 flex-1">
             <h3 class="text-sm sm:text-base font-black leading-snug word-break-keep">${link(escHtml(b.title))}</h3>
             ${meta ? `<p class="text-[11px] sm:text-xs font-bold text-muted mt-0.5 mb-2">${escHtml(meta)}</p>` : '<div class="mb-2"></div>'}
@@ -1947,7 +1948,7 @@
      이름을 쳐도 결과를 보려면 한참 스크롤해야 했다. 검색 중에는 그 사이 칸과
      아래쪽 둘러보기 칸을 접어 결과가 검색창 바로 밑에 오게 한다. */
   const SEARCH_HIDDEN = ['match', 'featured', 'pinned', 'grid-head', 'join',
-                         'seo-top-readers', 'common-books', 'all-celebs'];
+                         'seo-top-readers', 'groups', 'common-books', 'all-celebs'];
 
   function setSearchMode(on, { bookCount = 0, celebCount = 0, hideGrid = false } = {}) {
     SEARCH_HIDDEN.forEach((id) => {
