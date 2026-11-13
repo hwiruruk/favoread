@@ -10871,8 +10871,8 @@
 
   function bookCard(b, i) {
     var cover = b.cover
-      ? '<img src="' + esc(b.cover) + '" alt="' + esc(b.title) + ' cover" loading="lazy" referrerpolicy="no-referrer" class="w-full h-full object-cover">'
-      : '<div class="w-full h-full bg-paper-dark flex items-center justify-center text-2xl">📕</div>';
+      ? '<img src="' + esc(b.cover) + '" alt="' + esc(b.title) + ' cover" loading="lazy" referrerpolicy="no-referrer" class="block w-full h-auto">'
+      : '<div class="w-full aspect-[2/3] bg-paper-dark flex items-center justify-center text-2xl">📕</div>';
     var meta = [b.title_ko, b.author].filter(Boolean).map(esc).join(" · ");
     var chips = b.readers.map(function (r) {
       return '<button type="button" data-reader="' + esc(r.ko) + '" data-book="' + i + '" class="font-sans font-bold text-[10px] sm:text-xs border-2 border-ink bg-white shadow-neo-sm px-2.5 py-1 hover:bg-neo-mint hover:-translate-y-0.5 transition-all">' + esc(r.name) + "</button>";
@@ -10881,7 +10881,7 @@
       ? '<a href="share/book/' + esc(b.slug) + '.html" class="hover:underline decoration-2">' + esc(b.title) + "</a>"
       : esc(b.title);
     return '<div class="flex gap-3 sm:gap-4 bg-white border-2 border-ink shadow-neo p-3 sm:p-4">'
-      + '<div class="w-[62px] sm:w-[74px] flex-none aspect-[2/3] border-2 border-ink overflow-hidden bg-paper-dark">' + cover + "</div>"
+      + '<div class="w-[62px] sm:w-[74px] flex-none self-start border-2 border-ink overflow-hidden bg-paper-dark">' + cover + "</div>"
       + '<div class="min-w-0 flex-1">'
       + '<h3 class="text-sm sm:text-base font-black leading-snug word-break-keep">' + title + "</h3>"
       + '<p class="text-[11px] sm:text-xs font-bold text-muted mt-0.5 mb-2">' + meta + "</p>"
