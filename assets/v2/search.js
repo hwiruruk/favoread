@@ -1,4 +1,4 @@
-// 새 디자인 시안 공용 검색. 페이지 어디든 <div class="site-search"></div> 를 두면
+// 새 디자인 공용 검색. 페이지 어디든 <div class="site-search"></div> 를 두면
 // 그 자리에 검색창이 생긴다. 이름·책 제목·저자로 찾아 셀럽 페이지나 책 페이지로 보낸다.
 // data.json(약 1MB)은 검색창에 처음 들어올 때 한 번만 받는다.
 (function () {
@@ -38,7 +38,7 @@
     if (index) return Promise.resolve(index);
     if (loading) return loading;
     if (EN) {
-      loading = fetch('/test/en/search.json').then(function (r) { return r.json(); }).then(function (rows) {
+      loading = fetch('/assets/v2/search-en.json').then(function (r) { return r.json(); }).then(function (rows) {
         index = rows.map(function (r) { return { label: r[0], key: r[1], meta: r[2], href: r[3], rank: r[4], n: r[5] }; });
         return index;
       });

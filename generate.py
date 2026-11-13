@@ -3929,310 +3929,15 @@ for _f in os.listdir('group'):
         os.remove(os.path.join('group', _f))
 print(f"✅ /group/ 그룹 페이지: {len(ko_group_pages)}개")
 
-# ── 5.4. /recommend/ 아이돌·연예인 추천책 모음 ──────────────────────
-# "아이돌 추천책", "연예인 추천책"처럼 인물 이름 없이 찾는 검색어는 셀럽·그룹
-# 페이지로는 잡히지 않는다. 홈은 제목·본문이 브랜드 위주라 약하다.
-# 그래서 이 검색어를 제목·h1에 그대로 담은 모음 페이지를 따로 둔다.
-
-idol_names = sorted((n for n in celebs if is_idol(n)), key=lambda x: x.lower())
-celeb_names = sorted((n for n in celebs if not is_idol(n)), key=lambda x: x.lower())
-IDOL_HUB_URL = BASE + 'recommend/idol.html'
-CELEB_HUB_URL = BASE + 'recommend/celeb.html'
-ACTOR_HUB_URL = BASE + 'recommend/actor.html'
-MUSICIAN_HUB_URL = BASE + 'recommend/musician.html'
-os.makedirs('recommend', exist_ok=True)
-
-
-def _hub_books(names):
-    """names가 읽은 책을 읽은 사람 수 순으로"""
-    hub = {}
-    for _n in names:
-        for b in celebs[_n]['books']:
-            t = b['title'].strip()
-            hit = hub.setdefault(t, {'readers': [], 'author': b['author']})
-            if _n not in hit['readers']:
-                hit['readers'].append(_n)
-    return sorted(hub.items(), key=lambda kv: (-len(kv[1]['readers']), title_sort_key(kv[0])))
-
-
-def _hub_page(url, path, title, desc, h1, intro, ranked, list_title, people, people_title,
-              extra_html, faq):
-    LIMIT = 80
-    rows = ''
-    for i, (t, info) in enumerate(ranked[:LIMIT]):
-        who = ', '.join('<a href="' + esc(make_celeb_url(r)) + '">' + esc(r) + '</a>'
-                        for r in info['readers'])
-        t_html = ('<a href="' + esc(make_book_url(t)) + '">' + esc(t) + '</a>') if t in books_with_pages else esc(t)
-        rows += (
-            '    <li class="gb">\n'
-            '      <span class="gb-t">' + str(i + 1) + '. ' + t_html + '</span>\n'
-            + (('      <span class="gb-a">' + esc(info['author']) + '</span>\n') if info['author'] else '')
-            + '      <span class="gb-w">' + str(len(info['readers'])) + '명 · ' + who + '</span>\n'
-            '    </li>\n'
-        )
-    people_html = ' · '.join(
-        '<a href="' + esc(make_celeb_url(n)) + '">' + esc(n) + '</a> <span class="cnt">'
-        + str(len(celebs[n]['books'])) + '권</span>' for n in people)
-    faq_html = ''.join('    <h3>' + esc(q) + '</h3>\n    <p>' + esc(a) + '</p>\n' for q, a in faq)
-    ld = [
-        {
-            '@context': 'https://schema.org',
-            '@type': 'CollectionPage',
-            'name': title,
-            'url': url,
-            'inLanguage': 'ko',
-            'description': desc,
-            'isPartOf': {'@type': 'WebSite', 'name': '최애의 독서', 'url': BASE},
-            'mainEntity': {
-                '@type': 'ItemList',
-                'name': list_title,
-                'numberOfItems': min(len(ranked), LIMIT),
-                'itemListElement': [
-                    {'@type': 'ListItem', 'position': i + 1, 'name': t,
-                     **({'url': make_book_url(t)} if t in books_with_pages else {})}
-                    for i, (t, _) in enumerate(ranked[:LIMIT])
-                ],
-            },
-        },
-        {
-            '@context': 'https://schema.org',
-            '@type': 'BreadcrumbList',
-            'itemListElement': [
-                {'@type': 'ListItem', 'position': 1, 'name': '홈', 'item': BASE},
-                {'@type': 'ListItem', 'position': 2, 'name': h1, 'item': url},
-            ],
-        },
-    ]
-    page = (
-        '<!DOCTYPE html>\n'
-        '<html lang="ko">\n'
-        '<head>\n' + GA_TAG +
-        '  <meta charset="utf-8">\n'
-        '  <meta name="viewport" content="width=device-width, initial-scale=1">\n'
-        '  <title>' + esc(title) + ' | 최애의 독서</title>\n'
-        '  <meta name="description" content="' + esc(desc) + '">\n'
-        '  <meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1">\n'
-        '  <meta property="og:title" content="' + esc(title) + '">\n'
-        '  <meta property="og:description" content="' + esc(desc) + '">\n'
-        '  <meta property="og:url" content="' + esc(url) + '">\n'
-        '  <meta property="og:type" content="website">\n'
-        '  <meta property="og:locale" content="ko_KR">\n'
-        '  <meta property="og:site_name" content="최애의 독서">\n'
-        '  <meta property="og:image" content="' + OG_SITE + '">\n'
-        '  <meta name="twitter:card" content="summary_large_image">\n'
-        '  <link rel="canonical" href="' + esc(url) + '">\n'
-        '  <link rel="icon" href="' + BASE + 'favicon.svg" type="image/svg+xml">\n'
-        '  <script type="application/ld+json">\n  '
-        + json.dumps(ld, ensure_ascii=False, indent=2) + '\n  </script>\n'
-        '  <style>\n'
-        '    body { font-family: -apple-system, BlinkMacSystemFont, "Apple SD Gothic Neo", "Segoe UI", sans-serif; max-width: 860px; margin: 0 auto; padding: 20px; color: #222; line-height: 1.6; background: #fcfaf5; word-break: keep-all; }\n'
-        '    a { color: #2563eb; text-decoration: none; }\n'
-        '    a:hover { text-decoration: underline; }\n'
-        '    nav { margin: 8px 0 16px; font-size: 13px; }\n'
-        '    .hero { border: 3px solid #000; box-shadow: 5px 5px 0 0 #000; padding: 18px 18px 14px; background: #fff; }\n'
-        '    .hero h1 { font-size: 26px; margin: 0 0 8px; font-weight: 900; line-height: 1.3; }\n'
-        '    .hero p { margin: 0 0 6px; font-size: 15px; }\n'
-        '    h2 { font-size: 19px; margin: 32px 0 12px; padding-bottom: 4px; border-bottom: 2px solid #000; font-weight: 800; }\n'
-        '    h3 { font-size: 15px; margin: 16px 0 4px; font-weight: 800; }\n'
-        '    .books { padding: 0; margin: 0; }\n'
-        '    .gb { background: #fff; border: 2px solid #000; box-shadow: 3px 3px 0 0 #000; padding: 10px 12px; margin-bottom: 10px; list-style: none; }\n'
-        '    .gb-t { display: block; font-weight: 800; font-size: 15px; line-height: 1.3; }\n'
-        '    .gb-a { display: block; font-size: 12px; color: #555; }\n'
-        '    .gb-w { display: block; font-size: 12px; margin-top: 3px; }\n'
-        '    .people { font-size: 14px; line-height: 2; }\n'
-        '    .cnt { font-size: 11px; color: #777; }\n'
-        '    footer { margin-top: 40px; padding-top: 16px; border-top: 2px solid #000; font-size: 12px; color: #666; }\n'
-        '  </style>\n'
-        '</head>\n'
-        '<body>\n'
-        '  <nav><a href="' + BASE + '">← 최애의 독서</a> · <a href="' + IDOL_HUB_URL + '">아이돌 추천책</a>'
-        ' · <a href="' + ACTOR_HUB_URL + '">배우 추천책</a> · <a href="' + MUSICIAN_HUB_URL + '">가수 추천책</a>'
-        ' · <a href="' + AUTHOR_HUB_URL + '">작가별 추천책</a>'
-        ' · <a href="' + BASE + 'share/ranking.html">셀럽 독서 랭킹</a></nav>\n'
-        '  <div class="hero">\n'
-        '    <h1>' + esc(h1) + '</h1>\n'
-        + ''.join('    <p>' + p + '</p>\n' for p in intro) +
-        '  </div>\n'
-        '  <h2>' + esc(list_title) + '</h2>\n'
-        '  <ul class="books">\n' + rows + '  </ul>\n'
-        + extra_html +
-        '  <h2>' + esc(people_title) + '</h2>\n'
-        '  <p class="people">' + people_html + '</p>\n'
-        '  <h2>자주 묻는 질문</h2>\n' + faq_html +
-        '  <footer>\n'
-        '    <p>공개된 인터뷰·방송·SNS를 바탕으로 정리했어요. 빠진 책이 있다면 '
-        '<a href="https://forms.gle/Sd3ZQTahZNbUjbdz7">제보해 주세요</a>. '
-        '<a href="' + BASE + '">최애의 독서 홈 →</a></p>\n'
-        '  </footer>\n'
-        '</body>\n'
-        '</html>'
-    )
-    write_if_changed(path, page)
-
-
-# 아이돌 추천책
-_idol_ranked = _hub_books(idol_names)
-_idol_picks = [t for t, _ in _idol_ranked[:3]]
-_group_links = ''.join(
-    '    <li class="gb"><span class="gb-t"><a href="' + esc(make_group_url(g)) + '">'
-    + esc(g['ko']) + ' 멤버들이 읽은 책</a></span><span class="gb-w">' + str(len(g['members']))
-    + '명 · ' + str(g['n_books']) + '권</span></li>\n'
-    for g in sorted(ko_groups.values(), key=lambda g: (-g['n_books'], g['ko']))
-    if g['members'][0] in idol_names
-)
-_hub_page(
-    IDOL_HUB_URL, 'recommend/idol.html',
-    '아이돌 추천책 모음 · 아이돌이 읽은 책 ' + str(len(_idol_ranked)) + '권',
-    '아이돌 추천책 한눈에 보기. K-POP 아이돌 ' + str(len(idol_names)) + '명이 읽고 추천한 책 '
-    + str(len(_idol_ranked)) + '권' + ((' — ' + ', '.join(_idol_picks)) if _idol_picks else '')
-    + '. 여러 아이돌이 함께 추천한 책부터 그룹별 추천 도서까지 출처와 함께 정리했어요.',
-    '아이돌 추천책 모음',
-    ['K-POP 아이돌 <strong>' + str(len(idol_names)) + '명</strong>이 인터뷰·유튜브·SNS에서 읽었다고 밝히거나 '
-     '추천한 책 <strong>' + str(len(_idol_ranked)) + '권</strong>을 모았어요.',
-     '여러 아이돌이 함께 추천한 책부터 순서대로 보여드려요. 그룹별 추천 도서와 멤버별 인생책도 바로 찾아볼 수 있어요.'],
-    _idol_ranked, '아이돌이 가장 많이 추천한 책',
-    idol_names, '책을 추천한 아이돌 ' + str(len(idol_names)) + '명',
-    '  <h2>그룹별 아이돌 추천 도서</h2>\n  <ul class="books">\n' + _group_links + '  </ul>\n',
-    [('아이돌 추천책은 어떤 기준으로 모았나요?',
-      '아이돌이 직접 추천한 책은 물론, 방송·인터뷰·유튜브·위버스·인스타그램 등에서 읽었다고 말하거나 언급한 책, 화보나 일상 사진에 포착된 책까지 출처와 함께 모았어요. 본인이 쓴 책이나 출연작의 원작 도서는 넣지 않았어요. 책마다 인물 페이지에서 출처를 확인할 수 있어요.'),
-     ('아이돌이 가장 많이 추천한 책은 무엇인가요?',
-      ('지금 기준으로 ' + ', '.join(_idol_picks) + ' 순으로 많이 언급됐어요.') if _idol_picks else '아직 집계 중이에요.'),
-     ('배우나 다른 연예인 추천책도 볼 수 있나요?',
-      '배우 추천책 모음, 가수 추천책 모음 페이지에서 배우·가수가 추천한 책을 따로 볼 수 있어요.')],
-)
-
-# ── 5.41. 새 디자인 시안 (테스트) — test/*.html ──────────────────────
-# 홈 시안(test/index.html)과 같은 톤(명조 제목·노란 알약, 밝은/어두운 화면 전환)으로
-# 모음 페이지들을 다시 짠 것. 표지와 인물 사진을 넣었다. 공식 페이지는 그대로 두고
-# test/ 아래에만 내보낸다. noindex, 사이트맵·수정일 추적에도 넣지 않는다.
-# 확정되면 공식 페이지 본문을 이 구성으로 바꾸고 이 블록(과 5.9)은 지운다.
+# ── 5.39. 새 디자인 공통 틀 ──────────────────────────────────────────
+# 모음 페이지(추천책·작가 목록·랭킹, 영문 직업별·랭킹)가 함께 쓰는 틀.
+# 명조 제목 · 노란 알약 · 표지와 인물 사진 · 밝은/어두운 화면 전환.
+# 스타일과 스크립트는 assets/v2/ 에 있다(theme.css 색 변수, site.css 구성 요소,
+# theme.js 화면 전환, search.js 검색, shuffle.js 들어올 때마다 다른 표지).
+V2_ASSETS = BASE + 'assets/v2/'
 V2_TEST = BASE + 'test/'
-V2_CSS = '''
-    :root { --serif:"KoPubWorld Batang",serif; --sans:"Space Grotesk","KoPubWorld Dotum",sans-serif;
-      --pad:clamp(16px,4vw,48px); }
-    * { box-sizing:border-box; }
-    html,body { margin:0; }
-    body { background:var(--bg); color:var(--ink); font-family:var(--sans); -webkit-font-smoothing:antialiased; overflow-x:hidden; word-break:keep-all; line-height:1.55; }
-    a { color:inherit; text-decoration:none; }
-    .bar { display:grid; grid-template-columns:1fr auto 1fr; align-items:center; padding:18px var(--pad); font-size:13px; }
-    .bar nav { display:flex; gap:clamp(12px,2vw,28px); white-space:nowrap; }
-    .bar nav a { color:var(--soft); }
-    .bar nav a:hover { color:var(--ink); text-decoration:underline; text-underline-offset:4px; }
-    .logo { font-family:var(--serif); font-weight:700; font-size:17px; display:flex; align-items:center; gap:8px; }
-    .logo::before { content:""; width:9px; height:9px; border-radius:50%; background:var(--yellow); box-shadow:0 0 0 1px var(--ink) inset; }
-    .bar .right { justify-self:end; display:flex; align-items:center; gap:10px; min-width:0; }
-    .chip { font-size:10px; font-weight:700; letter-spacing:.1em; border:1px solid var(--ink); padding:2px 7px; border-radius:99px; }
-    @media (max-width:720px) {
-      .bar { grid-template-columns:auto 1fr; row-gap:12px; }
-      .bar nav { grid-column:1/-1; grid-row:2; overflow-x:auto; scrollbar-width:none; }
-      .bar .right { grid-column:1/-1; grid-row:3; justify-self:stretch; }
-      .bar .right .chip { display:none; }
-    }
-    .hero { text-align:center; padding:clamp(28px,4vw,56px) 20px clamp(28px,3vw,40px); }
-    .eyebrow { font-size:11px; font-weight:700; letter-spacing:.14em; color:var(--muted); margin:0 0 14px; }
-    .hero h1 { font-family:var(--serif); font-weight:500; font-size:clamp(28px,4vw,48px); line-height:1.3; letter-spacing:-.02em; margin:0; }
-    .hero p.lead { max-width:560px; margin:16px auto 0; font-size:15px; color:var(--soft); }
-    .hero p.lead strong { color:var(--ink); background:linear-gradient(transparent 60%, var(--yellow) 60%); }
-    .tabs { margin-top:24px; display:inline-flex; gap:6px; flex-wrap:wrap; justify-content:center; }
-    .tabs a { font-size:13px; font-weight:700; padding:9px 18px; border-radius:99px; border:1px solid var(--border); }
-    .tabs a:hover { border-color:var(--ink); }
-    .tabs a.on { background:var(--yellow); border-color:var(--yellow); color:var(--on-yellow); }
-    main section { max-width:1120px; margin:0 auto; padding:clamp(40px,6vw,72px) var(--pad) 0; }
-    h2 { font-family:var(--serif); font-weight:700; font-size:clamp(20px,2.4vw,26px); margin:0 0 6px; }
-    .sub { margin:0 0 24px; font-size:13px; color:var(--muted); }
-    ol { list-style:none; margin:0; padding:0; }
-    .cv { display:block; flex:none; background:var(--ph); overflow:hidden; }
-    .cv img { display:block; width:100%; height:100%; object-fit:cover; }
-    .nocv { display:flex; height:100%; align-items:center; justify-content:center; padding:6px; font-family:var(--serif); font-size:11px; text-align:center; color:var(--soft); }
-    h3 { font-family:var(--serif); font-weight:700; margin:0; line-height:1.35; }
-    h3 a:hover, .who a:hover { text-decoration:underline; text-underline-offset:3px; }
-    .au { margin:2px 0 0; font-size:12px; color:var(--muted); }
-    .who { margin:8px 0 0; font-size:12px; color:var(--soft); line-height:1.7; }
-    .rk { font-weight:700; font-size:13px; color:var(--muted); font-variant-numeric:tabular-nums; }
-    .faces { display:flex; align-items:center; flex-wrap:wrap; row-gap:4px; padding-left:8px; }
-    .av { position:relative; flex:none; width:30px; height:30px; border-radius:50%; overflow:hidden; background:var(--ph); border:2px solid var(--bg); margin-left:-8px; display:inline-flex; align-items:center; justify-content:center; }
-    .av i { font-style:normal; font-size:11px; font-weight:700; color:var(--ph-ink); }
-    .av img { position:absolute; inset:0; width:100%; height:100%; object-fit:cover; object-position:50% 20%; }
-    .av.more { font-size:10px; font-weight:700; color:var(--soft); }
-    .cnt { font-size:12px; font-weight:700; margin:0 16px 0 -8px; background:var(--yellow); color:var(--on-yellow); padding:2px 8px; border-radius:99px; }
-    .top3 { display:grid; grid-template-columns:repeat(3,1fr); gap:clamp(16px,2.5vw,32px); }
-    .top3 li { display:flex; gap:16px; min-width:0; }
-    .top3 .cv { aspect-ratio:2/2.9; width:38%; max-width:150px; align-self:flex-start; }
-    .top3 .tx { min-width:0; flex:1; }
-    .top3 .rk { display:inline-block; font-size:12px; letter-spacing:.1em; color:var(--on-yellow); background:var(--yellow); border-radius:99px; padding:2px 10px; margin-bottom:8px; }
-    .top3 .rk::before { content:"TOP "; }
-    .top3 h3 { font-size:clamp(18px,2vw,22px); }
-    .top3 .n { margin:10px 0 8px; font-size:13px; font-weight:700; }
-    .top3 .av { width:36px; height:36px; }
-    .list { display:grid; grid-template-columns:repeat(2,1fr); column-gap:clamp(24px,4vw,56px); margin-top:clamp(32px,4vw,48px); border-top:1px solid var(--ink); }
-    .list li { display:flex; gap:14px; padding:16px 0; border-bottom:1px solid var(--line); min-width:0; }
-    .list .rk { width:22px; flex:none; padding-top:2px; }
-    .list .cv { width:60px; height:87px; }
-    .list .tx { min-width:0; flex:1; }
-    .list h3 { font-size:16px; }
-    .list .faces { margin-top:8px; }
-    .list .who { display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden; }
-    @media (max-width:820px) {
-      .top3 { grid-template-columns:1fr; }
-      .list { grid-template-columns:1fr; }
-    }
-    .grps { display:grid; grid-template-columns:repeat(auto-fill,minmax(150px,1fr)); gap:8px; }
-    .grp { border:1px solid var(--border); border-radius:12px; padding:11px 14px; display:flex; flex-direction:column; transition:transform .15s; }
-    .grp:hover { transform:translateY(-2px); }
-    .grp b { font-family:var(--serif); font-size:15px; }
-    .grp small { font-size:11px; opacity:.75; }
-    .people { display:grid; grid-template-columns:repeat(auto-fill,minmax(170px,1fr)); gap:4px 12px; }
-    .person { display:flex; align-items:center; gap:10px; padding:7px 8px; border-radius:99px; min-width:0; }
-    .person:hover { background:var(--hover); }
-    .av.lg { width:42px; height:42px; margin:0; border:0; }
-    .av.lg i { font-size:14px; }
-    .av.xl { width:64px; height:64px; margin:0; border:0; }
-    .av.xl i { font-size:20px; }
-    .hid { display:none !important; }
-    .lang { font-size:12px; font-weight:700; white-space:nowrap; text-decoration:underline; text-underline-offset:3px; }
-    .hero.home h1 { font-size:clamp(28px,4.4vw,54px); line-height:1.35; }
-    .hero.home .site-search { margin:28px auto 0; text-align:left; }
-    .count { margin:18px 0 0; font-size:12px; font-weight:700; letter-spacing:.14em; color:var(--muted); }
-    .bgrid { display:grid; grid-template-columns:repeat(8,1fr); gap:clamp(16px,2.4vw,28px) clamp(8px,1.4vw,18px); }
-    .bgrid a, .pgrid a { display:block; min-width:0; }
-    .bgrid .cv { aspect-ratio:2/2.9; }
-    .bgrid b { font-family:var(--serif); font-size:13px; line-height:1.35; margin-top:8px; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden; }
-    .bgrid small, .pgrid small { display:block; font-size:11px; color:var(--muted); margin-top:2px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
-    .pgrid { display:grid; grid-template-columns:repeat(6,1fr); gap:clamp(20px,3vw,32px) clamp(10px,1.6vw,20px); }
-    .ph { position:relative; display:block; aspect-ratio:3/4; background:var(--ph); overflow:hidden; }
-    .ph img { position:absolute; inset:0; width:100%; height:100%; object-fit:cover; object-position:50% 20%; }
-    .ph i { position:absolute; inset:0; display:flex; align-items:center; justify-content:center; font-style:normal; font-family:var(--serif); font-size:28px; color:var(--ph-ink); }
-    .ph .rk { position:absolute; z-index:1; left:0; top:0; background:var(--ink); color:var(--bg); font-size:11px; padding:3px 8px; }
-    .pgrid b { display:block; font-family:var(--serif); font-size:15px; margin-top:10px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
-    .pgrid .cnt { display:inline-block; margin:4px 0 3px; font-size:11px; padding:1px 8px; }
-    @media (max-width:820px) { .bgrid { grid-template-columns:repeat(4,1fr); } .bgrid[data-pick] a:nth-child(n+9) { display:none; } .pgrid { grid-template-columns:repeat(3,1fr); } }
-    .person span:last-child { min-width:0; display:flex; flex-direction:column; line-height:1.3; }
-    .person b { font-size:13px; font-weight:700; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
-    .person small { font-size:11px; color:var(--muted); }
-    .qa { border-top:1px solid var(--line); padding:16px 0; max-width:760px; }
-    .qa h3 { font-size:15px; }
-    .qa p { margin:6px 0 0; font-size:14px; color:var(--soft); }
-    footer { margin-top:clamp(48px,6vw,80px); border-top:1px solid var(--line); padding:22px var(--pad) 40px; font-size:12px; color:var(--muted); }
-    footer a { color:var(--ink); text-decoration:underline; text-underline-offset:3px; }
-    .list.one { grid-template-columns:1fr; }
-    .strip { display:flex; gap:6px; margin-top:10px; }
-    .strip .cv { width:44px; height:64px; }
-    .meta { margin:4px 0 0; font-size:12px; color:var(--soft); }
-    .cards { display:grid; grid-template-columns:repeat(auto-fill,minmax(160px,1fr)); gap:clamp(20px,3vw,36px) clamp(16px,2.5vw,28px); }
-    .card { display:block; min-width:0; }
-    .card .fan { display:flex; gap:4px; background:var(--card); padding:16px 14px 0; height:150px; align-items:flex-end; overflow:hidden; }
-    .card .fan .cv { flex:1; height:124px; transition:transform .25s; }
-    .card:hover .fan .cv { transform:translateY(-6px); }
-    .card .rk { display:block; margin-top:12px; }
-    .card h3 { font-size:18px; margin-top:2px; }
-    .card:hover h3 { text-decoration:underline; text-underline-offset:3px; }
-    .jump { margin-top:24px; display:inline-flex; gap:6px; flex-wrap:wrap; justify-content:center; }
-    .jump a { font-size:13px; font-weight:700; padding:9px 18px; border-radius:99px; border:1px solid var(--border); }
-    .jump a:hover { background:var(--yellow); border-color:var(--yellow); color:var(--on-yellow); }
-'''
 
-
-# 지금 만들고 있는 시안 페이지의 언어. 영문판(6.2)을 만드는 동안만 'en'으로 바꾼다.
+# 지금 만들고 있는 페이지의 언어. 영문 페이지를 만드는 동안만 'en'으로 바꾼다.
 # 아래 도우미들이 이 값을 보고 이름·제목·주소를 고른다.
 _v2_lang = 'ko'
 
@@ -4306,7 +4011,7 @@ def _v2_who(readers):
 
 def _v2_strip(titles, n=5, pool=0):
     """작은 표지 줄. pool을 주면 그만큼을 후보로 싣고 n권만 보인다 —
-    test/shuffle.js가 들어올 때마다 후보를 섞어 다른 n권을 보여 준다.
+    assets/v2/shuffle.js가 들어올 때마다 후보를 섞어 다른 n권을 보여 준다.
     후보는 제목 해시 순으로 골라 빌드할 때마다 파일이 바뀌지 않게 한다."""
     if not titles:
         return ''
@@ -4355,38 +4060,73 @@ def _v2_book_rows(rows, who_label):
             + (('      <ol class="list" start="4">\n' + rest + '      </ol>\n') if rest else ''))
 
 
-def _v2_write(path, title, eyebrow, h1, lead, hero_extra, sections, old_url, alt_url='', home=False):
-    """새 디자인 공통 틀: 상단 바 · 제목 · 본문 · 바닥글. h1은 HTML 그대로 들어간다.
-    alt_url은 다른 언어판 주소, home은 검색창을 제목 아래에 크게 두는 홈 모양."""
+def _v2_en_count(n):
+    """영문 제목이 있는 책 수 — 영문 페이지에서 보여 주는 권수"""
+    return sum(1 for b in celebs[n]['books'] if b.get('title_en'))
+
+
+def _v2_people(names):
+    """사람 목록: 동그란 사진 · 이름 · 권수"""
     en = _v2_lang == 'en'
-    if en:
-        nav = ''.join('<a href="' + V2_TEST + 'en/' + EN_ROLE_INFO[r]['hub'] + '.html">' + lbl + '</a>'
-                      for r, lbl in (('idol', 'Idols'), ('actor', 'Actors'), ('musician', 'Musicians'))
-                      if r in en_role_members) + '<a href="' + V2_TEST + 'en/ranking.html">Ranking</a>'
-    else:
-        nav = ('<a href="' + V2_TEST + 'idol.html">아이돌</a><a href="' + V2_TEST + 'actor.html">배우</a>'
-               '<a href="' + V2_TEST + 'author.html">작가</a><a href="' + V2_TEST + 'ranking.html">랭킹</a>'
-               '<a href="' + BASE + 'match/">취향 월드컵</a>')
-    alt = (('<a class="lang" href="' + alt_url + '">' + ('한국어' if en else 'EN') + '</a>') if alt_url else '')
-    page = (
-        '<!DOCTYPE html>\n<html lang="' + ('en' if en else 'ko') + '">\n<head>\n'
-        '  <meta charset="utf-8">\n'
-        '  <meta name="viewport" content="width=device-width, initial-scale=1">\n'
-        '  <meta name="robots" content="noindex, nofollow">\n'
-        '  <title>' + esc(title) + (' — design test | Favorbook' if en else ' — 디자인 테스트 | 최애의 독서') + '</title>\n'
-        '  <link rel="icon" href="' + BASE + 'favicon.svg" type="image/svg+xml">\n'
-        '  <link rel="preconnect" href="https://image.yes24.com">\n'
+    return '      <div class="people">\n' + ''.join(
+        '      <a class="person" href="' + esc(_v2_curl(n)) + '">' + _v2_face(n, 'av lg') + '<span><b>'
+        + esc(_v2_cname(n)) + '</b><small>'
+        + ((esc(n) + ' · ' + str(_v2_en_count(n)) + ' book' + ('s' if _v2_en_count(n) != 1 else '')) if en
+           else (str(len(celebs[n]['books'])) + '권'))
+        + '</small></span></a>\n' for n in names) + '      </div>\n'
+
+
+def _v2_readers_rank(names):
+    """다독 순위 목록: 순위 · 사진 · 이름 · 권수 · 들어올 때마다 다른 표지 5권"""
+    en = _v2_lang == 'en'
+    return '      <ol class="list">\n' + ''.join(
+        '      <li><span class="rk">' + str(i + 1) + '</span>' + _v2_face(n, 'av xl')
+        + '<div class="tx"><h3><a href="' + esc(_v2_curl(n)) + '">' + esc(_v2_cname(n)) + '</a></h3>'
+        '<p class="meta"><span class="cnt" style="margin:0">'
+        + ((str(_v2_en_count(n)) + ' books') if en else (str(len(celebs[n]['books'])) + '권')) + '</span></p>'
+        + _v2_strip([b['title'].strip() for b in celebs[n]['books'] if (b.get('title_en') or not en)], 5, 15)
+        + '</div></li>\n' for i, n in enumerate(names)) + '      </ol>\n'
+
+
+def _v2_nav():
+    if _v2_lang == 'en':
+        return ''.join(
+            '<a href="' + EN_BASE + 'category/' + EN_ROLE_INFO[r]['hub'] + '.html">'
+            + {'idol': 'Idols', 'actor': 'Actors', 'musician': 'Musicians'}.get(r, EN_ROLE_INFO[r]['hub_name']) + '</a>'
+            for r in sorted(en_role_members, key=lambda x: -len(en_role_members[x]))
+        ) + '<a href="' + EN_BASE + 'share/ranking.html">Ranking</a>'
+    return ('<a href="' + IDOL_HUB_URL + '">아이돌</a><a href="' + ACTOR_HUB_URL + '">배우</a>'
+            '<a href="' + AUTHOR_HUB_URL + '">작가</a><a href="' + BASE + 'share/ranking.html">랭킹</a>'
+            '<a href="' + BASE + 'match/">취향 월드컵</a>')
+
+
+def _v2_page(head, eyebrow, h1, lead, hero_extra, sections, alt_url='', home=False, test=False):
+    """새 디자인 페이지 한 장을 HTML 문자열로 돌려준다.
+
+    head     '<!DOCTYPE html>'부터 </head> 직전까지. 제목·설명·canonical·구조화 데이터 등
+             검색용 정보는 부르는 쪽이 예전 그대로 만든다. 여기서는 스타일만 붙인다.
+    h1       HTML 그대로 들어간다(줄바꿈 <br> 가능).
+    sections [(id, 제목, 한 줄 설명, 본문 HTML)]
+    alt_url  다른 언어판 주소. home은 검색창을 제목 아래에 크게 두는 홈 모양,
+             test는 아직 공식 반영 전인 시안(TEST 표시)."""
+    en = _v2_lang == 'en'
+    alt = (('<a class="lang" href="' + alt_url + '" hreflang="' + ('ko' if en else 'en') + '">'
+            + ('한국어' if en else 'EN') + '</a>') if alt_url else '')
+    return (
+        head
+        + '  <link rel="preconnect" href="https://image.yes24.com">\n'
         '  <link rel="stylesheet" href="' + BASE + 'assets/fonts/space-grotesk.css">\n'
         '  <link rel="stylesheet" href="' + BASE + 'assets/fonts/kopubworld.css">\n'
-        '  <link rel="stylesheet" href="' + V2_TEST + 'theme.css">\n'
-        '  <script src="' + V2_TEST + 'theme.js"></script>\n'
-        '  <style>' + V2_CSS + '  </style>\n'
+        '  <link rel="stylesheet" href="' + V2_ASSETS + 'theme.css">\n'
+        '  <link rel="stylesheet" href="' + V2_ASSETS + 'site.css">\n'
+        '  <script src="' + V2_ASSETS + 'theme.js"></script>\n'
         '</head>\n<body>\n'
         '  <header class="bar">\n'
-        '    <nav aria-label="' + ('Main menu' if en else '주요 메뉴') + '">' + nav + '</nav>\n'
-        '    <a class="logo" href="' + V2_TEST + ('en/' if en else '') + '">' + ('Favorbook' if en else '최애의 독서') + '</a>\n'
+        '    <nav aria-label="' + ('Main menu' if en else '주요 메뉴') + '">' + _v2_nav() + '</nav>\n'
+        '    <a class="logo" href="' + ((V2_TEST + ('en/' if en else '')) if test else (EN_BASE if en else BASE)) + '">'
+        + ('Favorbook' if en else '최애의 독서') + '</a>\n'
         '    <div class="right">' + ('' if home else '<div class="site-search sm"></div>')
-        + '<span class="chip">TEST</span>' + alt + '</div>\n'
+        + ('<span class="chip">TEST</span>' if test else '') + alt + '</div>\n'
         '  </header>\n'
         '  <main>\n'
         '    <div class="hero' + (' home' if home else '') + '">\n'
@@ -4400,70 +4140,157 @@ def _v2_write(path, title, eyebrow, h1, lead, hero_extra, sections, old_url, alt
             + (('      <p class="sub">' + esc(sub) + '</p>\n') if sub else '') + body + '    </section>\n'
             for sid, h2, sub, body in sections)
         + '  </main>\n'
-        + ('  <footer>This is a design test page. It is hidden from search engines. '
-           '<a href="' + old_url + '">See the current page</a> · '
-           '<a href="https://forms.gle/Sd3ZQTahZNbUjbdz7">Tell us about a missing book</a></footer>\n' if en else
-           '  <footer>디자인 테스트 페이지입니다. 검색 엔진에 노출되지 않아요. '
-           '<a href="' + old_url + '">기존 페이지 보기</a> · '
-           '<a href="https://forms.gle/Sd3ZQTahZNbUjbdz7">빠진 책 제보하기</a></footer>\n')
-        + '  <script src="' + V2_TEST + 'search.js" defer></script>\n'
-        '  <script src="' + V2_TEST + 'shuffle.js" defer></script>\n'
-        '</body>\n</html>\n'
+        + ('  <footer>Curated from public Korean-language sources. '
+           '<a href="https://forms.gle/Sd3ZQTahZNbUjbdz7">Tell us about a missing book</a> · '
+           '<a href="' + EN_BASE + '">Browse every Korean celebrity in the archive →</a></footer>\n' if en else
+           '  <footer>공개된 인터뷰·방송·SNS를 바탕으로 정리했어요. 빠진 책이 있다면 '
+           '<a href="https://forms.gle/Sd3ZQTahZNbUjbdz7">제보해 주세요</a>. '
+           '<a href="' + BASE + '">최애의 독서 홈 →</a></footer>\n')
+        + '  <script src="' + V2_ASSETS + 'search.js" defer></script>\n'
+        '  <script src="' + V2_ASSETS + 'shuffle.js" defer></script>\n'
+        '</body>\n</html>'
     )
-    # 테스트 페이지라 write_if_changed(수정일·사이트맵 추적)를 거치지 않는다.
-    os.makedirs(os.path.dirname(path), exist_ok=True)
-    with open(path, 'w', encoding='utf-8') as _f:
-        _f.write(page)
 
 
-def _hub_page_v2(tab, eyebrow, h1, lead, ranked, list_title, people, people_title, groups, faq,
-                 who_label, old_url):
-    """추천책 모음(아이돌·배우·가수·전체)의 새 디자인판 → test/<tab>.html"""
-    rows = [(t, info['author'], info['readers']) for t, info in ranked[:80]]
+def _v2_head_only(page_head):
+    """예전 방식으로 만든 <head> 문자열에서 옛 <style> 블록만 뗀다."""
+    return re.sub(r'[ \t]*<style>.*?</style>\n', '', page_head, flags=re.S)
+
+
+# ── 5.4. /recommend/ 아이돌·연예인 추천책 모음 ──────────────────────
+# "아이돌 추천책", "연예인 추천책"처럼 인물 이름 없이 찾는 검색어는 셀럽·그룹
+# 페이지로는 잡히지 않는다. 홈은 제목·본문이 브랜드 위주라 약하다.
+# 그래서 이 검색어를 제목·h1에 그대로 담은 모음 페이지를 따로 둔다.
+
+idol_names = sorted((n for n in celebs if is_idol(n)), key=lambda x: x.lower())
+celeb_names = sorted((n for n in celebs if not is_idol(n)), key=lambda x: x.lower())
+IDOL_HUB_URL = BASE + 'recommend/idol.html'
+CELEB_HUB_URL = BASE + 'recommend/celeb.html'
+ACTOR_HUB_URL = BASE + 'recommend/actor.html'
+MUSICIAN_HUB_URL = BASE + 'recommend/musician.html'
+os.makedirs('recommend', exist_ok=True)
+
+
+def _hub_books(names):
+    """names가 읽은 책을 읽은 사람 수 순으로"""
+    hub = {}
+    for _n in names:
+        for b in celebs[_n]['books']:
+            t = b['title'].strip()
+            hit = hub.setdefault(t, {'readers': [], 'author': b['author']})
+            if _n not in hit['readers']:
+                hit['readers'].append(_n)
+    return sorted(hub.items(), key=lambda kv: (-len(kv[1]['readers']), title_sort_key(kv[0])))
+
+
+def _hub_page(url, path, title, desc, h1, intro, ranked, list_title, people, people_title,
+              groups, faq):
+    """추천책 모음 한 장. groups는 그룹 박스로 보여 줄 그룹 목록(아이돌 모음만)."""
+    LIMIT = 80
+    ld = [
+        {
+            '@context': 'https://schema.org',
+            '@type': 'CollectionPage',
+            'name': title,
+            'url': url,
+            'inLanguage': 'ko',
+            'description': desc,
+            'isPartOf': {'@type': 'WebSite', 'name': '최애의 독서', 'url': BASE},
+            'mainEntity': {
+                '@type': 'ItemList',
+                'name': list_title,
+                'numberOfItems': min(len(ranked), LIMIT),
+                'itemListElement': [
+                    {'@type': 'ListItem', 'position': i + 1, 'name': t,
+                     **({'url': make_book_url(t)} if t in books_with_pages else {})}
+                    for i, (t, _) in enumerate(ranked[:LIMIT])
+                ],
+            },
+        },
+        {
+            '@context': 'https://schema.org',
+            '@type': 'BreadcrumbList',
+            'itemListElement': [
+                {'@type': 'ListItem', 'position': 1, 'name': '홈', 'item': BASE},
+                {'@type': 'ListItem', 'position': 2, 'name': h1, 'item': url},
+            ],
+        },
+    ]
+    head = (
+        '<!DOCTYPE html>\n'
+        '<html lang="ko">\n'
+        '<head>\n' + GA_TAG +
+        '  <meta charset="utf-8">\n'
+        '  <meta name="viewport" content="width=device-width, initial-scale=1">\n'
+        '  <title>' + esc(title) + ' | 최애의 독서</title>\n'
+        '  <meta name="description" content="' + esc(desc) + '">\n'
+        '  <meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1">\n'
+        '  <meta property="og:title" content="' + esc(title) + '">\n'
+        '  <meta property="og:description" content="' + esc(desc) + '">\n'
+        '  <meta property="og:url" content="' + esc(url) + '">\n'
+        '  <meta property="og:type" content="website">\n'
+        '  <meta property="og:locale" content="ko_KR">\n'
+        '  <meta property="og:site_name" content="최애의 독서">\n'
+        '  <meta property="og:image" content="' + OG_SITE + '">\n'
+        '  <meta name="twitter:card" content="summary_large_image">\n'
+        '  <link rel="canonical" href="' + esc(url) + '">\n'
+        '  <link rel="icon" href="' + BASE + 'favicon.svg" type="image/svg+xml">\n'
+        '  <script type="application/ld+json">\n  '
+        + json.dumps(ld, ensure_ascii=False, indent=2) + '\n  </script>\n'
+    )
+    tab = os.path.splitext(os.path.basename(path))[0]
+    who = {'idol': '아이돌', 'actor': '배우', 'musician': '가수'}.get(tab, '연예인')
     tabs = ('      <div class="tabs">' + ''.join(
-        '<a href="' + V2_TEST + k + '.html"' + (' class="on" aria-current="page"' if k == tab else '') + '>' + lbl + '</a>'
-        for k, lbl in (('idol', '아이돌'), ('actor', '배우'), ('musician', '가수'), ('celeb', '전체'))) + '</div>\n')
-    groups_html = ''
-    for g in groups:
-        style, _fg = group_box_style(g['en'])
-        groups_html += ('      <a class="grp" href="' + esc(make_group_url(g)) + '"'
-                        + ((' style="' + style + '"') if style else '') + '><b>' + esc(g['ko']) + '</b>'
-                        '<small>' + str(len(g['members'])) + '명 · ' + str(g['n_books']) + '권</small></a>\n')
-    people_html = ''.join(
-        '      <a class="person" href="' + esc(make_celeb_url(n)) + '">' + _v2_face(n, 'av lg')
-        + '<span><b>' + esc(n) + '</b><small>' + str(len(celebs[n]['books'])) + '권</small></span></a>\n'
-        for n in people)
-    faq_html = ''.join('      <div class="qa"><h3>' + esc(q) + '</h3><p>' + esc(a) + '</p></div>\n' for q, a in faq)
+        '<a href="' + u + '"' + (' class="on" aria-current="page"' if k == tab else '') + '>' + lbl + '</a>'
+        for k, lbl, u in (('idol', '아이돌', IDOL_HUB_URL), ('actor', '배우', ACTOR_HUB_URL),
+                          ('musician', '가수', MUSICIAN_HUB_URL), ('celeb', '전체', CELEB_HUB_URL))) + '</div>\n')
+    rows = [(t, info['author'], info['readers']) for t, info in ranked[:LIMIT]]
     sections = [('', list_title, '여러 명이 함께 읽은 책부터 ' + str(len(rows)) + '권을 순서대로 보여드려요.',
-                 _v2_book_rows(rows, who_label))]
-    if groups_html:
-        sections.append(('', '그룹별 추천 도서', '박스 색은 그룹 공식 색이에요.',
+                 _v2_book_rows(rows, who))]
+    if groups:
+        groups_html = ''
+        for g in groups:
+            style, _fg = group_box_style(g['en'])
+            groups_html += ('      <a class="grp" href="' + esc(make_group_url(g)) + '"'
+                            + ((' style="' + style + '"') if style else '') + '><b>' + esc(g['ko']) + '</b>'
+                            '<small>' + str(len(g['members'])) + '명 · ' + str(g['n_books']) + '권</small></a>\n')
+        sections.append(('', '그룹별 아이돌 추천 도서', '박스 색은 그룹 공식 색이에요.',
                          '      <div class="grps">\n' + groups_html + '      </div>\n'))
-    sections.append(('', people_title, '이름을 누르면 그 사람이 읽은 책을 모두 볼 수 있어요.',
-                     '      <div class="people">\n' + people_html + '      </div>\n'))
-    sections.append(('', '자주 묻는 질문', '', faq_html))
-    _v2_write('test/' + tab + '.html', h1, eyebrow, esc(h1), lead, tabs, sections, old_url,
-              V2_TEST + 'en/' + {'idol': 'kpop-idols.html', 'actor': 'k-drama-actors.html',
-                                 'musician': 'korean-musicians.html'}.get(tab, ''))
+    sections.append(('', people_title, '이름을 누르면 그 사람이 읽은 책을 모두 볼 수 있어요.', _v2_people(people)))
+    sections.append(('', '자주 묻는 질문', '', ''.join(
+        '      <div class="qa"><h3>' + esc(q) + '</h3><p>' + esc(a) + '</p></div>\n' for q, a in faq)))
+    alt = {'idol': 'kpop-idols', 'actor': 'k-drama-actors', 'musician': 'korean-musicians'}.get(tab)
+    write_if_changed(path, _v2_page(
+        head, {'idol': 'RECOMMENDED BY IDOLS', 'actor': 'RECOMMENDED BY ACTORS',
+               'musician': 'RECOMMENDED BY MUSICIANS'}.get(tab, 'RECOMMENDED BY STARS'),
+        esc(h1), intro, tabs, sections,
+        (BASE + 'en/category/' + alt + '.html') if alt else (BASE + 'en/')))
 
 
-def _v2_faq(label, picks):
-    return [(label + ' 추천책은 어떤 기준으로 모았나요?',
-             label + '가 직접 추천한 책은 물론, 방송·인터뷰·유튜브·SNS에서 읽었다고 말하거나 언급한 책, '
-             '화보나 일상 사진에 포착된 책까지 출처와 함께 모았어요. 본인이 쓴 책이나 출연작의 원작은 넣지 않아요.'),
-            (label + '가 가장 많이 추천한 책은 무엇인가요?',
-             ('지금 기준으로 ' + ', '.join(picks) + ' 순으로 많이 언급됐어요.') if picks else '아직 집계 중이에요.')]
-
-
-_hub_page_v2(
-    'idol', 'RECOMMENDED BY IDOLS', '아이돌 추천책 모음',
+# 아이돌 추천책
+_idol_ranked = _hub_books(idol_names)
+_idol_picks = [t for t, _ in _idol_ranked[:3]]
+_idol_groups = [g for g in sorted(ko_groups.values(), key=lambda g: (-g['n_books'], g['ko']))
+                if g['members'][0] in idol_names]
+_hub_page(
+    IDOL_HUB_URL, 'recommend/idol.html',
+    '아이돌 추천책 모음 · 아이돌이 읽은 책 ' + str(len(_idol_ranked)) + '권',
+    '아이돌 추천책 한눈에 보기. K-POP 아이돌 ' + str(len(idol_names)) + '명이 읽고 추천한 책 '
+    + str(len(_idol_ranked)) + '권' + ((' — ' + ', '.join(_idol_picks)) if _idol_picks else '')
+    + '. 여러 아이돌이 함께 추천한 책부터 그룹별 추천 도서까지 출처와 함께 정리했어요.',
+    '아이돌 추천책 모음',
     ['K-POP 아이돌 <strong>' + str(len(idol_names)) + '명</strong>이 인터뷰·유튜브·SNS에서 읽었다고 밝히거나 '
-     '추천한 책 <strong>' + str(len(_idol_ranked)) + '권</strong>을 모았어요.'],
+     '추천한 책 <strong>' + str(len(_idol_ranked)) + '권</strong>을 모았어요.',
+     '여러 아이돌이 함께 추천한 책부터 순서대로 보여드려요. 그룹별 추천 도서와 멤버별 인생책도 바로 찾아볼 수 있어요.'],
     _idol_ranked, '아이돌이 가장 많이 추천한 책',
     idol_names, '책을 추천한 아이돌 ' + str(len(idol_names)) + '명',
-    [g for g in sorted(ko_groups.values(), key=lambda g: (-g['n_books'], g['ko']))
-     if g['members'][0] in idol_names],
-    _v2_faq('아이돌', _idol_picks), '아이돌', IDOL_HUB_URL,
+    _idol_groups,
+    [('아이돌 추천책은 어떤 기준으로 모았나요?',
+      '아이돌이 직접 추천한 책은 물론, 방송·인터뷰·유튜브·위버스·인스타그램 등에서 읽었다고 말하거나 언급한 책, 화보나 일상 사진에 포착된 책까지 출처와 함께 모았어요. 본인이 쓴 책이나 출연작의 원작 도서는 넣지 않았어요. 책마다 인물 페이지에서 출처를 확인할 수 있어요.'),
+     ('아이돌이 가장 많이 추천한 책은 무엇인가요?',
+      ('지금 기준으로 ' + ', '.join(_idol_picks) + ' 순으로 많이 언급됐어요.') if _idol_picks else '아직 집계 중이에요.'),
+     ('배우나 다른 연예인 추천책도 볼 수 있나요?',
+      '배우 추천책 모음, 가수 추천책 모음 페이지에서 배우·가수가 추천한 책을 따로 볼 수 있어요.')],
 )
 
 # 연예인 추천책 (아이돌 포함 전체)
@@ -4482,7 +4309,7 @@ _hub_page(
      '<a href="' + IDOL_HUB_URL + '">아이돌 추천책 모음</a>으로 가 보세요.'],
     _all_ranked, '연예인이 가장 많이 추천한 책',
     celeb_names, '책을 추천한 배우·가수·방송인 ' + str(len(celeb_names)) + '명',
-    '  <p><a href="' + IDOL_HUB_URL + '">아이돌 ' + str(len(idol_names)) + '명의 추천책은 아이돌 추천책 모음에서 →</a></p>\n',
+    [],
     [('연예인 추천책은 어떤 기준으로 모았나요?',
       '연예인이 직접 추천한 책은 물론, 방송·인터뷰·유튜브·SNS 등에서 읽었다고 말하거나 언급한 책, 화보나 일상 사진에 포착된 책까지 출처와 함께 모았어요. 본인이 쓴 책이나 출연작의 원작 도서는 넣지 않았어요. 책마다 인물 페이지에서 출처를 확인할 수 있어요.'),
      ('연예인이 가장 많이 추천한 책은 무엇인가요?',
@@ -4711,12 +4538,25 @@ for a in sorted(author_pages, key=lambda x: (-len(author_mentions[x]), x)):
     write_if_changed(path, page)
     author_index.append((a, n_celebs, n_mentions, len(ranked), ranked[0][0], updated))
 
-# 작가 목록 (/author/)
-_ai_rows = ''.join(
-    '    <li>\n'
-    '      <div class="ab-t">' + str(i + 1) + '. <a href="' + esc(make_author_url(a)) + '">' + esc(a) + '</a></div>\n'
-    '      <div class="ab-m">' + str(nc) + '명이 읽음 · 책 ' + str(nb) + '권 · 가장 많이 읽힌 책 『' + esc(top) + '』</div>\n'
-    '    </li>\n'
+# 작가·출판사별로 책을 묶는다 (책마다 읽은 사람 수 순) — 작가 목록 카드와 랭킹의 표지 줄에 쓴다.
+_v2_by_author, _v2_by_pub = {}, {}
+for _t, _bi in book_celebs.items():
+    if (_bi.get('author') or '').strip():
+        _v2_by_author.setdefault(_bi['author'].strip(), []).append(_t)
+    if (_bi.get('publisher') or '').strip():
+        _v2_by_pub.setdefault(_bi['publisher'].strip(), []).append(_t)
+for _m in (_v2_by_author, _v2_by_pub):
+    for _k in _m:
+        _m[_k].sort(key=lambda t: (-len(book_celebs[t]['celebs']), title_sort_key(t)))
+
+# 작가 목록 (/author/) — 작가마다 대표작 표지 3권을 세운 카드
+_ai_cards = ''.join(
+    '      <a class="card" href="' + esc(make_author_url(a)) + '">'
+    '<div class="fan">' + ''.join('<span class="cv">' + _v2_cover_img(t) + '</span>'
+                                  for t in _v2_by_author.get(a, [])[:3]) + '</div>'
+    '<span class="rk">' + str(i + 1) + '</span><h3>' + esc(a) + '</h3>'
+    '<p class="meta">' + str(nc) + '명이 읽음 · 책 ' + str(nb) + '권</p>'
+    '<p class="au">가장 많이 읽힌 책 『' + esc(top) + '』</p></a>\n'
     for i, (a, nc, _nm, nb, top, _u) in enumerate(author_index)
 )
 _ai_top = [a for a, *_ in author_index[:3]]
@@ -4750,21 +4590,17 @@ _ai_ld = clean_none([
         ],
     },
 ])
-write_if_changed('author/index.html', (
-    _author_head('작가별 연예인 추천책 · 그들이 많이 읽은 작가 ' + str(len(author_index)) + '명',
-                 _ai_desc, AUTHOR_HUB_URL, _ai_ld, OG_SITE)
-    + '  <div class="hero">\n'
-    '    <h1>그들이 많이 읽은 작가</h1>\n'
-    '    <p>그들이 읽었거나 추천한 책을 작가별로 모았어요. 언급이 ' + str(AUTHOR_MIN_MENTIONS)
-    + '번 이상인 작가 ' + str(len(author_index)) + '명이고, 가장 많이 언급된 작가는 '
-    + ', '.join(esc(a) for a in _ai_top) + ' 순이에요.</p>\n'
-    '  </div>\n'
-    '  <h2>작가 목록</h2>\n'
-    '  <ol class="ab">\n' + _ai_rows + '  </ol>\n'
-    + AUTHOR_FOOT +
-    '</body>\n'
-    '</html>'
-))
+write_if_changed('author/index.html', _v2_page(
+    _v2_head_only(_author_head('작가별 연예인 추천책 · 그들이 많이 읽은 작가 ' + str(len(author_index)) + '명',
+                               _ai_desc, AUTHOR_HUB_URL, _ai_ld, OG_SITE).split('</head>')[0]),
+    'MOST-READ AUTHORS', '그들이 많이 읽은 작가',
+    ['그들이 읽었거나 추천한 책을 작가별로 모았어요. 언급이 ' + str(AUTHOR_MIN_MENTIONS)
+     + '번 이상인 작가 <strong>' + str(len(author_index)) + '명</strong>이고, 가장 많이 언급된 작가는 '
+     + ', '.join(esc(a) for a in _ai_top) + ' 순이에요.'],
+    '',
+    [('', '작가 목록', '작가를 누르면 그 작가의 책과 읽은 사람을 볼 수 있어요.',
+      '      <div class="cards">\n' + _ai_cards + '      </div>\n')],
+    BASE + 'en/'))
 print(f"✅ /author/ 작가 페이지: {len(author_index)}명 (언급 {AUTHOR_MIN_MENTIONS}번 이상)")
 
 # ── 5.5. /en/ 영문 페이지 생성 ──────────────────────────────────────
@@ -5078,7 +4914,7 @@ for _url, _path, _label, _names, _who, _example in (
          + ' 순이에요. ' + _example + '까지 출처 링크와 함께 볼 수 있어요.'],
         _ranked, _label + '가 가장 많이 추천한 책',
         _names, '책을 추천한 ' + _label + ' ' + str(len(_names)) + '명',
-        '  <p><a href="' + AUTHOR_HUB_URL + '">작가별 추천책 →</a></p>\n',
+        [],
         [(_label + ' 추천책은 어떤 기준으로 모았나요?',
           _label + '가 직접 추천한 책은 물론, 방송·인터뷰·유튜브·SNS에서 읽었다고 말하거나 언급한 책, '
           '화보나 일상 사진에 포착된 책까지 출처와 함께 모았어요. 본인이 쓴 책이나 출연작의 원작은 넣지 않아요.'),
@@ -6099,51 +5935,6 @@ for _role in sorted(en_role_members, key=lambda r: -len(en_role_members[r])):
     ranked = sorted(cbooks.items(), key=lambda kv: (-len(kv[1]['readers']), kv[0].lower()))
     shared = [x for x in ranked if len(x[1]['readers']) >= 2]
 
-    _slug_by_en = {m[1]: m[0] for m in members}
-    person_cards = ''
-    for _slug, _name_en, _name_ko in members:
-        n_b = sum(1 for b in celebs[_name_ko]['books'] if b.get('title_en'))
-        img = celebs[_name_ko]['img']
-        person_cards += (
-            '    <li class="gm">\n'
-            '      <a href="' + EN_BASE + 'share/' + _slug + '.html">\n'
-            + (('        <img src="' + esc(img) + '" alt="' + esc(plain_en(_name_en))
-                + ' profile photo" loading="lazy" referrerpolicy="no-referrer">\n')
-               if img.startswith('http') else '')
-            + '        <span class="gm-n">' + esc(plain_en(_name_en)) + '</span>\n'
-            '        <span class="gm-c">' + esc(_name_ko) + ' · ' + str(n_b)
-            + ' book' + ('s' if n_b != 1 else '') + '</span>\n'
-            '      </a>\n'
-            '    </li>\n'
-        )
-
-    book_rows = ''
-    for t, binfo_c in ranked[:40]:
-        who = ', '.join(
-            '<a href="' + EN_BASE + 'share/' + _slug_by_en[r] + '.html">'
-            + esc(plain_en(EN_GROUP_RE.sub('', r).strip() or r)) + '</a>'
-            for r in binfo_c['readers'][:8])
-        if len(binfo_c['readers']) > 8:
-            who += ' and ' + str(len(binfo_c['readers']) - 8) + ' more'
-        _bslug = en_book_slug_by_ko.get(binfo_c['ko'])
-        _t_html = (('<a href="' + EN_BASE + 'share/book/' + _bslug + '.html">' + esc(t) + '</a>')
-                   if _bslug else esc(t))
-        book_rows += (
-            '    <li class="gb">\n'
-            '      <span class="gb-t">' + _t_html + '</span>\n'
-            + (('      <span class="gb-a">' + esc(binfo_c['author']) + '</span>\n')
-               if binfo_c['author'] else '')
-            + '      <span class="gb-w">' + who + '</span>\n'
-            '    </li>\n'
-        )
-
-    # 다른 직업 모아보기로 가는 줄 — 아이돌만 보던 사람이 배우 쪽으로 넘어간다
-    _sibling_links = ' · '.join(
-        '<a href="' + EN_BASE + 'category/' + EN_ROLE_INFO[r]['hub'] + '.html">'
-        + esc(EN_ROLE_INFO[r]['hub_name']) + '</a>'
-        for r in sorted(EN_ROLE_HUBS, key=lambda x: -len(en_role_members.get(x, [])))
-        if r != _role and en_role_members.get(r))
-
     n_people, n_books = len(members), len(cbooks)
     c_title = 'What ' + hub_name + ' Read — Books & Reading List Archive'
     if hub_name == 'K-Pop Idols':
@@ -6189,7 +5980,7 @@ for _role in sorted(en_role_members, key=lambda r: -len(en_role_members[r])):
         ],
     }
 
-    page = (
+    head = (
         '<!DOCTYPE html>\n'
         '<html lang="en">\n'
         '<head>\n' + GA_TAG +
@@ -6215,65 +6006,35 @@ for _role in sorted(en_role_members, key=lambda r: -len(en_role_members[r])):
         + json.dumps(c_ld, ensure_ascii=False, indent=2) + '\n  </script>\n'
         '  <script type="application/ld+json">\n  '
         + json.dumps(c_breadcrumb, ensure_ascii=False, indent=2) + '\n  </script>\n'
-        '  <style>\n'
-        '    body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; max-width: 860px; margin: 0 auto; padding: 20px; color: #222; line-height: 1.6; background: #fcfaf5; }\n'
-        '    a { color: #2563eb; text-decoration: none; }\n'
-        '    a:hover { text-decoration: underline; }\n'
-        '    nav { margin: 8px 0 16px; font-size: 13px; }\n'
-        '    h1 { font-size: 27px; margin: 0 0 8px; font-weight: 900; line-height: 1.25; }\n'
-        '    h2 { font-size: 19px; margin: 32px 0 12px; padding-bottom: 4px; border-bottom: 2px solid #000; font-weight: 800; }\n'
-        '    .lead { background: #fff; border: 2px solid #000; box-shadow: 4px 4px 0 0 #000; padding: 14px 16px; margin: 14px 0 6px; font-size: 15px; }\n'
-        '    .lead p { margin: 0 0 8px; }\n'
-        '    .lead p:last-child { margin-bottom: 0; }\n'
-        '    .members { list-style: none; padding: 0; margin: 0; display: grid; grid-template-columns: repeat(auto-fill, minmax(116px, 1fr)); gap: 12px; }\n'
-        '    .gm a { display: block; color: #000; text-align: center; }\n'
-        '    .gm a:hover { text-decoration: none; }\n'
-        '    .gm img { width: 100%; aspect-ratio: 1/1; object-fit: cover; border: 2px solid #000; box-shadow: 2px 2px 0 0 #000; display: block; background: #f4f4f0; }\n'
-        '    .gm-n { display: block; font-weight: 800; font-size: 13px; margin-top: 6px; line-height: 1.25; }\n'
-        '    .gm-c { display: block; font-size: 11px; color: #666; }\n'
-        '    .gb { background: #fff; border: 2px solid #000; box-shadow: 3px 3px 0 0 #000; padding: 10px 12px; margin-bottom: 10px; list-style: none; }\n'
-        '    .gb-t { display: block; font-weight: 800; font-size: 15px; line-height: 1.3; }\n'
-        '    .gb-a { display: block; font-size: 12px; color: #555; }\n'
-        '    .gb-w { display: block; font-size: 12px; color: #2563eb; margin-top: 3px; }\n'
-        '    .books { padding: 0; margin: 0; }\n'
-        '    .cat-links { font-size: 13px; margin-top: 18px; }\n'
-        '    footer { margin-top: 40px; padding-top: 16px; border-top: 2px solid #000; font-size: 12px; color: #666; }\n'
-        '  </style>\n'
-        '</head>\n'
-        '<body>\n'
-        '  <nav><a href="' + EN_BASE + '">← Favorbook</a></nav>\n'
-        '  <h1>What ' + esc(hub_name) + ' Read</h1>\n'
-        '  <div class="lead">\n'
-        '    <p>Book recommendations and full reading lists from <strong>' + str(n_people)
-        + ' ' + esc(hub_lower) + '</strong> — ' + str(n_books)
-        + ' books in all'
-        + ((', ' + str(len(shared)) + ' of them read by more than one person') if shared else '')
-        + '. Each entry links to the interview, YouTube video or SNS post it came from.</p>\n'
-        + (('    <p>Looking for a kpop idol reading list? This page collects what kpop idols read, '
-            'from BTS, SEVENTEEN, IVE and aespa members to solo singers, with the source '
-            'for every book.</p>\n') if hub_name == 'K-Pop Idols' else '')
-        + ('    <p>These are Korean stars, so most of the books are Korean editions. '
-           'Where an official English translation exists it is shown; otherwise the Korean '
-           'title is kept next to a working translation so you can search for it directly.</p>\n')
-        + '  </div>\n'
-        + (('  <p class="cat-links">Also in this archive: ' + _sibling_links + '</p>\n')
-           if _sibling_links else '')
-        + '  <h2>' + esc(hub_name) + ' in this archive (' + str(n_people) + ')</h2>\n'
-        '  <ul class="members">\n' + person_cards +
-        '  </ul>\n'
-        '  <h2>Books ' + esc(hub_lower) + ' have read</h2>\n'
-        '  <ul class="books">\n' + book_rows +
-        '  </ul>\n'
-        + (('  <p>Showing the ' + str(min(40, len(ranked))) + ' most shared of '
-            + str(n_books) + ' books. Open a name above for a full reading list.</p>\n')
-           if len(ranked) > 40 else '')
-        + '  <footer>\n'
-        '    <p>Curated from public Korean-language sources. '
-        '<a href="' + EN_BASE + '">Browse every Korean celebrity in the archive →</a></p>\n'
-        '  </footer>\n'
-        '</body>\n'
-        '</html>'
     )
+    _v2_lang = 'en'
+    _names_ko = [m[2] for m in members]
+    _c_rows = [(t, i['author'], i['readers']) for t, i in _hub_books(_names_ko) if book_title_en.get(t)][:40]
+    _c_tabs = ('      <div class="tabs">' + ''.join(
+        '<a href="' + EN_BASE + 'category/' + EN_ROLE_INFO[r]['hub'] + '.html"'
+        + (' class="on" aria-current="page"' if r == _role else '') + '>' + esc(EN_ROLE_INFO[r]['hub_name']) + '</a>'
+        for r in sorted(en_role_members, key=lambda x: -len(en_role_members[x]))) + '</div>\n')
+    page = _v2_page(
+        head, 'KOREAN CELEBRITY READING LISTS', 'What ' + esc(hub_name) + ' Read',
+        ['Book recommendations and full reading lists from <strong>' + str(n_people)
+         + ' ' + esc(hub_lower) + '</strong> — ' + str(n_books) + ' books in all'
+         + ((', ' + str(len(shared)) + ' of them read by more than one person') if shared else '')
+         + '. Each entry links to the interview, YouTube video or SNS post it came from.']
+        + (['Looking for a kpop idol reading list? This page collects what kpop idols read, '
+            'from BTS, SEVENTEEN, IVE and aespa members to solo singers, with the source '
+            'for every book.'] if hub_name == 'K-Pop Idols' else [])
+        + ['These are Korean stars, so most of the books are Korean editions. '
+           'Where an official English translation exists it is shown; otherwise the Korean '
+           'title is kept next to a working translation so you can search for it directly.'],
+        _c_tabs,
+        [('', 'Books ' + hub_lower + ' have read',
+          ('Showing the ' + str(len(_c_rows)) + ' most shared of ' + str(n_books)
+           + ' books. Open a name below for a full reading list.') if len(ranked) > 40 else '',
+          _v2_book_rows(_c_rows, hub_lower)),
+         ('', hub_name + ' in this archive (' + str(n_people) + ')',
+          'Pick a name to see everything they have read.', _v2_people(_names_ko))],
+        {'idol': IDOL_HUB_URL, 'actor': ACTOR_HUB_URL, 'musician': MUSICIAN_HUB_URL}.get(_role, BASE))
+    _v2_lang = 'ko'
     write_if_changed('en/category/' + cslug + '.html', page)
     en_category_pages.append((cslug, _role, n_people, n_books))
 
@@ -6301,23 +6062,7 @@ en_rank_url = EN_BASE + 'share/ranking.html'
 _en_pool_set = set(en_book_pool)
 
 
-def _en_book_cell(t):
-    if t in _en_pool_set:
-        return ('<a href="' + EN_BASE + 'share/book/' + safe_en_filename(book_title_en[t]) + '.html">'
-                + esc(plain_en(book_title_en[t])) + '</a> <span class="ko">' + esc(t) + '</span>')
-    if t in books_with_pages:
-        return '<a href="' + esc(make_book_url(t)) + '" hreflang="ko">' + esc(t) + '</a>'
-    return esc(t)
-
-
 _en_top_books = sorted(book_celebs.items(), key=lambda x: (-len(x[1]['celebs']), x[0]))[:30]
-_en_rank_books = '\n'.join(
-    '    <tr><td>' + str(i + 1) + '</td><td>' + _en_book_cell(t) + '</td><td>'
-    + str(len(bi['celebs'])) + '</td><td>'
-    + ', '.join(en_celeb_link(c) for c in sorted(bi['celebs'])[:5])
-    + (' …' if len(bi['celebs']) > 5 else '') + '</td></tr>'
-    for i, (t, bi) in enumerate(_en_top_books))
-
 _en_auth_cnt, _en_auth_name = {}, {}
 for _i in celebs.values():
     for _b in _i['books']:
@@ -6327,19 +6072,9 @@ for _i in celebs.values():
         _en_auth_cnt[_a] = _en_auth_cnt.get(_a, 0) + 1
         if _b.get('author_en') and _a not in _en_auth_name:
             _en_auth_name[_a] = plain_en(_b['author_en'])
-_en_rank_auth = '\n'.join(
-    '    <tr><td>' + str(i + 1) + '</td><td>' + esc(_en_auth_name.get(a) or a)
-    + ((' <span class="ko">' + esc(a) + '</span>') if _en_auth_name.get(a) else '')
-    + '</td><td>' + str(c) + '</td></tr>'
-    for i, (a, c) in enumerate(sorted(_en_auth_cnt.items(), key=lambda x: (-x[1], x[0]))[:20]))
-
 _en_top_readers = sorted(en_celeb_order,
                          key=lambda n: (-sum(1 for b in celebs[n]['books'] if b.get('title_en')),
-                                        plain_en(celebs[n]['name_en']).lower()))[:20]
-_en_rank_readers = '\n'.join(
-    '    <tr><td>' + str(i + 1) + '</td><td>' + en_celeb_link(n) + '</td><td>'
-    + str(sum(1 for b in celebs[n]['books'] if b.get('title_en'))) + '</td></tr>'
-    for i, n in enumerate(_en_top_readers))
+                                        plain_en(celebs[n]['name_en']).lower()))[:30]
 
 _en_rank_ld = json.dumps({
     '@context': 'https://schema.org', '@type': 'ItemList',
@@ -6358,7 +6093,7 @@ _en_rank_bc = json.dumps({
         {'@type': 'ListItem', 'position': 2, 'name': 'Most-read books ranking', 'item': en_rank_url}],
 }, ensure_ascii=False, indent=2)
 
-write_if_changed('en/share/ranking.html', (
+_en_rank_head = (
     '<!DOCTYPE html>\n<html lang="en">\n<head>\n' + GA_TAG +
     '  <meta charset="utf-8">\n'
     '  <meta name="viewport" content="width=device-width, initial-scale=1">\n'
@@ -6377,24 +6112,103 @@ write_if_changed('en/share/ranking.html', (
     '  <link rel="icon" href="' + BASE + 'favicon.svg" type="image/svg+xml">\n'
     '  <script type="application/ld+json">\n  ' + _en_rank_bc + '\n  </script>\n'
     '  <script type="application/ld+json">\n  ' + _en_rank_ld + '\n  </script>\n'
-    '  <style>\n' + EN_PAGE_CSS + '  </style>\n'
-    '</head>\n<body>\n'
-    '  <nav><a href="' + EN_BASE + '">← Favorbook Home</a> · <a href="' + BASE + 'share/ranking.html" hreflang="ko">한국어</a></nav>\n'
-    '  <h1>What Korean celebrities read most</h1>\n'
-    '  <p>Counted across ' + str(len(celebs)) + ' K-pop idols, K-drama and K-movie actors, musicians and other Korean '
-    'celebrities in the archive. Every entry is linked to the interview, video or SNS post where it came up.</p>\n'
-    '  <h2>Top 30 books</h2>\n'
-    '  <table>\n    <thead><tr><th>#</th><th>Book</th><th>Celebrities</th><th>Who read it</th></tr></thead>\n'
-    '    <tbody>\n' + _en_rank_books + '\n    </tbody>\n  </table>\n'
-    '  <h2>Top 20 authors</h2>\n'
-    '  <table>\n    <thead><tr><th>#</th><th>Author</th><th>Mentions</th></tr></thead>\n'
-    '    <tbody>\n' + _en_rank_auth + '\n    </tbody>\n  </table>\n'
-    '  <h2>Longest reading lists</h2>\n'
-    '  <table>\n    <thead><tr><th>#</th><th>Celebrity</th><th>Books</th></tr></thead>\n'
-    '    <tbody>\n' + _en_rank_readers + '\n    </tbody>\n  </table>\n'
-    '  <p><a href="' + EN_BASE + '">Browse every reading list →</a></p>\n'
-    '</body>\n</html>'))
+)
+_v2_en_by_author = {}
+for _t, _bi in book_celebs.items():
+    if (_bi.get('author') or '').strip() and book_title_en.get(_t):
+        _v2_en_by_author.setdefault(_bi['author'].strip(), []).append(_t)
+for _k in _v2_en_by_author:
+    _v2_en_by_author[_k].sort(key=lambda t: (-len(book_celebs[t]['celebs']), t))
+_v2_lang = 'en'
+write_if_changed('en/share/ranking.html', _v2_page(
+    _en_rank_head, 'RANKING', 'What Korean celebrities read most',
+    ['Counted across <strong>' + str(len(celebs)) + '</strong> K-pop idols, K-drama and K-movie actors, musicians '
+     'and other Korean celebrities in the archive. Every entry is linked to the interview, video or SNS post '
+     'where it came up.'],
+    '      <div class="jump"><a href="#readers">Top 30 readers</a><a href="#books">Top 30 books</a>'
+    '<a href="#authors">Top 20 authors</a></div>\n',
+    [('readers', 'Longest reading lists',
+      'Ranked by confirmed books. Not everyone shares what they read, so take it lightly.',
+      _v2_readers_rank(_en_top_readers)),
+     ('books', 'Top 30 books', 'Ranked by how many celebrities have read them.',
+      _v2_book_rows([(t, bi['author'], sorted(bi['celebs'], key=lambda n: _v2_cname(n).lower()))
+                     for t, bi in _en_top_books], 'celebrities')),
+     ('authors', 'Top 20 authors', 'The number is how many times their books were mentioned.',
+      '      <ol class="list">\n' + ''.join(
+          '      <li><span class="rk">' + str(i + 1) + '</span><div class="tx"><h3>'
+          + esc(_en_auth_name.get(a) or a)
+          + ((' <small class="ko">' + esc(a) + '</small>') if _en_auth_name.get(a) else '')
+          + '</h3><p class="meta"><span class="cnt" style="margin:0">' + str(c)
+          + '</span></p>' + _v2_strip(_v2_en_by_author.get(a, [])) + '</div></li>\n'
+          for i, (a, c) in enumerate(sorted(_en_auth_cnt.items(), key=lambda x: (-x[1], x[0]))[:20]))
+      + '      </ol>\n')],
+    BASE + 'share/ranking.html'))
+_v2_lang = 'ko'
 print("✅ /en/ 랭킹 페이지 생성: en/share/ranking.html")
+
+# ── 영문 검색 색인 (assets/v2/search-en.json) ─────────────────────────
+# 새 디자인 영문 페이지의 검색창이 읽는다.
+# [표시 이름, 찾을 말(소문자·공백 없음), 덧붙는 말, 주소, 0=사람/1=책, 읽은 사람 수]
+_v2_lang = 'en'
+_v2_norm = lambda s: re.sub(r'\s+', '', (s or '').lower())
+_v2_en_index = [[_v2_cname(n), _v2_norm(_v2_cname(n) + n), str(_v2_en_count(n)) + ' books', _v2_curl(n), 0, 0]
+                for n in en_celeb_order]
+for _t in book_title_en:
+    _rd = [n for n in book_celebs.get(_t, {}).get('celebs', []) if n in en_celeb_pos]
+    if not _rd:
+        continue
+    _v2_en_index.append([
+        _v2_bname(_t), _v2_norm(_v2_bname(_t) + _t + _v2_aname(_t, book_celebs[_t].get('author'))),
+        ('Read by ' + str(len(_rd))) if len(_rd) >= 2 else ('Read by ' + _v2_cname(_rd[0])),
+        _v2_burl(_t) or _v2_curl(_rd[0]), 1, len(_rd)])
+write_if_changed('assets/v2/search-en.json', json.dumps(_v2_en_index, ensure_ascii=False, separators=(',', ':')))
+
+# ── 영문 홈 시안 (test/en/index.html) ─────────────────────────────────
+# 홈은 아직 공식 반영 전이라 test/ 아래에 둔다. noindex, 사이트맵·수정일 추적에도 넣지 않는다.
+
+
+def _v2_en_person(n, rank=0):
+    img = celebs[n].get('img') or ''
+    return ('<a href="' + esc(_v2_curl(n)) + '"><span class="ph">'
+            + (('<span class="rk">' + str(rank) + '</span>') if rank else '')
+            + '<i>' + esc(_v2_cname(n)[:1]) + '</i>'
+            + (('<img src="' + esc(img) + '" alt="' + esc(_v2_cname(n)) + '" loading="lazy" '
+                'referrerpolicy="no-referrer" onerror="this.remove()">') if img.startswith('http') else '')
+            + '</span><b>' + esc(_v2_cname(n)) + '</b><span class="cnt">' + str(_v2_en_count(n)) + ' books</span><small>'
+            + esc(' · '.join(_v2_bname(b['title'].strip()) for b in celebs[n]['books'] if b.get('title_en'))[:80])
+            + '</small></a>\n')
+
+
+_v2_en_books = [t for t, bi in sorted(book_celebs.items(), key=lambda x: (-len(x[1]['celebs']), x[0]))
+                if t in en_books_with_pages and _v2_cover(t)][:60]
+_v2_en_books = sorted(_v2_en_books, key=lambda t: hashlib.md5(t.encode('utf-8')).hexdigest())
+_v2_en_bgrid = ('      <div class="bgrid" data-pick="16">\n' + ''.join(
+    '      <a' + (' class="hid"' if i >= 16 else '') + ' href="' + esc(_v2_burl(t)) + '"><span class="cv">'
+    + _v2_cover_img(t) + '</span><b>' + esc(_v2_bname(t)) + '</b><small>Read by '
+    + str(len(book_celebs[t]['celebs'])) + '</small></a>\n' for i, t in enumerate(_v2_en_books)) + '      </div>\n')
+_v2_en_hot = [p['name'] for p in featured_picks if p['name'] in en_celeb_pos][:6]
+os.makedirs('test/en', exist_ok=True)
+with open('test/en/index.html', 'w', encoding='utf-8') as _f:
+    _f.write(_v2_page(
+        '<!DOCTYPE html>\n<html lang="en">\n<head>\n'
+        '  <meta charset="utf-8">\n'
+        '  <meta name="viewport" content="width=device-width, initial-scale=1">\n'
+        '  <meta name="robots" content="noindex, nofollow">\n'
+        '  <title>Favorbook — design test</title>\n'
+        '  <link rel="icon" href="' + BASE + 'favicon.svg" type="image/svg+xml">\n',
+        '', 'Books your favorite<br>Korean stars have read', [],
+        '      <p class="count">' + format(len(en_celeb_order), ',') + ' STARS · '
+        + format(len(book_title_en), ',') + ' BOOKS</p>\n      <div class="site-search"></div>\n',
+        [('', 'Books many stars have read', 'A different pick every visit, from books read by two or more stars.',
+          _v2_en_bgrid)]
+        + ([('', 'Trending now', 'People everyone is talking about right now, hand-picked.',
+             '      <div class="pgrid">\n' + ''.join('      ' + _v2_en_person(n) for n in _v2_en_hot) + '      </div>\n')]
+           if _v2_en_hot else [])
+        + [('', 'Longest reading lists', 'Ranked by confirmed books. Not everyone shares what they read, so take it lightly.',
+            '      <div class="pgrid">\n'
+            + ''.join('      ' + _v2_en_person(n, i + 1) for i, n in enumerate(_en_top_readers[:12])) + '      </div>\n')],
+        V2_TEST, home=True, test=True))
+_v2_lang = 'ko'
 
 
 # ── /en/updates.html — 영문 업데이트 내역 ────────────────────────────
@@ -7333,22 +7147,6 @@ for name, info in celebs.items():
 top_authors_list    = sorted(top_authors.items(),    key=lambda x: x[1], reverse=True)[:20]
 top_publishers_list = sorted(top_publishers.items(), key=lambda x: x[1], reverse=True)[:15]
 
-ranking_books_html = '\n'.join(
-    '    <tr><td>' + str(i+1) + '</td><td>' + esc(t) + '</td><td>' + str(len(bi['celebs'])) + '명</td>'
-    '<td>' + ', '.join(esc(c) for c in bi['celebs'][:5]) + ('...' if len(bi['celebs']) > 5 else '') + '</td></tr>'
-    for i, (t, bi) in enumerate(top_books)
-)
-
-ranking_authors_html = '\n'.join(
-    '    <tr><td>' + str(i+1) + '</td><td>' + esc(a) + '</td><td>' + str(c) + '회</td></tr>'
-    for i, (a, c) in enumerate(top_authors_list)
-)
-
-ranking_pub_html = '\n'.join(
-    '    <tr><td>' + str(i+1) + '</td><td>' + esc(p) + '</td><td>' + str(c) + '회</td></tr>'
-    for i, (p, c) in enumerate(top_publishers_list)
-)
-
 ranking_url = BASE + 'share/ranking.html'
 
 ranking_breadcrumb_ld = json.dumps({
@@ -7386,7 +7184,7 @@ ranking_itemlist_ld = json.dumps({
     ]
 }, ensure_ascii=False, indent=2)
 
-ranking_page = (
+ranking_head = (
     '<!DOCTYPE html>\n'
     '<html lang="ko">\n'
     '<head>\n' + GA_TAG +
@@ -7427,255 +7225,38 @@ ranking_page = (
     '  ' + ranking_itemlist_ld + '\n'
     '  </script>\n'
     '\n'
-    '  <style>\n'
-    '    body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; max-width: 900px; margin: 0 auto; padding: 20px; color: #333; }\n'
-    '    table { width: 100%; border-collapse: collapse; margin-bottom: 32px; }\n'
-    '    th, td { border: 1px solid #ddd; padding: 8px; text-align: left; font-size: 14px; }\n'
-    '    th { background: #f5f5f5; }\n'
-    '    a { color: #2563eb; }\n'
-    '  </style>\n'
-    '</head>\n'
-    '<body>\n'
-    '  <nav><a href="' + BASE + '">← 최애의 독서 홈</a></nav>\n'
-    '  <h1>셀럽 독서 랭킹</h1>\n'
-    '\n'
-    '  <h2>가장 많이 읽힌 책 TOP 30</h2>\n'
-    '  <table>\n'
-    '    <thead><tr><th>#</th><th>도서명</th><th>읽은 셀럽</th><th>누가 읽었나</th></tr></thead>\n'
-    '    <tbody>\n' + ranking_books_html + '\n    </tbody>\n'
-    '  </table>\n'
-    '\n'
-    '  <h2>가장 많이 읽힌 저자 TOP 20</h2>\n'
-    '  <table>\n'
-    '    <thead><tr><th>#</th><th>저자</th><th>언급 횟수</th></tr></thead>\n'
-    '    <tbody>\n' + ranking_authors_html + '\n    </tbody>\n'
-    '  </table>\n'
-    '\n'
-    '  <h2>가장 많이 읽힌 출판사 TOP 15</h2>\n'
-    '  <table>\n'
-    '    <thead><tr><th>#</th><th>출판사</th><th>언급 횟수</th></tr></thead>\n'
-    '    <tbody>\n' + ranking_pub_html + '\n    </tbody>\n'
-    '  </table>\n'
-    '\n'
-    '  <p><a href="' + BASE + '">최애의 독서 홈으로 →</a></p>\n'
-    '\n'
-    '</body>\n'
-    '</html>'
 )
 
-write_if_changed('share/ranking.html', ranking_page)
-print("✅ 랭킹 페이지 생성: share/ranking.html")
-
-# ── 6.1. 새 디자인 시안 (테스트) — 배우·가수·전체·작가·랭킹 ─────────────
-# 틀은 5.41의 _v2_write. 여기서는 필요한 집계(직업별 이름, 작가 목록, 랭킹)가
-# 모두 끝난 뒤라 한꺼번에 내보낸다.
-for _tab, _eyebrow, _label, _names, _who, _old in (
-    ('actor', 'RECOMMENDED BY ACTORS', '배우', actor_names, '드라마·영화 배우', ACTOR_HUB_URL),
-    ('musician', 'RECOMMENDED BY MUSICIANS', '가수', musician_names, '가수·싱어송라이터·뮤지션', MUSICIAN_HUB_URL),
-    ('celeb', 'RECOMMENDED BY STARS', '연예인', sorted(celebs, key=lambda x: x.lower()),
-     '배우·가수·아이돌·방송인 등 연예인', CELEB_HUB_URL),
-):
-    _ranked = _hub_books(_names)
-    _hub_page_v2(
-        _tab, _eyebrow, _label + ' 추천책 모음',
-        [_who + ' <strong>' + str(len(_names)) + '명</strong>이 인터뷰·방송·SNS에서 읽었다고 밝히거나 '
-         '추천한 책 <strong>' + str(len(_ranked)) + '권</strong>을 모았어요.'],
-        _ranked, _label + '가 가장 많이 추천한 책' if _tab != 'celeb' else '연예인이 가장 많이 추천한 책',
-        _names, '책을 추천한 ' + _label + ' ' + str(len(_names)) + '명',
-        [], _v2_faq(_label, [t for t, _ in _ranked[:3]]), _label, _old,
-    )
-
-# 작가·출판사별로 책을 묶는다 (책마다 읽은 사람 수 순)
-_v2_by_author, _v2_by_pub = {}, {}
-for _t, _bi in book_celebs.items():
-    if (_bi.get('author') or '').strip():
-        _v2_by_author.setdefault(_bi['author'].strip(), []).append(_t)
-    if (_bi.get('publisher') or '').strip():
-        _v2_by_pub.setdefault(_bi['publisher'].strip(), []).append(_t)
-for _m in (_v2_by_author, _v2_by_pub):
-    for _k in _m:
-        _m[_k].sort(key=lambda t: (-len(book_celebs[t]['celebs']), title_sort_key(t)))
-
-
-# 작가 목록 → test/author.html
-_v2_author_cards = ''.join(
-    '      <a class="card" href="' + esc(make_author_url(a)) + '">'
-    '<div class="fan">' + ''.join('<span class="cv">' + _v2_cover_img(t) + '</span>'
-                                  for t in _v2_by_author.get(a, [])[:3]) + '</div>'
-    '<span class="rk">' + str(i + 1) + '</span><h3>' + esc(a) + '</h3>'
-    '<p class="meta">' + str(nc) + '명이 읽음 · 책 ' + str(nb) + '권</p>'
-    '<p class="au">가장 많이 읽힌 책 『' + esc(top) + '』</p></a>\n'
-    for i, (a, nc, _nm, nb, top, _u) in enumerate(author_index))
-_v2_write(
-    'test/author.html', '그들이 많이 읽은 작가', 'MOST-READ AUTHORS', '그들이 많이 읽은 작가',
-    ['그들이 읽었거나 추천한 책을 작가별로 모았어요. 언급이 ' + str(AUTHOR_MIN_MENTIONS) + '번 이상인 작가 <strong>'
-     + str(len(author_index)) + '명</strong>이고, 가장 많이 언급된 작가는 '
-     + ', '.join(esc(a) for a, *_r in author_index[:3]) + ' 순이에요.'],
-    '',
-    [('', '작가 목록', '작가를 누르면 그 작가의 책과 읽은 사람을 볼 수 있어요.',
-      '      <div class="cards">\n' + _v2_author_cards + '      </div>\n')],
-    AUTHOR_HUB_URL, V2_TEST + 'en/')
-
-# 랭킹 → test/ranking.html
-# 맨 위는 책을 많이 읽은 사람 순위. 공식 랭킹 페이지에는 없고 홈에만 있던 것을 여기로도 가져왔다.
-_v2_top_readers = sorted(celebs, key=lambda n: (-len(celebs[n]['books']), n.lower()))[:30]
-_v2_rank_readers = ''.join(
-    '      <li><span class="rk">' + str(i + 1) + '</span>' + _v2_face(n, 'av xl')
-    + '<div class="tx"><h3><a href="' + esc(make_celeb_url(n)) + '">' + esc(n) + '</a></h3>'
-    '<p class="meta"><span class="cnt" style="margin:0">' + str(len(celebs[n]['books'])) + '권</span></p>'
-    + _v2_strip([b['title'].strip() for b in celebs[n]['books']], 5, 15) + '</div></li>\n'
-    for i, n in enumerate(_v2_top_readers))
-_v2_rank_authors = ''.join(
+# 맨 위는 책을 많이 읽은 사람 순위, 이어서 책·저자·출판사.
+_rank_top_readers = sorted(celebs, key=lambda n: (-len(celebs[n]['books']), n.lower()))[:30]
+_rank_authors = ''.join(
     '      <li><span class="rk">' + str(i + 1) + '</span><div class="tx"><h3>'
     + (('<a href="' + esc(make_author_url(a)) + '">' + esc(a) + '</a>') if a in author_pages else esc(a))
     + '</h3><p class="meta"><span class="cnt" style="margin:0">' + str(c) + '회</span></p>'
     + _v2_strip(_v2_by_author.get(a, [])) + '</div></li>\n'
     for i, (a, c) in enumerate(top_authors_list))
-_v2_rank_pubs = ''.join(
+_rank_pubs = ''.join(
     '      <li><span class="rk">' + str(i + 1) + '</span><div class="tx"><h3>' + esc(p)
     + '</h3><p class="meta"><span class="cnt" style="margin:0">' + str(c) + '회</span></p>'
     + _v2_strip(_v2_by_pub.get(p, [])) + '</div></li>\n'
     for i, (p, c) in enumerate(top_publishers_list))
-_v2_write(
-    'test/ranking.html', '셀럽 독서 랭킹', 'RANKING', '셀럽 독서 랭킹',
-    ['셀럽 <strong>' + str(len(celebs)) + '명</strong>의 독서 기록에서 책을 가장 많이 읽은 사람과, 가장 많이 읽힌 책·저자·출판사를 뽑았어요.'],
-    '      <div class="jump"><a href="#readers">다독 TOP 30</a><a href="#books">책 TOP 30</a><a href="#authors">저자 TOP 20</a>'
-    '<a href="#publishers">출판사 TOP 15</a></div>\n',
+write_if_changed('share/ranking.html', _v2_page(
+    ranking_head, 'RANKING', '셀럽 독서 랭킹',
+    ['셀럽 <strong>' + str(len(celebs)) + '명</strong>의 독서 기록에서 책을 가장 많이 읽은 사람과, '
+     '가장 많이 읽힌 책·저자·출판사를 뽑았어요.'],
+    '      <div class="jump"><a href="#readers">다독 TOP 30</a><a href="#books">책 TOP 30</a>'
+    '<a href="#authors">저자 TOP 20</a><a href="#publishers">출판사 TOP 15</a></div>\n',
     [('readers', '책을 가장 많이 읽은 연예인 TOP 30',
       '확인된 책이 많은 순서예요. 모든 사람이 읽은 책을 인증하지는 않으니 참고만 해 주세요.',
-      '      <ol class="list">\n' + _v2_rank_readers + '      </ol>\n'),
+      _v2_readers_rank(_rank_top_readers)),
      ('books', '가장 많이 읽힌 책 TOP 30', '읽은 셀럽이 많은 순서예요.',
       _v2_book_rows([(t, bi['author'], bi['celebs']) for t, bi in top_books], '셀럽')),
      ('authors', '가장 많이 읽힌 저자 TOP 20', '횟수는 그 저자의 책이 언급된 횟수예요.',
-      '      <ol class="list">\n' + _v2_rank_authors + '      </ol>\n'),
+      '      <ol class="list">\n' + _rank_authors + '      </ol>\n'),
      ('publishers', '가장 많이 읽힌 출판사 TOP 15', '횟수는 그 출판사의 책이 언급된 횟수예요.',
-      '      <ol class="list">\n' + _v2_rank_pubs + '      </ol>\n')],
-    BASE + 'share/ranking.html', V2_TEST + 'en/ranking.html')
-print("✅ 새 디자인 시안: test/idol·actor·musician·celeb·author·ranking.html")
-
-# ── 6.2. 새 디자인 시안 영문판 — test/en/ ─────────────────────────────
-# 영문 사이트(/en/)의 홈·직업별 모아보기·랭킹에 대응한다. 이름·제목은 영문 표기를 쓰고,
-# 영문 페이지가 없는 사람·책은 한국어 페이지로 보낸다. 검색용 색인(test/en/search.json)도 여기서 만든다.
-_v2_lang = 'en'
-_V2_EN = V2_TEST + 'en/'
-_V2_EN_ROLES = [(r, lbl) for r, lbl in (('idol', 'Idols'), ('actor', 'Actors'), ('musician', 'Musicians'))
-                if r in en_role_members]
-
-
-def _v2_en_count(n):
-    return sum(1 for b in celebs[n]['books'] if b.get('title_en'))
-
-
-def _v2_en_person(n, rank=0):
-    img = celebs[n].get('img') or ''
-    return ('<a href="' + esc(_v2_curl(n)) + '"><span class="ph">'
-            + (('<span class="rk">' + str(rank) + '</span>') if rank else '')
-            + '<i>' + esc(_v2_cname(n)[:1]) + '</i>'
-            + (('<img src="' + esc(img) + '" alt="' + esc(_v2_cname(n)) + '" loading="lazy" '
-                'referrerpolicy="no-referrer" onerror="this.remove()">') if img.startswith('http') else '')
-            + '</span><b>' + esc(_v2_cname(n)) + '</b><span class="cnt">' + str(_v2_en_count(n)) + ' books</span><small>'
-            + esc(' · '.join(_v2_bname(b['title'].strip()) for b in celebs[n]['books'] if b.get('title_en'))[:80])
-            + '</small></a>\n')
-
-
-# 홈
-_v2_en_books = [t for t, bi in sorted(book_celebs.items(), key=lambda x: (-len(x[1]['celebs']), x[0]))
-                if t in en_books_with_pages and _v2_cover(t)][:60]
-_v2_en_books = sorted(_v2_en_books, key=lambda t: hashlib.md5(t.encode('utf-8')).hexdigest())
-_v2_en_bgrid = ('      <div class="bgrid" data-pick="16">\n' + ''.join(
-    '      <a' + (' class="hid"' if i >= 16 else '') + ' href="' + esc(_v2_burl(t)) + '"><span class="cv">'
-    + _v2_cover_img(t) + '</span><b>' + esc(_v2_bname(t)) + '</b><small>Read by '
-    + str(len(book_celebs[t]['celebs'])) + '</small></a>\n' for i, t in enumerate(_v2_en_books)) + '      </div>\n')
-_v2_en_hot = [p['name'] for p in featured_picks if p['name'] in en_celeb_pos][:6]
-_v2_en_top = sorted(en_celeb_order, key=lambda n: (-_v2_en_count(n), _v2_cname(n).lower()))
-_v2_write(
-    'test/en/index.html', 'Favorbook', '', 'Books your favorite<br>Korean stars have read',
-    [], '      <p class="count">' + format(len(en_celeb_order), ',') + ' STARS · '
-    + format(len(book_title_en), ',') + ' BOOKS</p>\n      <div class="site-search"></div>\n',
-    [('', 'Books many stars have read', 'A different pick every visit, from books read by two or more stars.', _v2_en_bgrid)]
-    + ([('', 'Trending now', 'People everyone is talking about right now, hand-picked.',
-         '      <div class="pgrid">\n' + ''.join('      ' + _v2_en_person(n) for n in _v2_en_hot) + '      </div>\n')]
-       if _v2_en_hot else [])
-    + [('', 'Longest reading lists', 'Ranked by confirmed books. Not everyone shares what they read, so take it lightly.',
-        '      <div class="pgrid">\n' + ''.join('      ' + _v2_en_person(n, i + 1) for i, n in enumerate(_v2_en_top[:12]))
-        + '      </div>\n')],
-    EN_BASE, V2_TEST, home=True)
-
-# 직업별 (K-pop idols · actors · musicians)
-for _role, _lbl in _V2_EN_ROLES:
-    _info = EN_ROLE_INFO[_role]
-    _names = [m[2] for m in en_role_members[_role]]
-    _ranked = [(t, i) for t, i in _hub_books(_names) if book_title_en.get(t)]
-    _tabs = ('      <div class="tabs">' + ''.join(
-        '<a href="' + _V2_EN + EN_ROLE_INFO[r]['hub'] + '.html"' + (' class="on" aria-current="page"' if r == _role else '')
-        + '>' + l + '</a>' for r, l in _V2_EN_ROLES) + '</div>\n')
-    _people = ''.join(
-        '      <a class="person" href="' + esc(_v2_curl(n)) + '">' + _v2_face(n, 'av lg') + '<span><b>'
-        + esc(_v2_cname(n)) + '</b><small>' + str(_v2_en_count(n)) + ' books</small></span></a>\n'
-        for n in sorted(_names, key=lambda n: _v2_cname(n).lower()))
-    _v2_write(
-        'test/en/' + _info['hub'] + '.html', 'Books ' + _info['hub_name'] + ' Read',
-        'RECOMMENDED BY ' + _lbl.upper(), 'Books ' + esc(_info['hub_name']) + ' Read',
-        ['<strong>' + str(len(_names)) + '</strong> ' + esc(_info.get('hub_lower') or _info['hub_name'].lower())
-         + ' and the <strong>' + str(len(_ranked)) + '</strong> books they have read or recommended in interviews, '
-         'on YouTube and on social media.'],
-        _tabs,
-        [('', 'Most-read books', 'Books read by the most people come first.',
-          _v2_book_rows([(t, i['author'], i['readers']) for t, i in _ranked[:80]], _lbl.lower())),
-         ('', str(len(_names)) + ' ' + _info['hub_name'], 'Pick a name to see everything they have read.',
-          '      <div class="people">\n' + _people + '      </div>\n')],
-        EN_BASE + 'category/' + _info['hub'] + '.html',
-        V2_TEST + {'idol': 'idol.html', 'actor': 'actor.html', 'musician': 'musician.html'}[_role])
-
-# 랭킹
-_v2_en_by_author = {}
-for _t, _bi in book_celebs.items():
-    if (_bi.get('author') or '').strip() and book_title_en.get(_t):
-        _v2_en_by_author.setdefault(_bi['author'].strip(), []).append(_t)
-for _k in _v2_en_by_author:
-    _v2_en_by_author[_k].sort(key=lambda t: (-len(book_celebs[t]['celebs']), t))
-_v2_write(
-    'test/en/ranking.html', 'Korean Celebrity Reading Ranking', 'RANKING', 'Korean Celebrity Reading Ranking',
-    ['Who reads the most, and which books and authors come up most often across <strong>'
-     + str(len(en_celeb_order)) + '</strong> Korean stars.'],
-    '      <div class="jump"><a href="#readers">Top 30 readers</a><a href="#books">Top 30 books</a>'
-    '<a href="#authors">Top 20 authors</a></div>\n',
-    [('readers', 'Longest reading lists — Top 30',
-      'Ranked by confirmed books. Not everyone shares what they read, so take it lightly.',
-      '      <ol class="list">\n' + ''.join(
-          '      <li><span class="rk">' + str(i + 1) + '</span>' + _v2_face(n, 'av xl')
-          + '<div class="tx"><h3><a href="' + esc(_v2_curl(n)) + '">' + esc(_v2_cname(n)) + '</a></h3>'
-          '<p class="meta"><span class="cnt" style="margin:0">' + str(_v2_en_count(n)) + ' books</span></p>'
-          + _v2_strip([b['title'].strip() for b in celebs[n]['books'] if b.get('title_en')], 5, 15) + '</div></li>\n'
-          for i, n in enumerate(_v2_en_top[:30])) + '      </ol>\n'),
-     ('books', 'Top 30 books', 'Ranked by how many stars have read them.',
-      _v2_book_rows([(t, bi['author'], sorted(bi['celebs'], key=lambda n: _v2_cname(n).lower()))
-                     for t, bi in _en_top_books], 'stars')),
-     ('authors', 'Top 20 authors', 'The number is how many times their books were mentioned.',
-      '      <ol class="list">\n' + ''.join(
-          '      <li><span class="rk">' + str(i + 1) + '</span><div class="tx"><h3>'
-          + esc(_en_auth_name.get(a) or a) + '</h3><p class="meta"><span class="cnt" style="margin:0">' + str(c)
-          + '</span></p>' + _v2_strip(_v2_en_by_author.get(a, [])) + '</div></li>\n'
-          for i, (a, c) in enumerate(sorted(_en_auth_cnt.items(), key=lambda x: (-x[1], x[0]))[:20]))
-      + '      </ol>\n')],
-    EN_BASE + 'share/ranking.html', V2_TEST + 'ranking.html')
-
-# 검색 색인: [표시 이름, 찾을 말(소문자·공백 없음), 덧붙는 말, 주소, 0=사람/1=책, 읽은 사람 수]
-_v2_norm = lambda s: re.sub(r'\s+', '', (s or '').lower())
-_v2_en_index = [[_v2_cname(n), _v2_norm(_v2_cname(n) + n), str(_v2_en_count(n)) + ' books', _v2_curl(n), 0, 0]
-                for n in en_celeb_order]
-for _t in book_title_en:
-    _rd = [n for n in book_celebs.get(_t, {}).get('celebs', []) if n in en_celeb_pos]
-    if not _rd:
-        continue
-    _v2_en_index.append([
-        _v2_bname(_t), _v2_norm(_v2_bname(_t) + _t + _v2_aname(_t, book_celebs[_t].get('author'))),
-        ('Read by ' + str(len(_rd))) if len(_rd) >= 2 else ('Read by ' + _v2_cname(_rd[0])),
-        _v2_burl(_t) or _v2_curl(_rd[0]), 1, len(_rd)])
-with open('test/en/search.json', 'w', encoding='utf-8') as _f:
-    json.dump(_v2_en_index, _f, ensure_ascii=False, separators=(',', ':'))
-_v2_lang = 'ko'
-print("✅ 새 디자인 시안 영문판: test/en/ (홈 · " + ' · '.join(EN_ROLE_INFO[r]['hub'] for r, _ in _V2_EN_ROLES) + " · ranking)")
+      '      <ol class="list">\n' + _rank_pubs + '      </ol>\n')],
+    BASE + 'en/share/ranking.html'))
+print("✅ 랭킹 페이지 생성: share/ranking.html")
 
 # ── 6.5. 고아(orphan) share 파일 정리 ────────────────────────────────
 #
