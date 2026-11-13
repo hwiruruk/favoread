@@ -4186,6 +4186,8 @@ V2_CSS = '''
     .person:hover { background:var(--hover); }
     .av.lg { width:42px; height:42px; margin:0; border:0; }
     .av.lg i { font-size:14px; }
+    .av.xl { width:64px; height:64px; margin:0; border:0; }
+    .av.xl i { font-size:20px; }
     .person span:last-child { min-width:0; display:flex; flex-direction:column; line-height:1.3; }
     .person b { font-size:13px; font-weight:700; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
     .person small { font-size:11px; color:var(--muted); }
@@ -7430,6 +7432,14 @@ _v2_write(
     AUTHOR_HUB_URL)
 
 # 랭킹 → test/ranking.html
+# 맨 위는 책을 많이 읽은 사람 순위. 공식 랭킹 페이지에는 없고 홈에만 있던 것을 여기로도 가져왔다.
+_v2_top_readers = sorted(celebs, key=lambda n: (-len(celebs[n]['books']), n.lower()))[:30]
+_v2_rank_readers = ''.join(
+    '      <li><span class="rk">' + str(i + 1) + '</span>' + _v2_face(n, 'av xl')
+    + '<div class="tx"><h3><a href="' + esc(make_celeb_url(n)) + '">' + esc(n) + '</a></h3>'
+    '<p class="meta"><span class="cnt" style="margin:0">' + str(len(celebs[n]['books'])) + '권</span></p>'
+    + _v2_strip([b['title'].strip() for b in celebs[n]['books']]) + '</div></li>\n'
+    for i, n in enumerate(_v2_top_readers))
 _v2_rank_authors = ''.join(
     '      <li><span class="rk">' + str(i + 1) + '</span><div class="tx"><h3>'
     + (('<a href="' + esc(make_author_url(a)) + '">' + esc(a) + '</a>') if a in author_pages else esc(a))
@@ -7443,10 +7453,13 @@ _v2_rank_pubs = ''.join(
     for i, (p, c) in enumerate(top_publishers_list))
 _v2_write(
     'test/ranking.html', '셀럽 독서 랭킹', 'RANKING', '셀럽 독서 랭킹',
-    ['셀럽 <strong>' + str(len(celebs)) + '명</strong>의 독서 기록에서 가장 많이 읽힌 책, 저자, 출판사를 뽑았어요.'],
-    '      <div class="jump"><a href="#books">책 TOP 30</a><a href="#authors">저자 TOP 20</a>'
+    ['셀럽 <strong>' + str(len(celebs)) + '명</strong>의 독서 기록에서 책을 가장 많이 읽은 사람과, 가장 많이 읽힌 책·저자·출판사를 뽑았어요.'],
+    '      <div class="jump"><a href="#readers">다독 TOP 30</a><a href="#books">책 TOP 30</a><a href="#authors">저자 TOP 20</a>'
     '<a href="#publishers">출판사 TOP 15</a></div>\n',
-    [('books', '가장 많이 읽힌 책 TOP 30', '읽은 셀럽이 많은 순서예요.',
+    [('readers', '책을 가장 많이 읽은 연예인 TOP 30',
+      '확인된 책이 많은 순서예요. 모든 사람이 읽은 책을 인증하지는 않으니 참고만 해 주세요.',
+      '      <ol class="list">\n' + _v2_rank_readers + '      </ol>\n'),
+     ('books', '가장 많이 읽힌 책 TOP 30', '읽은 셀럽이 많은 순서예요.',
       _v2_book_rows([(t, bi['author'], bi['celebs']) for t, bi in top_books], '셀럽')),
      ('authors', '가장 많이 읽힌 저자 TOP 20', '횟수는 그 저자의 책이 언급된 횟수예요.',
       '      <ol class="list">\n' + _v2_rank_authors + '      </ol>\n'),
