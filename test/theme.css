@@ -1,0 +1,41 @@
+/* 새 디자인 시안 공용 색. 밝은 화면이 기본이고 <html data-theme="dark"> 이면 어두운 화면.
+   페이지 쪽 CSS는 색을 직접 쓰지 않고 여기 변수만 쓴다. */
+:root {
+  --bg: #fff;          /* 바탕 */
+  --ink: #111;         /* 본문 글자 */
+  --soft: #444;        /* 덜 강한 글자 */
+  --muted: #777;       /* 보조 글자 */
+  --line: #e6e4de;     /* 구분선 */
+  --border: #cfccc4;   /* 버튼·입력창 테두리 */
+  --ph: #f1efe9;       /* 사진·표지가 뜨기 전 자리 */
+  --ph-ink: #8a8578;   /* 사진 없는 사람의 이름 첫 글자 */
+  --card: #f6f4ee;     /* 옅은 카드 바탕 */
+  --hover: #faf6dc;    /* 올렸을 때 바탕 */
+  --yellow: #fde047;   /* 강조 */
+  --on-yellow: #111;   /* 강조 위 글자 */
+  color-scheme: light;
+}
+html[data-theme="dark"] {
+  --bg: #131210;
+  --ink: #f3f0e8;
+  --soft: #cdc8bc;
+  --muted: #9a9589;
+  --line: #2b2925;
+  --border: #45423b;
+  --ph: #24221e;
+  --ph-ink: #7d786c;
+  --card: #1c1b18;
+  --hover: #2c2916;
+  color-scheme: dark;
+}
+/* 밝은 화면의 노란 밑줄 강조는 어두운 화면에서 글자가 묻히므로 글자색으로 바꾼다. */
+html[data-theme="dark"] .hero .lead strong { background: none; color: var(--yellow); }
+/* 표지·사진이 어두운 바탕에서 너무 튀지 않게 살짝만 누른다. */
+html[data-theme="dark"] img { filter: brightness(.92); }
+
+.theme-btn {
+  font: inherit; font-size: 11px; font-weight: 700; white-space: nowrap;
+  padding: 5px 11px; border-radius: 99px; cursor: pointer;
+  border: 1px solid var(--border); background: var(--bg); color: var(--ink);
+}
+.theme-btn:hover { border-color: var(--ink); }

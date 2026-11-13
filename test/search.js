@@ -8,17 +8,17 @@
   var css = document.createElement('style');
   css.textContent =
     '.site-search{position:relative;width:min(340px,100%)}' +
-    '.site-search input{width:100%;font:inherit;font-size:14px;padding:12px 20px;border-radius:99px;border:1px solid #cfccc4;background:#fff;color:#111;outline:none;-webkit-appearance:none}' +
-    '.site-search input:focus{border-color:#111}' +
+    '.site-search input{width:100%;font:inherit;font-size:14px;padding:12px 20px;border-radius:99px;border:1px solid var(--border);background:var(--bg);color:var(--ink);outline:none;-webkit-appearance:none}' +
+    '.site-search input:focus{border-color:var(--ink)}' +
     '.site-search.sm{width:min(220px,100%)}' +
     '.site-search.sm input{font-size:13px;padding:8px 16px}' +
-    '.ss-box{position:absolute;z-index:50;top:calc(100% + 6px);right:0;width:max(100%,300px);max-width:calc(100vw - 32px);background:#fff;border:1px solid #111;border-radius:16px;text-align:left;overflow:hidden;display:none;box-shadow:0 12px 32px rgba(0,0,0,.12)}' +
+    '.ss-box{position:absolute;z-index:50;top:calc(100% + 6px);right:0;width:max(100%,300px);max-width:calc(100vw - 32px);background:var(--bg);border:1px solid var(--ink);border-radius:16px;text-align:left;overflow:hidden;display:none;box-shadow:0 12px 32px rgba(0,0,0,.12)}' +
     '.ss-box.open{display:block}' +
-    '.ss-box a{display:flex;justify-content:space-between;align-items:baseline;gap:12px;padding:10px 16px;font-size:14px;color:#111;text-decoration:none}' +
-    '.ss-box a:hover,.ss-box a.on{background:#faf6dc}' +
+    '.ss-box a{display:flex;justify-content:space-between;align-items:baseline;gap:12px;padding:10px 16px;font-size:14px;color:var(--ink);text-decoration:none}' +
+    '.ss-box a:hover,.ss-box a.on{background:var(--hover)}' +
     '.ss-box a span{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}' +
-    '.ss-box small{color:#777;white-space:nowrap;font-size:12px}' +
-    '.ss-box .none{padding:12px 16px;font-size:13px;color:#777}' +
+    '.ss-box small{color:var(--muted);white-space:nowrap;font-size:12px}' +
+    '.ss-box .none{padding:12px 16px;font-size:13px;color:var(--muted)}' +
     '@media (max-width:720px){.site-search.sm{width:100%}.ss-box{left:0;right:auto}}';
   document.head.appendChild(css);
 

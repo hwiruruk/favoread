@@ -4102,22 +4102,21 @@ _hub_page(
 )
 
 # ── 5.41. 새 디자인 시안 (테스트) — test/*.html ──────────────────────
-# 홈 시안(test/index.html)과 같은 톤(흰 바탕·명조 제목·노란 알약·흐르는 표지 띠)으로
+# 홈 시안(test/index.html)과 같은 톤(명조 제목·노란 알약, 밝은/어두운 화면 전환)으로
 # 모음 페이지들을 다시 짠 것. 표지와 인물 사진을 넣었다. 공식 페이지는 그대로 두고
 # test/ 아래에만 내보낸다. noindex, 사이트맵·수정일 추적에도 넣지 않는다.
 # 확정되면 공식 페이지 본문을 이 구성으로 바꾸고 이 블록(과 5.9)은 지운다.
 V2_TEST = BASE + 'test/'
 V2_CSS = '''
-    :root { --ink:#111; --muted:#777; --line:#e6e4de; --yellow:#fde047;
-      --serif:"KoPubWorld Batang",serif; --sans:"Space Grotesk","KoPubWorld Dotum",sans-serif;
-      --cover-h:clamp(140px,15vw,220px); --pad:clamp(16px,4vw,48px); }
+    :root { --serif:"KoPubWorld Batang",serif; --sans:"Space Grotesk","KoPubWorld Dotum",sans-serif;
+      --pad:clamp(16px,4vw,48px); }
     * { box-sizing:border-box; }
     html,body { margin:0; }
-    body { background:#fff; color:var(--ink); font-family:var(--sans); -webkit-font-smoothing:antialiased; overflow-x:hidden; word-break:keep-all; line-height:1.55; }
+    body { background:var(--bg); color:var(--ink); font-family:var(--sans); -webkit-font-smoothing:antialiased; overflow-x:hidden; word-break:keep-all; line-height:1.55; }
     a { color:inherit; text-decoration:none; }
     .bar { display:grid; grid-template-columns:1fr auto 1fr; align-items:center; padding:18px var(--pad); font-size:13px; }
     .bar nav { display:flex; gap:clamp(12px,2vw,28px); white-space:nowrap; }
-    .bar nav a { color:#444; }
+    .bar nav a { color:var(--soft); }
     .bar nav a:hover { color:var(--ink); text-decoration:underline; text-underline-offset:4px; }
     .logo { font-family:var(--serif); font-weight:700; font-size:17px; display:flex; align-items:center; gap:8px; }
     .logo::before { content:""; width:9px; height:9px; border-radius:50%; background:var(--yellow); box-shadow:0 0 0 1px var(--ink) inset; }
@@ -4132,45 +4131,35 @@ V2_CSS = '''
     .hero { text-align:center; padding:clamp(28px,4vw,56px) 20px clamp(28px,3vw,40px); }
     .eyebrow { font-size:11px; font-weight:700; letter-spacing:.14em; color:var(--muted); margin:0 0 14px; }
     .hero h1 { font-family:var(--serif); font-weight:500; font-size:clamp(28px,4vw,48px); line-height:1.3; letter-spacing:-.02em; margin:0; }
-    .hero p.lead { max-width:560px; margin:16px auto 0; font-size:15px; color:#444; }
+    .hero p.lead { max-width:560px; margin:16px auto 0; font-size:15px; color:var(--soft); }
     .hero p.lead strong { color:var(--ink); background:linear-gradient(transparent 60%, var(--yellow) 60%); }
     .tabs { margin-top:24px; display:inline-flex; gap:6px; flex-wrap:wrap; justify-content:center; }
-    .tabs a { font-size:13px; font-weight:700; padding:9px 18px; border-radius:99px; border:1px solid #cfccc4; }
+    .tabs a { font-size:13px; font-weight:700; padding:9px 18px; border-radius:99px; border:1px solid var(--border); }
     .tabs a:hover { border-color:var(--ink); }
-    .tabs a.on { background:var(--yellow); border-color:var(--yellow); }
-    .rail { overflow:hidden; width:100%; }
-    .track { display:flex; width:max-content; animation:flow var(--dur,100s) linear infinite; }
-    .rail:hover .track { animation-play-state:paused; }
-    @keyframes flow { from { transform:translateX(0); } to { transform:translateX(-50%); } }
-    .item { position:relative; flex:none; display:block; overflow:hidden; background:#f1efe9; height:var(--cover-h); width:calc(var(--cover-h)*.68); }
-    .item img { display:block; width:100%; height:100%; object-fit:cover; }
-    .cap { position:absolute; left:0; right:0; bottom:0; padding:28px 10px 9px; color:#fff; font-size:12px; line-height:1.35; background:linear-gradient(transparent,rgba(0,0,0,.78)); opacity:0; transition:opacity .2s; }
-    .cap b { display:block; font-family:var(--serif); font-size:13px; }
-    .item:hover .cap { opacity:1; }
-    @media (prefers-reduced-motion:reduce) { .track { animation:none; } .rail { overflow-x:auto; } }
+    .tabs a.on { background:var(--yellow); border-color:var(--yellow); color:var(--on-yellow); }
     main section { max-width:1120px; margin:0 auto; padding:clamp(40px,6vw,72px) var(--pad) 0; }
     h2 { font-family:var(--serif); font-weight:700; font-size:clamp(20px,2.4vw,26px); margin:0 0 6px; }
     .sub { margin:0 0 24px; font-size:13px; color:var(--muted); }
     ol { list-style:none; margin:0; padding:0; }
-    .cv { display:block; flex:none; background:#f1efe9; overflow:hidden; }
+    .cv { display:block; flex:none; background:var(--ph); overflow:hidden; }
     .cv img { display:block; width:100%; height:100%; object-fit:cover; }
-    .nocv { display:flex; height:100%; align-items:center; justify-content:center; padding:6px; font-family:var(--serif); font-size:11px; text-align:center; color:#666; }
+    .nocv { display:flex; height:100%; align-items:center; justify-content:center; padding:6px; font-family:var(--serif); font-size:11px; text-align:center; color:var(--soft); }
     h3 { font-family:var(--serif); font-weight:700; margin:0; line-height:1.35; }
     h3 a:hover, .who a:hover { text-decoration:underline; text-underline-offset:3px; }
     .au { margin:2px 0 0; font-size:12px; color:var(--muted); }
-    .who { margin:8px 0 0; font-size:12px; color:#555; line-height:1.7; }
+    .who { margin:8px 0 0; font-size:12px; color:var(--soft); line-height:1.7; }
     .rk { font-weight:700; font-size:13px; color:var(--muted); font-variant-numeric:tabular-nums; }
     .faces { display:flex; align-items:center; flex-wrap:wrap; row-gap:4px; padding-left:8px; }
-    .av { position:relative; flex:none; width:30px; height:30px; border-radius:50%; overflow:hidden; background:#ece9e1; border:2px solid #fff; margin-left:-8px; display:inline-flex; align-items:center; justify-content:center; }
-    .av i { font-style:normal; font-size:11px; font-weight:700; color:#8a8578; }
+    .av { position:relative; flex:none; width:30px; height:30px; border-radius:50%; overflow:hidden; background:var(--ph); border:2px solid var(--bg); margin-left:-8px; display:inline-flex; align-items:center; justify-content:center; }
+    .av i { font-style:normal; font-size:11px; font-weight:700; color:var(--ph-ink); }
     .av img { position:absolute; inset:0; width:100%; height:100%; object-fit:cover; object-position:50% 20%; }
-    .av.more { font-size:10px; font-weight:700; color:#555; }
-    .cnt { font-size:12px; font-weight:700; margin:0 16px 0 -8px; background:var(--yellow); padding:2px 8px; border-radius:99px; }
+    .av.more { font-size:10px; font-weight:700; color:var(--soft); }
+    .cnt { font-size:12px; font-weight:700; margin:0 16px 0 -8px; background:var(--yellow); color:var(--on-yellow); padding:2px 8px; border-radius:99px; }
     .top3 { display:grid; grid-template-columns:repeat(3,1fr); gap:clamp(16px,2.5vw,32px); }
     .top3 li { display:flex; gap:16px; min-width:0; }
     .top3 .cv { aspect-ratio:2/2.9; width:38%; max-width:150px; align-self:flex-start; }
     .top3 .tx { min-width:0; flex:1; }
-    .top3 .rk { display:inline-block; font-size:12px; letter-spacing:.1em; color:var(--ink); background:var(--yellow); border-radius:99px; padding:2px 10px; margin-bottom:8px; }
+    .top3 .rk { display:inline-block; font-size:12px; letter-spacing:.1em; color:var(--on-yellow); background:var(--yellow); border-radius:99px; padding:2px 10px; margin-bottom:8px; }
     .top3 .rk::before { content:"TOP "; }
     .top3 h3 { font-size:clamp(18px,2vw,22px); }
     .top3 .n { margin:10px 0 8px; font-size:13px; font-weight:700; }
@@ -4188,13 +4177,13 @@ V2_CSS = '''
       .list { grid-template-columns:1fr; }
     }
     .grps { display:grid; grid-template-columns:repeat(auto-fill,minmax(150px,1fr)); gap:8px; }
-    .grp { border:1px solid #cfccc4; border-radius:12px; padding:11px 14px; display:flex; flex-direction:column; transition:transform .15s; }
+    .grp { border:1px solid var(--border); border-radius:12px; padding:11px 14px; display:flex; flex-direction:column; transition:transform .15s; }
     .grp:hover { transform:translateY(-2px); }
     .grp b { font-family:var(--serif); font-size:15px; }
     .grp small { font-size:11px; opacity:.75; }
     .people { display:grid; grid-template-columns:repeat(auto-fill,minmax(170px,1fr)); gap:4px 12px; }
     .person { display:flex; align-items:center; gap:10px; padding:7px 8px; border-radius:99px; min-width:0; }
-    .person:hover { background:#faf6dc; }
+    .person:hover { background:var(--hover); }
     .av.lg { width:42px; height:42px; margin:0; border:0; }
     .av.lg i { font-size:14px; }
     .person span:last-child { min-width:0; display:flex; flex-direction:column; line-height:1.3; }
@@ -4202,24 +4191,24 @@ V2_CSS = '''
     .person small { font-size:11px; color:var(--muted); }
     .qa { border-top:1px solid var(--line); padding:16px 0; max-width:760px; }
     .qa h3 { font-size:15px; }
-    .qa p { margin:6px 0 0; font-size:14px; color:#444; }
+    .qa p { margin:6px 0 0; font-size:14px; color:var(--soft); }
     footer { margin-top:clamp(48px,6vw,80px); border-top:1px solid var(--line); padding:22px var(--pad) 40px; font-size:12px; color:var(--muted); }
     footer a { color:var(--ink); text-decoration:underline; text-underline-offset:3px; }
     .list.one { grid-template-columns:1fr; }
     .strip { display:flex; gap:6px; margin-top:10px; }
     .strip .cv { width:44px; height:64px; }
-    .meta { margin:4px 0 0; font-size:12px; color:#555; }
+    .meta { margin:4px 0 0; font-size:12px; color:var(--soft); }
     .cards { display:grid; grid-template-columns:repeat(auto-fill,minmax(160px,1fr)); gap:clamp(20px,3vw,36px) clamp(16px,2.5vw,28px); }
     .card { display:block; min-width:0; }
-    .card .fan { display:flex; gap:4px; background:#f6f4ee; padding:16px 14px 0; height:150px; align-items:flex-end; overflow:hidden; }
+    .card .fan { display:flex; gap:4px; background:var(--card); padding:16px 14px 0; height:150px; align-items:flex-end; overflow:hidden; }
     .card .fan .cv { flex:1; height:124px; transition:transform .25s; }
     .card:hover .fan .cv { transform:translateY(-6px); }
     .card .rk { display:block; margin-top:12px; }
     .card h3 { font-size:18px; margin-top:2px; }
     .card:hover h3 { text-decoration:underline; text-underline-offset:3px; }
     .jump { margin-top:24px; display:inline-flex; gap:6px; flex-wrap:wrap; justify-content:center; }
-    .jump a { font-size:13px; font-weight:700; padding:9px 18px; border-radius:99px; border:1px solid #cfccc4; }
-    .jump a:hover { background:var(--yellow); border-color:var(--yellow); }
+    .jump a { font-size:13px; font-weight:700; padding:9px 18px; border-radius:99px; border:1px solid var(--border); }
+    .jump a:hover { background:var(--yellow); border-color:var(--yellow); color:var(--on-yellow); }
 '''
 
 
@@ -4290,14 +4279,8 @@ def _v2_book_rows(rows, who_label):
             + (('      <ol class="list" start="4">\n' + rest + '      </ol>\n') if rest else ''))
 
 
-def _v2_write(path, title, eyebrow, h1, lead, hero_extra, band_titles, sections, old_url):
-    """새 디자인 공통 틀: 상단 바 · 제목 · 흐르는 표지 띠 · 본문 · 바닥글."""
-    band_items = [t for t in band_titles if _v2_cover(t) and t in books_with_pages][:24]
-    band = ''.join(
-        '<a class="item" data-k="' + str(i) + '" href="' + esc(make_book_url(t)) + '">'
-        '<img src="' + esc(_v2_cover(t)) + '" alt="' + esc(t) + ' 표지" referrerpolicy="no-referrer" decoding="async">'
-        '<span class="cap"><b>' + esc(t) + '</b>' + str(len(book_celebs[t]['celebs'])) + '명이 읽었어요</span></a>'
-        for i, t in enumerate(band_items))
+def _v2_write(path, title, eyebrow, h1, lead, hero_extra, sections, old_url):
+    """새 디자인 공통 틀: 상단 바 · 제목 · 본문 · 바닥글."""
     page = (
         '<!DOCTYPE html>\n<html lang="ko">\n<head>\n'
         '  <meta charset="utf-8">\n'
@@ -4308,6 +4291,8 @@ def _v2_write(path, title, eyebrow, h1, lead, hero_extra, band_titles, sections,
         '  <link rel="preconnect" href="https://image.yes24.com">\n'
         '  <link rel="stylesheet" href="' + BASE + 'assets/fonts/space-grotesk.css">\n'
         '  <link rel="stylesheet" href="' + BASE + 'assets/fonts/kopubworld.css">\n'
+        '  <link rel="stylesheet" href="' + V2_TEST + 'theme.css">\n'
+        '  <script src="' + V2_TEST + 'theme.js"></script>\n'
         '  <style>' + V2_CSS + '  </style>\n'
         '</head>\n<body>\n'
         '  <header class="bar">\n'
@@ -4324,8 +4309,6 @@ def _v2_write(path, title, eyebrow, h1, lead, hero_extra, band_titles, sections,
         + ''.join('      <p class="lead">' + p + '</p>\n' for p in lead)
         + hero_extra +
         '    </div>\n'
-        + (('    <div class="rail" id="band"><div class="track" style="--dur:' + str(len(band_items) * 5) + 's">'
-            + band + band + '</div></div>\n') if band_items else '')
         + ''.join(
             '    <section' + ((' id="' + sid + '"') if sid else '') + '>\n      <h2>' + esc(h2) + '</h2>\n'
             + (('      <p class="sub">' + esc(sub) + '</p>\n') if sub else '') + body + '    </section>\n'
@@ -4334,20 +4317,6 @@ def _v2_write(path, title, eyebrow, h1, lead, hero_extra, band_titles, sections,
         '  <footer>디자인 테스트 페이지입니다. 검색 엔진에 노출되지 않아요. '
         '<a href="' + old_url + '">기존 페이지 보기</a> · '
         '<a href="https://forms.gle/Sd3ZQTahZNbUjbdz7">빠진 책 제보하기</a></footer>\n'
-        + ((
-        '  <script>\n'
-        '  // 흐르는 띠는 같은 묶음을 두 번 이어 붙인 것이라, 깨진 표지는 양쪽에서 같이 뺀다.\n'
-        '  (function () {\n'
-        '    var t = document.querySelector("#band .track");\n'
-        '    var half = t.children.length / 2;\n'
-        '    [].slice.call(t.children, half).forEach(function (el) { el.setAttribute("aria-hidden", "true"); el.tabIndex = -1; });\n'
-        '    t.addEventListener("error", function (e) {\n'
-        '      var it = e.target.closest && e.target.closest(".item"); if (!it) return;\n'
-        '      [].forEach.call(t.querySelectorAll(\'.item[data-k="\' + it.dataset.k + \'"]\'), function (el) { el.remove(); });\n'
-        '      t.style.setProperty("--dur", (t.children.length / 2 * 5) + "s");\n'
-        '    }, true);\n'
-        '  })();\n'
-        '  </script>\n') if band_items else '')
         + '  <script src="' + V2_TEST + 'search.js" defer></script>\n'
         '</body>\n</html>\n'
     )
@@ -4383,7 +4352,7 @@ def _hub_page_v2(tab, eyebrow, h1, lead, ranked, list_title, people, people_titl
     sections.append(('', people_title, '이름을 누르면 그 사람이 읽은 책을 모두 볼 수 있어요.',
                      '      <div class="people">\n' + people_html + '      </div>\n'))
     sections.append(('', '자주 묻는 질문', '', faq_html))
-    _v2_write('test/' + tab + '.html', h1, eyebrow, h1, lead, tabs, [t for t, _a, _r in rows], sections, old_url)
+    _v2_write('test/' + tab + '.html', h1, eyebrow, h1, lead, tabs, sections, old_url)
 
 
 def _v2_faq(label, picks):
@@ -7455,7 +7424,7 @@ _v2_write(
     ['그들이 읽었거나 추천한 책을 작가별로 모았어요. 언급이 ' + str(AUTHOR_MIN_MENTIONS) + '번 이상인 작가 <strong>'
      + str(len(author_index)) + '명</strong>이고, 가장 많이 언급된 작가는 '
      + ', '.join(esc(a) for a, *_r in author_index[:3]) + ' 순이에요.'],
-    '', [top for _a, _nc, _nm, _nb, top, _u in author_index],
+    '',
     [('', '작가 목록', '작가를 누르면 그 작가의 책과 읽은 사람을 볼 수 있어요.',
       '      <div class="cards">\n' + _v2_author_cards + '      </div>\n')],
     AUTHOR_HUB_URL)
@@ -7477,7 +7446,6 @@ _v2_write(
     ['셀럽 <strong>' + str(len(celebs)) + '명</strong>의 독서 기록에서 가장 많이 읽힌 책, 저자, 출판사를 뽑았어요.'],
     '      <div class="jump"><a href="#books">책 TOP 30</a><a href="#authors">저자 TOP 20</a>'
     '<a href="#publishers">출판사 TOP 15</a></div>\n',
-    [t for t, _bi in top_books],
     [('books', '가장 많이 읽힌 책 TOP 30', '읽은 셀럽이 많은 순서예요.',
       _v2_book_rows([(t, bi['author'], bi['celebs']) for t, bi in top_books], '셀럽')),
      ('authors', '가장 많이 읽힌 저자 TOP 20', '횟수는 그 저자의 책이 언급된 횟수예요.',
