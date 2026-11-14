@@ -3750,12 +3750,6 @@ for title, binfo in book_celebs.items():
         '  </style>\n'
         '</head>\n'
         '<body>\n'
-        + '  <div class="lang-toggle">\n'
-        + (('    <span class="lang-btn active">한국어</span>\n'
-            '    <a class="lang-btn" href="' + esc(make_en_book_url(title_en)) + '" hreflang="en">EN</a>\n') if title_en else '')
-        + '  </div>\n'
-        + '  <nav><a href="' + BASE + '">← 최애의 독서 홈</a></nav>\n'
-        '\n'
         '  <h1>' + esc(title) + ((' <span lang="ja" style="font-size:.6em; font-weight:700; color:#666">(' + esc(title_ja) + ')</span>') if title_ja else '') + '</h1>\n'
         '  <p>' + author_html(binfo['author']) + ((' · ' + esc(binfo['publisher'])) if binfo['publisher'] else '') + '</p>\n'
         '  <p class="heart-row">' + heart_btn_html(book_heart_key(title), '이 책에 하트')
@@ -3772,7 +3766,8 @@ for title, binfo in book_celebs.items():
         '</html>'
     )
 
-    write_if_changed('share/book/' + fn + '.html', page)
+    write_if_changed('share/book/' + fn + '.html',
+                     _v2_detail(page, 'ko', make_en_book_url(title_en) if title_en else ''))
     book_pages.append((fn, title))
     if indexable:
         ko_book_indexed.add(title)
@@ -3993,7 +3988,7 @@ for _g in sorted(ko_groups.values(), key=lambda g: g['ko']):
         '</body>\n'
         '</html>'
     )
-    write_if_changed('group/' + _g['slug'] + '.html', page)
+    write_if_changed('group/' + _g['slug'] + '.html', _v2_detail(page, 'ko'))
     ko_group_pages.append((_g['slug'], name))
 
 # 그룹에서 빠진 옛 파일 정리
@@ -4600,7 +4595,7 @@ for a in sorted(author_pages, key=lambda x: (-len(author_mentions[x]), x)):
         '</body>\n'
         '</html>'
     )
-    write_if_changed(path, page)
+    write_if_changed(path, _v2_detail(page, 'ko'))
     author_index.append((a, n_celebs, n_mentions, len(ranked), ranked[0][0], updated))
 
 # 작가·출판사별로 책을 묶는다 (책마다 읽은 사람 수 순) — 작가 목록 카드와 랭킹의 표지 줄에 쓴다.
@@ -5717,11 +5712,6 @@ for title, t_en in book_title_en.items():
         '  </style>\n'
         '</head>\n'
         '<body>\n'
-        '  <div class="lang-toggle">\n'
-        + '    <a class="lang-btn" href="' + esc(ko_url) + '" hreflang="ko">한국어</a>\n'
-        '    <span class="lang-btn active">EN</span>\n'
-        '  </div>\n'
-        '  <nav><a href="' + EN_BASE + '">← Favorbook Home</a> · <a href="' + EN_BASE + 'share/ranking.html">Most-read books ranking</a></nav>\n'
         '  <h1>' + esc(t_en)
         + ((' <span style="color:#666">| ' + lang_span(orig) + '</span>') if orig else '') + '</h1>\n'
         '  <p class="meta">Korean: <strong>' + esc(title) + '</strong>'
@@ -5748,7 +5738,7 @@ for title, t_en in book_title_en.items():
         '</body>\n'
         '</html>'
     )
-    write_if_changed('en/share/book/' + slug + '.html', page)
+    write_if_changed('en/share/book/' + slug + '.html', _v2_detail(page, 'en', ko_url))
     en_book_pages.append((slug, t_en, title))
     if indexable:
         en_book_indexed.add(title)
@@ -5949,7 +5939,7 @@ for _group in sorted(en_groups, key=lambda g: g.lower()):
         '</body>\n'
         '</html>'
     )
-    write_if_changed('en/group/' + gslug + '.html', page)
+    write_if_changed('en/group/' + gslug + '.html', _v2_detail(page, 'en'))
     en_group_pages.append((gslug, _group, n_members, n_books))
 
 print(f"✅ /en/group/ 그룹 페이지: {len(en_group_pages)}개")
