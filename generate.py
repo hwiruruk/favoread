@@ -922,6 +922,11 @@ SHELF_CAPTURE_JS_TEMPLATE = (
     '      // 책장과 표지 목록을 함께 담은 상자 하나만 넘긴다\n'
     '      var view = document.getElementById("shelf-area") || document.getElementById("shelf");\n'
     '      if (!view) return;\n'
+    '      // 책등 보기에서는 목록·제목 없이 책등만 가로 한 줄로, 투명 배경으로 담는다\n'
+    '      var shelf = document.getElementById("shelf");\n'
+    '      var strip = !!shelf && !view.classList.contains("show-covers");\n'
+    '      var target = strip ? shelf : view;\n'
+    '      if (strip) { clear = true; shelf.classList.add("is-strip"); }\n'
     '      var was = btn.textContent;\n'
     '      btns.forEach(function (b) { b.disabled = true; });\n'
     '      btn.textContent = __BUSY__;\n'
@@ -931,12 +936,20 @@ SHELF_CAPTURE_JS_TEMPLATE = (
     '      view.classList.add("is-capturing");\n'
     '      // 화면에 보이는 그대로 담는다. 표지를 접어 둔 상태면 보이는 3줄만, 펼쳤으면 전체.\n'
     '      guard(loadH2C(), 15000, "html2canvas").then(function () {\n'
-    '        swap = swapImages(view);\n'
+    '        swap = swapImages(target);\n'
     '        return swap.ready;\n'
     '      }).then(function () {\n'
-    '        muted = muteUnloaded(view);\n'
+    '        muted = muteUnloaded(target);\n'
     '        // 책등은 상자 왼쪽에만 서 있어서 그대로 찍으면 오른쪽이 휑하다.\n'
     '        // 내용이 실제로 차지한 폭까지만 자른다.\n'
+    '        if (strip) {\n'
+    '          var sw = shelf.scrollWidth, sh = shelf.offsetHeight;\n'
+    '          return guard(html2canvas(shelf, {\n'
+    '            backgroundColor: null, scale: fitScale(sw, sh),\n'
+    '            useCORS: true, logging: false, imageTimeout: 8000,\n'
+    '            width: sw, height: sh, windowWidth: Math.max(document.documentElement.clientWidth, sw + 40),\n'
+    '          }), 40000, "그리기");\n'
+    '        }\n'
     '        var left = view.getBoundingClientRect().left, right = 0;\n'
     '        [].forEach.call(view.children, function (ch) {\n'
     '          var b = ch.getBoundingClientRect();\n'
@@ -951,7 +964,7 @@ SHELF_CAPTURE_JS_TEMPLATE = (
     '        }), 40000, "그리기");\n'
     '      }).then(function (inner) {\n'
     '        // data: 주소는 길어지면 브라우저가 파일 이름을 무시한다. Blob으로 넘긴다.\n'
-    '        return guard(toBlob(compose(inner, clear)), 25000, "내보내기");\n'
+    '        return guard(toBlob(strip ? inner : compose(inner, clear)), 25000, "내보내기");\n'
     '      }).then(function (blob) {\n'
     '        download(blob, clear);\n'
     '      }).catch(function (e) {\n'
@@ -961,6 +974,7 @@ SHELF_CAPTURE_JS_TEMPLATE = (
     '        if (swap) swap.undo.forEach(function (f) { f(); });\n'
     '        if (muted) unmute(muted);\n'
     '        view.classList.remove("is-capturing");\n'
+    '        if (shelf) shelf.classList.remove("is-strip");\n'
     '        btns.forEach(function (b) { b.disabled = false; });\n'
     '        btn.textContent = was;\n'
     '      });\n'
@@ -1137,6 +1151,21 @@ SHELF_CSS = (
     "    .sp.no-img { box-shadow: inset -2px 0 5px rgba(0,0,0,.14), inset 2px 0 4px rgba(255,255,255,.1); }\n"
     # 표지가 밝은 색이면 흰 제목이 묻히므로 검은 글자로 바꾼다
     "    .sp.sp-light .sp-t i { color: #111; text-shadow: 0 0 1px rgba(255,255,255,.8), 0 1px 1px rgba(255,255,255,.5); }\n"
+    # 책등 보기에서 저장할 때만 쓰는 모양 — 실제 책장 사진처럼 책등만 가로 한 줄로 세운다.
+    # 책마다 간격을 두고, 모서리를 둥글게, 좌우에 은은한 음영을 줘서 두께감을 낸다.
+    # 배경은 칠하지 않는다(투명 PNG). 화면 폭과 상관없이 한 줄이라 높이는 늘 같게 되돌린다.
+    # html2canvas가 안쪽(inset) 그림자를 못 그려서 음영은 ::after 그라데이션으로 얹는다.
+    '    .shelf.is-strip { flex-wrap: nowrap; gap: 0 10px; width: max-content; max-width: none;\n'
+    '                      margin: 0; padding: 8px 14px 16px; --sh-h: ' + str(SPINE_H) + 'px; }\n'
+    '    .shelf.is-strip .sp { border: 0; border-radius: 9px; box-shadow: 0 3px 6px rgba(0,0,0,.24); transform: none; }\n'
+    '    .shelf.is-strip .sp::after { content: ""; position: absolute; inset: 0; z-index: 3; pointer-events: none;\n'
+    '        border-radius: 9px;\n'
+    '        background: linear-gradient(90deg, rgba(255,255,255,.26) 0%, rgba(255,255,255,0) 15%,\n'
+    '                                           rgba(0,0,0,0) 74%, rgba(0,0,0,.28) 100%); }\n'
+    '    .shelf.is-strip .sp.no-img, .shelf.is-strip .sp.sp-fail { width: var(--w, 28px); }\n'
+    '    .shelf.is-strip .sp-i { max-width: 92px; }\n'
+    '    .shelf.is-strip .sp-t i { font-size: var(--fs, 15px); }\n'
+    '    .shelf.is-strip .sp-t { padding: 14px 2px; }\n'
     # 이미지로 저장하는 동안에는 NEW 표시와 함께 추천한 셀럽 목록을 뺀다
     '    .is-capturing .rl-new, .is-capturing .rl-shared, .is-capturing .rl-comment { display: none !important; }\n'
     # 좁은 화면에서는 한 줄에 너무 적게 들어가므로 조금 줄인다
