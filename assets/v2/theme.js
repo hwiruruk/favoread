@@ -11,7 +11,7 @@
   if (asked) { try { localStorage.setItem(KEY, asked); } catch (e) {} }
 
   document.addEventListener('DOMContentLoaded', function () {
-    var slot = document.querySelector('.bar .right');
+    var slot = document.querySelector('.bar .right, .topbar-actions');
     if (!slot) return;
     var btn = document.createElement('button');
     btn.type = 'button';
