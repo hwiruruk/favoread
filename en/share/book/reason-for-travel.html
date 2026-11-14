@@ -47,56 +47,62 @@
 }
   </script>
   <style>
-    body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; max-width: 800px; margin: 0 auto; padding: 20px; color: #222; background: #fcfaf5; line-height: 1.6; }
+    body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; max-width: 800px; margin: 0 auto; padding: 20px; color: var(--ink); background: var(--bg); line-height: 1.6; }
     body { position: relative; }
     .lang-toggle { position: absolute; top: 16px; right: 20px; display: flex; gap: 6px; }
     .heart-row { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; }
-    .copy-btn { display: inline-flex; align-items: center; gap: 6px; padding: 7px 14px; border: 2px solid #000; background: #fde047; box-shadow: 2px 2px 0 0 #000; font-family: inherit; font-size: 14px; font-weight: 800; color: #000; cursor: pointer; transition: transform .1s, box-shadow .1s, background .1s; }
-    .copy-btn:hover { transform: translate(-1px,-1px); box-shadow: 3px 3px 0 0 #000; background: #fef08a; }
-    .copy-btn:active { transform: none; box-shadow: 1px 1px 0 0 #000; }
-    .copy-btn.done { background: #86efac; }
-    .lang-btn { padding: 6px 12px; border: 2px solid #000; background: #fff; box-shadow: 2px 2px 0 0 #000; font-size: 12px; font-weight: 700; text-decoration: none; color: #000; transition: transform .1s, box-shadow .1s; }
-    .lang-btn:hover { transform: translate(-1px,-1px); box-shadow: 3px 3px 0 0 #000; background: #fde047; text-decoration: none; }
-    .lang-btn.active { background: #000; color: #fff; }
+    .copy-btn { display: inline-flex; align-items: center; gap: 6px; padding: 7px 14px; border: 1px solid var(--border); background: #fde047; box-shadow: none; font-family: inherit; font-size: 14px; font-weight: 800; color: var(--on-yellow); cursor: pointer; transition: transform .1s, box-shadow .1s, background .1s; }
+    .copy-btn:hover { transform: translate(-1px,-1px); box-shadow: none; background: var(--hover); }
+    .copy-btn:active { transform: none; box-shadow: none; }
+    .copy-btn.done { background: var(--card); }
+    .lang-btn { padding: 6px 12px; border: 1px solid var(--border); background: var(--bg); box-shadow: none; font-size: 12px; font-weight: 700; text-decoration: none; color: var(--ink); transition: transform .1s, box-shadow .1s; }
+    .lang-btn:hover { transform: translate(-1px,-1px); box-shadow: none; background: #fde047; text-decoration: none; color: var(--on-yellow); }
+    .lang-btn.active { background: var(--ink); color: var(--bg); }
     nav { margin: 50px 0 16px; font-size: 13px; }
     h1 { font-size: 28px; margin: 0 0 6px; font-weight: 900; }
-    h2 { font-size: 19px; margin: 32px 0 12px; padding-bottom: 4px; border-bottom: 2px solid #000; font-weight: 800; }
-    .meta { color: #666; margin: 0 0 16px; }
-    .tr-note { margin: 24px 0 0; padding: 10px 12px; background: #fff8e7; border-left: 4px solid #000; font-size: 13px; line-height: 1.5; color: #444; }
+    h2 { font-size: 19px; margin: 32px 0 12px; padding-bottom: 4px; border-bottom: 1px solid var(--border); font-weight: 800; }
+    .meta { color: var(--soft); margin: 0 0 16px; }
+    .tr-note { margin: 24px 0 0; padding: 10px 12px; background: var(--hover); border-left: 1px solid var(--border); font-size: 13px; line-height: 1.5; color: var(--soft); }
     ul { line-height: 2; padding-left: 22px; }
     .intro { margin: 8px 0 0; }
     ul.notes { line-height: 1.7; }
     ul.notes li { margin: 0 0 12px; }
-    ul.notes blockquote { margin: 4px 0 0; padding: 6px 12px; border-left: 3px solid #000; background: #fff; color: #333; font-size: 14px; }
-    .src { font-size: 12px; color: #666; }
-    .by { color: #888; font-size: 13px; }
-    a { color: #2563eb; text-decoration: none; }
+    ul.notes blockquote { margin: 4px 0 0; padding: 6px 12px; border-left: 1px solid var(--border); background: var(--bg); color: var(--ink); font-size: 14px; }
+    .src { font-size: 12px; color: var(--soft); }
+    .by { color: var(--muted); font-size: 13px; }
+    a { color: var(--ink); text-decoration: none; }
     a:hover { text-decoration: underline; }
   </style>
+  <link rel="stylesheet" href="https://favorbook.co.kr/assets/fonts/space-grotesk.css">
+  <link rel="stylesheet" href="https://favorbook.co.kr/assets/fonts/kopubworld.css">
+  <link rel="stylesheet" href="https://favorbook.co.kr/assets/v2/theme.css">
+  <link rel="stylesheet" href="https://favorbook.co.kr/assets/v2/detail.css">
+  <script src="https://favorbook.co.kr/assets/v2/theme.js"></script>
 </head>
 <body>
-  <div class="lang-toggle">
-    <a class="lang-btn" href="https://favorbook.co.kr/share/book/%EC%97%AC%ED%96%89%EC%9D%98%20%EC%9D%B4%EC%9C%A0.html" hreflang="ko">한국어</a>
-    <span class="lang-btn active">EN</span>
-  </div>
-  <nav><a href="https://favorbook.co.kr/en/">← Favorbook Home</a> · <a href="https://favorbook.co.kr/en/share/ranking.html">Most-read books ranking</a></nav>
+  <header class="bar">
+    <nav aria-label="Main menu"><a href="https://favorbook.co.kr/en/category/kpop-idols.html">Idols</a><a href="https://favorbook.co.kr/en/category/k-drama-actors.html">Actors</a><a href="https://favorbook.co.kr/en/category/korean-musicians.html">Musicians</a><a href="https://favorbook.co.kr/en/share/ranking.html">Ranking</a></nav>
+    <a class="logo" href="https://favorbook.co.kr/en/">Favorbook</a>
+    <div class="right"><div class="site-search sm"></div><a class="lang" href="https://favorbook.co.kr/share/book/%EC%97%AC%ED%96%89%EC%9D%98%20%EC%9D%B4%EC%9C%A0.html" hreflang="ko">한국어</a></div>
+  </header>
+
   <h1>Reason for Travel *</h1>
   <p class="meta">Korean: <strong>여행의 이유</strong> · Kim Young-ha · 복복서가</p>
   <p class="heart-row"><button type="button" class="heart-btn" data-heart="b:여행의 이유" aria-pressed="false" aria-label="Heart this book" title="Heart this book" hidden><span class="heart-ico" aria-hidden="true">♡</span><span class="heart-n"></span></button><button class="copy-btn" type="button" data-url="https://favorbook.co.kr/s/eb/reason-for-travel.html" data-done="Copied!" title="https://favorbook.co.kr/s/eb/reason-for-travel.html">🔗 Copy share link</button></p>
-  <img src="https://image.yes24.com/goods/125905365/L" alt="Reason for Travel * cover" width="200" height="280" loading="lazy" style="object-fit:cover; margin:16px 0; border:2px solid #000">
+  <img src="https://image.yes24.com/goods/125905365/L" alt="Reason for Travel * cover" width="200" height="280" loading="lazy" style="object-fit:cover; margin:16px 0; border:1px solid var(--border)">
   <p class="intro">Reason for Travel * (Korean title: 여행의 이유) by Kim Young-ha has been read or recommended by 7 Korean celebrities, including RM (BTS), Go Ah-sung, Park Ji-hoon. Below, each entry shows where they mentioned it and what they said.</p>
   <h2>Read by 7 Korean celebrities</h2>
   <ul class="notes">
-    <li><a href="../rm-bts.html">RM (BTS)</a> <span style="color:#888;font-size:13px">(RM(BTS))</span> <a class="src" href="https://btsbook130613.tistory.com/146" rel="nofollow noopener noreferrer" target="_blank">Source</a></li>
-    <li><a href="../go-ah-sung.html">Go Ah-sung</a> <span style="color:#888;font-size:13px">(고아성)</span> <a class="src" href="https://www.youtube.com/watch?v=cScmQjsdEts" rel="nofollow noopener noreferrer" target="_blank">Source</a>
+    <li><a href="../rm-bts.html">RM (BTS)</a> <span style="color:var(--muted);font-size:13px">(RM(BTS))</span> <a class="src" href="https://btsbook130613.tistory.com/146" rel="nofollow noopener noreferrer" target="_blank">Source</a></li>
+    <li><a href="../go-ah-sung.html">Go Ah-sung</a> <span style="color:var(--muted);font-size:13px">(고아성)</span> <a class="src" href="https://www.youtube.com/watch?v=cScmQjsdEts" rel="nofollow noopener noreferrer" target="_blank">Source</a>
       <blockquote>Named it as the first book to come to mind for travel, a recent read, with the line about craving travel more when life&#x27;s problems get harder standing out. (Source: YouTube)</blockquote></li>
-    <li><a href="../park-ji-hoon.html">Park Ji-hoon</a> <span style="color:#888;font-size:13px">(박지훈)</span> <a class="src" href="https://www.instagram.com/p/DV7DjnAEiPg/?img_index=8&amp;igsh=MWxyaXlueGVocHVndw==" rel="nofollow noopener noreferrer" target="_blank">Source</a></li>
-    <li><a href="../soobintomorrow-x-together.html">SOOBIN(TOMORROW X TOGETHER)</a> <span style="color:#888;font-size:13px">(수빈(투바투))</span> <a class="src" href="https://theqoo.net/txt/3632238439" rel="nofollow noopener noreferrer" target="_blank">Source</a></li>
-    <li><a href="../yozoh.html">Yozoh</a> <span style="color:#888;font-size:13px">(요조)</span> <a class="src" href="https://www.youtube.com/watch?v=7hTzMM-XWN0&amp;t=226s" rel="nofollow noopener noreferrer" target="_blank">Source</a>
+    <li><a href="../park-ji-hoon.html">Park Ji-hoon</a> <span style="color:var(--muted);font-size:13px">(박지훈)</span> <a class="src" href="https://www.instagram.com/p/DV7DjnAEiPg/?img_index=8&amp;igsh=MWxyaXlueGVocHVndw==" rel="nofollow noopener noreferrer" target="_blank">Source</a></li>
+    <li><a href="../soobintomorrow-x-together.html">SOOBIN(TOMORROW X TOGETHER)</a> <span style="color:var(--muted);font-size:13px">(수빈(투바투))</span> <a class="src" href="https://theqoo.net/txt/3632238439" rel="nofollow noopener noreferrer" target="_blank">Source</a></li>
+    <li><a href="../yozoh.html">Yozoh</a> <span style="color:var(--muted);font-size:13px">(요조)</span> <a class="src" href="https://www.youtube.com/watch?v=7hTzMM-XWN0&amp;t=226s" rel="nofollow noopener noreferrer" target="_blank">Source</a>
       <blockquote>Quoted a passage from this book on YouTube. (Source: YouTube)</blockquote></li>
-    <li><a href="../ji-chang-wook.html">Ji Chang-wook</a> <span style="color:#888;font-size:13px">(지창욱)</span> <a class="src" href="https://www.dispatch.co.kr/2056711" rel="nofollow noopener noreferrer" target="_blank">Source</a>
+    <li><a href="../ji-chang-wook.html">Ji Chang-wook</a> <span style="color:var(--muted);font-size:13px">(지창욱)</span> <a class="src" href="https://www.dispatch.co.kr/2056711" rel="nofollow noopener noreferrer" target="_blank">Source</a>
       <blockquote>He posted a page from Kim Young-ha&#x27;s Reasons to Travel on Instagram, underlining the line that everyone is different and a little strange once you look closely. (Source: Dispatch)</blockquote></li>
-    <li><a href="../changmin-tvxq.html">Changmin (TVXQ!)</a> <span style="color:#888;font-size:13px">(최강창민(동방신기))</span> <a class="src" href="https://www.elle.co.kr/article/42162?utm_source=twitter&amp;utm_medium=other&amp;utm_campaign=twitter" rel="nofollow noopener noreferrer" target="_blank">Source</a>
+    <li><a href="../changmin-tvxq.html">Changmin (TVXQ!)</a> <span style="color:var(--muted);font-size:13px">(최강창민(동방신기))</span> <a class="src" href="https://www.elle.co.kr/article/42162?utm_source=twitter&amp;utm_medium=other&amp;utm_campaign=twitter" rel="nofollow noopener noreferrer" target="_blank">Source</a>
       <blockquote>A recent read shared on social media; it brought back solo trips swinging between excitement and caution, anxiety and ease. (Source: Elle Korea)</blockquote></li>
   </ul>
   <h2>More by the same author</h2>
@@ -139,5 +145,6 @@
   });
   </script>
   <script src="https://favorbook.co.kr/assets/hearts.js" defer></script>
+  <script src="https://favorbook.co.kr/assets/v2/search.js" defer></script>
 </body>
 </html>

@@ -47,65 +47,71 @@
 }
   </script>
   <style>
-    body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; max-width: 800px; margin: 0 auto; padding: 20px; color: #222; background: #fcfaf5; line-height: 1.6; }
+    body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; max-width: 800px; margin: 0 auto; padding: 20px; color: var(--ink); background: var(--bg); line-height: 1.6; }
     body { position: relative; }
     .lang-toggle { position: absolute; top: 16px; right: 20px; display: flex; gap: 6px; }
     .heart-row { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; }
-    .copy-btn { display: inline-flex; align-items: center; gap: 6px; padding: 7px 14px; border: 2px solid #000; background: #fde047; box-shadow: 2px 2px 0 0 #000; font-family: inherit; font-size: 14px; font-weight: 800; color: #000; cursor: pointer; transition: transform .1s, box-shadow .1s, background .1s; }
-    .copy-btn:hover { transform: translate(-1px,-1px); box-shadow: 3px 3px 0 0 #000; background: #fef08a; }
-    .copy-btn:active { transform: none; box-shadow: 1px 1px 0 0 #000; }
-    .copy-btn.done { background: #86efac; }
-    .lang-btn { padding: 6px 12px; border: 2px solid #000; background: #fff; box-shadow: 2px 2px 0 0 #000; font-size: 12px; font-weight: 700; text-decoration: none; color: #000; transition: transform .1s, box-shadow .1s; }
-    .lang-btn:hover { transform: translate(-1px,-1px); box-shadow: 3px 3px 0 0 #000; background: #fde047; text-decoration: none; }
-    .lang-btn.active { background: #000; color: #fff; }
+    .copy-btn { display: inline-flex; align-items: center; gap: 6px; padding: 7px 14px; border: 1px solid var(--border); background: #fde047; box-shadow: none; font-family: inherit; font-size: 14px; font-weight: 800; color: var(--on-yellow); cursor: pointer; transition: transform .1s, box-shadow .1s, background .1s; }
+    .copy-btn:hover { transform: translate(-1px,-1px); box-shadow: none; background: var(--hover); }
+    .copy-btn:active { transform: none; box-shadow: none; }
+    .copy-btn.done { background: var(--card); }
+    .lang-btn { padding: 6px 12px; border: 1px solid var(--border); background: var(--bg); box-shadow: none; font-size: 12px; font-weight: 700; text-decoration: none; color: var(--ink); transition: transform .1s, box-shadow .1s; }
+    .lang-btn:hover { transform: translate(-1px,-1px); box-shadow: none; background: #fde047; text-decoration: none; color: var(--on-yellow); }
+    .lang-btn.active { background: var(--ink); color: var(--bg); }
     nav { margin: 50px 0 16px; font-size: 13px; }
     h1 { font-size: 28px; margin: 0 0 6px; font-weight: 900; }
-    h2 { font-size: 19px; margin: 32px 0 12px; padding-bottom: 4px; border-bottom: 2px solid #000; font-weight: 800; }
-    .meta { color: #666; margin: 0 0 16px; }
-    .tr-note { margin: 24px 0 0; padding: 10px 12px; background: #fff8e7; border-left: 4px solid #000; font-size: 13px; line-height: 1.5; color: #444; }
+    h2 { font-size: 19px; margin: 32px 0 12px; padding-bottom: 4px; border-bottom: 1px solid var(--border); font-weight: 800; }
+    .meta { color: var(--soft); margin: 0 0 16px; }
+    .tr-note { margin: 24px 0 0; padding: 10px 12px; background: var(--hover); border-left: 1px solid var(--border); font-size: 13px; line-height: 1.5; color: var(--soft); }
     ul { line-height: 2; padding-left: 22px; }
     .intro { margin: 8px 0 0; }
     ul.notes { line-height: 1.7; }
     ul.notes li { margin: 0 0 12px; }
-    ul.notes blockquote { margin: 4px 0 0; padding: 6px 12px; border-left: 3px solid #000; background: #fff; color: #333; font-size: 14px; }
-    .src { font-size: 12px; color: #666; }
-    .by { color: #888; font-size: 13px; }
-    a { color: #2563eb; text-decoration: none; }
+    ul.notes blockquote { margin: 4px 0 0; padding: 6px 12px; border-left: 1px solid var(--border); background: var(--bg); color: var(--ink); font-size: 14px; }
+    .src { font-size: 12px; color: var(--soft); }
+    .by { color: var(--muted); font-size: 13px; }
+    a { color: var(--ink); text-decoration: none; }
     a:hover { text-decoration: underline; }
   </style>
+  <link rel="stylesheet" href="https://favorbook.co.kr/assets/fonts/space-grotesk.css">
+  <link rel="stylesheet" href="https://favorbook.co.kr/assets/fonts/kopubworld.css">
+  <link rel="stylesheet" href="https://favorbook.co.kr/assets/v2/theme.css">
+  <link rel="stylesheet" href="https://favorbook.co.kr/assets/v2/detail.css">
+  <script src="https://favorbook.co.kr/assets/v2/theme.js"></script>
 </head>
 <body>
-  <div class="lang-toggle">
-    <a class="lang-btn" href="https://favorbook.co.kr/share/book/%EC%B0%BD%EC%A1%B0%EC%A0%81%20%ED%96%89%EC%9C%84.html" hreflang="ko">한국어</a>
-    <span class="lang-btn active">EN</span>
-  </div>
-  <nav><a href="https://favorbook.co.kr/en/">← Favorbook Home</a> · <a href="https://favorbook.co.kr/en/share/ranking.html">Most-read books ranking</a></nav>
+  <header class="bar">
+    <nav aria-label="Main menu"><a href="https://favorbook.co.kr/en/category/kpop-idols.html">Idols</a><a href="https://favorbook.co.kr/en/category/k-drama-actors.html">Actors</a><a href="https://favorbook.co.kr/en/category/korean-musicians.html">Musicians</a><a href="https://favorbook.co.kr/en/share/ranking.html">Ranking</a></nav>
+    <a class="logo" href="https://favorbook.co.kr/en/">Favorbook</a>
+    <div class="right"><div class="site-search sm"></div><a class="lang" href="https://favorbook.co.kr/share/book/%EC%B0%BD%EC%A1%B0%EC%A0%81%20%ED%96%89%EC%9C%84.html" hreflang="ko">한국어</a></div>
+  </header>
+
   <h1>The Creative Act: A Way of Being</h1>
   <p class="meta">Korean: <strong>창조적 행위</strong> · Rick Rubin * · 코쿤북스</p>
   <p class="heart-row"><button type="button" class="heart-btn" data-heart="b:창조적 행위" aria-pressed="false" aria-label="Heart this book" title="Heart this book" hidden><span class="heart-ico" aria-hidden="true">♡</span><span class="heart-n"></span></button><button class="copy-btn" type="button" data-url="https://favorbook.co.kr/s/eb/creative-act.html" data-done="Copied!" title="https://favorbook.co.kr/s/eb/creative-act.html">🔗 Copy share link</button></p>
-  <img src="https://image.yes24.com/goods/119886818/L" alt="The Creative Act: A Way of Being cover" width="200" height="280" loading="lazy" style="object-fit:cover; margin:16px 0; border:2px solid #000">
+  <img src="https://image.yes24.com/goods/119886818/L" alt="The Creative Act: A Way of Being cover" width="200" height="280" loading="lazy" style="object-fit:cover; margin:16px 0; border:1px solid var(--border)">
   <p class="intro">The Creative Act: A Way of Being (Korean title: 창조적 행위) by Rick Rubin * has been read or recommended by 15 Korean celebrities, including RM (BTS), Geonho (CORTIS), Kim Min-ha. Below, each entry shows where they mentioned it and what they said.</p>
   <h2>Read by 15 Korean celebrities</h2>
   <ul class="notes">
-    <li><a href="../rm-bts.html">RM (BTS)</a> <span style="color:#888;font-size:13px">(RM(BTS))</span> <a class="src" href="https://btsbook130613.tistory.com/146" rel="nofollow noopener noreferrer" target="_blank">Source</a></li>
-    <li><a href="../geonho-cortis.html">Geonho (CORTIS)</a> <span style="color:#888;font-size:13px">(건호(코르티스))</span> <a class="src" href="https://x.com/you_ricemeup/status/2094049305988632623?s=20" rel="nofollow noopener noreferrer" target="_blank">Source</a></li>
-    <li><a href="../kim-min-ha.html">Kim Min-ha</a> <span style="color:#888;font-size:13px">(김민하)</span> <a class="src" href="https://rollingstone.co.kr/main-trending/$/20329" rel="nofollow noopener noreferrer" target="_blank">Source</a>
+    <li><a href="../rm-bts.html">RM (BTS)</a> <span style="color:var(--muted);font-size:13px">(RM(BTS))</span> <a class="src" href="https://btsbook130613.tistory.com/146" rel="nofollow noopener noreferrer" target="_blank">Source</a></li>
+    <li><a href="../geonho-cortis.html">Geonho (CORTIS)</a> <span style="color:var(--muted);font-size:13px">(건호(코르티스))</span> <a class="src" href="https://x.com/you_ricemeup/status/2094049305988632623?s=20" rel="nofollow noopener noreferrer" target="_blank">Source</a></li>
+    <li><a href="../kim-min-ha.html">Kim Min-ha</a> <span style="color:var(--muted);font-size:13px">(김민하)</span> <a class="src" href="https://rollingstone.co.kr/main-trending/$/20329" rel="nofollow noopener noreferrer" target="_blank">Source</a>
       <blockquote>Recommended in a Rolling Stone Korea interview. A rare non-fiction read that felt like meeting a friend you could talk with for four hours straight. (Source: Rolling Stone Korea)</blockquote></li>
-    <li><a href="../kim-yoo-jung.html">Kim Yoo-jung</a> <span style="color:#888;font-size:13px">(김유정)</span> <a class="src" href="https://news.nate.com/view/20231228n26946" rel="nofollow noopener noreferrer" target="_blank">Source</a>
+    <li><a href="../kim-yoo-jung.html">Kim Yoo-jung</a> <span style="color:var(--muted);font-size:13px">(김유정)</span> <a class="src" href="https://news.nate.com/view/20231228n26946" rel="nofollow noopener noreferrer" target="_blank">Source</a>
       <blockquote>Pulled from the bag in a What&#x27;s in My Bag video: a recent gift that Kim Yoo-jung strongly recommends. (Source: Nate News)</blockquote></li>
-    <li><a href="../dino-seventeen.html">Dino (SEVENTEEN)</a> <span style="color:#888;font-size:13px">(디노(세븐틴))</span> <a class="src" href="https://www.threads.com/@ready_to.dino/post/DV7eda_kdGI/%EB%94%94%EB%85%B8%EA%B0%80-%EC%98%A4%EB%8A%98-%EB%B1%85%EA%B8%B0%EC%97%90-%EB%93%A4%EA%B3%A0-%ED%83%84-%EC%B1%85%EC%9D%B8%EB%8D%B0%EB%B2%84%EB%85%BC%EC%9D%B4%EA%B0%80-%EC%B6%94%EC%B2%9C%ED%96%88%EB%8D%98-%EC%B1%85%EC%9D%B4%EB%9E%98%EC%9A%94%EC%98%A4" rel="nofollow noopener noreferrer" target="_blank">Source</a></li>
-    <li><a href="../martin-cortis.html">Martin (CORTIS)</a> <span style="color:#888;font-size:13px">(마틴(코르티스))</span> <a class="src" href="https://frontamagazine.com/beauty/?idx=170187403&amp;bmode=view" rel="nofollow noopener noreferrer" target="_blank">Source</a></li>
-    <li><a href="../vernon-seventeen.html">Vernon (SEVENTEEN)</a> <span style="color:#888;font-size:13px">(버논(세븐틴))</span> <a class="src" href="https://www.threads.com/@ready_to.dino/post/DV7eda_kdGI/%EB%94%94%EB%85%B8%EA%B0%80-%EC%98%A4%EB%8A%98-%EB%B1%85%EA%B8%B0%EC%97%90-%EB%93%A4%EA%B3%A0-%ED%83%84-%EC%B1%85%EC%9D%B8%EB%8D%B0%EB%B2%84%EB%85%BC%EC%9D%B4%EA%B0%80-%EC%B6%94%EC%B2%9C%ED%96%88%EB%8D%98-%EC%B1%85%EC%9D%B4%EB%9E%98%EC%9A%94%EC%98%A4" rel="nofollow noopener noreferrer" target="_blank">Source</a></li>
-    <li><a href="../sumin.html">Sumin</a> <span style="color:#888;font-size:13px">(수민)</span> <a class="src" href="https://www.instagram.com/p/DcQb7SFlNEW/?img_index=1&amp;igsi=Y3A1YjJ0anNxZWp3" rel="nofollow noopener noreferrer" target="_blank">Source</a></li>
-    <li><a href="../g-dragon-bigbang.html">G-Dragon (BIGBANG)</a> <span style="color:#888;font-size:13px">(지드래곤(빅뱅))</span> <a class="src" href="https://x.com/daisyyong8/status/2050973785344602285?s=12" rel="nofollow noopener noreferrer" target="_blank">Source</a></li>
-    <li><a href="../jiung-p1harmony.html">JIUNG (P1Harmony)</a> <span style="color:#888;font-size:13px">(지웅(P원하모니))</span> <a class="src" href="https://x.com/P1HDeul/status/1949118539635556793?s=20" rel="nofollow noopener noreferrer" target="_blank">Source</a>
+    <li><a href="../dino-seventeen.html">Dino (SEVENTEEN)</a> <span style="color:var(--muted);font-size:13px">(디노(세븐틴))</span> <a class="src" href="https://www.threads.com/@ready_to.dino/post/DV7eda_kdGI/%EB%94%94%EB%85%B8%EA%B0%80-%EC%98%A4%EB%8A%98-%EB%B1%85%EA%B8%B0%EC%97%90-%EB%93%A4%EA%B3%A0-%ED%83%84-%EC%B1%85%EC%9D%B8%EB%8D%B0%EB%B2%84%EB%85%BC%EC%9D%B4%EA%B0%80-%EC%B6%94%EC%B2%9C%ED%96%88%EB%8D%98-%EC%B1%85%EC%9D%B4%EB%9E%98%EC%9A%94%EC%98%A4" rel="nofollow noopener noreferrer" target="_blank">Source</a></li>
+    <li><a href="../martin-cortis.html">Martin (CORTIS)</a> <span style="color:var(--muted);font-size:13px">(마틴(코르티스))</span> <a class="src" href="https://frontamagazine.com/beauty/?idx=170187403&amp;bmode=view" rel="nofollow noopener noreferrer" target="_blank">Source</a></li>
+    <li><a href="../vernon-seventeen.html">Vernon (SEVENTEEN)</a> <span style="color:var(--muted);font-size:13px">(버논(세븐틴))</span> <a class="src" href="https://www.threads.com/@ready_to.dino/post/DV7eda_kdGI/%EB%94%94%EB%85%B8%EA%B0%80-%EC%98%A4%EB%8A%98-%EB%B1%85%EA%B8%B0%EC%97%90-%EB%93%A4%EA%B3%A0-%ED%83%84-%EC%B1%85%EC%9D%B8%EB%8D%B0%EB%B2%84%EB%85%BC%EC%9D%B4%EA%B0%80-%EC%B6%94%EC%B2%9C%ED%96%88%EB%8D%98-%EC%B1%85%EC%9D%B4%EB%9E%98%EC%9A%94%EC%98%A4" rel="nofollow noopener noreferrer" target="_blank">Source</a></li>
+    <li><a href="../sumin.html">Sumin</a> <span style="color:var(--muted);font-size:13px">(수민)</span> <a class="src" href="https://www.instagram.com/p/DcQb7SFlNEW/?img_index=1&amp;igsi=Y3A1YjJ0anNxZWp3" rel="nofollow noopener noreferrer" target="_blank">Source</a></li>
+    <li><a href="../g-dragon-bigbang.html">G-Dragon (BIGBANG)</a> <span style="color:var(--muted);font-size:13px">(지드래곤(빅뱅))</span> <a class="src" href="https://x.com/daisyyong8/status/2050973785344602285?s=12" rel="nofollow noopener noreferrer" target="_blank">Source</a></li>
+    <li><a href="../jiung-p1harmony.html">JIUNG (P1Harmony)</a> <span style="color:var(--muted);font-size:13px">(지웅(P원하모니))</span> <a class="src" href="https://x.com/P1HDeul/status/1949118539635556793?s=20" rel="nofollow noopener noreferrer" target="_blank">Source</a>
       <blockquote>He often hears that he becomes like a child when talking about what he loves, and said it boosted his confidence that this book says keeping that child&#x27;s heart makes a great artist. (Source: X)</blockquote></li>
-    <li><a href="../choi-jung-hoon-jannabi.html">Choi Jung-hoon (Jannabi)</a> <span style="color:#888;font-size:13px">(최정훈(잔나비))</span> <a class="src" href="https://www.elle.co.kr/ellevoice/community/detail/3833" rel="nofollow noopener noreferrer" target="_blank">Source</a>
+    <li><a href="../choi-jung-hoon-jannabi.html">Choi Jung-hoon (Jannabi)</a> <span style="color:var(--muted);font-size:13px">(최정훈(잔나비))</span> <a class="src" href="https://www.elle.co.kr/ellevoice/community/detail/3833" rel="nofollow noopener noreferrer" target="_blank">Source</a>
       <blockquote>Known among fans as a Choi Jung-hoon recommendation. (Source: Elle Korea)</blockquote></li>
-    <li><a href="../lee-taemin-shinee.html">Lee Taemin (SHINee)</a> <span style="color:#888;font-size:13px">(태민(샤이니))</span> <a class="src" href="https://theqoo.net/taemin/4365727311" rel="nofollow noopener noreferrer" target="_blank">Source</a></li>
-    <li><a href="../theo-p1harmony.html">Theo (P1Harmony)</a> <span style="color:#888;font-size:13px">(테오(P원하모니))</span> <a class="src" href="https://x.com/hibi701/status/1928140854503366956?s=20" rel="nofollow noopener noreferrer" target="_blank">Source</a></li>
-    <li><a href="../ha-hyun-sang.html">Ha Hyun Sang</a> <span style="color:#888;font-size:13px">(하현상)</span> <a class="src" href="https://x.com/summertime1over/status/1845792754586230967?s=20" rel="nofollow noopener noreferrer" target="_blank">Source</a></li>
-    <li><a href="../huh-yunjin-le-sserafim.html">Huh Yunjin (LE SSERAFIM)</a> <span style="color:#888;font-size:13px">(허윤진(르세라핌))</span> <a class="src" href="https://x.com/huhbookshelf/status/1982762080370671905?s=20" rel="nofollow noopener noreferrer" target="_blank">Source</a></li>
+    <li><a href="../lee-taemin-shinee.html">Lee Taemin (SHINee)</a> <span style="color:var(--muted);font-size:13px">(태민(샤이니))</span> <a class="src" href="https://theqoo.net/taemin/4365727311" rel="nofollow noopener noreferrer" target="_blank">Source</a></li>
+    <li><a href="../theo-p1harmony.html">Theo (P1Harmony)</a> <span style="color:var(--muted);font-size:13px">(테오(P원하모니))</span> <a class="src" href="https://x.com/hibi701/status/1928140854503366956?s=20" rel="nofollow noopener noreferrer" target="_blank">Source</a></li>
+    <li><a href="../ha-hyun-sang.html">Ha Hyun Sang</a> <span style="color:var(--muted);font-size:13px">(하현상)</span> <a class="src" href="https://x.com/summertime1over/status/1845792754586230967?s=20" rel="nofollow noopener noreferrer" target="_blank">Source</a></li>
+    <li><a href="../huh-yunjin-le-sserafim.html">Huh Yunjin (LE SSERAFIM)</a> <span style="color:var(--muted);font-size:13px">(허윤진(르세라핌))</span> <a class="src" href="https://x.com/huhbookshelf/status/1982762080370671905?s=20" rel="nofollow noopener noreferrer" target="_blank">Source</a></li>
   </ul>
   <h2>Most read in Arts</h2>
   <ul>
@@ -140,5 +146,6 @@
   });
   </script>
   <script src="https://favorbook.co.kr/assets/hearts.js" defer></script>
+  <script src="https://favorbook.co.kr/assets/v2/search.js" defer></script>
 </body>
 </html>
