@@ -2178,6 +2178,124 @@ NEW_BADGE_CSS = (
 )
 
 
+# ── 3.9. 새 디자인: 상세 페이지 옷 갈아입히기 ─────────────────────────
+# 상세 페이지(셀럽·책·그룹·작가)는 구조와 기능(책장, 이미지 저장, 하트 등)이 복잡해서
+# 본문은 그대로 두고 겉모양만 바꾼다. 페이지를 다 만든 뒤 _v2_detail()을 한 번 거치면
+#   · <style> 안의 옛 색·굵은 테두리·딱딱한 그림자를 새 톤(assets/v2/theme.css 변수)으로 바꾸고
+#   · 상단 바(메뉴·검색·언어·밝게/어둡게)를 붙이고
+#   · 공용 스타일(assets/v2/detail.css)과 스크립트를 건다.
+# <head>의 검색용 정보와 본문 글·링크는 건드리지 않는다.
+V2_ASSETS = BASE + 'assets/v2/'
+
+
+def _v2_bar_nav(lang):
+    """상단 메뉴. 모음 페이지(_v2_page)와 상세 페이지가 같은 것을 쓴다."""
+    if lang == 'en':
+        return ('<a href="' + BASE + 'en/category/kpop-idols.html">Idols</a>'
+                '<a href="' + BASE + 'en/category/k-drama-actors.html">Actors</a>'
+                '<a href="' + BASE + 'en/category/korean-musicians.html">Musicians</a>'
+                '<a href="' + BASE + 'en/share/ranking.html">Ranking</a>')
+    return ('<a href="' + BASE + 'recommend/idol.html">아이돌</a><a href="' + BASE + 'recommend/actor.html">배우</a>'
+            '<a href="' + BASE + 'author/">작가</a><a href="' + BASE + 'share/ranking.html">랭킹</a>'
+            '<a href="' + BASE + 'match/">취향 월드컵</a>')
+
+
+_V2_CSS_RULES = [
+    # 딱딱한 그림자는 없앤다
+    (re.compile(r'box-shadow:\s*-?\d+px -?\d+px 0 0 #000\b'), 'box-shadow: none'),
+    # 테두리는 가는 회색 선으로
+    (re.compile(r'(border(?:-(?:top|right|bottom|left))?:\s*)\d(?:\.\d)?px (solid|dashed) #(?:000|ccc|bbb)\b'),
+     r'\g<1>1px \2 var(--border)'),
+    # 바탕
+    (re.compile(r'(background(?:-color)?:\s*)#(?:fcfaf5|fff|ffffff|fffdf7)\b', re.I), r'\1var(--bg)'),
+    (re.compile(r'(background(?:-color)?:\s*)#(?:f4f4f0|f5f5f0|f5f5f5|a7f3d0|86efac|fbcfe8|fdf2f8)\b', re.I), r'\1var(--card)'),
+    (re.compile(r'(background(?:-color)?:\s*)#(?:fff8e7|fffbe6|fff7c2|fef08a)\b', re.I), r'\1var(--hover)'),
+    (re.compile(r'(background(?:-color)?:\s*)#(?:000|111)\b'), r'\1var(--ink)'),
+    (re.compile(r'(background(?:-color)?:\s*)#(?:ff8cc6|ff6fb6)\b', re.I), r'\1var(--card)'),
+    # 표지 줄을 접을 때 아래를 흐리게 덮는 바탕색
+    (re.compile(r'rgba\(252,\s*250,\s*245,\s*([\d.]+)\)'), r'rgb(var(--bg-rgb) / \1)'),
+    (re.compile(r'#fcfaf5\b', re.I), 'var(--bg)'),
+    # 글자
+    (re.compile(r'((?<![-\w])color:\s*)#(?:000|111|222|333|2563eb)\b', re.I), r'\1var(--ink)'),
+    (re.compile(r'((?<![-\w])color:\s*)#(?:444|555|666)\b'), r'\1var(--soft)'),
+    (re.compile(r'((?<![-\w])color:\s*)#(?:777|888|999)\b'), r'\1var(--muted)'),
+    (re.compile(r'((?<![-\w])color:\s*)#(?:fff|ffffff)\b', re.I), r'\1var(--bg)'),
+]
+_V2_YELLOW_RULE = re.compile(r'\{[^{}]*background(?:-color)?:\s*#fde047[^{}]*\}', re.I)
+
+
+def _v2_css(css):
+    """옛 스타일 글의 색·테두리·그림자를 새 톤으로 바꾼다."""
+    for pat, to in _V2_CSS_RULES:
+        css = pat.sub(to, css)
+
+    # 노란 바탕 위의 글자는 어두운 화면에서도 검게
+    def _on_yellow(m):
+        rule = m.group(0)
+        if re.search(r'(?<![-\w])color:', rule):
+            return re.sub(r'((?<![-\w])color:\s*)var\(--(?:ink|soft)\)', r'\1var(--on-yellow)', rule)
+        return rule[:-1].rstrip().rstrip(';') + '; color: var(--on-yellow); }'
+    return _V2_YELLOW_RULE.sub(_on_yellow, css)
+
+
+def _v2_bar_html(lang='ko', alt_url='', search=True):
+    """상단 바(메뉴 · 로고 · 검색 · 언어 · 밝게/어둡게). 밝게/어둡게 단추는 theme.js가 넣는다."""
+    en = lang == 'en'
+    return ('\n  <header class="bar">\n'
+            '    <nav aria-label="' + ('Main menu' if en else '주요 메뉴') + '">' + _v2_bar_nav(lang) + '</nav>\n'
+            '    <a class="logo" href="' + BASE + ('en/' if en else '') + '">' + ('Favorbook' if en else '최애의 독서') + '</a>\n'
+            '    <div class="right">' + ('<div class="site-search sm"></div>' if search else '')
+            + (('<a class="lang" href="' + esc(alt_url) + '" hreflang="' + ('ko' if en else 'en') + '">'
+                + ('한국어' if en else 'EN') + '</a>') if alt_url else '') + '</div>\n'
+            '  </header>\n')
+
+
+# Tailwind로 짠 단순 페이지(업데이트 내역·데이터 이용 안내)용 디자인 값. 홈(index.html)과 같은 값이다.
+_V2_TW_COLORS = (
+    "colors: { ink: 'rgb(var(--ink-rgb) / <alpha-value>)', black: 'rgb(var(--ink-rgb) / <alpha-value>)', "
+    "paper: 'rgb(var(--bg-rgb) / <alpha-value>)', white: 'rgb(var(--bg-rgb) / <alpha-value>)', "
+    "'paper-dark': 'rgb(var(--card-rgb) / <alpha-value>)', muted: 'rgb(var(--muted-rgb) / <alpha-value>)', "
+    "'neo-mint': 'rgb(var(--card-rgb) / <alpha-value>)', 'neo-pink': 'rgb(var(--card-rgb) / <alpha-value>)', "
+    "'neo-yellow': '#fde047' }, "
+    "borderColor: { ink: 'rgb(var(--border-rgb) / <alpha-value>)' }, borderWidth: { 2: '1px', 4: '1px' }, "
+    "fontWeight: { black: '700', bold: '500' }")
+_V2_TW_SHADOW = "boxShadow: { neo: 'none', 'neo-lg': '0 16px 40px rgb(0 0 0 / .14)', 'neo-sm': 'none' }"
+
+
+def _v2_tailwind(page, lang='ko', alt_url=''):
+    """Tailwind로 짠 페이지 한 장에 새 디자인을 입힌다(색·테두리·그림자 값 교체 + 상단 바).
+    이미 입힌 페이지면 그대로 돌려준다."""
+    if 'assets/v2/theme.css' in page:
+        return page
+    page = re.sub(r'colors:\s*\{[^{}]*\}', _V2_TW_COLORS, page, count=1)
+    page = re.sub(r'boxShadow:\s*\{[^{}]*\}', _V2_TW_SHADOW, page, count=1)
+    page = re.sub(r'(<style>)(.*?)(</style>)', lambda m: m.group(1) + _v2_css(m.group(2)) + m.group(3), page, count=1, flags=re.S)
+    page = page.replace('<script src="https://cdn.tailwindcss.com"></script>',
+                        '<link rel="stylesheet" href="' + V2_ASSETS + 'theme.css">\n'
+                        '  <script src="' + V2_ASSETS + 'theme.js"></script>\n'
+                        '  <script src="https://cdn.tailwindcss.com"></script>', 1)
+    page = page.replace('</head>', '  <link rel="stylesheet" href="' + V2_ASSETS + 'home.css">\n</head>', 1)
+    page = re.sub(r'(<body[^>]*>)', lambda m: m.group(1) + _v2_bar_html(lang, alt_url), page, count=1)
+    return page.replace('</body>', '  <script src="' + V2_ASSETS + 'search.js" defer></script>\n</body>', 1)
+
+
+def _v2_detail(page, lang='ko', alt_url=''):
+    """다 만든 상세 페이지 HTML에 새 디자인을 입혀 돌려준다."""
+    head, sep, body = page.partition('</head>')
+    # <style> 안쪽과 본문의 style="…" 속성에 같은 규칙을 적용한다
+    head = re.sub(r'(<style>)(.*?)(</style>)', lambda m: m.group(1) + _v2_css(m.group(2)) + m.group(3), head, flags=re.S)
+    body = re.sub(r'style="([^"]*)"', lambda m: 'style="' + _v2_css(m.group(1)) + '"', body)
+    head += ('  <link rel="stylesheet" href="' + BASE + 'assets/fonts/space-grotesk.css">\n'
+             '  <link rel="stylesheet" href="' + BASE + 'assets/fonts/kopubworld.css">\n'
+             '  <link rel="stylesheet" href="' + V2_ASSETS + 'theme.css">\n'
+             '  <link rel="stylesheet" href="' + V2_ASSETS + 'detail.css">\n'
+             '  <script src="' + V2_ASSETS + 'theme.js"></script>\n')
+    bar = _v2_bar_html(lang, alt_url)
+    body = re.sub(r'(<body[^>]*>)', lambda m: m.group(1) + bar, body, count=1)
+    body = body.replace('</body>', '  <script src="' + V2_ASSETS + 'search.js" defer></script>\n</body>', 1)
+    return head + sep + body
+
+
 def _write_updates_page(entries):
     """updates.html 생성."""
     if entries:
@@ -2253,8 +2371,8 @@ def _write_updates_page(entries):
         '  <main class="max-w-3xl mx-auto px-4 sm:px-6 py-10 sm:py-16">\n'
         '    <header class="mb-10 text-center">\n'
         '      <a href="./" class="inline-block font-sans font-bold text-xs tracking-widest '
-        'uppercase border-2 border-ink bg-white hover:bg-neo-yellow shadow-neo-sm px-4 py-2 '
-        'no-underline text-ink transition-all hover:-translate-y-0.5 mb-6">← 메인으로</a>\n'
+        'uppercase border-2 border-ink bg-white hover:bg-neo-yellow rounded-full px-4 py-2 '
+        'no-underline text-ink transition-all mb-6">← 메인으로</a>\n'
         '      <h1 class="text-3xl sm:text-5xl font-black tracking-tight mb-3">'
         '업데이트 내역 📕</h1>\n'
         '      <p class="font-sans font-bold text-sm text-muted">'
@@ -2269,7 +2387,7 @@ def _write_updates_page(entries):
         '</body>\n'
         '</html>\n'
     )
-    write_if_changed('updates.html', page)
+    write_if_changed('updates.html', _v2_tailwind(page, 'ko', BASE + 'en/updates.html'))
 
 _write_updates_page(update_entries)
 
@@ -2538,90 +2656,6 @@ else:
     print("ℹ️ 메인 고정 추천책 없음 (data/pinned_books.json) — 섹션 숨김")
 print(f"✅ index.html 정적 목록 갱신: {len(sorted_names)}명")
 print(f"✅ updates.html 생성 ({len(update_entries)} 항목)")
-
-# ── 3.9. 새 디자인: 상세 페이지 옷 갈아입히기 ─────────────────────────
-# 상세 페이지(셀럽·책·그룹·작가)는 구조와 기능(책장, 이미지 저장, 하트 등)이 복잡해서
-# 본문은 그대로 두고 겉모양만 바꾼다. 페이지를 다 만든 뒤 _v2_detail()을 한 번 거치면
-#   · <style> 안의 옛 색·굵은 테두리·딱딱한 그림자를 새 톤(assets/v2/theme.css 변수)으로 바꾸고
-#   · 상단 바(메뉴·검색·언어·밝게/어둡게)를 붙이고
-#   · 공용 스타일(assets/v2/detail.css)과 스크립트를 건다.
-# <head>의 검색용 정보와 본문 글·링크는 건드리지 않는다.
-V2_ASSETS = BASE + 'assets/v2/'
-
-
-def _v2_bar_nav(lang):
-    """상단 메뉴. 모음 페이지(_v2_page)와 상세 페이지가 같은 것을 쓴다."""
-    if lang == 'en':
-        return ('<a href="' + BASE + 'en/category/kpop-idols.html">Idols</a>'
-                '<a href="' + BASE + 'en/category/k-drama-actors.html">Actors</a>'
-                '<a href="' + BASE + 'en/category/korean-musicians.html">Musicians</a>'
-                '<a href="' + BASE + 'en/share/ranking.html">Ranking</a>')
-    return ('<a href="' + BASE + 'recommend/idol.html">아이돌</a><a href="' + BASE + 'recommend/actor.html">배우</a>'
-            '<a href="' + BASE + 'author/">작가</a><a href="' + BASE + 'share/ranking.html">랭킹</a>'
-            '<a href="' + BASE + 'match/">취향 월드컵</a>')
-
-
-_V2_CSS_RULES = [
-    # 딱딱한 그림자는 없앤다
-    (re.compile(r'box-shadow:\s*-?\d+px -?\d+px 0 0 #000\b'), 'box-shadow: none'),
-    # 테두리는 가는 회색 선으로
-    (re.compile(r'(border(?:-(?:top|right|bottom|left))?:\s*)\d(?:\.\d)?px (solid|dashed) #(?:000|ccc|bbb)\b'),
-     r'\g<1>1px \2 var(--border)'),
-    # 바탕
-    (re.compile(r'(background(?:-color)?:\s*)#(?:fcfaf5|fff|ffffff|fffdf7)\b', re.I), r'\1var(--bg)'),
-    (re.compile(r'(background(?:-color)?:\s*)#(?:f4f4f0|f5f5f0|f5f5f5|a7f3d0|86efac|fbcfe8|fdf2f8)\b', re.I), r'\1var(--card)'),
-    (re.compile(r'(background(?:-color)?:\s*)#(?:fff8e7|fffbe6|fff7c2|fef08a)\b', re.I), r'\1var(--hover)'),
-    (re.compile(r'(background(?:-color)?:\s*)#(?:000|111)\b'), r'\1var(--ink)'),
-    (re.compile(r'(background(?:-color)?:\s*)#(?:ff8cc6|ff6fb6)\b', re.I), r'\1var(--card)'),
-    # 표지 줄을 접을 때 아래를 흐리게 덮는 바탕색
-    (re.compile(r'rgba\(252,\s*250,\s*245,\s*([\d.]+)\)'), r'rgb(var(--bg-rgb) / \1)'),
-    (re.compile(r'#fcfaf5\b', re.I), 'var(--bg)'),
-    # 글자
-    (re.compile(r'((?<![-\w])color:\s*)#(?:000|111|222|333|2563eb)\b', re.I), r'\1var(--ink)'),
-    (re.compile(r'((?<![-\w])color:\s*)#(?:444|555|666)\b'), r'\1var(--soft)'),
-    (re.compile(r'((?<![-\w])color:\s*)#(?:777|888|999)\b'), r'\1var(--muted)'),
-    (re.compile(r'((?<![-\w])color:\s*)#(?:fff|ffffff)\b', re.I), r'\1var(--bg)'),
-]
-_V2_YELLOW_RULE = re.compile(r'\{[^{}]*background(?:-color)?:\s*#fde047[^{}]*\}', re.I)
-
-
-def _v2_css(css):
-    """옛 스타일 글의 색·테두리·그림자를 새 톤으로 바꾼다."""
-    for pat, to in _V2_CSS_RULES:
-        css = pat.sub(to, css)
-
-    # 노란 바탕 위의 글자는 어두운 화면에서도 검게
-    def _on_yellow(m):
-        rule = m.group(0)
-        if re.search(r'(?<![-\w])color:', rule):
-            return re.sub(r'((?<![-\w])color:\s*)var\(--(?:ink|soft)\)', r'\1var(--on-yellow)', rule)
-        return rule[:-1].rstrip().rstrip(';') + '; color: var(--on-yellow); }'
-    return _V2_YELLOW_RULE.sub(_on_yellow, css)
-
-
-def _v2_detail(page, lang='ko', alt_url=''):
-    """다 만든 상세 페이지 HTML에 새 디자인을 입혀 돌려준다."""
-    head, sep, body = page.partition('</head>')
-    # <style> 안쪽과 본문의 style="…" 속성에 같은 규칙을 적용한다
-    head = re.sub(r'(<style>)(.*?)(</style>)', lambda m: m.group(1) + _v2_css(m.group(2)) + m.group(3), head, flags=re.S)
-    body = re.sub(r'style="([^"]*)"', lambda m: 'style="' + _v2_css(m.group(1)) + '"', body)
-    head += ('  <link rel="stylesheet" href="' + BASE + 'assets/fonts/space-grotesk.css">\n'
-             '  <link rel="stylesheet" href="' + BASE + 'assets/fonts/kopubworld.css">\n'
-             '  <link rel="stylesheet" href="' + V2_ASSETS + 'theme.css">\n'
-             '  <link rel="stylesheet" href="' + V2_ASSETS + 'detail.css">\n'
-             '  <script src="' + V2_ASSETS + 'theme.js"></script>\n')
-    en = lang == 'en'
-    bar = ('\n  <header class="bar">\n'
-           '    <nav aria-label="' + ('Main menu' if en else '주요 메뉴') + '">' + _v2_bar_nav(lang) + '</nav>\n'
-           '    <a class="logo" href="' + BASE + ('en/' if en else '') + '">' + ('Favorbook' if en else '최애의 독서') + '</a>\n'
-           '    <div class="right"><div class="site-search sm"></div>'
-           + (('<a class="lang" href="' + esc(alt_url) + '" hreflang="' + ('ko' if en else 'en') + '">'
-               + ('한국어' if en else 'EN') + '</a>') if alt_url else '') + '</div>\n'
-           '  </header>\n')
-    body = re.sub(r'(<body[^>]*>)', lambda m: m.group(1) + bar, body, count=1)
-    body = body.replace('</body>', '  <script src="' + V2_ASSETS + 'search.js" defer></script>\n</body>', 1)
-    return head + sep + body
-
 
 # ── 4. share 페이지 생성 (SEO 강화) ─────────────────────────────────
 
@@ -6231,7 +6265,7 @@ def _en_update_item(e):
             + '<br>' + chips + '</li>')
 
 
-write_if_changed('en/updates.html', (
+write_if_changed('en/updates.html', _v2_detail(
     '<!DOCTYPE html>\n<html lang="en">\n<head>\n' + GA_TAG +
     '  <meta charset="utf-8">\n'
     '  <meta name="viewport" content="width=device-width, initial-scale=1">\n'
@@ -6245,13 +6279,12 @@ write_if_changed('en/updates.html', (
     '    ul.upd li { background: #fff; border: 2px solid #000; box-shadow: 3px 3px 0 0 #000; padding: 12px 14px; margin-bottom: 12px; font-size: 14px; }\n'
     '  </style>\n'
     '</head>\n<body>\n'
-    '  <nav><a href="' + EN_BASE + '">← Favorbook Home</a> · <a href="' + BASE + 'updates.html" hreflang="ko">한국어</a></nav>\n'
     '  <h1>What\'s new 📕</h1>\n'
     '  <p>Books and people recently added to the archive.</p>\n'
     '  <ul class="upd">\n'
     + ('\n'.join(_en_update_item(e) for e in update_entries) or '  <li>No updates yet.</li>')
     + '\n  </ul>\n'
-    '</body>\n</html>'))
+    '</body>\n</html>', 'en', BASE + 'updates.html'))
 print(f"✅ /en/updates.html 생성 ({len(update_entries)} 항목)")
 
 

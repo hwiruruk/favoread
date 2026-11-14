@@ -15,6 +15,11 @@
 <meta name="description" content="표지만 보고 10번 고르면, 같은 책을 읽은 연예인 중 나와 독서 취향이 비슷한 사람을 찾아드려요. 혹시 본인이세요?">
 <link rel="canonical" href="https://favorbook.co.kr/match/">
 <link rel="icon" href="../favicon.svg" type="image/svg+xml">
+<link rel="stylesheet" href="../assets/fonts/space-grotesk.css">
+<link rel="stylesheet" href="../assets/fonts/kopubworld.css">
+<link rel="stylesheet" href="../assets/v2/theme.css">
+<link rel="stylesheet" href="../assets/v2/home.css">
+<script src="../assets/v2/theme.js"></script>
 <meta property="og:type" content="website">
 <meta property="og:site_name" content="최애의 독서">
 <meta property="og:title" content="내 독서 취향이 비슷한 연예인은?">
@@ -28,129 +33,146 @@
 <meta name="twitter:description" content="표지만 보고 10번 고르면, 같은 책을 읽은 연예인 중 나와 독서 취향이 비슷한 사람을 찾아드려요. 혹시 본인이세요?">
 <meta name="twitter:image" content="https://favorbook.co.kr/og/match.jpg">
 <style>
-  :root { --ink:#000; --bg:#fffdf5; --yellow:#fde047; --pink:#fbcfe8; --mint:#bbf7d0; --sky:#bae6fd; }
+  :root { --pink:var(--card); --mint:var(--card); --sky:var(--card); }
   * { box-sizing: border-box; }
   body { margin:0; background:var(--bg); color:var(--ink); font-family:-apple-system,"Pretendard","Noto Sans KR",sans-serif; line-height:1.5; }
   a { color:inherit; }
   .wrap { max-width:720px; margin:0 auto; padding:0 16px 80px; }
-  .topbar { border-bottom:3px solid #000; background:var(--yellow); padding:12px 16px; font-size:13px; }
+  .topbar { border-bottom:1px solid var(--border); background:var(--yellow); padding:12px 16px; font-size:13px; }
   .topbar { display:flex; justify-content:space-between; align-items:center; gap:10px; }
   .topbar a { font-weight:800; text-decoration:none; }
-  .topbar span { font-size:12px; color:#444; }
+  .topbar span { font-size:12px; color:var(--soft); }
   h1 { font-size:26px; margin:26px 0 6px; line-height:1.25; }
-  .lead { margin:0 0 16px; color:#333; }
-  .box { border:3px solid #000; box-shadow:4px 4px 0 0 #000; background:#fff; padding:16px; margin:16px 0; }
+  .lead { margin:0 0 16px; color:var(--ink); }
+  .box { border:1px solid var(--border); box-shadow: none; background:var(--bg); padding:16px; margin:16px 0; }
   .tabs { display:flex; gap:8px; margin:0 0 4px; }
-  .tabs button { flex:1; padding:10px; font-size:14px; font-weight:800; border:3px solid #000; background:#fff; cursor:pointer; }
-  .tabs button[aria-selected=true] { background:var(--yellow); box-shadow:3px 3px 0 0 #000; }
-  .btn { display:block; width:100%; padding:14px; font-size:16px; font-weight:800; background:var(--yellow); border:3px solid #000; box-shadow:4px 4px 0 0 #000; cursor:pointer; margin-top:14px; }
-  .btn:disabled { background:#ddd; box-shadow:none; cursor:not-allowed; color:#777; }
-  .btn:not(:disabled):hover { transform:translate(-1px,-1px); box-shadow:6px 6px 0 0 #000; }
-  .btn.ghost { background:#fff; box-shadow:none; font-size:14px; padding:10px; }
+  .tabs button { flex:1; padding:10px; font-size:14px; font-weight:800; border:1px solid var(--border); background:var(--bg); cursor:pointer; }
+  .tabs button[aria-selected=true] { background:var(--yellow); box-shadow: none; }
+  .btn { display:block; width:100%; padding:14px; font-size:16px; font-weight:800; background:var(--yellow); border:1px solid var(--border); box-shadow: none; cursor:pointer; margin-top:14px; }
+  .btn:disabled { background:var(--line); box-shadow:none; cursor:not-allowed; color:var(--muted); }
+  .btn.ghost { background:var(--bg); box-shadow:none; font-size:14px; padding:10px; }
   .hide { display:none !important; }
 
   /* 표지 */
-  .cv { position:relative; width:100%; aspect-ratio:2/3; background:var(--pink); border:2px solid #000; display:flex; align-items:center; justify-content:center; padding:10px; font-weight:800; font-size:14px; overflow:hidden; text-align:center; }
+  .cv { position:relative; width:100%; aspect-ratio:2/3; background:var(--pink); border:1px solid var(--border); display:flex; align-items:center; justify-content:center; padding:10px; font-weight:800; font-size:14px; overflow:hidden; text-align:center; }
   .cv img { position:absolute; inset:0; width:100%; height:100%; object-fit:cover; }
 
   /* 월드컵 */
   .prog { display:flex; align-items:center; gap:10px; font-weight:800; font-size:14px; }
-  .bar { flex:1; height:12px; border:2px solid #000; background:#fff; }
-  .bar i { display:block; height:100%; background:var(--pink); width:0; transition:width .25s; }
+  .prog-bar { flex:1; height:12px; border:1px solid var(--border); background:var(--bg); }
+  .prog-bar i { display:block; height:100%; background:var(--pink); width:0; transition:width .25s; }
   .vs { display:grid; grid-template-columns:1fr 1fr; gap:14px; margin-top:14px; position:relative; }
-  .vs::after { content:'VS'; position:absolute; left:50%; top:34%; transform:translate(-50%,-50%); background:#000; color:var(--yellow); font-weight:900; padding:4px 8px; font-size:14px; z-index:2; }
-  .bk { border:3px solid #000; background:#fff; padding:8px; cursor:pointer; text-align:center; font:inherit; box-shadow:4px 4px 0 0 #000; transition:transform .12s, background .12s; }
-  .bk:hover, .bk:focus-visible { transform:translate(-2px,-2px) rotate(-1deg); background:var(--yellow); outline:none; box-shadow:6px 6px 0 0 #000; }
+  .vs::after { content:'VS'; position:absolute; left:50%; top:34%; transform:translate(-50%,-50%); background:var(--yellow); color:var(--on-yellow); font-weight:900; padding:4px 8px; font-size:14px; z-index:2; }
+  .bk { border:1px solid var(--border); background:var(--bg); padding:8px; cursor:pointer; text-align:center; font:inherit; box-shadow: none; transition:transform .12s, background .12s; }
+  .bk:hover, .bk:focus-visible { transform:translate(-2px,-2px) rotate(-1deg); background:var(--yellow); outline:none; box-shadow: none; }
   .bk.won { background:var(--mint); transform:scale(1.04); }
   .bk.lost { opacity:.35; transform:scale(.96); }
   .bk .t { margin-top:10px; font-weight:800; font-size:15px; line-height:1.3; word-break:keep-all; }
-  .bk .a { font-size:12px; color:#555; margin-top:2px; }
+  .bk .a { font-size:12px; color:var(--soft); margin-top:2px; }
   .skip { margin-top:14px; text-align:center; }
-  .skip button { background:none; border:0; text-decoration:underline; font-size:13px; color:#555; cursor:pointer; }
+  .skip button { background:none; border:0; text-decoration:underline; font-size:13px; color:var(--soft); cursor:pointer; }
   .shelf { display:grid; grid-template-columns:repeat(5,1fr); gap:8px; margin-top:12px; }
   .shelf .it { align-self:start; position:relative; border:0; background:none; padding:0; cursor:pointer; font:inherit; text-align:center; }
   .shelf .cv { padding:4px; font-size:10px; }
-  .shelf .it.king .cv { outline:4px solid var(--yellow); box-shadow:0 0 0 7px #000; }
+  .shelf .it.king .cv { outline:4px solid var(--yellow); box-shadow:0 0 0 7px var(--ink); }
   .shelf .tt { font-size:11px; font-weight:700; margin-top:4px; line-height:1.25; word-break:keep-all; }
-  .crown { position:absolute; top:-12px; left:50%; transform:translateX(-50%); z-index:3; font-size:11px; white-space:nowrap; font-weight:900; background:#000; color:var(--yellow); padding:1px 6px; }
+  .crown { position:absolute; top:-12px; left:50%; transform:translateX(-50%); z-index:3; font-size:11px; white-space:nowrap; font-weight:900; background:var(--yellow); color:var(--on-yellow); padding:1px 6px; }
 
   /* 직접 고르기 */
-  input[type=search] { width:100%; padding:12px; font-size:16px; border:3px solid #000; background:#fff; margin-top:8px; }
-  .sug { list-style:none; margin:6px 0 0; padding:0; border:2px solid #000; max-height:340px; overflow:auto; background:#fff; }
+  input[type=search] { width:100%; padding:12px; font-size:16px; border:1px solid var(--border); background:var(--bg); margin-top:8px; }
+  .sug { list-style:none; margin:6px 0 0; padding:0; border:1px solid var(--border); max-height:340px; overflow:auto; background:var(--bg); }
   .sug:empty { display:none; }
-  .sug li button { width:100%; text-align:left; background:#fff; border:0; border-bottom:1px solid #ddd; padding:8px 10px; font-size:14px; cursor:pointer; display:flex; gap:10px; align-items:center; font:inherit; }
+  .sug li button { width:100%; text-align:left; background:var(--bg); border:0; border-bottom:1px solid var(--line); padding:8px 10px; font-size:14px; cursor:pointer; display:flex; gap:10px; align-items:center; font:inherit; }
   .sug li button:hover { background:var(--yellow); }
   .sug .th { width:34px; flex:none; }
   .sug .th .cv { padding:1px; font-size:0; border-width:1px; }
-  .sug small { color:#666; display:block; font-size:12px; }
+  .sug small { color:var(--soft); display:block; font-size:12px; }
   .sug .au { background:var(--sky); }
-  .nohit { margin-top:8px; padding:12px; border:2px solid #000; background:#fff7ed; font-size:14px; }
+  .nohit { margin-top:8px; padding:12px; border:1px solid var(--border); background:var(--card); font-size:14px; }
   .nohit p { margin:0 0 8px; }
-  .nohit .opts button, .opts button { margin:3px 4px 0 0; padding:4px 10px; border:2px solid #000; background:#fff; font-size:13px; cursor:pointer; font-family:inherit; }
+  .nohit .opts button, .opts button { margin:3px 4px 0 0; padding:4px 10px; border:1px solid var(--border); background:var(--bg); font-size:13px; cursor:pointer; font-family:inherit; }
   .opts button:hover { background:var(--yellow); }
   .chips { display:flex; flex-wrap:wrap; gap:8px; margin:12px 0 0; padding:0; list-style:none; }
-  .chip { display:flex; gap:6px; align-items:center; padding:5px 6px 5px 10px; border:2px solid #000; background:var(--mint); font-size:13px; font-weight:700; }
+  .chip { display:flex; gap:6px; align-items:center; padding:5px 6px 5px 10px; border:1px solid var(--border); background:var(--mint); font-size:13px; font-weight:700; }
   .chip.au { background:var(--sky); }
-  .chip button { border:0; background:#000; color:#fff; width:20px; height:20px; cursor:pointer; }
-  .count { font-size:13px; color:#555; margin-top:8px; }
+  .chip button { border:0; background:var(--ink); color:var(--bg); width:20px; height:20px; cursor:pointer; }
+  .count { font-size:13px; color:var(--soft); margin-top:8px; }
 
   /* 많이 읽은 책 둘러보기 */
-  .browse { margin-top:18px; padding-top:14px; border-top:3px dashed #000; }
+  .browse { margin-top:18px; padding-top:14px; border-top:1px dashed var(--border); }
   .browse h2 { font-size:17px; margin:0 0 2px; }
-  .browse .sub { font-size:12px; color:#555; margin:0 0 10px; }
+  .browse .sub { font-size:12px; color:var(--soft); margin:0 0 10px; }
   .gen { display:flex; gap:6px; overflow-x:auto; padding-bottom:6px; }
-  .gen button { flex:none; padding:5px 12px; border:2px solid #000; background:#fff; font-size:13px; font-weight:700; cursor:pointer; font-family:inherit; }
-  .gen button[aria-pressed=true] { background:var(--yellow); box-shadow:2px 2px 0 0 #000; }
-  .gen button small { font-weight:400; color:#555; margin-left:3px; }
+  .gen button { flex:none; padding:5px 12px; border:1px solid var(--border); background:var(--bg); font-size:13px; font-weight:700; cursor:pointer; font-family:inherit; }
+  .gen button[aria-pressed=true] { background:var(--yellow); box-shadow: none; }
+  .gen button small { font-weight:400; color:var(--soft); margin-left:3px; }
   .grid { display:grid; grid-template-columns:repeat(3,1fr); gap:12px; margin-top:12px; }
   .pk { position:relative; border:0; background:none; padding:0; cursor:pointer; text-align:left; font:inherit; }
   .pk .cv { padding:6px; font-size:12px; }
-  .pk .n { position:absolute; top:-6px; left:-6px; z-index:3; background:#000; color:var(--yellow); font-size:11px; font-weight:900; padding:1px 6px; }
+  .pk .n { position:absolute; top:-6px; left:-6px; z-index:3; background:var(--yellow); color:var(--on-yellow); font-size:11px; font-weight:900; padding:1px 6px; }
   .pk .t { font-size:12px; font-weight:800; margin-top:5px; line-height:1.25; word-break:keep-all; }
-  .pk .w { font-size:11px; color:#555; line-height:1.3; margin-top:1px; }
-  .pk.on .cv { outline:4px solid var(--mint); box-shadow:0 0 0 7px #000; }
-  .pk.on::after { content:'✓ 고름'; position:absolute; right:4px; top:4px; z-index:3; background:var(--mint); border:2px solid #000; font-size:11px; font-weight:900; padding:0 5px; }
+  .pk .w { font-size:11px; color:var(--soft); line-height:1.3; margin-top:1px; }
+  .pk.on .cv { outline:4px solid var(--mint); box-shadow:0 0 0 7px var(--ink); }
+  .pk.on::after { content:'✓ 고름'; position:absolute; right:4px; top:4px; z-index:3; background:var(--mint); border:1px solid var(--border); font-size:11px; font-weight:900; padding:0 5px; }
   .more { margin-top:12px; }
 
   /* 결과 */
   .res { display:flex; gap:14px; align-items:flex-start; }
   .rank { font-size:30px; font-weight:900; width:30px; flex:none; }
-  .pic { width:72px; height:72px; border:3px solid #000; object-fit:cover; flex:none; background:#eee; }
+  .pic { width:72px; height:72px; border:1px solid var(--border); object-fit:cover; flex:none; background:var(--ph); }
   .res h3 { margin:0; font-size:18px; }
-  .pct { display:inline-block; margin:4px 0 0; padding:1px 8px; background:var(--yellow); border:2px solid #000; font-size:13px; font-weight:700; }
-  .why { margin:6px 0 0; font-size:13px; color:#333; }
+  .pct { display:inline-block; margin:4px 0 0; padding:1px 8px; background:var(--yellow); border:1px solid var(--border); font-size:13px; font-weight:700; }
+  .why { margin:6px 0 0; font-size:13px; color:var(--ink); }
   .shared { display:flex; gap:10px; margin-top:10px; flex-wrap:wrap; }
   .shared .m { width:84px; text-align:center; font-size:11px; font-weight:700; line-height:1.25; word-break:keep-all; }
   .shared .cv { padding:4px; font-size:10px; margin-bottom:4px; }
-  .hl { margin-top:22px; border:4px solid #000; box-shadow:6px 6px 0 0 #000; background:var(--mint); padding:18px 16px; text-align:center; }
+  .hl { margin-top:22px; border:1px solid var(--border); box-shadow: none; background:var(--mint); padding:18px 16px; text-align:center; }
   .hl.hot { background:var(--pink); }
-  .hl-tag { display:inline-block; background:#000; color:var(--yellow); font-weight:900; font-size:14px; padding:3px 12px; }
+  .hl-tag { display:inline-block; background:var(--yellow); color:var(--on-yellow); font-weight:900; font-size:14px; padding:3px 12px; }
   .hl-name { font-size:32px; font-weight:900; margin:8px 0 2px; line-height:1.2; word-break:keep-all; }
   .hl-sub { font-size:14px; font-weight:700; }
-  .hl-sub b { background:var(--yellow); padding:0 5px; border:2px solid #000; }
-  .hl-hint { margin-top:10px; font-size:12px; color:#333; }
+  .hl-sub b { background:var(--yellow); padding:0 5px; border:1px solid var(--border); }
+  .hl-hint { margin-top:10px; font-size:12px; color:var(--ink); }
   .pct2 { display:inline-block; font-size:13px; font-weight:900; }
   .said { margin:6px 0 0; font-size:13px; }
   .said b { font-weight:900; }
   .share { text-align:center; }
   .share .btn { margin-top:0; }
-  .share small { display:block; margin-top:8px; color:#555; font-size:12px; min-height:16px; }
-  .sharedbar { margin-top:22px; border:3px solid #000; background:var(--sky); padding:12px 14px; font-weight:800; font-size:14px; box-shadow:4px 4px 0 0 #000; }
+  .share small { display:block; margin-top:8px; color:var(--soft); font-size:12px; min-height:16px; }
+  .sharedbar { margin-top:22px; border:1px solid var(--border); background:var(--sky); padding:12px 14px; font-weight:800; font-size:14px; box-shadow: none; }
   body.shared .tabs, body.shared #cup, body.shared #manual, body.shared .lead { display:none; }
-  .data-cta { margin-top:32px; border:4px solid #000; box-shadow:6px 6px 0 0 #000; background:var(--yellow); padding:18px 16px; }
+  .data-cta { margin-top:32px; border:1px solid var(--border); box-shadow: none; background:var(--yellow); padding:18px 16px; }
   .data-cta h2 { margin:0 0 4px; font-size:20px; line-height:1.3; }
-  .data-cta p { margin:0 0 12px; font-size:13px; font-weight:700; color:#333; }
+  .data-cta p { margin:0 0 12px; font-size:13px; font-weight:700; color:var(--ink); }
   .data-cta .links { display:flex; gap:8px; flex-wrap:wrap; }
-  .data-cta .links a { display:inline-block; padding:10px 14px; border:3px solid #000; background:#fff; font-weight:900; font-size:14px; text-decoration:none; box-shadow:3px 3px 0 0 #000; }
-  .data-cta .links a.main { background:#000; color:var(--yellow); box-shadow:3px 3px 0 0 var(--pink); }
-  .foot { margin-top:24px; font-size:12px; color:#666; text-align:center; }
-  .empty { padding:12px; background:#fee2e2; border:2px solid #000; }
-  .note { font-size:12px; color:#666; margin-top:24px; }
+  .data-cta .links a { display:inline-block; padding:10px 14px; border:1px solid var(--border); background:var(--bg); font-weight:900; font-size:14px; text-decoration:none; box-shadow: none; }
+  .data-cta .links a.main { background:#111; color:#fde047; box-shadow:none; }
+  .data-cta, .data-cta h2, .data-cta p { color:#111; }
+  .data-cta .links a { color:#111; border-radius:99px; }
+  .data-cta .links a:not(.main) { background:#fff; }
+  .data-cta .links a.main { color:#fde047; }
+  .foot { margin-top:24px; font-size:12px; color:var(--soft); text-align:center; }
+  .empty { padding:12px; background:var(--hover); border:1px solid var(--border); }
+  .note { font-size:12px; color:var(--soft); margin-top:24px; }
   @media (min-width:560px) { .shelf { grid-template-columns:repeat(10,1fr); } .grid { grid-template-columns:repeat(4,1fr); } }
+  /* 새 디자인: 단추는 알약 모양, 글꼴은 사이트 공통 */
+  body { font-family:var(--sans); word-break:keep-all; }
+  h1 { font-family:var(--serif); font-weight:700; }
+  .tabs button, .btn { border-radius:99px; font-family:inherit; }
+  .box { border-radius:16px; }
+  .cv { border-radius:10px; overflow:hidden; }
+  .topbar { display:none; }
+  .bar a { text-decoration:none; }
+  .btn, .tabs button[aria-selected=true], .pct, .hl-sub b { color:var(--on-yellow); }
+  .btn.ghost { color:var(--ink); }
 </style>
 </head>
 <body>
-<header class="topbar"><a href="../">📕 최애의 독서</a><span>연예인이 읽은 책 데이터</span></header>
+<header class="bar">
+  <nav aria-label="주요 메뉴"><a href="/recommend/idol.html">아이돌</a><a href="/recommend/actor.html">배우</a><a href="/author/">작가</a><a href="/share/ranking.html">랭킹</a><a href="/match/">취향 월드컵</a></nav>
+  <a class="logo" href="/">최애의 독서</a>
+  <div class="right"><div class="site-search sm"></div></div>
+</header>
 <main class="wrap">
   <h1>내 독서 취향이 비슷한 연예인은?</h1>
   <p class="lead">표지에 끌리는 대로 10번만 고르세요. 같은 책을 읽은 연예인 중에서 나와 독서 취향이 가장 비슷한 사람을 찾아드려요.</p>
@@ -164,17 +186,17 @@
   <section id="cup" class="box">
     <div id="cupIntro">
       <b style="font-size:18px">표지 두 장 중에 더 끌리는 책은?</b>
-      <p style="margin:8px 0 0;color:#333">읽었는지는 상관없어요. 표지와 제목에 끌리는 대로 10번 고르면 나만의 독서 취향 10권이 완성돼요.</p>
+      <p style="margin:8px 0 0;color:var(--ink)">읽었는지는 상관없어요. 표지와 제목에 끌리는 대로 10번 고르면 나만의 독서 취향 10권이 완성돼요.</p>
       <button class="btn" id="cupStart" disabled>독서 월드컵 시작하기</button>
     </div>
     <div id="cupPlay" class="hide">
-      <div class="prog"><span id="cupNo">1 / 10</span><div class="bar"><i id="cupBar"></i></div></div>
+      <div class="prog"><span id="cupNo">1 / 10</span><div class="prog-bar"><i id="cupBar"></i></div></div>
       <div class="vs" id="vs"></div>
       <div class="skip"><button id="cupSkip">둘 다 별로예요 · 다른 책 보기</button></div>
     </div>
     <div id="cupKing" class="hide">
       <b style="font-size:18px">나만의 독서 취향 10권 완성!</b>
-      <p style="margin:6px 0 0;color:#333">이 중 딱 한 권만 꼽는다면? 인생 책으로 꼽은 책은 점수를 2배로 반영해요.</p>
+      <p style="margin:6px 0 0;color:var(--ink)">이 중 딱 한 권만 꼽는다면? 인생 책으로 꼽은 책은 점수를 2배로 반영해요.</p>
       <div class="shelf" id="shelf"></div>
       <button class="btn" id="cupGo">독서 취향 비슷한 연예인 보기</button>
       <button class="btn ghost" id="cupAgain">다시 하기</button>
@@ -529,5 +551,6 @@
   }
 })();
 </script>
+<script src="../assets/v2/search.js" defer></script>
 </body>
 </html>
