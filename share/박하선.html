@@ -515,48 +515,64 @@
         document.head.appendChild(s);
       });
     }
-    function proxied(u) {
+    /* 사진을 받는 길은 셋이다. 예스24가 CORS를 허용하면 바로 받는 게 가장 빠르고 안전하다
+       (엣지의 추적 방지가 외부 프록시를 막아도 상관없다). 안 되면 프록시를 차례로 쓴다. */
+    var PROXY2 = "https://wsrv.nl/?url=";
+    function proxied(u, base) {
       if (!u || u.indexOf("data:") === 0) return u;
-      return PROXY + encodeURIComponent(u.replace(/^https?:\/\//i, "")) + "&output=jpg&q=92";
+      return base + encodeURIComponent(u.replace(/^https?:\/\//i, "")) + "&output=jpg&q=92";
     }
-    /* 프록시 주소로 바꾼 뒤 다 받아질 때까지 기다린다. 못 받은 것은 감춰서
+    function probe(u, ms) {
+      return new Promise(function (ok) {
+        var im = new Image(), t = setTimeout(function () { im.onload = im.onerror = null; ok(false); }, ms);
+        im.crossOrigin = "anonymous"; im.referrerPolicy = "no-referrer";
+        im.onload = function () { clearTimeout(t); ok(im.naturalWidth > 0); };
+        im.onerror = function () { clearTimeout(t); ok(false); };
+        im.src = u;
+      });
+    }
+    function firstWorking(list, i) {
+      if (i >= list.length) return Promise.resolve(null);
+      return probe(list[i], 6000).then(function (good) { return good ? list[i] : firstWorking(list, i + 1); });
+    }
+    /* 받아질 길을 먼저 화면 밖에서 찾고, 찾은 주소로만 바꾼다. 그래서 저장을 누를 때
+       책등 사진이 색 책등으로 깜빡 바뀌지 않는다. 셋 다 안 되는 것만 감춰서
        색 책등으로 떨어뜨린다 — 반쯤 그려진 그림이 남는 것보다 낫다.
        화면 밖 표지는 loading="lazy"라 주소만 바꿔서는 받아 오지 않는다.
-       목록 보기에서 표지 수십 장이 시간 초과로 통째로 사라지던 원인이다.
        건드린 것은 끝나고 모두 원래대로 되돌린다. */
     function swapImages(root) {
       var undo = [];
       var jobs = [].slice.call(root.querySelectorAll("img")).map(function (img) {
-        var src = img.getAttribute("src"), lazy = img.getAttribute("loading");
+        var src = img.getAttribute("src"), lazy = img.getAttribute("loading"), cors = img.getAttribute("crossorigin");
         var par = img.parentNode, hid = false;
         undo.push(function () {
           img.onload = img.onerror = null;
           if (lazy != null) img.setAttribute("loading", lazy);
+          if (cors == null) img.removeAttribute("crossorigin"); else img.setAttribute("crossorigin", cors);
           img.style.display = "";
           if (hid && par) par.classList.remove("sp-fail");
           if (src != null) img.setAttribute("src", src);
         });
-        return new Promise(function (done) {
-          // 프록시가 느리거나 막혀도 버튼이 영영 멈추지 않게 제한을 둔다
-          var t = setTimeout(function () { fin(true); }, 8000);
-          function fin(drop) {
-            clearTimeout(t);
-            if (drop) {
-              // 주소까지 떼어 둔다. 남겨 두면 복사본 쪽에서 또 기다린다.
-              img.removeAttribute("src");
-              img.style.display = "none";
-              if (par && par.classList && par.classList.contains("sp")
-                  && !par.classList.contains("sp-fail")) {
-                par.classList.add("sp-fail"); hid = true;
-              }
-            }
-            done();
+        function drop() {
+          // 주소까지 떼어 둔다. 남겨 두면 복사본 쪽에서 또 기다린다.
+          img.removeAttribute("src");
+          img.style.display = "none";
+          if (par && par.classList && par.classList.contains("sp") && !par.classList.contains("sp-fail")) {
+            par.classList.add("sp-fail"); hid = true;
           }
-          img.onload = function () { fin(false); };
-          img.onerror = function () { fin(true); };
-          img.removeAttribute("loading");
-          img.crossOrigin = "anonymous";
-          img.src = proxied(src);
+        }
+        if (!src || src.indexOf("data:") === 0) return Promise.resolve();
+        return firstWorking([src, proxied(src, PROXY), proxied(src, PROXY2)], 0).then(function (url) {
+          if (!url) { drop(); return; }
+          return new Promise(function (done) {
+            var t = setTimeout(function () { drop(); done(); }, 6000);
+            img.onload = function () { clearTimeout(t); done(); };
+            img.onerror = function () { clearTimeout(t); drop(); done(); };
+            img.removeAttribute("loading");
+            img.crossOrigin = "anonymous";
+            if (img.getAttribute("src") === url && img.complete && img.naturalWidth) { clearTimeout(t); done(); return; }
+            img.src = url;
+          });
         });
       });
       return { ready: Promise.all(jobs), undo: undo };

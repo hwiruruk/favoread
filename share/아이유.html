@@ -2104,9 +2104,9 @@
     <div class="taste-body">
       <p class="taste-sum">가장 많이 읽은 분야는 <mark>소설</mark> 61권, 자주 고른 키워드는 <mark>한국소설</mark> 18권 · <mark>영미소설</mark> 12권</p>
       <div>
-        <p class="taste-label">분야 <small>분야를 아는 85권</small></p>
-        <div class="taste-bar" role="img" aria-label="소설 61, 에세이 10, 시 3, 어린이책 3, 인문 3, 실용·생활 2, 과학 1, 만화 1, 자기계발 1"><span class="wide" style="flex:61 0 0;background:#fde047" title="소설 61">소설 72%</span><span style="flex:10 0 0;background:var(--card)" title="에세이 10"></span><span style="flex:3 0 0;background:#ddd6fe" title="시 3"></span><span style="flex:3 0 0;background:#bef264" title="어린이책 3"></span><span style="flex:3 0 0;background:#fed7aa" title="인문 3"></span><span style="flex:2 0 0;background:#d6d3d1" title="실용·생활 2"></span><span style="flex:1 0 0;background:#99f6e4" title="과학 1"></span><span style="flex:1 0 0;background:#fdba74" title="만화 1"></span><span style="flex:1 0 0;background:#fecaca" title="자기계발 1"></span></div>
-        <ul class="taste-legend"><li><i style="background:#fde047"></i>소설 61권</li><li><i style="background:var(--card)"></i>에세이 10권</li><li><i style="background:#ddd6fe"></i>시 3권</li><li><i style="background:#bef264"></i>어린이책 3권</li><li><i style="background:#fed7aa"></i>인문 3권</li><li><i style="background:#d6d3d1"></i>실용·생활 2권</li><li><i style="background:#99f6e4"></i>과학 1권</li><li><i style="background:#fdba74"></i>만화 1권</li><li><i style="background:#fecaca"></i>자기계발 1권</li></ul>
+        <p class="taste-label">분야 <small>분야를 아는 86권</small></p>
+        <div class="taste-bar" role="img" aria-label="소설 61, 에세이 10, 어린이책 4, 시 3, 인문 3, 실용·생활 2, 과학 1, 만화 1, 자기계발 1"><span class="wide" style="flex:61 0 0;background:#fde047" title="소설 61">소설 71%</span><span style="flex:10 0 0;background:var(--card)" title="에세이 10"></span><span style="flex:4 0 0;background:#bef264" title="어린이책 4"></span><span style="flex:3 0 0;background:#ddd6fe" title="시 3"></span><span style="flex:3 0 0;background:#fed7aa" title="인문 3"></span><span style="flex:2 0 0;background:#d6d3d1" title="실용·생활 2"></span><span style="flex:1 0 0;background:#99f6e4" title="과학 1"></span><span style="flex:1 0 0;background:#fdba74" title="만화 1"></span><span style="flex:1 0 0;background:#fecaca" title="자기계발 1"></span></div>
+        <ul class="taste-legend"><li><i style="background:#fde047"></i>소설 61권</li><li><i style="background:var(--card)"></i>에세이 10권</li><li><i style="background:#bef264"></i>어린이책 4권</li><li><i style="background:#ddd6fe"></i>시 3권</li><li><i style="background:#fed7aa"></i>인문 3권</li><li><i style="background:#d6d3d1"></i>실용·생활 2권</li><li><i style="background:#99f6e4"></i>과학 1권</li><li><i style="background:#fdba74"></i>만화 1권</li><li><i style="background:#fecaca"></i>자기계발 1권</li></ul>
       </div>
       <div>
         <p class="taste-label">자주 고른 키워드 <small>예스24 카테고리 · 2권 이상 · 누르면 책이 보여요</small></p>
@@ -3204,48 +3204,64 @@
         document.head.appendChild(s);
       });
     }
-    function proxied(u) {
+    /* 사진을 받는 길은 셋이다. 예스24가 CORS를 허용하면 바로 받는 게 가장 빠르고 안전하다
+       (엣지의 추적 방지가 외부 프록시를 막아도 상관없다). 안 되면 프록시를 차례로 쓴다. */
+    var PROXY2 = "https://wsrv.nl/?url=";
+    function proxied(u, base) {
       if (!u || u.indexOf("data:") === 0) return u;
-      return PROXY + encodeURIComponent(u.replace(/^https?:\/\//i, "")) + "&output=jpg&q=92";
+      return base + encodeURIComponent(u.replace(/^https?:\/\//i, "")) + "&output=jpg&q=92";
     }
-    /* 프록시 주소로 바꾼 뒤 다 받아질 때까지 기다린다. 못 받은 것은 감춰서
+    function probe(u, ms) {
+      return new Promise(function (ok) {
+        var im = new Image(), t = setTimeout(function () { im.onload = im.onerror = null; ok(false); }, ms);
+        im.crossOrigin = "anonymous"; im.referrerPolicy = "no-referrer";
+        im.onload = function () { clearTimeout(t); ok(im.naturalWidth > 0); };
+        im.onerror = function () { clearTimeout(t); ok(false); };
+        im.src = u;
+      });
+    }
+    function firstWorking(list, i) {
+      if (i >= list.length) return Promise.resolve(null);
+      return probe(list[i], 6000).then(function (good) { return good ? list[i] : firstWorking(list, i + 1); });
+    }
+    /* 받아질 길을 먼저 화면 밖에서 찾고, 찾은 주소로만 바꾼다. 그래서 저장을 누를 때
+       책등 사진이 색 책등으로 깜빡 바뀌지 않는다. 셋 다 안 되는 것만 감춰서
        색 책등으로 떨어뜨린다 — 반쯤 그려진 그림이 남는 것보다 낫다.
        화면 밖 표지는 loading="lazy"라 주소만 바꿔서는 받아 오지 않는다.
-       목록 보기에서 표지 수십 장이 시간 초과로 통째로 사라지던 원인이다.
        건드린 것은 끝나고 모두 원래대로 되돌린다. */
     function swapImages(root) {
       var undo = [];
       var jobs = [].slice.call(root.querySelectorAll("img")).map(function (img) {
-        var src = img.getAttribute("src"), lazy = img.getAttribute("loading");
+        var src = img.getAttribute("src"), lazy = img.getAttribute("loading"), cors = img.getAttribute("crossorigin");
         var par = img.parentNode, hid = false;
         undo.push(function () {
           img.onload = img.onerror = null;
           if (lazy != null) img.setAttribute("loading", lazy);
+          if (cors == null) img.removeAttribute("crossorigin"); else img.setAttribute("crossorigin", cors);
           img.style.display = "";
           if (hid && par) par.classList.remove("sp-fail");
           if (src != null) img.setAttribute("src", src);
         });
-        return new Promise(function (done) {
-          // 프록시가 느리거나 막혀도 버튼이 영영 멈추지 않게 제한을 둔다
-          var t = setTimeout(function () { fin(true); }, 8000);
-          function fin(drop) {
-            clearTimeout(t);
-            if (drop) {
-              // 주소까지 떼어 둔다. 남겨 두면 복사본 쪽에서 또 기다린다.
-              img.removeAttribute("src");
-              img.style.display = "none";
-              if (par && par.classList && par.classList.contains("sp")
-                  && !par.classList.contains("sp-fail")) {
-                par.classList.add("sp-fail"); hid = true;
-              }
-            }
-            done();
+        function drop() {
+          // 주소까지 떼어 둔다. 남겨 두면 복사본 쪽에서 또 기다린다.
+          img.removeAttribute("src");
+          img.style.display = "none";
+          if (par && par.classList && par.classList.contains("sp") && !par.classList.contains("sp-fail")) {
+            par.classList.add("sp-fail"); hid = true;
           }
-          img.onload = function () { fin(false); };
-          img.onerror = function () { fin(true); };
-          img.removeAttribute("loading");
-          img.crossOrigin = "anonymous";
-          img.src = proxied(src);
+        }
+        if (!src || src.indexOf("data:") === 0) return Promise.resolve();
+        return firstWorking([src, proxied(src, PROXY), proxied(src, PROXY2)], 0).then(function (url) {
+          if (!url) { drop(); return; }
+          return new Promise(function (done) {
+            var t = setTimeout(function () { drop(); done(); }, 6000);
+            img.onload = function () { clearTimeout(t); done(); };
+            img.onerror = function () { clearTimeout(t); drop(); done(); };
+            img.removeAttribute("loading");
+            img.crossOrigin = "anonymous";
+            if (img.getAttribute("src") === url && img.complete && img.naturalWidth) { clearTimeout(t); done(); return; }
+            img.src = url;
+          });
         });
       });
       return { ready: Promise.all(jobs), undo: undo };
