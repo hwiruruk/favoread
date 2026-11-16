@@ -1454,6 +1454,25 @@ def load_bios():
 
 BIOS = load_bios()
 
+# ── 책 한 줄 소개 로더 ───────────────────────────────────────────────
+# data/blurbs.json: { "books": { "도서명": {"ko": "...", "en": "..."} } }
+# tools/blurb_queue.py · blurb_merge.py 가 매일 채운다. 없으면 소개 문단을 만들지 않는다.
+def load_blurbs():
+    path = 'data/blurbs.json'
+    if not os.path.exists(path):
+        return {}
+    try:
+        with open(path, encoding='utf-8') as f:
+            return json.load(f).get('books', {})
+    except Exception as e:
+        print(f"⚠️ blurbs.json 로드 실패: {e}")
+        return {}
+
+BLURBS = load_blurbs()
+
+def get_blurb(title, lang='ko'):
+    return ((BLURBS.get(title) or {}).get(lang) or '').strip()
+
 # 괄호/소속 표기 제거한 짧은 이름 — 본문 반복 노출 시 사용
 # "윤덕원(브로콜리너마저)" → "윤덕원", "RM(BTS)" → "RM"
 _SHORT_NAME_RE = re.compile(r'\s*\([^)]*\)\s*$')
@@ -3667,6 +3686,7 @@ ko_book_indexed = set()   # 색인 대상(코멘트 있음) — sitemap에만 �
 # 책 페이지 공용 스타일 — 셀럽별 코멘트 인용과 출처
 BOOK_NOTE_CSS = (
     '    .intro { margin: 8px 0 0; }\n'
+    '    .blurb { margin: 0 0 14px; padding: 10px 14px; background: #fff; border: 2px solid #000; box-shadow: 3px 3px 0 0 #000; font-size: 15px; line-height: 1.7; font-weight: 600; }\n'
     '    ul.notes { line-height: 1.7; }\n'
     '    ul.notes li { margin: 0 0 12px; }\n'
     '    ul.notes blockquote { margin: 4px 0 0; padding: 6px 12px; border-left: 3px solid #000; background: #fff; color: #333; font-size: 14px; }\n'
@@ -3754,7 +3774,7 @@ for title, binfo in book_celebs.items():
         '@type': 'Book',
         'name': title,
         'url': page_url,
-        'description': str(celeb_count) + '명의 셀럽이 읽은 책',
+        'description': ((get_blurb(title, 'ko') + ' ') if get_blurb(title, 'ko') else '') + str(celeb_count) + '명의 셀럽이 읽은 책',
     }
     if title_ja:
         json_ld['alternateName'] = title_ja
@@ -3842,7 +3862,9 @@ for title, binfo in book_celebs.items():
         '  <p>' + author_html(binfo['author']) + ((' · ' + esc(binfo['publisher'])) if binfo['publisher'] else '') + '</p>\n'
         '  <p class="heart-row">' + heart_btn_html(book_heart_key(title), '이 책에 하트')
         + copy_btn_html(make_book_short_url(title)) + '</p>\n'
-        + cover_html + intro_html +
+        + cover_html
+        + (('  <p class="blurb">' + esc(get_blurb(title, 'ko')) + '</p>\n') if get_blurb(title, 'ko') else '')
+        + intro_html +
         '  <h2>이 책을 읽은 셀럽 (' + str(celeb_count) + '명)</h2>\n'
         '  <ul class="notes">\n' + celeb_rows + '\n  </ul>\n'
         + more_html +
@@ -5742,7 +5764,7 @@ for title, t_en in book_title_en.items():
         'alternateName': [title, orig[0]] if orig else title,
         'url': page_url,
         'inLanguage': 'en',
-        'description': str(n_celebs) + ' Korean celebrities have read this book.',
+        'description': ((get_blurb(title, 'en') + ' ') if get_blurb(title, 'en') else '') + str(n_celebs) + ' Korean celebrities have read this book.',
         'author': clean_none({'@type': 'Person', 'name': author_display,
                               'alternateName': author_nat[0] if author_nat else None})
                   if author_display.strip() else None,
@@ -5809,6 +5831,7 @@ for title, t_en in book_title_en.items():
         '  <p class="heart-row">' + heart_btn_html(book_heart_key(title), 'Heart this book')
         + copy_btn_html(make_en_book_short_url(title), '🔗 Copy share link', 'Copied!') + '</p>\n'
         + cover_html
+        + (('  <p class="blurb">' + esc(get_blurb(title, 'en')) + '</p>\n') if get_blurb(title, 'en') else '')
         + '  <p class="intro">' + esc(t_en) + ' (Korean title: ' + esc(title)
         + (('; original title: ' + lang_span(orig)) if orig else '') + ')'
         + ((' by ' + author_html) if author_display.strip() else '')
