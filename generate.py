@@ -5906,17 +5906,21 @@ for _group in sorted(en_groups, key=lambda g: g.lower()):
             + esc(EN_GROUP_RE.sub('', r).strip() or r) + '</a>'
             for r in info['readers'])
         _bslug = en_book_slug_by_ko.get(info['ko'])
-        # 책 제목은 예스24 책 정보로, 옆의 작은 링크는 영문 책 페이지(이 책을 읽은 사람 모두)로
-        _t_html = ('<a href="' + esc(yes24_book_url(info['ko'], info['link'], info['cover']))
-                   + '" rel="nofollow noopener noreferrer" target="_blank">' + esc(t) + '</a>')
-        if _bslug:
-            _t_html += (' <a class="gb-l" href="' + EN_BASE + 'share/book/' + _bslug
-                        + '.html">Who else read it</a>')
+        # 표지·제목은 예스24 책 정보로, 작은 링크는 영문 책 페이지(이 책을 읽은 사람 모두)로
+        _href = yes24_book_url(info['ko'], info['link'], info['cover'])
+        _cover = info['cover'] if (info['cover'] or '').startswith('http') else ''
+        _cover_html = (('<img src="' + esc(_cover) + '" alt="' + esc(t) + ' cover" loading="lazy" referrerpolicy="no-referrer">')
+                       if _cover else '<span class="gb-no">' + esc(t) + '</span>')
+        _more = (('      <a class="gb-l" href="' + EN_BASE + 'share/book/' + _bslug
+                  + '.html">Who else read it</a>\n') if _bslug else '')
         book_rows += (
             '    <li class="gb">\n'
-            '      <span class="gb-t">' + _t_html + '</span>\n'
+            '      <a class="gb-c" href="' + esc(_href) + '" rel="nofollow noopener noreferrer" target="_blank" title="'
+            + esc(t) + '">' + _cover_html + '</a>\n'
+            '      <a class="gb-t" href="' + esc(_href) + '" rel="nofollow noopener noreferrer" target="_blank">' + esc(t) + '</a>\n'
             + (('      <span class="gb-a">' + esc(info['author']) + '</span>\n') if info['author'] else '')
             + '      <span class="gb-w">' + who + '</span>\n'
+            + _more +
             '    </li>\n'
         )
 
@@ -5992,12 +5996,18 @@ for _group in sorted(en_groups, key=lambda g: g.lower()):
         '    .gm img { width: 100%; aspect-ratio: 1/1; object-fit: cover; border: 2px solid #000; box-shadow: 2px 2px 0 0 #000; display: block; background: #f4f4f0; }\n'
         '    .gm-n { display: block; font-weight: 800; font-size: 13px; margin-top: 6px; line-height: 1.25; }\n'
         '    .gm-c { display: block; font-size: 11px; color: #666; }\n'
-        '    .gb { background: #fff; border: 2px solid #000; box-shadow: 3px 3px 0 0 #000; padding: 10px 12px; margin-bottom: 10px; list-style: none; }\n'
-        '    .gb-t { display: block; font-weight: 800; font-size: 15px; line-height: 1.3; }\n'
-        '    .gb-l { font-size: 12px; font-weight: 600; margin-left: 6px; white-space: nowrap; }\n'
-        '    .gb-a { display: block; font-size: 12px; color: #555; }\n'
-        '    .gb-w { display: block; font-size: 12px; color: #2563eb; margin-top: 3px; }\n'
-        '    .books { padding: 0; margin: 0; }\n'
+        '    .books { list-style: none; padding: 0; margin: 14px 0 0; display: grid; grid-template-columns: repeat(auto-fill, minmax(128px, 1fr)); gap: 18px 14px; }\n'
+        '    .gb { list-style: none; min-width: 0; }\n'
+        '    .gb-c { display: block; aspect-ratio: 2/3; border: 2px solid #000; box-shadow: 3px 3px 0 0 #000; background: #f4f4f0; overflow: hidden; }\n'
+        '    .gb-c:hover { transform: translate(-1px,-1px); box-shadow: 4px 4px 0 0 #000; }\n'
+        '    .gb-c img { width: 100%; height: 100%; object-fit: cover; display: block; }\n'
+        '    .gb-no { display: flex; height: 100%; align-items: center; justify-content: center; padding: 8px; text-align: center; font-weight: 800; font-size: 13px; color: #333; }\n'
+        '    .gb-t { display: block; margin-top: 8px; font-weight: 800; font-size: 13px; line-height: 1.3; color: #111; }\n'
+        '    .gb-a { display: block; font-size: 11px; color: #666; }\n'
+        '    .gb-w { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 4px; }\n'
+        '    .gb-w a { font-size: 11px; font-weight: 700; color: #000; background: #ffe58a; border: 1.5px solid #000; padding: 0 6px; border-radius: 99px; line-height: 1.6; }\n'
+        '    .gb-l { display: inline-block; margin-top: 4px; font-size: 11px; font-weight: 600; }\n'
+
         '    footer { margin-top: 40px; padding-top: 16px; border-top: 2px solid #000; font-size: 12px; color: #666; }\n'
         '  </style>\n'
         '</head>\n'
