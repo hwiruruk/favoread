@@ -3951,6 +3951,7 @@ for _g in sorted(ko_groups.values(), key=lambda g: g['ko']):
             + esc(t) + '">' + cover_html + '</a>\n'
             '      <a class="gb-t" href="' + esc(book_href) + '" rel="nofollow noopener noreferrer" target="_blank">' + esc(t) + '</a>\n'
             + (('      <span class="gb-a">' + esc(info['author']) + '</span>\n') if info['author'] else '')
+            + (('      <span class="gb-b">' + esc(get_blurb(t, 'ko')) + '</span>\n') if get_blurb(t, 'ko') else '')
             + '      <span class="gb-w">' + who + '</span>\n'
             + more +
             '    </li>\n'
@@ -4037,6 +4038,7 @@ for _g in sorted(ko_groups.values(), key=lambda g: g['ko']):
         '    .gb-no { display: flex; height: 100%; align-items: center; justify-content: center; padding: 8px; text-align: center; font-weight: 800; font-size: 13px; color: #333; }\n'
         '    .gb-t { display: block; margin-top: 8px; font-weight: 800; font-size: 13px; line-height: 1.3; color: #111; }\n'
         '    .gb-a { display: block; font-size: 11px; color: #666; }\n'
+        '    .gb-b { display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; margin-top: 4px; font-size: 11px; line-height: 1.45; color: #444; }\n'
         '    .gb-w { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 4px; }\n'
         '    .gb-w a { font-size: 11px; font-weight: 700; color: #000; background: #ffe58a; border: 1.5px solid #000; padding: 0 6px; border-radius: 99px; line-height: 1.6; }\n'
         '    .gb-l { display: inline-block; margin-top: 4px; font-size: 11px; font-weight: 600; }\n'
@@ -5942,6 +5944,7 @@ for _group in sorted(en_groups, key=lambda g: g.lower()):
             + esc(t) + '">' + _cover_html + '</a>\n'
             '      <a class="gb-t" href="' + esc(_href) + '" rel="nofollow noopener noreferrer" target="_blank">' + esc(t) + '</a>\n'
             + (('      <span class="gb-a">' + esc(info['author']) + '</span>\n') if info['author'] else '')
+            + (('      <span class="gb-b">' + esc(get_blurb(info['ko'], 'en')) + '</span>\n') if get_blurb(info['ko'], 'en') else '')
             + '      <span class="gb-w">' + who + '</span>\n'
             + _more +
             '    </li>\n'
@@ -6027,6 +6030,7 @@ for _group in sorted(en_groups, key=lambda g: g.lower()):
         '    .gb-no { display: flex; height: 100%; align-items: center; justify-content: center; padding: 8px; text-align: center; font-weight: 800; font-size: 13px; color: #333; }\n'
         '    .gb-t { display: block; margin-top: 8px; font-weight: 800; font-size: 13px; line-height: 1.3; color: #111; }\n'
         '    .gb-a { display: block; font-size: 11px; color: #666; }\n'
+        '    .gb-b { display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; margin-top: 4px; font-size: 11px; line-height: 1.45; color: #444; }\n'
         '    .gb-w { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 4px; }\n'
         '    .gb-w a { font-size: 11px; font-weight: 700; color: #000; background: #ffe58a; border: 1.5px solid #000; padding: 0 6px; border-radius: 99px; line-height: 1.6; }\n'
         '    .gb-l { display: inline-block; margin-top: 4px; font-size: 11px; font-weight: 600; }\n'
