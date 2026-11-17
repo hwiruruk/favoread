@@ -490,9 +490,31 @@
        건드린 것은 끝나고 모두 원래대로 되돌린다. */
     function swapImages(root) {
       var undo = [];
+      /* 같은 사진은 한 번만 시험한다(책등과 표지가 같은 주소를 쓴다). 그리고 동시에 6장까지만
+         받는다 — 사파리는 한 서버에 몇 개만 동시에 열어 주므로, 수십 장을 한꺼번에 시험하면
+         뒤쪽 사진은 줄을 서는 동안 6초가 지나 멀쩡한데도 실패로 처리되고 다음 길로 넘어간다.
+         그 시간이 쌓여 "저장 중…"이 몇 분씩 이어졌다. */
+      var cache = {}, active = 0, waiting = [];
+      function next() { if (waiting.length && active < 6) waiting.shift()(); }
+      function queued(fn) {
+        return new Promise(function (ok) {
+          function run() { active++; fn().then(function (v) { active--; ok(v); next(); }); }
+          if (active < 6) run(); else waiting.push(run);
+        });
+      }
+      function resolveSrc(src) {
+        if (!cache[src]) {
+          cache[src] = queued(function () {
+            return firstWorking([src, proxied(src, PROXY), proxied(src, PROXY2)], 0);
+          });
+        }
+        return cache[src];
+      }
       var jobs = [].slice.call(root.querySelectorAll("img")).map(function (img) {
         var src = img.getAttribute("src"), lazy = img.getAttribute("loading"), cors = img.getAttribute("crossorigin");
         var par = img.parentNode, hid = false;
+        // 접어 둔 표지처럼 화면에 안 그려지는 그림은 찍히지도 않는다. 건드리지 않는다.
+        if (!img.getClientRects().length) return Promise.resolve();
         undo.push(function () {
           img.onload = img.onerror = null;
           if (lazy != null) img.setAttribute("loading", lazy);
@@ -510,7 +532,7 @@
           }
         }
         if (!src || src.indexOf("data:") === 0) return Promise.resolve();
-        return firstWorking([src, proxied(src, PROXY), proxied(src, PROXY2)], 0).then(function (url) {
+        return resolveSrc(src).then(function (url) {
           if (!url) { drop(); return; }
           return new Promise(function (done) {
             var t = setTimeout(function () { drop(); done(); }, 6000);
@@ -523,7 +545,12 @@
           });
         });
       });
-      return { ready: Promise.all(jobs), undo: undo };
+      // 전체 대기에도 상한을 둔다. 넘으면 받아진 것만으로 그린다.
+      var ready = Promise.race([
+        Promise.all(jobs),
+        new Promise(function (ok) { setTimeout(ok, 45000); })
+      ]);
+      return { ready: ready, undo: undo };
     }
 
     /* 아이폰에서 버튼이 "저장 중…"에 멈춰 있던 진짜 이유.
@@ -540,7 +567,7 @@
     function muteUnloaded(view) {
       var off = [];
       [].slice.call(document.images).forEach(function (img) {
-        if (view.contains(img) || img.complete) return;
+        if ((view.contains(img) && img.getClientRects().length) || img.complete) return;
         off.push([img, img.getAttribute("src")]);
         img.removeAttribute("src");
       });
@@ -682,7 +709,7 @@
         download(blob, clear);
       }).catch(function (e) {
         console.error(e);
-        alert("이미지를 만들지 못했어요. 잠시 뒤 다시 눌러 주세요.");
+        alert("이미지를 만들지 못했어요. 잠시 뒤 다시 눌러 주세요." + "\n(" + (e && e.message ? e.message : e) + ")");
       }).then(function () {
         if (swap) swap.undo.forEach(function (f) { f(); });
         if (muted) unmute(muted);
