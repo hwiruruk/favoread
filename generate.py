@@ -3304,8 +3304,13 @@ for name, info in celebs.items():
         byline_html = ' · '.join(byline_parts)
 
         # 책 정보(예스24) · 출처 — 표지·제목 링크를 모르는 사람도 바로 찾게 버튼으로 둔다
-        source_html = ('<a class="rl-source" href="' + esc(yes24_book_url(b['title'], raw_link, b['coverUrl']))
-                       + '" rel="nofollow noopener noreferrer" target="_blank" title="예스24에서 보기">📖 책 정보</a>')
+        # 우리 책 페이지(이 책을 읽은 셀럽 모음)는 따로 둔다 — 예스24 링크와 헷갈리지 않게
+        # 예스24 버튼은 '예스24'라고 밝힌다. 책 페이지는 읽은 셀럽이 2명 이상일 때만 있다.
+        source_html = ((' <a class="rl-source rl-bookpage" href="' + esc(make_book_url(b['title']))
+                        + '" title="이 책을 읽은 셀럽 모아보기">📚 책 페이지</a> ')
+                       if b['title'] in books_with_pages else '')
+        source_html += ('<a class="rl-source" href="' + esc(yes24_book_url(b['title'], raw_link, b['coverUrl']))
+                        + '" rel="nofollow noopener noreferrer" target="_blank" title="예스24에서 보기">🛒 예스24</a>')
         if b['source'] and b['source'].startswith('http'):
             source_html += (' <a class="rl-source" href="' + esc(b['source'])
                             + '" rel="nofollow noopener noreferrer" target="_blank">📺 출처</a>')
@@ -3363,6 +3368,8 @@ for name, info in celebs.items():
             '      <div class="rl-meta">\n'
             '        <div class="rl-title">' + title_html + '</div>\n'
             + (('        <div class="rl-byline">' + byline_html + '</div>\n') if byline_html else '')
+            + (('        <p class="rl-blurb">' + esc(get_blurb(b['title'], 'ko')) + '</p>\n')
+               if get_blurb(b['title'], 'ko') else '')
             + (('        <p class="rl-comment">' + esc(b['comment']) + '</p>\n') if b.get('comment') else '')
             + (('        ' + source_html + '\n') if source_html else '')
             + '        ' + heart_btn_html(book_heart_key(b['title']), '이 책에 하트', small=True) + '\n'
@@ -3583,6 +3590,8 @@ for name, info in celebs.items():
         '    .rl-title a { color: #000; }\n'
         '    .rl-title a:hover { color: #2563eb; }\n'
         '    .rl-byline { font-size: 13px; color: #555; margin-bottom: 8px; line-height: 1.4; }\n'
+        '    .rl-blurb { font-size: 13px; color: #444; margin: 0 0 8px; line-height: 1.55; }\n'
+        '    .rl-bookpage { background: #fff8e7; font-weight: 700; }\n'
         '    .rl-comment { font-size: 13px; line-height: 1.55; color: #222; background: #FFF7C2; border: 1.5px solid #000; padding: 6px 9px; margin: 0 0 8px; word-break: keep-all; }\n'
         '    .rl-source { display: inline-block; font-size: 12px; padding: 3px 8px; background: #fff; border: 1.5px solid #000; box-shadow: 1px 1px 0 0 #000; text-decoration: none; color: #000; transition: transform .1s, box-shadow .1s, background .1s; }\n'
         '    .rl-source:hover { transform: translate(-1px,-1px); box-shadow: 2px 2px 0 0 #000; background: #a7f3d0; text-decoration: none; }\n'
@@ -5268,9 +5277,13 @@ for name, info in celebs.items():
             author_text += ' <span style="color:#888">(' + lang_span(_nat) + ')</span>'
 
         # 책 정보(예스24) · 출처 — 한국어 페이지와 같은 자리. 한국 서점으로 가니 툴팁에 밝힌다.
-        src_html = ('<a class="rl-source" href="' + esc(yes24_book_url(b['title'], raw_link, b['coverUrl']))
-                    + '" rel="nofollow noopener noreferrer" target="_blank" '
-                    'title="View on YES24 (Korean bookstore)">📖 Book details</a>')
+        # 우리 책 페이지(이 책을 읽은 셀럽 모음)는 따로 둔다 — 예스24 링크와 헷갈리지 않게
+        src_html = ((' <a class="rl-source rl-bookpage" href="' + make_en_book_url(book_title_en[b['title'].strip()])
+                     + '" title="See every celebrity who read this book">📚 Book page</a> ')
+                    if b['title'].strip() in books_with_pages and b['title'].strip() in book_title_en else '')
+        src_html += ('<a class="rl-source" href="' + esc(yes24_book_url(b['title'], raw_link, b['coverUrl']))
+                     + '" rel="nofollow noopener noreferrer" target="_blank" '
+                     'title="View on YES24 (Korean bookstore)">🛒 YES24</a>')
         if b['source'] and b['source'].startswith('http'):
             src_html += (' <a class="rl-source" href="' + esc(b['source'])
                          + '" rel="nofollow noopener noreferrer" target="_blank">📺 Source</a>')
@@ -5322,6 +5335,8 @@ for name, info in celebs.items():
             '      <div class="rl-meta">\n'
             '        <div class="rl-title">' + t_html + '</div>\n'
             + (('        <div class="rl-byline">' + author_text + '</div>\n') if author_text else '')
+            + (('        <p class="rl-blurb">' + esc(get_blurb(b['title'], 'en')) + '</p>\n')
+               if get_blurb(b['title'], 'en') else '')
             + (('        <p class="rl-comment">' + esc(b['comment_en']) + '</p>\n') if b.get('comment_en') else '')
             + (('        ' + src_html + '\n') if src_html else '')
             + '        ' + heart_btn_html(book_heart_key(b['title']), 'Heart this book', small=True) + '\n'
@@ -5685,6 +5700,8 @@ for name, info in celebs.items():
         '    .rl-title a { color: #000; }\n'
         '    .rl-title a:hover { color: #2563eb; }\n'
         '    .rl-byline { font-size: 13px; color: #555; margin-bottom: 8px; line-height: 1.4; }\n'
+        '    .rl-blurb { font-size: 13px; color: #444; margin: 0 0 8px; line-height: 1.55; }\n'
+        '    .rl-bookpage { background: #fff8e7; font-weight: 700; }\n'
         '    .rl-comment { font-size: 13px; line-height: 1.55; color: #222; background: #FFF7C2; border: 1.5px solid #000; padding: 6px 9px; margin: 0 0 8px; word-break: keep-all; }\n'
         '    .rl-source { display: inline-block; font-size: 12px; padding: 3px 8px; background: #fff; border: 1.5px solid #000; box-shadow: 1px 1px 0 0 #000; text-decoration: none; color: #000; transition: transform .1s, box-shadow .1s, background .1s; }\n'
         '    .rl-source:hover { transform: translate(-1px,-1px); box-shadow: 2px 2px 0 0 #000; background: #a7f3d0; text-decoration: none; }\n'
