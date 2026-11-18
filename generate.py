@@ -1166,7 +1166,7 @@ SHELF_CSS = (
     '    .is-capturing .covers-more, .is-capturing .taste { display: none !important; }\n'
     # 책장 — 책등을 같은 높이로 세워 바닥에 붙여 늘어놓는다. 선반 판(검은 바닥)은 두지 않는다.
     '    .shelf { --sh-h: ' + str(SPINE_H) + 'px;\n'
-    '             display: flex; flex-wrap: wrap; align-items: flex-end; gap: 11px 2px;\n'
+    '             display: flex; flex-wrap: wrap; align-items: flex-end; gap: 11px 1px;\n'
     '             margin: 14px 0 22px; padding: 0 8px; }\n'
     # 최근 추가된 책 칸 — 본 목록 위에 따로 모은다
     '    .new-sec { margin: 12px 0 6px; padding: 8px 12px; background: #fffbe6; border: 1.5px dashed #000; }\n'
@@ -1201,15 +1201,14 @@ SHELF_CSS = (
     '    .sp-t { position: absolute; inset: 0; display: flex; align-items: stretch;\n'
     '            justify-content: center; padding: 14px 2px; overflow: hidden; }\n'
     # 책등 제목은 바탕(세리프)으로 — 시스템 고딕은 책등에 얹으면 안내문처럼 보인다.
-    # 굵기 500이라 kopubworld.css의 medium 한 벌만 받는다(364KB, swap).
+    # 굵기 300이라 kopubworld.css의 light 한 벌만 받는다(swap).
     # 바탕체 획이 가늘어 검은 책등에서는 흐려 보인다. 같은 색 외곽선으로 획을 살짝
     # 두껍게 하고, 바깥에 촘촘한 그림자를 둘러 중간 톤 바탕에서도 글자를 띄운다.
     '    .sp-t i { writing-mode: vertical-rl; text-orientation: mixed; font-style: normal;\n'
     '              white-space: nowrap; overflow: hidden; text-overflow: ellipsis;\n'
     '              font-family: "KoPubWorld Batang", "Noto Serif KR", Batang, serif;\n'
-    '              font-size: var(--fs, 15px); font-weight: 500; letter-spacing: .01em; color: #fff;\n'
-    '              -webkit-text-stroke: .35px currentColor;\n'
-    '              text-shadow: 0 0 1px rgba(0,0,0,.9), 0 1px 2px rgba(0,0,0,.7); }\n'
+    '              font-size: var(--fs, 15px); font-weight: 300; line-height: 1; letter-spacing: .02em; color: #fff;\n'
+    '              text-shadow: 0 0 1px rgba(0,0,0,.35); }\n'
     '    .sp-i { position: relative; z-index: 1; display: block;\n'
     '            height: 100%; width: auto; max-width: 92px; object-fit: fill; }\n'
     # 책등 이미지가 없거나 못 불러오면 색 책등 폭으로 돌아간다
@@ -1217,11 +1216,11 @@ SHELF_CSS = (
     # 책등 사진이 없는 책은 표지 대표색 한 가지로 칠한다. 그림자는 은은하게, 제목은 세로로 얹는다.
     "    .sp.no-img { box-shadow: inset -2px 0 5px rgba(0,0,0,.14), inset 2px 0 4px rgba(255,255,255,.1); }\n"
     # 표지가 밝은 색이면 흰 제목이 묻히므로 검은 글자로 바꾼다
-    "    .sp.sp-light .sp-t i { color: #111; text-shadow: 0 0 1px rgba(255,255,255,.8), 0 1px 1px rgba(255,255,255,.5); }\n"
+    "    .sp.sp-light .sp-t i { color: #111; text-shadow: none; }\n"
     # 책등 보기에서 저장할 때만 쓰는 모양 — 실제 책장 사진처럼 책등만 가로 한 줄로 세운다.
     # 책마다 간격을 두고 모서리를 둥글게 한다. 그림자·음영 없이 플랫하게, 배경은 칠하지 않는다(투명 PNG).
     # 화면 폭과 상관없이 한 줄이라 높이는 늘 같게 되돌린다.
-    '    .shelf.is-strip { flex-wrap: nowrap; gap: 0 10px; width: max-content; max-width: none;\n'
+    '    .shelf.is-strip { flex-wrap: nowrap; gap: 0 2px; width: max-content; max-width: none;\n'
     '                      margin: 0; padding: 4px 4px; --sh-h: ' + str(SPINE_H) + 'px; }\n'
     '    .shelf.is-strip .sp { border: 0; border-radius: 9px; box-shadow: none; transform: none; }\n'
     '    .shelf.is-strip .sp.no-img, .shelf.is-strip .sp.sp-fail { width: var(--w, 28px); }\n'
