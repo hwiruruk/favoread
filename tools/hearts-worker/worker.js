@@ -19,6 +19,8 @@
  *   GET  /celebs  → {"counts":{"c:이름":3,...}}  하트가 1개 이상인 모든 셀럽 (1분 캐시)
  *   GET  /top?type=c|b&limit=20  → {"items":[{"key":"c:이름","n":12},...]}   (운영자 전용)
  *   GET  /admin/stats            → 합계·일별·순위·최근 기록                  (운영자 전용)
+ *   POST /view    {"path":"/share/이름.html"}  → 204   페이지 조회수 한 번 (assets/views.js가 보낸다)
+ *   GET  /admin/views?days=30    → 일별 합계·페이지 순위                       (운영자 전용)
  *        운영자 전용은 Authorization: Bearer <ADMIN_KEY> 헤더가 있어야 한다.
  *
  * 키는 셀럽이면 "c:" + 한국어 이름, 책이면 "b:" + 한국어 제목이다.
@@ -60,6 +62,13 @@ export default {
       if (url.pathname === '/heart' && request.method === 'POST') {
         if (!allowed) throw new HttpError(403, 'origin not allowed');
         return json(await heart(request, env), cors);
+      }
+      if (url.pathname === '/view' && request.method === 'POST') {
+        return await view(request, env, cors, allowed);
+      }
+      if (url.pathname === '/admin/views' && request.method === 'GET') {
+        await requireAdmin(request, env);
+        return json(await adminViews(url, env), cors);
       }
       if (url.pathname === '/top' && request.method === 'GET') {
         await requireAdmin(request, env);
@@ -222,6 +231,67 @@ async function adminStats(env) {
     topCelebs: topC.results.map(pair),
     topBooks: topB.results.map(pair),
     recent: recent.results.map(r => ({ key: r.item, t: r.created })),
+  };
+}
+
+// ── 조회수 ─────────────────────────────────────────────────────────
+// 광고 차단기에 가려지는 GA와 달리 우리 서버에 직접 쌓는다. 페이지 주소·날짜별로
+// 횟수만 세고 방문자 id·IP는 저장하지 않는다. 같은 탭에서 같은 페이지를 새로고침해도
+// 한 번만 세는 일은 assets/views.js가 하고, 서버는 봇과 남의 사이트에서 온 요청만 거른다.
+
+const BOT_RE = /bot|crawl|spider|slurp|headless|lighthouse|preview|monitor|curl|wget|python|node-fetch|axios|go-http|java\/|httpclient|facebookexternalhit|embedly|yeti|kakaotalk-scrap|yandex|baidu|ahrefs|semrush|mj12|bytespider|perplexity/i;
+// 네이버·카카오톡·구글 앱의 인앱 브라우저는 실제 방문자이므로 일부러 막지 않는다.
+
+async function view(request, env, cors, allowed) {
+  // 브라우저가 보내는 Origin이 허용 목록에 있어야 센다 (남의 사이트·스크립트 요청 제외)
+  const ua = request.headers.get('User-Agent') || '';
+  const ip = request.headers.get('CF-Connecting-IP') || '';
+  if (!allowed || !ua || BOT_RE.test(ua) || !rateOk('view|' + ip)) {
+    return new Response(null, { status: 204, headers: cors });
+  }
+  const body = await readJson(request);
+  const path = normalizePath(body.path);
+  if (path) {
+    const day = Math.floor((Date.now() + KST) / DAY);
+    await env.DB
+      .prepare('INSERT INTO views (path, day, n) VALUES (?1, ?2, 1) '
+             + 'ON CONFLICT(path, day) DO UPDATE SET n = n + 1')
+      .bind(path, day)
+      .run();
+  }
+  return new Response(null, { status: 204, headers: cors });
+}
+
+// /index.html 과 / 를 같은 주소로 합치고, 검색어·해시는 버린다. 이상한 문자열은 거른다.
+function normalizePath(p) {
+  if (typeof p !== 'string' || p.length > 300) return '';
+  let path = p.split('#')[0].split('?')[0];
+  if (path[0] !== '/') return '';
+  try { path = decodeURIComponent(path); } catch { return ''; }
+  path = path.replace(/\/index\.html$/, '/');
+  if (!/^\/[^\s<>"'\\]*$/.test(path)) return '';
+  return path;
+}
+
+async function adminViews(url, env) {
+  const days = Math.min(Math.max(parseInt(url.searchParams.get('days'), 10) || 30, 1), 90);
+  const today = Math.floor((Date.now() + KST) / DAY);
+  const since = today - days + 1;
+  const [daily, top, total] = await env.DB.batch([
+    env.DB.prepare('SELECT day, SUM(n) AS n FROM views WHERE day >= ?1 GROUP BY day ORDER BY day').bind(since),
+    env.DB.prepare('SELECT path, SUM(n) AS n FROM views WHERE day >= ?1 GROUP BY path ORDER BY n DESC LIMIT 100').bind(since),
+    env.DB.prepare('SELECT SUM(n) AS n FROM views WHERE day >= ?1').bind(since),
+  ]);
+  const byDay = new Map(daily.results.map(r => [Number(r.day), r.n]));
+  const out = [];
+  for (let d = since; d <= today; d++) {
+    out.push({ date: new Date(d * DAY).toISOString().slice(0, 10), n: byDay.get(d) || 0 });
+  }
+  return {
+    days,
+    total: total.results[0].n || 0,
+    daily: out,
+    pages: top.results.map(r => ({ path: r.path, n: r.n })),
   };
 }
 
