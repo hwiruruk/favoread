@@ -3307,7 +3307,7 @@ for name, info in celebs.items():
         # 우리 책 페이지(이 책을 읽은 셀럽 모음)는 따로 둔다 — 예스24 링크와 헷갈리지 않게
         # 예스24 버튼은 '예스24'라고 밝힌다. 책 페이지는 읽은 셀럽이 2명 이상일 때만 있다.
         source_html = ((' <a class="rl-source rl-bookpage" href="' + esc(make_book_url(b['title']))
-                        + '" title="이 책을 읽은 셀럽 모아보기">📚 책 페이지</a> ')
+                        + '" title="이 책을 읽은 셀럽 모아보기">📚 이 책 읽은 셀럽</a> ')
                        if b['title'] in books_with_pages else '')
         source_html += ('<a class="rl-source" href="' + esc(yes24_book_url(b['title'], raw_link, b['coverUrl']))
                         + '" rel="nofollow noopener noreferrer" target="_blank" title="예스24에서 보기">📖 책 정보 · 예스24</a>')
@@ -5279,7 +5279,7 @@ for name, info in celebs.items():
         # 책 정보(예스24) · 출처 — 한국어 페이지와 같은 자리. 한국 서점으로 가니 툴팁에 밝힌다.
         # 우리 책 페이지(이 책을 읽은 셀럽 모음)는 따로 둔다 — 예스24 링크와 헷갈리지 않게
         src_html = ((' <a class="rl-source rl-bookpage" href="' + make_en_book_url(book_title_en[b['title'].strip()])
-                     + '" title="See every celebrity who read this book">📚 Book page</a> ')
+                     + '" title="See every celebrity who read this book">📚 Celebs who read this</a> ')
                     if b['title'].strip() in books_with_pages and b['title'].strip() in book_title_en else '')
         src_html += ('<a class="rl-source" href="' + esc(yes24_book_url(b['title'], raw_link, b['coverUrl']))
                      + '" rel="nofollow noopener noreferrer" target="_blank" '
