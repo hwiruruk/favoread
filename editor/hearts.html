@@ -4,12 +4,12 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="robots" content="noindex,nofollow">
-<title>하트 통계 · Favorbook</title>
+<title>하트·조회수 통계 · Favorbook</title>
 <link rel="icon" href="../favicon.svg">
 <style>
   :root {
     --bg: #fbfaf6; --panel: #fff; --ink: #000; --muted: #666;
-    --pink: #fbcfe8; --heart: #e11d48; --yellow: #ffe14d; --mint: #a7f3d0;
+    --pink: #fbcfe8; --heart: #e11d48; --view: #2563eb; --sky: #bfdbfe; --yellow: #ffe14d; --mint: #a7f3d0;
   }
   * { box-sizing: border-box; }
   body {
@@ -50,7 +50,9 @@
   .chart { display: flex; align-items: flex-end; gap: 3px; height: 140px; padding-top: 16px; }
   .bar { flex: 1; min-width: 0; position: relative; display: flex; flex-direction: column; justify-content: flex-end; height: 100%; }
   .bar i { display: block; background: var(--heart); min-height: 1px; }
+  .bar i.v { background: var(--view); }
   .bar.zero i { background: #ddd; }
+  .tile.vw { background: var(--sky); }
   .bar span { position: absolute; left: 50%; transform: translateX(-50%); font-size: 10px; color: var(--muted); white-space: nowrap; }
   .bar .n { top: auto; }
   @media (max-width: 600px) { .bar .n { display: none; } }
@@ -73,7 +75,7 @@
 </head>
 <body>
 <div class="wrap">
-  <h1>❤️ 하트 통계</h1>
+  <h1>❤️ 하트·조회수 통계</h1>
   <p class="sub">운영자 전용 페이지입니다. 하트 서버의 ADMIN_KEY 비밀번호가 있어야 볼 수 있어요. · <a href="./">편집기로</a></p>
 
   <section id="login" class="box">
@@ -98,6 +100,9 @@
       <div class="tile"><div class="k">최근 7일</div><div class="v" id="tWeek">-</div></div>
       <div class="tile"><div class="k">누른 사람(브라우저)</div><div class="v" id="tVoters">-</div></div>
       <div class="tile"><div class="k">하트 받은 셀럽·책</div><div class="v" id="tItems">-</div></div>
+      <div class="tile vw"><div class="k">오늘 조회수</div><div class="v" id="vToday">-</div></div>
+      <div class="tile vw"><div class="k">최근 7일 조회수</div><div class="v" id="vWeek">-</div></div>
+      <div class="tile vw"><div class="k">최근 30일 조회수</div><div class="v" id="vTotal">-</div></div>
     </div>
 
     <div class="box">
@@ -107,10 +112,18 @@
     </div>
 
     <div class="box">
+      <h2>최근 30일 일별 조회수</h2>
+      <div id="vChart" class="chart"></div>
+      <div class="axis"><span id="vAxisFrom"></span><span id="vAxisTo"></span></div>
+      <p id="vMsg" class="msg"></p>
+    </div>
+
+    <div class="box">
       <div class="tabs">
         <button class="btn sel" type="button" data-tab="celebs">셀럽 순위</button>
         <button class="btn" type="button" data-tab="books">책 순위</button>
         <button class="btn" type="button" data-tab="recent">최근 기록</button>
+        <button class="btn" type="button" data-tab="pages">인기 페이지(조회수)</button>
       </div>
       <div id="tabBody"></div>
     </div>
@@ -118,6 +131,7 @@
     <p class="foot">
       하트를 취소하면 기록에서 빠지므로, 일별·최근 기록은 지금까지 남아 있는 하트 기준입니다.
       누른 사람은 브라우저 단위로 세며, 누가 눌렀는지는 서버에도 남지 않습니다.
+      조회수는 자체 집계라 GA와 수치가 다를 수 있습니다(봇·같은 탭 새로고침 제외, 한국 시간 기준).
       <span id="genAt"></span>
     </p>
   </section>
@@ -133,6 +147,7 @@
 
   var $ = function (id) { return document.getElementById(id); };
   var data = null;
+  var views = null;
   var tab = 'celebs';
 
   function load() { try { return localStorage.getItem(STORE) || sessionStorage.getItem(STORE) || ''; } catch (e) { return ''; } }
@@ -179,11 +194,22 @@
       });
   }
 
+  // 조회수는 실패해도 하트 통계를 막지 않는다 (서버에 아직 배포 전이거나 views 테이블이 없을 수 있다)
+  function fetchViews(key) {
+    return fetch(API + '/admin/views?days=30', { headers: { Authorization: 'Bearer ' + key }, cache: 'no-store' })
+      .then(function (r) {
+        if (!r.ok) throw new Error(r.status === 404 ? 'notdeployed' : 'http' + r.status);
+        return r.json();
+      })
+      .catch(function (e) { return { error: e.message || 'error' }; });
+  }
+
   function show(key, remember) {
     $('loginMsg').className = 'msg';
     $('loginMsg').textContent = '불러오는 중…';
-    return fetchStats(key).then(function (d) {
-      data = d;
+    return Promise.all([fetchStats(key), fetchViews(key)]).then(function (res) {
+      data = res[0];
+      views = res[1];
       if (remember !== undefined) save(key, remember);
       $('login').classList.add('hidden');
       $('stats').classList.remove('hidden');
@@ -204,18 +230,44 @@
     $('tItems').textContent = fmt(data.items);
     $('genAt').textContent = '(' + new Date(data.generated).toLocaleString('ko-KR', { timeZone: 'Asia/Seoul' }) + ' 기준)';
 
-    var days = data.days || [];
-    var max = Math.max.apply(null, days.map(function (x) { return x.n; }).concat([1]));
-    $('chart').innerHTML = days.map(function (x) {
-      var h = Math.round(x.n / max * 100);
-      return '<div class="bar' + (x.n ? '' : ' zero') + '" title="' + x.date + ' · ' + x.n + '개">'
-        + (x.n ? '<span class="n" style="bottom:calc(' + h + '% + 2px)">' + x.n + '</span>' : '')
-        + '<i style="height:' + h + '%"></i></div>';
-    }).join('');
-    $('axisFrom').textContent = days.length ? days[0].date.slice(5).replace('-', '/') : '';
-    $('axisTo').textContent = days.length ? '오늘 ' + days[days.length - 1].date.slice(5).replace('-', '/') : '';
+    drawChart('chart', 'axisFrom', 'axisTo', data.days || [], '개', false);
+    renderViews();
 
     renderTab();
+  }
+
+  // 막대 그래프 하나를 그린다. 하트(빨강)와 조회수(파랑)가 같은 모양을 쓴다.
+  function drawChart(chartId, fromId, toId, days, unit, isView) {
+    var max = Math.max.apply(null, days.map(function (x) { return x.n; }).concat([1]));
+    $(chartId).innerHTML = days.map(function (x) {
+      var h = Math.round(x.n / max * 100);
+      return '<div class="bar' + (x.n ? '' : ' zero') + '" title="' + x.date + ' · ' + fmt(x.n) + unit + '">'
+        + (x.n ? '<span class="n" style="bottom:calc(' + h + '% + 2px)">' + fmt(x.n) + '</span>' : '')
+        + '<i' + (isView ? ' class="v"' : '') + ' style="height:' + h + '%"></i></div>';
+    }).join('');
+    $(fromId).textContent = days.length ? days[0].date.slice(5).replace('-', '/') : '';
+    $(toId).textContent = days.length ? '오늘 ' + days[days.length - 1].date.slice(5).replace('-', '/') : '';
+  }
+
+  function renderViews() {
+    var ok = views && !views.error;
+    var days = ok ? (views.daily || []) : [];
+    var last = days.length ? days[days.length - 1].n : 0;
+    var week = days.slice(-7).reduce(function (a, x) { return a + x.n; }, 0);
+    $('vToday').textContent = ok ? fmt(last) : '-';
+    $('vWeek').textContent = ok ? fmt(week) : '-';
+    $('vTotal').textContent = ok ? fmt(views.total) : '-';
+    drawChart('vChart', 'vAxisFrom', 'vAxisTo', days, '회', true);
+    var msg = $('vMsg');
+    msg.className = 'msg';
+    if (!ok) {
+      msg.className = 'msg err';
+      msg.textContent = views && views.error === 'notdeployed'
+        ? '조회수 서버가 아직 배포되지 않았어요. 새 worker.js를 배포해 주세요.'
+        : '조회수를 불러오지 못했어요. D1에 views 테이블을 만들었는지 확인해 주세요. (' + (views && views.error) + ')';
+    } else if (!views.total) {
+      msg.textContent = '아직 집계된 조회수가 없어요. 사이트를 다시 생성해 views.js가 페이지에 들어가면 쌓이기 시작해요.';
+    }
   }
 
   function renderTab() {
@@ -223,7 +275,17 @@
       b.classList.toggle('sel', b.getAttribute('data-tab') === tab);
     });
     var html;
-    if (tab === 'recent') {
+    if (tab === 'pages') {
+      var ps = views && !views.error ? (views.pages || []) : [];
+      html = ps.length
+        ? '<table><thead><tr><th>#</th><th>페이지 (최근 30일)</th><th class="num">조회수</th></tr></thead><tbody>'
+          + ps.map(function (r, i) {
+              return '<tr><td class="rank">' + (i + 1) + '</td><td><a href="..' + esc(encodeURI(r.path)) + '" target="_blank" rel="noopener">'
+                + esc(r.path) + '</a></td><td class="num">' + fmt(r.n) + '</td></tr>';
+            }).join('')
+          + '</tbody></table>'
+        : '<p class="empty">아직 집계된 페이지 조회수가 없어요.</p>';
+    } else if (tab === 'recent') {
       var rows = data.recent || [];
       html = rows.length
         ? '<table><thead><tr><th>시간 (한국)</th><th>대상</th></tr></thead><tbody>'
