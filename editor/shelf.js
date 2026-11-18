@@ -1,4 +1,5 @@
-/* 책장 이미지 저장 — 선택한 연예인의 책등을 책장처럼 세워 PNG로 저장한다.
+/* 책장 이미지 저장 — 선택한 연예인의 책등만 세워 PNG로 저장한다.
+ * 배경은 투명, 이름·워터마크·선반선 등 다른 요소는 일절 넣지 않는다.
  *   인스타그램  1080 × 1350 (4:5 세로)
  *   X(트위터)   1600 ×  900 (16:9 가로)
  * html2canvas 없이 canvas로 직접 그린다. app.js 의 State·$·toast 를 쓰므로 app.js 뒤에 불러온다.
@@ -8,13 +9,12 @@
  */
 (function () {
   const FORMATS = {
-    insta: { w: 1080, h: 1350, label: '인스타그램', head: 230, foot: 96, maxSpine: 640, pad: 70 },
-    x:     { w: 1600, h: 900,  label: 'X',          head: 150, foot: 70, maxSpine: 520, pad: 80 },
+    insta: { w: 1080, h: 1350, label: '인스타그램', head: 60, foot: 60, maxSpine: 760, pad: 50 },
+    x:     { w: 1600, h: 900,  label: 'X',          head: 50, foot: 50, maxSpine: 700, pad: 60 },
   };
   const PROXY = 'https://images.weserv.nl/?url=';   // 예스24 이미지에 CORS가 없어 canvas가 막히므로 거친다
   const SPINE_MAX_RATIO = 0.4;                      // 이보다 넙적하면 '이미지 준비중' 안내 그림
-  const PAPER = '#fbf8f1', INK = '#161616', MUTE = '#7a766c', LINE = '#2a2620';
-  const SERIF = '"KoPubWorld Batang","Noto Serif KR",Batang,serif';
+    const SERIF = '"KoPubWorld Batang","Noto Serif KR",Batang,serif';
 
   let extra = null;   // { spines: {제목: URL}, colors: {표지 URL: '#rrggbb'} }
 
@@ -213,19 +213,6 @@
     const cv = document.createElement('canvas');
     cv.width = fmt.w; cv.height = fmt.h;
     const ctx = cv.getContext('2d');
-    ctx.fillStyle = PAPER;
-    ctx.fillRect(0, 0, fmt.w, fmt.h);
-
-    // 머리글
-    const big = kind === 'insta';
-    ctx.textBaseline = 'alphabetic'; ctx.textAlign = 'left';
-    ctx.fillStyle = INK;
-    ctx.font = `700 ${big ? 60 : 50}px ${SERIF}`;
-    const nameY = fmt.pad * (big ? 1.05 : 0.8) + (big ? 40 : 30);
-    ctx.fillText(celebName, fmt.pad, nameY);
-    ctx.fillStyle = MUTE;
-    ctx.font = `300 ${big ? 30 : 26}px ${SERIF}`;
-    ctx.fillText(`추천한 책 ${books.length}권`, fmt.pad, nameY + (big ? 52 : 44));
 
     // 책장
     const top = fmt.head + (lay.availH - lay.total) / 2;
@@ -236,18 +223,8 @@
         drawSpine(ctx, c, x, y, lay.H);
         x += c.w + lay.gap;
       }
-      // 선반 바닥선
-      ctx.fillStyle = LINE;
-      ctx.fillRect(Math.round((fmt.w - row.w) / 2) - 14, y + lay.H, row.w + 28, 3);
     });
 
-    // 꼬리글
-    ctx.fillStyle = MUTE;
-    ctx.font = `700 ${big ? 26 : 22}px ${SERIF}`;
-    ctx.textAlign = 'right';
-    ctx.fillText('favorbook.co.kr', fmt.w - fmt.pad, fmt.h - fmt.foot / 2 + 6);
-    ctx.textAlign = 'left';
-    ctx.fillText('FAVORBOOK', fmt.pad, fmt.h - fmt.foot / 2 + 6);
     return { canvas: cv, fmt, missing: items.filter((i) => !i.img).length };
   }
 
