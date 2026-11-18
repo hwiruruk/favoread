@@ -1480,6 +1480,25 @@ def load_bios():
 
 BIOS = load_bios()
 
+# ── 책 한 줄 소개 로더 ───────────────────────────────────────────────
+# data/blurbs.json: { "books": { "도서명": {"ko": "...", "en": "..."} } }
+# tools/blurb_queue.py · blurb_merge.py 가 매일 채운다. 없으면 소개 문단을 만들지 않는다.
+def load_blurbs():
+    path = 'data/blurbs.json'
+    if not os.path.exists(path):
+        return {}
+    try:
+        with open(path, encoding='utf-8') as f:
+            return json.load(f).get('books', {})
+    except Exception as e:
+        print(f"⚠️ blurbs.json 로드 실패: {e}")
+        return {}
+
+BLURBS = load_blurbs()
+
+def get_blurb(title, lang='ko'):
+    return ((BLURBS.get(title) or {}).get(lang) or '').strip()
+
 # 괄호/소속 표기 제거한 짧은 이름 — 본문 반복 노출 시 사용
 # "윤덕원(브로콜리너마저)" → "윤덕원", "RM(BTS)" → "RM"
 _SHORT_NAME_RE = re.compile(r'\s*\([^)]*\)\s*$')
@@ -3693,6 +3712,7 @@ ko_book_indexed = set()   # 색인 대상(코멘트 있음) — sitemap에만 �
 # 책 페이지 공용 스타일 — 셀럽별 코멘트 인용과 출처
 BOOK_NOTE_CSS = (
     '    .intro { margin: 8px 0 0; }\n'
+    '    .blurb { margin: 0 0 14px; padding: 10px 14px; background: #fff; border: 2px solid #000; box-shadow: 3px 3px 0 0 #000; font-size: 15px; line-height: 1.7; font-weight: 600; }\n'
     '    ul.notes { line-height: 1.7; }\n'
     '    ul.notes li { margin: 0 0 12px; }\n'
     '    ul.notes blockquote { margin: 4px 0 0; padding: 6px 12px; border-left: 3px solid #000; background: #fff; color: #333; font-size: 14px; }\n'
@@ -3780,7 +3800,7 @@ for title, binfo in book_celebs.items():
         '@type': 'Book',
         'name': title,
         'url': page_url,
-        'description': str(celeb_count) + '명의 셀럽이 읽은 책',
+        'description': ((get_blurb(title, 'ko') + ' ') if get_blurb(title, 'ko') else '') + str(celeb_count) + '명의 셀럽이 읽은 책',
     }
     if title_ja:
         json_ld['alternateName'] = title_ja
@@ -3868,7 +3888,9 @@ for title, binfo in book_celebs.items():
         '  <p>' + author_html(binfo['author']) + ((' · ' + esc(binfo['publisher'])) if binfo['publisher'] else '') + '</p>\n'
         '  <p class="heart-row">' + heart_btn_html(book_heart_key(title), '이 책에 하트')
         + copy_btn_html(make_book_short_url(title)) + '</p>\n'
-        + cover_html + intro_html +
+        + cover_html
+        + (('  <p class="blurb">' + esc(get_blurb(title, 'ko')) + '</p>\n') if get_blurb(title, 'ko') else '')
+        + intro_html +
         '  <h2>이 책을 읽은 셀럽 (' + str(celeb_count) + '명)</h2>\n'
         '  <ul class="notes">\n' + celeb_rows + '\n  </ul>\n'
         + more_html +
@@ -3955,6 +3977,7 @@ for _g in sorted(ko_groups.values(), key=lambda g: g['ko']):
             + esc(t) + '">' + cover_html + '</a>\n'
             '      <a class="gb-t" href="' + esc(book_href) + '" rel="nofollow noopener noreferrer" target="_blank">' + esc(t) + '</a>\n'
             + (('      <span class="gb-a">' + esc(info['author']) + '</span>\n') if info['author'] else '')
+            + (('      <span class="gb-b">' + esc(get_blurb(t, 'ko')) + '</span>\n') if get_blurb(t, 'ko') else '')
             + '      <span class="gb-w">' + who + '</span>\n'
             + more +
             '    </li>\n'
@@ -4041,6 +4064,7 @@ for _g in sorted(ko_groups.values(), key=lambda g: g['ko']):
         '    .gb-no { display: flex; height: 100%; align-items: center; justify-content: center; padding: 8px; text-align: center; font-weight: 800; font-size: 13px; color: #333; }\n'
         '    .gb-t { display: block; margin-top: 8px; font-weight: 800; font-size: 13px; line-height: 1.3; color: #111; }\n'
         '    .gb-a { display: block; font-size: 11px; color: #666; }\n'
+        '    .gb-b { display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; margin-top: 4px; font-size: 11px; line-height: 1.45; color: #444; }\n'
         '    .gb-w { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 4px; }\n'
         '    .gb-w a { font-size: 11px; font-weight: 700; color: #000; background: #ffe58a; border: 1.5px solid #000; padding: 0 6px; border-radius: 99px; line-height: 1.6; }\n'
         '    .gb-l { display: inline-block; margin-top: 4px; font-size: 11px; font-weight: 600; }\n'
@@ -5856,7 +5880,7 @@ for title, t_en in book_title_en.items():
         'alternateName': [title, orig[0]] if orig else title,
         'url': page_url,
         'inLanguage': 'en',
-        'description': str(n_celebs) + ' Korean celebrities have read this book.',
+        'description': ((get_blurb(title, 'en') + ' ') if get_blurb(title, 'en') else '') + str(n_celebs) + ' Korean celebrities have read this book.',
         'author': clean_none({'@type': 'Person', 'name': author_display,
                               'alternateName': author_nat[0] if author_nat else None})
                   if author_display.strip() else None,
@@ -5917,6 +5941,7 @@ for title, t_en in book_title_en.items():
         '  <p class="heart-row">' + heart_btn_html(book_heart_key(title), 'Heart this book')
         + copy_btn_html(make_en_book_short_url(title), '🔗 Copy share link', 'Copied!') + '</p>\n'
         + cover_html
+        + (('  <p class="blurb">' + esc(get_blurb(title, 'en')) + '</p>\n') if get_blurb(title, 'en') else '')
         + '  <p class="intro">' + esc(t_en) + ' (Korean title: ' + esc(title)
         + (('; original title: ' + lang_span(orig)) if orig else '') + ')'
         + ((' by ' + author_html) if author_display.strip() else '')
@@ -6024,6 +6049,7 @@ for _group in sorted(en_groups, key=lambda g: g.lower()):
             '    <li class="gb">\n'
             '      <span class="gb-t">' + _t_html + '</span>\n'
             + (('      <span class="gb-a">' + esc(info['author']) + '</span>\n') if info['author'] else '')
+            + (('      <span class="gb-b">' + esc(get_blurb(info['ko'], 'en')) + '</span>\n') if get_blurb(info['ko'], 'en') else '')
             + '      <span class="gb-w">' + who + '</span>\n'
             '    </li>\n'
         )
@@ -6104,6 +6130,7 @@ for _group in sorted(en_groups, key=lambda g: g.lower()):
         '    .gb-t { display: block; font-weight: 800; font-size: 15px; line-height: 1.3; }\n'
         '    .gb-l { font-size: 12px; font-weight: 600; margin-left: 6px; white-space: nowrap; }\n'
         '    .gb-a { display: block; font-size: 12px; color: #555; }\n'
+        '    .gb-b { display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; margin-top: 4px; font-size: 11px; line-height: 1.45; color: #444; }\n'
         '    .gb-w { display: block; font-size: 12px; color: #2563eb; margin-top: 3px; }\n'
         '    .books { padding: 0; margin: 0; }\n'
         '    footer { margin-top: 40px; padding-top: 16px; border-top: 2px solid #000; font-size: 12px; color: #666; }\n'
