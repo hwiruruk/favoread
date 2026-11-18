@@ -3310,7 +3310,7 @@ for name, info in celebs.items():
                         + '" title="이 책을 읽은 셀럽 모아보기">📚 책 페이지</a> ')
                        if b['title'] in books_with_pages else '')
         source_html += ('<a class="rl-source" href="' + esc(yes24_book_url(b['title'], raw_link, b['coverUrl']))
-                        + '" rel="nofollow noopener noreferrer" target="_blank" title="예스24에서 보기">🛒 예스24</a>')
+                        + '" rel="nofollow noopener noreferrer" target="_blank" title="예스24에서 보기">📖 책 정보 · 예스24</a>')
         if b['source'] and b['source'].startswith('http'):
             source_html += (' <a class="rl-source" href="' + esc(b['source'])
                             + '" rel="nofollow noopener noreferrer" target="_blank">📺 출처</a>')
@@ -5283,7 +5283,7 @@ for name, info in celebs.items():
                     if b['title'].strip() in books_with_pages and b['title'].strip() in book_title_en else '')
         src_html += ('<a class="rl-source" href="' + esc(yes24_book_url(b['title'], raw_link, b['coverUrl']))
                      + '" rel="nofollow noopener noreferrer" target="_blank" '
-                     'title="View on YES24 (Korean bookstore)">🛒 YES24</a>')
+                     'title="View on YES24 (Korean bookstore)">📖 Book details · YES24</a>')
         if b['source'] and b['source'].startswith('http'):
             src_html += (' <a class="rl-source" href="' + esc(b['source'])
                          + '" rel="nofollow noopener noreferrer" target="_blank">📺 Source</a>')
