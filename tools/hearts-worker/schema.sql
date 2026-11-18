@@ -16,6 +16,9 @@ CREATE INDEX IF NOT EXISTS counts_n ON counts (n DESC);
 -- 페이지 조회수. 주소·날짜(한국 시간 기준 1970-01-01부터의 일 수)별 횟수만 센다.
 CREATE TABLE IF NOT EXISTS views (path TEXT NOT NULL, day INTEGER NOT NULL, n INTEGER NOT NULL DEFAULT 0, PRIMARY KEY (path, day));
 
+-- 사이트 검색어. 검색어·날짜별로 검색 횟수(n), 추천 결과가 없었던 횟수(zero), 추천 결과를 누른 횟수(clicks)를 센다.
+CREATE TABLE IF NOT EXISTS searches (q TEXT NOT NULL, day INTEGER NOT NULL, n INTEGER NOT NULL DEFAULT 0, zero INTEGER NOT NULL DEFAULT 0, clicks INTEGER NOT NULL DEFAULT 0, PRIMARY KEY (q, day));
+
 -- 2026-09 이전에 만든 데이터베이스는 아래 두 줄을 하나씩 실행해 ip 칸을 더한다.
 -- ALTER TABLE hearts ADD COLUMN ip TEXT;
 -- CREATE INDEX IF NOT EXISTS hearts_item_ip ON hearts (item, ip, created);

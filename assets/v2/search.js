@@ -33,6 +33,19 @@
     ? { ph: 'Search a star or a book', loading: 'Loading…', fail: 'Search is unavailable right now. Please try again shortly.', none: 'No results. Try another name or title.' }
     : { ph: '최애 이름이나 책 제목 검색', loading: '불러오는 중이에요…', fail: '검색 데이터를 불러오지 못했어요. 잠시 뒤 다시 시도해 주세요.', none: '찾는 결과가 없어요. 다른 이름이나 제목으로 검색해 보세요.' };
 
+  // 검색어 기록 — tools/hearts-worker/ 의 /search 로 보낸다. 입력을 멈춘 뒤 한 번, 추천 결과를 누르면 한 번.
+  // 방문자 id·IP는 보내지도 저장하지도 않는다.
+  var LOG_API = (window.FAVOR_HEARTS_API || 'https://favorbook-hearts.twinwhee.workers.dev').replace(/\/+$/, '');
+  var LOG_OFF = /^(localhost|127\.0\.0\.1)$/.test(location.hostname) || navigator.webdriver;
+  function sendLog(payload) {
+    if (LOG_OFF) return;
+    var body = JSON.stringify(payload);
+    try {
+      if (navigator.sendBeacon && navigator.sendBeacon(LOG_API + '/search', new Blob([body], { type: 'text/plain' }))) return;
+    } catch (e) {}
+    try { fetch(LOG_API + '/search', { method: 'POST', body: body, headers: { 'Content-Type': 'text/plain' }, keepalive: true }); } catch (e) {}
+  }
+
   var index = null, loading = null;
   function load() {
     if (index) return Promise.resolve(index);
@@ -89,6 +102,21 @@
       '<input type="search" autocomplete="off" placeholder="' + T.ph + '" aria-label="' + T.ph + '">' +
       '<div class="ss-box" role="listbox"></div>';
     var q = slot.querySelector('input'), box = slot.querySelector('.ss-box'), on = -1;
+    var logTimer = null, logged = '', lastHits = -1;
+
+    // 입력을 1.2초 멈추면 그 검색어를 한 번 기록한다. 같은 검색어는 다시 세지 않는다.
+    function flushLog() {
+      clearTimeout(logTimer);
+      var t = q.value.trim().replace(/\s+/g, ' ').toLowerCase().slice(0, 40);
+      if (t.length < 2 || t === logged || lastHits < 0) return t;
+      logged = t;
+      sendLog({ kind: 's', q: t, hits: lastHits });
+      return t;
+    }
+    function logClick() {
+      var t = flushLog();
+      if (t.length >= 2) sendLog({ kind: 'c', q: t });
+    }
 
     function render() {
       var term = norm(q.value);
@@ -101,6 +129,9 @@
         return;
       }
       var hits = find(term);
+      lastHits = hits.length;
+      clearTimeout(logTimer);
+      logTimer = setTimeout(flushLog, 1200);
       box.innerHTML = hits.length
         ? hits.map(function (h) { return '<a href="' + h.href + '"><span>' + esc(h.label) + '</span><small>' + esc(h.meta) + '</small></a>'; }).join('')
         : '<div class="none">' + T.none + '</div>';
@@ -119,9 +150,11 @@
     q.addEventListener('keydown', function (e) {
       if (e.key === 'ArrowDown') { e.preventDefault(); move(1); }
       else if (e.key === 'ArrowUp') { e.preventDefault(); move(-1); }
-      else if (e.key === 'Enter') { var a = box.querySelector('a.on') || box.querySelector('a'); if (a) location.href = a.href; }
+      else if (e.key === 'Enter') { var a = box.querySelector('a.on') || box.querySelector('a'); if (a) { logClick(); location.href = a.href; } else flushLog(); }
       else if (e.key === 'Escape') { box.classList.remove('open'); q.blur(); }
     });
+    box.addEventListener('click', function (e) { if (e.target.closest && e.target.closest('a')) logClick(); });
+    q.addEventListener('blur', function () { setTimeout(flushLog, 200); });
     document.addEventListener('click', function (e) { if (!slot.contains(e.target)) box.classList.remove('open'); });
   });
 })();
