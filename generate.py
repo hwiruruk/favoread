@@ -5112,6 +5112,33 @@ en_celeb_order = sorted(
 en_celeb_pos = {n: k for k, n in enumerate(en_celeb_order)}
 
 
+def date_en(iso):
+    """'2026-11-18' → 'Nov 18, 2026'. 못 읽으면 ''."""
+    try:
+        d = datetime.date.fromisoformat((iso or '')[:10])
+    except ValueError:
+        return ''
+    return d.strftime('%b ') + str(d.day) + d.strftime(', %Y')
+
+
+def source_summary_en(urls):
+    """출처 종류별 건수 — 'Sources: 5 on YouTube, 3 on social media, ...'"""
+    kinds = {}
+    for u in urls:
+        k = source_kind(u)
+        if k:
+            kinds[k] = kinds.get(k, 0) + 1
+    labels = [('유튜브', 'on YouTube'), ('SNS', 'on social media'),
+              ('기사·방송 등', 'in articles and broadcasts')]
+    parts = [str(kinds[k]) + ' ' + lab for k, lab in labels if k in kinds]
+    return ('Sources: ' + ', '.join(parts) + '.') if parts else ''
+
+
+def en_celeb_display(n):
+    """셀럽 표시 이름 — 영문명이 있으면 영문, 없으면 한국어."""
+    return plain_en(celebs[n]['name_en']) if celebs[n].get('name_en') else n
+
+
 def en_celeb_link(n, cls=''):
     """다른 셀럽 링크 — 영문 페이지가 있으면 그쪽, 없으면 한국어 페이지."""
     c = (' class="' + cls + '"') if cls else ''
@@ -5303,7 +5330,9 @@ for name, info in celebs.items():
         return (_role_lbl + ' ' + _name_pl + ' has read ' + str(n) + ' book'
                 + ('s' if n != 1 else '')
                 + ((', including ' + txt) if txt else '')
-                + '. Full reading list with the interview, YouTube or SNS source for each.')
+                + ('. Find out what your bias reads — full list with the interview, YouTube or SNS source for each.'
+                   if 'idol' in _roles else
+                   '. Full reading list with the interview, YouTube or SNS source for each.'))
 
     # 검색 결과에 잘리지 않게 165자 안쪽으로. 제목이 길면 권수를 줄인다.
     desc_text = _desc(3)
@@ -5311,22 +5340,6 @@ for name, info in celebs.items():
         if len(desc_text) <= 165:
             break
         desc_text = _desc(_k)
-
-    # 검색어 후보. 이름 표기 흔들림(하이픈 없는 표기)과 직업별 말을 함께 넣는다.
-    en_kw = [
-        _name_pl + ' books', _name_pl + ' reading list',
-        _name_pl + ' book recommendations', 'what does ' + _name_pl + ' read',
-        _name_pl + ' favorite books',
-    ]
-    for _v in _variants:
-        en_kw += [_v + ' books', _v + ' reading list', _v + ' book recommendations']
-    en_kw.append(name + ' 책')
-    for _r in _roles:
-        en_kw += EN_ROLE_INFO[_r]['kw']
-    en_kw += ['korean celebrity books', 'korean celebrity reading list', 'books from korea',
-              'korean celebrity book archive']
-    _seen_kw = set()
-    en_kw = [k for k in en_kw if not (k.lower() in _seen_kw or _seen_kw.add(k.lower()))]
 
     _picks_all = [plain_en(b['title_en']) for b in en_books if b.get('title_en')]
     _picks_all = [t for t in _picks_all if t]
@@ -5412,6 +5425,74 @@ for name, info in celebs.items():
     en_pager_html = (('  <nav class="celeb-pager" aria-label="Browse celebrities">\n'
                       + '\n'.join(_pl) + '\n  </nav>\n') if _pl else '')
 
+    # ── 한눈에 보기 + FAQ 확장 ──────────────────────────────────────
+    # 대표 도서 3권: 공식 영문판이 있는 책(영어권 독자가 알아보는 제목)을 앞에 두고,
+    # 그 안에서는 여러 셀럽이 함께 고른 책부터.
+    _rank = sorted(en_books, key=lambda b: (
+        is_auto_translated(b['title_en']),
+        -len(book_celebs.get(b['title'].strip(), {}).get('celebs', [])),
+        title_sort_key(plain_en(b['title_en']))))
+    _top3 = [t for t in (plain_en(b['title_en']) for b in _rank[:3]) if t]
+    _n_official = sum(1 for b in en_books if not is_auto_translated(b['title_en']))
+    _src_en = source_summary_en(b.get('source') for b in en_books)
+    _up_iso = celeb_page_lastmod('en/share/' + slug + '.html', name)[:10]
+    _up_en = date_en(_up_iso)
+    _auth_txt = ', '.join(a + ' (' + str(c) + ' books)' for a, c in _top_auth)
+
+    _glance = []
+    if _top3:
+        _glance.append(('Top picks', esc(', '.join(_top3))))
+    if _top_auth:
+        _glance.append(('Most-read authors', esc(_auth_txt)))
+    _glance.append(('English editions', str(_n_official) + ' of ' + str(n)
+                    + ' books have a published English edition'))
+    if _src_en:
+        _glance.append(('Sources', esc(_src_en.replace('Sources: ', '', 1).rstrip('.'))))
+    if _up_en:
+        _glance.append(('Last updated', '<time datetime="' + esc(_up_iso) + '">'
+                        + esc(_up_en) + '</time>'))
+    en_glance_html = (
+        '    <dl class="glance">\n'
+        + ''.join('      <div><dt>' + k + '</dt><dd>' + v + '</dd></div>\n' for k, v in _glance)
+        + '    </dl>\n')
+    en_bias_html = (
+        '    <p class="bias-line">Looking for your bias\'s reading list? Every book here was read or '
+        'recommended by ' + esc(_name_pl) + ', each with a source you can open.</p>\n'
+        if 'idol' in _roles else '')
+
+    # 가장 최근에 들어온 책 (같은 날 들어온 책은 함께, 최대 3권)
+    _dated = [(_new_book_dates.get((name, b['title'].strip())) or '', b) for b in en_books]
+    _dated = [(d, b) for d, b in _dated if d]
+    if _dated:
+        _last_d = max(d for d, _b in _dated)
+        _last_t = [plain_en(b['title_en']) for d, b in _dated if d == _last_d][:3]
+        if _last_t and date_en(_last_d):
+            en_faq_items.append((
+                'What is the latest book added to ' + _name_pl + "'s list?",
+                'The most recent addition' + ('s' if len(_last_t) > 1 else '') + ' (' + date_en(_last_d)
+                + '): ' + ', '.join(_last_t) + '. New mentions are added as they turn up in '
+                'interviews, videos and posts.'))
+    if _top_auth:
+        en_faq_items.append((
+            'Which authors does ' + _name_pl + ' read most?',
+            'The authors who come up most often in ' + _name_pl + "'s list: " + _auth_txt + '.'))
+    en_faq_items.append((
+        'Are ' + _name_pl + "'s books available in English?",
+        str(_n_official) + ' of the ' + str(n) + ' books on this list have a published English '
+        'edition. For the rest, the title is machine-translated (marked with an asterisk) and the '
+        'Korean original is shown next to it so you can search for it directly.'))
+    if _rel_sorted:
+        en_faq_items.append((
+            'Who has a similar reading taste to ' + _name_pl + '?',
+            'Celebrities who share the most books with ' + _name_pl + ': '
+            + '; '.join(en_celeb_display(o) + ' — ' + str(len(bs)) + ' shared books'
+                        for o, bs in _rel_sorted[:3]) + '.'))
+    if 'idol' in _roles and _top3:
+        en_faq_items.append((
+            'What should I read if ' + _name_pl + ' is my bias?',
+            'Good places to start: ' + ', '.join(_top3) + '. Books with a published English '
+            'edition are listed first, and the full list with sources is on this page.'))
+
     en_faq_html = ''.join(
         '    <div class="pfaq-q">\n'
         '      <h3>' + esc(q) + '</h3>\n'
@@ -5496,7 +5577,6 @@ for name, info in celebs.items():
         '  <meta name="viewport" content="width=device-width, initial-scale=1">\n'
         '  <title>' + esc(title_text) + ' | Favorbook</title>\n'
         '  <meta name="description" content="' + esc(desc_text) + '">\n'
-        '  <meta name="keywords" content="' + esc(', '.join(en_kw)) + '">\n'
         '  <meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1">\n'
         '  <meta property="og:title" content="' + esc(title_text) + '">\n'
         '  <meta property="og:description" content="' + esc(desc_text) + '">\n'
@@ -5541,6 +5621,12 @@ for name, info in celebs.items():
         '    h1 { font-size: 28px; margin: 0 0 8px; font-weight: 900; }\n'
         '    h2 { font-size: 19px; margin: 32px 0 12px; padding-bottom: 4px; border-bottom: 2px solid #000; font-weight: 800; }\n'
         '    .intro { background: #fff; border: 2px solid #000; box-shadow: 4px 4px 0 0 #000; padding: 14px 16px; margin: 16px 0 24px; font-size: 15px; }\n'
+        '    .bias-line { margin: 8px 0 0; font-size: 14px; color: #444; }\n'
+        '    .glance { margin: 12px 0 0; padding: 10px 0 0; border-top: 1.5px dashed #ccc; font-size: 14px; }\n'
+        '    .glance div { display: flex; gap: 10px; margin: 4px 0; }\n'
+        '    .glance dt { flex: 0 0 132px; font-weight: 800; color: #555; }\n'
+        '    .glance dd { margin: 0; }\n'
+        '    @media (max-width: 480px) { .glance div { flex-direction: column; gap: 0; } .glance dt { flex: none; } }\n'
         '    .celeb-bio { margin: 4px 0 8px; padding: 6px 10px; background: #fff8e7; border-left: 4px solid #000; font-size: 14px; line-height: 1.45; color: #222; }\n'
         + TASTE_CSS +
         '    .celeb-alias { margin: 2px 0 0; font-size: 12px; color: #888; }\n'
@@ -5617,7 +5703,9 @@ for name, info in celebs.items():
         + ' read or recommended by <strong>' + esc(_name_pl) + '</strong> (' + esc(name) + ')'
         + ((', a ' + esc(_role_lbl)) if _roles else '')
         + ', gathered from interviews, YouTube, and SNS sources.</p>\n'
-        '  </section>\n'
+        + en_bias_html
+        + en_glance_html
+        + '  </section>\n'
         + ((
             '  <p class="grp-link">Part of <strong>' + esc(_en_group) + '</strong> — '
             '<a href="' + EN_BASE + 'group/' + safe_en_filename(_en_group) + '.html">'
@@ -5784,12 +5872,6 @@ for title, t_en in book_title_en.items():
         '  <meta name="viewport" content="width=device-width, initial-scale=1">\n'
         '  <title>' + esc(title_text) + ' | Favorbook</title>\n'
         '  <meta name="description" content="' + esc(desc_text) + '">\n'
-        '  <meta name="keywords" content="'
-        + esc(t_en) + ', ' + esc(t_en) + ' kpop, ' + esc(t_en) + ' korean celebrity, '
-        + ((esc(orig[0]) + ', ') if orig else '') + ((esc(author_nat[0]) + ', ') if author_nat else '')
-        + 'books read by ' + esc(top_celebs_str) + ', '
-        + ', '.join((esc(c) + ' books') for c in celeb_names_en[:3]) + ', '
-        + 'kpop idol books, korean celebrity book recommendations, kpop reading list, korean celebrity book archive">\n'
         + ('  <meta name="robots" content="index, follow, max-image-preview:large">\n'
            if indexable else '  <meta name="robots" content="noindex, follow">\n') +
         '  <meta property="og:title" content="' + esc(title_text) + '">\n'
@@ -5956,11 +6038,11 @@ for _group in sorted(en_groups, key=lambda g: g.lower()):
     g_desc = (_group + ' members have read ' + str(n_books) + ' books'
               + ((', including ' + ', '.join(picks[:-1]) + ' and ' + picks[-1])
                  if len(picks) >= 2 else (', including ' + picks[0] if picks else ''))
-              + '. Reading lists for all ' + str(n_members)
+              + '. Find out what your bias reads — all ' + str(n_members)
               + ' members, with the source for each book.')
     if len(g_desc) > 165:
-        g_desc = (_group + ' members have read ' + str(n_books) + ' books. Reading lists for all '
-                  + str(n_members) + ' members, with the source for each book.')
+        g_desc = (_group + ' members have read ' + str(n_books) + ' books. Find out what your bias reads — all '
+                  + str(n_members) + ' members, with sources.')
 
     g_ld = clean_none({
         '@context': 'https://schema.org',
@@ -6035,7 +6117,8 @@ for _group in sorted(en_groups, key=lambda g: g.lower()):
         + '</strong> members have read or recommended — ' + str(n_books) + ' books across '
         + str(n_members) + ' members'
         + ((', ' + str(len(shared)) + ' of them read by more than one member') if shared else '')
-        + '. Each entry links to the interview, YouTube video or SNS post it came from.</p>\n'
+        + '. Each entry links to the interview, YouTube video or SNS post it came from. '
+        'Pick a member to see what your bias reads.</p>\n'
         '  </div>\n'
         '  <h2>Members</h2>\n'
         '  <ul class="members">\n' + member_cards +
@@ -6108,7 +6191,8 @@ for _role in sorted(en_role_members, key=lambda r: -len(en_role_members[r])):
     c_desc = (str(n_people) + ' ' + hub_lower + ' and the ' + str(n_books)
               + ' books they have read or recommended'
               + ((', including ' + ' and '.join(picks)) if len(picks) == 2 else '')
-              + '. Every entry keeps its source.')
+              + ('. Find out what your bias reads — every entry keeps its source.'
+                 if hub_name == 'K-Pop Idols' else '. Every entry keeps its source.'))
     if len(c_desc) > 165:
         c_desc = (str(n_people) + ' ' + hub_lower + ' and the ' + str(n_books)
                   + ' books they have read or recommended, each traced to the interview, '
@@ -6152,9 +6236,6 @@ for _role in sorted(en_role_members, key=lambda r: -len(en_role_members[r])):
         '  <meta name="viewport" content="width=device-width, initial-scale=1">\n'
         '  <title>' + esc(c_title) + ' | Favorbook</title>\n'
         '  <meta name="description" content="' + esc(c_desc) + '">\n'
-        '  <meta name="keywords" content="'
-        + esc(', '.join(info_r['kw'] + ['korean celebrity books', 'books from korea',
-                                        'what korean stars read', 'korean celebrity book archive'])) + '">\n'
         '  <meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1">\n'
         '  <meta property="og:title" content="' + esc(c_title) + '">\n'
         '  <meta property="og:description" content="' + esc(c_desc) + '">\n'
@@ -6502,6 +6583,11 @@ en_category_chips = '\n'.join(
 # read" 처럼 물어보는 검색이 많은데, 그 말에 답하는 문장이 사이트에 한 줄도
 # 없었다. 눈에 보이는 본문으로 넣고 FAQPage로도 표시해 둔다.
 EN_FAQ = [
+    ('What does my bias read?',
+     'Search for your bias by name, or open the group page to see every member side by side. '
+     'Each reading list shows the books a K-pop idol has read or recommended, with the interview, '
+     'YouTube video or social post where it came up. '
+     + str(len(en_celeb_pages)) + ' idols and actors are covered so far.'),
     ('What books do K-pop idols read?',
      'Across ' + str(len(en_celeb_pages)) + ' idols and actors in this archive, the books that come up '
      'most are Korean literary fiction and essays — Kim Ae-ran, Baek Se-hee, Kim Cho-yeop — '
@@ -6914,8 +7000,7 @@ en_index = (
     '  <meta charset="UTF-8">\n'
     '  <meta name="viewport" content="width=device-width, initial-scale=1.0">\n'
     '  <title>What Do Kpop Idols Read? K-pop Idol &amp; K-Drama Actor Book Lists | Favorbook</title>\n'
-    '  <meta name="description" content="A searchable archive of what Korean stars read — K-pop idols (BTS, aespa, IVE, NewJeans), K-drama and K-movie actors, directors and musicians. Every book traced to its source.">\n'
-    '  <meta name="keywords" content="korean celebrity books, korean actor books, k-drama actor books, k-movie actor books, what korean actors read, korean drama star reading list, kdrama books, korean actress books, korean film director books, korean star book recommendations, books from korea, kpop idol books, what bts reads, BTS reading list, RM book recommendations, IU books, what kpop idols read, kpop star reading, korean celebrity books, k-drama actor books, IVE books, NewJeans reading list, SEVENTEEN books, kpop idol favorite books, korean idol book recommendations, kpop reading list, books read by kpop idols, korean drama actor reading list, kdrama books, kpop fandom books, kpop star book archive, kpop star reading, kpop idol reading list, korean celebrity reading archive, what do kpop idols read, book archive, korean celebrity book archive, kpop idol book archive, kdrama actor book archive">\n'
+    '  <meta name="description" content="What does your bias read? Book lists of K-pop idols (BTS, aespa, IVE, NewJeans), K-drama actors and more — every book traced to its source.">\n'
     '  <meta name="referrer" content="no-referrer">\n'
     '\n'
     '  <link rel="icon" href="' + BASE + 'favicon.svg" type="image/svg+xml">\n'
@@ -7891,10 +7976,56 @@ _llms += ['- [' + n + '](' + make_celeb_url(n) + '): ' + str(len(celebs[n]['book
           for n in sorted(celebs, key=title_sort_key)]
 _llms += ['', '## Optional', '',
           '- [English version](' + EN_BASE + '): Korean celebrities\' reading lists in English',
+          '- [English llms.txt](' + EN_BASE + 'llms.txt): English guide for AI search and crawlers',
           '- [RSS](' + BASE + 'feed.xml): 최근 추가된 책',
           '']
 write_if_changed('llms.txt', '\n'.join(_llms))
 print(f"✅ llms.txt 생성")
+
+# 영문 llms.txt — 영어권 AI 검색이 사이트를 영어로 설명하고 영문 페이지를 인용하도록 돕는다.
+_llms_en = [
+    '# Favorbook — what K-pop idols and Korean celebrities read',
+    '',
+    '> A source-linked archive of the books read or recommended by ' + str(len(en_celeb_pages))
+    + ' K-pop idols, K-drama and K-movie actors, directors, musicians and other Korean celebrities. '
+    'Every book links to the interview, YouTube video, broadcast or social post where it came up. '
+    'Use it to find out what your bias (favorite idol) reads.',
+    '',
+    '- Each celebrity page opens with a quick-facts summary: top picks, most-read authors, how many '
+    'books have an official English edition, source types and the last update date.',
+    '- Books the celebrity wrote, and the original books behind works they starred in, are excluded.',
+    '- Titles with an asterisk are machine-translated where no official English edition was confirmed; '
+    'the Korean original title is always shown next to them.',
+    '- When citing, name the site (Favorbook) and link the specific page. Bulk copying or automated '
+    'mass collection of the database is not permitted (policy, in Korean): ' + BASE + 'data-policy.html',
+    '- The Korean site is the full archive (' + str(len(celebs)) + ' people); English pages exist for '
+    'celebrities whose names and book titles have been checked.',
+    '',
+    '## Browse by category',
+    '',
+]
+_llms_en += ['- [' + EN_ROLE_INFO[role]['hub_name'] + '](' + EN_BASE + 'category/' + cslug + '.html): '
+             + str(n_p) + ' people, ' + str(n_b) + ' books'
+             for cslug, role, n_p, n_b in sorted(en_category_pages, key=lambda c: -c[2])]
+_llms_en += ['', '## Browse by group', '']
+_llms_en += ['- [' + g + '](' + EN_BASE + 'group/' + gslug + '.html): ' + str(nm) + ' members, '
+             + str(nb) + ' books'
+             for gslug, g, nm, nb in sorted(en_group_pages, key=lambda g: g[1].lower())]
+_top_books_en = sorted(en_book_pages, key=lambda b: (-len(book_celebs[b[2]]['celebs']), b[1].lower()))[:40]
+_llms_en += ['', '## Most-read books', '']
+_llms_en += ['- [' + plain_en(t_en) + '](' + make_en_book_url(t_en) + '): read by '
+             + str(len(book_celebs[t_ko]['celebs'])) + ' celebrities'
+             for _s, t_en, t_ko in _top_books_en]
+_llms_en += ['', '## Celebrity reading lists', '']
+_llms_en += ['- [' + plain_en(n_en) + '](' + make_en_celeb_url(n_en) + '): '
+             + str(len(celebs[n_ko]['books'])) + ' books'
+             for _s, n_en, n_ko in sorted(en_celeb_pages, key=lambda c: plain_en(c[1]).lower())]
+_llms_en += ['', '## Optional', '',
+             '- [Korean version](' + BASE + '): the full archive in Korean',
+             '- [llms.txt (Korean)](' + BASE + 'llms.txt)',
+             '']
+write_if_changed('en/llms.txt', '\n'.join(_llms_en))
+print(f"✅ en/llms.txt 생성")
 
 # ── 9. feed.xml 자동 생성 ───────────────────────────────────────────
 
