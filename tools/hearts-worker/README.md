@@ -129,6 +129,33 @@ SELECT path, SUM(n) AS n FROM views GROUP BY path ORDER BY n DESC LIMIT 30;
 GA 수치와는 완전히 같지 않습니다. 이 집계는 차단기에 덜 가려지는 대신 JS가 꺼진 방문은 못 세고, 봇 판별 기준도 다릅니다.
 한쪽을 기준으로 정해 추세를 보세요.
 
+## 사이트 검색어 (검색창 기록)
+
+사이트 검색창([`assets/v2/search.js`](../../assets/v2/search.js))에서 입력한 검색어를 Worker의 `POST /search`로 보내 날짜별 횟수로 쌓습니다.
+구글·네이버에서 들어온 검색어는 서치 콘솔·서치어드바이저에서 따로 보고, 여기서는 **우리 사이트 안에서 찾은 말**만 봅니다.
+
+1. D1 **Console**에서 [`schema.sql`](./schema.sql)의 `CREATE TABLE IF NOT EXISTS searches ...` 문을 실행
+2. 새 [`worker.js`](./worker.js)를 **Edit code**에 붙여 넣고 **Deploy**
+3. 검색창 스크립트는 모든 페이지가 같은 파일을 불러오므로 병합만 하면 적용됩니다(페이지를 다시 만들 필요 없음).
+   브라우저 캐시 때문에 방문자에게는 하루쯤 걸릴 수 있습니다.
+
+세는 기준
+
+- 글자를 칠 때마다가 아니라 입력을 1.2초 멈춘 뒤 한 번만 기록합니다. 같은 검색어를 이어서 다시 치면 세지 않습니다.
+- 2글자 미만, 40자 초과, 주소·이메일처럼 보이는 입력은 저장하지 않습니다. 영문은 소문자로 합칩니다.
+- 칸마다 검색 횟수, 추천 결과가 하나도 없었던 횟수, 추천 결과를 누른 횟수를 셉니다.
+- 방문자 id·IP는 보내지도 저장하지도 않습니다. 봇·허용 출처가 아닌 요청은 세지 않습니다.
+
+보기: 하트·조회수 통계 화면의 **인기 검색어**, **결과 없는 검색어** 탭. 결과 없는 검색어는 사람들이 찾는데 사이트에 없는 셀럽·책이라 추가할 후보를 고르는 데 씁니다.
+
+```bash
+curl -H "Authorization: Bearer <ADMIN_KEY>" "https://favorbook-hearts.<계정>.workers.dev/admin/searches?days=30"
+```
+
+```sql
+SELECT q, SUM(n) AS n, SUM(zero) AS zero FROM searches GROUP BY q ORDER BY n DESC LIMIT 30;
+```
+
 ## 무료 한도
 
 D1 무료 플랜은 하루 쓰기 10만 건, 읽기 500만 행입니다. 하트 한 번에 쓰기 2건이라

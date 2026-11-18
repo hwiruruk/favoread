@@ -21,6 +21,9 @@
  *   GET  /admin/stats            → 합계·일별·순위·최근 기록                  (운영자 전용)
  *   POST /view    {"path":"/share/이름.html"}  → 204   페이지 조회수 한 번 (assets/views.js가 보낸다)
  *   GET  /admin/views?days=30    → 일별 합계·페이지 순위                       (운영자 전용)
+ *   POST /search  {"kind":"s","q":"카리나","hits":3}  → 204  사이트 검색창 검색어 (assets/v2/search.js가 보낸다)
+ *                 kind "s"=검색(hits는 추천 결과 수), "c"=추천 결과를 누름
+ *   GET  /admin/searches?days=30 → 인기 검색어·결과 없는 검색어                (운영자 전용)
  *        운영자 전용은 Authorization: Bearer <ADMIN_KEY> 헤더가 있어야 한다.
  *
  * 키는 셀럽이면 "c:" + 한국어 이름, 책이면 "b:" + 한국어 제목이다.
@@ -65,6 +68,13 @@ export default {
       }
       if (url.pathname === '/view' && request.method === 'POST') {
         return await view(request, env, cors, allowed);
+      }
+      if (url.pathname === '/search' && request.method === 'POST') {
+        return await searchLog(request, env, cors, allowed);
+      }
+      if (url.pathname === '/admin/searches' && request.method === 'GET') {
+        await requireAdmin(request, env);
+        return json(await adminSearches(url, env), cors);
       }
       if (url.pathname === '/admin/views' && request.method === 'GET') {
         await requireAdmin(request, env);
@@ -271,6 +281,64 @@ function normalizePath(p) {
   path = path.replace(/\/index\.html$/, '/');
   if (!/^\/[^\s<>"'\\]*$/.test(path)) return '';
   return path;
+}
+
+// ── 사이트 검색어 ──────────────────────────────────────────────────
+// 검색창에 입력을 멈춘 뒤의 검색어를 날짜별로 센다. 방문자 id·IP는 저장하지 않는다.
+// zero는 추천 결과가 하나도 없었던 횟수 — 사람들이 찾는데 사이트에 없는 셀럽·책이다.
+
+const MAX_Q = 40;
+
+function normalizeQuery(q) {
+  if (typeof q !== 'string') return '';
+  const t = q.normalize('NFC').replace(/[\u0000-\u001f\u007f]/g, ' ').replace(/\s+/g, ' ').trim().toLowerCase();
+  if (t.length < 2 || t.length > MAX_Q) return '';
+  if (/https?:|www\.|@/.test(t)) return '';   // 주소·이메일처럼 보이는 입력은 저장하지 않는다
+  return t;
+}
+
+async function searchLog(request, env, cors, allowed) {
+  const ua = request.headers.get('User-Agent') || '';
+  const ip = request.headers.get('CF-Connecting-IP') || '';
+  const done = () => new Response(null, { status: 204, headers: cors });
+  if (!allowed || !ua || BOT_RE.test(ua) || !rateOk('search|' + ip)) return done();
+  const body = await readJson(request);
+  const q = normalizeQuery(body.q);
+  if (!q) return done();
+  const day = Math.floor((Date.now() + KST) / DAY);
+  if (body.kind === 'c') {
+    await env.DB
+      .prepare('INSERT INTO searches (q, day, n, zero, clicks) VALUES (?1, ?2, 0, 0, 1) '
+             + 'ON CONFLICT(q, day) DO UPDATE SET clicks = clicks + 1')
+      .bind(q, day).run();
+  } else {
+    const zero = Number(body.hits) === 0 ? 1 : 0;
+    await env.DB
+      .prepare('INSERT INTO searches (q, day, n, zero, clicks) VALUES (?1, ?2, 1, ?3, 0) '
+             + 'ON CONFLICT(q, day) DO UPDATE SET n = n + 1, zero = zero + ?3')
+      .bind(q, day, zero).run();
+  }
+  return done();
+}
+
+async function adminSearches(url, env) {
+  const days = Math.min(Math.max(parseInt(url.searchParams.get('days'), 10) || 30, 1), 90);
+  const since = Math.floor((Date.now() + KST) / DAY) - days + 1;
+  const [top, none, total] = await env.DB.batch([
+    env.DB.prepare('SELECT q, SUM(n) AS n, SUM(zero) AS zero, SUM(clicks) AS clicks FROM searches '
+                 + 'WHERE day >= ?1 GROUP BY q HAVING SUM(n) > 0 ORDER BY n DESC, q LIMIT 100').bind(since),
+    env.DB.prepare('SELECT q, SUM(n) AS n, SUM(zero) AS zero, SUM(clicks) AS clicks FROM searches '
+                 + 'WHERE day >= ?1 GROUP BY q HAVING SUM(zero) > 0 ORDER BY zero DESC, q LIMIT 100').bind(since),
+    env.DB.prepare('SELECT SUM(n) AS n, SUM(zero) AS zero, SUM(clicks) AS clicks FROM searches WHERE day >= ?1').bind(since),
+  ]);
+  const row = r => ({ q: r.q, n: r.n, zero: r.zero, clicks: r.clicks });
+  const t = total.results[0] || {};
+  return {
+    days,
+    total: t.n || 0, zero: t.zero || 0, clicks: t.clicks || 0,
+    top: top.results.map(row),
+    none: none.results.map(row),
+  };
 }
 
 async function adminViews(url, env) {
