@@ -20,6 +20,7 @@ GA_TAG = (
     "    gtag('js', new Date());\n"
     "    gtag('config', '" + GA_MEASUREMENT_ID + "');\n"
     '  </script>\n'
+    '  <script src="' + BASE + 'assets/views.js" defer></script>\n'
 )
 TODAY = datetime.date.today().isoformat()
 

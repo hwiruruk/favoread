@@ -97,7 +97,38 @@ SELECT item, n FROM counts ORDER BY n DESC LIMIT 30;
 
 읽은 책이 많은 셀럽과 검색 인기 셀럽에 더 몰아서 넣고 싶으면 [`seed-500.sql`](./seed-500.sql)을 씁니다. `data.json`의 셀럽별 책 권수에 비례해 500개를 나누되, 서치콘솔 인기 검색어에 나온 8명은 3배 가중합니다(책이 적은 셀럽은 0~1개). 위 `seed.sql`과 따로 더해지며, 같은 방식으로 한 번만 실행하고 되돌릴 때는 파일 안의 `UPDATE` 문을 씁니다.
 
+## 페이지 조회수 (GA를 거치지 않는 자체 집계)
+
+모든 공개 페이지가 [`assets/views.js`](../../assets/views.js)를 불러와 열릴 때 Worker의 `POST /view`로 한 번 알립니다.
+광고 차단기에 덜 가려지고, 서버에는 **페이지 주소·날짜별 횟수만** 남습니다(방문자 id·IP는 저장하지 않음).
+
+1. D1 **Console**에서 [`schema.sql`](./schema.sql)의 `CREATE TABLE IF NOT EXISTS views ...` 문을 실행
+2. 새 [`worker.js`](./worker.js)를 **Edit code**에 붙여 넣고 **Deploy** (바인딩·변수는 그대로)
+3. 사이트를 다시 생성하면(update-sitemap 워크플로) 각 페이지 `<head>`에 `views.js`가 들어갑니다
+
+세는 기준
+
+- 같은 탭에서 같은 페이지를 새로고침하거나 다시 열어도 한 번만 셉니다(브라우저 sessionStorage).
+- 서버는 User-Agent에 봇·크롤러·미리보기 표시가 있는 요청, 허용 출처(`ALLOWED_ORIGIN`)가 아닌 요청, IP당 1분 40회 초과를 세지 않습니다.
+- 주소는 `/index.html`을 `/`로 합치고 `?검색어`·`#해시`는 버립니다. 날짜는 한국 시간 기준입니다.
+- 한국어·영문 페이지는 주소가 다르므로 따로 셉니다.
+
+보기 (운영자 전용, `ADMIN_KEY` 필요)
+
+```bash
+curl -H "Authorization: Bearer <ADMIN_KEY>" "https://favorbook-hearts.<계정>.workers.dev/admin/views?days=30"
+```
+
+최근 N일(최대 90) 일별 합계와 페이지 순위 100개가 나옵니다. D1 Console에서 바로 보려면:
+
+```sql
+SELECT path, SUM(n) AS n FROM views GROUP BY path ORDER BY n DESC LIMIT 30;
+```
+
+GA 수치와는 완전히 같지 않습니다. 이 집계는 차단기에 덜 가려지는 대신 JS가 꺼진 방문은 못 세고, 봇 판별 기준도 다릅니다.
+한쪽을 기준으로 정해 추세를 보세요.
+
 ## 무료 한도
 
 D1 무료 플랜은 하루 쓰기 10만 건, 읽기 500만 행입니다. 하트 한 번에 쓰기 2건이라
-하루 수만 번 눌려도 충분합니다.
+하루 수만 번 눌려도 충분합니다. 조회수는 한 번에 쓰기 1건이라 하루 약 10만 페이지뷰까지 무료로 셉니다.
