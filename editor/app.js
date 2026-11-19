@@ -75,6 +75,36 @@ function toTitleCase(s) {
   );
 }
 
+/* 검증된 표기 사전 — data.csv 에 이미 쌓인 값에서 학습한다.
+ * 같은 한국어 제목(저자)에 같은 영문 표기가 LEARNED_MIN 건 이상 있고 다른 표기보다 앞서면
+ * 번역기를 부르지 않고 그 값을 그대로 쓴다. (예: 한강 → Han Kang)
+ * 반환: { text, source: 'learned', count } 또는 null.
+ * 끝의 ' *'(직역 표시)는 세기에서 무시하고, 가장 많은 원본 표기를 그대로 돌려준다. */
+const LEARNED_MIN = 3;
+function learnedEn(kind, ko) {
+  const key = String(ko || '').replace(/\s+/g, ' ').trim();
+  if (!key) return null;
+  const field = kind === 'author' ? 'author' : 'title';
+  const byNorm = new Map();   // 정규화 영문 -> { n, raw: Map(원본 -> 건수) }
+  for (const c of State.celebs.values()) {
+    for (const b of c.books || []) {
+      if (String(b[field] || '').replace(/\s+/g, ' ').trim() !== key) continue;
+      const raw = String(b[field + '_en'] || '').trim();
+      const norm = raw.replace(/\s*\*\s*$/, '').trim().toLowerCase();
+      if (!norm) continue;
+      const e = byNorm.get(norm) || { n: 0, raw: new Map() };
+      e.n++;
+      e.raw.set(raw, (e.raw.get(raw) || 0) + 1);
+      byNorm.set(norm, e);
+    }
+  }
+  const ranked = [...byNorm.values()].sort((a, b) => b.n - a.n);
+  if (!ranked.length || ranked[0].n < LEARNED_MIN) return null;
+  if (ranked[1] && ranked[1].n === ranked[0].n) return null;   // 동률이면 애매하니 번역기에 맡김
+  const text = [...ranked[0].raw.entries()].sort((a, b) => b[1] - a[1])[0][0];
+  return { text, source: 'learned', count: ranked[0].n };
+}
+
 /* 한국어 성씨 → 자주 쓰이는 로마자 표기.
  * 한국 이름의 영문 표기는 '성 이름' 순서(예: 한강 = Han Kang)가 표준이고
  * 본인이 외국 활동 시에도 이 순서를 유지하는 경우가 많다.
@@ -1114,12 +1144,17 @@ async function autoFillEn(title, author) {
   const seq = ++enAutoSeq;
   const stillEmpty = (id) => seq === enAutoSeq && bookDlg.open && !$('#' + id).value.trim();
   const done = [];
+  // 이미 3건 이상 쌓인 검증 표기가 있으면 조회 없이 먼저 채운다
+  const Lt = needTitle ? learnedEn('title', title) : null;
+  if (Lt) { markAutoFilled('bookTitleEn', Lt.text); done.push('영문 제목(검증)'); }
+  const La = needAuthor ? learnedEn('author', author) : null;
+  if (La) { markAutoFilled('bookAuthorEn', La.text); done.push('영문 저자(검증)'); }
   try {
     const [book, person] = await Promise.all([
-      EnEnrich.bookEn(title, author).catch(() => null),
-      needAuthor ? EnEnrich.celebEn(author).catch(() => null) : null,
+      (needTitle && !Lt) || (needAuthor && !La) ? EnEnrich.bookEn(title, author).catch(() => null) : null,
+      needAuthor && !La ? EnEnrich.celebEn(author).catch(() => null) : null,
     ]);
-    if (needTitle && book && book.title_en && stillEmpty('bookTitleEn')) {
+    if (needTitle && !Lt && book && book.title_en && stillEmpty('bookTitleEn')) {
       markAutoFilled('bookTitleEn', book.title_en);
       done.push('영문 제목');
     }
@@ -1127,7 +1162,7 @@ async function autoFillEn(title, author) {
     let authorEn = person && person.name_en
       ? person.name_en.replace(/\s*\([^)]*\)\s*$/, '').trim()
       : (book && book.author_en) || '';
-    if (needAuthor && authorEn && stillEmpty('bookAuthorEn')) {
+    if (needAuthor && !La && authorEn && stillEmpty('bookAuthorEn')) {
       markAutoFilled('bookAuthorEn', fixKoreanNameOrder(author, authorEn));
       done.push('영문 저자');
     }
@@ -1392,6 +1427,12 @@ $('#bookTranslateBtn').addEventListener('click', async (e) => {
   const prev = e.target.textContent;
   e.target.textContent = '번역 중…';
   try {
+    const L = learnedEn('title', t);
+    if (L) {
+      $('#bookTitleEn').value = L.text;
+      toast(`검증된 표기 적용 (${L.count}건): ${L.text}`, 'ok');
+      return;
+    }
     const r = await EnEnrich.translateKoEn(t);
     if (!r || !r.text) {
       toast('번역 결과를 얻지 못했습니다', 'err');
@@ -1428,6 +1469,12 @@ $('#bookAuthorTranslateBtn').addEventListener('click', async (e) => {
   const prev = e.target.textContent;
   e.target.textContent = '번역 중…';
   try {
+    const L = learnedEn('author', a);
+    if (L) {
+      $('#bookAuthorEn').value = L.text;
+      toast(`검증된 표기 적용 (${L.count}건): ${L.text}`, 'ok');
+      return;
+    }
     const r = await EnEnrich.translateKoEn(a);
     if (!r || !r.text) { toast('번역 결과를 얻지 못했습니다', 'err'); return; }
     const cased = fixKoreanNameOrder(a, toTitleCase(r.text));
@@ -3547,6 +3594,8 @@ function ttlNeedsDraft(k, v) {
 }
 
 async function draftTitle(titleKo) {
+  const L = learnedEn('title', titleKo);
+  if (L) return { value: stripStar(L.text), source: `검증 ${L.count}건` };
   const r = await EnEnrich.translateKoEn(titleKo);
   if (!r || !r.text) return null;
   const value = enTitleCase(stripStar(r.text).replace(/[.。]+$/, ''));
@@ -3562,6 +3611,8 @@ function autNeedsDraft(name, av) {
 }
 
 async function draftAuthor(nameKo) {
+  const L = learnedEn('author', nameKo);
+  if (L) return { value: stripStar(L.text), source: `검증 ${L.count}건` };
   const r = await EnEnrich.translateKoEn(nameKo);
   if (!r || !r.text) return null;
   const value = fixKoreanNameOrder(nameKo, toTitleCase(stripStar(r.text).replace(/[.。]+$/, '')));
