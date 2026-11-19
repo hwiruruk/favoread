@@ -131,7 +131,14 @@ GA 수치와는 완전히 같지 않습니다. 이 집계는 차단기에 덜 �
 
 ## 사이트 검색어 (검색창 기록)
 
-사이트 검색창([`assets/v2/search.js`](../../assets/v2/search.js))에서 입력한 검색어를 Worker의 `POST /search`로 보내 날짜별 횟수로 쌓습니다.
+사이트 검색창에서 입력한 검색어를 Worker의 `POST /search`로 보내 날짜별 횟수로 쌓습니다.
+검색창이 두 종류라 기록하는 파일도 둘입니다.
+
+- 메인 한국어·영문 페이지: 입력할 때마다 목록을 바로 걸러 주는 자체 검색창이라 [`assets/views.js`](../../assets/views.js)가 입력창(`#search-input`, `#en-search-input`)에 붙어 기록합니다.
+  걸러진 결과 문구가 `결과 없음`·`No results`이면 결과 없는 검색으로 셉니다. 책 칩을 눌러 자동으로 채워지는 검색은 사람이 친 말이 아니므로 세지 않습니다.
+- 그 밖의 페이지(셀럽·그룹·작가·영문 등 약 2,700개): [`assets/v2/search.js`](../../assets/v2/search.js)가 기록합니다.
+
+메인 검색창의 HTML 구조(입력창·결과 문구 id)를 바꾸면 `views.js`의 `MAIN_SEARCH` 설정도 함께 고쳐야 합니다.
 구글·네이버에서 들어온 검색어는 서치 콘솔·서치어드바이저에서 따로 보고, 여기서는 **우리 사이트 안에서 찾은 말**만 봅니다.
 
 1. D1 **Console**에서 [`schema.sql`](./schema.sql)의 `CREATE TABLE IF NOT EXISTS searches ...` 문을 실행
