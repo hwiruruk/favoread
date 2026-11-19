@@ -61,7 +61,8 @@
       var celebs = data.celebs || {}, books = {}, list = [];
       Object.keys(celebs).forEach(function (n) {
         var bs = celebs[n].books || [];
-        list.push({ key: norm(n + (celebs[n].nameEn || '')), label: n, meta: bs.length + '권', href: celebUrl(n), rank: 0 });
+        // aliases(본명 등)는 화면에 보이지 않고 검색에만 쓴다.
+        list.push({ key: norm(n + (celebs[n].nameEn || '')), alias: norm((celebs[n].aliases || []).join(' ')), label: n, meta: bs.length + '권', href: celebUrl(n), rank: 0 });
         bs.forEach(function (b) {
           if (!b.title) return;
           var e = books[b.title] || (books[b.title] = { author: b.author || '', en: b.title_en || '', readers: [] });
@@ -89,7 +90,8 @@
       var x = index[i], score = -1;
       if (x.key.indexOf(term) === 0) score = 0;
       else if (x.key.indexOf(term) > 0) score = 1;
-      else if (x.akey && x.akey.indexOf(term) >= 0) score = 2;
+      else if (x.alias && x.alias.indexOf(term) >= 0) score = 2;
+      else if (x.akey && x.akey.indexOf(term) >= 0) score = 3;
       if (score >= 0) hits.push([score, x]);
     }
     // 이름·제목 앞부분이 맞는 것 먼저, 사람 먼저, 책은 많이 읽힌 순

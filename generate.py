@@ -2025,6 +2025,14 @@ for _fn in os.listdir(DETAIL_DIR):
     if _fn.endswith('.json') and _fn not in _kept_detail_files:
         os.remove(os.path.join(DETAIL_DIR, _fn))
 
+# 검색 전용 별칭(본명·성+이름·이름만 등). 화면에는 표기하지 않고 검색창 색인에만 쓴다.
+# data/aliases.json: {"aliases": {"가원(미야오)": ["김가원", "가원"]}}
+try:
+    with open('data/aliases.json', encoding='utf-8') as f:
+        _aliases_db = json.load(f).get('aliases', {})
+except (FileNotFoundError, json.JSONDecodeError):
+    _aliases_db = {}
+
 data_json = {
     'generated': TODAY,
     'source': 'favorbook.co.kr',
@@ -2036,6 +2044,7 @@ data_json = {
             'books':    [lite_book(b) for b in info['books']],
             # 영문 공유 카드에 쓴다 (tools/make_og.py)
             **({'nameEn': plain_en(info['name_en'])} if info.get('name_en') else {}),
+            **({'aliases': _aliases_db[name]} if _aliases_db.get(name) else {}),
         }
         for name, info in celebs.items()
     }
