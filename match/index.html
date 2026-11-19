@@ -59,6 +59,8 @@
   .cv img { position:absolute; inset:0; width:100%; height:100%; object-fit:cover; }
 
   /* 월드컵 */
+  .skip { margin-top:14px; text-align:center; }
+  .skip button { background:none; border:0; text-decoration:underline; font-size:13px; color:var(--soft); cursor:pointer; }
   .prog { display:flex; align-items:center; gap:10px; font-weight:800; font-size:14px; }
   .prog-bar { flex:1; height:12px; border:1px solid var(--border); background:var(--bg); }
   .prog-bar i { display:block; height:100%; background:var(--pink); width:0; transition:width .25s; }
@@ -70,8 +72,6 @@
   .bk.lost { opacity:.35; transform:scale(.96); }
   .bk .t { margin-top:10px; font-weight:800; font-size:15px; line-height:1.3; word-break:keep-all; }
   .bk .a { font-size:12px; color:var(--soft); margin-top:2px; }
-  .skip { margin-top:14px; text-align:center; }
-  .skip button { background:none; border:0; text-decoration:underline; font-size:13px; color:var(--soft); cursor:pointer; }
   .shelf { display:grid; grid-template-columns:repeat(5,1fr); gap:8px; margin-top:12px; }
   .shelf .it { align-self:start; position:relative; border:0; background:none; padding:0; cursor:pointer; font:inherit; text-align:center; }
   .shelf .cv { padding:4px; font-size:10px; }
@@ -193,7 +193,7 @@
     <div id="cupPlay" class="hide">
       <div class="prog"><span id="cupNo">1 / 10</span><div class="prog-bar"><i id="cupBar"></i></div></div>
       <div class="vs" id="vs"></div>
-      <div class="skip"><button id="cupSkip">둘 다 별로예요 · 다른 책 보기</button></div>
+      <div class="skip"><button id="cupSkip">다른 책 보기</button></div>
     </div>
     <div id="cupKing" class="hide">
       <b style="font-size:18px">나만의 독서 취향 10권 완성!</b>
@@ -505,7 +505,7 @@
       var cos = dot / Math.sqrt(uw * cw);
       // 내 선택이 얼마나 겹쳤나를 우선하고, 책장이 작아 우연히 맞은 사람은 cos 로 가려낸다
       return { c: c, shared: shared, sameAuth: sameAuth, authHit: authHit, score: (dot / uw) * (0.7 + 0.3 * cos) };
-    }).filter(Boolean).sort(function (a, b) { return b.score - a.score || (b.shared.length + b.authHit.length) - (a.shared.length + a.authHit.length); });
+    }).filter(Boolean).sort(function (a, b) { return (b.shared.length + b.authHit.length) - (a.shared.length + a.authHit.length) || b.score - a.score; });
 
     var again = isShared
       ? '<button class="btn" data-try="1">나도 해보기 →</button>'

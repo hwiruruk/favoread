@@ -2779,6 +2779,22 @@ for _name, _info in celebs.items():
             }
         book_celebs[_t]['celebs'].append(_name)
 
+def merge_title_variants(items):
+    """띄어쓰기만 다른 제목('어린왕자'/'어린 왕자')은 랭킹에서 한 권으로 합친다.
+    대표 제목은 읽은 사람이 더 많은 쪽."""
+    groups = {}
+    for t, bi in items:
+        groups.setdefault(re.sub(r'\s+', '', t), []).append((t, bi))
+    merged = []
+    for g in groups.values():
+        g.sort(key=lambda x: -len(x[1]['celebs']))
+        t, bi = g[0]
+        if len(g) > 1:
+            celebs_u = list(dict.fromkeys(c for _, b in g for c in b['celebs']))
+            bi = dict(bi, celebs=celebs_u)
+        merged.append((t, bi))
+    return merged
+
 # 2명 이상이 읽은 책만 책 페이지가 생성됨 → 그 책 제목 set
 books_with_pages = {t for t, bi in book_celebs.items() if len(bi['celebs']) >= 2}
 
@@ -6352,7 +6368,7 @@ en_rank_url = EN_BASE + 'share/ranking.html'
 _en_pool_set = set(en_book_pool)
 
 
-_en_top_books = sorted(book_celebs.items(), key=lambda x: (-len(x[1]['celebs']), x[0]))[:30]
+_en_top_books = sorted(merge_title_variants(book_celebs.items()), key=lambda x: (-len(x[1]['celebs']), x[0]))[:30]
 _en_auth_cnt, _en_auth_name = {}, {}
 for _i in celebs.values():
     for _b in _i['books']:
@@ -7349,7 +7365,7 @@ print(f"✅ /en/index.html 생성")
 
 # ── 6. 랭킹 페이지 (share/ranking.html) ─────────────────────────────
 
-top_books = sorted(book_celebs.items(), key=lambda x: len(x[1]['celebs']), reverse=True)[:30]
+top_books = sorted(merge_title_variants(book_celebs.items()), key=lambda x: len(x[1]['celebs']), reverse=True)[:30]
 
 top_authors = {}
 top_publishers = {}
