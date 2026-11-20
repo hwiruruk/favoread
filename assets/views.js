@@ -13,7 +13,16 @@
   if (!API || /^(localhost|127\.0\.0\.1)$/.test(location.hostname)) return;
   if (navigator.webdriver) return;
 
+  // Workers 무료 요청 한도(하루 10만 건)를 아끼려고 조회수·검색어는 SAMPLE번 중 1번만 보내고,
+  // 보낼 때 w(가중치)=SAMPLE을 함께 실어 서버가 그만큼 더한다. 그래서 통계 숫자는 전체에 가깝게 나온다.
+  // 비율을 바꾸려면 이 값(과 assets/v2/search.js 의 같은 값)만 고치면 된다. 1이면 전부 보낸다.
+  var SAMPLE = 3;
+
   function post(path, payload) {
+    if (SAMPLE > 1) {
+      if (Math.random() * SAMPLE >= 1) return;
+      payload.w = SAMPLE;
+    }
     var body = JSON.stringify(payload);
     try {
       if (navigator.sendBeacon && navigator.sendBeacon(API + path, new Blob([body], { type: 'text/plain' }))) return;

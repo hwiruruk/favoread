@@ -37,8 +37,15 @@
   // 방문자 id·IP는 보내지도 저장하지도 않는다.
   var LOG_API = (window.FAVOR_HEARTS_API || 'https://favorbook-hearts.twinwhee.workers.dev').replace(/\/+$/, '');
   var LOG_OFF = /^(localhost|127\.0\.0\.1)$/.test(location.hostname) || navigator.webdriver;
+  // Workers 무료 요청 한도를 아끼려고 SAMPLE번 중 1번만 보내고 가중치 w를 실어 서버가 그만큼 더한다.
+  // assets/views.js 의 SAMPLE과 같은 값으로 둔다.
+  var SAMPLE = 3;
   function sendLog(payload) {
     if (LOG_OFF) return;
+    if (SAMPLE > 1) {
+      if (Math.random() * SAMPLE >= 1) return;
+      payload.w = SAMPLE;
+    }
     var body = JSON.stringify(payload);
     try {
       if (navigator.sendBeacon && navigator.sendBeacon(LOG_API + '/search', new Blob([body], { type: 'text/plain' }))) return;

@@ -24,6 +24,7 @@
  *   POST /search  {"kind":"s","q":"카리나","hits":3}  → 204  사이트 검색창 검색어 (assets/v2/search.js가 보낸다)
  *                 kind "s"=검색(hits는 추천 결과 수), "c"=추천 결과를 누름
  *   GET  /admin/searches?days=30 → 인기 검색어·결과 없는 검색어                (운영자 전용)
+ *        /view·/search 는 선택 필드 w(1~10)를 받아 그만큼 센다 (클라이언트가 N번 중 1번만 보낼 때 w=N).
  *        운영자 전용은 Authorization: Bearer <ADMIN_KEY> 헤더가 있어야 한다.
  *
  * 키는 셀럽이면 "c:" + 한국어 이름, 책이면 "b:" + 한국어 제목이다.
@@ -39,6 +40,13 @@ const RATE_LIMIT = 40;       // IP 하나가 1분에 누를 수 있는 횟수
 const KNOWN_TTL = 3600 * 1000;
 const IP_DAILY_PER_ITEM = 10; // IP 하나가 같은 셀럽·책에 하루 넣을 수 있는 하트 수
 const CELEBS_TTL = 60;        // /celebs 캐시 초
+const MAX_WEIGHT = 10;       // /view·/search 한 번이 셀 수 있는 최대 가중치 (클라이언트 샘플링용)
+
+// 클라이언트가 N번 중 1번만 보낼 때 실어 보내는 w. 없거나 이상하면 1.
+function weightOf(body) {
+  const w = Math.floor(Number(body && body.w));
+  return w >= 1 && w <= MAX_WEIGHT ? w : 1;
+}
 
 class HttpError extends Error {
   constructor(status, message) { super(message); this.status = status; }
@@ -263,10 +271,11 @@ async function view(request, env, cors, allowed) {
   const path = normalizePath(body.path);
   if (path) {
     const day = Math.floor((Date.now() + KST) / DAY);
+    const w = weightOf(body);
     await env.DB
-      .prepare('INSERT INTO views (path, day, n) VALUES (?1, ?2, 1) '
-             + 'ON CONFLICT(path, day) DO UPDATE SET n = n + 1')
-      .bind(path, day)
+      .prepare('INSERT INTO views (path, day, n) VALUES (?1, ?2, ?3) '
+             + 'ON CONFLICT(path, day) DO UPDATE SET n = n + ?3')
+      .bind(path, day, w)
       .run();
   }
   return new Response(null, { status: 204, headers: cors });
@@ -306,17 +315,18 @@ async function searchLog(request, env, cors, allowed) {
   const q = normalizeQuery(body.q);
   if (!q) return done();
   const day = Math.floor((Date.now() + KST) / DAY);
+  const w = weightOf(body);
   if (body.kind === 'c') {
     await env.DB
-      .prepare('INSERT INTO searches (q, day, n, zero, clicks) VALUES (?1, ?2, 0, 0, 1) '
-             + 'ON CONFLICT(q, day) DO UPDATE SET clicks = clicks + 1')
-      .bind(q, day).run();
+      .prepare('INSERT INTO searches (q, day, n, zero, clicks) VALUES (?1, ?2, 0, 0, ?3) '
+             + 'ON CONFLICT(q, day) DO UPDATE SET clicks = clicks + ?3')
+      .bind(q, day, w).run();
   } else {
-    const zero = Number(body.hits) === 0 ? 1 : 0;
+    const zero = Number(body.hits) === 0 ? w : 0;
     await env.DB
-      .prepare('INSERT INTO searches (q, day, n, zero, clicks) VALUES (?1, ?2, 1, ?3, 0) '
-             + 'ON CONFLICT(q, day) DO UPDATE SET n = n + 1, zero = zero + ?3')
-      .bind(q, day, zero).run();
+      .prepare('INSERT INTO searches (q, day, n, zero, clicks) VALUES (?1, ?2, ?4, ?3, 0) '
+             + 'ON CONFLICT(q, day) DO UPDATE SET n = n + ?4, zero = zero + ?3')
+      .bind(q, day, zero, w).run();
   }
   return done();
 }
