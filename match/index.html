@@ -58,7 +58,7 @@
   .cv { position:relative; width:100%; aspect-ratio:2/3; background:var(--pink); border:1px solid var(--border); display:flex; align-items:center; justify-content:center; padding:10px; font-weight:800; font-size:14px; overflow:hidden; text-align:center; }
   .cv img { position:absolute; inset:0; width:100%; height:100%; object-fit:cover; }
 
-  /* 월드컵 */
+  /* 취향 매칭 */
   .skip { margin-top:14px; text-align:center; }
   .skip button { background:none; border:0; text-decoration:underline; font-size:13px; color:var(--soft); cursor:pointer; }
   .prog { display:flex; align-items:center; gap:10px; font-weight:800; font-size:14px; }
@@ -170,7 +170,7 @@
 </head>
 <body>
 <header class="bar">
-  <nav aria-label="주요 메뉴"><a href="/recommend/idol.html">아이돌</a><a href="/recommend/actor.html">배우</a><a href="/author/">작가</a><a href="/share/ranking.html">랭킹</a><a href="/match/">취향 월드컵</a></nav>
+  <nav aria-label="주요 메뉴"><a href="/recommend/idol.html">아이돌</a><a href="/recommend/actor.html">배우</a><a href="/author/">작가</a><a href="/share/ranking.html">랭킹</a><a href="/match/">취향 매칭</a></nav>
   <a class="logo" href="/">최애의 독서</a>
   <div class="right"><div class="site-search sm"></div></div>
 </header>
@@ -179,16 +179,16 @@
   <p class="lead">표지에 끌리는 대로 10번만 고르세요. 같은 책을 읽은 연예인 중에서 나와 독서 취향이 가장 비슷한 사람을 찾아드려요.</p>
 
   <div class="tabs" role="tablist">
-    <button role="tab" id="tabCup" aria-selected="true">📚 독서 월드컵</button>
+    <button role="tab" id="tabCup" aria-selected="true">📚 독서 취향 매칭</button>
     <button role="tab" id="tabSearch" aria-selected="false">🔎 인생책으로 찾기</button>
   </div>
 
-  <!-- 월드컵 -->
+  <!-- 취향 매칭 -->
   <section id="cup" class="box">
     <div id="cupIntro">
       <b style="font-size:18px">표지 두 장 중에 더 끌리는 책은?</b>
       <p style="margin:8px 0 0;color:var(--ink)">읽었는지는 상관없어요. 표지와 제목에 끌리는 대로 10번 고르면 나만의 독서 취향 10권이 완성돼요.</p>
-      <button class="btn" id="cupStart" disabled>독서 월드컵 시작하기</button>
+      <button class="btn" id="cupStart" disabled>독서 취향 매칭 시작하기</button>
     </div>
     <div id="cupPlay" class="hide">
       <div class="prog"><span id="cupNo">1 / 10</span><div class="prog-bar"><i id="cupBar"></i></div></div>
@@ -269,10 +269,10 @@
       auth.forEach(function (a) { authorDf[a] = (authorDf[a] || 0) + 1; });
       celebs.push({ name: name, img: c.imageUrl, url: c.shortUrl, keys: keys, authors: auth, byAuthor: byAuthor });
     });
-    // 월드컵 후보: 표지가 있고 4명 이상이 읽은, 알아볼 만한 책
+    // 매칭 후보: 표지가 있고 4명 이상이 읽은, 알아볼 만한 책
     pool = Object.keys(books).map(function (k) { return books[k]; }).filter(function (b) { return b.cover && b.df >= 4; });
     $('cupStart').disabled = false;
-    $('cupStart').textContent = '독서 월드컵 시작하기 (후보 ' + pool.length + '권)';
+    $('cupStart').textContent = '독서 취향 매칭 시작하기 (후보 ' + pool.length + '권)';
     renderGenres(); renderGrid(true);
     var nb = 0; celebs.forEach(function (c) { nb += c.keys.size; });
     $('ctaCelebs').textContent = celebs.length.toLocaleString(); $('ctaBooks').textContent = nb.toLocaleString();
@@ -293,7 +293,7 @@
   $('tabCup').onclick = function () { tab('cup'); };
   $('tabSearch').onclick = function () { tab('search'); picked = []; pickedAuthors = []; weight = {}; renderChips(); renderGrid(true); };
 
-  /* ---------- 월드컵 ---------- */
+  /* ---------- 취향 매칭 ---------- */
   var round = 0, seen = {}, pair = [], locked = false;
   function show(id) { ['cupIntro', 'cupPlay', 'cupKing'].forEach(function (x) { $(x).classList.toggle('hide', x !== id); }); }
   function draw() {
@@ -509,7 +509,7 @@
 
     var again = isShared
       ? '<button class="btn" data-try="1">나도 해보기 →</button>'
-      : '<button class="btn ghost" onclick="document.getElementById(\'tabCup\').click();document.getElementById(\'cupStart\').click()">독서 월드컵 다시 하기</button>';
+      : '<button class="btn ghost" onclick="document.getElementById(\'tabCup\').click();document.getElementById(\'cupStart\').click()">독서 취향 매칭 다시 하기</button>';
     if (!rows.length) { $('out').innerHTML = '<p class="empty">고른 책을 읽은 연예인이 아직 없어요. 다시 골라 보세요.</p>' + again; return; }
     var n = total(), cnt = pickedAuthors.length ? '개' : '권';
     // 일치율별 한 줄 — 고른 게 5개 미만이면 우연히 100%가 나오기 쉬워서 최상위 문구는 아끼고 정확도 안내를 붙인다

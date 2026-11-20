@@ -2307,7 +2307,7 @@ def _v2_bar_nav(lang):
                 '<a href="' + BASE + 'en/share/ranking.html">Ranking</a>')
     return ('<a href="' + BASE + 'recommend/idol.html">아이돌</a><a href="' + BASE + 'recommend/actor.html">배우</a>'
             '<a href="' + BASE + 'author/">작가</a><a href="' + BASE + 'share/ranking.html">랭킹</a>'
-            '<a href="' + BASE + 'match/">취향 월드컵</a>')
+            '<a href="' + BASE + 'match/">취향 매칭</a>')
 
 
 _V2_CSS_RULES = [
