@@ -515,7 +515,7 @@
     // 일치율별 한 줄 — 고른 게 5개 미만이면 우연히 100%가 나오기 쉬워서 최상위 문구는 아끼고 정확도 안내를 붙인다
     var TIERS = [
       { min: 0.8, tag: '혹시 본인이세요? 🫢', line: '거의 복붙 수준이에요', cls: 'hot' },
-      { min: 0.6, tag: '독서 메이트 👯', line: '같은 책장에서 꺼낸 수준이에요', cls: 'hot' },
+      { min: 0.5, tag: '독서 메이트 👯', line: '같은 책장에서 꺼낸 수준이에요', cls: 'hot' },
       { min: 0.4, tag: '독서 메이트 후보 🤝', line: '같이 독서모임 해도 되겠어요', cls: '' },
       { min: 0.2, tag: '은근 통하는 사이 👀', line: '겹치는 책이 은근 많아요', cls: '' },
       { min: 0,   tag: '독서 접점 발견 🔍', line: '이 책만큼은 통했어요', cls: '' }
@@ -532,20 +532,35 @@
       '<div class="hl-name">' + esc(top1.c.name) + '</div>' +
       '<div class="hl-sub">' + (isShared ? '친구의' : '내') + ' 독서 취향과 <b>' + p1 + '%</b> 겹쳐요 · ' + t1.line + '</div>' +
       (n < 2 ? '<div class="hl-hint">💡 2' + cnt + ' 이상 고르면 더 정확해져요</div>' : '') + '</div>';
-    $('out').innerHTML = headline + '<h2 style="margin:22px 0 0">나와 독서 취향이 비슷한 연예인 TOP ' + Math.min(5, rows.length) + '</h2>' +
-      rows.slice(0, 5).map(function (r, i) {
-        var why = [], m = r.shared.length + r.authHit.length, rate = rateOf(r), t = tierOf(rate);
-        r.authHit.forEach(function (a) { why.push('작가 ' + esc(authors[a].name) + ' · ' + esc((r.c.byAuthor[a] || []).slice(0, 3).join(', '))); });
-        if (r.sameAuth.length) why.push('같은 작가 · ' + r.sameAuth.map(function (x) { return esc(authors[x.a].name); }).filter(function (v, j, y) { return y.indexOf(v) === j; }).join(', '));
-        return '<article class="box"><div class="res"><div class="rank">' + (i + 1) + '</div>' +
-          (r.c.img ? '<img class="pic" src="' + esc(r.c.img) + '" alt="' + esc(r.c.name) + '" loading="lazy" referrerpolicy="no-referrer">' : '') +
-          '<div><h3><a href="' + esc(r.c.url) + '">' + esc(r.c.name) + '</a></h3>' +
-          '<span class="pct">' + t.tag + '</span> <span class="pct2">' + Math.round(rate * 100) + '%</span>' +
-          '<p class="said"><b>' + esc(r.c.name) + '님</b>은 ' + (isShared ? '친구가' : '내가') + ' 고른 ' + (pickedAuthors.length ? '' : '책 ') + n + cnt + ' 중 <b>' + m + cnt + '</b>' + (cnt === '권' ? '을' : '를') + ' 읽었어요</p>' +
-          (why.length ? '<p class="why">' + why.join('<br>') + '</p>' : '') + '</div></div>' +
-          (r.shared.length ? '<div class="shared">' + r.shared.map(function (k) { return '<div class="m">' + cover(books[k]) + esc(books[k].title) + '</div>'; }).join('') + '</div>' : '') +
-          '</article>';
-      }).join('') + shareBlock(top1, t1, p1) + again;
+    var card = function (r, i) {
+      var why = [], m = r.shared.length + r.authHit.length, rate = rateOf(r), t = tierOf(rate);
+      r.authHit.forEach(function (a) { why.push('작가 ' + esc(authors[a].name) + ' · ' + esc((r.c.byAuthor[a] || []).slice(0, 3).join(', '))); });
+      if (r.sameAuth.length) why.push('같은 작가 · ' + r.sameAuth.map(function (x) { return esc(authors[x.a].name); }).filter(function (v, j, y) { return y.indexOf(v) === j; }).join(', '));
+      return '<article class="box"><div class="res"><div class="rank">' + (i + 1) + '</div>' +
+        (r.c.img ? '<img class="pic" src="' + esc(r.c.img) + '" alt="' + esc(r.c.name) + '" loading="lazy" referrerpolicy="no-referrer">' : '') +
+        '<div><h3><a href="' + esc(r.c.url) + '">' + esc(r.c.name) + '</a></h3>' +
+        '<span class="pct">' + t.tag + '</span> <span class="pct2">' + Math.round(rate * 100) + '%</span>' +
+        '<p class="said"><b>' + esc(r.c.name) + '님</b>은 ' + (isShared ? '친구가' : '내가') + ' 고른 ' + (pickedAuthors.length ? '' : '책 ') + n + cnt + ' 중 <b>' + m + cnt + '</b>' + (cnt === '권' ? '을' : '를') + ' 읽었어요</p>' +
+        (why.length ? '<p class="why">' + why.join('<br>') + '</p>' : '') + '</div></div>' +
+        (r.shared.length ? '<div class="shared">' + r.shared.map(function (k) { return '<div class="m">' + cover(books[k]) + esc(books[k].title) + '</div>'; }).join('') + '</div>' : '') +
+        '</article>';
+    };
+    // 5위와 일치 개수가 같은 동률은 더보기로 펼친다 (TOP 5 바깥에서 잘리는 사람 방지)
+    var TOP_N = 5, tieEnd = Math.min(rows.length, TOP_N);
+    if (rows.length > TOP_N) {
+      var cut = rateOf(rows[TOP_N - 1]);
+      while (tieEnd < rows.length && rateOf(rows[tieEnd]) === cut) tieEnd++;
+    }
+    var tieCnt = tieEnd - TOP_N;
+    $('out').innerHTML = headline + '<h2 style="margin:22px 0 0">나와 독서 취향이 비슷한 연예인 TOP ' + Math.min(TOP_N, rows.length) + '</h2>' +
+      rows.slice(0, TOP_N).map(card).join('') +
+      (tieCnt > 0 ? '<div id="tieBox" hidden>' + rows.slice(TOP_N, tieEnd).map(function (r, i) { return card(r, TOP_N + i); }).join('') + '</div>' +
+        '<button class="btn ghost" id="tieMore" type="button">5위와 같은 일치율 ' + tieCnt + '명 더보기 ▾</button>' : '') +
+      shareBlock(top1, t1, p1) + again;
+    var tieBtn = $('tieMore');
+    if (tieBtn) tieBtn.addEventListener('click', function () {
+      $('tieBox').hidden = false; tieBtn.remove(); gtag('event', 'match_tie_more', { extra: tieCnt });
+    });
     if (isShared) $('out').insertAdjacentHTML('afterbegin', '<div class="sharedbar">💌 친구가 공유한 결과예요. 나는 어떤 연예인과 독서 취향이 비슷할까요?</div>');
     gtag('event', isShared ? 'match_view_shared' : 'match_result', { top1: top1.c.name, picks: n, rate: p1 });
     $('out').scrollIntoView({ behavior: 'smooth' });
