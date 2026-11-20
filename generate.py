@@ -1239,7 +1239,9 @@ SHELF_CSS = (
     '    .shelf.is-strip .sp-t i { font-size: var(--fs, 10px); }\n'
     # 그림으로 저장할 때: html2canvas는 세로쓰기 글자의 윗부분을 상자 밖으로 그려 overflow:hidden 에 잘라 먹힌다
     # (어→거, 엘→겔). 저장하는 동안만 상자를 열어 두고 줄 높이를 넉넉히 준다.
-    '    .is-capturing .sp-t i, .shelf.is-strip .sp-t i { overflow: visible; text-overflow: clip; line-height: 1.5; }\n'
+    '    .is-capturing .sp-t i, .shelf.is-strip .sp-t i { overflow: visible; text-overflow: clip; line-height: 1.5;\n'
+    # html2canvas는 세로쓰기 글자를 칸 왼쪽으로 치우쳐 그린다(글자 크기의 0.3배쯤). 저장할 때만 되돌려 가운데로 맞춘다.
+    '                                                 position: relative; left: .3em; }\n'
     '    .shelf.is-strip .sp-t { padding: 14px 2px; }\n'
     # 이미지로 저장하는 동안에는 NEW 표시와 함께 추천한 셀럽 목록을 뺀다
     '    .is-capturing .rl-new, .is-capturing .rl-shared, .is-capturing .rl-comment { display: none !important; }\n'
