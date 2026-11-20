@@ -26,6 +26,7 @@
     <button id="sortBtn" class="btn" title="모든 셀럽의 추천 도서를 도서명·저자 가나다순으로 정렬">🔤 정렬</button>
     <button id="missingBtn" class="btn" title="영문 누락된 셀럽·책 목록 (TSV 복사 → AI 의뢰 → 일괄 적용)">📋 누락 영문</button>
     <button id="featuredBtn" class="btn" title="메인 상단에 고정 노출할 &apos;요즘 핫한 사람&apos; 한 줄 지정">🔥 핫한 사람</button>
+    <button id="biosBtn" class="btn" title="셀럽 페이지 상단의 한 줄 소개(한국어·영어)를 직접 고침 — 저장하면 data/bios.json 에 바로 커밋">✏️ 소개글</button>
     <button id="pinnedBtn" class="btn" title="셀럽이 최근 추천한 책을 골라 메인에 고정 (책 표지 + 셀럽 사진)">📌 추천책 고정</button>
     <button id="titlesBtn" class="btn" title="원제·위키백과에서 찾은 공식 영문판 제목과 저자 영문 이름 후보를 검수 (승인한 값이 영문 페이지에 나감)">🔤 영문 제목·저자 검수</button>
     <button id="genresBtn" class="btn" title="도서관 분류로 소설·에세이 등을 정하지 못한 책을 직접 골라 줌 (독서 취향 통계에 쓰임)">🏷️ 분야 검수</button>
@@ -277,8 +278,44 @@
 </dialog>
 
 <!-- 누락 영문 다이얼로그 -->
+<!-- 셀럽 한 줄 소개(data/bios.json) 편집 -->
+<dialog id="biosDialog" class="modal" style="width: min(860px, 96vw);">
+  <header class="modal-head">
+    <h3>✏️ 셀럽 소개글 편집</h3>
+    <button type="button" class="x" data-close>✕</button>
+  </header>
+
+  <div class="modal-body" style="max-height: calc(90vh - 130px);">
+    <p class="muted small">
+      셀럽 페이지 맨 위에 나오는 <b>한 줄 소개</b>(한국어·영어)를 직접 고칩니다.
+      <code>data/bios.json</code>에 따로 저장되며, <b>data.csv와는 별개로 이 창의 저장 버튼으로 바로 커밋</b>됩니다.
+      저장하면 자동 갱신이 돌아 몇 분 뒤 사이트에 반영돼요.
+      작품 제목은 <code>'작품명'</code>처럼 작은따옴표로 감싸 주세요. 둘 다 비우면 소개가 없는 상태가 됩니다.
+    </p>
+
+    <div class="row">
+      <input id="biosSearch" type="search" placeholder="이름·영문명으로 검색…" style="flex:1 1 auto;min-width:0">
+      <select id="biosFilter" title="보기 범위" style="flex:0 0 auto;width:auto">
+        <option value="all">전체</option>
+        <option value="missing">소개 없음</option>
+        <option value="noyear">생년 없음</option>
+        <option value="edited">수정함</option>
+      </select>
+    </div>
+    <div id="biosCount" class="muted small" style="margin-top:6px"></div>
+    <ul id="biosList" class="bios-list"></ul>
+    <button type="button" id="biosMore" class="btn small hidden" style="margin-top:8px">더 보기</button>
+  </div>
+
+  <footer class="modal-foot">
+    <span id="biosStatus" class="status"></span>
+    <button type="button" class="btn" data-close>닫기</button>
+    <button type="button" id="biosSaveBtn" class="btn primary" disabled>💾 GitHub에 저장</button>
+  </footer>
+</dialog>
+
 <!-- 메인 고정 "요즘 핫한 사람" 편집 -->
-<dialog id="featuredDialog" class="modal" style="width: min(760px, 96vw);">
+<dialog id="featuredDialog"class="modal" style="width: min(760px, 96vw);">
   <header class="modal-head">
     <h3>🔥 메인에 고정할 핫한 사람</h3>
     <button type="button" class="x" data-close>✕</button>
