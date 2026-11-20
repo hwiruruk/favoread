@@ -3320,16 +3320,15 @@ for name, info in celebs.items():
         byline_html = ' · '.join(byline_parts)
 
         # 책 정보(예스24) · 출처 — 표지·제목 링크를 모르는 사람도 바로 찾게 버튼으로 둔다
-        # 우리 책 페이지(이 책을 읽은 셀럽 모음)는 따로 둔다 — 예스24 링크와 헷갈리지 않게
-        # 예스24 버튼은 '예스24'라고 밝힌다. 책 페이지는 읽은 셀럽이 2명 이상일 때만 있다.
-        source_html = ((' <a class="rl-source rl-bookpage" href="' + esc(make_book_url(b['title']))
-                        + '" title="이 책을 읽은 셀럽 모아보기">📚 이 책 읽은 셀럽</a> ')
-                       if b['title'] in books_with_pages else '')
-        source_html += ('<a class="rl-source" href="' + esc(yes24_book_url(b['title'], raw_link, b['coverUrl']))
-                        + '" rel="nofollow noopener noreferrer" target="_blank" title="예스24에서 보기">📖 책 정보 · 예스24</a>')
-        if b['source'] and b['source'].startswith('http'):
-            source_html += (' <a class="rl-source" href="' + esc(b['source'])
+        # 출처는 URL이면 링크 버튼, URL이 아닌 글이면 '출처: 글' 로 그대로 보여준다.
+        source_html = ('<a class="rl-source" href="' + esc(yes24_book_url(b['title'], raw_link, b['coverUrl']))
+                       + '" rel="nofollow noopener noreferrer" target="_blank" title="예스24에서 보기">📖 책 정보 · 예스24</a>')
+        _src = (b['source'] or '').strip()
+        if _src.startswith('http'):
+            source_html += (' <a class="rl-source" href="' + esc(_src)
                             + '" rel="nofollow noopener noreferrer" target="_blank">📺 출처</a>')
+        elif _src:
+            source_html += ' <span class="rl-source-text">출처: ' + esc(_src) + '</span>'
 
         # 함께 추천한 다른 셀럽 (카드 안에 임베드)
         shared_html = ''
@@ -3347,8 +3346,9 @@ for name, info in celebs.items():
                     '\n      <div class="rl-shared">'
                     '<span class="rl-shared-label">👥 이 책을 읽은 다른 셀럽 '
                     + str(len(other_celebs)) + '명:</span> '
-                    + chips +
-                    '</div>'
+                    + chips
+                    + ' <a class="rl-book-link" href="' + esc(make_book_url(b['title'])) + '">책 정보 →</a>'
+                    + '</div>'
                 )
 
         # 책등 한 칸 — 예스24 책등이 있으면 그 이미지를, 없으면 색 책등을 쓴다.
@@ -3610,6 +3610,8 @@ for name, info in celebs.items():
         '    .rl-bookpage { background: #fff8e7; font-weight: 700; }\n'
         '    .rl-comment { font-size: 13px; line-height: 1.55; color: #222; background: #FFF7C2; border: 1.5px solid #000; padding: 6px 9px; margin: 0 0 8px; word-break: keep-all; }\n'
         '    .rl-source { display: inline-block; font-size: 12px; padding: 3px 8px; background: #fff; border: 1.5px solid #000; box-shadow: 1px 1px 0 0 #000; text-decoration: none; color: #000; transition: transform .1s, box-shadow .1s, background .1s; }\n'
+        '    .rl-source-text { display: inline-block; font-size: 12px; color: #555; margin-left: 4px; }\n'
+        '    .rl-book-link { font-size: 12px; font-weight: 700; }\n'
         '    .rl-source:hover { transform: translate(-1px,-1px); box-shadow: 2px 2px 0 0 #000; background: #a7f3d0; text-decoration: none; }\n'
         '    .rl-shared { clear: both; margin-top: 12px; padding-top: 10px; border-top: 1.5px dashed #ccc; display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }\n'
         '    .rl-shared-label { font-size: 12px; color: #666; font-weight: 700; }\n'
@@ -5293,16 +5295,16 @@ for name, info in celebs.items():
             author_text += ' <span style="color:#888">(' + lang_span(_nat) + ')</span>'
 
         # 책 정보(예스24) · 출처 — 한국어 페이지와 같은 자리. 한국 서점으로 가니 툴팁에 밝힌다.
-        # 우리 책 페이지(이 책을 읽은 셀럽 모음)는 따로 둔다 — 예스24 링크와 헷갈리지 않게
-        src_html = ((' <a class="rl-source rl-bookpage" href="' + make_en_book_url(book_title_en[b['title'].strip()])
-                     + '" title="See every celebrity who read this book">📚 Celebs who read this</a> ')
-                    if b['title'].strip() in books_with_pages and b['title'].strip() in book_title_en else '')
-        src_html += ('<a class="rl-source" href="' + esc(yes24_book_url(b['title'], raw_link, b['coverUrl']))
-                     + '" rel="nofollow noopener noreferrer" target="_blank" '
-                     'title="View on YES24 (Korean bookstore)">📖 Book details · YES24</a>')
-        if b['source'] and b['source'].startswith('http'):
-            src_html += (' <a class="rl-source" href="' + esc(b['source'])
+        # 출처가 URL이 아닌 글이면 'Source: 글' 로 그대로 보여준다.
+        src_html = ('<a class="rl-source" href="' + esc(yes24_book_url(b['title'], raw_link, b['coverUrl']))
+                    + '" rel="nofollow noopener noreferrer" target="_blank" '
+                    'title="View on YES24 (Korean bookstore)">📖 Book details · YES24</a>')
+        _src = (b['source'] or '').strip()
+        if _src.startswith('http'):
+            src_html += (' <a class="rl-source" href="' + esc(_src)
                          + '" rel="nofollow noopener noreferrer" target="_blank">📺 Source</a>')
+        elif _src:
+            src_html += ' <span class="rl-source-text">Source: ' + esc(_src) + '</span>'
 
         # 함께 추천한 다른 셀럽 — 한국어 페이지의 '👥 이 책을 읽은 다른 셀럽'과 같은 자리
         en_shared_html = ''
@@ -5720,6 +5722,7 @@ for name, info in celebs.items():
         '    .rl-bookpage { background: #fff8e7; font-weight: 700; }\n'
         '    .rl-comment { font-size: 13px; line-height: 1.55; color: #222; background: #FFF7C2; border: 1.5px solid #000; padding: 6px 9px; margin: 0 0 8px; word-break: keep-all; }\n'
         '    .rl-source { display: inline-block; font-size: 12px; padding: 3px 8px; background: #fff; border: 1.5px solid #000; box-shadow: 1px 1px 0 0 #000; text-decoration: none; color: #000; transition: transform .1s, box-shadow .1s, background .1s; }\n'
+        '    .rl-source-text { display: inline-block; font-size: 12px; color: #555; margin-left: 4px; }\n'
         '    .rl-source:hover { transform: translate(-1px,-1px); box-shadow: 2px 2px 0 0 #000; background: #a7f3d0; text-decoration: none; }\n'
         '    @media (max-width: 480px) { .rl-item { padding: 14px 12px 14px 46px; } .rl-num { width: 32px; height: 26px; font-size: 12px; } .rl-cover { width: 60px; height: 88px; margin-right: 10px; } .rl-meta { min-height: 88px; } .rl-title { font-size: 15px; } }\n'
         '    a { color: #2563eb; text-decoration: none; }\n'
