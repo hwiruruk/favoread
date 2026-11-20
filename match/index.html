@@ -522,8 +522,8 @@
     ];
     var tierOf = function (rate) {
       var t = TIERS.filter(function (x) { return rate >= x.min; })[0];
-      if (n < 5 && t === TIERS[0]) t = TIERS[2];       // 적게 골랐으면 '본인' · '독서 메이트'는 아낀다
-      if (n < 5 && t === TIERS[1]) t = TIERS[2];
+      if (n < 2 && t === TIERS[0]) t = TIERS[2];       // 1개만 골랐으면 '본인' · '독서 메이트'는 아낀다
+      if (n < 2 && t === TIERS[1]) t = TIERS[2];
       return t;
     };
     var rateOf = function (r) { return (r.shared.length + r.authHit.length) / n; };
@@ -531,7 +531,7 @@
     var headline = '<div class="hl ' + t1.cls + '"><div class="hl-tag">' + t1.tag + '</div>' +
       '<div class="hl-name">' + esc(top1.c.name) + '</div>' +
       '<div class="hl-sub">' + (isShared ? '친구의' : '내') + ' 독서 취향과 <b>' + p1 + '%</b> 겹쳐요 · ' + t1.line + '</div>' +
-      (n < 5 ? '<div class="hl-hint">💡 5' + cnt + ' 이상 고르면 더 정확해져요</div>' : '') + '</div>';
+      (n < 2 ? '<div class="hl-hint">💡 2' + cnt + ' 이상 고르면 더 정확해져요</div>' : '') + '</div>';
     $('out').innerHTML = headline + '<h2 style="margin:22px 0 0">나와 독서 취향이 비슷한 연예인 TOP ' + Math.min(5, rows.length) + '</h2>' +
       rows.slice(0, 5).map(function (r, i) {
         var why = [], m = r.shared.length + r.authHit.length, rate = rateOf(r), t = tierOf(rate);
