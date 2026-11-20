@@ -2008,20 +2008,27 @@
     filteredEntries = currentEntries.filter(([name, data]) => {
       if (!q) return true;
       // 칸 사이는 '|'로 막아 제목 끝과 저자 앞이 이어져 우연히 걸리지 않게 한다
-      const str = nk(`${name}|${data.books.map(b => `${b.title}|${b.author}|${b.publisher}`).join('|')}`);
+      // 본명(aka)은 화면에 안 보이고 검색에서만 쓴다 — '박진영'으로 쳐도 진영(갓세븐)이 나오게
+      const str = nk(`${name}|${(data.aka || []).join('|')}|${data.books.map(b => `${b.title}|${b.author}|${b.publisher}`).join('|')}`);
       return str.includes(q);
     });
-    // 이름이 걸린 사람을 책 제목으로만 걸린 사람보다 앞에 둔다 (무작위 순서에 묻히지 않게)
+    // 이름이 걸린 사람 → 본명으로 걸린 사람 → 책 제목으로만 걸린 사람 순 (무작위 순서에 묻히지 않게)
+    const akaHit = (e) => (e[1].aka || []).some((a) => nk(a).includes(q));
     if (q) {
       const byName = (e) => nk(e[0]).includes(q);
-      filteredEntries = [...filteredEntries.filter(byName), ...filteredEntries.filter((e) => !byName(e))];
+      const byAka = (e) => !byName(e) && akaHit(e);
+      filteredEntries = [
+        ...filteredEntries.filter(byName),
+        ...filteredEntries.filter(byAka),
+        ...filteredEntries.filter((e) => !byName(e) && !byAka(e)),
+      ];
     }
 
     const { count: bookCount, publisher: pubMode } = renderBookHits(kw);
     // 책 제목으로 찾았는데 사람 이름은 안 걸렸다면, 아래 셀럽 목록은 위 태그와
     // 같은 사람들이라 중복이다. 그럴 때는 목록을 접는다.
     // 출판사로 찾았을 때도 셀럽은 책 아래 태그로 이미 나오므로 큰 카드 목록은 접는다.
-    const nameHit = !!q && currentEntries.some(([name]) => nk(name).includes(q));
+    const nameHit = !!q && currentEntries.some(([name, data]) => nk(name).includes(q) || (data.aka || []).some((a) => nk(a).includes(q)));
     // pubMode 는 책 제목으로 찾았을 때 undefined 라서 이 식이 undefined 가 되고,
     // classList.toggle('hidden', undefined) 는 '강제 값 없음'으로 읽혀 목록을 뒤집어 버린다.
     // (예: '키키' → 키야(키키) 이름이 걸려도 책 제목 결과 때문에 셀럽 목록이 접혔다) 불리언으로 고정.
