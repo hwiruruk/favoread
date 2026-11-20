@@ -4094,7 +4094,7 @@ for _g in sorted(ko_groups.values(), key=lambda g: g['ko']):
         '    .gb-a { display: block; font-size: 11px; color: #666; }\n'
         '    .gb-b { display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; margin-top: 4px; font-size: 11px; line-height: 1.45; color: #444; }\n'
         '    .gb-w { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 4px; }\n'
-        '    .gb-w a { font-size: 11px; font-weight: 700; color: #000; background: #ffe58a; border: 1.5px solid #000; padding: 0 6px; border-radius: 99px; line-height: 1.6; }\n'
+        '    .gb-w a { font-size: 11px; font-weight: 700; color: var(--on-yellow, #111); background: #ffe58a; border: 1.5px solid #000; padding: 0 6px; border-radius: 99px; line-height: 1.6; }\n'
         '    .gb-l { display: inline-block; margin-top: 4px; font-size: 11px; font-weight: 600; }\n'
         '    footer { margin-top: 40px; padding-top: 16px; border-top: 2px solid #000; font-size: 12px; color: #666; }\n'
         '  </style>\n'
