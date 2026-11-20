@@ -761,7 +761,7 @@ SPINE_IMG_GUARD = (
 SHELF_CAPTURE_JS_TEMPLATE = (
     '  <script>\n'
     '  (function () {\n'
-    '    var btns = [document.getElementById("shelf-cap"), document.getElementById("shelf-cap-clear")]\n'
+    '    var btns = [document.getElementById("shelf-cap"), document.getElementById("shelf-cap-clear"), document.getElementById("shelf-cap-list")]\n'
     '      .filter(Boolean);\n'
     '    if (!btns.length) return;\n'
     '    var H2C = "https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js";\n'
@@ -967,11 +967,12 @@ SHELF_CAPTURE_JS_TEMPLATE = (
     '      });\n'
     '    }\n'
     '\n'
-    '    function download(blob, clear) {\n'
+    '    function download(blob, clear, kind) {\n'
     '      var url = URL.createObjectURL(blob);\n'
     '      var a = document.createElement("a");\n'
     '      a.href = url; a.rel = "noopener";\n'
-    '      a.download = clear ? __FILE__.replace(/\\.png$/, __CLEAR__ + ".png") : __FILE__;\n'
+    '      a.download = kind === "list" ? __FILE__.replace(/\\.png$/, __LIST__ + ".png")\n'
+    '        : clear ? __FILE__.replace(/\\.png$/, __CLEAR__ + ".png") : __FILE__;\n'
     '      document.body.appendChild(a);\n'
     '      a.click();\n'
     '      a.remove();\n'
@@ -979,15 +980,18 @@ SHELF_CAPTURE_JS_TEMPLATE = (
     '    }\n'
     '\n'
     '    function capture(btn) {\n'
+    '      // 표지 저장: 표지 격자만(접어 둔 줄까지 전부). 책등 보기에서는 책등 한 줄. 리스트 저장: 독서 리스트만.\n'
+    '      var kind = btn.id === "shelf-cap-list" ? "list" : "cover";\n'
     '      var clear = btn.id === "shelf-cap-clear";\n'
-    '      // 책장과 표지 목록을 함께 담은 상자 하나만 넘긴다\n'
     '      var view = document.getElementById("shelf-area") || document.getElementById("shelf");\n'
     '      if (!view) return;\n'
-    '      // 책등 보기에서는 목록·제목 없이 책등만 가로 한 줄로, 투명 배경으로 담는다\n'
     '      var shelf = document.getElementById("shelf");\n'
-    '      var strip = !!shelf && !view.classList.contains("show-covers");\n'
-    '      var target = strip ? shelf : view;\n'
+    '      var covers = document.getElementById("covers"), rlist = document.getElementById("rlist");\n'
+    '      var strip = kind === "cover" && !!shelf && !view.classList.contains("show-covers");\n'
+    '      var target = strip ? shelf : kind === "list" ? (rlist || view) : (covers || view);\n'
     '      if (strip) { clear = true; shelf.classList.add("is-strip"); }\n'
+    '      var reopen = kind === "cover" && !strip && view.classList.contains("covers-collapsed");\n'
+    '      if (reopen) view.classList.remove("covers-collapsed");\n'
     '      var was = btn.textContent;\n'
     '      btns.forEach(function (b) { b.disabled = true; });\n'
     '      btn.textContent = __BUSY__;\n'
@@ -1018,15 +1022,15 @@ SHELF_CAPTURE_JS_TEMPLATE = (
     '            width: sw, height: sh, windowWidth: Math.max(document.documentElement.clientWidth, sw + 40),\n'
     '          }).then(function (c) { return trimRight(c, Math.round(8 * sc)); }), 40000, "그리기");\n'
     '        }\n'
-    '        var left = view.getBoundingClientRect().left, right = 0;\n'
-    '        [].forEach.call(view.children, function (ch) {\n'
+    '        var left = target.getBoundingClientRect().left, right = 0;\n'
+    '        [].forEach.call(target.children, function (ch) {\n'
     '          var b = ch.getBoundingClientRect();\n'
     '          if (b.right > right) right = b.right;\n'
     '        });\n'
-    '        var w = right > left ? Math.ceil(right - left) + 4 : view.offsetWidth;\n'
-    '        w = Math.min(w, view.offsetWidth);\n'
-    '        return guard(html2canvas(view, {\n'
-    '          backgroundColor: clear ? null : PAPER, scale: fitScale(w, view.offsetHeight),\n'
+    '        var w = right > left ? Math.ceil(right - left) + 4 : target.offsetWidth;\n'
+    '        w = Math.min(w, target.offsetWidth);\n'
+    '        return guard(html2canvas(target, {\n'
+    '          backgroundColor: clear ? null : PAPER, scale: fitScale(w, target.offsetHeight),\n'
     '          useCORS: true, logging: false, imageTimeout: 8000,\n'
     '          width: w, windowWidth: document.documentElement.clientWidth,\n'
     '        }), 40000, "그리기");\n'
@@ -1034,7 +1038,7 @@ SHELF_CAPTURE_JS_TEMPLATE = (
     '        // data: 주소는 길어지면 브라우저가 파일 이름을 무시한다. Blob으로 넘긴다.\n'
     '        return guard(toBlob(strip ? inner : compose(inner, clear)), 25000, "내보내기");\n'
     '      }).then(function (blob) {\n'
-    '        download(blob, clear);\n'
+    '        download(blob, clear, kind);\n'
     '      }).catch(function (e) {\n'
     '        console.error(e);\n'
     '        alert(__FAIL__ + "\\n(" + (e && e.message ? e.message : e) + ")");\n'
@@ -1042,6 +1046,7 @@ SHELF_CAPTURE_JS_TEMPLATE = (
     '        if (swap) swap.undo.forEach(function (f) { f(); });\n'
     '        if (muted) unmute(muted);\n'
     '        view.classList.remove("is-capturing");\n'
+    '        if (reopen) view.classList.add("covers-collapsed");\n'
     '        if (shelf) shelf.classList.remove("is-strip");\n'
     '        btns.forEach(function (b) { b.disabled = false; });\n'
     '        btn.textContent = was;\n'
@@ -1118,11 +1123,12 @@ SHELF_VIEW_JS = (
 )
 
 
-def shelf_capture_js(busy, filename, fail, headline, clear_suffix='_투명'):
+def shelf_capture_js(busy, filename, fail, headline, clear_suffix='_투명', list_suffix='_리스트'):
     """언어별 문구만 갈아 끼운다. clear_suffix 는 투명 배경 파일 이름 끝에 붙는다."""
     j = lambda v: json.dumps(v, ensure_ascii=False)
     return (SHELF_CAPTURE_JS_TEMPLATE
             .replace('__CLEAR__', j(clear_suffix))
+            .replace('__LIST__', j(list_suffix))
             .replace('__BUSY__', j(busy))
             .replace('__FILE__', j(filename))
             .replace('__FAIL__', j(fail))
@@ -2079,7 +2085,7 @@ def group_box_style(group_en):
     cs = gc['colors']
     bg = cs[0] if len(cs) == 1 else 'linear-gradient(135deg, ' + ', '.join(cs) + ')'
     dark = sum(_hex_luma(c) for c in cs) / len(cs) < 140
-    fg = '#fff' if dark else '#111'
+    fg = '#fefefe' if dark else '#101010'  # 치환 규칙(#fff·#111 → 테마색)에 걸리지 않게 고정값
     return 'background:' + bg + ';color:' + fg, fg
 
 
@@ -3667,8 +3673,9 @@ for name, info in celebs.items():
         '      <h2>📚 ' + esc(sname) + '의 독서 리스트 (' + str(n_books) + '권)</h2>\n'
         '      <div class="shelf-tabs">\n'
         + shelf_view_tabs('📚 책등', '🖼 표지') +
-        '        <button type="button" class="sh-cap" id="shelf-cap" title="지금 보이는 책장을 그대로 그림으로 내려받아요">⤓ 이미지 저장</button>\n'
+        '        <button type="button" class="sh-cap" id="shelf-cap" title="표지(또는 책등)를 전부 그림으로 내려받아요">⤓ 표지 저장</button>\n'
         '        <button type="button" class="sh-cap" id="shelf-cap-clear" title="배경 없이 투명한 PNG로 내려받아요">⤓ 투명 배경</button>\n'
+        '        <button type="button" class="sh-cap" id="shelf-cap-list" title="독서 리스트를 그림으로 내려받아요">⤓ 리스트 저장</button>\n'
         '      </div>\n'
         '    </div>\n'
         + new_block(new_items)
@@ -4040,7 +4047,7 @@ for _g in sorted(ko_groups.values(), key=lambda g: g['ko']):
             ],
         },
     })
-    GM_ON = (style + ';') if style else 'background: #ffe58a;'
+    GM_ON = (style + ';') if style else 'background: #ffe58a; color: #101010;'
     color_note = (('<p class="gc">공식 색 · ' + esc(gc['name']) + '</p>\n') if gc else '')
     page = (
         '<!DOCTYPE html>\n'
@@ -4078,7 +4085,7 @@ for _g in sorted(ko_groups.values(), key=lambda g: g['ko']):
         '    .gm:hover { transform: translate(-1px,-1px); box-shadow: 3px 3px 0 0 #000; }\n'
         '    .gm.on { box-shadow: 2px 2px 0 0 #000; ' + GM_ON + ' }\n'
         '    .gm img, .gm-all { width: 100%; aspect-ratio: 1/1; object-fit: cover; border: 2px solid #000; display: block; background: #f4f4f0; }\n'
-        '    .gm-all { display: flex; align-items: center; justify-content: center; font-weight: 900; font-size: 20px; }\n'
+        '    .gm-all { color: #000; display: flex; align-items: center; justify-content: center; font-weight: 900; font-size: 20px; }\n'
         '    .gm-n { display: block; font-weight: 800; font-size: 13px; margin-top: 6px; line-height: 1.25; }\n'
         '    .gm-c { display: block; font-size: 11px; opacity: .7; }\n'
         '    .pick { display: none; margin: 14px 0 0; font-size: 14px; font-weight: 700; }\n'
@@ -5782,8 +5789,9 @@ for name, info in celebs.items():
         '      <h2>Books ' + esc(_name_pl) + ' has read (' + str(n) + ')</h2>\n'
         '      <div class="shelf-tabs">\n'
         + shelf_view_tabs('📚 Spines', '🖼 Covers') +
-        '        <button type="button" class="sh-cap" id="shelf-cap" title="Download the bookshelf as shown on screen">\u2913 Save image</button>\n'
+        '        <button type="button" class="sh-cap" id="shelf-cap" title="Download all covers (or spines) as an image">\u2913 Save covers</button>\n'
         '        <button type="button" class="sh-cap" id="shelf-cap-clear" title="Download as a PNG with a transparent background">\u2913 Transparent</button>\n'
+        '        <button type="button" class="sh-cap" id="shelf-cap-list" title="Download the reading list as an image">\u2913 Save list</button>\n'
         '      </div>\n'
         '    </div>\n'
         + new_block(en_new_items, 'en')
@@ -5801,7 +5809,7 @@ for name, info in celebs.items():
         + SHELF_VIEW_JS
         + shelf_capture_js('Saving…', 'bookshelf_' + slug + '.png',
                            'Could not create the image. Please try again.',
-                           _name_pl + ' — ' + str(n) + ' books', '_transparent')
+                           _name_pl + ' — ' + str(n) + ' books', '_transparent', '_list')
         + (EN_TR_NOTE_HTML if en_show_tr_note else '')
         + en_taste_html
         + en_related_html
