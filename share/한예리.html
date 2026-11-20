@@ -365,7 +365,7 @@
     .sp-t i { writing-mode: vertical-rl; text-orientation: mixed; font-style: normal;
               white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
               font-family: "KoPubWorld Batang", "Noto Serif KR", Batang, serif;
-              font-size: var(--fs, 15px); font-weight: 300; line-height: 1; letter-spacing: .02em; color: var(--bg);
+              font-size: var(--fs, 10px); font-weight: 300; line-height: 1; letter-spacing: .02em; color: var(--bg);
               text-shadow: 0 0 1px rgba(0,0,0,.35); }
     .sp-i { position: relative; z-index: 1; display: block;
             height: 100%; width: auto; max-width: 92px; object-fit: fill; }
@@ -377,7 +377,8 @@
     .shelf.is-strip .sp { border: 0; border-radius: 9px; box-shadow: none; transform: none; }
     .shelf.is-strip .sp.no-img, .shelf.is-strip .sp.sp-fail { width: var(--w, 28px); }
     .shelf.is-strip .sp-i { max-width: 92px; }
-    .shelf.is-strip .sp-t i { font-size: var(--fs, 15px); }
+    .shelf.is-strip .sp-t i { font-size: var(--fs, 10px); }
+    .is-capturing .sp-t i, .shelf.is-strip .sp-t i { overflow: visible; text-overflow: clip; line-height: 1.5; }
     .shelf.is-strip .sp-t { padding: 14px 2px; }
     .is-capturing .rl-new, .is-capturing .rl-shared, .is-capturing .rl-comment { display: none !important; }
     @media (max-width: 700px) { .covers { grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 16px 14px; }
@@ -388,7 +389,7 @@
                                  .shelf { --sh-h: 235px; }
                                  .sp.no-img, .sp.sp-fail { width: calc(var(--w, 28px) * .88); }
                                  .sp-i { max-width: 70px; }
-                                 .sp-t i { font-size: calc(var(--fs, 15px) * .76); }
+                                 .sp-t i { font-size: calc(var(--fs, 10px) * .76); }
                                  .sp-t { padding: 10px 2px; } }
     .reading-list { list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 14px; counter-reset: rl; }
     .rl-item { position: relative; background: var(--bg); border: 1px solid var(--border); box-shadow: none; padding: 14px 14px 14px 52px; transition: transform .12s, box-shadow .12s; }
@@ -482,15 +483,26 @@
         <button type="button" class="sh-cap" id="shelf-cap-list" title="독서 리스트를 그림으로 내려받아요">⤓ 리스트 저장</button>
       </div>
     </div>
+    <details class="new-sec">
+      <summary class="new-sec-h"><span class="rl-new-tag">NEW</span> 최근 10일 새로 추가된 책 (6권) <span class="new-sec-more" data-show="보기" data-hide="접기"></span></summary>
+      <div class="new-tiles">
+        <a class="new-tile" href="#b1"><span class="nt-cover"><img src="https://image.yes24.com/goods/112373505/L" alt="그리고 행복하다는 소식을 들었습니다 표지" loading="lazy"></span><span class="nt-title">그리고 행복하다는 소식을 들었습니다</span></a>
+        <a class="new-tile" href="#b2"><span class="nt-cover"><img src="https://image.yes24.com/goods/97255028/L" alt="긴긴밤 표지" loading="lazy"></span><span class="nt-title">긴긴밤</span></a>
+        <a class="new-tile" href="#b3"><span class="nt-cover"><img src="https://image.yes24.com/goods/67453439/L" alt="안락 표지" loading="lazy"></span><span class="nt-title">안락</span></a>
+        <a class="new-tile" href="#b4"><span class="nt-cover"><img src="https://image.yes24.com/goods/30435587/L" alt="여름은 오래 그곳에 남아 표지" loading="lazy"></span><span class="nt-title">여름은 오래 그곳에 남아</span></a>
+        <a class="new-tile" href="#b5"><span class="nt-cover"><img src="https://image.yes24.com/goods/123400303/L" alt="이처럼 사소한 것들 표지" loading="lazy"></span><span class="nt-title">이처럼 사소한 것들</span></a>
+        <a class="new-tile" href="#b6"><span class="nt-cover"><img src="https://image.yes24.com/goods/103026125/L" alt="지구 끝의 온실 표지" loading="lazy"></span><span class="nt-title">지구 끝의 온실</span></a>
+      </div>
+    </details>
     <p class="muted">5권은 다른 셀럽도 읽은 책이에요. 아래 목록에서 이 책을 읽은 셀럽 이름을 볼 수 있어요.</p>
     <div id="shelf-area" class="show-covers">
     <div class="shelf" id="shelf">
     <a class="sp" style="--c:hsl(40,45%,45%);--w:26px;--fs:10px" href="https://www.yes24.com/product/goods/112373505" rel="nofollow noopener noreferrer" target="_blank" title="그리고 행복하다는 소식을 들었습니다"><span class="sp-t"><i>그리고 행복하다는 소식을 들었습니다</i></span><img class="sp-i" src="https://image.yes24.com/goods/112373505/side" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.parentNode.classList.add('sp-fail');this.remove()" onload="if(this.naturalWidth/this.naturalHeight>0.4){this.parentNode.classList.add('sp-fail');this.remove()}"></a>
-    <a class="sp" style="--c:hsl(196,54%,33%);--w:30px;--fs:15px" href="https://www.yes24.com/product/goods/97255028" rel="nofollow noopener noreferrer" target="_blank" title="긴긴밤"><span class="sp-t"><i>긴긴밤</i></span><img class="sp-i" src="https://image.yes24.com/goods/97255028/side" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.parentNode.classList.add('sp-fail');this.remove()" onload="if(this.naturalWidth/this.naturalHeight>0.4){this.parentNode.classList.add('sp-fail');this.remove()}"></a>
-    <a class="sp" style="--c:hsl(157,35%,38%);--w:29px;--fs:15px" href="https://www.yes24.com/product/goods/67453439" rel="nofollow noopener noreferrer" target="_blank" title="안락"><span class="sp-t"><i>안락</i></span><img class="sp-i" src="https://image.yes24.com/goods/67453439/side" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.parentNode.classList.add('sp-fail');this.remove()" onload="if(this.naturalWidth/this.naturalHeight>0.4){this.parentNode.classList.add('sp-fail');this.remove()}"></a>
-    <a class="sp" style="--c:hsl(355,48%,31%);--w:33px;--fs:15px" href="https://www.yes24.com/product/goods/30435587" rel="nofollow noopener noreferrer" target="_blank" title="여름은 오래 그곳에 남아"><span class="sp-t"><i>여름은 오래 그곳에 남아</i></span><img class="sp-i" src="https://image.yes24.com/goods/30435587/side" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.parentNode.classList.add('sp-fail');this.remove()" onload="if(this.naturalWidth/this.naturalHeight>0.4){this.parentNode.classList.add('sp-fail');this.remove()}"></a>
-    <a class="sp" style="--c:hsl(109,38%,32%);--w:33px;--fs:15px" href="https://www.yes24.com/product/goods/123400303" rel="nofollow noopener noreferrer" target="_blank" title="이처럼 사소한 것들"><span class="sp-t"><i>이처럼 사소한 것들</i></span><img class="sp-i" src="https://image.yes24.com/goods/123400303/side" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.parentNode.classList.add('sp-fail');this.remove()" onload="if(this.naturalWidth/this.naturalHeight>0.4){this.parentNode.classList.add('sp-fail');this.remove()}"></a>
-    <a class="sp" style="--c:hsl(325,41%,27%);--w:33px;--fs:15px" href="https://www.yes24.com/product/goods/103026125" rel="nofollow noopener noreferrer" target="_blank" title="지구 끝의 온실"><span class="sp-t"><i>지구 끝의 온실</i></span><img class="sp-i" src="https://image.yes24.com/goods/103026125/side" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.parentNode.classList.add('sp-fail');this.remove()" onload="if(this.naturalWidth/this.naturalHeight>0.4){this.parentNode.classList.add('sp-fail');this.remove()}"></a>
+    <a class="sp" style="--c:hsl(196,54%,33%);--w:30px;--fs:10px" href="https://www.yes24.com/product/goods/97255028" rel="nofollow noopener noreferrer" target="_blank" title="긴긴밤"><span class="sp-t"><i>긴긴밤</i></span><img class="sp-i" src="https://image.yes24.com/goods/97255028/side" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.parentNode.classList.add('sp-fail');this.remove()" onload="if(this.naturalWidth/this.naturalHeight>0.4){this.parentNode.classList.add('sp-fail');this.remove()}"></a>
+    <a class="sp" style="--c:hsl(157,35%,38%);--w:29px;--fs:10px" href="https://www.yes24.com/product/goods/67453439" rel="nofollow noopener noreferrer" target="_blank" title="안락"><span class="sp-t"><i>안락</i></span><img class="sp-i" src="https://image.yes24.com/goods/67453439/side" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.parentNode.classList.add('sp-fail');this.remove()" onload="if(this.naturalWidth/this.naturalHeight>0.4){this.parentNode.classList.add('sp-fail');this.remove()}"></a>
+    <a class="sp" style="--c:hsl(355,48%,31%);--w:33px;--fs:10px" href="https://www.yes24.com/product/goods/30435587" rel="nofollow noopener noreferrer" target="_blank" title="여름은 오래 그곳에 남아"><span class="sp-t"><i>여름은 오래 그곳에 남아</i></span><img class="sp-i" src="https://image.yes24.com/goods/30435587/side" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.parentNode.classList.add('sp-fail');this.remove()" onload="if(this.naturalWidth/this.naturalHeight>0.4){this.parentNode.classList.add('sp-fail');this.remove()}"></a>
+    <a class="sp" style="--c:hsl(109,38%,32%);--w:33px;--fs:10px" href="https://www.yes24.com/product/goods/123400303" rel="nofollow noopener noreferrer" target="_blank" title="이처럼 사소한 것들"><span class="sp-t"><i>이처럼 사소한 것들</i></span><img class="sp-i" src="https://image.yes24.com/goods/123400303/side" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.parentNode.classList.add('sp-fail');this.remove()" onload="if(this.naturalWidth/this.naturalHeight>0.4){this.parentNode.classList.add('sp-fail');this.remove()}"></a>
+    <a class="sp" style="--c:hsl(325,41%,27%);--w:33px;--fs:10px" href="https://www.yes24.com/product/goods/103026125" rel="nofollow noopener noreferrer" target="_blank" title="지구 끝의 온실"><span class="sp-t"><i>지구 끝의 온실</i></span><img class="sp-i" src="https://image.yes24.com/goods/103026125/side" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.parentNode.classList.add('sp-fail');this.remove()" onload="if(this.naturalWidth/this.naturalHeight>0.4){this.parentNode.classList.add('sp-fail');this.remove()}"></a>
     </div>
     <div class="covers" id="covers">
     <a class="cv" href="https://www.yes24.com/product/goods/112373505" rel="nofollow noopener noreferrer" target="_blank" title="그리고 행복하다는 소식을 들었습니다"><img src="https://image.yes24.com/goods/112373505/L" alt="그리고 행복하다는 소식을 들었습니다 표지" loading="lazy"></a>
@@ -555,7 +567,7 @@
     <ol class="reading-list" id="rlist">
     <li class="rl-item" id="b1">
       <span class="rl-num">1</span>
-      <a class="rl-cover" href="https://www.yes24.com/product/goods/112373505" rel="nofollow noopener noreferrer" target="_blank" aria-label="그리고 행복하다는 소식을 들었습니다 알라딘에서 보기"><img src="https://image.yes24.com/goods/112373505/L" alt="그리고 행복하다는 소식을 들었습니다 표지" loading="lazy"></a>
+      <a class="rl-cover" href="https://www.yes24.com/product/goods/112373505" rel="nofollow noopener noreferrer" target="_blank" aria-label="그리고 행복하다는 소식을 들었습니다 알라딘에서 보기"><span class="rl-new" data-added="2026-11-20">NEW</span><img src="https://image.yes24.com/goods/112373505/L" alt="그리고 행복하다는 소식을 들었습니다 표지" loading="lazy"></a>
       <div class="rl-meta">
         <div class="rl-title"><a href="https://www.yes24.com/product/goods/112373505" rel="nofollow noopener noreferrer" target="_blank">그리고 행복하다는 소식을 들었습니다</a></div>
         <div class="rl-byline"><a href="https://favorbook.co.kr/author/%EC%9D%B4%EB%B3%91%EB%A5%A0.html">이병률</a> · 달</div>
@@ -566,7 +578,7 @@
     </li>
     <li class="rl-item" id="b2">
       <span class="rl-num">2</span>
-      <a class="rl-cover" href="https://www.yes24.com/product/goods/97255028" rel="nofollow noopener noreferrer" target="_blank" aria-label="긴긴밤 알라딘에서 보기"><img src="https://image.yes24.com/goods/97255028/L" alt="긴긴밤 표지" loading="lazy"></a>
+      <a class="rl-cover" href="https://www.yes24.com/product/goods/97255028" rel="nofollow noopener noreferrer" target="_blank" aria-label="긴긴밤 알라딘에서 보기"><span class="rl-new" data-added="2026-11-20">NEW</span><img src="https://image.yes24.com/goods/97255028/L" alt="긴긴밤 표지" loading="lazy"></a>
       <div class="rl-meta">
         <div class="rl-title"><a href="https://www.yes24.com/product/goods/97255028" rel="nofollow noopener noreferrer" target="_blank">긴긴밤</a></div>
         <div class="rl-byline">루리 · 문학동네</div>
@@ -579,7 +591,7 @@
     </li>
     <li class="rl-item" id="b3">
       <span class="rl-num">3</span>
-      <a class="rl-cover" href="https://www.yes24.com/product/goods/67453439" rel="nofollow noopener noreferrer" target="_blank" aria-label="안락 알라딘에서 보기"><img src="https://image.yes24.com/goods/67453439/L" alt="안락 표지" loading="lazy"></a>
+      <a class="rl-cover" href="https://www.yes24.com/product/goods/67453439" rel="nofollow noopener noreferrer" target="_blank" aria-label="안락 알라딘에서 보기"><span class="rl-new" data-added="2026-11-20">NEW</span><img src="https://image.yes24.com/goods/67453439/L" alt="안락 표지" loading="lazy"></a>
       <div class="rl-meta">
         <div class="rl-title"><a href="https://www.yes24.com/product/goods/67453439" rel="nofollow noopener noreferrer" target="_blank">안락</a></div>
         <div class="rl-byline">은모든 · 아르테</div>
@@ -591,7 +603,7 @@
     </li>
     <li class="rl-item" id="b4">
       <span class="rl-num">4</span>
-      <a class="rl-cover" href="https://www.yes24.com/product/goods/30435587" rel="nofollow noopener noreferrer" target="_blank" aria-label="여름은 오래 그곳에 남아 알라딘에서 보기"><img src="https://image.yes24.com/goods/30435587/L" alt="여름은 오래 그곳에 남아 표지" loading="lazy"></a>
+      <a class="rl-cover" href="https://www.yes24.com/product/goods/30435587" rel="nofollow noopener noreferrer" target="_blank" aria-label="여름은 오래 그곳에 남아 알라딘에서 보기"><span class="rl-new" data-added="2026-11-20">NEW</span><img src="https://image.yes24.com/goods/30435587/L" alt="여름은 오래 그곳에 남아 표지" loading="lazy"></a>
       <div class="rl-meta">
         <div class="rl-title"><a href="https://www.yes24.com/product/goods/30435587" rel="nofollow noopener noreferrer" target="_blank">여름은 오래 그곳에 남아</a></div>
         <div class="rl-byline">마쓰이에 마사시 · 비채</div>
@@ -603,7 +615,7 @@
     </li>
     <li class="rl-item" id="b5">
       <span class="rl-num">5</span>
-      <a class="rl-cover" href="https://www.yes24.com/product/goods/123400303" rel="nofollow noopener noreferrer" target="_blank" aria-label="이처럼 사소한 것들 알라딘에서 보기"><img src="https://image.yes24.com/goods/123400303/L" alt="이처럼 사소한 것들 표지" loading="lazy"></a>
+      <a class="rl-cover" href="https://www.yes24.com/product/goods/123400303" rel="nofollow noopener noreferrer" target="_blank" aria-label="이처럼 사소한 것들 알라딘에서 보기"><span class="rl-new" data-added="2026-11-20">NEW</span><img src="https://image.yes24.com/goods/123400303/L" alt="이처럼 사소한 것들 표지" loading="lazy"></a>
       <div class="rl-meta">
         <div class="rl-title"><a href="https://www.yes24.com/product/goods/123400303" rel="nofollow noopener noreferrer" target="_blank">이처럼 사소한 것들</a></div>
         <div class="rl-byline">클레어 키건 · 다산책방</div>
@@ -616,7 +628,7 @@
     </li>
     <li class="rl-item" id="b6">
       <span class="rl-num">6</span>
-      <a class="rl-cover" href="https://www.yes24.com/product/goods/103026125" rel="nofollow noopener noreferrer" target="_blank" aria-label="지구 끝의 온실 알라딘에서 보기"><img src="https://image.yes24.com/goods/103026125/L" alt="지구 끝의 온실 표지" loading="lazy"></a>
+      <a class="rl-cover" href="https://www.yes24.com/product/goods/103026125" rel="nofollow noopener noreferrer" target="_blank" aria-label="지구 끝의 온실 알라딘에서 보기"><span class="rl-new" data-added="2026-11-20">NEW</span><img src="https://image.yes24.com/goods/103026125/L" alt="지구 끝의 온실 표지" loading="lazy"></a>
       <div class="rl-meta">
         <div class="rl-title"><a href="https://www.yes24.com/product/goods/103026125" rel="nofollow noopener noreferrer" target="_blank">지구 끝의 온실</a></div>
         <div class="rl-byline"><a href="https://favorbook.co.kr/author/%EA%B9%80%EC%B4%88%EC%97%BD.html">김초엽</a> · 자이언트북스</div>
@@ -889,7 +901,11 @@
       // html2canvas가 문서를 복사할 때 이 클래스도 따라가서 복사본에서만 빠진 채 그려진다.
       view.classList.add("is-capturing");
       // 화면에 보이는 그대로 담는다. 표지를 접어 둔 상태면 보이는 3줄만, 펼쳤으면 전체.
-      guard(loadH2C(), 15000, "html2canvas").then(function () {
+      // 책등 글꼴(코펍 바탕체)은 글자를 처음 그릴 때 받아 온다. 안 받아진 채 찍으면 기본 바탕체로 나온다.
+      var fontReady = document.fonts && document.fonts.load
+        ? guard(document.fonts.load("300 10px \"KoPubWorld Batang\"", "가나다abc"), 8000, "글꼴").catch(function () {})
+        : Promise.resolve();
+      guard(Promise.all([loadH2C(), fontReady]), 15000, "html2canvas").then(function () {
         swap = swapImages(target);
         return swap.ready;
       }).then(function () {
