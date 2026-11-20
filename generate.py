@@ -1506,6 +1506,50 @@ _SHORT_NAME_RE = re.compile(r'\s*\([^)]*\)\s*$')
 def short_name(name):
     return _SHORT_NAME_RE.sub('', name).strip() or name
 
+# ── 셀럽 숨은 검색어(본명 등) 로더 ───────────────────────────────────
+# data/aliases.json: { "aliases": { "현진(스트레이키즈)": ["황현진", "Hwang Hyun-jin"] } }
+# 화면에는 나오지 않고 검색 색인에만 들어간다. 본명으로 검색해도 활동명 셀럽이 뜨게 하는 용도.
+# 키의 한글 정규화(NFC/NFD)가 CSV와 달라도 찾을 수 있게 NFC로 맞춰 둔다.
+def load_aliases():
+    path = 'data/aliases.json'
+    if not os.path.exists(path):
+        return {}
+    try:
+        with open(path, encoding='utf-8') as f:
+            d = json.load(f).get('aliases', {})
+    except Exception as e:
+        print(f"⚠️ aliases.json 로드 실패: {e}")
+        return {}
+    return {unicodedata.normalize('NFC', k): [str(x).strip() for x in v if str(x).strip()]
+            for k, v in d.items() if isinstance(v, list)}
+
+ALIASES = load_aliases()
+
+def get_aliases(name):
+    return ALIASES.get(unicodedata.normalize('NFC', name), [])
+
+def alias_search_terms(name):
+    """영어 홈 카드(data-q)용 — 영어 홈 검색은 하이픈만 공백으로 바꾸고 공백은 남겨서 비교한다.
+    그래서 'Hwang Hyun-jin' 한 가지만 넣으면 'hwang hyunjin'·'hwanghyunjin' 으로 못 찾는다. 세 꼴을 다 넣는다."""
+    out = []
+    for a in get_aliases(name):
+        k = a.lower().strip()
+        for v in (k, k.replace('-', ''), re.sub(r'[\s-]+', '', k)):
+            if v and v not in out:
+                out.append(v)
+    return out
+
+def alias_keys(name):
+    """검색 색인용 — 공백을 없앤 소문자 별칭. 하이픈이 든 영문 이름은 하이픈 뺀 꼴도 같이 넣는다
+    ("Hwang Hyun-jin" 을 'hwanghyunjin' 으로도 찾을 수 있게)."""
+    out = []
+    for a in get_aliases(name):
+        k = re.sub(r'\s+', '', a.lower())
+        for v in (k, k.replace('-', '')):
+            if v and v not in out:
+                out.append(v)
+    return out
+
 def get_bio(name, lang='ko'):
     """bios.json에서 한 줄 소개 가져오기. 없으면 빈 문자열."""
     entry = BIOS.get(name) or {}
@@ -2036,6 +2080,8 @@ data_json = {
             'books':    [lite_book(b) for b in info['books']],
             # 영문 공유 카드에 쓴다 (tools/make_og.py)
             **({'nameEn': plain_en(info['name_en'])} if info.get('name_en') else {}),
+            # 숨은 검색어(본명 등) — 화면에는 안 나오고 검색창만 쓴다 (data/aliases.json)
+            **({'alias': get_aliases(name)} if get_aliases(name) else {}),
         }
         for name, info in celebs.items()
     }
@@ -6460,7 +6506,8 @@ print("✅ /en/ 랭킹 페이지 생성: en/share/ranking.html")
 # [표시 이름, 찾을 말(소문자·공백 없음), 덧붙는 말, 주소, 0=사람/1=책, 읽은 사람 수]
 _v2_lang = 'en'
 _v2_norm = lambda s: re.sub(r'\s+', '', (s or '').lower())
-_v2_en_index = [[_v2_cname(n), _v2_norm(_v2_cname(n) + n), str(_v2_en_count(n)) + ' books', _v2_curl(n), 0, 0]
+_v2_en_index = [[_v2_cname(n), _v2_norm(_v2_cname(n) + n) + ''.join('|' + k for k in alias_keys(n)),
+                 str(_v2_en_count(n)) + ' books', _v2_curl(n), 0, 0]
                 for n in en_celeb_order]
 for _t in book_title_en:
     _rd = [n for n in book_celebs.get(_t, {}).get('celebs', []) if n in en_celeb_pos]
@@ -6525,7 +6572,7 @@ for slug, name_en, name_ko in en_celeb_pages:
     en_celeb_cards.append(
         '    <a href="share/' + slug + '.html" id="celeb-card-' + slug + '" data-celeb-card '
         'data-ko="' + esc(name_ko) + '" data-en="' + esc(plain_en(name_en)) + '" '
-        'data-q="' + esc((name_en + ' ' + name_ko).lower()) + '" class="group flex flex-col">\n'
+        'data-q="' + esc((name_en + ' ' + name_ko + ' ' + ' '.join(alias_search_terms(name_ko))).lower()) + '" class="group flex flex-col">\n'
         '      <div class="aspect-square overflow-hidden border-2 border-ink shadow-neo-sm bg-white group-hover:shadow-neo group-hover:-translate-y-0.5 transition-all">\n'
         '        <img src="' + esc(img) + '" alt="' + esc(name_en) + ' profile" loading="lazy" '
         'class="w-full h-full object-cover" referrerpolicy="no-referrer">\n'

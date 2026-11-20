@@ -24,6 +24,13 @@
 
   var esc = function (s) { return String(s).replace(/[&<>"']/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; }); };
   var norm = function (s) { return String(s).toLowerCase().replace(/\s+/g, ''); };
+  // 숨은 검색어(본명 등) — 화면에는 안 나오고 찾는 데만 쓴다. 하이픈 든 영문 이름은 하이픈 뺀 꼴도 같이 넣는다.
+  var aliasKey = function (arr) {
+    return (arr || []).map(function (a) {
+      var k = norm(a);
+      return k.indexOf('-') >= 0 ? '|' + k + '|' + k.replace(/-/g, '') : '|' + k;
+    }).join('');
+  };
   var celebUrl = function (n) { return '/share/' + encodeURIComponent(n.replace(/[\/\\]/g, '_')) + '.html'; };
   var bookUrl = function (t) { return '/share/book/' + encodeURIComponent(t.replace(/[\/\\:"?]/g, '_')) + '.html'; };
 
@@ -61,7 +68,7 @@
       var celebs = data.celebs || {}, books = {}, list = [];
       Object.keys(celebs).forEach(function (n) {
         var bs = celebs[n].books || [];
-        list.push({ key: norm(n + (celebs[n].nameEn || '')), label: n, meta: bs.length + '권', href: celebUrl(n), rank: 0 });
+        list.push({ key: norm(n + (celebs[n].nameEn || '')) + aliasKey(celebs[n].alias), label: n, meta: bs.length + '권', href: celebUrl(n), rank: 0 });
         bs.forEach(function (b) {
           if (!b.title) return;
           var e = books[b.title] || (books[b.title] = { author: b.author || '', en: b.title_en || '', readers: [] });

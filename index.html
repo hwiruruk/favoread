@@ -1812,6 +1812,12 @@
      '누가 이 책을 읽었나'가 궁금한 것이지 셀럽 카드가 궁금한 게 아니다. */
   /* 검색은 띄어쓰기를 무시한다. 제목은 '인간 실격'인데 '인간실격'으로 치는 사람이 많다. */
   const nk = (s) => String(s || '').toLowerCase().replace(/\s+/g, '');
+  // 숨은 검색어(본명 등) — 화면에는 안 나오고 검색에만 쓴다 (data/aliases.json → data.json 의 alias)
+  // 하이픈 든 영문 이름은 하이픈 뺀 꼴도 같이 넣는다 ('hwang hyun-jin' 도 'hwanghyunjin' 도 찾게).
+  const aliasOf = (data) => (data && data.alias || []).map((a) => {
+    const k = nk(a);
+    return k.includes('-') ? k + '|' + k.replace(/-/g, '') : k;
+  }).join('|');
 
   function bookIndex() {
     if (bookIndex._cache) return bookIndex._cache;
@@ -2013,12 +2019,12 @@
     filteredEntries = currentEntries.filter(([name, data]) => {
       if (!q) return true;
       // 칸 사이는 '|'로 막아 제목 끝과 저자 앞이 이어져 우연히 걸리지 않게 한다
-      const str = nk(`${name}|${data.books.map(b => `${b.title}|${b.author}|${b.publisher}`).join('|')}`);
+      const str = nk(`${name}|`) + aliasOf(data) + '|' + nk(`${data.books.map(b => `${b.title}|${b.author}|${b.publisher}`).join('|')}`);
       return str.includes(q);
     });
     // 이름이 걸린 사람을 책 제목으로만 걸린 사람보다 앞에 둔다 (무작위 순서에 묻히지 않게)
     if (q) {
-      const byName = (e) => nk(e[0]).includes(q);
+      const byName = (e) => nk(e[0]).includes(q) || aliasOf(e[1]).includes(q);
       filteredEntries = [...filteredEntries.filter(byName), ...filteredEntries.filter((e) => !byName(e))];
     }
 
@@ -2026,7 +2032,7 @@
     // 책 제목으로 찾았는데 사람 이름은 안 걸렸다면, 아래 셀럽 목록은 위 태그와
     // 같은 사람들이라 중복이다. 그럴 때는 목록을 접는다.
     // 출판사로 찾았을 때도 셀럽은 책 아래 태그로 이미 나오므로 큰 카드 목록은 접는다.
-    const nameHit = !!q && currentEntries.some(([name]) => nk(name).includes(q));
+    const nameHit = !!q && currentEntries.some(([name, data]) => nk(name).includes(q) || aliasOf(data).includes(q));
     // pubMode 는 책 제목으로 찾았을 때 undefined 라서 이 식이 undefined 가 되고,
     // classList.toggle('hidden', undefined) 는 '강제 값 없음'으로 읽혀 목록을 뒤집어 버린다.
     // (예: '키키' → 키야(키키) 이름이 걸려도 책 제목 결과 때문에 셀럽 목록이 접혔다) 불리언으로 고정.
