@@ -1416,7 +1416,7 @@ $('#bookLink').addEventListener('input', () => {
 /* '↗ 열기' 버튼 — 출처 칸의 URL을 새 탭으로 열어 원문을 바로 확인한다 */
 $('#openSourceBtn').addEventListener('click', () => {
   const u = $('#bookSource').value.trim();
-  if (!isHttp(u)) { toast('출처 칸에 http로 시작하는 URL이 없어요', 'err'); return; }
+  if (!isHttp(u)) { toast('출처가 URL이 아니라 텍스트라서 열 수 있는 링크가 없어요', 'err'); return; }
   window.open(u, '_blank', 'noopener');
 });
 
