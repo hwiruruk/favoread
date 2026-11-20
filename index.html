@@ -400,11 +400,26 @@
   </a>
   <!-- updates-banner:end -->
 
+  <style>
+    .scope-chip { font-family: inherit; font-weight: 700; font-size: 11px; letter-spacing: .05em; padding: 5px 12px;
+      border: 2px solid #000; background: #fff; color: #000; cursor: pointer; transition: all .15s; }
+    .scope-chip:hover { background: #f3ede0; }
+    .scope-chip[aria-pressed="true"] { background: #000; color: #fff; }
+    @media (min-width: 640px) { .scope-chip { font-size: 12px; padding: 6px 14px; } }
+  </style>
   <section id="search" class="max-w-xl mx-auto w-full opacity-0 animate-fade-in-delayed flex flex-col gap-4">
     <input id="search-input" type="text"
       class="w-full bg-white border-2 border-ink shadow-neo px-4 sm:px-6 py-3 sm:py-4 text-center text-base sm:text-lg focus:outline-none focus:shadow-neo-lg focus:-translate-y-1 transition-all placeholder:text-muted/50 tracking-wide font-sans font-bold"
       placeholder="최애 이름, 책 제목, 작가, 출판사로 검색">
-    
+
+    <!-- 검색 범위 — 전체 / 인물명(본명 포함) / 제목 / 지은이 / 출판사 -->
+    <div id="search-scope" role="group" aria-label="검색 범위" class="flex items-center justify-center gap-1.5 sm:gap-2 flex-wrap">
+      <button type="button" data-scope="all" aria-pressed="true" class="scope-chip">전체</button>
+      <button type="button" data-scope="name" aria-pressed="false" class="scope-chip">인물명</button>
+      <button type="button" data-scope="title" aria-pressed="false" class="scope-chip">제목</button>
+      <button type="button" data-scope="author" aria-pressed="false" class="scope-chip">지은이</button>
+      <button type="button" data-scope="publisher" aria-pressed="false" class="scope-chip">출판사</button>
+    </div>
 
     <!-- 검색 중에만 보이는 줄 — 결과 수와 '전체 보기' -->
     <div id="search-bar" class="hidden flex items-center justify-center gap-3 flex-wrap">
@@ -1629,6 +1644,7 @@
 
   /* ── GLOBALS ────────────────────────────────────────────── */
   window.searchBook = function(title) {
+    if (searchScope !== 'all') { searchScope = 'all'; document.querySelectorAll('#search-scope [data-scope]').forEach((b) => b.setAttribute('aria-pressed', String(b.dataset.scope === 'all'))); }
     D.search.value = title;
     D.search.dispatchEvent(new Event('input'));
     D.search.scrollIntoView({ behavior: 'smooth', block: 'center' });
@@ -1915,22 +1931,25 @@
       </div>`;
   }
 
-  function renderBookHits(q) {
+  function renderBookHits(q, scope = 'all') {
     const kw = nk(q);
+    const useT = scope === 'all' || scope === 'title';
+    const useA = scope === 'all' || scope === 'author';
+    const useP = scope === 'all' || scope === 'publisher';
     // 두 글자는 돼야 쓸모 있는 결과가 나온다
     if (kw.length < 2) { D.bookHits.classList.add('hidden'); return { count: 0 }; }
 
     const byCelebs = (a, b) => b.celebs.length - a.celebs.length || a.title.localeCompare(b.title, 'ko');
     const all = bookIndex();
     const hits = all
-      .filter((b) => nk(b.title).includes(kw)
-                  || nk(b.author).includes(kw))
+      .filter((b) => (useT && nk(b.title).includes(kw))
+                  || (useA && nk(b.author).includes(kw)))
       // 여러 셀럽이 읽은 책을 먼저, 그다음 제목 순
       .sort(byCelebs)
       .slice(0, 12);
 
     // 제목·저자로는 안 걸리고 출판사로만 걸리면 출판사 모드
-    if (!hits.length) {
+    if (!hits.length && useP) {
       const pubOf = (b) => b.publishers.find((p) => nk(p).includes(kw));
       const pubHits = all.filter(pubOf).sort(byCelebs);
       pubHits.forEach((b) => { b.pubMatch = pubOf(b); });
@@ -1998,6 +2017,14 @@
     D.searchSummary.textContent = empty ? '결과 없음' : parts.join(' · ');
   }
 
+  let searchScope = 'all';
+  function setSearchScope(scope) {
+    searchScope = scope;
+    document.querySelectorAll('#search-scope [data-scope]').forEach((b) =>
+      b.setAttribute('aria-pressed', String(b.dataset.scope === scope)));
+    filterEntries(D.search.value);
+  }
+
   function filterEntries(kw = '') {
     const q = nk(kw);
     
@@ -2007,6 +2034,9 @@
 
     filteredEntries = currentEntries.filter(([name, data]) => {
       if (!q) return true;
+      // 인물명 범위: 이름과 본명만 본다. 제목·지은이·출판사 범위: 사람 카드는 안 보이고 책 결과만 나온다
+      if (searchScope === 'name') return nk(`${name}|${(data.aka || []).join('|')}`).includes(q);
+      if (searchScope !== 'all') return false;
       // 칸 사이는 '|'로 막아 제목 끝과 저자 앞이 이어져 우연히 걸리지 않게 한다
       // 본명(aka)은 화면에 안 보이고 검색에서만 쓴다 — '박진영'으로 쳐도 진영(갓세븐)이 나오게
       const str = nk(`${name}|${(data.aka || []).join('|')}|${data.books.map(b => `${b.title}|${b.author}|${b.publisher}`).join('|')}`);
@@ -2024,7 +2054,7 @@
       ];
     }
 
-    const { count: bookCount, publisher: pubMode } = renderBookHits(kw);
+    const { count: bookCount, publisher: pubMode } = renderBookHits(kw, searchScope);
     // 책 제목으로 찾았는데 사람 이름은 안 걸렸다면, 아래 셀럽 목록은 위 태그와
     // 같은 사람들이라 중복이다. 그럴 때는 목록을 접는다.
     // 출판사로 찾았을 때도 셀럽은 책 아래 태그로 이미 나오므로 큰 카드 목록은 접는다.
@@ -2662,6 +2692,10 @@
 
   function bindEvents() {
     D.search.addEventListener('input', e => filterEntries(e.target.value));
+    document.getElementById('search-scope').addEventListener('click', (e) => {
+      const b = e.target.closest('[data-scope]');
+      if (b) setSearchScope(b.dataset.scope);
+    });
     D.btnClearSearch.addEventListener('click', () => {
       D.search.value = '';
       filterEntries('');
