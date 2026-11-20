@@ -2086,6 +2086,14 @@ def _hex_luma(h):
     return 0.299 * r + 0.587 * g + 0.114 * b
 
 
+def _lum(h):
+    """상대 휘도(WCAG)"""
+    h = h.lstrip('#')
+    lin = [(v / 255) / 12.92 if v / 255 <= 0.03928 else (((v / 255) + 0.055) / 1.055) ** 2.4
+           for v in (int(h[i:i + 2], 16) for i in (0, 2, 4))]
+    return 0.2126 * lin[0] + 0.7152 * lin[1] + 0.0722 * lin[2]
+
+
 def group_box_style(group_en):
     """박스 배경 style 속성값과 글자색. 공식 색이 없으면 ('', '')"""
     gc = group_color(group_en)
@@ -2093,7 +2101,11 @@ def group_box_style(group_en):
         return '', ''
     cs = gc['colors']
     bg = cs[0] if len(cs) == 1 else 'linear-gradient(135deg, ' + ', '.join(cs) + ')'
-    dark = sum(_hex_luma(c) for c in cs) / len(cs) < 140
+    # 흰 글자가 어두운 글자보다 대비가 큰 쪽을 고른다. 여러 색(그라데이션)이면 가장 불리한 색 기준.
+    def _cr(a, b):
+        hi, lo = max(a, b), min(a, b)
+        return (hi + 0.05) / (lo + 0.05)
+    dark = min(_cr(1.0, _lum(c)) for c in cs) > min(_cr(_lum(c), _lum('#101010')) for c in cs)
     fg = '#fefefe' if dark else '#101010'  # 치환 규칙(#fff·#111 → 테마색)에 걸리지 않게 고정값
     return 'background:' + bg + ';color:' + fg, fg
 
