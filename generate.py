@@ -712,7 +712,7 @@ def spine_title(title):
 
 # 색 책등 제목은 세로 한 줄이라 글자 수가 곧 길이다. 기본 크기로 넘치면
 # 말줄임(…) 대신 글자를 줄여 끝까지 보이게 한다.
-SPINE_FS = 15                        # 기본 글자 크기
+SPINE_FS = 10                        # 기본 글자 크기 (너무 크면 책등이 답답해 보인다)
 SPINE_FS_MIN = 8                     # 이보다 작아지면 읽기 어려우니 여기서 멈춘다
 SPINE_TEXT_PAD = 14                  # .sp-t 위아래 여백
 # 세로쓰기에서 한 글자가 잡아먹는 높이(em). 브라우저에서 직접 재서 넣었다 —
@@ -761,7 +761,7 @@ SPINE_IMG_GUARD = (
 SHELF_CAPTURE_JS_TEMPLATE = (
     '  <script>\n'
     '  (function () {\n'
-    '    var btns = [document.getElementById("shelf-cap"), document.getElementById("shelf-cap-clear")]\n'
+    '    var btns = [document.getElementById("shelf-cap"), document.getElementById("shelf-cap-clear"), document.getElementById("shelf-cap-list")]\n'
     '      .filter(Boolean);\n'
     '    if (!btns.length) return;\n'
     '    var H2C = "https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js";\n'
@@ -967,11 +967,12 @@ SHELF_CAPTURE_JS_TEMPLATE = (
     '      });\n'
     '    }\n'
     '\n'
-    '    function download(blob, clear) {\n'
+    '    function download(blob, clear, kind) {\n'
     '      var url = URL.createObjectURL(blob);\n'
     '      var a = document.createElement("a");\n'
     '      a.href = url; a.rel = "noopener";\n'
-    '      a.download = clear ? __FILE__.replace(/\\.png$/, __CLEAR__ + ".png") : __FILE__;\n'
+    '      a.download = kind === "list" ? __FILE__.replace(/\\.png$/, __LIST__ + ".png")\n'
+    '        : clear ? __FILE__.replace(/\\.png$/, __CLEAR__ + ".png") : __FILE__;\n'
     '      document.body.appendChild(a);\n'
     '      a.click();\n'
     '      a.remove();\n'
@@ -979,15 +980,18 @@ SHELF_CAPTURE_JS_TEMPLATE = (
     '    }\n'
     '\n'
     '    function capture(btn) {\n'
+    '      // 표지 저장: 표지 격자만(접어 둔 줄까지 전부). 책등 보기에서는 책등 한 줄. 리스트 저장: 독서 리스트만.\n'
+    '      var kind = btn.id === "shelf-cap-list" ? "list" : "cover";\n'
     '      var clear = btn.id === "shelf-cap-clear";\n'
-    '      // 책장과 표지 목록을 함께 담은 상자 하나만 넘긴다\n'
     '      var view = document.getElementById("shelf-area") || document.getElementById("shelf");\n'
     '      if (!view) return;\n'
-    '      // 책등 보기에서는 목록·제목 없이 책등만 가로 한 줄로, 투명 배경으로 담는다\n'
     '      var shelf = document.getElementById("shelf");\n'
-    '      var strip = !!shelf && !view.classList.contains("show-covers");\n'
-    '      var target = strip ? shelf : view;\n'
+    '      var covers = document.getElementById("covers"), rlist = document.getElementById("rlist");\n'
+    '      var strip = kind === "cover" && !!shelf && !view.classList.contains("show-covers");\n'
+    '      var target = strip ? shelf : kind === "list" ? (rlist || view) : (covers || view);\n'
     '      if (strip) { clear = true; shelf.classList.add("is-strip"); }\n'
+    '      var reopen = kind === "cover" && !strip && view.classList.contains("covers-collapsed");\n'
+    '      if (reopen) view.classList.remove("covers-collapsed");\n'
     '      var was = btn.textContent;\n'
     '      btns.forEach(function (b) { b.disabled = true; });\n'
     '      btn.textContent = __BUSY__;\n'
@@ -996,7 +1000,11 @@ SHELF_CAPTURE_JS_TEMPLATE = (
     '      // html2canvas가 문서를 복사할 때 이 클래스도 따라가서 복사본에서만 빠진 채 그려진다.\n'
     '      view.classList.add("is-capturing");\n'
     '      // 화면에 보이는 그대로 담는다. 표지를 접어 둔 상태면 보이는 3줄만, 펼쳤으면 전체.\n'
-    '      guard(loadH2C(), 15000, "html2canvas").then(function () {\n'
+    '      // 책등 글꼴(코펍 바탕체)은 글자를 처음 그릴 때 받아 온다. 안 받아진 채 찍으면 기본 바탕체로 나온다.\n'
+    '      var fontReady = document.fonts && document.fonts.load\n'
+    '        ? guard(document.fonts.load("300 10px \\"KoPubWorld Batang\\"", "가나다abc"), 8000, "글꼴").catch(function () {})\n'
+    '        : Promise.resolve();\n'
+    '      guard(Promise.all([loadH2C(), fontReady]), 15000, "html2canvas").then(function () {\n'
     '        swap = swapImages(target);\n'
     '        return swap.ready;\n'
     '      }).then(function () {\n'
@@ -1018,15 +1026,15 @@ SHELF_CAPTURE_JS_TEMPLATE = (
     '            width: sw, height: sh, windowWidth: Math.max(document.documentElement.clientWidth, sw + 40),\n'
     '          }).then(function (c) { return trimRight(c, Math.round(8 * sc)); }), 40000, "그리기");\n'
     '        }\n'
-    '        var left = view.getBoundingClientRect().left, right = 0;\n'
-    '        [].forEach.call(view.children, function (ch) {\n'
+    '        var left = target.getBoundingClientRect().left, right = 0;\n'
+    '        [].forEach.call(target.children, function (ch) {\n'
     '          var b = ch.getBoundingClientRect();\n'
     '          if (b.right > right) right = b.right;\n'
     '        });\n'
-    '        var w = right > left ? Math.ceil(right - left) + 4 : view.offsetWidth;\n'
-    '        w = Math.min(w, view.offsetWidth);\n'
-    '        return guard(html2canvas(view, {\n'
-    '          backgroundColor: clear ? null : PAPER, scale: fitScale(w, view.offsetHeight),\n'
+    '        var w = right > left ? Math.ceil(right - left) + 4 : target.offsetWidth;\n'
+    '        w = Math.min(w, target.offsetWidth);\n'
+    '        return guard(html2canvas(target, {\n'
+    '          backgroundColor: clear ? null : PAPER, scale: fitScale(w, target.offsetHeight),\n'
     '          useCORS: true, logging: false, imageTimeout: 8000,\n'
     '          width: w, windowWidth: document.documentElement.clientWidth,\n'
     '        }), 40000, "그리기");\n'
@@ -1034,7 +1042,7 @@ SHELF_CAPTURE_JS_TEMPLATE = (
     '        // data: 주소는 길어지면 브라우저가 파일 이름을 무시한다. Blob으로 넘긴다.\n'
     '        return guard(toBlob(strip ? inner : compose(inner, clear)), 25000, "내보내기");\n'
     '      }).then(function (blob) {\n'
-    '        download(blob, clear);\n'
+    '        download(blob, clear, kind);\n'
     '      }).catch(function (e) {\n'
     '        console.error(e);\n'
     '        alert(__FAIL__ + "\\n(" + (e && e.message ? e.message : e) + ")");\n'
@@ -1042,6 +1050,7 @@ SHELF_CAPTURE_JS_TEMPLATE = (
     '        if (swap) swap.undo.forEach(function (f) { f(); });\n'
     '        if (muted) unmute(muted);\n'
     '        view.classList.remove("is-capturing");\n'
+    '        if (reopen) view.classList.add("covers-collapsed");\n'
     '        if (shelf) shelf.classList.remove("is-strip");\n'
     '        btns.forEach(function (b) { b.disabled = false; });\n'
     '        btn.textContent = was;\n'
@@ -1118,11 +1127,12 @@ SHELF_VIEW_JS = (
 )
 
 
-def shelf_capture_js(busy, filename, fail, headline, clear_suffix='_투명'):
+def shelf_capture_js(busy, filename, fail, headline, clear_suffix='_투명', list_suffix='_리스트'):
     """언어별 문구만 갈아 끼운다. clear_suffix 는 투명 배경 파일 이름 끝에 붙는다."""
     j = lambda v: json.dumps(v, ensure_ascii=False)
     return (SHELF_CAPTURE_JS_TEMPLATE
             .replace('__CLEAR__', j(clear_suffix))
+            .replace('__LIST__', j(list_suffix))
             .replace('__BUSY__', j(busy))
             .replace('__FILE__', j(filename))
             .replace('__FAIL__', j(fail))
@@ -1208,7 +1218,7 @@ SHELF_CSS = (
     '    .sp-t i { writing-mode: vertical-rl; text-orientation: mixed; font-style: normal;\n'
     '              white-space: nowrap; overflow: hidden; text-overflow: ellipsis;\n'
     '              font-family: "KoPubWorld Batang", "Noto Serif KR", Batang, serif;\n'
-    '              font-size: var(--fs, 15px); font-weight: 300; line-height: 1; letter-spacing: .02em; color: #fff;\n'
+    '              font-size: var(--fs, 10px); font-weight: 300; line-height: 1; letter-spacing: .02em; color: #fff;\n'
     '              text-shadow: 0 0 1px rgba(0,0,0,.35); }\n'
     '    .sp-i { position: relative; z-index: 1; display: block;\n'
     '            height: 100%; width: auto; max-width: 92px; object-fit: fill; }\n'
@@ -1226,7 +1236,12 @@ SHELF_CSS = (
     '    .shelf.is-strip .sp { border: 0; border-radius: 9px; box-shadow: none; transform: none; }\n'
     '    .shelf.is-strip .sp.no-img, .shelf.is-strip .sp.sp-fail { width: var(--w, 28px); }\n'
     '    .shelf.is-strip .sp-i { max-width: 92px; }\n'
-    '    .shelf.is-strip .sp-t i { font-size: var(--fs, 15px); }\n'
+    '    .shelf.is-strip .sp-t i { font-size: var(--fs, 10px); }\n'
+    # 그림으로 저장할 때: html2canvas는 세로쓰기 글자의 윗부분을 상자 밖으로 그려 overflow:hidden 에 잘라 먹힌다
+    # (어→거, 엘→겔). 저장하는 동안만 상자를 열어 두고 줄 높이를 넉넉히 준다.
+    '    .is-capturing .sp-t i, .shelf.is-strip .sp-t i { overflow: visible; text-overflow: clip; line-height: 1.5;\n'
+    # html2canvas는 세로쓰기 글자를 칸 왼쪽으로 치우쳐 그린다(글자 크기의 0.3배쯤). 저장할 때만 되돌려 가운데로 맞춘다.
+    '                                                 position: relative; left: .3em; }\n'
     '    .shelf.is-strip .sp-t { padding: 14px 2px; }\n'
     # 이미지로 저장하는 동안에는 NEW 표시와 함께 추천한 셀럽 목록을 뺀다
     '    .is-capturing .rl-new, .is-capturing .rl-shared, .is-capturing .rl-comment { display: none !important; }\n'
@@ -1240,7 +1255,7 @@ SHELF_CSS = (
     '                                 .shelf { --sh-h: 235px; }\n'
     '                                 .sp.no-img, .sp.sp-fail { width: calc(var(--w, 28px) * .88); }\n'
     '                                 .sp-i { max-width: 70px; }\n'
-    '                                 .sp-t i { font-size: calc(var(--fs, 15px) * .76); }\n'
+    '                                 .sp-t i { font-size: calc(var(--fs, 10px) * .76); }\n'
     '                                 .sp-t { padding: 10px 2px; } }\n'
 )
 
@@ -2107,7 +2122,7 @@ def group_box_style(group_en):
     cs = gc['colors']
     bg = cs[0] if len(cs) == 1 else 'linear-gradient(135deg, ' + ', '.join(cs) + ')'
     dark = sum(_hex_luma(c) for c in cs) / len(cs) < 140
-    fg = '#fff' if dark else '#111'
+    fg = '#fefefe' if dark else '#101010'  # 치환 규칙(#fff·#111 → 테마색)에 걸리지 않게 고정값
     return 'background:' + bg + ';color:' + fg, fg
 
 
@@ -2335,7 +2350,7 @@ def _v2_bar_nav(lang):
                 '<a href="' + BASE + 'en/share/ranking.html">Ranking</a>')
     return ('<a href="' + BASE + 'recommend/idol.html">아이돌</a><a href="' + BASE + 'recommend/actor.html">배우</a>'
             '<a href="' + BASE + 'author/">작가</a><a href="' + BASE + 'share/ranking.html">랭킹</a>'
-            '<a href="' + BASE + 'match/">취향 월드컵</a>')
+            '<a href="' + BASE + 'match/">취향 매칭</a>')
 
 
 _V2_CSS_RULES = [
@@ -3348,16 +3363,15 @@ for name, info in celebs.items():
         byline_html = ' · '.join(byline_parts)
 
         # 책 정보(예스24) · 출처 — 표지·제목 링크를 모르는 사람도 바로 찾게 버튼으로 둔다
-        # 우리 책 페이지(이 책을 읽은 셀럽 모음)는 따로 둔다 — 예스24 링크와 헷갈리지 않게
-        # 예스24 버튼은 '예스24'라고 밝힌다. 책 페이지는 읽은 셀럽이 2명 이상일 때만 있다.
-        source_html = ((' <a class="rl-source rl-bookpage" href="' + esc(make_book_url(b['title']))
-                        + '" title="이 책을 읽은 셀럽 모아보기">📚 이 책 읽은 셀럽</a> ')
-                       if b['title'] in books_with_pages else '')
-        source_html += ('<a class="rl-source" href="' + esc(yes24_book_url(b['title'], raw_link, b['coverUrl']))
-                        + '" rel="nofollow noopener noreferrer" target="_blank" title="예스24에서 보기">📖 책 정보 · 예스24</a>')
-        if b['source'] and b['source'].startswith('http'):
-            source_html += (' <a class="rl-source" href="' + esc(b['source'])
+        # 출처는 URL이면 링크 버튼, URL이 아닌 글이면 '출처: 글' 로 그대로 보여준다.
+        source_html = ('<a class="rl-source" href="' + esc(yes24_book_url(b['title'], raw_link, b['coverUrl']))
+                       + '" rel="nofollow noopener noreferrer" target="_blank" title="예스24에서 보기">📖 책 정보 · 예스24</a>')
+        _src = (b['source'] or '').strip()
+        if _src.startswith('http'):
+            source_html += (' <a class="rl-source" href="' + esc(_src)
                             + '" rel="nofollow noopener noreferrer" target="_blank">📺 출처</a>')
+        elif _src:
+            source_html += ' <span class="rl-source-text">출처: ' + esc(_src) + '</span>'
 
         # 함께 추천한 다른 셀럽 (카드 안에 임베드)
         shared_html = ''
@@ -3375,8 +3389,9 @@ for name, info in celebs.items():
                     '\n      <div class="rl-shared">'
                     '<span class="rl-shared-label">👥 이 책을 읽은 다른 셀럽 '
                     + str(len(other_celebs)) + '명:</span> '
-                    + chips +
-                    '</div>'
+                    + chips
+                    + ' <a class="rl-book-link" href="' + esc(make_book_url(b['title'])) + '">All Readers →</a>'
+                    + '</div>'
                 )
 
         # 책등 한 칸 — 예스24 책등이 있으면 그 이미지를, 없으면 색 책등을 쓴다.
@@ -3638,6 +3653,8 @@ for name, info in celebs.items():
         '    .rl-bookpage { background: #fff8e7; font-weight: 700; }\n'
         '    .rl-comment { font-size: 13px; line-height: 1.55; color: #222; background: #FFF7C2; border: 1.5px solid #000; padding: 6px 9px; margin: 0 0 8px; word-break: keep-all; }\n'
         '    .rl-source { display: inline-block; font-size: 12px; padding: 3px 8px; background: #fff; border: 1.5px solid #000; box-shadow: 1px 1px 0 0 #000; text-decoration: none; color: #000; transition: transform .1s, box-shadow .1s, background .1s; }\n'
+        '    .rl-source-text { display: inline-block; font-size: 12px; color: #555; margin-left: 4px; }\n'
+        '    .rl-book-link { font-size: 12px; font-weight: 700; }\n'
         '    .rl-source:hover { transform: translate(-1px,-1px); box-shadow: 2px 2px 0 0 #000; background: #a7f3d0; text-decoration: none; }\n'
         '    .rl-shared { clear: both; margin-top: 12px; padding-top: 10px; border-top: 1.5px dashed #ccc; display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }\n'
         '    .rl-shared-label { font-size: 12px; color: #666; font-weight: 700; }\n'
@@ -3693,8 +3710,9 @@ for name, info in celebs.items():
         '      <h2>📚 ' + esc(sname) + '의 독서 리스트 (' + str(n_books) + '권)</h2>\n'
         '      <div class="shelf-tabs">\n'
         + shelf_view_tabs('📚 책등', '🖼 표지') +
-        '        <button type="button" class="sh-cap" id="shelf-cap" title="지금 보이는 책장을 그대로 그림으로 내려받아요">⤓ 이미지 저장</button>\n'
+        '        <button type="button" class="sh-cap" id="shelf-cap" title="표지(또는 책등)를 전부 그림으로 내려받아요">⤓ 표지 저장</button>\n'
         '        <button type="button" class="sh-cap" id="shelf-cap-clear" title="배경 없이 투명한 PNG로 내려받아요">⤓ 투명 배경</button>\n'
+        '        <button type="button" class="sh-cap" id="shelf-cap-list" title="독서 리스트를 그림으로 내려받아요">⤓ 리스트 저장</button>\n'
         '      </div>\n'
         '    </div>\n'
         + new_block(new_items)
@@ -4066,7 +4084,7 @@ for _g in sorted(ko_groups.values(), key=lambda g: g['ko']):
             ],
         },
     })
-    GM_ON = (style + ';') if style else 'background: #ffe58a;'
+    GM_ON = (style + ';') if style else 'background: #ffe58a; color: #101010;'
     color_note = (('<p class="gc">공식 색 · ' + esc(gc['name']) + '</p>\n') if gc else '')
     page = (
         '<!DOCTYPE html>\n'
@@ -4104,7 +4122,7 @@ for _g in sorted(ko_groups.values(), key=lambda g: g['ko']):
         '    .gm:hover { transform: translate(-1px,-1px); box-shadow: 3px 3px 0 0 #000; }\n'
         '    .gm.on { box-shadow: 2px 2px 0 0 #000; ' + GM_ON + ' }\n'
         '    .gm img, .gm-all { width: 100%; aspect-ratio: 1/1; object-fit: cover; border: 2px solid #000; display: block; background: #f4f4f0; }\n'
-        '    .gm-all { display: flex; align-items: center; justify-content: center; font-weight: 900; font-size: 20px; }\n'
+        '    .gm-all { color: #000; display: flex; align-items: center; justify-content: center; font-weight: 900; font-size: 20px; }\n'
         '    .gm-n { display: block; font-weight: 800; font-size: 13px; margin-top: 6px; line-height: 1.25; }\n'
         '    .gm-c { display: block; font-size: 11px; opacity: .7; }\n'
         '    .pick { display: none; margin: 14px 0 0; font-size: 14px; font-weight: 700; }\n'
@@ -4120,7 +4138,7 @@ for _g in sorted(ko_groups.values(), key=lambda g: g['ko']):
         '    .gb-a { display: block; font-size: 11px; color: #666; }\n'
         '    .gb-b { display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; margin-top: 4px; font-size: 11px; line-height: 1.45; color: #444; }\n'
         '    .gb-w { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 4px; }\n'
-        '    .gb-w a { font-size: 11px; font-weight: 700; color: #000; background: #ffe58a; border: 1.5px solid #000; padding: 0 6px; border-radius: 99px; line-height: 1.6; }\n'
+        '    .gb-w a { font-size: 11px; font-weight: 700; color: var(--on-yellow, #111); background: #ffe58a; border: 1.5px solid #000; padding: 0 6px; border-radius: 99px; line-height: 1.6; }\n'
         '    .gb-l { display: inline-block; margin-top: 4px; font-size: 11px; font-weight: 600; }\n'
         '    footer { margin-top: 40px; padding-top: 16px; border-top: 2px solid #000; font-size: 12px; color: #666; }\n'
         '  </style>\n'
@@ -5321,16 +5339,16 @@ for name, info in celebs.items():
             author_text += ' <span style="color:#888">(' + lang_span(_nat) + ')</span>'
 
         # 책 정보(예스24) · 출처 — 한국어 페이지와 같은 자리. 한국 서점으로 가니 툴팁에 밝힌다.
-        # 우리 책 페이지(이 책을 읽은 셀럽 모음)는 따로 둔다 — 예스24 링크와 헷갈리지 않게
-        src_html = ((' <a class="rl-source rl-bookpage" href="' + make_en_book_url(book_title_en[b['title'].strip()])
-                     + '" title="See every celebrity who read this book">📚 Celebs who read this</a> ')
-                    if b['title'].strip() in books_with_pages and b['title'].strip() in book_title_en else '')
-        src_html += ('<a class="rl-source" href="' + esc(yes24_book_url(b['title'], raw_link, b['coverUrl']))
-                     + '" rel="nofollow noopener noreferrer" target="_blank" '
-                     'title="View on YES24 (Korean bookstore)">📖 Book details · YES24</a>')
-        if b['source'] and b['source'].startswith('http'):
-            src_html += (' <a class="rl-source" href="' + esc(b['source'])
+        # 출처가 URL이 아닌 글이면 'Source: 글' 로 그대로 보여준다.
+        src_html = ('<a class="rl-source" href="' + esc(yes24_book_url(b['title'], raw_link, b['coverUrl']))
+                    + '" rel="nofollow noopener noreferrer" target="_blank" '
+                    'title="View on YES24 (Korean bookstore)">📖 Book details · YES24</a>')
+        _src = (b['source'] or '').strip()
+        if _src.startswith('http'):
+            src_html += (' <a class="rl-source" href="' + esc(_src)
                          + '" rel="nofollow noopener noreferrer" target="_blank">📺 Source</a>')
+        elif _src:
+            src_html += ' <span class="rl-source-text">Source: ' + esc(_src) + '</span>'
 
         # 함께 추천한 다른 셀럽 — 한국어 페이지의 '👥 이 책을 읽은 다른 셀럽'과 같은 자리
         en_shared_html = ''
@@ -5345,7 +5363,7 @@ for name, info in celebs.items():
                     + str(len(_others)) + ':</span> '
                     + ''.join(en_celeb_link(c, 'rl-celeb-chip') for c in _others)
                     + ((' <a class="rl-book-link" href="' + EN_BASE + 'share/book/' + _en_bslug
-                        + '.html">All readers →</a>') if _en_bslug else '')
+                        + '.html">All Readers →</a>') if _en_bslug else '')
                     + '</div>\n')
 
         # 책등 한 칸 — 한국어 페이지와 같은 규칙. 예스24 책등이 있으면 그 이미지를,
@@ -5748,6 +5766,7 @@ for name, info in celebs.items():
         '    .rl-bookpage { background: #fff8e7; font-weight: 700; }\n'
         '    .rl-comment { font-size: 13px; line-height: 1.55; color: #222; background: #FFF7C2; border: 1.5px solid #000; padding: 6px 9px; margin: 0 0 8px; word-break: keep-all; }\n'
         '    .rl-source { display: inline-block; font-size: 12px; padding: 3px 8px; background: #fff; border: 1.5px solid #000; box-shadow: 1px 1px 0 0 #000; text-decoration: none; color: #000; transition: transform .1s, box-shadow .1s, background .1s; }\n'
+        '    .rl-source-text { display: inline-block; font-size: 12px; color: #555; margin-left: 4px; }\n'
         '    .rl-source:hover { transform: translate(-1px,-1px); box-shadow: 2px 2px 0 0 #000; background: #a7f3d0; text-decoration: none; }\n'
         '    @media (max-width: 480px) { .rl-item { padding: 14px 12px 14px 46px; } .rl-num { width: 32px; height: 26px; font-size: 12px; } .rl-cover { width: 60px; height: 88px; margin-right: 10px; } .rl-meta { min-height: 88px; } .rl-title { font-size: 15px; } }\n'
         '    a { color: #2563eb; text-decoration: none; }\n'
@@ -5807,8 +5826,9 @@ for name, info in celebs.items():
         '      <h2>Books ' + esc(_name_pl) + ' has read (' + str(n) + ')</h2>\n'
         '      <div class="shelf-tabs">\n'
         + shelf_view_tabs('📚 Spines', '🖼 Covers') +
-        '        <button type="button" class="sh-cap" id="shelf-cap" title="Download the bookshelf as shown on screen">\u2913 Save image</button>\n'
+        '        <button type="button" class="sh-cap" id="shelf-cap" title="Download all covers (or spines) as an image">\u2913 Save covers</button>\n'
         '        <button type="button" class="sh-cap" id="shelf-cap-clear" title="Download as a PNG with a transparent background">\u2913 Transparent</button>\n'
+        '        <button type="button" class="sh-cap" id="shelf-cap-list" title="Download the reading list as an image">\u2913 Save list</button>\n'
         '      </div>\n'
         '    </div>\n'
         + new_block(en_new_items, 'en')
@@ -5826,7 +5846,7 @@ for name, info in celebs.items():
         + SHELF_VIEW_JS
         + shelf_capture_js('Saving…', 'bookshelf_' + slug + '.png',
                            'Could not create the image. Please try again.',
-                           _name_pl + ' — ' + str(n) + ' books', '_transparent')
+                           _name_pl + ' — ' + str(n) + ' books', '_transparent', '_list')
         + (EN_TR_NOTE_HTML if en_show_tr_note else '')
         + en_taste_html
         + en_related_html

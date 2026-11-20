@@ -3,8 +3,8 @@
 
 카카오톡·X·검색 결과에 링크를 걸면 뜨는 1200×630 이미지다. 예전엔 외부 사이트의
 셀럽 사진을 그대로 썼는데, 그 주소가 깨지면 미리보기가 비고 초상권 부담도 있었다.
-그래서 사이트가 직접 '리딩 리스트' 카드를 그린다 — 왼쪽에 표지 6장 격자,
-오른쪽에 큰 글씨('카리나의 독서' / "KARINA'S READING LIST")와 권수.
+그래서 사이트가 직접 '리딩 리스트' 카드를 그린다 — 노란 바탕, 왼쪽에 제목('카리나의 독서' /
+"KARINA'S READING LIST")·설명·권수 알약, 오른쪽에 표지 6장.
 
     og/<짧은 주소>.jpg      셀럽 카드 (짧은 주소 = data/shortlinks.json 의 celeb 값)
     og/en/<짧은 주소>.jpg   영문 셀럽 카드 (영문 페이지가 있는 셀럽만)
@@ -24,7 +24,7 @@ import argparse, colorsys, datetime, hashlib, io, json, os, random, re, sys, url
 
 from concurrent.futures import ThreadPoolExecutor
 
-from PIL import Image, ImageDraw, ImageFont
+from PIL import Image, ImageDraw, ImageFilter, ImageFont
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 OUT_DIR = os.path.join(ROOT, 'og')
@@ -34,19 +34,16 @@ FONT_MED = os.path.join(ROOT, 'assets', 'fonts', 'kopubworld-dotum-medium.woff2'
 FONT_EN = os.path.join(ROOT, 'assets', 'fonts', 'space-grotesk-latin.woff2')
 
 # 그림을 바꾸면 올린다 — 모든 카드를 다시 그린다
-VERSION = 2
+VERSION = 3
 
 W, H = 1200, 630
-TAUPE = (88, 78, 74)
+# 노란 바탕 + 검은 글씨 (사이트 강조색)
+YEL, YEL_TOP, YEL_BOT = (253, 224, 71), (254, 229, 92), (250, 214, 40)
+INK, SUB, DOMAIN, SHADOW = (17, 17, 17), (60, 50, 10), (90, 75, 10), (90, 60, 0, 110)
 
 # 표지 격자: 3×2, 표지 크기·간격·왼쪽 위
 N_COVERS = 6
 CW, CH, GX, GY, X0, Y0 = 164, 240, 26, 30, 56, 50
-# 오른쪽 글씨 자리
-TX = X0 + 3 * CW + 2 * GX + 60
-TW = W - 50 - TX
-NUM_Y = Y0 + 2 * CH + GY + 6        # 권수 글씨 밑선 = 둘째 줄 표지 밑선
-HEAD_H = NUM_Y - 64 - 40 - (Y0 - 8)   # 큰 글씨가 쓸 수 있는 높이
 
 UA = 'favorbook-og/1.0 (https://favorbook.co.kr)'
 _fonts = {}
@@ -152,75 +149,102 @@ def picks_for(books, read_count):
     return sorted(out, key=lambda b: (-read_count.get(b['title'].strip(), 0), title_sort_key(b['title'])))
 
 
-def grid_tile(book, w, h, offline):
-    """흰 테두리 + 오른쪽 아래 검은 그림자가 붙은 표지 (RGBA). 표지를 못 받으면 (tile, False)."""
+def cover_face(book, w, h, offline):
+    """표지 한 장 (RGB, 칸 크기에 맞춰 가운데를 자름). 못 받으면 제목을 적은 색 표지. → (face, 받았는지)"""
     img = fetch_cover(book.get('coverUrl'), offline)
     if img is not None:
-        # 표지 비율을 맞춰 가운데를 자른다
         r = max(w / img.width, h / img.height)
         img = img.resize((max(w, round(img.width * r)), max(h, round(img.height * r))), Image.LANCZOS)
         x, y = (img.width - w) // 2, (img.height - h) // 2
-        face = img.crop((x, y, x + w, y + h))
-    else:
-        face = Image.new('RGB', (w, h), tint(book['title']))
-        d = ImageDraw.Draw(face)
-        for i, line in enumerate(wrap(d, book['title'], font(16), w - 20, 4)):
-            d.text((10, 10 + i * 22), line, font=font(16), fill=(255, 255, 255))
-    B, S = 3, 6   # 흰 테두리, 그림자
-    tile = Image.new('RGBA', (w + 2 * B + S, h + 2 * B + S), (0, 0, 0, 0))
-    td = ImageDraw.Draw(tile)
-    td.rectangle((S, S, w + 2 * B + S - 1, h + 2 * B + S - 1), fill=(20, 20, 20))
-    td.rectangle((0, 0, w + 2 * B - 1, h + 2 * B - 1), fill=(255, 255, 255))
-    tile.paste(face, (B, B))
-    return tile, img is not None
+        return img.crop((x, y, x + w, y + h)), True
+    face = Image.new('RGB', (w, h), tint(book['title']))
+    d = ImageDraw.Draw(face)
+    for i, line in enumerate(wrap(d, book['title'], font(16), w - 20, 4)):
+        d.text((10, 10 + i * 22), line, font=font(16), fill=(255, 255, 255))
+    return face, False
 
 
-def draw_card(heads, ko, num, covers, offline):
+def paste_cover(im, face, x, y, radius=6):
+    """둥근 모서리 + 부드러운 그림자로 표지를 얹는다"""
+    w, h = face.size
+    mask = Image.new('L', (w, h), 0)
+    ImageDraw.Draw(mask).rounded_rectangle((0, 0, w - 1, h - 1), radius, fill=255)
+    pad = 40
+    shadow = Image.new('RGBA', (w + 2 * pad, h + 2 * pad), (0, 0, 0, 0))
+    shadow.paste(Image.new('RGBA', (w, h), SHADOW), (pad, pad + 12), mask.point(lambda a: a * SHADOW[3] // 255))
+    shadow = shadow.filter(ImageFilter.GaussianBlur(16))
+    im.paste(shadow, (x - pad, y - pad), shadow)
+    im.paste(face, (x, y), mask)
+
+
+# 표지 자리 (왼쪽 위 좌표). 열 세 개가 오른쪽 끝·위아래로 살짝 잘려 나간다.
+SLOTS = [(690, -40), (690, -40 + CH + 34), (868, 40), (868, 40 + CH + 34), (1046, -20), (1046, -20 + CH + 34)]
+SLOT_ORDER = [0, 2, 4, 1, 3, 5]   # 표지 순서대로 채우는 자리: 위 칸 셋 → 아래 칸 셋
+ROW_X = [676, 850, 1024]          # 3장 이하는 가운데 한 줄
+
+
+def draw_card(heads, ko, num, covers, offline, sub=None):
     """리딩 리스트 카드 → (Image, 모든 표지를 받았는지).
-    heads: 큰 글씨 줄 나눔 후보들. 글씨를 가장 크게 쓸 수 있는 것을 고른다.
-    num: 오른쪽 아래 권수 글씨 ('58 books')"""
-    # 위에서 아래로 옅은 회색 그러데이션
+    heads: 제목 줄 나눔 후보들. 글씨를 가장 크게 쓸 수 있는 것을 고른다 (한 줄 우선).
+    sub: 제목 아래 설명 줄들. num: 왼쪽 아래 알약 글씨 ('154 books')"""
     im = Image.new('RGB', (W, H))
-    top, bot = (246, 245, 243), (214, 213, 211)
     d = ImageDraw.Draw(im)
     for y in range(H):
         t = y / (H - 1)
-        d.line((0, y, W, y), fill=tuple(round(a + (b - a) * t) for a, b in zip(top, bot)))
+        d.line((0, y, W, y), fill=tuple(round(a + (b - a) * t) for a, b in zip(YEL_TOP, YEL_BOT)))
 
-    # 왼쪽: 표지. 4장 이상이면 3+나머지 두 줄, 3장 이하면 가운데 한 줄.
+    # 오른쪽: 표지
     all_ok = True
     covers = covers[:N_COVERS]
+    n = len(covers)
     for i, b in enumerate(covers):
-        tile, ok = grid_tile(b, CW, CH, offline)
+        face, ok = cover_face(b, CW, CH, offline)
         u = b.get('coverUrl') or ''
         all_ok = all_ok and (ok or not u.startswith('http') or u in _cover_gone)
-        if len(covers) > 3:
-            x, y = X0 + (i % 3) * (CW + GX), Y0 + (i // 3) * (CH + GY)
+        if n == 4:      # 4장은 두 열로, 오른쪽으로 옮겨 균형을 맞춘다
+            x, y = SLOTS[[0, 1, 2, 3][i]]
+            x += 90
+        elif n > 3:
+            x, y = SLOTS[SLOT_ORDER[i]]
         else:
-            pad = (3 - len(covers)) * (CW + GX) // 2
-            x, y = X0 + pad + i * (CW + GX), (H - CH) // 2
-        im.paste(tile, (x, y), tile)
+            x, y = ROW_X[i], (H - CH) // 2
+        paste_cover(im, face, x, y)
 
-    # 오른쪽 위: 큰 글씨
-    mk = (lambda s: font(s, bold=False)) if ko else (lambda s: font_en(s))
-    lh = 1.08 if ko else 0.98
+    # 왼쪽: 글씨
+    LX, LW = 72, 560
+    mk = (lambda s: font(s, bold=True)) if ko else (lambda s: font_en(s, 'Bold'))
+    lh = 1.14
     best = None
     for lines in heads:
-        size = 110 if ko else 100
-        while size > 40 and (max(text_w(d, s, mk(size)) for s in lines) > TW
-                             or len(lines) * size * lh > HEAD_H):
+        size = 70 if ko else 64
+        while size > 34 and (max(text_w(d, s, mk(size)) for s in lines) > LW or len(lines) * size * lh > 220):
             size -= 2
         if best is None or size > best[0]:
             best = (size, lines)
     size, lines = best
-    y = Y0 - 8
+    d.text((LX, 92), 'favorbook.co.kr', font=font_en(20), fill=DOMAIN)
+    y = max(150, 200 - (len(lines) - 1) * round(size * lh / 2))
     for s in lines:
-        d.text((TX, y), fit(d, s, mk(size), TW), font=mk(size), fill=TAUPE)
+        d.text((LX, y), fit(d, s, mk(size), LW), font=mk(size), fill=INK)
         y += round(size * lh)
+    y += 14
+    sf = font(29, bold=False) if ko else font_en(29)
+    for s in (sub or []):
+        d.text((LX, y), fit(d, s, sf, LW), font=sf, fill=SUB)
+        y += 41
 
-    # 오른쪽 아래: 권수
-    d.text((TX, NUM_Y), num, font=font_en(64), fill=TAUPE, anchor='ls')
+    # 왼쪽 아래: 권수 알약
+    pf = font_en(22, 'Bold')
+    pw = round(text_w(d, num, pf)) + 56
+    d.rounded_rectangle((LX, 456, LX + pw, 506), 25, fill=INK)
+    d.text((LX + pw // 2, 481), num, font=pf, fill=YEL, anchor='mm')
     return im, all_ok
+
+
+def group_of(name):
+    """'카리나(에스파)' → '에스파', 괄호가 없으면 ''"""
+    m = re.match(r'^(.*?)\s*\(([^)]*)\)\s*$', name or '')
+    return m.group(2).strip() if m else ''
 
 
 def split_name(name):
@@ -231,7 +255,7 @@ def split_name(name):
 
 def heads_ko(name):
     main = split_name(name)
-    out = [[main + '의', '독서']]
+    out = [[main + '의 독서'], [main + '의', '독서']]
     words = main.split()
     if len(words) > 1:
         out.append(words[:-1] + [words[-1] + '의', '독서'])
@@ -243,11 +267,11 @@ def heads_ko(name):
 
 def heads_en(name_en):
     main = split_name(name_en).upper()
-    out = [[main + "'S", 'READING', 'LIST']]
+    out = [[main + "'S READING LIST"], [main + "'S", 'READING LIST'], [main + "'S", 'READING', 'LIST']]
     words = main.split()
     if len(words) > 1:
-        out.append(words[:-1] + [words[-1] + "'S", 'READING', 'LIST'])
         out.append(words[:-1] + [words[-1] + "'S", 'READING LIST'])
+        out.append(words[:-1] + [words[-1] + "'S", 'READING', 'LIST'])
     return out
 
 
@@ -256,11 +280,15 @@ def books_txt(n):
 
 
 def render(name, books, offline):
-    return draw_card(heads_ko(name), True, books_txt(len(books)), books, offline)
+    g = group_of(name)
+    sub = [(g + ' · ' if g else '') + '읽은 책 리딩 리스트']
+    return draw_card(heads_ko(name), True, books_txt(len(books)), books, offline, sub)
 
 
 def render_en(name_en, books, offline):
-    return draw_card(heads_en(name_en), False, books_txt(len(books)), books, offline)
+    g = group_of(name_en)
+    sub = [(g + ' · ' if g else '') + 'Reading list']
+    return draw_card(heads_en(name_en), False, books_txt(len(books)), books, offline, sub)
 
 
 # 사이트 대표 카드 — 메인·목록 페이지처럼 셀럽 한 명이 아닌 페이지의 og:image.
@@ -298,10 +326,11 @@ def make_site_cards(celebs, offline):
     # 수는 100권 단위로 내림 — 책 한 권 늘 때마다 다시 그리지 않게
     n_books = len({b['title'].strip() for b in pool})
     num = f'{n_books // 100 * 100:,}+ books'
-    heads = {'ko': [['최애의', '독서', '리스트']], 'en': [["K-STARS'", 'READING', 'LIST']]}
+    heads = {'ko': [['최애의 독서']], 'en': [["K-STARS' READING LIST"], ["K-STARS'", 'READING LIST']]}
+    subs = {'ko': ['아이돌·셀럽이 읽은 책을', '한곳에 모았어요'], 'en': ['What K-pop idols and', 'celebs are reading']}
     changed = 0
     for lang, rel in SITE_CARDS.items():
-        im, ok = draw_card(heads[lang], lang == 'ko', num, covers, offline)
+        im, ok = draw_card(heads[lang], lang == 'ko', num, covers, offline, subs[lang])
         path = os.path.join(ROOT, rel)
         if not ok and os.path.exists(path):
             continue

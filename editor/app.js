@@ -2519,6 +2519,149 @@ async function saveBios() {
   }
 }
 
+/* ---- 내려받기 / 올려 반영 ----
+ * 전체 소개글을 한 파일로 받아 엑셀·구글 시트나 Claude에게 맡겨 한꺼번에 검증·수정하고,
+ * 고친 파일을 다시 올려 바뀐 곳만 '수정함'으로 불러온다. 올리는 것만으로는 저장되지 않는다.
+ * 짝을 맞추는 열쇠는 '이름'(= data.csv 의 연예인 칸)이다. 나머지 열은 참고용이다. */
+const BIOS_HEAD = ['이름', '영문명', '읽은책수', '한국어소개', '영어소개', '메모'];
+const BIOS_JSON_NOTE =
+  'Favorbook 셀럽 한 줄 소개. 각 항목의 name(이름)은 열쇠이니 바꾸지 마세요. ko(한국어소개)와 en(영어소개)만 고치세요. ' +
+  'name_en·books는 참고용이고 올려도 무시돼요. 작품 제목은 작은따옴표로 감싸고(예: \'연모\'), ' +
+  '확인되지 않은 작품은 넣지 마세요. 생년은 "1996년생" / "(born 1996)" 형식이에요. ' +
+  '둘 다 빈 문자열이면 소개가 지워지고, 목록에서 뺀 항목은 바뀌지 않아요. note(메모)는 무시돼요.';
+
+function biosRows() {
+  return State.order.map(n => {
+    const c = State.celebs.get(n);
+    const cur = biosCurrent(n);
+    return { name: n, name_en: c?.name_en || '', books: c ? c.books.length : 0, ko: cur.ko, en: cur.en };
+  });
+}
+function biosStamp() {
+  const d = new Date(), p = (x) => String(x).padStart(2, '0');
+  return `${d.getFullYear()}${p(d.getMonth() + 1)}${p(d.getDate())}`;
+}
+function biosDownload(filename, text, type) {
+  const url = URL.createObjectURL(new Blob([text], { type }));
+  const a = document.createElement('a');
+  a.href = url; a.download = filename;
+  document.body.appendChild(a); a.click(); a.remove();
+  setTimeout(() => URL.revokeObjectURL(url), 2000);
+}
+function biosExportCsv() {
+  const rows = biosRows();
+  const data = rows.map(r => [r.name, r.name_en, r.books, r.ko, r.en, '']);
+  // 맨 앞 BOM — 엑셀이 한글 CSV를 UTF-8로 열도록
+  biosDownload(`favorbook-bios-${biosStamp()}.csv`,
+    '﻿' + Papa.unparse({ fields: BIOS_HEAD, data }, { newline: '\r\n' }),
+    'text/csv;charset=utf-8');
+  toast(`CSV ${rows.length}명 내려받음`, 'ok');
+}
+function biosExportJson() {
+  const rows = biosRows();
+  const doc = {
+    format: 'favorbook-bios',
+    exported: new Date().toISOString().slice(0, 16).replace('T', ' '),
+    안내: BIOS_JSON_NOTE,
+    count: rows.length,
+    bios: rows.map(r => ({ name: r.name, name_en: r.name_en, books: r.books, ko: r.ko, en: r.en, note: '' })),
+  };
+  biosDownload(`favorbook-bios-${biosStamp()}.json`, JSON.stringify(doc, null, 2) + '\n', 'application/json');
+  toast(`JSON ${rows.length}명 내려받음`, 'ok');
+}
+
+// 올린 파일에서 {name, ko, en} 목록을 뽑는다 (en/ko 가 파일에 아예 없으면 undefined)
+function biosParseUpload(text) {
+  text = String(text).replace(/^﻿/, '');
+  const pick = (o, keys) => {
+    for (const k of Object.keys(o)) {
+      if (keys.includes(k.trim().toLowerCase())) return o[k] == null ? '' : String(o[k]);
+    }
+    return undefined;
+  };
+  const NAME = ['이름', 'name', '연예인'];
+  const KO = ['한국어소개', 'ko', '한국어', '소개(한국어)'];
+  const EN = ['영어소개', 'en', '영어', 'english', '소개(영어)'];
+  const toRec = (o) => ({ name: (pick(o, NAME) || '').trim(), ko: pick(o, KO), en: pick(o, EN) });
+  const t = text.trim();
+  let recs;
+  if (t.startsWith('{') || t.startsWith('[')) {
+    let j = JSON.parse(t);
+    if (!Array.isArray(j)) j = j.bios !== undefined ? j.bios : j;
+    if (Array.isArray(j)) recs = j.map(toRec);
+    else recs = Object.keys(j).filter(k => !k.startsWith('_') && j[k] && typeof j[k] === 'object')
+                       .map(k => ({ name: k, ko: j[k].ko, en: j[k].en }));   // data/bios.json 형식 그대로도 받는다
+  } else {
+    const res = Papa.parse(t, { header: true, skipEmptyLines: 'greedy' });
+    recs = res.data.map(toRec);
+  }
+  recs = recs.filter(r => r.name);
+  if (!recs.length) throw new Error('이름 열(이름 / name)을 가진 행을 찾지 못했어요');
+  if (recs.every(r => r.ko === undefined && r.en === undefined)) {
+    throw new Error('소개 열(한국어소개·영어소개 / ko·en)을 찾지 못했어요');
+  }
+  return recs;
+}
+
+function biosApplyUpload(recs) {
+  const byNfc = new Map(State.order.map(n => [nfc(n), n]));
+  const seen = new Map();
+  let dup = 0;
+  recs.forEach(r => { if (seen.has(nfc(r.name))) dup++; seen.set(nfc(r.name), r); });   // 같은 이름은 마지막 행
+
+  const plan = { change: [], clear: [], add: [], same: 0, unknown: [] };
+  seen.forEach((r, key) => {
+    const name = byNfc.get(key);
+    if (!name) { plan.unknown.push(r.name); return; }
+    const o = biosOriginal(name);
+    const cur = biosCurrent(name);
+    const ko = r.ko === undefined ? cur.ko : r.ko.trim();
+    const en = r.en === undefined ? cur.en : r.en.trim();
+    if (ko === cur.ko && en === cur.en) { plan.same++; return; }
+    const item = { name, ko, en };
+    if (!ko && !en && (o.ko || o.en)) plan.clear.push(item);
+    else if (!o.ko && !o.en) plan.add.push(item);
+    else plan.change.push(item);
+  });
+  const all = [...plan.change, ...plan.clear, ...plan.add];
+  if (!all.length) {
+    toast(`바뀐 곳이 없어요 (같은 ${plan.same}명${plan.unknown.length ? `, 못 찾은 이름 ${plan.unknown.length}` : ''})`, '');
+    return;
+  }
+  const names = (a) => a.slice(0, 6).map(x => x.name).join(', ') + (a.length > 6 ? ` 외 ${a.length - 6}명` : '');
+  const lines = [`파일 ${seen.size}명 중 바뀐 곳을 불러옵니다.`, ''];
+  if (plan.change.length) lines.push(`· 수정 ${plan.change.length}명: ${names(plan.change)}`);
+  if (plan.add.length)    lines.push(`· 새로 씀 ${plan.add.length}명: ${names(plan.add)}`);
+  if (plan.clear.length)  lines.push(`· ⚠ 소개 지움 ${plan.clear.length}명: ${names(plan.clear)}`);
+  lines.push(`· 그대로 ${plan.same}명`);
+  if (plan.unknown.length) lines.push(`· 못 찾은 이름 ${plan.unknown.length}개(무시): ${plan.unknown.slice(0, 6).join(', ')}${plan.unknown.length > 6 ? ' …' : ''}`);
+  if (dup) lines.push(`· 이름이 겹친 행 ${dup}개는 마지막 행만 썼어요`);
+  lines.push('', '저장은 아직 아니에요. 불러온 뒤 확인하고 [GitHub에 저장]을 눌러야 커밋됩니다.');
+  if (!confirm(lines.join('\n'))) return;
+
+  all.forEach(({ name, ko, en }) => {
+    const o = biosOriginal(name);
+    if (ko === o.ko && en === o.en) _bios.edits.delete(name);
+    else _bios.edits.set(name, { ko, en });
+  });
+  $('#biosFilter').value = 'edited';
+  $('#biosSearch').value = '';
+  _bios.shown = BIOS_PAGE;
+  renderBios();
+  toast(`${all.length}명을 '수정함'으로 불러왔어요 — 확인 후 저장하세요`, 'ok');
+}
+
+$('#biosDlCsv').addEventListener('click', biosExportCsv);
+$('#biosDlJson').addEventListener('click', biosExportJson);
+$('#biosUpload').addEventListener('click', () => $('#biosFile').click());
+$('#biosFile').addEventListener('change', async (e) => {
+  const f = e.target.files && e.target.files[0];
+  e.target.value = '';
+  if (!f) return;
+  try { biosApplyUpload(biosParseUpload(await f.text())); }
+  catch (err) { toast('파일을 읽지 못했어요: ' + err.message, 'err'); }
+});
+
 $('#biosBtn').addEventListener('click', openBiosDialog);
 $('#biosSaveBtn').addEventListener('click', saveBios);
 

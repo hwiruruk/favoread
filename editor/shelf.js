@@ -213,6 +213,9 @@
     const cv = document.createElement('canvas');
     cv.width = fmt.w; cv.height = fmt.h;
     const ctx = cv.getContext('2d');
+    // 원본 책등 사진(높이 약 1200px)을 크게 줄여 그리므로 고품질 보간을 켠다 (기본값은 low라 계단이 생김)
+    ctx.imageSmoothingEnabled = true;
+    ctx.imageSmoothingQuality = 'high';
 
     // 책장
     const top = fmt.head + (lay.availH - lay.total) / 2;
