@@ -2040,6 +2040,32 @@ for _fn in os.listdir(DETAIL_DIR):
     if _fn.endswith('.json') and _fn not in _kept_detail_files:
         os.remove(os.path.join(DETAIL_DIR, _fn))
 
+# 검색 전용 본명(별칭) — 화면에는 안 보이고 메인 검색창에서만 쓴다.
+# 성+이름(박진영)을 적어 두면 이름만(진영)으로 쳐도 찾아지게 이름 부분을 덧붙인다.
+def load_real_names(path='data/real_names.json'):
+    try:
+        with open(path, encoding='utf-8') as f:
+            raw = json.load(f)
+    except (FileNotFoundError, json.JSONDecodeError) as e:
+        print('⚠️ real_names.json 로드 실패 — 본명 검색 없이 진행합니다: %s' % e)
+        return {}
+    out = {}
+    for k, v in raw.items():
+        if k.startswith('_') or not isinstance(v, list):
+            continue
+        names = []
+        for n in v:
+            n = str(n).strip()
+            if not n:
+                continue
+            names.append(n)
+            if re.fullmatch(r'[가-힣]{3}', n):
+                names.append(n[1:])
+        out[k] = list(dict.fromkeys(names))
+    return out
+
+REAL_NAMES = load_real_names()
+
 data_json = {
     'generated': TODAY,
     'source': 'favorbook.co.kr',
@@ -2051,6 +2077,8 @@ data_json = {
             'books':    [lite_book(b) for b in info['books']],
             # 영문 공유 카드에 쓴다 (tools/make_og.py)
             **({'nameEn': plain_en(info['name_en'])} if info.get('name_en') else {}),
+            # 검색 전용 본명 (index.html 검색창). 화면에는 표시하지 않는다
+            **({'aka': REAL_NAMES[name]} if REAL_NAMES.get(name) else {}),
         }
         for name, info in celebs.items()
     }
