@@ -5,7 +5,7 @@
 잘라 책등 자리에 깔았는데, 표지 가운데 그림·글자가 토막 나서 지저분해 보였다.
 그래서 표지에서 가장 많이 쓰인 색 하나를 뽑아 그 색으로 책등을 칠한다.
 
-    표지 ──(작게 줄여 색 6개로 묶기)──▶ 가장 넓게 칠해진 색 ──▶ "#rrggbb"
+    표지 ──(작게 줄여 색을 거칠게 나누기)──▶ 가장 넓게 칠해진 색 ──▶ "#rrggbb"
 
 data.json 의 책 중 spineUrl 이 없는 책만 본다(generate.py 가 먼저 돌아야 한다).
 한 번 뽑은 표지는 다시 받지 않는다 — 키가 표지 URL이라 표지가 바뀌면 새로 뽑는다.
@@ -23,6 +23,7 @@ import os
 import sys
 import urllib.error
 import urllib.request
+from collections import defaultdict
 from concurrent.futures import ThreadPoolExecutor
 
 from PIL import Image
@@ -34,15 +35,34 @@ UA = 'Mozilla/5.0 (compatible; favoread-cover-colors/1.0)'
 
 
 def dominant_color(img):
-    """표지에서 가장 넓게 칠해진 색. 가장자리 테두리·스캔 여백은 조금 떼고 본다."""
+    """표지에서 가장 넓게 칠해진 색. 가장자리 테두리·스캔 여백은 조금 떼고 본다.
+
+    예전에는 색 6개로 묶은 평균색을 썼는데, 검정 글자·그림과 섞여 탁하고 어두운
+    색이 나오곤 했다. 지금은 색을 16단계로 거칠게 나눠 가장 넓은 덩어리를 찾고,
+    그 덩어리에 든 실제 픽셀의 평균을 쓴다. 채도가 있는 색은 조금 더 쳐 줘서
+    흰 여백이나 검은 글자보다 표지 색이 이기게 한다.
+    """
     img = img.convert('RGB')
     w, h = img.size
     dx, dy = max(1, w // 25), max(1, h // 25)
     img = img.crop((dx, dy, w - dx, h - dy)).resize((60, 90))
-    q = img.quantize(colors=6, method=Image.Quantize.MEDIANCUT)
-    pal = q.getpalette()
-    count, idx = max(q.getcolors())
-    r, g, b = pal[idx * 3:idx * 3 + 3]
+    weight = defaultdict(float)
+    members = defaultdict(list)
+    raw = img.tobytes()
+    for p in zip(raw[0::3], raw[1::3], raw[2::3]):
+        k = (p[0] >> 4, p[1] >> 4, p[2] >> 4)
+        weight[k] += 1 + (max(p) - min(p)) / 64.0
+        members[k].append(p)
+
+    def near(k):
+        for a in (-1, 0, 1):
+            for b in (-1, 0, 1):
+                for c in (-1, 0, 1):
+                    yield (k[0] + a, k[1] + b, k[2] + c)
+
+    best = max(weight, key=lambda k: sum(weight.get(n, 0) for n in near(k)))
+    pts = [p for n in near(best) for p in members.get(n, ())]
+    r, g, b = (sum(p[i] for p in pts) // len(pts) for i in range(3))
     return '#%02x%02x%02x' % (r, g, b)
 
 
