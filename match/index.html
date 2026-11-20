@@ -58,7 +58,7 @@
   .cv { position:relative; width:100%; aspect-ratio:2/3; background:var(--pink); border:1px solid var(--border); display:flex; align-items:center; justify-content:center; padding:10px; font-weight:800; font-size:14px; overflow:hidden; text-align:center; }
   .cv img { position:absolute; inset:0; width:100%; height:100%; object-fit:cover; }
 
-  /* 월드컵 */
+  /* 취향 매칭 */
   .skip { margin-top:14px; text-align:center; }
   .skip button { background:none; border:0; text-decoration:underline; font-size:13px; color:var(--soft); cursor:pointer; }
   .prog { display:flex; align-items:center; gap:10px; font-weight:800; font-size:14px; }
@@ -183,7 +183,7 @@
     <button role="tab" id="tabSearch" aria-selected="false">🔎 인생책으로 찾기</button>
   </div>
 
-  <!-- 월드컵 -->
+  <!-- 취향 매칭 -->
   <section id="cup" class="box">
     <div id="cupIntro">
       <b style="font-size:18px">표지 두 장 중에 더 끌리는 책은?</b>
@@ -269,7 +269,7 @@
       auth.forEach(function (a) { authorDf[a] = (authorDf[a] || 0) + 1; });
       celebs.push({ name: name, img: c.imageUrl, url: c.shortUrl, keys: keys, authors: auth, byAuthor: byAuthor });
     });
-    // 월드컵 후보: 표지가 있고 4명 이상이 읽은, 알아볼 만한 책
+    // 매칭 후보: 표지가 있고 4명 이상이 읽은, 알아볼 만한 책
     pool = Object.keys(books).map(function (k) { return books[k]; }).filter(function (b) { return b.cover && b.df >= 4; });
     $('cupStart').disabled = false;
     $('cupStart').textContent = '독서 취향 매칭 시작하기 (후보 ' + pool.length + '권)';
@@ -293,7 +293,7 @@
   $('tabCup').onclick = function () { tab('cup'); };
   $('tabSearch').onclick = function () { tab('search'); picked = []; pickedAuthors = []; weight = {}; renderChips(); renderGrid(true); };
 
-  /* ---------- 월드컵 ---------- */
+  /* ---------- 취향 매칭 ---------- */
   var round = 0, seen = {}, pair = [], locked = false;
   function show(id) { ['cupIntro', 'cupPlay', 'cupKing'].forEach(function (x) { $(x).classList.toggle('hide', x !== id); }); }
   function draw() {
