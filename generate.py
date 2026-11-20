@@ -2079,7 +2079,7 @@ def group_box_style(group_en):
     cs = gc['colors']
     bg = cs[0] if len(cs) == 1 else 'linear-gradient(135deg, ' + ', '.join(cs) + ')'
     dark = sum(_hex_luma(c) for c in cs) / len(cs) < 140
-    fg = '#fff' if dark else '#111'
+    fg = '#fefefe' if dark else '#101010'  # 치환 규칙(#fff·#111 → 테마색)에 걸리지 않게 고정값
     return 'background:' + bg + ';color:' + fg, fg
 
 
@@ -4040,7 +4040,7 @@ for _g in sorted(ko_groups.values(), key=lambda g: g['ko']):
             ],
         },
     })
-    GM_ON = (style + ';') if style else 'background: #ffe58a;'
+    GM_ON = (style + ';') if style else 'background: #ffe58a; color: #101010;'
     color_note = (('<p class="gc">공식 색 · ' + esc(gc['name']) + '</p>\n') if gc else '')
     page = (
         '<!DOCTYPE html>\n'
@@ -4078,7 +4078,7 @@ for _g in sorted(ko_groups.values(), key=lambda g: g['ko']):
         '    .gm:hover { transform: translate(-1px,-1px); box-shadow: 3px 3px 0 0 #000; }\n'
         '    .gm.on { box-shadow: 2px 2px 0 0 #000; ' + GM_ON + ' }\n'
         '    .gm img, .gm-all { width: 100%; aspect-ratio: 1/1; object-fit: cover; border: 2px solid #000; display: block; background: #f4f4f0; }\n'
-        '    .gm-all { display: flex; align-items: center; justify-content: center; font-weight: 900; font-size: 20px; }\n'
+        '    .gm-all { color: #000; display: flex; align-items: center; justify-content: center; font-weight: 900; font-size: 20px; }\n'
         '    .gm-n { display: block; font-weight: 800; font-size: 13px; margin-top: 6px; line-height: 1.25; }\n'
         '    .gm-c { display: block; font-size: 11px; opacity: .7; }\n'
         '    .pick { display: none; margin: 14px 0 0; font-size: 14px; font-weight: 700; }\n'
