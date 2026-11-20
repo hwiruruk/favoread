@@ -2326,6 +2326,202 @@ $('#featuredBtn').addEventListener('click', openFeaturedDialog);
 $('#featuredSaveBtn').addEventListener('click', saveFeatured);
 $('#featuredSearch').addEventListener('input', (e) => renderFeaturedResults(e.target.value));
 
+/* -------------------- 소개글 편집 (data/bios.json) --------------------
+ * 셀럽 페이지 상단의 한 줄 소개. data/bios.json 의 bios[이름] = { ko, en }.
+ * featured.json 과 같은 이유로 data.csv 와 섞지 않고 이 파일만 따로 커밋한다.
+ * 이 파일이 바뀌면 자동 갱신(update-sitemap.yml)이 돌아 셀럽 페이지(한·영)에 다시 박힌다.
+ * 키는 한글 정규화(NFC/NFD)가 CSV와 다를 수 있어서 NFC로 맞춰 찾고,
+ * 이미 있는 키는 그대로 두고 쓴다 (generate.py 가 바로 그 키로 찾기 때문). */
+const BIOS_PATH = 'data/bios.json';
+const BIOS_PAGE = 40;
+
+const biosDlg = $('#biosDialog');
+const _bios = {
+  doc: null, sha: null, loaded: false,
+  orig: new Map(),   // NFC(이름) -> { key, ko, en } — 마지막으로 저장/불러온 값
+  edits: new Map(),  // 셀럽 이름 -> { ko, en } — 아직 저장 안 된 수정
+  shown: BIOS_PAGE,
+};
+const nfc = (s) => String(s || '').normalize('NFC');
+
+function setBiosStatus(msg) { $('#biosStatus').textContent = msg || ''; }
+
+function biosIndex() {
+  _bios.orig = new Map();
+  const b = (_bios.doc && _bios.doc.bios) || {};
+  Object.keys(b).forEach(k => {
+    _bios.orig.set(nfc(k), { key: k, ko: (b[k] && b[k].ko) || '', en: (b[k] && b[k].en) || '' });
+  });
+}
+function biosCurrent(name) {
+  const e = _bios.edits.get(name);
+  if (e) return e;
+  const o = _bios.orig.get(nfc(name));
+  return { ko: o ? o.ko : '', en: o ? o.en : '' };
+}
+function biosOriginal(name) {
+  const o = _bios.orig.get(nfc(name));
+  return { ko: o ? o.ko : '', en: o ? o.en : '' };
+}
+
+async function openBiosDialog() {
+  if (!Config.token) { toast('GitHub Token을 먼저 설정하세요', 'err'); settingsDlg.showModal(); return; }
+  if (!State.celebs.size) { toast('먼저 ↻ 불러오기로 CSV를 가져오세요', 'err'); return; }
+
+  if (!_bios.loaded) {
+    setBiosStatus('불러오는 중…');
+    biosDlg.showModal();
+    try {
+      const { content, sha } = await Gh.getFile(BIOS_PATH, { allowMissing: true });
+      _bios.doc = content ? JSON.parse(content) : { _comment: '', _updated: '', bios: {} };
+      if (!_bios.doc.bios) _bios.doc.bios = {};
+      _bios.sha = sha;
+      _bios.loaded = true;
+      biosIndex();
+      setBiosStatus(sha ? `sha ${sha.slice(0, 7)}` : '새 파일로 생성됩니다');
+    } catch (err) {
+      setBiosStatus('');
+      toast('소개글 불러오기 실패: ' + err.message, 'err');
+      return;
+    }
+  } else {
+    biosDlg.showModal();
+  }
+  _bios.shown = BIOS_PAGE;
+  renderBios();
+}
+
+function biosVisibleNames() {
+  const q = $('#biosSearch').value.trim().toLowerCase();
+  const f = $('#biosFilter').value;
+  return State.order.filter(n => {
+    const c = State.celebs.get(n);
+    if (q && !(n.toLowerCase().includes(q) || (c?.name_en || '').toLowerCase().includes(q))) return false;
+    const cur = biosCurrent(n);
+    if (f === 'missing') return !cur.ko && !cur.en;
+    if (f === 'noyear')  return !/(19|20)\d\d\s*년생/.test(cur.ko) && !/\bborn (19|20)\d\d/.test(cur.en);
+    if (f === 'edited')  return _bios.edits.has(n);
+    return true;
+  });
+}
+
+function biosWarn(ko, en) {
+  const w = [];
+  if ((ko.match(/'/g) || []).length % 2) w.push('한국어 따옴표 짝이 안 맞아요');
+  if (/[가-힣]/.test(en)) w.push('영어 칸에 한글이 섞여 있어요');
+  const ky = (ko.match(/((?:19|20)\d\d)\s*년생/) || [])[1];
+  const ey = (en.match(/born ((?:19|20)\d\d)/) || [])[1];
+  if (ky && ey && ky !== ey) w.push(`생년이 달라요 (한국어 ${ky} / 영어 ${ey})`);
+  return w.join(' · ');
+}
+
+function renderBios() {
+  const names = biosVisibleNames();
+  const ul = $('#biosList');
+  const slice = names.slice(0, _bios.shown);
+  $('#biosCount').textContent =
+    `${names.length}명 중 ${slice.length}명 표시 · 수정 ${_bios.edits.size}건 (저장 전)`;
+
+  ul.innerHTML = slice.map(n => {
+    const c = State.celebs.get(n);
+    const cur = biosCurrent(n);
+    const edited = _bios.edits.has(n);
+    return `
+      <li class="bios-item${edited ? ' edited' : ''}" data-name="${esc(n)}">
+        <div class="bios-head">
+          <img class="featured-pick-img" src="${esc(c?.img || '')}" alt="" referrerpolicy="no-referrer">
+          <b>${esc(n)}</b>
+          <span class="muted small">${esc(c?.name_en || '')} · ${c ? c.books.length : 0}권</span>
+          ${edited ? '<span class="badge">수정함</span>' : ''}
+          ${!cur.ko && !cur.en ? '<span class="badge">소개 없음</span>' : ''}
+          <button type="button" class="btn small bios-reset" ${edited ? '' : 'disabled'}>되돌리기</button>
+        </div>
+        <label class="small muted">한국어
+          <textarea class="bios-ko" rows="2" maxlength="300">${esc(cur.ko)}</textarea></label>
+        <label class="small muted">English
+          <textarea class="bios-en" rows="2" maxlength="300">${esc(cur.en)}</textarea></label>
+        <div class="bios-warn small">${esc(biosWarn(cur.ko, cur.en))}</div>
+      </li>`;
+  }).join('') || '<li class="muted small">조건에 맞는 셀럽이 없습니다.</li>';
+
+  $('#biosMore').classList.toggle('hidden', names.length <= slice.length);
+  $('#biosSaveBtn').disabled = !_bios.edits.size;
+}
+
+function biosOnInput(li) {
+  const name = li.dataset.name;
+  const ko = li.querySelector('.bios-ko').value.trim();
+  const en = li.querySelector('.bios-en').value.trim();
+  const o = biosOriginal(name);
+  if (ko === o.ko && en === o.en) _bios.edits.delete(name);
+  else _bios.edits.set(name, { ko, en });
+  li.classList.toggle('edited', _bios.edits.has(name));
+  li.querySelector('.bios-reset').disabled = !_bios.edits.has(name);
+  li.querySelector('.bios-warn').textContent = biosWarn(ko, en);
+  $('#biosCount').textContent = $('#biosCount').textContent.replace(/수정 \d+건/, `수정 ${_bios.edits.size}건`);
+  $('#biosSaveBtn').disabled = !_bios.edits.size;
+}
+
+$('#biosList').addEventListener('input', (e) => {
+  const li = e.target.closest('.bios-item');
+  if (li) biosOnInput(li);
+});
+$('#biosList').addEventListener('click', (e) => {
+  if (!e.target.classList.contains('bios-reset')) return;
+  const li = e.target.closest('.bios-item');
+  _bios.edits.delete(li.dataset.name);
+  renderBios();
+});
+$('#biosSearch').addEventListener('input', () => { _bios.shown = BIOS_PAGE; renderBios(); });
+$('#biosFilter').addEventListener('change', () => { _bios.shown = BIOS_PAGE; renderBios(); });
+$('#biosMore').addEventListener('click', () => { _bios.shown += BIOS_PAGE; renderBios(); });
+
+async function saveBios() {
+  if (!_bios.edits.size) return;
+  const warns = [];
+  _bios.edits.forEach((v, n) => { const w = biosWarn(v.ko, v.en); if (w) warns.push(`${n}: ${w}`); });
+  if (warns.length && !confirm(`확인이 필요한 곳이 있어요:\n${warns.slice(0, 10).join('\n')}\n\n그래도 저장할까요?`)) return;
+
+  const doc = JSON.parse(JSON.stringify(_bios.doc));
+  const b = doc.bios;
+  _bios.edits.forEach((v, n) => {
+    const o = _bios.orig.get(nfc(n));
+    const key = o ? o.key : n;
+    if (!v.ko && !v.en) delete b[key];
+    else b[key] = { ...(b[key] || {}), ko: v.ko, en: v.en };
+  });
+  const now = new Date();
+  const pad = (x) => String(x).padStart(2, '0');
+  doc._updated = `${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())}`;
+
+  const content = JSON.stringify(doc, null, 2);   // 기존 파일처럼 끝 줄바꿈 없음
+  const names = [..._bios.edits.keys()];
+  const message = prompt('커밋 메시지',
+    `셀럽 소개글 수정 — ${names.slice(0, 3).join(', ')}${names.length > 3 ? ` 외 ${names.length - 3}명` : ''}`);
+  if (!message) return;
+
+  const btn = $('#biosSaveBtn');
+  btn.disabled = true;
+  setBiosStatus('저장 중…');
+  try {
+    const { sha } = await Gh.putFile({ content, sha: _bios.sha, message, path: BIOS_PATH });
+    _bios.doc = doc;
+    _bios.sha = sha;
+    _bios.edits.clear();
+    biosIndex();
+    setBiosStatus(sha ? `저장 완료 · sha ${sha.slice(0, 7)}` : '저장 완료');
+    toast('소개글 저장됨 — 자동 갱신이 돌면 몇 분 뒤 사이트에 반영됩니다', 'ok');
+    renderBios();
+  } catch (err) {
+    setBiosStatus('');
+    toast(err.message, 'err');
+    btn.disabled = false;
+  }
+}
+
+$('#biosBtn').addEventListener('click', openBiosDialog);
+$('#biosSaveBtn').addEventListener('click', saveBios);
+
 /* -------------------- Pinned ("셀럽이 최근 추천한 책") --------------------
  * 메인에 책 표지 + 셀럽 사진 카드로 고정할 (셀럽, 책) 짝 목록.
  * featured.json과 같은 이유로 data.csv와 섞지 않고 data/pinned_books.json 에 따로 저장한다.
