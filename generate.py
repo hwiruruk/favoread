@@ -712,7 +712,7 @@ def spine_title(title):
 
 # 색 책등 제목은 세로 한 줄이라 글자 수가 곧 길이다. 기본 크기로 넘치면
 # 말줄임(…) 대신 글자를 줄여 끝까지 보이게 한다.
-SPINE_FS = 15                        # 기본 글자 크기
+SPINE_FS = 12                        # 기본 글자 크기 (너무 크면 책등이 답답해 보인다)
 SPINE_FS_MIN = 8                     # 이보다 작아지면 읽기 어려우니 여기서 멈춘다
 SPINE_TEXT_PAD = 14                  # .sp-t 위아래 여백
 # 세로쓰기에서 한 글자가 잡아먹는 높이(em). 브라우저에서 직접 재서 넣었다 —
@@ -1214,7 +1214,7 @@ SHELF_CSS = (
     '    .sp-t i { writing-mode: vertical-rl; text-orientation: mixed; font-style: normal;\n'
     '              white-space: nowrap; overflow: hidden; text-overflow: ellipsis;\n'
     '              font-family: "KoPubWorld Batang", "Noto Serif KR", Batang, serif;\n'
-    '              font-size: var(--fs, 15px); font-weight: 300; line-height: 1; letter-spacing: .02em; color: #fff;\n'
+    '              font-size: var(--fs, 12px); font-weight: 300; line-height: 1; letter-spacing: .02em; color: #fff;\n'
     '              text-shadow: 0 0 1px rgba(0,0,0,.35); }\n'
     '    .sp-i { position: relative; z-index: 1; display: block;\n'
     '            height: 100%; width: auto; max-width: 92px; object-fit: fill; }\n'
@@ -1232,7 +1232,10 @@ SHELF_CSS = (
     '    .shelf.is-strip .sp { border: 0; border-radius: 9px; box-shadow: none; transform: none; }\n'
     '    .shelf.is-strip .sp.no-img, .shelf.is-strip .sp.sp-fail { width: var(--w, 28px); }\n'
     '    .shelf.is-strip .sp-i { max-width: 92px; }\n'
-    '    .shelf.is-strip .sp-t i { font-size: var(--fs, 15px); }\n'
+    '    .shelf.is-strip .sp-t i { font-size: var(--fs, 12px); }\n'
+    # 그림으로 저장할 때: html2canvas는 세로쓰기 글자의 윗부분을 상자 밖으로 그려 overflow:hidden 에 잘라 먹힌다
+    # (어→거, 엘→겔). 저장하는 동안만 상자를 열어 두고 줄 높이를 넉넉히 준다.
+    '    .is-capturing .sp-t i, .shelf.is-strip .sp-t i { overflow: visible; text-overflow: clip; line-height: 1.5; }\n'
     '    .shelf.is-strip .sp-t { padding: 14px 2px; }\n'
     # 이미지로 저장하는 동안에는 NEW 표시와 함께 추천한 셀럽 목록을 뺀다
     '    .is-capturing .rl-new, .is-capturing .rl-shared, .is-capturing .rl-comment { display: none !important; }\n'
@@ -1246,7 +1249,7 @@ SHELF_CSS = (
     '                                 .shelf { --sh-h: 235px; }\n'
     '                                 .sp.no-img, .sp.sp-fail { width: calc(var(--w, 28px) * .88); }\n'
     '                                 .sp-i { max-width: 70px; }\n'
-    '                                 .sp-t i { font-size: calc(var(--fs, 15px) * .76); }\n'
+    '                                 .sp-t i { font-size: calc(var(--fs, 12px) * .76); }\n'
     '                                 .sp-t { padding: 10px 2px; } }\n'
 )
 
