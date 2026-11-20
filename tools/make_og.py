@@ -281,7 +281,7 @@ def books_txt(n):
 
 def render(name, books, offline):
     g = group_of(name)
-    sub = [(g + ' · ' if g else '') + '읽은 책 리딩 리스트']
+    sub = [(g + ' · ' if g else '') + '읽은 책 모아보기']
     return draw_card(heads_ko(name), True, books_txt(len(books)), books, offline, sub)
 
 
