@@ -5319,7 +5319,7 @@ for name, info in celebs.items():
                     + str(len(_others)) + ':</span> '
                     + ''.join(en_celeb_link(c, 'rl-celeb-chip') for c in _others)
                     + ((' <a class="rl-book-link" href="' + EN_BASE + 'share/book/' + _en_bslug
-                        + '.html">Book details →</a>') if _en_bslug else '')
+                        + '.html">All readers →</a>') if _en_bslug else '')
                     + '</div>\n')
 
         # 책등 한 칸 — 한국어 페이지와 같은 규칙. 예스24 책등이 있으면 그 이미지를,
