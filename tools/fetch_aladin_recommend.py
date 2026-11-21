@@ -24,13 +24,17 @@ def get(url):
 def base_name(n):  # 'RM(BTS)' -> 'RM', '상원(알파드라이브원)' -> '상원'
     return re.sub(r"\(.*", "", n).strip()
 
-def candidates(name):
+def candidates(name, full=None):
     ids = []
-    for t in ("DVD", "Music"):
-        for i in re.findall(r"AuthorSearch=@(\d+)", get(SEARCH.format(t=t, k=urllib.parse.quote(name)))):
-            if i not in ids: ids.append(i)
-        time.sleep(0.5)
-    return ids[:6]
+    qs = [name]
+    if full and full != name:  # 'RM(BTS)' -> 'RM BTS' 도 검색
+        qs.append(re.sub(r"[()]+", " ", full).strip())
+    for q in qs:
+        for t in ("DVD", "Music"):
+            for i in re.findall(r"AuthorSearch=@(\d+)", get(SEARCH.format(t=t, k=urllib.parse.quote(q)))):
+                if i not in ids: ids.append(i)
+            time.sleep(0.4)
+    return ids[:8]
 
 def text(s):
     s = re.sub(r"<script.*?</script>|<style.*?</style>", "", s, flags=re.S)
@@ -65,6 +69,14 @@ def parse(page, name):
         items.append({"도서명": title, "저자": author, "출판사": pub, "추천사": comment})
     return {"job": job.group(1).strip() if job else "", "items": items}
 
+def flags(c, it):
+    f = []
+    if c.get("동명후보"): f.append("동명후보 " + "/".join(c["동명후보"]))
+    if not c.get("job"): f.append("직업 미기재")
+    if re.search(r"사은품|도서전|\[나도서점주인\]|\[세트\]|이벤트", it["도서명"]): f.append("도서명 판촉문구")
+    if re.search(r"(^|\s)중에서\s*$", it["추천사"]) or it["추천사"].startswith("“") and it["추천사"].endswith("”"): f.append("인용 가능성")
+    return "; ".join(f)
+
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--names"); ap.add_argument("--limit", type=int, default=0)
@@ -79,21 +91,23 @@ def main():
     cache = json.load(open(CACHE)) if os.path.exists(CACHE) else {}
     for n in names:
         if n in cache: continue
-        q = base_name(n); found = None
-        for i in candidates(q):
+        q = base_name(n); hits = []
+        for i in candidates(q, n):
             r = parse(get(REC.format(i=i)), q)
-            time.sleep(0.5)
+            time.sleep(0.4)
             if r and r["items"]:
-                found = {"id": i, **r}; break
+                hits.append({"id": i, **r})
+        found = hits[0] if hits else None
+        if found: found["동명후보"] = [h["id"] for h in hits[1:]]
         cache[n] = found or {"id": None, "items": []}
         print(n, "->", cache[n]["id"], len(cache[n]["items"]), file=sys.stderr)
         json.dump(cache, open(CACHE, "w"), ensure_ascii=False)
     with open(a.out, "w", newline="", encoding="utf-8-sig") as f:
-        w = csv.writer(f); w.writerow(["연예인", "알라딘번호", "직업", "도서명", "저자", "출판사", "추천사", "출처"])
+        w = csv.writer(f); w.writerow(["연예인", "알라딘번호", "직업", "도서명", "저자", "출판사", "추천사", "확인필요", "출처"])
         for n in names:
             c = cache.get(n)
             if c and c["id"]:
                 for it in c["items"]:
-                    w.writerow([n, c["id"], c.get("job", ""), it["도서명"], it["저자"], it["출판사"], it["추천사"], REC.format(i=c["id"])])
+                    w.writerow([n, c["id"], c.get("job", ""), it["도서명"], it["저자"], it["출판사"], it["추천사"], flags(c, it), REC.format(i=c["id"])])
 if __name__ == "__main__":
     main()
