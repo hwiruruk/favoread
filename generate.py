@@ -133,13 +133,14 @@ def source_credit(url, lang='ko'):
     return ''
 
 def source_button(url, label_text, lang='ko'):
-    """출처 버튼. 기여자 라벨이 있으면 버튼 위에 항상 보이게 얹는다."""
-    btn = ('<a class="rl-source" href="' + esc(url)
-           + '" rel="nofollow noopener noreferrer" target="_blank">' + label_text + '</a>')
+    """출처 버튼. 기여자를 알 수 있으면 버튼 안에 '출처 : @계정 님의 X 게시글' 처럼 표기한다."""
     credit = source_credit(url, lang)
-    if not credit:
-        return btn
-    return ('<span class="rl-src-wrap"><span class="rl-credit">' + ('출처 : ' if lang == 'ko' else 'Source : ') + esc(credit) + '</span>' + btn + '</span>')
+    if credit:
+        label_text = '🔗 ' + ('출처 : ' if lang == 'ko' else 'Source : ') + esc(credit)
+    else:
+        label_text = label_text.replace('📺', '🔗')
+    return ('<a class="rl-source" href="' + esc(url)
+            + '" rel="nofollow noopener noreferrer" target="_blank">' + label_text + '</a>')
 
 def esc(text):
     """HTML 특수문자 이스케이프"""
@@ -3418,7 +3419,7 @@ for name, info in celebs.items():
                        + '" rel="nofollow noopener noreferrer" target="_blank" title="예스24에서 보기">📖 책 정보 · 예스24</a>')
         _src = (b['source'] or '').strip()
         if _src.startswith('http'):
-            source_html += ' ' + source_button(_src, '📺 출처', 'ko')
+            source_html += ' ' + source_button(_src, '🔗 출처', 'ko')
         elif _src:
             source_html += ' <span class="rl-source-text">출처: ' + esc(_src) + '</span>'
 
@@ -3703,9 +3704,6 @@ for name, info in celebs.items():
         '    .rl-comment { font-size: 13px; line-height: 1.55; color: #222; background: #FFF7C2; border: 1.5px solid #000; padding: 6px 9px; margin: 0 0 8px; word-break: keep-all; }\n'
         '    .rl-source { display: inline-block; font-size: 12px; padding: 3px 8px; background: #fff; border: 1.5px solid #000; box-shadow: 1px 1px 0 0 #000; text-decoration: none; color: #000; transition: transform .1s, box-shadow .1s, background .1s; }\n'
         '    .rl-source-text { display: inline-block; font-size: 12px; color: #555; margin-left: 4px; }\n'
-        '    .rl-src-wrap { display: inline-flex; flex-direction: column; align-items: flex-start; vertical-align: bottom; gap: 2px; }\n'
-        '    .rl-credit { width: 0; min-width: 100%; white-space: nowrap; font-size: 11px; line-height: 1.2; color: #555; }\n'
-        '    @media (max-width: 600px) { .rl-credit { width: auto; min-width: 0; white-space: normal; } }\n'
         '    .rl-book-link { font-size: 12px; font-weight: 700; }\n'
         '    .rl-source:hover { transform: translate(-1px,-1px); box-shadow: 2px 2px 0 0 #000; background: #a7f3d0; text-decoration: none; }\n'
         '    .rl-shared { clear: both; margin-top: 12px; padding-top: 10px; border-top: 1.5px dashed #ccc; display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }\n'
@@ -5397,7 +5395,7 @@ for name, info in celebs.items():
                     'title="View on YES24 (Korean bookstore)">📖 Book details · YES24</a>')
         _src = (b['source'] or '').strip()
         if _src.startswith('http'):
-            src_html += ' ' + source_button(_src, '📺 Source', 'en')
+            src_html += ' ' + source_button(_src, '🔗 Source', 'en')
         elif _src:
             src_html += ' <span class="rl-source-text">Source: ' + esc(_src) + '</span>'
 
@@ -5818,9 +5816,6 @@ for name, info in celebs.items():
         '    .rl-comment { font-size: 13px; line-height: 1.55; color: #222; background: #FFF7C2; border: 1.5px solid #000; padding: 6px 9px; margin: 0 0 8px; word-break: keep-all; }\n'
         '    .rl-source { display: inline-block; font-size: 12px; padding: 3px 8px; background: #fff; border: 1.5px solid #000; box-shadow: 1px 1px 0 0 #000; text-decoration: none; color: #000; transition: transform .1s, box-shadow .1s, background .1s; }\n'
         '    .rl-source-text { display: inline-block; font-size: 12px; color: #555; margin-left: 4px; }\n'
-        '    .rl-src-wrap { display: inline-flex; flex-direction: column; align-items: flex-start; vertical-align: bottom; gap: 2px; }\n'
-        '    .rl-credit { width: 0; min-width: 100%; white-space: nowrap; font-size: 11px; line-height: 1.2; color: #555; }\n'
-        '    @media (max-width: 600px) { .rl-credit { width: auto; min-width: 0; white-space: normal; } }\n'
         '    .rl-source:hover { transform: translate(-1px,-1px); box-shadow: 2px 2px 0 0 #000; background: #a7f3d0; text-decoration: none; }\n'
         '    @media (max-width: 480px) { .rl-item { padding: 14px 12px 14px 46px; } .rl-num { width: 32px; height: 26px; font-size: 12px; } .rl-cover { width: 60px; height: 88px; margin-right: 10px; } .rl-meta { min-height: 88px; } .rl-title { font-size: 15px; } }\n'
         '    a { color: #2563eb; text-decoration: none; }\n'
