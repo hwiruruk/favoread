@@ -139,7 +139,7 @@ def source_button(url, label_text, lang='ko'):
     credit = source_credit(url, lang)
     if not credit:
         return btn
-    return ('<span class="rl-src-wrap"><span class="rl-credit">' + esc(credit) + '</span>' + btn + '</span>')
+    return ('<span class="rl-src-wrap"><span class="rl-credit">' + ('출처 : ' if lang == 'ko' else 'Source : ') + esc(credit) + '</span>' + btn + '</span>')
 
 def esc(text):
     """HTML 특수문자 이스케이프"""
