@@ -2665,6 +2665,165 @@ $('#biosFile').addEventListener('change', async (e) => {
 $('#biosBtn').addEventListener('click', openBiosDialog);
 $('#biosSaveBtn').addEventListener('click', saveBios);
 
+/* -------------------- 본명(검색용) 편집 (data/real_names.json) --------------------
+ * 메인 검색창에서 본명으로도 셀럽이 찾아지게 하는 값. 화면에는 표시하지 않는다.
+ * { _comment, 이름: [본명, ...] } 형식. generate.py 가 data.json 의 aka 로 옮기고,
+ * 3글자 한글 본명은 이름 부분(성 뺀 것)도 자동으로 검색에 걸어 준다.
+ * 소개글(bios.json)과 같은 이유로 data.csv 와 섞지 않고 이 파일만 따로 커밋한다. */
+const REAL_PATH = 'data/real_names.json';
+const REAL_PAGE = 40;
+
+const realDlg = $('#realDialog');
+const _real = {
+  doc: null, sha: null, loaded: false,
+  orig: new Map(),   // NFC(이름) -> { key, names: [..] } — 마지막으로 저장/불러온 값
+  edits: new Map(),  // 셀럽 이름 -> [본명..] — 아직 저장 안 된 수정
+  shown: REAL_PAGE,
+};
+
+function setRealStatus(msg) { $('#realStatus').textContent = msg || ''; }
+
+function realIndex() {
+  _real.orig = new Map();
+  Object.keys(_real.doc || {}).forEach(k => {
+    if (k.startsWith('_') || !Array.isArray(_real.doc[k])) return;
+    _real.orig.set(nfc(k), { key: k, names: _real.doc[k].map(String) });
+  });
+}
+function realOriginal(name) {
+  const o = _real.orig.get(nfc(name));
+  return o ? o.names : [];
+}
+function realCurrent(name) {
+  return _real.edits.has(name) ? _real.edits.get(name) : realOriginal(name);
+}
+// 쉼표·줄바꿈으로 나눠 공백 정리, 중복 제거. 검색은 띄어쓰기를 무시하므로 안쪽 공백은 그대로 둔다
+function realParse(text) {
+  return [...new Set(String(text).split(/[,，、\n]/).map(x => x.trim()).filter(Boolean))];
+}
+const realSame = (a, b) => a.length === b.length && a.every((x, i) => x === b[i]);
+
+async function openRealDialog() {
+  if (!Config.token) { toast('GitHub Token을 먼저 설정하세요', 'err'); settingsDlg.showModal(); return; }
+  if (!State.celebs.size) { toast('먼저 ↻ 불러오기로 CSV를 가져오세요', 'err'); return; }
+
+  if (!_real.loaded) {
+    setRealStatus('불러오는 중…');
+    realDlg.showModal();
+    try {
+      const { content, sha } = await Gh.getFile(REAL_PATH, { allowMissing: true });
+      _real.doc = content ? JSON.parse(content) : { _comment: '검색 전용 본명(별칭). 화면에는 표시하지 않는다.' };
+      _real.sha = sha;
+      _real.loaded = true;
+      realIndex();
+      setRealStatus(sha ? `sha ${sha.slice(0, 7)}` : '새 파일로 생성됩니다');
+    } catch (err) {
+      setRealStatus('');
+      toast('본명 불러오기 실패: ' + err.message, 'err');
+      return;
+    }
+  } else {
+    realDlg.showModal();
+  }
+  _real.shown = REAL_PAGE;
+  renderReal();
+}
+
+function realVisibleNames() {
+  const q = $('#realSearch').value.trim().toLowerCase();
+  const f = $('#realFilter').value;
+  return State.order.filter(n => {
+    const c = State.celebs.get(n);
+    const cur = realCurrent(n);
+    if (q && !(n.toLowerCase().includes(q) || (c?.name_en || '').toLowerCase().includes(q)
+               || cur.some(x => x.toLowerCase().includes(q)))) return false;
+    if (f === 'missing') return !cur.length;
+    if (f === 'has')     return cur.length > 0;
+    if (f === 'edited')  return _real.edits.has(n);
+    return true;
+  });
+}
+
+function renderReal() {
+  const names = realVisibleNames();
+  const slice = names.slice(0, _real.shown);
+  $('#realCount').textContent =
+    `${names.length}명 중 ${slice.length}명 표시 · 수정 ${_real.edits.size}건 (저장 전)`;
+  $('#realList').innerHTML = slice.map(n => {
+    const c = State.celebs.get(n);
+    const edited = _real.edits.has(n);
+    return `
+      <li class="bios-item${edited ? ' edited' : ''}" data-name="${esc(n)}">
+        <div class="bios-head">
+          <img class="featured-pick-img" src="${esc(c?.img || '')}" alt="" referrerpolicy="no-referrer">
+          <b>${esc(n)}</b>
+          <span class="muted small">${esc(c?.name_en || '')}</span>
+          ${edited ? '<span class="badge">수정함</span>' : ''}
+          <button type="button" class="btn small bios-reset" ${edited ? '' : 'disabled'}>되돌리기</button>
+        </div>
+        <input type="text" class="real-input" placeholder="본명 (여러 개면 쉼표로 구분)" value="${esc(realCurrent(n).join(', '))}" style="width:100%">
+      </li>`;
+  }).join('') || '<li class="muted small">조건에 맞는 셀럽이 없습니다.</li>';
+  $('#realMore').classList.toggle('hidden', names.length <= slice.length);
+  $('#realSaveBtn').disabled = !_real.edits.size;
+}
+
+$('#realList').addEventListener('input', (e) => {
+  const li = e.target.closest('.bios-item');
+  if (!li || !e.target.classList.contains('real-input')) return;
+  const name = li.dataset.name;
+  const val = realParse(e.target.value);
+  if (realSame(val, realOriginal(name))) _real.edits.delete(name);
+  else _real.edits.set(name, val);
+  li.classList.toggle('edited', _real.edits.has(name));
+  li.querySelector('.bios-reset').disabled = !_real.edits.has(name);
+  $('#realCount').textContent = $('#realCount').textContent.replace(/수정 \d+건/, `수정 ${_real.edits.size}건`);
+  $('#realSaveBtn').disabled = !_real.edits.size;
+});
+$('#realList').addEventListener('click', (e) => {
+  if (!e.target.classList.contains('bios-reset')) return;
+  _real.edits.delete(e.target.closest('.bios-item').dataset.name);
+  renderReal();
+});
+$('#realSearch').addEventListener('input', () => { _real.shown = REAL_PAGE; renderReal(); });
+$('#realFilter').addEventListener('change', () => { _real.shown = REAL_PAGE; renderReal(); });
+$('#realMore').addEventListener('click', () => { _real.shown += REAL_PAGE; renderReal(); });
+
+async function saveReal() {
+  if (!_real.edits.size) return;
+  const doc = JSON.parse(JSON.stringify(_real.doc));
+  _real.edits.forEach((v, n) => {
+    const o = _real.orig.get(nfc(n));
+    const key = o ? o.key : n;
+    if (!v.length) delete doc[key];
+    else doc[key] = v;
+  });
+  const names = [..._real.edits.keys()];
+  const message = prompt('커밋 메시지',
+    `본명(검색용) 수정 — ${names.slice(0, 3).join(', ')}${names.length > 3 ? ` 외 ${names.length - 3}명` : ''}`);
+  if (!message) return;
+
+  const btn = $('#realSaveBtn');
+  btn.disabled = true;
+  setRealStatus('저장 중…');
+  try {
+    const { sha } = await Gh.putFile({ content: JSON.stringify(doc, null, 2), sha: _real.sha, message, path: REAL_PATH });
+    _real.doc = doc;
+    _real.sha = sha;
+    _real.edits.clear();
+    realIndex();
+    setRealStatus(sha ? `저장 완료 · sha ${sha.slice(0, 7)}` : '저장 완료');
+    toast('본명 저장됨 — 자동 갱신이 돌면 몇 분 뒤 검색에 반영됩니다', 'ok');
+    renderReal();
+  } catch (err) {
+    setRealStatus('');
+    toast(err.message, 'err');
+    btn.disabled = false;
+  }
+}
+$('#realNamesBtn').addEventListener('click', openRealDialog);
+$('#realSaveBtn').addEventListener('click', saveReal);
+
 /* -------------------- Pinned ("셀럽이 최근 추천한 책") --------------------
  * 메인에 책 표지 + 셀럽 사진 카드로 고정할 (셀럽, 책) 짝 목록.
  * featured.json과 같은 이유로 data.csv와 섞지 않고 data/pinned_books.json 에 따로 저장한다.
