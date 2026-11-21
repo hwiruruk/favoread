@@ -2824,6 +2824,106 @@ async function saveReal() {
 $('#realNamesBtn').addEventListener('click', openRealDialog);
 $('#realSaveBtn').addEventListener('click', saveReal);
 
+/* -------------------- 알라딘 추천사 보기 (data/aladin_recommend.csv, 읽기 전용) --------------------
+ * tools/fetch_aladin_recommend.py 가 알라딘 '저자의 추천'에서 모은 셀럽 추천사.
+ * 사이트에는 나가지 않고, 책·코멘트를 채울 때 참고만 한다. 저장·커밋 없음. */
+const ALA_PATH = 'data/aladin_recommend.csv';
+const ALA_PAGE = 30;
+const alaDlg = $('#alaDialog');
+const _ala = { rows: null, shown: ALA_PAGE };
+
+function setAlaStatus(msg) { $('#alaStatus').textContent = msg || ''; }
+
+async function openAlaDialog() {
+  if (!Config.token) { toast('GitHub Token을 먼저 설정하세요', 'err'); settingsDlg.showModal(); return; }
+  if (!State.celebs.size) { toast('먼저 ↻ 불러오기로 CSV를 가져오세요', 'err'); return; }
+  alaDlg.showModal();
+  if (!_ala.rows) {
+    setAlaStatus('불러오는 중…');
+    try {
+      const { content } = await Gh.getFile(ALA_PATH, { allowMissing: true });
+      if (!content) { setAlaStatus(''); $('#alaList').innerHTML = '<li class="muted small">아직 발행 브랜치에 data/aladin_recommend.csv 가 없어요. 머지 후 다시 열어 보세요.</li>'; return; }
+      const parsed = Papa.parse(content.replace(/^\ufeff/, ''), { header: true, skipEmptyLines: true });
+      _ala.rows = parsed.data;
+      setAlaStatus(`${_ala.rows.length}건`);
+    } catch (err) {
+      setAlaStatus('');
+      toast('알라딘 추천사 불러오기 실패: ' + err.message, 'err');
+      return;
+    }
+  }
+  _ala.shown = ALA_PAGE;
+  renderAla();
+}
+
+// 이 셀럽에게 같은 제목의 책이 이미 등록돼 있는가 ('[세트] …' 같은 접두 문구는 부분 일치로 봄)
+function alaRegistered(r) {
+  const c = State.celebs.get(r['연예인']);
+  const t = normTitle(r['도서명']);
+  if (!c || !t) return false;
+  return c.books.some(b => { const k = normTitle(b.title); return k && (k === t || t.includes(k) || k.includes(t)); });
+}
+
+function alaVisible() {
+  const q = $('#alaSearch').value.trim().toLowerCase();
+  const f = $('#alaFilter').value;
+  return (_ala.rows || []).filter(r => {
+    if (q && !`${r['연예인']} ${r['도서명']} ${r['저자']} ${r['추천사']}`.toLowerCase().includes(q)) return false;
+    if (f === 'clean') return !r['확인필요'];
+    if (f === 'flag') return !!r['확인필요'];
+    if (f === 'new') return !alaRegistered(r);
+    if (f === 'registered') return alaRegistered(r);
+    return true;
+  });
+}
+
+function renderAla() {
+  const rows = alaVisible();
+  const slice = rows.slice(0, _ala.shown);
+  $('#alaCount').textContent = `${rows.length}건 중 ${slice.length}건 표시`;
+  $('#alaList').innerHTML = slice.map((r, i) => {
+    const reg = alaRegistered(r);
+    return `
+      <li class="bios-item" data-name="${esc(r['연예인'])}" data-i="${i}">
+        <div class="bios-head">
+          <b>${esc(r['연예인'])}</b>
+          <span class="muted small">${esc(r['직업'])}</span>
+          <span class="badge">${reg ? '등록됨' : '새 책'}</span>
+          ${r['확인필요'] ? `<span class="badge draft">확인필요 · ${esc(r['확인필요'])}</span>` : ''}
+          <button type="button" class="btn small bios-reset ala-open">셀럽 열기</button>
+        </div>
+        <div style="margin-top:4px"><b>${esc(r['도서명'])}</b>
+          <span class="muted small">${esc(r['저자'])}${r['출판사'] ? ' · ' + esc(r['출판사']) : ''}</span></div>
+        <div class="small" style="margin-top:4px;white-space:pre-wrap">${esc(r['추천사'])}</div>
+        <div class="small" style="margin-top:4px">
+          <a href="${esc(r['출처'])}" target="_blank" rel="noopener noreferrer">알라딘 출처</a>
+          · <a href="#" class="ala-copy">추천사 복사</a>
+        </div>
+      </li>`;
+  }).join('') || '<li class="muted small">조건에 맞는 항목이 없습니다.</li>';
+  $('#alaMore').classList.toggle('hidden', rows.length <= slice.length);
+}
+
+$('#alaList').addEventListener('click', async (e) => {
+  const li = e.target.closest('.bios-item');
+  if (!li) return;
+  if (e.target.classList.contains('ala-open')) {
+    const name = li.dataset.name;
+    if (!State.celebs.has(name)) { toast('편집기에 없는 셀럽이에요', 'err'); return; }
+    alaDlg.close();
+    selectCeleb(name);
+  } else if (e.target.classList.contains('ala-copy')) {
+    e.preventDefault();
+    const r = alaVisible().slice(0, _ala.shown)[Number(li.dataset.i)];
+    try { await navigator.clipboard.writeText(r['추천사']); toast('추천사를 복사했어요', 'ok'); }
+    catch { toast('복사하지 못했어요', 'err'); }
+  }
+});
+$('#alaSearch').addEventListener('input', () => { _ala.shown = ALA_PAGE; renderAla(); });
+$('#alaFilter').addEventListener('change', () => { _ala.shown = ALA_PAGE; renderAla(); });
+$('#alaMore').addEventListener('click', () => { _ala.shown += ALA_PAGE; renderAla(); });
+$('#alaBtn').addEventListener('click', openAlaDialog);
+
 /* -------------------- Pinned ("셀럽이 최근 추천한 책") --------------------
  * 메인에 책 표지 + 셀럽 사진 카드로 고정할 (셀럽, 책) 짝 목록.
  * featured.json과 같은 이유로 data.csv와 섞지 않고 data/pinned_books.json 에 따로 저장한다.
