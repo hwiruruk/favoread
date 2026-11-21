@@ -1170,7 +1170,7 @@ SHELF_CSS = (
     '    .cv { position: relative; display: block; aspect-ratio: 2/3; border: 1.5px solid #000; box-shadow: 2px 2px 0 0 #000;\n'
     '          background: #f4f4f0; overflow: hidden; color: #000; text-decoration: none; transition: transform .12s; }\n'
     '    .cv:hover { transform: translateY(-3px); text-decoration: none; }\n'
-    '    .cv img { width: 100%; height: 100%; object-fit: cover; display: block; }\n'
+    '    .cv img { width: 100%; height: 100%; object-fit: contain; display: block; }\n'
     '    .cv-no { display: flex; height: 100%; align-items: center; justify-content: center; padding: 6px;\n'
     '             font-size: 11px; font-weight: 700; line-height: 1.3; text-align: center; word-break: keep-all; }\n'
     # 이미지 저장 — 접힌 상태면 보이는 3줄만 담고, 흐린 가림막과 '전체 보기' 버튼은 빼고 찍는다
@@ -1194,7 +1194,7 @@ SHELF_CSS = (
     '    .new-tile { width: 84px; color: #000; text-decoration: none; display: flex; flex-direction: column; gap: 5px; }\n'
     '    .new-tile:hover { text-decoration: none; transform: translateY(-2px); }\n'
     '    .nt-cover { display: block; width: 84px; aspect-ratio: 2/3; border: 1.5px solid #000; box-shadow: 2px 2px 0 0 #000; background: #f4f4f0; overflow: hidden; }\n'
-    '    .nt-cover img { width: 100%; height: 100%; object-fit: cover; display: block; }\n'
+    '    .nt-cover img { width: 100%; height: 100%; object-fit: contain; display: block; }\n'
     '    .nt-no-cover { display: flex; width: 100%; height: 100%; align-items: center; justify-content: center; font-size: 22px; }\n'
     '    .nt-title { font-size: 12px; font-weight: 700; line-height: 1.3; word-break: keep-all; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }\n'
     '    .rl-new-tag { font-size: 9px; font-weight: 800; letter-spacing: .06em; line-height: 1; padding: 3px 5px;\n'
@@ -1700,7 +1700,7 @@ TASTE_CSS = (
     '    .taste-kw.open .kw-pop { display: grid; }\n'
     '    .kw-pop a { display: block; min-width: 0; color: #000; text-decoration: none; font-size: 11px; font-weight: 700; line-height: 1.3; }\n'
     '    .kw-pop a:hover span { text-decoration: underline; }\n'
-    '    .kw-pop img, .kw-pop .kw-nocv { display: flex; align-items: center; justify-content: center; width: 100%; aspect-ratio: 2/3; object-fit: cover; border: 1.5px solid #000; background: #f4f4f0; font-style: normal; font-size: 22px; margin-bottom: 4px; }\n'
+    '    .kw-pop img, .kw-pop .kw-nocv { display: flex; align-items: center; justify-content: center; width: 100%; aspect-ratio: 2/3; object-fit: contain; border: 1.5px solid #000; background: #f4f4f0; font-style: normal; font-size: 22px; margin-bottom: 4px; }\n'
     '    .kw-pop span { display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; word-break: keep-all; }\n'
     '    .kw-pop em { grid-column: 1 / -1; font-style: normal; font-size: 12px; color: #555; text-align: right; }\n'
     '    .taste-chip.big { background: #fde047; font-size: 15px; }\n'
@@ -3653,7 +3653,7 @@ for name, info in celebs.items():
         '    .rl-item:hover { transform: translate(-1px,-1px); box-shadow: 6px 6px 0 0 #000; }\n'
         '    .rl-num { position: absolute; left: -2px; top: -2px; width: 38px; height: 30px; display: flex; align-items: center; justify-content: center; background: #fde047; border: 2px solid #000; font-weight: 900; font-size: 14px; font-family: "Space Grotesk", sans-serif; }\n'
         '    .rl-item .rl-cover, .rl-item > .rl-cover { float: left; margin-right: 14px; width: 74px; height: 105px; display: block; flex-shrink: 0; border: 1.5px solid #000; box-shadow: 2px 2px 0 0 #000; background: #f4f4f0; overflow: hidden; }\n'
-        '    .rl-cover img { width: 100%; height: 100%; object-fit: cover; display: block; }\n'
+        '    .rl-cover img { width: 100%; height: 100%; object-fit: contain; display: block; }\n'
         + NEW_BADGE_CSS +
         '    .rl-no-cover { width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; font-size: 32px; }\n'
         '    .rl-meta { overflow: hidden; min-height: 105px; }\n'
@@ -3855,7 +3855,7 @@ for title, binfo in book_celebs.items():
     if binfo['coverUrl'] and binfo['coverUrl'].startswith('http'):
         cover_html = (
             '  <img src="' + esc(binfo['coverUrl']) + '" alt="' + esc(title) + ' 표지"'
-            ' width="200" height="280" loading="lazy" style="object-fit:cover; margin:16px 0">\n'
+            ' width="200" height="280" loading="lazy" style="object-fit:contain; margin:16px 0">\n'
         )
 
     desc_text = esc(title) + '을(를) ' + str(celeb_count) + '명의 셀럽이 읽었습니다: ' + celeb_names_str
@@ -4144,7 +4144,7 @@ for _g in sorted(ko_groups.values(), key=lambda g: g['ko']):
         '    .gb[hidden] { display: none; }\n'
         '    .gb-c { display: block; aspect-ratio: 2/3; border: 2px solid #000; box-shadow: 3px 3px 0 0 #000; background: #f4f4f0; overflow: hidden; }\n'
         '    .gb-c:hover { transform: translate(-1px,-1px); box-shadow: 4px 4px 0 0 #000; }\n'
-        '    .gb-c img { width: 100%; height: 100%; object-fit: cover; display: block; }\n'
+        '    .gb-c img { width: 100%; height: 100%; object-fit: contain; display: block; }\n'
         '    .gb-no { display: flex; height: 100%; align-items: center; justify-content: center; padding: 8px; text-align: center; font-weight: 800; font-size: 13px; color: #333; }\n'
         '    .gb-t { display: block; margin-top: 8px; font-weight: 800; font-size: 13px; line-height: 1.3; color: #111; }\n'
         '    .gb-a { display: block; font-size: 11px; color: #666; }\n'
@@ -4620,7 +4620,7 @@ AUTHOR_CSS = (
     '    .ab { list-style: none; padding: 0; margin: 0; }\n'
     '    .ab > li { background: #fff; border: 2px solid #000; box-shadow: 3px 3px 0 0 #000; padding: 12px; margin-bottom: 12px; }\n'
     '    .ab > li.has-cover { display: grid; grid-template-columns: 64px minmax(0, 1fr); gap: 12px; }\n'
-    '    .ab-cover { width: 64px; height: 92px; object-fit: cover; border: 1.5px solid #000; background: #f4f4f0; }\n'
+    '    .ab-cover { width: 64px; height: 92px; object-fit: contain; border: 1.5px solid #000; background: #f4f4f0; }\n'
     '    .ab-t { font-weight: 800; font-size: 16px; line-height: 1.3; }\n'
     '    .ab-m { font-size: 12px; color: #555; margin: 2px 0 6px; }\n'
     '    .ab-who { margin: 0 0 6px; font-size: 14px; line-height: 1.9; }\n'
@@ -5766,7 +5766,7 @@ for name, info in celebs.items():
         '    .rl-item:hover { transform: translate(-1px,-1px); box-shadow: 6px 6px 0 0 #000; }\n'
         '    .rl-num { position: absolute; left: -2px; top: -2px; width: 38px; height: 30px; display: flex; align-items: center; justify-content: center; background: #fde047; border: 2px solid #000; font-weight: 900; font-size: 14px; }\n'
         '    .rl-cover { float: left; margin-right: 14px; width: 74px; height: 105px; display: block; border: 1.5px solid #000; box-shadow: 2px 2px 0 0 #000; background: #f4f4f0; overflow: hidden; }\n'
-        '    .rl-cover img { width: 100%; height: 100%; object-fit: cover; display: block; }\n'
+        '    .rl-cover img { width: 100%; height: 100%; object-fit: contain; display: block; }\n'
         + NEW_BADGE_CSS +
         '    .rl-no-cover { width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; font-size: 32px; }\n'
         '    .rl-meta { overflow: hidden; min-height: 105px; }\n'
@@ -5938,7 +5938,7 @@ for title, t_en in book_title_en.items():
     if binfo['coverUrl'] and binfo['coverUrl'].startswith('http'):
         cover_html = ('  <img src="' + esc(binfo['coverUrl']) + '" alt="' + esc(t_en)
                       + ' cover" width="200" height="280" loading="lazy" '
-                      'style="object-fit:cover; margin:16px 0; border:2px solid #000">\n')
+                      'style="object-fit:contain; margin:16px 0; border:2px solid #000">\n')
 
     # SEO: 어떤 셀럽이 읽었는지 제목/설명에 노출 (영문명 우선 3명)
     celeb_names_en = []
