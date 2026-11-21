@@ -1,6 +1,6 @@
 """유튜브 출처의 채널명을 모아 data/youtube_channels.json에 캐시한다.
 
-도움 주신 곳(generate.py thanks_html)이 'YouTube' 대신 채널명을 보여 주려고 쓴다.
+도움 주신 곳(generate.py special_thanks_html)이 'YouTube' 대신 채널명을 보여 주려고 쓴다.
 이미 받은 영상은 다시 묻지 않는다. 비공개·삭제된 영상은 빈 값으로 남긴다.
 실행: python3 tools/fetch_youtube_channels.py
 """

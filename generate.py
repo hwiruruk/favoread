@@ -103,6 +103,53 @@ LINK_CLASS = (
 
 # ── 유틸리티 함수 ────────────────────────────────────────────────────
 
+# 계정 노출을 원하지 않는 분 목록. data/source_credits.json 의 {"hide": ["계정", ...]} (없으면 아무도 숨기지 않는다)
+try:
+    with open('data/source_credits.json', encoding='utf-8') as _f:
+        _SOURCE_HIDE = {str(x).lower().lstrip('@') for x in json.load(_f).get('hide', [])}
+except (OSError, ValueError):
+    _SOURCE_HIDE = set()
+
+
+def source_credit(url, lang='ko'):
+    """출처 URL에서 기여자 라벨(예: '@계정 님의 X 게시글')을 만든다. 모르면 ''."""
+    try:
+        u = urlparse(url)
+    except Exception:
+        return ''
+    host = re.sub(r'^(www|m)\.', '', (u.netloc or '').lower())
+    seg = [x for x in u.path.split('/') if x]
+    ko = (lang == 'ko')
+    if host in ('x.com', 'twitter.com'):
+        if seg and seg[0] not in ('i', 'home', 'search', 'intent', 'hashtag') and seg[0].lower() not in _SOURCE_HIDE:
+            h = '@' + seg[0]
+            return (h + ' 님의 X 게시글') if ko else (h + "'s post on X")
+        return 'X 게시글' if ko else 'Post on X'
+    if host == 'blog.naver.com':
+        if seg and seg[0] not in ('PostView.naver', 'PostView.nhn') and seg[0].lower() not in _SOURCE_HIDE:
+            return (seg[0] + ' 님의 블로그 글') if ko else (seg[0] + "'s blog post")
+        return '네이버 블로그 글' if ko else 'Naver blog post'
+    if host == 'instagram.com':
+        if seg and seg[0] not in ('p', 'reel', 'reels', 'stories', 'tv') and seg[0].lower() not in _SOURCE_HIDE:
+            h = '@' + seg[0]
+            return (h + ' 님의 인스타그램 게시글') if ko else (h + "'s Instagram post")
+        return '인스타그램 게시글' if ko else 'Instagram post'
+    if host in ('youtube.com', 'youtu.be'):
+        return '유튜브 영상' if ko else 'YouTube video'
+    if host.endswith('tistory.com'):
+        return '블로그 글' if ko else 'Blog post'
+    return ''
+
+def source_button(url, label_text, lang='ko'):
+    """출처 버튼. 기여자를 알 수 있으면 버튼 안에 '출처 : @계정 님의 X 게시글' 처럼 표기한다."""
+    credit = source_credit(url, lang)
+    if credit:
+        label_text = '🔗 ' + ('출처 : ' if lang == 'ko' else 'Source : ') + esc(credit)
+    else:
+        label_text = label_text.replace('📺', '🔗')
+    return ('<a class="rl-source" href="' + esc(url)
+            + '" rel="nofollow noopener noreferrer" target="_blank">' + label_text + '</a>')
+
 def esc(text):
     """HTML 특수문자 이스케이프"""
     return html.escape(text, quote=True)
@@ -2968,7 +3015,7 @@ def source_summary(urls):
 # 한 셀럽의 책 여러 권이 같은 출처에서 나오면(같은 글·영상, 같은 유튜브 채널, 또는 X 한 계정의
 # 여러 타래) 책마다 같은 링크를 되풀이하지 않고 페이지 맨 아래에 접어서 모아 고마움을 표시한다.
 # 서점 책 소개 페이지는 출처로 치지 않는다(『읽는 사람』 인터뷰집만 예외).
-THANKS_MIN_BOOKS = 5
+THANKS_MIN_BOOKS = 2
 _THANKS_NAMES = {
     'instagram.com': 'Instagram', 'theqoo.net': '더쿠', 'dcinside.com': '디시인사이드',
     'naver.com': 'Naver Blog', 'tistory.com': 'Tistory', 'tiktok.com': 'TikTok',
@@ -2979,6 +3026,8 @@ _THANKS_NAMES = {
     'singleskorea.com': '싱글즈', 'millie.co.kr': '밀리의 서재', 'postype.com': 'Postype',
     'hatenadiary.com': 'Hatena', 'fastpapermag.com': 'FASTPAPER', 'yes24.com': 'YES24',
     'kyobobook.co.kr': '교보문고', 'aladin.co.kr': '알라딘', 'youtube.com': 'YouTube',
+    'cine21.com': '씨네21', 'gqkorea.co.kr': 'GQ Korea', 'wkorea.com': 'W Korea', 'elle.co.kr': 'ELLE Korea',
+    'imbc.com': 'MBC', 'namu.wiki': '나무위키', 'vogue.co.kr': 'VOGUE Korea', 'bazaar.co.kr': '하퍼스 바자',
 }
 _READING_PEOPLE = '118286898'   # 허윤선 인터뷰집 『읽는 사람』(민음사)
 _YT_CHANNELS = {}
@@ -2999,6 +3048,8 @@ def _thanks_key(url):
     if not host:
         return None
     parts = [x for x in p.path.split('/') if x]
+    if parts and parts[0].lower().lstrip('@') in _SOURCE_HIDE:
+        return None
     if host in ('x.com', 'twitter.com'):
         if parts and parts[0].lower() not in ('i', 'intent', 'share', 'search', 'home'):
             return 'x:' + parts[0].lower(), '@' + parts[0], 'https://x.com/' + parts[0]
@@ -3025,8 +3076,8 @@ def _thanks_key(url):
     return url, label, url
 
 
-def thanks_sources(books, min_books=THANKS_MIN_BOOKS):
-    """[(표시 이름, 링크)] — 책 5권 이상이 같은 출처인 것만, abc·가나다 순."""
+def thanks_items(books, min_books=THANKS_MIN_BOOKS):
+    """[(열쇠, 표시 이름, 링크, 권수)] — 같은 출처가 책 min_books권 이상인 것만, 권수 많은 순."""
     groups = {}
     for b in books:
         src = (b.get('source') or '').strip()
@@ -3035,26 +3086,51 @@ def thanks_sources(books, min_books=THANKS_MIN_BOOKS):
         k = _thanks_key(src)
         if not k:
             continue
-        g = groups.setdefault(k[0], [0, k[1], k[2]])
-        g[0] += 1
-    out = [(g[1], g[2]) for g in groups.values() if g[0] >= min_books]
-
-    def _k(x):
-        n = x[0].lstrip('@')
-        return (1 if '가' <= n[:1] <= '힣' else 0, n.lower(), x[1])
-    out.sort(key=_k)
+        g = groups.setdefault(k[0], [set(), k[1], k[2]])
+        g[0].add(b['title'])
+    # 같은 매체가 유튜브·웹으로 나뉘어도 한 곳으로 센다 (이름이 같으면 합침, 링크는 책이 더 많은 쪽)
+    merged = {}
+    for key, g in sorted(groups.items(), key=lambda kv: -len(kv[1][0])):
+        m = merged.setdefault(g[1].lower(), [key, g[1], g[2], set()])
+        m[3] |= g[0]
+    out = [(m[0], m[1], m[2], len(m[3])) for m in merged.values() if len(m[3]) >= min_books]
+    out.sort(key=lambda x: (-x[3], x[1].lstrip('@').lower()))
     return out
 
 
-def thanks_html(books, lang='ko'):
-    items = thanks_sources(books)
+def special_thanks_html(books, who, lang='ko'):
+    """한 사람의 책 정보에 책 2권 이상 기여한 출처를 소개 문단 아래 'Special Thanks to' 카드로 보여준다."""
+    items = thanks_items(books)[:8]
     if not items:
         return ''
-    label = '도움 주신 곳' if lang == 'ko' else 'Thanks to'
-    links = ' · '.join('<a href="' + esc(u) + '" rel="nofollow noopener noreferrer" target="_blank">'
-                       + esc(n) + '</a>' for n, u in items)
-    return ('    <details class="thanks"><summary>' + label + ' (' + str(len(items)) + ')</summary>'
-            '<p>' + links + '</p></details>\n')
+    ko = (lang == 'ko')
+    chips = ''
+    for key, name, url, n in items:
+        person = key.split(':', 1)[0] in ('x', 'ig', 'nb', 'tt')
+        platform = {'x': 'X', 'ig': 'Instagram', 'nb': 'Naver Blog', 'tt': 'TikTok', 'yt': 'YouTube'}.get(
+            key.split(':', 1)[0] if ':' in key else '', '')
+        name = name.replace(' (Naver Blog)', '')
+        cnt = (str(n) + '권') if ko else (str(n) + ' books')
+        chips += ('<li><a class="st-chip" href="' + esc(url)
+                  + '" rel="nofollow noopener noreferrer" target="_blank">'
+                  + '<span class="st-name">' + (esc(('팬 계정(' + name + '님)') if ko else ('Fan account (' + name + ')'))
+                                                  if person else esc(name)) + '</span>'
+                  + '<span class="st-meta">' + (platform + ' · ' if platform else '') + cnt + '</span></a></li>')
+    if ko:
+        sub = esc(who) + '의 책 정보를 2권 이상 채워 주신 분들이에요. 고맙습니다!'
+        note = '표기 변경·삭제를 원하시면 <a href="https://forms.gle/Sd3ZQTahZNbUjbdz7">제보 링크</a>로 알려 주세요.'
+    else:
+        sub = 'These sources filled in 2 or more of the book entries for ' + esc(who) + '. Thank you!'
+        note = 'To change or remove a credit, let us know through <a href="https://forms.gle/ioosSU2D2V3CHg2h8">this form</a>.'
+    return ('  <details class="special-thanks">\n'
+            '    <summary class="st-h"><span>💛 Special Thanks to</span>'
+            '<span class="st-n">' + str(len(items)) + '</span>'
+            '<span class="st-more" data-show="' + ('보기' if ko else 'Show') + '" data-hide="'
+            + ('접기' if ko else 'Hide') + '"></span></summary>\n'
+            '    <p class="st-sub">' + sub + '</p>\n'
+            '    <ul class="st-list">' + chips + '</ul>\n'
+            '    <p class="st-note">' + note + '</p>\n'
+            '  </details>\n')
 
 
 def date_ko(iso):
@@ -3380,8 +3456,7 @@ for name, info in celebs.items():
                        + '" rel="nofollow noopener noreferrer" target="_blank" title="예스24에서 보기">📖 책 정보 · 예스24</a>')
         _src = (b['source'] or '').strip()
         if _src.startswith('http'):
-            source_html += (' <a class="rl-source" href="' + esc(_src)
-                            + '" rel="nofollow noopener noreferrer" target="_blank">📺 출처</a>')
+            source_html += ' ' + source_button(_src, '🔗 출처', 'ko')
         elif _src:
             source_html += ' <span class="rl-source-text">출처: ' + esc(_src) + '</span>'
 
@@ -3666,6 +3741,22 @@ for name, info in celebs.items():
         '    .rl-comment { font-size: 13px; line-height: 1.55; color: #222; background: #FFF7C2; border: 1.5px solid #000; padding: 6px 9px; margin: 0 0 8px; word-break: keep-all; }\n'
         '    .rl-source { display: inline-block; font-size: 12px; padding: 3px 8px; background: #fff; border: 1.5px solid #000; box-shadow: 1px 1px 0 0 #000; text-decoration: none; color: #000; transition: transform .1s, box-shadow .1s, background .1s; }\n'
         '    .rl-source-text { display: inline-block; font-size: 12px; color: #555; margin-left: 4px; }\n'
+        '    .special-thanks { margin: 16px 0 24px; padding: 12px 18px; background: #fff7c2; border: 2px solid #000; box-shadow: 4px 4px 0 0 #000; }\n'
+        '    .special-thanks > summary { list-style: none; }\n'
+        '    .st-h { display: flex; align-items: center; gap: 8px; margin: 0; font-size: 20px; font-weight: 700; cursor: pointer; }\n'
+        '    .st-h::-webkit-details-marker { display: none; }\n'
+        '    .special-thanks[open] .st-h { margin-bottom: 4px; }\n'
+        '    .st-n { font-size: 13px; font-weight: 700; padding: 1px 8px; background: #fff; border: 1.5px solid #000; }\n'
+        '    .st-more { margin-left: auto; font-size: 13px; font-weight: 400; text-decoration: underline; }\n'
+        '    .st-more::after { content: attr(data-show) " ▾"; }\n'
+        '    .special-thanks[open] .st-more::after { content: attr(data-hide) " ▴"; }\n'
+        '    .st-sub { margin: 0 0 12px; font-size: 14px; color: #555; }\n'
+        '    .st-list { list-style: none; margin: 0; padding: 0; display: flex; flex-wrap: wrap; gap: 8px; }\n'
+        '    .st-chip { display: flex; flex-direction: column; gap: 2px; padding: 8px 14px; background: #fff; border: 1.5px solid #000; text-decoration: none; color: #000; }\n'
+        '    .st-chip:hover { background: #a7f3d0; text-decoration: none; }\n'
+        '    .st-name { font-size: 16px; font-weight: 700; }\n'
+        '    .st-meta { font-size: 12px; color: #555; }\n'
+        '    .st-note { margin: 10px 0 0; font-size: 12px; color: #666; }\n'
         '    .rl-book-link { font-size: 12px; font-weight: 700; }\n'
         '    .rl-source:hover { transform: translate(-1px,-1px); box-shadow: 2px 2px 0 0 #000; background: #a7f3d0; text-decoration: none; }\n'
         '    .rl-shared { clear: both; margin-top: 12px; padding-top: 10px; border-top: 1.5px dashed #ccc; display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }\n'
@@ -3689,10 +3780,6 @@ for name, info in celebs.items():
         '    .together-btn { display: inline-block; padding: 9px 16px; background: #fde047; border: 2px solid #000; box-shadow: 3px 3px 0 0 #000; font-size: 13px; font-weight: 700; color: #000; text-decoration: none; transition: transform .1s, box-shadow .1s; }\n'
         '    .together-btn:hover { transform: translate(-1px,-1px); box-shadow: 5px 5px 0 0 #000; background: #fff; text-decoration: none; }\n'
         '    footer { margin-top: 48px; padding-top: 16px; border-top: 2px solid #000; font-size: 13px; color: #666; }\n'
-        '    footer .thanks { margin: 12px 0 0; font-size: 11px; color: #999; }\n'
-        '    footer .thanks summary { cursor: pointer; }\n'
-        '    footer .thanks p { margin: 6px 0 0; line-height: 1.7; }\n'
-        '    footer .thanks a { color: #888; }\n'
         '  </style>\n'
         '</head>\n'
         '<body>\n'
@@ -3716,6 +3803,7 @@ for name, info in celebs.items():
         '  <section class="intro">\n'
         '    <p style="margin:0">' + intro_p + '</p>\n'
         '  </section>\n'
+        + special_thanks_html(books, sname, 'ko') +
         '\n'
         '  <section id="shelf-sec">\n'
         '    <div class="shelf-head">\n'
@@ -3773,7 +3861,6 @@ for name, info in celebs.items():
         + pager_section
         + '  <footer>\n'
         '    <p>이 페이지의 독서 기록은 유튜브·인터뷰·SNS 등 공개된 출처를 기반으로 정리됐어요.</p>\n'
-        + thanks_html(books) +
         '  </footer>\n'
         '\n'
         + NEW_BADGE_JS
@@ -5357,8 +5444,7 @@ for name, info in celebs.items():
                     'title="View on YES24 (Korean bookstore)">📖 Book details · YES24</a>')
         _src = (b['source'] or '').strip()
         if _src.startswith('http'):
-            src_html += (' <a class="rl-source" href="' + esc(_src)
-                         + '" rel="nofollow noopener noreferrer" target="_blank">📺 Source</a>')
+            src_html += ' ' + source_button(_src, '🔗 Source', 'en')
         elif _src:
             src_html += ' <span class="rl-source-text">Source: ' + esc(_src) + '</span>'
 
@@ -5779,15 +5865,27 @@ for name, info in celebs.items():
         '    .rl-comment { font-size: 13px; line-height: 1.55; color: #222; background: #FFF7C2; border: 1.5px solid #000; padding: 6px 9px; margin: 0 0 8px; word-break: keep-all; }\n'
         '    .rl-source { display: inline-block; font-size: 12px; padding: 3px 8px; background: #fff; border: 1.5px solid #000; box-shadow: 1px 1px 0 0 #000; text-decoration: none; color: #000; transition: transform .1s, box-shadow .1s, background .1s; }\n'
         '    .rl-source-text { display: inline-block; font-size: 12px; color: #555; margin-left: 4px; }\n'
+        '    .special-thanks { margin: 16px 0 24px; padding: 12px 18px; background: #fff7c2; border: 2px solid #000; box-shadow: 4px 4px 0 0 #000; }\n'
+        '    .special-thanks > summary { list-style: none; }\n'
+        '    .st-h { display: flex; align-items: center; gap: 8px; margin: 0; font-size: 20px; font-weight: 700; cursor: pointer; }\n'
+        '    .st-h::-webkit-details-marker { display: none; }\n'
+        '    .special-thanks[open] .st-h { margin-bottom: 4px; }\n'
+        '    .st-n { font-size: 13px; font-weight: 700; padding: 1px 8px; background: #fff; border: 1.5px solid #000; }\n'
+        '    .st-more { margin-left: auto; font-size: 13px; font-weight: 400; text-decoration: underline; }\n'
+        '    .st-more::after { content: attr(data-show) " ▾"; }\n'
+        '    .special-thanks[open] .st-more::after { content: attr(data-hide) " ▴"; }\n'
+        '    .st-sub { margin: 0 0 12px; font-size: 14px; color: #555; }\n'
+        '    .st-list { list-style: none; margin: 0; padding: 0; display: flex; flex-wrap: wrap; gap: 8px; }\n'
+        '    .st-chip { display: flex; flex-direction: column; gap: 2px; padding: 8px 14px; background: #fff; border: 1.5px solid #000; text-decoration: none; color: #000; }\n'
+        '    .st-chip:hover { background: #a7f3d0; text-decoration: none; }\n'
+        '    .st-name { font-size: 16px; font-weight: 700; }\n'
+        '    .st-meta { font-size: 12px; color: #555; }\n'
+        '    .st-note { margin: 10px 0 0; font-size: 12px; color: #666; }\n'
         '    .rl-source:hover { transform: translate(-1px,-1px); box-shadow: 2px 2px 0 0 #000; background: #a7f3d0; text-decoration: none; }\n'
         '    @media (max-width: 480px) { .rl-item { padding: 14px 12px 14px 46px; } .rl-num { width: 32px; height: 26px; font-size: 12px; } .rl-cover { width: 60px; height: 88px; margin-right: 10px; } .rl-meta { min-height: 88px; } .rl-title { font-size: 15px; } }\n'
         '    a { color: #2563eb; text-decoration: none; }\n'
         '    a:hover { text-decoration: underline; }\n'
         '    footer { margin-top: 48px; padding-top: 16px; border-top: 2px solid #000; font-size: 13px; color: #666; }\n'
-        '    footer .thanks { margin: 12px 0 0; font-size: 11px; color: #999; }\n'
-        '    footer .thanks summary { cursor: pointer; }\n'
-        '    footer .thanks p { margin: 6px 0 0; line-height: 1.7; }\n'
-        '    footer .thanks a { color: #888; }\n'
         + (EN_TR_NOTE_CSS if en_show_tr_note else '')
         + '  </style>\n'
         '</head>\n'
@@ -5823,6 +5921,7 @@ for name, info in celebs.items():
         + en_bias_html
         + en_glance_html
         + '  </section>\n'
+        + special_thanks_html(en_books, _name_pl, 'en')
         + ((
             '  <p class="grp-link">Part of <strong>' + esc(_en_group) + '</strong> — '
             '<a href="' + EN_BASE + 'group/' + safe_en_filename(_en_group) + '.html">'
@@ -5871,7 +5970,6 @@ for name, info in celebs.items():
         '    <p>Curated from public Korean-language sources. Korean original page: <a href="'
         + esc(ko_url) + '" hreflang="ko">' + esc(name) + '</a>.</p>\n'
         '    <p><a href="' + EN_BASE + '">Browse the full Korean celebrity book archive →</a></p>\n'
-        + thanks_html(en_books, 'en') +
         '  </footer>\n'
         + NEW_BADGE_JS
         + COPY_BTN_JS + HEART_JS +
