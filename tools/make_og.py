@@ -34,7 +34,7 @@ FONT_MED = os.path.join(ROOT, 'assets', 'fonts', 'kopubworld-dotum-medium.woff2'
 FONT_EN = os.path.join(ROOT, 'assets', 'fonts', 'space-grotesk-latin.woff2')
 
 # 그림을 바꾸면 올린다 — 모든 카드를 다시 그린다
-VERSION = 3
+VERSION = 4
 
 W, H = 1200, 630
 # 노란 바탕 + 검은 글씨 (사이트 강조색)
