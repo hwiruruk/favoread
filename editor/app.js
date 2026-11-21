@@ -745,6 +745,8 @@ function findDupTitle(celebName, title, skipIdx, goodsId = '') {
 }
 
 /* -------------------- Render: Sidebar -------------------- */
+// 알라딘 '저자의 추천' 수집분으로 미리 넣은 책 (출처가 알라딘 추천 페이지)
+const isAlaBook = (b) => String(b.source || '').startsWith('https://www.aladin.co.kr/author/wauthor_recommend');
 function applyFilter(name) {
   const c = State.celebs.get(name);
   if (!c) return false;
@@ -753,6 +755,7 @@ function applyFilter(name) {
   if (f === 'missing-cover') return c.books.some(b => !b.cover);
   if (f === 'missing-img')   return !c.img;
   if (f === 'dup-book')      return dupBookIdx(c).size > 0;
+  if (f === 'aladin')        return c.books.some(isAlaBook);
   return true;
 }
 function renderSidebar() {
@@ -769,7 +772,7 @@ function renderSidebar() {
       (b.author || '').toLowerCase().includes(q));
   };
   let html = '';
-  let nCelebs = 0, nBooks = 0, nEn = 0, nEnTotal = 0, nDup = 0;
+  let nCelebs = 0, nBooks = 0, nEn = 0, nEnTotal = 0, nDup = 0, nAla = 0;
   for (const name of State.order) {
     const c = State.celebs.get(name);
     nCelebs++;
@@ -781,6 +784,7 @@ function renderSidebar() {
     }
     const hasDup = dupBookIdx(c).size > 0;
     if (hasDup) nDup++;
+    if (c.books.some(isAlaBook)) nAla++;
     if (!matches(name) || !applyFilter(name)) continue;
     const warnEn = !c.name_en || c.books.some(b => !b.title_en || !b.author_en);
     const warnImg = !c.img;
@@ -802,6 +806,8 @@ function renderSidebar() {
   $('#countEn').textContent = nEnTotal ? Math.round(nEn / nEnTotal * 100) + '%' : '-';
   const dupOpt = $('#filterSelect option[value="dup-book"]');
   if (dupOpt) dupOpt.textContent = `중복 도서 (${nDup}명)`;
+  const alaOpt = $('#filterSelect option[value="aladin"]');
+  if (alaOpt) alaOpt.textContent = `📖 알라딘 입력분 (${nAla}명)`;
 }
 
 $('#celebList').addEventListener('click', (e) => {
@@ -811,7 +817,7 @@ $('#celebList').addEventListener('click', (e) => {
 });
 
 $('#searchInput').addEventListener('input', renderSidebar);
-$('#filterSelect').addEventListener('change', renderSidebar);
+$('#filterSelect').addEventListener('change', () => { renderSidebar(); renderDetail(); });
 
 /* -------------------- Render: Detail -------------------- */
 function selectCeleb(name) {
@@ -853,7 +859,9 @@ function renderBooks() {
   if (dups.size) {
     html += `<p class="dup-note">⚠️ 제목이 같은 책이 ${dups.size}권 있어요. 하나만 남기고 삭제하세요.</p>`;
   }
+  const onlyAla = $('#filterSelect').value === 'aladin';
   c.books.forEach((b, i) => {
+    if (onlyAla && !isAlaBook(b)) return;
     const flagDup = dups.has(i) ? '<span class="flag dup">중복</span>' : '';
     const flagEn = (!b.title_en || !b.author_en) ? '<span class="flag warn">EN 누락</span>' : '';
     const flagCv = !b.cover ? '<span class="flag warn">표지 없음</span>' : '';
@@ -862,7 +870,7 @@ function renderBooks() {
     const flagCmt = !cs ? '' : (
       cs.status === 'approved' ? '<span class="flag ok">💬 코멘트 승인</span>'
       : cs.status === 'rejected' ? '<span class="flag off">💬 코멘트 반려</span>'
-      : '<span class="flag warn">💬 코멘트 검수 대기</span>');
+      : (cs.memo ? '<span class="flag warn">📝 메모 있음 · 문장 대기</span>' : '<span class="flag warn">💬 코멘트 검수 대기</span>'));
     html += `<div class="book-card" data-idx="${i}">
       <div class="cv">${b.cover ? `<img src="${esc(b.cover)}" referrerpolicy="no-referrer" alt="">` : ''}</div>
       <div class="meta">
