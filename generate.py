@@ -3088,7 +3088,12 @@ def thanks_items(books, min_books=THANKS_MIN_BOOKS):
             continue
         g = groups.setdefault(k[0], [set(), k[1], k[2]])
         g[0].add(b['title'])
-    out = [(key, g[1], g[2], len(g[0])) for key, g in groups.items() if len(g[0]) >= min_books]
+    # 같은 매체가 유튜브·웹으로 나뉘어도 한 곳으로 센다 (이름이 같으면 합침, 링크는 책이 더 많은 쪽)
+    merged = {}
+    for key, g in sorted(groups.items(), key=lambda kv: -len(kv[1][0])):
+        m = merged.setdefault(g[1].lower(), [key, g[1], g[2], set()])
+        m[3] |= g[0]
+    out = [(m[0], m[1], m[2], len(m[3])) for m in merged.values() if len(m[3]) >= min_books]
     out.sort(key=lambda x: (-x[3], x[1].lstrip('@').lower()))
     return out
 
@@ -3108,14 +3113,15 @@ def special_thanks_html(books, who, lang='ko'):
         cnt = (str(n) + '권') if ko else (str(n) + ' books')
         chips += ('<li><a class="st-chip" href="' + esc(url)
                   + '" rel="nofollow noopener noreferrer" target="_blank">'
-                  + '<span class="st-name">' + esc(name) + (' 님' if (ko and person) else '') + '</span>'
+                  + '<span class="st-name">' + (esc(('팬 계정(' + name + '님)') if ko else ('Fan account (' + name + ')'))
+                                                  if person else esc(name)) + '</span>'
                   + '<span class="st-meta">' + (platform + ' · ' if platform else '') + cnt + '</span></a></li>')
     if ko:
         sub = esc(who) + '의 책 정보를 2권 이상 채워 주신 분들이에요. 고맙습니다!'
-        note = '표기 변경·삭제 요청은 <a href="' + BASE + 'data-policy.html">데이터 이용 안내</a>를 확인해 주세요.'
+        note = '표기 변경·삭제를 원하시면 <a href="https://forms.gle/Sd3ZQTahZNbUjbdz7">제보 링크</a>로 알려 주세요.'
     else:
         sub = 'These sources filled in 2 or more of the book entries for ' + esc(who) + '. Thank you!'
-        note = 'To change or remove a credit, see the <a href="' + BASE + 'data-policy.html">data policy</a>.'
+        note = 'To change or remove a credit, let us know through <a href="https://forms.gle/ioosSU2D2V3CHg2h8">this form</a>.'
     return ('  <section class="special-thanks" aria-label="Special Thanks to">\n'
             '    <h2 class="st-h">💛 Special Thanks to</h2>\n'
             '    <p class="st-sub">' + sub + '</p>\n'
