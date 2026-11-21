@@ -27,6 +27,7 @@
     <button id="missingBtn" class="btn" title="영문 누락된 셀럽·책 목록 (TSV 복사 → AI 의뢰 → 일괄 적용)">📋 누락 영문</button>
     <button id="featuredBtn" class="btn" title="메인 상단에 고정 노출할 &apos;요즘 핫한 사람&apos; 한 줄 지정">🔥 핫한 사람</button>
     <button id="biosBtn" class="btn" title="셀럽 페이지 상단의 한 줄 소개(한국어·영어)를 직접 고침 — 저장하면 data/bios.json 에 바로 커밋">✏️ 소개글</button>
+    <button id="realNamesBtn" class="btn" title="메인 검색창에서 본명으로도 찾아지게 하는 검색 전용 이름(화면에는 표시 안 됨) — 저장하면 data/real_names.json 에 바로 커밋">🪪 본명(검색용)</button>
     <button id="pinnedBtn" class="btn" title="셀럽이 최근 추천한 책을 골라 메인에 고정 (책 표지 + 셀럽 사진)">📌 추천책 고정</button>
     <button id="titlesBtn" class="btn" title="원제·위키백과에서 찾은 공식 영문판 제목과 저자 영문 이름 후보를 검수 (승인한 값이 영문 페이지에 나감)">🔤 영문 제목·저자 검수</button>
     <button id="genresBtn" class="btn" title="도서관 분류로 소설·에세이 등을 정하지 못한 책을 직접 골라 줌 (독서 취향 통계에 쓰임)">🏷️ 분야 검수</button>
@@ -318,6 +319,41 @@
     <span id="biosStatus" class="status"></span>
     <button type="button" class="btn" data-close>닫기</button>
     <button type="button" id="biosSaveBtn" class="btn primary" disabled>💾 GitHub에 저장</button>
+  </footer>
+</dialog>
+
+<!-- 검색 전용 본명(data/real_names.json) 편집 -->
+<dialog id="realDialog" class="modal" style="width: min(760px, 96vw);">
+  <header class="modal-head">
+    <h3>🪪 본명(검색용) 편집</h3>
+    <button type="button" class="x" data-close>✕</button>
+  </header>
+
+  <div class="modal-body" style="max-height: calc(90vh - 130px);">
+    <p class="muted small">
+      메인 검색창에서 <b>본명으로도 셀럽이 찾아지게</b> 하는 값입니다. <b>화면에는 표시되지 않아요.</b>
+      예: 진영(갓세븐)에 <code>박진영</code>을 적으면 "박진영"으로 검색해도 나옵니다.
+      성+이름(3글자)을 적으면 이름만("진영")으로 쳐도 찾아져요. 여러 개면 쉼표(,)로 구분하세요.
+      <code>data/real_names.json</code>에 따로 저장되며 이 창의 저장 버튼으로 바로 커밋됩니다. 몇 분 뒤 사이트에 반영돼요.
+    </p>
+    <div class="row">
+      <input id="realSearch" type="search" placeholder="이름·영문명·본명으로 검색…" style="flex:1 1 auto;min-width:0">
+      <select id="realFilter" title="보기 범위" style="flex:0 0 auto;width:auto">
+        <option value="all">전체</option>
+        <option value="missing">본명 없음</option>
+        <option value="has">본명 있음</option>
+        <option value="edited">수정함</option>
+      </select>
+    </div>
+    <div id="realCount" class="muted small" style="margin-top:6px"></div>
+    <ul id="realList" class="bios-list"></ul>
+    <button type="button" id="realMore" class="btn small hidden" style="margin-top:8px">더 보기</button>
+  </div>
+
+  <footer class="modal-foot">
+    <span id="realStatus" class="status"></span>
+    <button type="button" class="btn" data-close>닫기</button>
+    <button type="button" id="realSaveBtn" class="btn primary" disabled>💾 GitHub에 저장</button>
   </footer>
 </dialog>
 
