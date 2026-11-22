@@ -2836,6 +2836,7 @@ $('#realSaveBtn').addEventListener('click', saveReal);
  * tools/fetch_aladin_recommend.py 가 알라딘 '저자의 추천'에서 모은 셀럽 추천사.
  * 사이트에는 나가지 않고, 책·코멘트를 채울 때 참고만 한다. 저장·커밋 없음. */
 const ALA_PATH = 'data/aladin_recommend.csv';
+const ALA_NEW_PATH = 'data/aladin_recommend_new.csv';
 const ALA_PAGE = 30;
 const alaDlg = $('#alaDialog');
 const _ala = { rows: null, shown: ALA_PAGE };
@@ -2850,9 +2851,14 @@ async function openAlaDialog() {
     setAlaStatus('불러오는 중…');
     try {
       const { content } = await Gh.getFile(ALA_PATH, { allowMissing: true });
+      const extra = await Gh.getFile(ALA_NEW_PATH, { allowMissing: true });
       if (!content) { setAlaStatus(''); $('#alaList').innerHTML = '<li class="muted small">아직 발행 브랜치에 data/aladin_recommend.csv 가 없어요. 머지 후 다시 열어 보세요.</li>'; return; }
       const parsed = Papa.parse(content.replace(/^\ufeff/, ''), { header: true, skipEmptyLines: true });
       _ala.rows = parsed.data;
+      if (extra.content) {   // 우리 리스트에 없는 사람 (이름 열이 '이름')
+        Papa.parse(extra.content.replace(/^\ufeff/, ''), { header: true, skipEmptyLines: true }).data
+          .forEach(r => { r['연예인'] = r['이름']; _ala.rows.push(r); });
+      }
       setAlaStatus(`${_ala.rows.length}건`);
     } catch (err) {
       setAlaStatus('');
@@ -2879,6 +2885,7 @@ function alaVisible() {
     if (q && !`${r['연예인']} ${r['도서명']} ${r['저자']} ${r['추천사']}`.toLowerCase().includes(q)) return false;
     if (f === 'clean') return !r['확인필요'];
     if (f === 'flag') return !!r['확인필요'];
+    if (f === 'newceleb') return !State.celebs.has(r['연예인']);
     if (f === 'new') return !alaRegistered(r);
     if (f === 'registered') return alaRegistered(r);
     return true;
@@ -2896,7 +2903,7 @@ function renderAla() {
         <div class="bios-head">
           <b>${esc(r['연예인'])}</b>
           <span class="muted small">${esc(r['직업'])}</span>
-          <span class="badge">${reg ? '등록됨' : '새 책'}</span>
+          <span class="badge">${State.celebs.has(r['연예인']) ? (reg ? '등록됨' : '새 책') : '새 셀럽'}</span>
           ${r['확인필요'] ? `<span class="badge draft">확인필요 · ${esc(r['확인필요'])}</span>` : ''}
           <button type="button" class="btn small bios-reset ala-open">셀럽 열기</button>
         </div>
@@ -2906,6 +2913,7 @@ function renderAla() {
         <div class="small" style="margin-top:4px">
           <a href="${esc(r['출처'])}" target="_blank" rel="noopener noreferrer">알라딘 출처</a>
           · <a href="#" class="ala-copy">추천사 복사</a>
+          ${reg ? '' : '· <a href="#" class="ala-add">+ 책 추가(메모 포함)</a>'}
         </div>
       </li>`;
   }).join('') || '<li class="muted small">조건에 맞는 항목이 없습니다.</li>';
@@ -2920,6 +2928,26 @@ $('#alaList').addEventListener('click', async (e) => {
     if (!State.celebs.has(name)) { toast('편집기에 없는 셀럽이에요', 'err'); return; }
     alaDlg.close();
     selectCeleb(name);
+  } else if (e.target.classList.contains('ala-add')) {
+    e.preventDefault();
+    const r = alaVisible().slice(0, _ala.shown)[Number(li.dataset.i)];
+    const name = r['연예인'];
+    let c = State.celebs.get(name);
+    if (!c) {
+      c = { name, name_en: '', img: '', books: [] };
+      State.celebs.set(name, c); State.order.push(name);
+    }
+    if (alaRegistered(r)) { toast('이미 등록된 책이에요', 'err'); return; }
+    c.books.push({
+      title: r['도서명'], title_en: '', author: r['저자'], author_en: '',
+      publisher: r['출판사'], source: r['출처'], link: '', cover: '', comment: '',
+    });
+    sortBooks(c.books);
+    setDirty(true);
+    renderSidebar();
+    renderAla();
+    await saveBookMemo(name, r['도서명'], r['추천사'], r['출처']);
+    toast(`${name} · ${r['도서명']} 추가됨 — 도서 정보·표지는 책 편집에서 채우세요`, 'ok');
   } else if (e.target.classList.contains('ala-copy')) {
     e.preventDefault();
     const r = alaVisible().slice(0, _ala.shown)[Number(li.dataset.i)];
