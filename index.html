@@ -2165,6 +2165,18 @@
     // (예: '키키' → 키야(키키) 이름이 걸려도 책 제목 결과 때문에 셀럽 목록이 접혔다) 불리언으로 고정.
     const hideGrid = bookCount > 0 && (!nameHit || !!pubMode);
     document.getElementById('grid').classList.toggle('hidden', hideGrid);
+    // 사람 이름이 걸렸으면 사람 카드를 먼저, 책 결과는 그 뒤에 둔다. 책 제목으로만 걸렸으면 책이 먼저.
+    {
+      const gridEl = document.getElementById('grid');
+      const hitsEl = D.bookHits;
+      if (nameHit && !hideGrid && searchScope === 'all') {
+        if (hitsEl.previousElementSibling !== gridEl) gridEl.after(hitsEl);
+        hitsEl.classList.add('pt-12'); hitsEl.classList.remove('pb-12');
+      } else {
+        if (hitsEl.nextElementSibling !== gridEl) gridEl.before(hitsEl);
+        hitsEl.classList.add('pb-12'); hitsEl.classList.remove('pt-12');
+      }
+    }
     setSearchMode(!!q, { bookCount, celebCount: filteredEntries.length, hideGrid });
 
     D.grid.innerHTML = '';
