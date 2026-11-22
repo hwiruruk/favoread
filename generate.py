@@ -1405,6 +1405,10 @@ def book_heart_key(title):
     return 'b:' + title.strip()
 
 
+def group_heart_key(name):
+    return 'g:' + name
+
+
 HEART_JS = '  <script src="' + BASE + 'assets/hearts.js" defer></script>\n'
 
 # ── 업데이트 내역 (git log of data.csv) ─────────────────────────────
@@ -4240,6 +4244,8 @@ for _g in sorted(ko_groups.values(), key=lambda g: g['ko']):
         '    .gb-w a { font-size: 11px; font-weight: 700; color: var(--on-yellow, #111); background: #ffe58a; border: 1.5px solid #000; padding: 0 6px; border-radius: 99px; line-height: 1.6; }\n'
         '    .gb-l { display: inline-block; margin-top: 4px; font-size: 11px; font-weight: 600; }\n'
         '    footer { margin-top: 40px; padding-top: 16px; border-top: 2px solid #000; font-size: 12px; color: #666; }\n'
+        + COPY_BTN_CSS +
+        '    .group-actions { margin: 14px 0 0; }\n'
         '  </style>\n'
         '</head>\n'
         '<body>\n'
@@ -4253,6 +4259,8 @@ for _g in sorted(ko_groups.values(), key=lambda g: g['ko']):
         + '. 책마다 인터뷰·유튜브·SNS 출처를 확인할 수 있어요.</p>\n'
         '    ' + color_note +
         '  </div>\n'
+        '  <p class="heart-row group-actions">' + heart_btn_html(group_heart_key(name), name + '에게 하트')
+        + copy_btn_html(make_group_url(_g)) + '</p>\n'
         '  <h2>멤버별로 보기</h2>\n'
         '  <ul class="members" id="members">\n' + member_cards + '  </ul>\n'
         '  <p class="pick" id="pick"></p>\n'
@@ -4262,6 +4270,7 @@ for _g in sorted(ko_groups.values(), key=lambda g: g['ko']):
         '    <p>공개된 인터뷰·방송·SNS를 바탕으로 정리했어요. '
         '<a href="' + BASE + '">다른 셀럽·아이돌이 읽은 책 보기 →</a></p>\n'
         '  </footer>\n'
+        + COPY_BTN_JS + HEART_JS +
         '  <script>\n'
         '  (function () {\n'
         '    var chips = document.querySelectorAll(".gm"), cards = document.querySelectorAll(".gb"),\n'
