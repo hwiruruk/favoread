@@ -2410,7 +2410,8 @@ def _v2_bar_nav(lang):
         return ('<a href="' + BASE + 'en/category/kpop-idols.html">Idols</a>'
                 '<a href="' + BASE + 'en/category/k-drama-actors.html">Actors</a>'
                 '<a href="' + BASE + 'en/category/korean-musicians.html">Musicians</a>'
-                '<a href="' + BASE + 'en/share/ranking.html">Ranking</a>')
+                '<a href="' + BASE + 'en/share/ranking.html">Ranking</a>'
+                '<a href="' + BASE + 'en/match/">Book Match</a>')
     return ('<a href="' + BASE + 'recommend/idol.html">아이돌</a><a href="' + BASE + 'recommend/actor.html">배우</a>'
             '<a href="' + BASE + 'author/">작가</a><a href="' + BASE + 'share/ranking.html">랭킹</a>'
             '<a href="' + BASE + 'match/">취향 매칭</a>')
@@ -7355,7 +7356,7 @@ en_index = (
     '  <section id="about" class="text-center max-w-2xl mx-auto border-4 border-ink p-6 md:p-8 bg-white shadow-neo w-full">\n'
     '    <h2 class="text-xl md:text-2xl font-black mb-4 bg-neo-pink inline-block px-3 py-1 border-2 border-ink shadow-neo-sm">What is Favorbook?</h2>\n'
     '    <p class="text-sm md:text-base font-bold leading-relaxed text-ink word-break-keep mb-3">\n'
-    '      <strong>Favorbook (최애의 독서 · My Bias Book)</strong> is a <strong>reading archive</strong> that gathers '
+    '      <strong>최애의 독서 (My Bias Book)</strong> is a <strong>reading archive</strong> that gathers '
     '<strong>the books celebrities and public figures have read</strong> in one place. '
     'From K-pop idols like BTS, IVE and SEVENTEEN to drama actors and musicians, you can find the books '
     'your favorite stars have read and recommended, each with its source.\n'
@@ -7938,6 +7939,12 @@ lines = [
     '    <lastmod>' + lastmod_for('match/index.html') + '</lastmod>',
     '    <changefreq>monthly</changefreq>',
     '    <priority>0.7</priority>',
+    '  </url>',
+    '  <url>',
+    '    <loc>' + BASE + 'en/match/</loc>',
+    '    <lastmod>' + lastmod_for('en/match/index.html') + '</lastmod>',
+    '    <changefreq>monthly</changefreq>',
+    '    <priority>0.6</priority>',
     '  </url>',
 ]
 
