@@ -26,7 +26,7 @@
  *   GET  /admin/searches?days=30 → 인기 검색어·결과 없는 검색어                (운영자 전용)
  *        운영자 전용은 Authorization: Bearer <ADMIN_KEY> 헤더가 있어야 한다.
  *
- * 키는 셀럽이면 "c:" + 한국어 이름, 책이면 "b:" + 한국어 제목이다.
+ * 키는 셀럽이면 "c:" + 한국어 이름, 책이면 "b:" + 한국어 제목, 그룹이면 "g:" + 그룹 이름이다.
  * 한국어·영문 페이지가 같은 키를 쓰므로 하트 수가 합쳐진다.
  */
 
@@ -404,7 +404,7 @@ async function insertHeart(env, key, voter, ipHash, now) {
 // ── 검증 ───────────────────────────────────────────────────────────
 
 function validKeyFormat(k) {
-  return typeof k === 'string' && /^[cb]:./.test(k) && k.length <= MAX_KEY_LEN;
+  return typeof k === 'string' && /^[cbg]:./.test(k) && k.length <= MAX_KEY_LEN;
 }
 
 // 사이트의 data.json에 있는 셀럽·책만 하트를 받는다. 아무 문자열이나
@@ -413,6 +413,8 @@ let known = null;
 let knownAt = 0;
 
 async function isKnown(key) {
+  // 그룹 페이지 하트("g:" + 그룹 이름). 그룹 목록은 data.json에 없어 형식만 본다.
+  if (key.startsWith('g:')) return true;
   if (!known || Date.now() - knownAt > KNOWN_TTL) {
     try {
       const res = await fetch(SITE + '/data.json', { cf: { cacheTtl: 600 } });

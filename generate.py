@@ -1405,6 +1405,10 @@ def book_heart_key(title):
     return 'b:' + title.strip()
 
 
+def group_heart_key(name):
+    return 'g:' + name
+
+
 HEART_JS = '  <script src="' + BASE + 'assets/hearts.js" defer></script>\n'
 
 # ── 업데이트 내역 (git log of data.csv) ─────────────────────────────
@@ -3534,7 +3538,7 @@ for name, info in celebs.items():
     intro_p = celeb_answer_html(name, books, page_updated)
     if name in KO_GROUP_OF:
         _kg = KO_GROUP_OF[name]
-        intro_p += (' <a href="' + esc(make_group_url(_kg)) + '">' + esc(_kg['ko'])
+        intro_p += (' <a href="' + esc(make_group_url(_kg)) + '">📚 ' + esc(_kg['ko'])
                     + ' 멤버들이 읽은 책 모아 보기 →</a>')
 
     # 작가 빈도 요약 (간단한 unique 콘텐츠)
@@ -4240,6 +4244,8 @@ for _g in sorted(ko_groups.values(), key=lambda g: g['ko']):
         '    .gb-w a { font-size: 11px; font-weight: 700; color: var(--on-yellow, #111); background: #ffe58a; border: 1.5px solid #000; padding: 0 6px; border-radius: 99px; line-height: 1.6; }\n'
         '    .gb-l { display: inline-block; margin-top: 4px; font-size: 11px; font-weight: 600; }\n'
         '    footer { margin-top: 40px; padding-top: 16px; border-top: 2px solid #000; font-size: 12px; color: #666; }\n'
+        + COPY_BTN_CSS +
+        '    .group-actions { margin: 14px 0 0; }\n'
         '  </style>\n'
         '</head>\n'
         '<body>\n'
@@ -4253,6 +4259,8 @@ for _g in sorted(ko_groups.values(), key=lambda g: g['ko']):
         + '. 책마다 인터뷰·유튜브·SNS 출처를 확인할 수 있어요.</p>\n'
         '    ' + color_note +
         '  </div>\n'
+        '  <p class="heart-row group-actions">' + heart_btn_html(group_heart_key(name), name + '에게 하트')
+        + copy_btn_html(make_group_url(_g)) + '</p>\n'
         '  <h2>멤버별로 보기</h2>\n'
         '  <ul class="members" id="members">\n' + member_cards + '  </ul>\n'
         '  <p class="pick" id="pick"></p>\n'
@@ -4262,6 +4270,7 @@ for _g in sorted(ko_groups.values(), key=lambda g: g['ko']):
         '    <p>공개된 인터뷰·방송·SNS를 바탕으로 정리했어요. '
         '<a href="' + BASE + '">다른 셀럽·아이돌이 읽은 책 보기 →</a></p>\n'
         '  </footer>\n'
+        + COPY_BTN_JS + HEART_JS +
         '  <script>\n'
         '  (function () {\n'
         '    var chips = document.querySelectorAll(".gm"), cards = document.querySelectorAll(".gb"),\n'
@@ -6183,6 +6192,8 @@ for _group in sorted(en_groups, key=lambda g: g.lower()):
     members = sorted(en_groups[_group], key=lambda m: m[1].lower())
     gslug = safe_en_filename(_group)
     gurl = EN_BASE + 'group/' + gslug + '.html'
+    # 하트 수는 한국어 그룹 페이지와 합쳐지도록 한국어 그룹 이름을 키로 쓴다
+    _ko_group_name = next((KO_GROUP_OF[m[2]]['ko'] for m in members if m[2] in KO_GROUP_OF), _group)
 
     # 그룹이 읽은 책을 모은다 — 여러 멤버가 읽은 책이 앞으로
     gbooks = {}
@@ -6326,6 +6337,8 @@ for _group in sorted(en_groups, key=lambda g: g.lower()):
         '    .gb-w { display: block; font-size: 12px; color: #2563eb; margin-top: 3px; }\n'
         '    .books { padding: 0; margin: 0; }\n'
         '    footer { margin-top: 40px; padding-top: 16px; border-top: 2px solid #000; font-size: 12px; color: #666; }\n'
+        + COPY_BTN_CSS +
+        '    .group-actions { margin: 14px 0 0; }\n'
         '  </style>\n'
         '</head>\n'
         '<body>\n'
@@ -6339,6 +6352,9 @@ for _group in sorted(en_groups, key=lambda g: g.lower()):
         + '. Each entry links to the interview, YouTube video or SNS post it came from. '
         'Pick a member to see what your bias reads.</p>\n'
         '  </div>\n'
+        '  <p class="heart-row group-actions">'
+        + heart_btn_html(group_heart_key(_ko_group_name), 'Send ' + _group + ' a heart')
+        + copy_btn_html(gurl, '🔗 Copy share link', 'Copied!') + '</p>\n'
         '  <h2>Members</h2>\n'
         '  <ul class="members">\n' + member_cards +
         '  </ul>\n'
@@ -6352,6 +6368,7 @@ for _group in sorted(en_groups, key=lambda g: g.lower()):
         '    <p>Curated from public Korean-language sources. '
         '<a href="' + EN_BASE + '">Browse every K-pop idol and Korean celebrity →</a></p>\n'
         '  </footer>\n'
+        + COPY_BTN_JS + HEART_JS +
         '</body>\n'
         '</html>'
     )
@@ -6867,7 +6884,8 @@ en_index_jsonld = json.dumps({
     '@context': 'https://schema.org',
     '@type': 'WebSite',
     'name': 'Favorbook',
-    'alternateName': ['Favorbook English', 'K-pop Idol Books', 'K-Drama Actor Books',
+    'alternateName': ['Favorbook English', 'My Bias Book', '推しの読書', '爱豆读书', '愛豆讀書',
+                      'Buku Bias Favoritku', 'Sách Bias Đọc', 'K-pop Idol Books', 'K-Drama Actor Books',
                       'Korean Celebrity Book Archive'],
     'url': EN_BASE,
     'description': 'What Korean stars are reading — K-pop idols (BTS, IVE, SEVENTEEN, NewJeans), K-drama and K-movie actors, directors and musicians, with the interview, YouTube or SNS source behind every book.',
@@ -7317,8 +7335,11 @@ en_index = (
     '\n'
     '  <header id="hero" class="hero-home flex flex-col items-center">\n'
     '    <p class="eyebrow">Archive of their reads</p>\n'
-    '    <h1>Favorbook</h1>\n'
+    '    <h1>My Bias Book</h1>\n'
     '    <p class="tagline">What your fave K-pop idol or K-drama actor is reading</p>\n'
+    '    <p lang="mul" class="text-muted" style="margin:10px 0 0;font-size:13px;display:flex;flex-wrap:wrap;justify-content:center;gap:4px 14px">'
+    '<span lang="ko">🇰🇷 최애의 독서</span><span lang="ja">🇯🇵 推しの読書</span><span lang="zh-Hans">🇨🇳 爱豆读书</span>'
+    '<span lang="id">🇮🇩 Buku Bias Favoritku</span><span lang="vi">🇻🇳 Sách Bias Đọc</span></p>\n'
     '    <p class="text-muted text-sm sm:text-base mt-5 max-w-xl mx-auto px-4 word-break-keep">Verified reading lists from Korean stars — K-pop idols (BTS, IVE, NewJeans, SEVENTEEN), K-drama and K-movie actors, film directors and musicians — sourced from interviews, YouTube, and SNS.</p>\n'
     '    <div class="count flex items-center gap-2">\n'
     '      <span id="status-dot" class="w-2 h-2 rounded-full"></span>\n'
