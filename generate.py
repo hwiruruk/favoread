@@ -3534,7 +3534,7 @@ for name, info in celebs.items():
     intro_p = celeb_answer_html(name, books, page_updated)
     if name in KO_GROUP_OF:
         _kg = KO_GROUP_OF[name]
-        intro_p += (' <a href="' + esc(make_group_url(_kg)) + '">' + esc(_kg['ko'])
+        intro_p += (' <a href="' + esc(make_group_url(_kg)) + '">📚 ' + esc(_kg['ko'])
                     + ' 멤버들이 읽은 책 모아 보기 →</a>')
 
     # 작가 빈도 요약 (간단한 unique 콘텐츠)
