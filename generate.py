@@ -5768,7 +5768,7 @@ for name, info in celebs.items():
             'numberOfItems': len(book_items),
             'itemListElement': book_items or None,
         }),
-        'isPartOf': {'@type': 'WebSite', 'name': '최애의 독서', 'url': EN_BASE},
+        'isPartOf': {'@type': 'WebSite', 'name': 'My Bias Book', 'url': EN_BASE},
     })
     breadcrumb_ld = {
         '@context': 'https://schema.org',
@@ -5785,7 +5785,7 @@ for name, info in celebs.items():
         '<head>\n' + GA_TAG +
         '  <meta charset="utf-8">\n'
         '  <meta name="viewport" content="width=device-width, initial-scale=1">\n'
-        '  <title>' + esc(title_text) + ' | 최애의 독서</title>\n'
+        '  <title>' + esc(title_text) + ' | My Bias Book</title>\n'
         '  <meta name="description" content="' + esc(desc_text) + '">\n'
         '  <meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1">\n'
         '  <meta property="og:title" content="' + esc(title_text) + '">\n'
@@ -5796,7 +5796,7 @@ for name, info in celebs.items():
         '  <meta property="og:url" content="' + esc(page_url) + '">\n'
         '  <meta property="og:type" content="profile">\n'
         '  <meta property="og:locale" content="en_US">\n'
-        '  <meta property="og:site_name" content="최애의 독서">\n'
+        '  <meta property="og:site_name" content="My Bias Book">\n'
         '  <meta name="twitter:card" content="summary_large_image">\n'
         '  <meta name="twitter:image" content="' + esc(_og_img) + '">\n'
         '  <link rel="canonical" href="' + esc(page_url) + '">\n'
@@ -6096,7 +6096,7 @@ for title, t_en in book_title_en.items():
         '<head>\n' + GA_TAG +
         '  <meta charset="utf-8">\n'
         '  <meta name="viewport" content="width=device-width, initial-scale=1">\n'
-        '  <title>' + esc(title_text) + ' | 최애의 독서</title>\n'
+        '  <title>' + esc(title_text) + ' | My Bias Book</title>\n'
         '  <meta name="description" content="' + esc(desc_text) + '">\n'
         + ('  <meta name="robots" content="index, follow, max-image-preview:large">\n'
            if indexable else '  <meta name="robots" content="noindex, follow">\n') +
@@ -6156,7 +6156,7 @@ for title, t_en in book_title_en.items():
         '  <ul class="notes">\n' + celeb_list + '\n  </ul>\n'
         + en_more_html
         + (EN_TR_NOTE_HTML if en_show_tr_note else '')
-        + '  <p style="margin-top:32px"><a href="' + EN_BASE + '">← Back to 최애의 독서</a></p>\n'
+        + '  <p style="margin-top:32px"><a href="' + EN_BASE + '">← Back to My Bias Book</a></p>\n'
         + COPY_BTN_JS + HEART_JS +
         '</body>\n'
         '</html>'
@@ -6282,7 +6282,7 @@ for _group in sorted(en_groups, key=lambda g: g.lower()):
         'inLanguage': 'en',
         'description': g_desc,
         'about': {'@type': 'MusicGroup', 'name': _group},
-        'isPartOf': {'@type': 'WebSite', 'name': '최애의 독서', 'url': EN_BASE},
+        'isPartOf': {'@type': 'WebSite', 'name': 'My Bias Book', 'url': EN_BASE},
         'hasPart': {
             '@type': 'ItemList',
             'name': 'Members of ' + _group,
@@ -6302,7 +6302,7 @@ for _group in sorted(en_groups, key=lambda g: g.lower()):
         '<head>\n' + GA_TAG +
         '  <meta charset="utf-8">\n'
         '  <meta name="viewport" content="width=device-width, initial-scale=1">\n'
-        '  <title>' + esc(g_title) + ' | 최애의 독서</title>\n'
+        '  <title>' + esc(g_title) + ' | My Bias Book</title>\n'
         '  <meta name="description" content="' + esc(g_desc) + '">\n'
         '  <meta name="robots" content="index, follow, max-image-preview:large">\n'
         '  <meta property="og:title" content="' + esc(g_title) + '">\n'
@@ -6310,7 +6310,7 @@ for _group in sorted(en_groups, key=lambda g: g.lower()):
         '  <meta property="og:url" content="' + esc(gurl) + '">\n'
         '  <meta property="og:type" content="website">\n'
         '  <meta property="og:locale" content="en_US">\n'
-        '  <meta property="og:site_name" content="최애의 독서">\n'
+        '  <meta property="og:site_name" content="My Bias Book">\n'
         '  <meta name="twitter:card" content="summary_large_image">\n'
         '  <link rel="canonical" href="' + esc(gurl) + '">\n'
         '  <link rel="icon" href="' + BASE + 'favicon.svg" type="image/svg+xml">\n'
@@ -6343,7 +6343,7 @@ for _group in sorted(en_groups, key=lambda g: g.lower()):
         '  </style>\n'
         '</head>\n'
         '<body>\n'
-        '  <nav><a href="' + EN_BASE + '">← 최애의 독서</a></nav>\n'
+        '  <nav><a href="' + EN_BASE + '">← My Bias Book</a></nav>\n'
         '  <h1>' + esc(_group) + ' Members’ Book Recommendations</h1>\n'
         '  <div class="lead"' + ((' style="' + group_box_style(_group)[0] + '"') if group_box_style(_group)[0] else '') + '>\n'
         '    <p style="margin:0">Every book we could verify that <strong>' + esc(_group)
@@ -6442,7 +6442,7 @@ for _role in sorted(en_role_members, key=lambda r: -len(en_role_members[r])):
         'url': curl,
         'inLanguage': 'en',
         'description': c_desc,
-        'isPartOf': {'@type': 'WebSite', 'name': '최애의 독서', 'url': EN_BASE},
+        'isPartOf': {'@type': 'WebSite', 'name': 'My Bias Book', 'url': EN_BASE},
         'hasPart': {
             '@type': 'ItemList',
             'name': hub_name + ' in this archive',
@@ -6471,7 +6471,7 @@ for _role in sorted(en_role_members, key=lambda r: -len(en_role_members[r])):
         '<head>\n' + GA_TAG +
         '  <meta charset="utf-8">\n'
         '  <meta name="viewport" content="width=device-width, initial-scale=1">\n'
-        '  <title>' + esc(c_title) + ' | 최애의 독서</title>\n'
+        '  <title>' + esc(c_title) + ' | My Bias Book</title>\n'
         '  <meta name="description" content="' + esc(c_desc) + '">\n'
         '  <meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1">\n'
         '  <meta property="og:title" content="' + esc(c_title) + '">\n'
@@ -6479,7 +6479,7 @@ for _role in sorted(en_role_members, key=lambda r: -len(en_role_members[r])):
         '  <meta property="og:url" content="' + esc(curl) + '">\n'
         '  <meta property="og:type" content="website">\n'
         '  <meta property="og:locale" content="en_US">\n'
-        '  <meta property="og:site_name" content="최애의 독서">\n'
+        '  <meta property="og:site_name" content="My Bias Book">\n'
         '  <meta property="og:image" content="' + OG_SITE_EN + '">\n'
         '  <meta name="twitter:card" content="summary_large_image">\n'
         '  <link rel="canonical" href="' + esc(curl) + '">\n'
@@ -6579,10 +6579,10 @@ _en_rank_head = (
     '<!DOCTYPE html>\n<html lang="en">\n<head>\n' + GA_TAG +
     '  <meta charset="utf-8">\n'
     '  <meta name="viewport" content="width=device-width, initial-scale=1">\n'
-    '  <title>Books Korean Celebrities Read Most — K-pop &amp; K-drama Star Ranking | 최애의 독서</title>\n'
+    '  <title>Books Korean Celebrities Read Most — K-pop &amp; K-drama Star Ranking | My Bias Book</title>\n'
     '  <meta name="description" content="The 30 books most often read by K-pop idols and K-drama actors, the authors they return to, and the celebrities with the longest reading lists.">\n'
     '  <meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1">\n'
-    '  <meta property="og:title" content="Most-read books among Korean celebrities | 최애의 독서">\n'
+    '  <meta property="og:title" content="Most-read books among Korean celebrities | My Bias Book">\n'
     '  <meta property="og:url" content="' + en_rank_url + '">\n'
     '  <meta property="og:type" content="website">\n'
     '  <meta property="og:locale" content="en_US">\n'
@@ -6667,8 +6667,8 @@ write_if_changed('en/updates.html', _v2_detail(
     '<!DOCTYPE html>\n<html lang="en">\n<head>\n' + GA_TAG +
     '  <meta charset="utf-8">\n'
     '  <meta name="viewport" content="width=device-width, initial-scale=1">\n'
-    '  <title>What\'s new — recently added reading lists | 최애의 독서</title>\n'
-    '  <meta name="description" content="Recently added books and Korean celebrities in the 최애의 독서 archive.">\n'
+    '  <title>What\'s new — recently added reading lists | My Bias Book</title>\n'
+    '  <meta name="description" content="Recently added books and Korean celebrities in the My Bias Book archive.">\n'
     '  <meta name="robots" content="noindex, follow">\n'
     '  <link rel="canonical" href="' + EN_BASE + 'updates.html">\n'
     '  <link rel="icon" href="' + BASE + 'favicon.svg" type="image/svg+xml">\n'
@@ -6884,8 +6884,8 @@ en_index_show_tr_note = has_auto_translated(
 en_index_jsonld = json.dumps({
     '@context': 'https://schema.org',
     '@type': 'WebSite',
-    'name': '최애의 독서',
-    'alternateName': ['Favorbook', 'Favorbook English', 'My Bias Book', '推しの読書', '爱豆读书', '愛豆讀書',
+    'name': 'My Bias Book',
+    'alternateName': ['최애의 독서', 'Favorbook', 'Favorbook English', '推しの読書', '爱豆读书', '愛豆讀書',
                       'Buku Bias Favoritku', 'Sách Bias Đọc', 'K-pop Idol Books', 'K-Drama Actor Books',
                       'Korean Celebrity Book Archive'],
     'url': EN_BASE,
@@ -7237,7 +7237,7 @@ en_index = (
     '<head>\n' + GA_TAG +
     '  <meta charset="UTF-8">\n'
     '  <meta name="viewport" content="width=device-width, initial-scale=1.0">\n'
-    '  <title>What Do Kpop Idols Read? K-pop Idol &amp; K-Drama Actor Book Lists | 최애의 독서</title>\n'
+    '  <title>What Do Kpop Idols Read? K-pop Idol &amp; K-Drama Actor Book Lists | My Bias Book</title>\n'
     '  <meta name="description" content="What does your bias read? Book lists of K-pop idols (BTS, aespa, IVE, NewJeans), K-drama actors and more — every book traced to its source.">\n'
     '  <meta name="referrer" content="no-referrer">\n'
     '\n'
@@ -7245,20 +7245,20 @@ en_index = (
     '  <link rel="icon" href="' + BASE + 'favicon.png" type="image/png" sizes="192x192">\n'
     '  <link rel="apple-touch-icon" href="' + BASE + 'favicon.png">\n'
     '\n'
-    '  <meta property="og:site_name" content="최애의 독서">\n'
-    '  <meta property="og:title" content="What K-pop Idols &amp; K-Drama Actors Read | 최애의 독서">\n'
+    '  <meta property="og:site_name" content="My Bias Book">\n'
+    '  <meta property="og:title" content="What K-pop Idols &amp; K-Drama Actors Read | My Bias Book">\n'
     '  <meta property="og:description" content="A searchable archive of what Korean stars read — K-pop idols, K-drama and K-movie actors, directors and musicians, with a source for every book.">\n'
     '  <meta property="og:type" content="website">\n'
     '  <meta property="og:url" content="' + EN_BASE + '">\n'
     '  <meta property="og:image" content="' + OG_SITE_EN + '">\n'
     '  <meta property="og:image:width" content="1200">\n'
     '  <meta property="og:image:height" content="630">\n'
-    '  <meta property="og:image:alt" content="최애의 독서 — what K-pop idols, K-drama actors and Korean celebrities are reading">\n'
+    '  <meta property="og:image:alt" content="My Bias Book — what K-pop idols, K-drama actors and Korean celebrities are reading">\n'
     '  <meta property="og:locale" content="en_US">\n'
     '  <meta property="og:locale:alternate" content="ko_KR">\n'
     '\n'
     '  <meta name="twitter:card" content="summary_large_image">\n'
-    '  <meta name="twitter:title" content="What K-pop Idols &amp; K-Drama Actors Read | 최애의 독서">\n'
+    '  <meta name="twitter:title" content="What K-pop Idols &amp; K-Drama Actors Read | My Bias Book">\n'
     '  <meta name="twitter:description" content="The Korean star book archive — reading lists from K-pop idols, K-drama and K-movie actors, directors and musicians.">\n'
     '  <meta name="twitter:image" content="' + OG_SITE_EN + '">\n'
     '\n'
@@ -7270,7 +7270,7 @@ en_index = (
     '  <meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1">\n'
     '  <meta name="theme-color" content="#ffffff">\n'
     '\n'
-    '  <link rel="alternate" type="application/rss+xml" title="최애의 독서 RSS" href="' + BASE + 'feed.xml">\n'
+    '  <link rel="alternate" type="application/rss+xml" title="My Bias Book RSS" href="' + BASE + 'feed.xml">\n'
     '\n'
     '\n'
     '  <script type="application/ld+json">\n  ' + en_index_jsonld + '\n  </script>\n'
@@ -7354,9 +7354,9 @@ en_index = (
     '\n'
     + EN_SEARCH_SECTION +
     '  <section id="about" class="text-center max-w-2xl mx-auto border-4 border-ink p-6 md:p-8 bg-white shadow-neo w-full">\n'
-    '    <h2 class="text-xl md:text-2xl font-black mb-4 bg-neo-pink inline-block px-3 py-1 border-2 border-ink shadow-neo-sm">What is 최애의 독서?</h2>\n'
+    '    <h2 class="text-xl md:text-2xl font-black mb-4 bg-neo-pink inline-block px-3 py-1 border-2 border-ink shadow-neo-sm">What is My Bias Book?</h2>\n'
     '    <p class="text-sm md:text-base font-bold leading-relaxed text-ink word-break-keep mb-3">\n'
-    '      <strong>최애의 독서 (My Bias Book)</strong> is a <strong>reading archive</strong> that gathers '
+    '      <strong>My Bias Book (최애의 독서)</strong> is a <strong>reading archive</strong> that gathers '
     '<strong>the books celebrities and public figures have read</strong> in one place. '
     'From K-pop idols like BTS, IVE and SEVENTEEN to drama actors and musicians, you can find the books '
     'your favorite stars have read and recommended, each with its source.\n'
