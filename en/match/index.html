@@ -1,0 +1,579 @@
+<!doctype html>
+<html lang="en">
+<head>
+<!-- Google tag (gtag.js) -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-42YXZRRS25"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+  gtag('config', 'G-42YXZRRS25');
+</script>
+<script src="https://favorbook.co.kr/assets/views.js" defer></script>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Which Celebrity Reads Like You? | Favorbook</title>
+<meta name="description" content="Pick the book cover you like 10 times, and we will find the Korean celebrity whose reading taste is closest to yours. Maybe it is you?">
+<link rel="canonical" href="https://favorbook.co.kr/en/match/">
+<link rel="alternate" hreflang="en" href="https://favorbook.co.kr/en/match/">
+<link rel="alternate" hreflang="ko" href="https://favorbook.co.kr/match/">
+<link rel="alternate" hreflang="x-default" href="https://favorbook.co.kr/match/">
+<link rel="icon" href="../../favicon.svg" type="image/svg+xml">
+<link rel="stylesheet" href="../../assets/fonts/space-grotesk.css">
+<link rel="stylesheet" href="../../assets/v2/theme.css">
+<link rel="stylesheet" href="../../assets/v2/home.css">
+<script src="../../assets/v2/theme.js"></script>
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="Favorbook">
+<meta property="og:title" content="Which Celebrity Reads Like You?">
+<meta property="og:description" content="Pick the book cover you like 10 times, and we will find the Korean celebrity whose reading taste is closest to yours. Maybe it is you?">
+<meta property="og:url" content="https://favorbook.co.kr/en/match/">
+<meta property="og:image" content="https://favorbook.co.kr/og/match.jpg">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Which Celebrity Reads Like You?">
+<meta name="twitter:description" content="Pick the book cover you like 10 times, and we will find the Korean celebrity whose reading taste is closest to yours. Maybe it is you?">
+<meta name="twitter:image" content="https://favorbook.co.kr/og/match.jpg">
+<style>
+  :root { --pink:var(--card); --mint:var(--card); --sky:var(--card); }
+  * { box-sizing: border-box; }
+  body { margin:0; background:var(--bg); color:var(--ink); font-family:-apple-system,"Pretendard","Noto Sans KR",sans-serif; line-height:1.5; }
+  a { color:inherit; }
+  .wrap { max-width:720px; margin:0 auto; padding:0 16px 80px; }
+  .topbar { border-bottom:1px solid var(--border); background:var(--yellow); padding:12px 16px; font-size:13px; }
+  .topbar { display:flex; justify-content:space-between; align-items:center; gap:10px; }
+  .topbar a { font-weight:800; text-decoration:none; }
+  .topbar span { font-size:12px; color:var(--soft); }
+  h1 { font-size:26px; margin:26px 0 6px; line-height:1.25; }
+  .lead { margin:0 0 16px; color:var(--ink); }
+  .box { border:1px solid var(--border); box-shadow: none; background:var(--bg); padding:16px; margin:16px 0; }
+  .tabs { display:flex; gap:8px; margin:0 0 4px; }
+  .tabs button { flex:1; padding:10px; font-size:14px; font-weight:800; border:1px solid var(--border); background:var(--bg); cursor:pointer; }
+  .tabs button[aria-selected=true] { background:var(--yellow); box-shadow: none; }
+  .btn { display:block; width:100%; padding:14px; font-size:16px; font-weight:800; background:var(--yellow); border:1px solid var(--border); box-shadow: none; cursor:pointer; margin-top:14px; }
+  .btn:disabled { background:var(--line); box-shadow:none; cursor:not-allowed; color:var(--muted); }
+  .btn.ghost { background:var(--bg); box-shadow:none; font-size:14px; padding:10px; }
+  .hide { display:none !important; }
+
+  /* 표지 */
+  .cv { position:relative; width:100%; aspect-ratio:2/3; background:var(--pink); border:1px solid var(--border); display:flex; align-items:center; justify-content:center; padding:10px; font-weight:800; font-size:14px; overflow:hidden; text-align:center; }
+  .cv img { position:absolute; inset:0; width:100%; height:100%; object-fit:cover; }
+
+  /* 취향 매칭 */
+  .skip { margin-top:14px; text-align:center; }
+  .skip button { background:none; border:0; text-decoration:underline; font-size:13px; color:var(--soft); cursor:pointer; }
+  .prog { display:flex; align-items:center; gap:10px; font-weight:800; font-size:14px; }
+  .prog-bar { flex:1; height:12px; border:1px solid var(--border); background:var(--bg); }
+  .prog-bar i { display:block; height:100%; background:var(--pink); width:0; transition:width .25s; }
+  .vs { display:grid; grid-template-columns:1fr 1fr; gap:14px; margin:14px auto 0; max-width:400px; position:relative; } /* 표지 원본이 268px라 카드를 키우면 흐려진다 */
+  .vs::after { content:'VS'; position:absolute; left:50%; top:34%; transform:translate(-50%,-50%); background:var(--yellow); color:var(--on-yellow); font-weight:900; padding:4px 8px; font-size:14px; z-index:2; }
+  .bk { border:1px solid var(--border); background:var(--bg); padding:8px; cursor:pointer; text-align:center; font:inherit; box-shadow: none; transition:transform .12s, background .12s; }
+  .bk:hover, .bk:focus-visible { transform:translate(-2px,-2px) rotate(-1deg); background:var(--yellow); outline:none; box-shadow: none; }
+  .bk.won { background:var(--mint); transform:scale(1.04); }
+  .bk.lost { opacity:.35; transform:scale(.96); }
+  .bk .t { margin-top:10px; font-weight:800; font-size:15px; line-height:1.3; word-break:keep-all; }
+  .bk .a { font-size:12px; color:var(--soft); margin-top:2px; }
+  .shelf { display:grid; grid-template-columns:repeat(5,1fr); gap:8px; margin-top:12px; }
+  .shelf .it { align-self:start; position:relative; border:0; background:none; padding:0; cursor:pointer; font:inherit; text-align:center; }
+  .shelf .cv { padding:4px; font-size:10px; }
+  .shelf .it.king .cv { outline:4px solid var(--yellow); box-shadow:0 0 0 7px var(--ink); }
+  .shelf .tt { font-size:11px; font-weight:700; margin-top:4px; line-height:1.25; word-break:keep-all; }
+  .crown { position:absolute; top:-12px; left:50%; transform:translateX(-50%); z-index:3; font-size:11px; white-space:nowrap; font-weight:900; background:var(--yellow); color:var(--on-yellow); padding:1px 6px; }
+
+  /* 직접 고르기 */
+  input[type=search] { width:100%; padding:12px; font-size:16px; border:1px solid var(--border); background:var(--bg); margin-top:8px; }
+  .sug { list-style:none; margin:6px 0 0; padding:0; border:1px solid var(--border); max-height:340px; overflow:auto; background:var(--bg); }
+  .sug:empty { display:none; }
+  .sug li button { width:100%; text-align:left; background:var(--bg); border:0; border-bottom:1px solid var(--line); padding:8px 10px; font-size:14px; cursor:pointer; display:flex; gap:10px; align-items:center; font:inherit; }
+  .sug li button:hover { background:var(--yellow); }
+  .sug .th { width:34px; flex:none; }
+  .sug .th .cv { padding:1px; font-size:0; border-width:1px; }
+  .sug small { color:var(--soft); display:block; font-size:12px; }
+  .sug .au { background:var(--sky); }
+  .nohit { margin-top:8px; padding:12px; border:1px solid var(--border); background:var(--card); font-size:14px; }
+  .nohit p { margin:0 0 8px; }
+  .nohit .opts button, .opts button { margin:3px 4px 0 0; padding:4px 10px; border:1px solid var(--border); background:var(--bg); font-size:13px; cursor:pointer; font-family:inherit; }
+  .opts button:hover { background:var(--yellow); }
+  .chips { display:flex; flex-wrap:wrap; gap:8px; margin:12px 0 0; padding:0; list-style:none; }
+  .chip { display:flex; gap:6px; align-items:center; padding:5px 6px 5px 10px; border:1px solid var(--border); background:var(--mint); font-size:13px; font-weight:700; }
+  .chip.au { background:var(--sky); }
+  .chip button { border:0; background:var(--ink); color:var(--bg); width:20px; height:20px; cursor:pointer; }
+  .count { font-size:13px; color:var(--soft); margin-top:8px; }
+
+  /* 많이 읽은 책 둘러보기 */
+  .browse { margin-top:18px; padding-top:14px; border-top:1px dashed var(--border); }
+  .browse h2 { font-size:17px; margin:0 0 2px; }
+  .browse .sub { font-size:12px; color:var(--soft); margin:0 0 10px; }
+  .gen { display:flex; gap:6px; overflow-x:auto; padding-bottom:6px; }
+  .gen button { flex:none; padding:5px 12px; border:1px solid var(--border); background:var(--bg); font-size:13px; font-weight:700; cursor:pointer; font-family:inherit; }
+  .gen button[aria-pressed=true] { background:var(--yellow); box-shadow: none; }
+  .gen button small { font-weight:400; color:var(--soft); margin-left:3px; }
+  .grid { display:grid; grid-template-columns:repeat(3,1fr); gap:12px; margin-top:12px; }
+  .pk { position:relative; border:0; background:none; padding:0; cursor:pointer; text-align:left; font:inherit; }
+  .pk .cv { padding:6px; font-size:12px; }
+  .pk .n { position:absolute; top:-6px; left:-6px; z-index:3; background:var(--yellow); color:var(--on-yellow); font-size:11px; font-weight:900; padding:1px 6px; }
+  .pk .t { font-size:12px; font-weight:800; margin-top:5px; line-height:1.25; word-break:keep-all; }
+  .pk .w { font-size:11px; color:var(--soft); line-height:1.3; margin-top:1px; }
+  .pk.on .cv { outline:4px solid var(--mint); box-shadow:0 0 0 7px var(--ink); }
+  .pk.on::after { content:'✓ Picked'; position:absolute; right:4px; top:4px; z-index:3; background:var(--mint); border:1px solid var(--border); font-size:11px; font-weight:900; padding:0 5px; }
+  .more { margin-top:12px; }
+
+  /* 결과 */
+  .res { display:flex; gap:14px; align-items:flex-start; }
+  .rank { font-size:30px; font-weight:900; width:30px; flex:none; }
+  .pic { width:72px; height:72px; border:1px solid var(--border); object-fit:cover; flex:none; background:var(--ph); }
+  .res h3 { margin:0; font-size:18px; }
+  .pct { display:inline-block; margin:4px 0 0; padding:1px 8px; background:var(--yellow); border:1px solid var(--border); font-size:13px; font-weight:700; }
+  .why { margin:6px 0 0; font-size:13px; color:var(--ink); }
+  .shared { display:flex; gap:10px; margin-top:10px; flex-wrap:wrap; }
+  .shared .m { width:84px; text-align:center; font-size:11px; font-weight:700; line-height:1.25; word-break:keep-all; }
+  .shared .cv { padding:4px; font-size:10px; margin-bottom:4px; }
+  .hl { margin-top:22px; border:1px solid var(--border); box-shadow: none; background:var(--mint); padding:18px 16px; text-align:center; }
+  .hl.hot { background:var(--pink); }
+  .hl-tag { display:inline-block; background:var(--yellow); color:var(--on-yellow); font-weight:900; font-size:14px; padding:3px 12px; }
+  .hl-name { font-size:32px; font-weight:900; margin:8px 0 2px; line-height:1.2; word-break:keep-all; }
+  .hl-sub { font-size:14px; font-weight:700; }
+  .hl-sub b { background:var(--yellow); padding:0 5px; border:1px solid var(--border); }
+  .hl-hint { margin-top:10px; font-size:12px; color:var(--ink); }
+  .pct2 { display:inline-block; font-size:13px; font-weight:900; }
+  .said { margin:6px 0 0; font-size:13px; }
+  .said b { font-weight:900; }
+  .share { text-align:center; }
+  .share .btn { margin-top:0; }
+  .share small { display:block; margin-top:8px; color:var(--soft); font-size:12px; min-height:16px; }
+  .sharedbar { margin-top:22px; border:1px solid var(--border); background:var(--sky); padding:12px 14px; font-weight:800; font-size:14px; box-shadow: none; }
+  body.shared .tabs, body.shared #cup, body.shared #manual, body.shared .lead { display:none; }
+  .data-cta { margin-top:32px; border:1px solid var(--border); box-shadow: none; background:var(--yellow); padding:18px 16px; }
+  .data-cta h2 { margin:0 0 4px; font-size:20px; line-height:1.3; }
+  .data-cta p { margin:0 0 12px; font-size:13px; font-weight:700; color:var(--ink); }
+  .data-cta .links { display:flex; gap:8px; flex-wrap:wrap; }
+  .data-cta .links a { display:inline-block; padding:10px 14px; border:1px solid var(--border); background:var(--bg); font-weight:900; font-size:14px; text-decoration:none; box-shadow: none; }
+  .data-cta .links a.main { background:#111; color:#fde047; box-shadow:none; }
+  .data-cta, .data-cta h2, .data-cta p { color:#111; }
+  .data-cta .links a { color:#111; border-radius:99px; }
+  .data-cta .links a:not(.main) { background:#fff; }
+  .data-cta .links a.main { color:#fde047; }
+  .foot { margin-top:24px; font-size:12px; color:var(--soft); text-align:center; }
+  .empty { padding:12px; background:var(--hover); border:1px solid var(--border); }
+  .note { font-size:12px; color:var(--soft); margin-top:24px; }
+  @media (min-width:560px) { .shelf { grid-template-columns:repeat(10,1fr); } .grid { grid-template-columns:repeat(4,1fr); } }
+  /* 새 디자인: 단추는 알약 모양, 글꼴은 사이트 공통 */
+  body { font-family:var(--sans); word-break:keep-all; }
+  h1 { font-family:var(--serif); font-weight:700; }
+  .tabs button, .btn { border-radius:99px; font-family:inherit; }
+  .box { border-radius:16px; }
+  .cv { border-radius:10px; overflow:hidden; }
+  .topbar { display:none; }
+  .bar a { text-decoration:none; }
+  .btn, .tabs button[aria-selected=true], .pct, .hl-sub b { color:var(--on-yellow); }
+  .btn.ghost { color:var(--ink); }
+</style>
+</head>
+<body>
+<header class="bar">
+  <nav aria-label="Main menu"><a href="/en/category/kpop-idols.html">Idols</a><a href="/en/category/k-drama-actors.html">Actors</a><a href="/en/category/korean-musicians.html">Musicians</a><a href="/en/share/ranking.html">Ranking</a><a href="/en/match/">Match</a></nav>
+  <a class="logo" href="/en/">최애의 독서</a>
+  <div class="right"><a class="lang" href="/match/" hreflang="ko">한국어</a></div>
+</header>
+<main class="wrap">
+  <h1>Which Celebrity Reads Like You?</h1>
+  <p class="lead">Just pick the covers that catch your eye, 10 times. We will find the Korean celebrity whose bookshelf overlaps with yours the most.</p>
+
+  <div class="tabs" role="tablist">
+    <button role="tab" id="tabCup" aria-selected="true">📚 Reading Taste Match</button>
+    <button role="tab" id="tabSearch" aria-selected="false">🔎 Find by Favorite Books</button>
+  </div>
+
+  <!-- 취향 매칭 -->
+  <section id="cup" class="box">
+    <div id="cupIntro">
+      <b style="font-size:18px">Which cover pulls you in more?</b>
+      <p style="margin:8px 0 0;color:var(--ink)">You do not need to have read them. Go with the cover and the title, and after 10 picks you will have your own 10-book taste. Covers show the Korean editions.</p>
+      <button class="btn" id="cupStart" disabled>Start the match</button>
+    </div>
+    <div id="cupPlay" class="hide">
+      <div class="prog"><span id="cupNo">1 / 10</span><div class="prog-bar"><i id="cupBar"></i></div></div>
+      <div class="vs" id="vs"></div>
+      <div class="skip"><button id="cupSkip">Show different books</button></div>
+    </div>
+    <div id="cupKing" class="hide">
+      <b style="font-size:18px">Your 10-book taste is ready!</b>
+      <p style="margin:6px 0 0;color:var(--ink)">If you could keep only one? A book you mark as your favorite counts double.</p>
+      <div class="shelf" id="shelf"></div>
+      <button class="btn" id="cupGo">See my celebrity matches</button>
+      <button class="btn ghost" id="cupAgain">Start over</button>
+    </div>
+  </section>
+
+  <!-- 직접 고르기 -->
+  <section id="manual" class="box hide">
+    <label for="q" style="font-weight:800">Favorite books or authors (1 to 10 in total)</label>
+    <input id="q" type="search" placeholder="Search by book title or author" autocomplete="off">
+    <ul id="sug" class="sug"></ul>
+    <div id="nohit" class="nohit hide"></div>
+    <ul id="chips" class="chips"></ul>
+    <div class="count" id="count">0 / 10</div>
+    <button id="go" class="btn" disabled>Find my celebrity matches</button>
+
+    <div class="browse">
+      <h2>Books celebrities read the most</h2>
+      <p class="sub">Choose a genre and tap covers to add them. The number is how many celebrities read the book. (Who read it is revealed in your results.)</p>
+      <div class="gen" id="gen"></div>
+      <div class="grid" id="grid"></div>
+      <button class="btn ghost more hide" id="more">Show more</button>
+    </div>
+  </section>
+
+  <section id="out" aria-live="polite"></section>
+
+  <section class="data-cta" aria-label="About Favorbook">
+    <h2>📕 Explore the full reading archive</h2>
+    <p><span id="ctaCelebs">566</span> celebrities and <span id="ctaBooks">3,776</span> book records in one place. What is your fave reading?</p>
+    <div class="links"><a class="main" href="../" data-ev="to_main">Browse Favorbook →</a><a href="../share/ranking.html" data-ev="to_top_books">See the ranking</a></div>
+  </section>
+
+  <p class="note">Calculated from the reading records collected on Favorbook. The same book scores highest, and other books by the same author count a little. Rarer overlaps score higher than books everyone has read. Your picks are never sent to a server; everything is computed in this browser.</p>
+  <p class="foot">See the <a href="../../data-policy.html" hreflang="ko">data policy</a> (Korean) for sources and terms of use. © Favorbook</p>
+</main>
+
+<script>
+(function () {
+  var MAX = 10, PAGE = 12;
+  var splitAuthors = function (s) { return String(s || '').split(/\s*[,，、&;]\s*|\s+and\s+/i).map(function (x) { return x.trim(); }).filter(Boolean); };
+  var norm = function (s) { return (s || '').toLowerCase().replace(/[\s\-·:：,.!?'"’‘“”()\[\]~*]/g, ''); };
+  var esc = function (s) { return String(s == null ? '' : s).replace(/[&<>"]/g, function (c) { return ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'})[c]; }); };
+  var $ = function (id) { return document.getElementById(id); };
+  var cover = function (b) { // 이미지가 안 뜨면 제목이 보이도록 글자를 깔아 둔다
+    return '<div class="cv">' + esc(b.title) + (b.cover ? '<img src="' + esc(b.cover) + '" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.remove()">' : '') + '</div>';
+  };
+
+  var books = {}, celebs = [], authorDf = {}, authors = {}, pool = [], genreOf = {}, slugs = {};
+  var GEN_EN = { '소설':'Fiction','에세이':'Essay','인문':'Humanities','시':'Poetry','예술':'Art','자기계발':'Self-help','만화':'Comics','어린이책':'Children','사회':'Society','과학':'Science','경제·경영':'Business','실용·생활':'Lifestyle','기타':'Other','기타 문학':'Other','여행':'Travel' };
+  var ALL = 'All';
+  var picked = [], pickedAuthors = [], weight = {}, isShared = false, lastShare = null;
+
+  Promise.all([
+    fetch('../../data.json').then(function (r) { return r.json(); }),
+    fetch('../../match/match-books.json').then(function (r) { return r.json(); }).catch(function () { return { genres: {} }; }),
+    fetch('../../data/en_slugs.json').then(function (r) { return r.json(); }).catch(function () { return {}; })
+  ]).then(function (res) {
+    var d = res[0]; genreOf = res[1].genres || {}; slugs = (res[2] && res[2].celeb) || {};
+    Object.keys(d.celebs).forEach(function (name) {
+      var c = d.celebs[name], keys = new Set(), auth = new Set(), byAuthor = {};
+      if (!c.nameEn) return;   // 영문 이름이 없는 셀럽은 영문 페이지에 노출하지 않는다
+      (c.books || []).forEach(function (b) {
+        var k = norm(b.title); if (!k) return;
+        var tEn = b.title_en || b.title, aEn = b.author_en || b.author;
+        keys.add(k);
+        var as = splitAuthors(aEn).map(function (nm) { return { n: norm(nm), name: nm }; }).filter(function (x) { return x.n; });
+        as.forEach(function (x) { auth.add(x.n); (byAuthor[x.n] = byAuthor[x.n] || []).push(tEn); if (!authors[x.n]) authors[x.n] = { key: x.n, name: x.name, books: {} }; authors[x.n].books[k] = 1; });
+        var e = books[k] || (books[k] = { key: k, title: tEn, tn: norm(tEn), hasEn: !!b.title_en, author: aEn, cover: b.coverUrl, df: 0, na: norm(aEn), nas: as.map(function (x) { return x.n; }), genre: GEN_EN[genreOf[b.title] || '기타'] || 'Other' });
+        if (!e.cover && b.coverUrl) e.cover = b.coverUrl;
+      });
+      if (!keys.size) return;
+      keys.forEach(function (k) { books[k].df++; });
+      auth.forEach(function (a) { authorDf[a] = (authorDf[a] || 0) + 1; });
+      celebs.push({ name: c.nameEn, img: c.imageUrl, url: slugs[name] ? '/en/share/' + slugs[name] + '.html' : null, keys: keys, authors: auth, byAuthor: byAuthor });
+    });
+    // 매칭 후보: 표지가 있고 4명 이상이 읽은, 알아볼 만한 책
+    pool = Object.keys(books).map(function (k) { return books[k]; }).filter(function (b) { return b.cover && b.hasEn && b.df >= 4; });
+    $('cupStart').disabled = false;
+    $('cupStart').textContent = 'Start the match (' + pool.length + ' books in the pool)';
+    renderGenres(); renderGrid(true);
+    var nb = 0; celebs.forEach(function (c) { nb += c.keys.size; });
+    $('ctaCelebs').textContent = celebs.length.toLocaleString(); $('ctaBooks').textContent = nb.toLocaleString();
+    restoreShared();
+  }).catch(function () { $('out').innerHTML = '<p class="empty">Could not load the data. Please try again in a moment.</p>'; });
+
+  var idf = function (df) { return Math.log((celebs.length + 1) / df) + 1; };
+  var wt = function (k) { return weight[k] || 1; };
+  var total = function () { return picked.length + pickedAuthors.length; };
+
+  /* ---------- 탭 ---------- */
+  function tab(which) {
+    var cup = which === 'cup';
+    $('tabCup').setAttribute('aria-selected', cup); $('tabSearch').setAttribute('aria-selected', !cup);
+    $('cup').classList.toggle('hide', !cup); $('manual').classList.toggle('hide', cup);
+    $('out').innerHTML = '';
+  }
+  $('tabCup').onclick = function () { tab('cup'); };
+  $('tabSearch').onclick = function () { tab('search'); picked = []; pickedAuthors = []; weight = {}; renderChips(); renderGrid(true); };
+
+  /* ---------- 취향 매칭 ---------- */
+  var round = 0, seen = {}, pair = [], locked = false;
+  function show(id) { ['cupIntro', 'cupPlay', 'cupKing'].forEach(function (x) { $(x).classList.toggle('hide', x !== id); }); }
+  function draw() {
+    var left = pool.filter(function (b) { return !seen[b.key]; });
+    for (var tries = 0; tries < 50; tries++) {
+      var a = left[Math.floor(Math.random() * left.length)], b = left[Math.floor(Math.random() * left.length)];
+      if (a && b && a !== b && !(a.na && a.na === b.na)) return [a, b];
+    }
+    return null;
+  }
+  function nextPair() {
+    pair = draw(); locked = false;
+    if (!pair) { finishCup(); return; }
+    pair.forEach(function (b) { seen[b.key] = 1; });
+    $('cupNo').textContent = (round + 1) + ' / ' + MAX;
+    $('cupBar').style.width = (round / MAX * 100) + '%';
+    $('vs').innerHTML = pair.map(function (b, i) {
+      return '<button class="bk" data-i="' + i + '">' + cover(b) + '<div class="t">' + esc(b.title) + '</div><div class="a">' + esc(b.author) + '</div></button>';
+    }).join('');
+  }
+  function startCup() { gtag('event', 'match_cup_start_en'); round = 0; seen = {}; picked = []; pickedAuthors = []; weight = {}; $('out').innerHTML = ''; show('cupPlay'); nextPair(); }
+  function finishCup() {
+    $('cupBar').style.width = '100%';
+    $('shelf').innerHTML = picked.map(function (k) {
+      return '<button class="it" data-king="' + esc(k) + '">' + cover(books[k]) + '<div class="tt">' + esc(books[k].title) + '</div></button>';
+    }).join('');
+    show('cupKing');
+  }
+  $('cupStart').onclick = startCup;
+  $('cupAgain').onclick = startCup;
+  $('cupSkip').onclick = function () { if (!locked) nextPair(); };
+  $('vs').addEventListener('click', function (e) {
+    var t = e.target.closest('.bk'); if (!t || locked) return;
+    locked = true;
+    var i = +t.getAttribute('data-i'), cards = $('vs').children;
+    cards[i].classList.add('won'); cards[1 - i].classList.add('lost');
+    picked.push(pair[i].key); round++;
+    setTimeout(function () { if (round >= MAX) finishCup(); else nextPair(); }, 380);
+  });
+  $('shelf').addEventListener('click', function (e) {
+    var t = e.target.closest('[data-king]'); if (!t) return;
+    var k = t.getAttribute('data-king'), was = t.classList.contains('king');
+    Array.prototype.forEach.call($('shelf').children, function (c) { c.classList.remove('king'); var cr = c.querySelector('.crown'); if (cr) cr.remove(); });
+    weight = {};
+    if (!was) { t.classList.add('king'); t.insertAdjacentHTML('afterbegin', '<span class="crown">Favorite</span>'); weight[k] = 2; }
+  });
+  $('cupGo').onclick = function () { showResults(); };
+
+  /* ---------- 직접 고르기: 담기 ---------- */
+  function renderChips() {
+    $('chips').innerHTML = picked.map(function (k) {
+      return '<li class="chip">' + esc(books[k].title) + '<button data-rm="' + esc(k) + '" aria-label="' + esc(books[k].title) + ' remove">×</button></li>';
+    }).join('') + pickedAuthors.map(function (a) {
+      return '<li class="chip au">✍ ' + esc(authors[a].name) + '<button data-rma="' + esc(a) + '" aria-label="' + esc(authors[a].name) + ' remove">×</button></li>';
+    }).join('');
+    $('count').textContent = total() + ' / ' + MAX + (total() >= MAX ? ' (Full. Remove one to add another)' : '');
+    $('go').disabled = total() < 1;
+  }
+  function toggleBook(k) {
+    var i = picked.indexOf(k);
+    if (i >= 0) picked.splice(i, 1); else if (books[k] && total() < MAX) picked.push(k); else return;
+    renderChips(); renderGrid(false);
+  }
+  function toggleAuthor(a) {
+    var i = pickedAuthors.indexOf(a);
+    if (i >= 0) pickedAuthors.splice(i, 1); else if (authors[a] && total() < MAX) pickedAuthors.push(a); else return;
+    renderChips();
+  }
+  function clearSearch() { $('q').value = ''; $('sug').innerHTML = ''; $('nohit').classList.add('hide'); }
+
+  /* ---------- 직접 고르기: 검색 ---------- */
+  var bigrams = function (s) { var r = {}, n = 0; for (var i = 0; i < s.length - 1; i++) { r[s.substr(i, 2)] = 1; n++; } return { set: r, n: n || 1 }; };
+  var dice = function (a, b) { var c = 0; for (var g in a.set) if (b.set[g]) c++; return 2 * c / (a.n + b.n); };
+
+  $('q').addEventListener('input', function () {
+    var raw = this.value, t = norm(raw);
+    $('nohit').classList.add('hide');
+    if (!t) { $('sug').innerHTML = ''; return; }
+    var hit = Object.keys(books).filter(function (k) { return books[k].tn.indexOf(t) >= 0 || books[k].na.indexOf(t) >= 0; })
+      .sort(function (a, b) { var sa = books[a].tn.indexOf(t) === 0 ? 0 : 1, sb = books[b].tn.indexOf(t) === 0 ? 0 : 1; return sa - sb || books[b].df - books[a].df; }).slice(0, 7);
+    var au = Object.keys(authors).filter(function (a) { return a.indexOf(t) >= 0; })
+      .sort(function (a, b) { return (authorDf[b] || 0) - (authorDf[a] || 0); }).slice(0, 3);
+    if (!hit.length && !au.length) { $('sug').innerHTML = ''; showNoHit(raw, t); return; }
+    $('sug').innerHTML = au.map(function (a) {
+      var n = Object.keys(authors[a].books).length;
+      return '<li><button class="au" data-au="' + esc(a) + '"><span>✍ Pick author ' + esc(authors[a].name) + '<small>' + n + ' book' + (n === 1 ? '' : 's') + ' by this author · read by ' + (authorDf[a] || 0) + ' celeb' + ((authorDf[a] || 0) === 1 ? '' : 's') + '</small></span></button></li>';
+    }).join('') + hit.map(function (k) {
+      var b = books[k], on = picked.indexOf(k) >= 0;
+      return '<li><button data-k="' + esc(k) + '"><span class="th">' + cover(b) + '</span><span>' + (on ? '✓ ' : '') + esc(b.title) + '<small>' + esc(b.author) + ' · ' + esc(b.genre) + ' · read by ' + b.df + '</small></span></button></li>';
+    }).join('');
+  });
+
+  // 못 찾았을 때: 비슷한 제목 → 작가로 고르기 → 인기 책 순으로 길을 열어 준다
+  function showNoHit(raw, t) {
+    var q = bigrams(t.length > 1 ? t : t + t);
+    var near = Object.keys(books).map(function (k) { return { k: k, s: Math.max(dice(q, bigrams(books[k].tn)), dice(q, bigrams(books[k].na)) * 0.9) }; })
+      .filter(function (x) { return x.s >= 0.34; }).sort(function (a, b) { return b.s - a.s; }).slice(0, 4);
+    var top = Object.keys(books).map(function (k) { return books[k]; }).filter(function (b) { return b.hasEn; }).sort(function (a, b) { return b.df - a.df; }).slice(0, 5);
+    var h = '<p><b>“' + esc(raw) + '”</b> is not in any celebrity reading record yet. We can only compare books that celebrities have read.</p>';
+    if (near.length) h += '<p>Did you mean one of these?</p><div class="opts">' + near.map(function (x) { return '<button data-k="' + esc(x.k) + '">' + esc(books[x.k].title) + ' · ' + esc(books[x.k].author) + '</button>'; }).join('') + '</div>';
+    h += '<p style="margin-top:10px">Try this</p><ol style="margin:0 0 6px 18px;padding:0"><li>Type just part of the title or the author name</li><li>Pick a book with a similar feel from “Books celebrities read the most” below</li></ol>' +
+      '<div class="opts">' + top.map(function (b) { return '<button data-k="' + esc(b.key) + '">' + esc(b.title) + '</button>'; }).join('') + '</div>';
+    $('nohit').innerHTML = h; $('nohit').classList.remove('hide');
+  }
+
+  /* ---------- 직접 고르기: 많이 읽은 책 ---------- */
+  var gSel = ALL, shown = PAGE;
+  function listFor(g) {
+    return Object.keys(books).map(function (k) { return books[k]; })
+      .filter(function (b) { return b.hasEn && b.df >= 2 && (g === ALL || b.genre === g); })
+      .sort(function (a, b) { return b.df - a.df || (a.title < b.title ? -1 : 1); });
+  }
+  function renderGenres() {
+    var cnt = {}; listFor(ALL).forEach(function (b) { cnt[b.genre] = (cnt[b.genre] || 0) + 1; });
+    var gs = Object.keys(cnt).sort(function (a, b) { return (a === 'Other') - (b === 'Other') || cnt[b] - cnt[a]; });
+    $('gen').innerHTML = [ALL].concat(gs).map(function (g) {
+      return '<button data-g="' + esc(g) + '" aria-pressed="' + (g === gSel) + '">' + esc(g) + '<small>' + (g === ALL ? listFor(ALL).length : cnt[g]) + '</small></button>';
+    }).join('');
+  }
+  function renderGrid(reset) {
+    if (reset) shown = PAGE;
+    var all = listFor(gSel);
+    $('grid').innerHTML = all.slice(0, shown).map(function (b) {
+      return '<button class="pk' + (picked.indexOf(b.key) >= 0 ? ' on' : '') + '" data-k="' + esc(b.key) + '"><span class="n">' + b.df + '</span>' + cover(b) +
+        '<div class="t">' + esc(b.title) + '</div><div class="w">' + esc(b.author) + '</div></button>';
+    }).join('');
+    $('more').classList.toggle('hide', all.length <= shown);
+  }
+  $('gen').addEventListener('click', function (e) { var t = e.target.closest('[data-g]'); if (!t) return; gSel = t.getAttribute('data-g'); renderGenres(); renderGrid(true); });
+  $('more').onclick = function () { shown += PAGE; renderGrid(false); };
+
+  document.addEventListener('click', function (e) {
+    var t = e.target.closest('#manual [data-k]');
+    if (t) {
+      var fromSearch = t.closest('#sug') || t.closest('#nohit'), k = t.getAttribute('data-k');
+      if (!(fromSearch && picked.indexOf(k) >= 0)) toggleBook(k);   // 검색에서는 추가만 한다
+      if (fromSearch) clearSearch();
+      return;
+    }
+    var a = e.target.closest('[data-au]'); if (a) { if (pickedAuthors.indexOf(a.getAttribute('data-au')) < 0) toggleAuthor(a.getAttribute('data-au')); clearSearch(); return; }
+    var r = e.target.closest('[data-rm]'); if (r) { picked = picked.filter(function (k) { return k !== r.getAttribute('data-rm'); }); renderChips(); renderGrid(false); return; }
+    var ra = e.target.closest('[data-rma]'); if (ra) { pickedAuthors = pickedAuthors.filter(function (x) { return x !== ra.getAttribute('data-rma'); }); renderChips(); }
+  });
+  $('go').onclick = function () { showResults(); };
+
+  /* ---------- 공유 ---------- */
+  function hash(str) { var h = 2166136261; for (var i = 0; i < str.length; i++) { h ^= str.charCodeAt(i); h = Math.imul(h, 16777619) >>> 0; } return h.toString(36); }
+  function shareUrl() {
+    var tok = picked.map(function (k) { return (weight[k] ? 'k' : 'b') + hash(k); })
+      .concat(pickedAuthors.map(function (a) { return 'a' + hash(a); })).join('.');
+    return location.origin + location.pathname + '?s=' + tok + '&utm_source=match_share&utm_medium=viral';
+  }
+  function shareBlock(top1, t1, p1) {
+    lastShare = {
+      title: 'Which Celebrity Reads Like You?',
+      text: 'The celebrity who reads like me is ' + top1.c.name + '! (' + p1 + '% overlap) ' + t1.tag + '\nWho do you match? 👇',
+      url: shareUrl()
+    };
+    return '<div class="box share"><button class="btn" id="shareBtn">📤 Share my result</button><small id="shareMsg">Send it to a friend and they can try it right away</small></div>';
+  }
+  function restoreShared() {
+    var m = /[?&]s=([0-9a-z.]+)/.exec(location.search); if (!m) return;
+    var hb = {}, ha = {};
+    Object.keys(books).forEach(function (k) { hb[hash(k)] = k; });
+    Object.keys(authors).forEach(function (a) { ha[hash(a)] = a; });
+    picked = []; pickedAuthors = []; weight = {};
+    m[1].split('.').slice(0, MAX).forEach(function (t) {
+      var kind = t.charAt(0), id = t.slice(1);
+      if ((kind === 'b' || kind === 'k') && hb[id] && picked.indexOf(hb[id]) < 0) { picked.push(hb[id]); if (kind === 'k') weight[hb[id]] = 2; }
+      else if (kind === 'a' && ha[id] && pickedAuthors.indexOf(ha[id]) < 0) pickedAuthors.push(ha[id]);
+    });
+    if (!total()) return;   // 깨진 링크는 무시하고 처음 화면을 보여 준다
+    isShared = true; document.body.classList.add('shared'); showResults();
+  }
+  document.addEventListener('click', function (e) {
+    var sb = e.target.closest('#shareBtn');
+    if (sb && lastShare) {
+      gtag('event', 'match_share_click_en');
+      var done = function (msg) { $('shareMsg').textContent = msg; };
+      if (navigator.share) { navigator.share(lastShare).catch(function () {}); }
+      else if (navigator.clipboard) { navigator.clipboard.writeText(lastShare.text + '\n' + lastShare.url).then(function () { done('Copied! Paste it to a friend 💌'); }, function () { done(lastShare.url); }); }
+      else { done(lastShare.url); }
+      return;
+    }
+    if (e.target.closest('[data-try]')) {
+      isShared = false; document.body.classList.remove('shared'); picked = []; pickedAuthors = []; weight = {};
+      history.replaceState(null, '', location.pathname); $('out').innerHTML = ''; tab('cup'); window.scrollTo(0, 0); return;
+    }
+    var ev = e.target.closest('[data-ev]'); if (ev) gtag('event', 'match_' + ev.getAttribute('data-ev'));
+  });
+
+  /* ---------- 결과 ---------- */
+  function showResults() {
+    var uw = 0;
+    picked.forEach(function (k) { uw += wt(k) * Math.pow(idf(books[k].df), 2); });
+    pickedAuthors.forEach(function (a) { uw += 0.5 * Math.pow(idf(authorDf[a] || 1), 2); });
+    var rows = celebs.map(function (c) {
+      var shared = [], sameAuth = [], authHit = [], dot = 0;
+      picked.forEach(function (k) {
+        if (c.keys.has(k)) { shared.push(k); dot += wt(k) * Math.pow(idf(books[k].df), 2); }
+        else {
+          var ha = books[k].nas.filter(function (a) { return c.authors.has(a) && pickedAuthors.indexOf(a) < 0; })[0];
+          if (ha) { sameAuth.push({ k: k, a: ha }); dot += wt(k) * 0.35 * idf(books[k].df) * idf(authorDf[ha] || 1); }
+        }
+      });
+      pickedAuthors.forEach(function (a) { if (c.authors.has(a)) { authHit.push(a); dot += 0.5 * Math.pow(idf(authorDf[a] || 1), 2); } });
+      if (!dot) return null;
+      var cw = 0; c.keys.forEach(function (k) { cw += Math.pow(idf(books[k].df), 2); });
+      var cos = dot / Math.sqrt(uw * cw);
+      // 내 선택이 얼마나 겹쳤나를 우선하고, 책장이 작아 우연히 맞은 사람은 cos 로 가려낸다
+      return { c: c, shared: shared, sameAuth: sameAuth, authHit: authHit, score: (dot / uw) * (0.7 + 0.3 * cos) };
+    }).filter(Boolean).sort(function (a, b) { return (b.shared.length + b.authHit.length) - (a.shared.length + a.authHit.length) || b.score - a.score; });
+
+    var again = isShared
+      ? '<button class="btn" data-try="1">Try it yourself →</button>'
+      : '<button class="btn ghost" onclick="document.getElementById(\'tabCup\').click();document.getElementById(\'cupStart\').click()">Play again</button>';
+    if (!rows.length) { $('out').innerHTML = '<p class="empty">No celebrity has read your picks yet. Try choosing again.</p>' + again; return; }
+    var n = total();
+    // 일치율별 한 줄 — 고른 게 5개 미만이면 우연히 100%가 나오기 쉬워서 최상위 문구는 아끼고 정확도 안내를 붙인다
+    var TIERS = [
+      { min: 0.8, tag: 'Is that really you? 🫢', line: 'practically a copy-paste', cls: 'hot' },
+      { min: 0.5, tag: 'Book Mates 👯', line: 'pulled from the same shelf', cls: 'hot' },
+      { min: 0.4, tag: 'Book Mate Candidate 🤝', line: 'you could start a book club', cls: '' },
+      { min: 0.2, tag: 'Quiet Kindred Spirits 👀', line: 'more overlap than you would think', cls: '' },
+      { min: 0,   tag: 'Common Ground Found 🔍', line: 'you clicked on this one', cls: '' }
+    ];
+    var tierOf = function (rate) {
+      var t = TIERS.filter(function (x) { return rate >= x.min; })[0];
+      if (n < 2 && t === TIERS[0]) t = TIERS[2];       // 1개만 골랐으면 '본인' · '독서 메이트'는 아낀다
+      if (n < 2 && t === TIERS[1]) t = TIERS[2];
+      return t;
+    };
+    var rateOf = function (r) { return (r.shared.length + r.authHit.length) / n; };
+    var top1 = rows[0], t1 = tierOf(rateOf(top1)), p1 = Math.round(rateOf(top1) * 100);
+    var headline = '<div class="hl ' + t1.cls + '"><div class="hl-tag">' + t1.tag + '</div>' +
+      '<div class="hl-name">' + esc(top1.c.name) + '</div>' +
+      '<div class="hl-sub">' + (isShared ? 'Your friend’s' : 'Your') + ' reading taste overlaps <b>' + p1 + '%</b> · ' + t1.line + '</div>' +
+      (n < 2 ? '<div class="hl-hint">💡 Pick 2 or more for a more accurate match</div>' : '') + '</div>';
+    var card = function (r, i) {
+      var why = [], m = r.shared.length + r.authHit.length, rate = rateOf(r), t = tierOf(rate);
+      r.authHit.forEach(function (a) { why.push('Author ' + esc(authors[a].name) + ' · ' + esc((r.c.byAuthor[a] || []).slice(0, 3).join(', '))); });
+      if (r.sameAuth.length) why.push('Same author · ' + r.sameAuth.map(function (x) { return esc(authors[x.a].name); }).filter(function (v, j, y) { return y.indexOf(v) === j; }).join(', '));
+      return '<article class="box"><div class="res"><div class="rank">' + (i + 1) + '</div>' +
+        (r.c.img ? '<img class="pic" src="' + esc(r.c.img) + '" alt="' + esc(r.c.name) + '" loading="lazy" referrerpolicy="no-referrer">' : '') +
+        '<div><h3>' + (r.c.url ? '<a href="' + esc(r.c.url) + '">' + esc(r.c.name) + '</a>' : esc(r.c.name)) + '</h3>' +
+        '<span class="pct">' + t.tag + '</span> <span class="pct2">' + Math.round(rate * 100) + '%</span>' +
+        '<p class="said"><b>' + esc(r.c.name) + '</b> has read <b>' + m + '</b> of ' + (isShared ? 'your friend’s ' : 'your ') + n + ' pick' + (n === 1 ? '' : 's') + '</p>' +
+        (why.length ? '<p class="why">' + why.join('<br>') + '</p>' : '') + '</div></div>' +
+        (r.shared.length ? '<div class="shared">' + r.shared.map(function (k) { return '<div class="m">' + cover(books[k]) + esc(books[k].title) + '</div>'; }).join('') + '</div>' : '') +
+        '</article>';
+    };
+    // 5위와 일치 개수가 같은 동률은 더보기로 펼친다 (TOP 5 바깥에서 잘리는 사람 방지)
+    var TOP_N = 5, tieEnd = Math.min(rows.length, TOP_N);
+    if (rows.length > TOP_N) {
+      var cut = rateOf(rows[TOP_N - 1]);
+      while (tieEnd < rows.length && rateOf(rows[tieEnd]) === cut) tieEnd++;
+    }
+    var tieCnt = tieEnd - TOP_N;
+    $('out').innerHTML = headline + '<h2 style="margin:22px 0 0">Top ' + Math.min(TOP_N, rows.length) + ' celebrities who read like you</h2>' +
+      rows.slice(0, TOP_N).map(card).join('') +
+      (tieCnt > 0 ? '<div id="tieBox" hidden>' + rows.slice(TOP_N, tieEnd).map(function (r, i) { return card(r, TOP_N + i); }).join('') + '</div>' +
+        '<button class="btn ghost" id="tieMore" type="button">Show ' + tieCnt + ' more tied with #5 ▾</button>' : '') +
+      shareBlock(top1, t1, p1) + again;
+    var tieBtn = $('tieMore');
+    if (tieBtn) tieBtn.addEventListener('click', function () {
+      $('tieBox').hidden = false; tieBtn.remove(); gtag('event', 'match_tie_more_en', { extra: tieCnt });
+    });
+    if (isShared) $('out').insertAdjacentHTML('afterbegin', '<div class="sharedbar">💌 A friend shared this result. Which celebrity reads like you?</div>');
+    gtag('event', isShared ? 'match_view_shared_en' : 'match_result_en', { top1: top1.c.name, picks: n, rate: p1 });
+    $('out').scrollIntoView({ behavior: 'smooth' });
+  }
+})();
+</script>
+<script src="../../../assets/v2/search.js" defer></script>
+</body>
+</html>
