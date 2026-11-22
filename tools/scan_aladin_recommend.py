@@ -37,7 +37,7 @@ def scan(i):
 
 def main():
     ap = argparse.ArgumentParser()
-    ap.add_argument("--start", type=int, required=True); ap.add_argument("--end", type=int, required=True)
+    ap.add_argument("--start", type=int); ap.add_argument("--end", type=int)
     ap.add_argument("--threads", type=int, default=6)
     ap.add_argument("--out", default="data/aladin_recommend_new.csv")
     ap.add_argument("--daily", type=int, default=0, help="하루치: 상태 파일의 큐 앞에서 N개만")
@@ -45,6 +45,7 @@ def main():
     ap.add_argument("--hits", default="data/aladin_scan_hits.jsonl")
     a = ap.parse_args()
     if a.daily: return daily(a)
+    if a.start is None or a.end is None: ap.error("--start/--end 또는 --daily 가 필요합니다")
     done = set()
     if os.path.exists(LOG):
         for l in open(LOG, encoding="utf-8"):
