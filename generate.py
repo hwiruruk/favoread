@@ -6876,7 +6876,7 @@ en_index_jsonld = json.dumps({
     '@context': 'https://schema.org',
     '@type': 'WebSite',
     'name': 'Favorbook',
-    'alternateName': ['Favorbook English', 'K-pop Idol Books', 'K-Drama Actor Books',
+    'alternateName': ['Favorbook English', '推しの読書', 'K-pop Idol Books', 'K-Drama Actor Books',
                       'Korean Celebrity Book Archive'],
     'url': EN_BASE,
     'description': 'What Korean stars are reading — K-pop idols (BTS, IVE, SEVENTEEN, NewJeans), K-drama and K-movie actors, directors and musicians, with the interview, YouTube or SNS source behind every book.',
