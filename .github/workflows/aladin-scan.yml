@@ -1,0 +1,50 @@
+name: Aladin Recommend Scan
+
+# 알라딘 '저자의 추천' 수집을 하루에 조금씩(기본 4000개 번호) 이어서 훑는다.
+# 우리 리스트에 없는 한국 배우·가수의 추천사를 data/aladin_recommend_new.csv 에 모은다.
+# 서버에 부담이 가지 않게 동시 요청 4개, 요청마다 짧게 쉰다. 사이트에는 영향 없음(경로 필터에 안 걸림).
+# 상태는 data/aladin_scan_state.json 의 queue 로 관리한다. 설명은 tools/scan_aladin_recommend.py 참고.
+
+on:
+  schedule:
+    - cron: '40 19 * * *'   # 한국 시간 새벽 4시 40분
+  workflow_dispatch:
+    inputs:
+      count:
+        description: '이번에 볼 번호 수'
+        required: false
+        default: '4000'
+
+concurrency:
+  group: aladin-scan
+  cancel-in-progress: false
+
+jobs:
+  scan:
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    permissions:
+      contents: write
+
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: actions/setup-python@v6
+        with:
+          python-version: '3.12'
+
+      - name: 하루치 훑기
+        run: |
+          COUNT="${{ github.event.inputs.count }}"
+          python3 tools/scan_aladin_recommend.py --daily "${COUNT:-4000}" --threads 4
+
+      - name: 결과 커밋
+        run: |
+          if git diff --quiet -- data/aladin_scan_state.json data/aladin_scan_hits.jsonl data/aladin_recommend_new.csv; then
+            echo "바뀐 게 없습니다"; exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add data/aladin_scan_state.json data/aladin_scan_hits.jsonl data/aladin_recommend_new.csv
+          git commit -m "chore: 알라딘 추천사 스캔 (하루치)"
+          for i in 1 2 3; do git pull --rebase origin main && git push origin HEAD:main && break || sleep 5; done
