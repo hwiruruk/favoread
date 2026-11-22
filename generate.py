@@ -7362,7 +7362,7 @@ en_index = (
     '    </p>\n'
     '    <p class="text-sm md:text-base font-bold leading-relaxed text-ink word-break-keep">\n'
     '      Only recommendations with a verified source (YouTube, interviews, SNS) are listed.<br>\n'
-    '      If you know a book your bias has read that isn\'t here yet, please <a href="https://forms.gle/Sd3ZQTahZNbUjbdz7" target="_blank" rel="noopener" class="underline decoration-2">let us know here</a>. We\'ll check it and add it :D<br>\n'
+    '      If you know a book your bias has read that isn\'t here yet, please <a href="https://forms.gle/Sd3ZQTahZNbUjbdz7" target="_blank" rel="noopener" class="underline decoration-2">let us know here</a>. We\'ll check it and add it. 😆<br>\n'
     '      Names follow <a href="https://kpop.fandom.com/" target="_blank" rel="noopener" class="underline decoration-2">Kpop Wiki</a> / <a href="https://www.imdb.com/" target="_blank" rel="noopener" class="underline decoration-2">IMDb</a> conventions.\n'
     '    </p>\n'
     + ('    <p class="text-xs sm:text-sm font-bold leading-relaxed text-muted word-break-keep mt-4 pt-3 border-t-2 border-ink/20">\n'
