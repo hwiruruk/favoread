@@ -1876,6 +1876,7 @@ function renderPublishDialog() {
 function openPublishDialog() {
   if (!State.dirty && !State.hasDraft) { toast('발행할 변경이 없습니다', 'ok'); return; }
   $('#pubMessage').value = '';
+  $('#pubGhost').checked = false;   // 고스트는 매번 직접 켠다 — 실수로 이어지지 않게
   setPubStatus('');
   renderPublishDialog();
   publishDlg.showModal();
@@ -1896,7 +1897,9 @@ async function publish() {
       setPubStatus('드래프트에 보관하는 중…');
       if (!(await saveDraft({ quiet: true }))) { setPubStatus(''); return; }
     }
-    const message = $('#pubMessage').value.trim() || `편집기에서 발행 (${stamp()})`;
+    // 고스트 발행이면 커밋 메시지 앞에 [ghost]를 단다 — generate.py가 이 커밋은 업데이트 내역에서 뺀다
+    const typed = ($('#pubMessage').value.trim() || `편집기에서 발행 (${stamp()})`).replace(/^\[ghost\]\s*/i, '');
+    const message = $('#pubGhost').checked ? `[ghost] ${typed}` : typed;
 
     // 2. 그새 발행본이 바뀌었으면(다른 사람 발행, 봇 PR 머지) 편집본에 합친다
     const head = await Gh.branchHead(Config.branch);

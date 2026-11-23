@@ -1476,6 +1476,10 @@ def build_updates_entries(limit=80):
             sha, ts, msg = line.split('|', 2)
         except ValueError:
             continue
+        # 고스트 발행([ghost] 머리말)은 사이트 내용에는 들어가지만 업데이트 내역·NEW 표시에서는 뺀다.
+        # 커밋별 diff라서, 빠진 커밋이 넣은 책은 다음 커밋에서도 '새 책'으로 다시 잡히지 않는다.
+        if re.match(r'\[ghost\]', msg.strip(), re.IGNORECASE):
+            continue
         cur_pairs = _parse_csv_pairs(_git_blob_csv(sha))
         par = subprocess.run(
             ['git', 'rev-parse', f'{sha}^'],
