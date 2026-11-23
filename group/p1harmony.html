@@ -113,6 +113,12 @@
     .gb-w a { font-size: 11px; font-weight: 700; color: var(--on-yellow, #111); background: #ffe58a; border: 1px solid var(--border); padding: 0 6px; border-radius: 99px; line-height: 1.6; }
     .gb-l { display: inline-block; margin-top: 4px; font-size: 11px; font-weight: 600; }
     footer { margin-top: 40px; padding-top: 16px; border-top: 1px solid var(--border); font-size: 12px; color: var(--soft); }
+    .heart-row { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; }
+    .copy-btn { display: inline-flex; align-items: center; gap: 6px; padding: 7px 14px; border: 1px solid var(--border); background: #fde047; box-shadow: none; font-family: inherit; font-size: 14px; font-weight: 800; color: var(--on-yellow); cursor: pointer; transition: transform .1s, box-shadow .1s, background .1s; }
+    .copy-btn:hover { transform: translate(-1px,-1px); box-shadow: none; background: var(--hover); }
+    .copy-btn:active { transform: none; box-shadow: none; }
+    .copy-btn.done { background: var(--card); }
+    .group-actions { margin: 14px 0 0; }
   </style>
   <link rel="stylesheet" href="https://favorbook.co.kr/assets/fonts/space-grotesk.css">
   <link rel="stylesheet" href="https://favorbook.co.kr/assets/fonts/kopubworld.css">
@@ -132,6 +138,7 @@
     <h1>피원하모니 멤버들이 읽은 책</h1>
     <p>피원하모니 멤버 3명이 읽거나 추천한 책 <strong>64권</strong>, 그중 4권은 여러 멤버가 함께 읽었어요. 책마다 인터뷰·유튜브·SNS 출처를 확인할 수 있어요.</p>
       </div>
+  <p class="heart-row group-actions"><button type="button" class="heart-btn" data-heart="g:피원하모니" aria-pressed="false" aria-label="피원하모니에게 하트" title="피원하모니에게 하트" hidden><span class="heart-ico" aria-hidden="true">♡</span><span class="heart-n"></span></button><button class="copy-btn" type="button" data-url="https://favorbook.co.kr/group/p1harmony.html" data-done="복사했어요!" title="https://favorbook.co.kr/group/p1harmony.html">🔗 공유 링크 복사</button></p>
   <h2>멤버별로 보기</h2>
   <ul class="members" id="members">
     <li><button type="button" class="gm on" data-m="" aria-pressed="true">
@@ -614,11 +621,34 @@
       <a class="gb-t" href="https://www.yes24.com/product/goods/79941819" rel="nofollow noopener noreferrer" target="_blank">혼자일 때도 괜찮은 사람</a>
       <span class="gb-a">권미선</span>
       <span class="gb-w"><a href="https://favorbook.co.kr/share/%EC%A7%80%EC%9B%85%28%ED%94%BC%EC%9B%90%ED%95%98%EB%AA%A8%EB%8B%88%29.html">지웅</a></span>
+      <a class="gb-l" href="https://favorbook.co.kr/share/book/%ED%98%BC%EC%9E%90%EC%9D%BC%20%EB%95%8C%EB%8F%84%20%EA%B4%9C%EC%B0%AE%EC%9D%80%20%EC%82%AC%EB%9E%8C.html">읽은 사람 모두 보기</a>
     </li>
   </ul>
   <footer>
     <p>공개된 인터뷰·방송·SNS를 바탕으로 정리했어요. <a href="https://favorbook.co.kr/">다른 셀럽·아이돌이 읽은 책 보기 →</a></p>
   </footer>
+  <script>
+  document.querySelectorAll(".copy-btn").forEach(function (b) {
+    b.addEventListener("click", function () {
+      var u = b.dataset.url, was = b.textContent;
+      function done() {
+        b.textContent = b.dataset.done; b.classList.add("done");
+        setTimeout(function () { b.textContent = was; b.classList.remove("done"); }, 1600);
+      }
+      function fallback() {
+        var ta = document.createElement("textarea");
+        ta.value = u; ta.style.cssText = "position:fixed;top:-9999px;left:-9999px";
+        document.body.appendChild(ta); ta.focus(); ta.select();
+        try { document.execCommand("copy"); done(); } catch (e) { prompt(was, u); }
+        document.body.removeChild(ta);
+      }
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(u).then(done, fallback);
+      } else { fallback(); }
+    });
+  });
+  </script>
+  <script src="https://favorbook.co.kr/assets/hearts.js" defer></script>
   <script>
   (function () {
     var chips = document.querySelectorAll(".gm"), cards = document.querySelectorAll(".gb"),

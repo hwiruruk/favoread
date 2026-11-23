@@ -1876,6 +1876,7 @@ function renderPublishDialog() {
 function openPublishDialog() {
   if (!State.dirty && !State.hasDraft) { toast('발행할 변경이 없습니다', 'ok'); return; }
   $('#pubMessage').value = '';
+  $('#pubGhost').checked = false;   // 고스트는 매번 직접 켠다 — 실수로 이어지지 않게
   setPubStatus('');
   renderPublishDialog();
   publishDlg.showModal();
@@ -1896,7 +1897,9 @@ async function publish() {
       setPubStatus('드래프트에 보관하는 중…');
       if (!(await saveDraft({ quiet: true }))) { setPubStatus(''); return; }
     }
-    const message = $('#pubMessage').value.trim() || `편집기에서 발행 (${stamp()})`;
+    // 고스트 발행이면 커밋 메시지 앞에 [ghost]를 단다 — generate.py가 이 커밋은 업데이트 내역에서 뺀다
+    const typed = ($('#pubMessage').value.trim() || `편집기에서 발행 (${stamp()})`).replace(/^\[ghost\]\s*/i, '');
+    const message = $('#pubGhost').checked ? `[ghost] ${typed}` : typed;
 
     // 2. 그새 발행본이 바뀌었으면(다른 사람 발행, 봇 PR 머지) 편집본에 합친다
     const head = await Gh.branchHead(Config.branch);
@@ -2836,11 +2839,34 @@ $('#realSaveBtn').addEventListener('click', saveReal);
  * tools/fetch_aladin_recommend.py 가 알라딘 '저자의 추천'에서 모은 셀럽 추천사.
  * 사이트에는 나가지 않고, 책·코멘트를 채울 때 참고만 한다. 저장·커밋 없음. */
 const ALA_PATH = 'data/aladin_recommend.csv';
+const ALA_NEW_PATH = 'data/aladin_recommend_new.csv';
+const ALA_HIDDEN_PATH = 'data/aladin_hidden.json';   // 여기서 삭제한 추천사 기록 (재수집돼도 다시 안 나오게)
 const ALA_PAGE = 30;
 const alaDlg = $('#alaDialog');
-const _ala = { rows: null, shown: ALA_PAGE };
+const _ala = { rows: null, shown: ALA_PAGE, hidden: new Map(), hiddenSha: null, queue: Promise.resolve() };
 
 function setAlaStatus(msg) { $('#alaStatus').textContent = msg || ''; }
+
+// 추천사 한 건을 식별하는 키 (셀럽 + 도서명 + 출처). 두 CSV 모두 같은 열 이름을 쓴다.
+function alaKey(r) { return [r['연예인'], r['도서명'], r['출처']].join('\u0001'); }
+
+// 삭제 기록을 data/aladin_hidden.json 으로 커밋한다. 요청은 한 줄로 세워 순서대로 보낸다.
+function saveAlaHidden() {
+  _ala.queue = _ala.queue.then(async () => {
+    const items = [..._ala.hidden.values()];
+    const now = new Date();
+    const pad = (x) => String(x).padStart(2, '0');
+    const doc = { _updated: `${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())}`, items };
+    const last = items[items.length - 1];
+    const content = JSON.stringify(doc, null, 2) + '\n';
+    const { sha } = await Gh.putFile({
+      content, sha: _ala.hiddenSha, path: ALA_HIDDEN_PATH,
+      message: `알라딘 추천사 삭제 — ${last['연예인']} · ${last['도서명']}`,
+    });
+    _ala.hiddenSha = sha;
+  });
+  return _ala.queue;
+}
 
 async function openAlaDialog() {
   if (!Config.token) { toast('GitHub Token을 먼저 설정하세요', 'err'); settingsDlg.showModal(); return; }
@@ -2850,9 +2876,20 @@ async function openAlaDialog() {
     setAlaStatus('불러오는 중…');
     try {
       const { content } = await Gh.getFile(ALA_PATH, { allowMissing: true });
+      const extra = await Gh.getFile(ALA_NEW_PATH, { allowMissing: true });
+      const hid = await Gh.getFile(ALA_HIDDEN_PATH, { allowMissing: true });
       if (!content) { setAlaStatus(''); $('#alaList').innerHTML = '<li class="muted small">아직 발행 브랜치에 data/aladin_recommend.csv 가 없어요. 머지 후 다시 열어 보세요.</li>'; return; }
       const parsed = Papa.parse(content.replace(/^\ufeff/, ''), { header: true, skipEmptyLines: true });
       _ala.rows = parsed.data;
+      if (extra.content) {   // 우리 리스트에 없는 사람 (이름 열이 '이름')
+        Papa.parse(extra.content.replace(/^\ufeff/, ''), { header: true, skipEmptyLines: true }).data
+          .forEach(r => { r['연예인'] = r['이름']; _ala.rows.push(r); });
+      }
+      _ala.hiddenSha = hid.sha;
+      _ala.hidden = new Map();
+      if (hid.content) {
+        (JSON.parse(hid.content).items || []).forEach(x => _ala.hidden.set(alaKey(x), x));
+      }
       setAlaStatus(`${_ala.rows.length}건`);
     } catch (err) {
       setAlaStatus('');
@@ -2876,9 +2913,11 @@ function alaVisible() {
   const q = $('#alaSearch').value.trim().toLowerCase();
   const f = $('#alaFilter').value;
   return (_ala.rows || []).filter(r => {
+    if (_ala.hidden.has(alaKey(r))) return false;
     if (q && !`${r['연예인']} ${r['도서명']} ${r['저자']} ${r['추천사']}`.toLowerCase().includes(q)) return false;
     if (f === 'clean') return !r['확인필요'];
     if (f === 'flag') return !!r['확인필요'];
+    if (f === 'newceleb') return !State.celebs.has(r['연예인']);
     if (f === 'new') return !alaRegistered(r);
     if (f === 'registered') return alaRegistered(r);
     return true;
@@ -2896,7 +2935,7 @@ function renderAla() {
         <div class="bios-head">
           <b>${esc(r['연예인'])}</b>
           <span class="muted small">${esc(r['직업'])}</span>
-          <span class="badge">${reg ? '등록됨' : '새 책'}</span>
+          <span class="badge">${State.celebs.has(r['연예인']) ? (reg ? '등록됨' : '새 책') : '새 셀럽'}</span>
           ${r['확인필요'] ? `<span class="badge draft">확인필요 · ${esc(r['확인필요'])}</span>` : ''}
           <button type="button" class="btn small bios-reset ala-open">셀럽 열기</button>
         </div>
@@ -2906,6 +2945,8 @@ function renderAla() {
         <div class="small" style="margin-top:4px">
           <a href="${esc(r['출처'])}" target="_blank" rel="noopener noreferrer">알라딘 출처</a>
           · <a href="#" class="ala-copy">추천사 복사</a>
+          ${reg ? '' : '· <a href="#" class="ala-add">+ 책 추가(메모 포함)</a>'}
+          · <a href="#" class="ala-del" style="color:#b42318">🗑 삭제</a>
         </div>
       </li>`;
   }).join('') || '<li class="muted small">조건에 맞는 항목이 없습니다.</li>';
@@ -2920,11 +2961,49 @@ $('#alaList').addEventListener('click', async (e) => {
     if (!State.celebs.has(name)) { toast('편집기에 없는 셀럽이에요', 'err'); return; }
     alaDlg.close();
     selectCeleb(name);
+  } else if (e.target.classList.contains('ala-add')) {
+    e.preventDefault();
+    const r = alaVisible().slice(0, _ala.shown)[Number(li.dataset.i)];
+    const name = r['연예인'];
+    let c = State.celebs.get(name);
+    if (!c) {
+      c = { name, name_en: '', img: '', books: [] };
+      State.celebs.set(name, c); State.order.push(name);
+    }
+    if (alaRegistered(r)) { toast('이미 등록된 책이에요', 'err'); return; }
+    c.books.push({
+      title: r['도서명'], title_en: '', author: r['저자'], author_en: '',
+      publisher: r['출판사'], source: r['출처'], link: '', cover: '', comment: '',
+    });
+    sortBooks(c.books);
+    setDirty(true);
+    renderSidebar();
+    renderAla();
+    await saveBookMemo(name, r['도서명'], r['추천사'], r['출처']);
+    toast(`${name} · ${r['도서명']} 추가됨 — 도서 정보·표지는 책 편집에서 채우세요`, 'ok');
   } else if (e.target.classList.contains('ala-copy')) {
     e.preventDefault();
     const r = alaVisible().slice(0, _ala.shown)[Number(li.dataset.i)];
     try { await navigator.clipboard.writeText(r['추천사']); toast('추천사를 복사했어요', 'ok'); }
     catch { toast('복사하지 못했어요', 'err'); }
+  } else if (e.target.classList.contains('ala-del')) {
+    e.preventDefault();
+    const r = alaVisible().slice(0, _ala.shown)[Number(li.dataset.i)];
+    if (!confirm(`'${r['연예인']} · ${r['도서명']}' 추천사를 목록에서 삭제할까요?\n\n삭제 기록은 data/aladin_hidden.json 에 저장되어 다음에도 나오지 않아요.`)) return;
+    const k = alaKey(r);
+    _ala.hidden.set(k, { 연예인: r['연예인'], 도서명: r['도서명'], 출처: r['출처'] });
+    renderAla();
+    setAlaStatus('삭제 저장 중…');
+    try {
+      await saveAlaHidden();
+      setAlaStatus(`${_ala.rows.length}건 · 삭제 ${_ala.hidden.size}건`);
+      toast(`${r['연예인']} · ${r['도서명']} 삭제됨`, 'ok');
+    } catch (err) {
+      _ala.hidden.delete(k);   // 저장 실패 → 목록에 되돌림
+      setAlaStatus(`${_ala.rows.length}건`);
+      renderAla();
+      toast('삭제 저장 실패: ' + err.message, 'err');
+    }
   }
 });
 $('#alaSearch').addEventListener('input', () => { _ala.shown = ALA_PAGE; renderAla(); });
@@ -3592,6 +3671,11 @@ function parseCmtPaste(text) {
     .map(([key, ko, en, grade, note]) => ({ key, ko, en, grade, note }));
 }
 
+// 문장 끝의 "(출처: …)" / "(Source: …)" 는 붙이지 않는다 — AI가 붙여 와도 여기서 뗀다
+function stripCmtSource(s) {
+  return String(s || '').replace(/\s*[(（]\s*(출처|source)\s*[:：][^)）]*[)）]\s*$/i, '').trim();
+}
+
 $('#cmtApplyPasteBtn').addEventListener('click', () => {
   const rows = parseCmtPaste($('#cmtPaste').value);
   const today = new Date().toISOString().slice(0, 10);
@@ -3599,8 +3683,8 @@ $('#cmtApplyPasteBtn').addEventListener('click', () => {
   for (const r of rows) {
     const it = Cmt.items.get(String(r.key || '').trim());
     if (!it) { miss++; continue; }
-    if (r.ko) it.ko = String(r.ko).trim();
-    if (r.en) it.en = String(r.en).trim();
+    if (r.ko) it.ko = stripCmtSource(r.ko);
+    if (r.en) it.en = stripCmtSource(r.en);
     if (r.grade === 'A' || r.grade === 'B') it.grade = r.grade;
     // 무엇을 보고 다듬었는지 남긴다 — 사람이 문장을 고쳤는지, 그 뒤 메모가 바뀌었는지 가리는 데 쓴다
     it.ai = { memo: (it.memo || '').trim(), ko: it.ko, en: it.en, note: String(r.note || '').trim(), at: today };
@@ -3647,16 +3731,16 @@ const CMT_POLISH_GUIDE = `한국 셀럽의 추천 도서를 모아 보여주는 
 지킬 것
 - memo 가 있으면 근거는 memo 입니다. quote·context 는 고유명사나 사실을 확인하는 데만 쓰고, memo 에 없는 이유나 감상을 지어내지 마세요.
 - memo 가 없고 basis 만 있으면 quote·context 가 근거입니다. 그 대목에 실제로 적힌 이유·감상만 옮기고, 거기 없는 건 지어내지 마세요. 이유가 없고 언급만 있으면 grade "B" 로 관계만 적습니다.
-- ko: 1~2문장, 120자 안팎. 셀럽 이름으로 시작하지 말고 전해 듣는 해요체로 끝냅니다("~했대요", "~했어요", "~래요"). 기사체("~했다", "~밝혔다")는 쓰지 않습니다. 끝에 "(출처: 매체명)".
-- en: ko 와 같은 내용을 자연스러운 영어 한 문장으로. 끝에 "(Source: 매체 영문명)" (씨네21 → Cine21, 보그 → Vogue Korea, 네이버 블로그 → Naver Blog). 매체를 모르면 source 주소로 판단합니다. 셀럽을 "they/them/their" 로 받지 말고, 성별도 짐작하지 마세요(she/he 금지). 대명사 없이 주어를 생략한 문장(예: "Picked on a whim…")으로 쓰거나, 꼭 필요하면 key 의 연예인 이름을 영문 표기로 쓰세요. 서술은 said·mentioned·shared·named 처럼 말한 사실을 밝히는 동사로 합니다.
+- ko: 1~2문장, 120자 안팎. 셀럽 이름으로 시작하지 말고 전해 듣는 해요체로 끝냅니다("~했대요", "~했어요", "~래요"). 기사체("~했다", "~밝혔다")는 쓰지 않습니다. 출처·매체 이야기는 쓰지 않습니다("(출처: …)" 도 붙이지 않습니다).
+- en: ko 와 같은 내용을 자연스러운 영어 한 문장으로. 출처·매체 이야기는 쓰지 않습니다("(Source: …)" 도 붙이지 않습니다). 셀럽을 "they/them/their" 로 받지 말고, 성별도 짐작하지 마세요(she/he 금지). 대명사 없이 주어를 생략한 문장(예: "Picked on a whim…")으로 쓰거나, 꼭 필요하면 key 의 연예인 이름을 영문 표기로 쓰세요. 서술은 said·mentioned·shared·named 처럼 말한 사실을 밝히는 동사로 합니다.
 - memo 가 원문을 길게 붙여넣은 것이면 추천 이유가 담긴 핵심만 추리고, 따옴표 인용을 그대로 옮기지 말고 풀어 씁니다.
 - grade: memo 에 추천 이유·감상이 있으면 "A", 읽었다·언급했다 같은 관계만 있으면 "B". B 면 관계만 담담히 적습니다.
 - note: 검수자가 알아야 할 점(다른 책 얘기 같다, 매체를 알 수 없다 등)을 한 줄로. 없으면 "".
 
 예시
-memo: 교보에서 별생각 없이 골랐는데 모순보다 재밌었다고. 건선으로 잠 못 자던 새벽마다 친구가 돼준 책 / outlet: 보그
-ko: 교보문고에서 별생각 없이 골랐는데 '모순'보다 훨씬 재미있게 읽었대요. 건선으로 잠 못 이루던 새벽마다 친구가 되어준 책이래요. (출처: 보그)
-en: Picked on a whim at Kyobo, it turned out more enjoyable than Contradiction and kept company through sleepless nights with psoriasis, as mentioned in the interview. (Source: Vogue Korea)
+memo: 교보에서 별생각 없이 골랐는데 모순보다 재밌었다고. 건선으로 잠 못 자던 새벽마다 친구가 돼준 책
+ko: 교보문고에서 별생각 없이 골랐는데 '모순'보다 훨씬 재미있게 읽었대요. 건선으로 잠 못 이루던 새벽마다 친구가 되어준 책이래요.
+en: Picked on a whim at Kyobo, it turned out more enjoyable than Contradiction and kept company through sleepless nights with psoriasis.
 
 답은 설명 없이 JSON 배열 하나만 코드 블록으로 주세요. key 는 받은 그대로 둡니다.
 [{"key": "연예인|도서명", "ko": "…", "en": "…", "grade": "A", "note": ""}]

@@ -1405,6 +1405,10 @@ def book_heart_key(title):
     return 'b:' + title.strip()
 
 
+def group_heart_key(name):
+    return 'g:' + name
+
+
 HEART_JS = '  <script src="' + BASE + 'assets/hearts.js" defer></script>\n'
 
 # ── 업데이트 내역 (git log of data.csv) ─────────────────────────────
@@ -1471,6 +1475,10 @@ def build_updates_entries(limit=80):
         try:
             sha, ts, msg = line.split('|', 2)
         except ValueError:
+            continue
+        # 고스트 발행([ghost] 머리말)은 사이트 내용에는 들어가지만 업데이트 내역·NEW 표시에서는 뺀다.
+        # 커밋별 diff라서, 빠진 커밋이 넣은 책은 다음 커밋에서도 '새 책'으로 다시 잡히지 않는다.
+        if re.match(r'\[ghost\]', msg.strip(), re.IGNORECASE):
             continue
         cur_pairs = _parse_csv_pairs(_git_blob_csv(sha))
         par = subprocess.run(
@@ -2406,7 +2414,8 @@ def _v2_bar_nav(lang):
         return ('<a href="' + BASE + 'en/category/kpop-idols.html">Idols</a>'
                 '<a href="' + BASE + 'en/category/k-drama-actors.html">Actors</a>'
                 '<a href="' + BASE + 'en/category/korean-musicians.html">Musicians</a>'
-                '<a href="' + BASE + 'en/share/ranking.html">Ranking</a>')
+                '<a href="' + BASE + 'en/share/ranking.html">Ranking</a>'
+                '<a href="' + BASE + 'en/match/">Book Match</a>')
     return ('<a href="' + BASE + 'recommend/idol.html">아이돌</a><a href="' + BASE + 'recommend/actor.html">배우</a>'
             '<a href="' + BASE + 'author/">작가</a><a href="' + BASE + 'share/ranking.html">랭킹</a>'
             '<a href="' + BASE + 'match/">취향 매칭</a>')
@@ -2455,7 +2464,7 @@ def _v2_bar_html(lang='ko', alt_url='', search=True):
     en = lang == 'en'
     return ('\n  <header class="bar">\n'
             '    <nav aria-label="' + ('Main menu' if en else '주요 메뉴') + '">' + _v2_bar_nav(lang) + '</nav>\n'
-            '    <a class="logo" href="' + BASE + ('en/' if en else '') + '">' + ('Favorbook' if en else '최애의 독서') + '</a>\n'
+            '    <a class="logo" href="' + BASE + ('en/' if en else '') + '">' + '최애의 독서' + '</a>\n'
             '    <div class="right">' + ('<div class="site-search sm"></div>' if search else '')
             + (('<a class="lang" href="' + esc(alt_url) + '" hreflang="' + ('ko' if en else 'en') + '">'
                 + ('한국어' if en else 'EN') + '</a>') if alt_url else '') + '</div>\n'
@@ -3534,7 +3543,7 @@ for name, info in celebs.items():
     intro_p = celeb_answer_html(name, books, page_updated)
     if name in KO_GROUP_OF:
         _kg = KO_GROUP_OF[name]
-        intro_p += (' <a href="' + esc(make_group_url(_kg)) + '">' + esc(_kg['ko'])
+        intro_p += (' <a href="' + esc(make_group_url(_kg)) + '">📚 ' + esc(_kg['ko'])
                     + ' 멤버들이 읽은 책 모아 보기 →</a>')
 
     # 작가 빈도 요약 (간단한 unique 콘텐츠)
@@ -4240,6 +4249,8 @@ for _g in sorted(ko_groups.values(), key=lambda g: g['ko']):
         '    .gb-w a { font-size: 11px; font-weight: 700; color: var(--on-yellow, #111); background: #ffe58a; border: 1.5px solid #000; padding: 0 6px; border-radius: 99px; line-height: 1.6; }\n'
         '    .gb-l { display: inline-block; margin-top: 4px; font-size: 11px; font-weight: 600; }\n'
         '    footer { margin-top: 40px; padding-top: 16px; border-top: 2px solid #000; font-size: 12px; color: #666; }\n'
+        + COPY_BTN_CSS +
+        '    .group-actions { margin: 14px 0 0; }\n'
         '  </style>\n'
         '</head>\n'
         '<body>\n'
@@ -4253,6 +4264,8 @@ for _g in sorted(ko_groups.values(), key=lambda g: g['ko']):
         + '. 책마다 인터뷰·유튜브·SNS 출처를 확인할 수 있어요.</p>\n'
         '    ' + color_note +
         '  </div>\n'
+        '  <p class="heart-row group-actions">' + heart_btn_html(group_heart_key(name), name + '에게 하트')
+        + copy_btn_html(make_group_url(_g)) + '</p>\n'
         '  <h2>멤버별로 보기</h2>\n'
         '  <ul class="members" id="members">\n' + member_cards + '  </ul>\n'
         '  <p class="pick" id="pick"></p>\n'
@@ -4262,6 +4275,7 @@ for _g in sorted(ko_groups.values(), key=lambda g: g['ko']):
         '    <p>공개된 인터뷰·방송·SNS를 바탕으로 정리했어요. '
         '<a href="' + BASE + '">다른 셀럽·아이돌이 읽은 책 보기 →</a></p>\n'
         '  </footer>\n'
+        + COPY_BTN_JS + HEART_JS +
         '  <script>\n'
         '  (function () {\n'
         '    var chips = document.querySelectorAll(".gm"), cards = document.querySelectorAll(".gb"),\n'
@@ -4494,7 +4508,7 @@ def _v2_page(head, eyebrow, h1, lead, hero_extra, sections, alt_url=''):
         '  <header class="bar">\n'
         '    <nav aria-label="' + ('Main menu' if en else '주요 메뉴') + '">' + _v2_nav() + '</nav>\n'
         '    <a class="logo" href="' + (EN_BASE if en else BASE) + '">'
-        + ('Favorbook' if en else '최애의 독서') + '</a>\n'
+        + '최애의 독서' + '</a>\n'
         '    <div class="right"><div class="site-search sm"></div>' + alt + '</div>\n'
         '  </header>\n'
         '  <main>\n'
@@ -5758,7 +5772,7 @@ for name, info in celebs.items():
             'numberOfItems': len(book_items),
             'itemListElement': book_items or None,
         }),
-        'isPartOf': {'@type': 'WebSite', 'name': 'Favorbook', 'url': EN_BASE},
+        'isPartOf': {'@type': 'WebSite', 'name': 'My Bias Book', 'url': EN_BASE},
     })
     breadcrumb_ld = {
         '@context': 'https://schema.org',
@@ -5775,7 +5789,7 @@ for name, info in celebs.items():
         '<head>\n' + GA_TAG +
         '  <meta charset="utf-8">\n'
         '  <meta name="viewport" content="width=device-width, initial-scale=1">\n'
-        '  <title>' + esc(title_text) + ' | Favorbook</title>\n'
+        '  <title>' + esc(title_text) + ' | My Bias Book</title>\n'
         '  <meta name="description" content="' + esc(desc_text) + '">\n'
         '  <meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1">\n'
         '  <meta property="og:title" content="' + esc(title_text) + '">\n'
@@ -5786,7 +5800,7 @@ for name, info in celebs.items():
         '  <meta property="og:url" content="' + esc(page_url) + '">\n'
         '  <meta property="og:type" content="profile">\n'
         '  <meta property="og:locale" content="en_US">\n'
-        '  <meta property="og:site_name" content="Favorbook">\n'
+        '  <meta property="og:site_name" content="My Bias Book">\n'
         '  <meta name="twitter:card" content="summary_large_image">\n'
         '  <meta name="twitter:image" content="' + esc(_og_img) + '">\n'
         '  <link rel="canonical" href="' + esc(page_url) + '">\n'
@@ -5983,14 +5997,30 @@ print(f"✅ /en/ 셀럽 페이지: {len(en_celeb_pages)}개")
 # 영문 책 페이지 (≥2 셀럽 읽은 책 + title_en 검수 완료)
 en_book_pool = [t for t in book_title_en if t in books_with_pages]
 en_book_indexed = set()   # 색인 대상(영문 코멘트 있음) — sitemap에만 싣는다
+# 한국어 제목이 달라도 영문 제목(=영문 주소)이 같으면 같은 책이다 (니체의 말 / 초역 니체의 말).
+# 영문 페이지는 한 장만 만들고, 읽은 셀럽·코멘트는 합친다. 대표는 읽은 사람이 더 많은 쪽.
+en_slug_groups = {}
+for _t, _te in book_title_en.items():
+    if _t in books_with_pages:
+        en_slug_groups.setdefault(safe_en_filename(_te), []).append(_t)
+for _g in en_slug_groups.values():
+    _g.sort(key=lambda t: (-len(book_celebs[t]['celebs']), t))
 for title, t_en in book_title_en.items():
     if title not in books_with_pages:
         continue
-    binfo = book_celebs[title]
     slug = safe_en_filename(t_en)
-    indexable = book_indexable(title, 'en')
+    _siblings = en_slug_groups[slug]
+    if _siblings[0] != title:
+        continue
+    binfo = book_celebs[title]
+    if len(_siblings) > 1:
+        binfo = dict(binfo, celebs=list(dict.fromkeys(c for t in _siblings for c in book_celebs[t]['celebs'])))
+    indexable = any(book_indexable(t, 'en') for t in _siblings)
     ko_indexable = book_indexable(title, 'ko')
-    _notes = {c: (cm_en, src) for c, _cm, cm_en, src in book_notes(title)}
+    _notes = {}
+    for _t in _siblings:
+        for c, _cm, cm_en, src in book_notes(_t):
+            _notes.setdefault(c, (cm_en, src))
     page_url = make_en_book_url(t_en)
     ko_url   = make_book_url(title)
     n_celebs = len(binfo['celebs'])
@@ -6020,12 +6050,17 @@ for title, t_en in book_title_en.items():
     celeb_list = '\n'.join(celeb_items)
 
     def _en_book_links(ts):
+        _seen_slugs = set()
+        ts = [t for t in ts if not (safe_en_filename(book_title_en[t]) in _seen_slugs
+                                    or _seen_slugs.add(safe_en_filename(book_title_en[t])))]
         return '\n'.join(
             '    <li><a href="' + safe_en_filename(book_title_en[t]) + '.html">' + esc(book_title_en[t]) + '</a>'
             + ' <span class="by">(' + esc(t) + ') · ' + str(len(book_celebs[t]['celebs'])) + ' celebrities</span></li>'
             for t in ts)
-    _same = same_author_books(title, en_book_pool)
+    _own = set(_siblings)
+    _same = [t for t in same_author_books(title, en_book_pool) if t not in _own]
     _rel_g, _rel = related_books(title, en_book_pool)
+    _rel = [t for t in _rel if t not in _own]
     en_more_html = ''
     if _same:
         en_more_html += ('  <h2>More by the same author</h2>\n  <ul>\n' + _en_book_links(_same) + '\n  </ul>\n')
@@ -6086,7 +6121,7 @@ for title, t_en in book_title_en.items():
         '<head>\n' + GA_TAG +
         '  <meta charset="utf-8">\n'
         '  <meta name="viewport" content="width=device-width, initial-scale=1">\n'
-        '  <title>' + esc(title_text) + ' | Favorbook</title>\n'
+        '  <title>' + esc(title_text) + ' | My Bias Book</title>\n'
         '  <meta name="description" content="' + esc(desc_text) + '">\n'
         + ('  <meta name="robots" content="index, follow, max-image-preview:large">\n'
            if indexable else '  <meta name="robots" content="noindex, follow">\n') +
@@ -6146,7 +6181,7 @@ for title, t_en in book_title_en.items():
         '  <ul class="notes">\n' + celeb_list + '\n  </ul>\n'
         + en_more_html
         + (EN_TR_NOTE_HTML if en_show_tr_note else '')
-        + '  <p style="margin-top:32px"><a href="' + EN_BASE + '">← Back to Favorbook</a></p>\n'
+        + '  <p style="margin-top:32px"><a href="' + EN_BASE + '">← Back to My Bias Book</a></p>\n'
         + COPY_BTN_JS + HEART_JS +
         '</body>\n'
         '</html>'
@@ -6183,6 +6218,8 @@ for _group in sorted(en_groups, key=lambda g: g.lower()):
     members = sorted(en_groups[_group], key=lambda m: m[1].lower())
     gslug = safe_en_filename(_group)
     gurl = EN_BASE + 'group/' + gslug + '.html'
+    # 하트 수는 한국어 그룹 페이지와 합쳐지도록 한국어 그룹 이름을 키로 쓴다
+    _ko_group_name = next((KO_GROUP_OF[m[2]]['ko'] for m in members if m[2] in KO_GROUP_OF), _group)
 
     # 그룹이 읽은 책을 모은다 — 여러 멤버가 읽은 책이 앞으로
     gbooks = {}
@@ -6270,7 +6307,7 @@ for _group in sorted(en_groups, key=lambda g: g.lower()):
         'inLanguage': 'en',
         'description': g_desc,
         'about': {'@type': 'MusicGroup', 'name': _group},
-        'isPartOf': {'@type': 'WebSite', 'name': 'Favorbook', 'url': EN_BASE},
+        'isPartOf': {'@type': 'WebSite', 'name': 'My Bias Book', 'url': EN_BASE},
         'hasPart': {
             '@type': 'ItemList',
             'name': 'Members of ' + _group,
@@ -6290,7 +6327,7 @@ for _group in sorted(en_groups, key=lambda g: g.lower()):
         '<head>\n' + GA_TAG +
         '  <meta charset="utf-8">\n'
         '  <meta name="viewport" content="width=device-width, initial-scale=1">\n'
-        '  <title>' + esc(g_title) + ' | Favorbook</title>\n'
+        '  <title>' + esc(g_title) + ' | My Bias Book</title>\n'
         '  <meta name="description" content="' + esc(g_desc) + '">\n'
         '  <meta name="robots" content="index, follow, max-image-preview:large">\n'
         '  <meta property="og:title" content="' + esc(g_title) + '">\n'
@@ -6298,7 +6335,7 @@ for _group in sorted(en_groups, key=lambda g: g.lower()):
         '  <meta property="og:url" content="' + esc(gurl) + '">\n'
         '  <meta property="og:type" content="website">\n'
         '  <meta property="og:locale" content="en_US">\n'
-        '  <meta property="og:site_name" content="Favorbook">\n'
+        '  <meta property="og:site_name" content="My Bias Book">\n'
         '  <meta name="twitter:card" content="summary_large_image">\n'
         '  <link rel="canonical" href="' + esc(gurl) + '">\n'
         '  <link rel="icon" href="' + BASE + 'favicon.svg" type="image/svg+xml">\n'
@@ -6326,10 +6363,12 @@ for _group in sorted(en_groups, key=lambda g: g.lower()):
         '    .gb-w { display: block; font-size: 12px; color: #2563eb; margin-top: 3px; }\n'
         '    .books { padding: 0; margin: 0; }\n'
         '    footer { margin-top: 40px; padding-top: 16px; border-top: 2px solid #000; font-size: 12px; color: #666; }\n'
+        + COPY_BTN_CSS +
+        '    .group-actions { margin: 14px 0 0; }\n'
         '  </style>\n'
         '</head>\n'
         '<body>\n'
-        '  <nav><a href="' + EN_BASE + '">← Favorbook</a></nav>\n'
+        '  <nav><a href="' + EN_BASE + '">← My Bias Book</a></nav>\n'
         '  <h1>' + esc(_group) + ' Members’ Book Recommendations</h1>\n'
         '  <div class="lead"' + ((' style="' + group_box_style(_group)[0] + '"') if group_box_style(_group)[0] else '') + '>\n'
         '    <p style="margin:0">Every book we could verify that <strong>' + esc(_group)
@@ -6339,6 +6378,9 @@ for _group in sorted(en_groups, key=lambda g: g.lower()):
         + '. Each entry links to the interview, YouTube video or SNS post it came from. '
         'Pick a member to see what your bias reads.</p>\n'
         '  </div>\n'
+        '  <p class="heart-row group-actions">'
+        + heart_btn_html(group_heart_key(_ko_group_name), 'Send ' + _group + ' a heart')
+        + copy_btn_html(gurl, '🔗 Copy share link', 'Copied!') + '</p>\n'
         '  <h2>Members</h2>\n'
         '  <ul class="members">\n' + member_cards +
         '  </ul>\n'
@@ -6352,6 +6394,7 @@ for _group in sorted(en_groups, key=lambda g: g.lower()):
         '    <p>Curated from public Korean-language sources. '
         '<a href="' + EN_BASE + '">Browse every K-pop idol and Korean celebrity →</a></p>\n'
         '  </footer>\n'
+        + COPY_BTN_JS + HEART_JS +
         '</body>\n'
         '</html>'
     )
@@ -6424,7 +6467,7 @@ for _role in sorted(en_role_members, key=lambda r: -len(en_role_members[r])):
         'url': curl,
         'inLanguage': 'en',
         'description': c_desc,
-        'isPartOf': {'@type': 'WebSite', 'name': 'Favorbook', 'url': EN_BASE},
+        'isPartOf': {'@type': 'WebSite', 'name': 'My Bias Book', 'url': EN_BASE},
         'hasPart': {
             '@type': 'ItemList',
             'name': hub_name + ' in this archive',
@@ -6453,7 +6496,7 @@ for _role in sorted(en_role_members, key=lambda r: -len(en_role_members[r])):
         '<head>\n' + GA_TAG +
         '  <meta charset="utf-8">\n'
         '  <meta name="viewport" content="width=device-width, initial-scale=1">\n'
-        '  <title>' + esc(c_title) + ' | Favorbook</title>\n'
+        '  <title>' + esc(c_title) + ' | My Bias Book</title>\n'
         '  <meta name="description" content="' + esc(c_desc) + '">\n'
         '  <meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1">\n'
         '  <meta property="og:title" content="' + esc(c_title) + '">\n'
@@ -6461,7 +6504,7 @@ for _role in sorted(en_role_members, key=lambda r: -len(en_role_members[r])):
         '  <meta property="og:url" content="' + esc(curl) + '">\n'
         '  <meta property="og:type" content="website">\n'
         '  <meta property="og:locale" content="en_US">\n'
-        '  <meta property="og:site_name" content="Favorbook">\n'
+        '  <meta property="og:site_name" content="My Bias Book">\n'
         '  <meta property="og:image" content="' + OG_SITE_EN + '">\n'
         '  <meta name="twitter:card" content="summary_large_image">\n'
         '  <link rel="canonical" href="' + esc(curl) + '">\n'
@@ -6561,10 +6604,10 @@ _en_rank_head = (
     '<!DOCTYPE html>\n<html lang="en">\n<head>\n' + GA_TAG +
     '  <meta charset="utf-8">\n'
     '  <meta name="viewport" content="width=device-width, initial-scale=1">\n'
-    '  <title>Books Korean Celebrities Read Most — K-pop &amp; K-drama Star Ranking | Favorbook</title>\n'
+    '  <title>Books Korean Celebrities Read Most — K-pop &amp; K-drama Star Ranking | My Bias Book</title>\n'
     '  <meta name="description" content="The 30 books most often read by K-pop idols and K-drama actors, the authors they return to, and the celebrities with the longest reading lists.">\n'
     '  <meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1">\n'
-    '  <meta property="og:title" content="Most-read books among Korean celebrities | Favorbook">\n'
+    '  <meta property="og:title" content="Most-read books among Korean celebrities | My Bias Book">\n'
     '  <meta property="og:url" content="' + en_rank_url + '">\n'
     '  <meta property="og:type" content="website">\n'
     '  <meta property="og:locale" content="en_US">\n'
@@ -6649,8 +6692,8 @@ write_if_changed('en/updates.html', _v2_detail(
     '<!DOCTYPE html>\n<html lang="en">\n<head>\n' + GA_TAG +
     '  <meta charset="utf-8">\n'
     '  <meta name="viewport" content="width=device-width, initial-scale=1">\n'
-    '  <title>What\'s new — recently added reading lists | Favorbook</title>\n'
-    '  <meta name="description" content="Recently added books and Korean celebrities in the Favorbook archive.">\n'
+    '  <title>What\'s new — recently added reading lists | My Bias Book</title>\n'
+    '  <meta name="description" content="Recently added books and Korean celebrities in the My Bias Book archive.">\n'
     '  <meta name="robots" content="noindex, follow">\n'
     '  <link rel="canonical" href="' + EN_BASE + 'updates.html">\n'
     '  <link rel="icon" href="' + BASE + 'favicon.svg" type="image/svg+xml">\n'
@@ -6866,8 +6909,9 @@ en_index_show_tr_note = has_auto_translated(
 en_index_jsonld = json.dumps({
     '@context': 'https://schema.org',
     '@type': 'WebSite',
-    'name': 'Favorbook',
-    'alternateName': ['Favorbook English', 'K-pop Idol Books', 'K-Drama Actor Books',
+    'name': 'My Bias Book',
+    'alternateName': ['최애의 독서', 'Favorbook', 'Favorbook English', '推しの読書', '爱豆读书', '愛豆讀書',
+                      'Buku Bias Favoritku', 'Sách Bias Đọc', 'K-pop Idol Books', 'K-Drama Actor Books',
                       'Korean Celebrity Book Archive'],
     'url': EN_BASE,
     'description': 'What Korean stars are reading — K-pop idols (BTS, IVE, SEVENTEEN, NewJeans), K-drama and K-movie actors, directors and musicians, with the interview, YouTube or SNS source behind every book.',
@@ -7218,7 +7262,7 @@ en_index = (
     '<head>\n' + GA_TAG +
     '  <meta charset="UTF-8">\n'
     '  <meta name="viewport" content="width=device-width, initial-scale=1.0">\n'
-    '  <title>What Do Kpop Idols Read? K-pop Idol &amp; K-Drama Actor Book Lists | Favorbook</title>\n'
+    '  <title>What Do Kpop Idols Read? K-pop Idol &amp; K-Drama Actor Book Lists | My Bias Book</title>\n'
     '  <meta name="description" content="What does your bias read? Book lists of K-pop idols (BTS, aespa, IVE, NewJeans), K-drama actors and more — every book traced to its source.">\n'
     '  <meta name="referrer" content="no-referrer">\n'
     '\n'
@@ -7226,20 +7270,20 @@ en_index = (
     '  <link rel="icon" href="' + BASE + 'favicon.png" type="image/png" sizes="192x192">\n'
     '  <link rel="apple-touch-icon" href="' + BASE + 'favicon.png">\n'
     '\n'
-    '  <meta property="og:site_name" content="Favorbook">\n'
-    '  <meta property="og:title" content="What K-pop Idols &amp; K-Drama Actors Read | Favorbook">\n'
+    '  <meta property="og:site_name" content="My Bias Book">\n'
+    '  <meta property="og:title" content="What K-pop Idols &amp; K-Drama Actors Read | My Bias Book">\n'
     '  <meta property="og:description" content="A searchable archive of what Korean stars read — K-pop idols, K-drama and K-movie actors, directors and musicians, with a source for every book.">\n'
     '  <meta property="og:type" content="website">\n'
     '  <meta property="og:url" content="' + EN_BASE + '">\n'
     '  <meta property="og:image" content="' + OG_SITE_EN + '">\n'
     '  <meta property="og:image:width" content="1200">\n'
     '  <meta property="og:image:height" content="630">\n'
-    '  <meta property="og:image:alt" content="Favorbook — what K-pop idols, K-drama actors and Korean celebrities are reading">\n'
+    '  <meta property="og:image:alt" content="My Bias Book — what K-pop idols, K-drama actors and Korean celebrities are reading">\n'
     '  <meta property="og:locale" content="en_US">\n'
     '  <meta property="og:locale:alternate" content="ko_KR">\n'
     '\n'
     '  <meta name="twitter:card" content="summary_large_image">\n'
-    '  <meta name="twitter:title" content="What K-pop Idols &amp; K-Drama Actors Read | Favorbook">\n'
+    '  <meta name="twitter:title" content="What K-pop Idols &amp; K-Drama Actors Read | My Bias Book">\n'
     '  <meta name="twitter:description" content="The Korean star book archive — reading lists from K-pop idols, K-drama and K-movie actors, directors and musicians.">\n'
     '  <meta name="twitter:image" content="' + OG_SITE_EN + '">\n'
     '\n'
@@ -7251,7 +7295,7 @@ en_index = (
     '  <meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1">\n'
     '  <meta name="theme-color" content="#ffffff">\n'
     '\n'
-    '  <link rel="alternate" type="application/rss+xml" title="Favorbook RSS" href="' + BASE + 'feed.xml">\n'
+    '  <link rel="alternate" type="application/rss+xml" title="My Bias Book RSS" href="' + BASE + 'feed.xml">\n'
     '\n'
     '\n'
     '  <script type="application/ld+json">\n  ' + en_index_jsonld + '\n  </script>\n'
@@ -7277,7 +7321,7 @@ en_index = (
     '    .scrollbar-hide::-webkit-scrollbar { display: none; }\n'
     '    .scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }\n'
     '    @media (max-width: 767px) {\n'
-    '      #hero, #search, #about, #featured, #categories, #groups, #celebs, #books { scroll-margin-top: 60px; }\n'
+    '      #hero, #search, #featured, #categories, #groups, #celebs, #books { scroll-margin-top: 60px; }\n'
     '    }\n'
     '  </style>\n'
     '  <link rel="stylesheet" href="' + V2_ASSETS + 'home.css">\n'
@@ -7287,7 +7331,7 @@ en_index = (
     '\n'
     '<header class="bar">\n'
     '  <nav aria-label="Main menu">' + _en_home_nav + '</nav>\n'
-    '  <a class="logo" href="' + EN_BASE + '">Favorbook</a>\n'
+    '  <a class="logo" href="' + EN_BASE + '">최애의 독서</a>\n'
     '  <div class="right"><a class="lang" href="' + BASE + '" hreflang="ko">한국어</a></div>\n'
     '</header>\n'
     '\n'
@@ -7295,7 +7339,6 @@ en_index = (
     '<nav id="side-tabs" class="hidden md:flex fixed left-4 lg:left-6 top-1/2 -translate-y-1/2 z-30 flex-col gap-2 pointer-events-auto">\n'
     '  <a href="#hero" data-spy="hero" class="spy-tab active">Home</a>\n'
     '  <a href="#search" data-spy="search" class="spy-tab">Search</a>\n'
-    '  <a href="#about" data-spy="about" class="spy-tab">About</a>\n'
     + ('  <a href="#featured" data-spy="featured" class="spy-tab">Trending</a>\n' if _en_feat else '')
     + '  <a href="#celebs" data-spy="celebs" class="spy-tab">Celebs</a>\n'
     '  <a href="#books" data-spy="books" class="spy-tab">Books</a>\n'
@@ -7306,7 +7349,6 @@ en_index = (
     '  <div class="flex overflow-x-auto gap-2 px-3 py-2 scrollbar-hide">\n'
     '    <a href="#hero" data-spy="hero" class="spy-tab active">Home</a>\n'
     '    <a href="#search" data-spy="search" class="spy-tab">Search</a>\n'
-    '    <a href="#about" data-spy="about" class="spy-tab">About</a>\n'
     + ('    <a href="#featured" data-spy="featured" class="spy-tab">Trending</a>\n' if _en_feat else '')
     + '    <a href="#celebs" data-spy="celebs" class="spy-tab">Celebs</a>\n'
     '    <a href="#books" data-spy="books" class="spy-tab">Books</a>\n'
@@ -7317,8 +7359,10 @@ en_index = (
     '\n'
     '  <header id="hero" class="hero-home flex flex-col items-center">\n'
     '    <p class="eyebrow">Archive of their reads</p>\n'
-    '    <h1>Favorbook</h1>\n'
+    '    <h1>My Bias Book</h1>\n'
     '    <p class="tagline">What your fave K-pop idol or K-drama actor is reading</p>\n'
+    '    <p lang="mul" class="text-muted" style="margin:10px 0 0;font-size:13px;display:flex;flex-wrap:wrap;justify-content:center;gap:4px 14px">'
+    '<span lang="ko" style="display:inline-flex;align-items:center;gap:6px"><img src="' + BASE + 'assets/flags/kr.svg" alt="" width="20" height="15" style="border:1px solid rgba(0,0,0,.25)">최애의 독서</span><span lang="ja" style="display:inline-flex;align-items:center;gap:6px"><img src="' + BASE + 'assets/flags/jp.svg" alt="" width="20" height="15" style="border:1px solid rgba(0,0,0,.25)">推しの読書</span><span lang="zh-Hans" style="display:inline-flex;align-items:center;gap:6px"><img src="' + BASE + 'assets/flags/cn.svg" alt="" width="20" height="15" style="border:1px solid rgba(0,0,0,.25)">爱豆读书</span><span lang="id" style="display:inline-flex;align-items:center;gap:6px"><img src="' + BASE + 'assets/flags/id.svg" alt="" width="20" height="15" style="border:1px solid rgba(0,0,0,.25)">Buku Bias Favoritku</span><span lang="vi" style="display:inline-flex;align-items:center;gap:6px"><img src="' + BASE + 'assets/flags/vn.svg" alt="" width="20" height="15" style="border:1px solid rgba(0,0,0,.25)">Sách Bias Đọc</span>'+ '</p>\n'
     '    <p class="text-muted text-sm sm:text-base mt-5 max-w-xl mx-auto px-4 word-break-keep">Verified reading lists from Korean stars — K-pop idols (BTS, IVE, NewJeans, SEVENTEEN), K-drama and K-movie actors, film directors and musicians — sourced from interviews, YouTube, and SNS.</p>\n'
     '    <div class="count flex items-center gap-2">\n'
     '      <span id="status-dot" class="w-2 h-2 rounded-full"></span>\n'
@@ -7331,31 +7375,7 @@ en_index = (
     + en_hero_links +
     '  </header>\n'
     '\n'
-    + EN_SEARCH_SECTION +
-    '  <section id="about" class="text-center max-w-2xl mx-auto border-4 border-ink p-6 md:p-8 bg-white shadow-neo w-full">\n'
-    '    <h2 class="text-xl md:text-2xl font-black mb-4 bg-neo-pink inline-block px-3 py-1 border-2 border-ink shadow-neo-sm">What is Favorbook?</h2>\n'
-    '    <p class="text-sm md:text-base font-bold leading-relaxed text-ink word-break-keep mb-3">\n'
-    '      Favorbook (최애의 독서) is a reading archive that gathers <strong>the books celebrities and public figures have read</strong> in one place. From K-pop idols like '
-    '<strong>BTS, aespa, SEVENTEEN, IVE and NewJeans</strong> to <strong>K-drama and K-movie '
-    'actors</strong>, film directors and musicians, you can find the books your favorite stars '
-    'have read and recommended, each with its source.\n'
-    '    </p>\n'
-    '    <p class="text-sm md:text-base font-bold leading-relaxed text-ink word-break-keep mb-3">\n'
-    '      Korean idols and actors talk about books constantly — in live streams, in fan letters, '
-    'in drama press conferences, in variety shows — but those mentions scatter across '
-    'Korean-language clips and posts that never reach international fans. '
-    'Every entry here is traced back to the interview, YouTube video or SNS post where the book came up, '
-    'so you can read what they read instead of guessing.\n'
-    '    </p>\n'
-    '    <p class="text-sm md:text-base font-bold leading-relaxed text-ink word-break-keep">\n'
-    '      Only entries with verified sources (YouTube, interviews, SNS) are listed. If you know of a book a star has recommended that isn\'t here yet, please <a href="https://forms.gle/Sd3ZQTahZNbUjbdz7" target="_blank" rel="noopener" class="underline decoration-2">let us know here</a>. We\'ll review it and add it. 😆<br>\n'
-    '      Names follow <a href="https://kpop.fandom.com/" target="_blank" rel="noopener" class="underline decoration-2">Kpop Wiki</a> / <a href="https://www.imdb.com/" target="_blank" rel="noopener" class="underline decoration-2">IMDb</a> conventions.\n'
-    '    </p>\n'
-    + ('    <p class="text-xs sm:text-sm font-bold leading-relaxed text-muted word-break-keep mt-4 pt-3 border-t-2 border-ink/20">\n'
-       '      ' + EN_TR_NOTE_TEXT + '\n'
-       '    </p>\n' if en_index_show_tr_note else '')
-    + '  </section>\n'
-    '\n'
+    + EN_SEARCH_SECTION
     + en_featured_html
     + '  <script type="application/json" id="en-search-books-data">' + json.dumps(en_search_books, ensure_ascii=False) + '</script>\n'
     '  <script type="application/json" id="en-search-people-data">' + json.dumps(en_search_people, ensure_ascii=False) + '</script>\n'
@@ -7498,7 +7518,7 @@ en_index = (
     '\n'
     '<script>\n'
     '(function() {\n'
-    '  const ids = ["hero", "search", "about", "featured", "categories", "groups", "celebs", "books", "report", "faq"];\n'
+    '  const ids = ["hero", "search", "featured", "categories", "groups", "celebs", "books", "report", "faq"];\n'
     '  const sections = ids.map(id => document.getElementById(id)).filter(Boolean);\n'
     '  const tabs = document.querySelectorAll(".spy-tab");\n'
     '  if (!sections.length || !tabs.length) return;\n'
@@ -7924,6 +7944,12 @@ lines = [
     '    <lastmod>' + lastmod_for('match/index.html') + '</lastmod>',
     '    <changefreq>monthly</changefreq>',
     '    <priority>0.7</priority>',
+    '  </url>',
+    '  <url>',
+    '    <loc>' + BASE + 'en/match/</loc>',
+    '    <lastmod>' + lastmod_for('en/match/index.html') + '</lastmod>',
+    '    <changefreq>monthly</changefreq>',
+    '    <priority>0.6</priority>',
     '  </url>',
 ]
 

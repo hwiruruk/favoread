@@ -231,6 +231,9 @@
     <button type="button" id="discardDraftBtn" class="btn danger" title="드래프트를 지우고 발행본으로 되돌림">드래프트 버리기</button>
     <button type="button" class="btn" data-close>닫기</button>
     <button type="button" id="pubDraftBtn" class="btn" title="발행하지 않고 드래프트에만 보관">📝 드래프트만 저장</button>
+    <label class="pub-ghost" title="사이트에는 나가지만 업데이트 내역과 NEW 표시에는 안 올라갑니다">
+      <input type="checkbox" id="pubGhost"> 고스트 발행
+    </label>
     <button type="button" id="pubConfirmBtn" class="btn primary">🚀 발행</button>
   </footer>
 </dialog>
@@ -368,8 +371,8 @@
   <div class="modal-body" style="max-height: calc(90vh - 130px);">
     <p class="muted small">
       알라딘 작가 페이지의 <b>"저자의 추천"</b>에서 자동 수집한 셀럽 추천사입니다(<code>data/aladin_recommend.csv</code>).
-      읽기 전용이며 사이트에는 나가지 않아요. <b>확인필요</b> 표시가 붙은 건 동명이인·인용문·판촉 문구일 수 있으니 출처를 열어 확인한 뒤 쓰세요.
-      "새 책"은 그 셀럽에게 아직 등록되지 않은 책이라는 뜻입니다.
+      사이트에는 나가지 않아요. 쓸모없는 항목은 <b>🗑 삭제</b>로 지울 수 있어요(<code>data/aladin_hidden.json</code>에 기록돼 재수집돼도 다시 안 나옴, 바로 main에 커밋). <b>확인필요</b> 표시가 붙은 건 동명이인·인용문·판촉 문구일 수 있으니 출처를 열어 확인한 뒤 쓰세요.
+      "새 책"은 그 셀럽에게 아직 등록되지 않은 책, "새 셀럽"은 우리 리스트에 없는 사람(<code>data/aladin_recommend_new.csv</code>, 매일 조금씩 늘어남)입니다. <b>책 추가</b>를 누르면 편집 중인 목록에 책이 들어가고(없는 셀럽이면 셀럽도 만들어짐) 추천사는 💬 내 메모로 들어갑니다. 저장·발행은 평소처럼 하세요.
     </p>
     <div class="row">
       <input id="alaSearch" type="search" placeholder="셀럽·도서명·추천사로 검색…" style="flex:1 1 auto;min-width:0">
@@ -379,6 +382,7 @@
         <option value="registered">이미 등록된 책</option>
         <option value="clean">확인필요 없음</option>
         <option value="flag">확인필요만</option>
+        <option value="newceleb">우리 리스트에 없는 사람</option>
       </select>
     </div>
     <div id="alaCount" class="muted small" style="margin-top:6px"></div>

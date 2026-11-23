@@ -104,6 +104,12 @@
     .gb-w a { font-size: 11px; font-weight: 700; color: var(--on-yellow, #111); background: #ffe58a; border: 1px solid var(--border); padding: 0 6px; border-radius: 99px; line-height: 1.6; }
     .gb-l { display: inline-block; margin-top: 4px; font-size: 11px; font-weight: 600; }
     footer { margin-top: 40px; padding-top: 16px; border-top: 1px solid var(--border); font-size: 12px; color: var(--soft); }
+    .heart-row { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; }
+    .copy-btn { display: inline-flex; align-items: center; gap: 6px; padding: 7px 14px; border: 1px solid var(--border); background: #fde047; box-shadow: none; font-family: inherit; font-size: 14px; font-weight: 800; color: var(--on-yellow); cursor: pointer; transition: transform .1s, box-shadow .1s, background .1s; }
+    .copy-btn:hover { transform: translate(-1px,-1px); box-shadow: none; background: var(--hover); }
+    .copy-btn:active { transform: none; box-shadow: none; }
+    .copy-btn.done { background: var(--card); }
+    .group-actions { margin: 14px 0 0; }
   </style>
   <link rel="stylesheet" href="https://favorbook.co.kr/assets/fonts/space-grotesk.css">
   <link rel="stylesheet" href="https://favorbook.co.kr/assets/fonts/kopubworld.css">
@@ -123,6 +129,7 @@
     <h1>뉴비트 멤버들이 읽은 책</h1>
     <p>뉴비트 멤버 2명이 읽거나 추천한 책 <strong>2권</strong>, 그중 1권은 여러 멤버가 함께 읽었어요. 책마다 인터뷰·유튜브·SNS 출처를 확인할 수 있어요.</p>
       </div>
+  <p class="heart-row group-actions"><button type="button" class="heart-btn" data-heart="g:뉴비트" aria-pressed="false" aria-label="뉴비트에게 하트" title="뉴비트에게 하트" hidden><span class="heart-ico" aria-hidden="true">♡</span><span class="heart-n"></span></button><button class="copy-btn" type="button" data-url="https://favorbook.co.kr/group/newbeat.html" data-done="복사했어요!" title="https://favorbook.co.kr/group/newbeat.html">🔗 공유 링크 복사</button></p>
   <h2>멤버별로 보기</h2>
   <ul class="members" id="members">
     <li><button type="button" class="gm on" data-m="" aria-pressed="true">
@@ -163,6 +170,28 @@
   <footer>
     <p>공개된 인터뷰·방송·SNS를 바탕으로 정리했어요. <a href="https://favorbook.co.kr/">다른 셀럽·아이돌이 읽은 책 보기 →</a></p>
   </footer>
+  <script>
+  document.querySelectorAll(".copy-btn").forEach(function (b) {
+    b.addEventListener("click", function () {
+      var u = b.dataset.url, was = b.textContent;
+      function done() {
+        b.textContent = b.dataset.done; b.classList.add("done");
+        setTimeout(function () { b.textContent = was; b.classList.remove("done"); }, 1600);
+      }
+      function fallback() {
+        var ta = document.createElement("textarea");
+        ta.value = u; ta.style.cssText = "position:fixed;top:-9999px;left:-9999px";
+        document.body.appendChild(ta); ta.focus(); ta.select();
+        try { document.execCommand("copy"); done(); } catch (e) { prompt(was, u); }
+        document.body.removeChild(ta);
+      }
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(u).then(done, fallback);
+      } else { fallback(); }
+    });
+  });
+  </script>
+  <script src="https://favorbook.co.kr/assets/hearts.js" defer></script>
   <script>
   (function () {
     var chips = document.querySelectorAll(".gm"), cards = document.querySelectorAll(".gb"),
