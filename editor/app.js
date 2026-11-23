@@ -2837,11 +2837,33 @@ $('#realSaveBtn').addEventListener('click', saveReal);
  * 사이트에는 나가지 않고, 책·코멘트를 채울 때 참고만 한다. 저장·커밋 없음. */
 const ALA_PATH = 'data/aladin_recommend.csv';
 const ALA_NEW_PATH = 'data/aladin_recommend_new.csv';
+const ALA_HIDDEN_PATH = 'data/aladin_hidden.json';   // 여기서 삭제한 추천사 기록 (재수집돼도 다시 안 나오게)
 const ALA_PAGE = 30;
 const alaDlg = $('#alaDialog');
-const _ala = { rows: null, shown: ALA_PAGE };
+const _ala = { rows: null, shown: ALA_PAGE, hidden: new Map(), hiddenSha: null, queue: Promise.resolve() };
 
 function setAlaStatus(msg) { $('#alaStatus').textContent = msg || ''; }
+
+// 추천사 한 건을 식별하는 키 (셀럽 + 도서명 + 출처). 두 CSV 모두 같은 열 이름을 쓴다.
+function alaKey(r) { return [r['연예인'], r['도서명'], r['출처']].join('\u0001'); }
+
+// 삭제 기록을 data/aladin_hidden.json 으로 커밋한다. 요청은 한 줄로 세워 순서대로 보낸다.
+function saveAlaHidden() {
+  _ala.queue = _ala.queue.then(async () => {
+    const items = [..._ala.hidden.values()];
+    const now = new Date();
+    const pad = (x) => String(x).padStart(2, '0');
+    const doc = { _updated: `${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())}`, items };
+    const last = items[items.length - 1];
+    const content = JSON.stringify(doc, null, 2) + '\n';
+    const { sha } = await Gh.putFile({
+      content, sha: _ala.hiddenSha, path: ALA_HIDDEN_PATH,
+      message: `알라딘 추천사 삭제 — ${last['연예인']} · ${last['도서명']}`,
+    });
+    _ala.hiddenSha = sha;
+  });
+  return _ala.queue;
+}
 
 async function openAlaDialog() {
   if (!Config.token) { toast('GitHub Token을 먼저 설정하세요', 'err'); settingsDlg.showModal(); return; }
@@ -2852,12 +2874,18 @@ async function openAlaDialog() {
     try {
       const { content } = await Gh.getFile(ALA_PATH, { allowMissing: true });
       const extra = await Gh.getFile(ALA_NEW_PATH, { allowMissing: true });
+      const hid = await Gh.getFile(ALA_HIDDEN_PATH, { allowMissing: true });
       if (!content) { setAlaStatus(''); $('#alaList').innerHTML = '<li class="muted small">아직 발행 브랜치에 data/aladin_recommend.csv 가 없어요. 머지 후 다시 열어 보세요.</li>'; return; }
       const parsed = Papa.parse(content.replace(/^\ufeff/, ''), { header: true, skipEmptyLines: true });
       _ala.rows = parsed.data;
       if (extra.content) {   // 우리 리스트에 없는 사람 (이름 열이 '이름')
         Papa.parse(extra.content.replace(/^\ufeff/, ''), { header: true, skipEmptyLines: true }).data
           .forEach(r => { r['연예인'] = r['이름']; _ala.rows.push(r); });
+      }
+      _ala.hiddenSha = hid.sha;
+      _ala.hidden = new Map();
+      if (hid.content) {
+        (JSON.parse(hid.content).items || []).forEach(x => _ala.hidden.set(alaKey(x), x));
       }
       setAlaStatus(`${_ala.rows.length}건`);
     } catch (err) {
@@ -2882,6 +2910,7 @@ function alaVisible() {
   const q = $('#alaSearch').value.trim().toLowerCase();
   const f = $('#alaFilter').value;
   return (_ala.rows || []).filter(r => {
+    if (_ala.hidden.has(alaKey(r))) return false;
     if (q && !`${r['연예인']} ${r['도서명']} ${r['저자']} ${r['추천사']}`.toLowerCase().includes(q)) return false;
     if (f === 'clean') return !r['확인필요'];
     if (f === 'flag') return !!r['확인필요'];
@@ -2914,6 +2943,7 @@ function renderAla() {
           <a href="${esc(r['출처'])}" target="_blank" rel="noopener noreferrer">알라딘 출처</a>
           · <a href="#" class="ala-copy">추천사 복사</a>
           ${reg ? '' : '· <a href="#" class="ala-add">+ 책 추가(메모 포함)</a>'}
+          · <a href="#" class="ala-del" style="color:#b42318">🗑 삭제</a>
         </div>
       </li>`;
   }).join('') || '<li class="muted small">조건에 맞는 항목이 없습니다.</li>';
@@ -2953,6 +2983,24 @@ $('#alaList').addEventListener('click', async (e) => {
     const r = alaVisible().slice(0, _ala.shown)[Number(li.dataset.i)];
     try { await navigator.clipboard.writeText(r['추천사']); toast('추천사를 복사했어요', 'ok'); }
     catch { toast('복사하지 못했어요', 'err'); }
+  } else if (e.target.classList.contains('ala-del')) {
+    e.preventDefault();
+    const r = alaVisible().slice(0, _ala.shown)[Number(li.dataset.i)];
+    if (!confirm(`'${r['연예인']} · ${r['도서명']}' 추천사를 목록에서 삭제할까요?\n\n삭제 기록은 data/aladin_hidden.json 에 저장되어 다음에도 나오지 않아요.`)) return;
+    const k = alaKey(r);
+    _ala.hidden.set(k, { 연예인: r['연예인'], 도서명: r['도서명'], 출처: r['출처'] });
+    renderAla();
+    setAlaStatus('삭제 저장 중…');
+    try {
+      await saveAlaHidden();
+      setAlaStatus(`${_ala.rows.length}건 · 삭제 ${_ala.hidden.size}건`);
+      toast(`${r['연예인']} · ${r['도서명']} 삭제됨`, 'ok');
+    } catch (err) {
+      _ala.hidden.delete(k);   // 저장 실패 → 목록에 되돌림
+      setAlaStatus(`${_ala.rows.length}건`);
+      renderAla();
+      toast('삭제 저장 실패: ' + err.message, 'err');
+    }
   }
 });
 $('#alaSearch').addEventListener('input', () => { _ala.shown = ALA_PAGE; renderAla(); });
