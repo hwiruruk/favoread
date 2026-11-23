@@ -5997,14 +5997,30 @@ print(f"✅ /en/ 셀럽 페이지: {len(en_celeb_pages)}개")
 # 영문 책 페이지 (≥2 셀럽 읽은 책 + title_en 검수 완료)
 en_book_pool = [t for t in book_title_en if t in books_with_pages]
 en_book_indexed = set()   # 색인 대상(영문 코멘트 있음) — sitemap에만 싣는다
+# 한국어 제목이 달라도 영문 제목(=영문 주소)이 같으면 같은 책이다 (니체의 말 / 초역 니체의 말).
+# 영문 페이지는 한 장만 만들고, 읽은 셀럽·코멘트는 합친다. 대표는 읽은 사람이 더 많은 쪽.
+en_slug_groups = {}
+for _t, _te in book_title_en.items():
+    if _t in books_with_pages:
+        en_slug_groups.setdefault(safe_en_filename(_te), []).append(_t)
+for _g in en_slug_groups.values():
+    _g.sort(key=lambda t: (-len(book_celebs[t]['celebs']), t))
 for title, t_en in book_title_en.items():
     if title not in books_with_pages:
         continue
-    binfo = book_celebs[title]
     slug = safe_en_filename(t_en)
-    indexable = book_indexable(title, 'en')
+    _siblings = en_slug_groups[slug]
+    if _siblings[0] != title:
+        continue
+    binfo = book_celebs[title]
+    if len(_siblings) > 1:
+        binfo = dict(binfo, celebs=list(dict.fromkeys(c for t in _siblings for c in book_celebs[t]['celebs'])))
+    indexable = any(book_indexable(t, 'en') for t in _siblings)
     ko_indexable = book_indexable(title, 'ko')
-    _notes = {c: (cm_en, src) for c, _cm, cm_en, src in book_notes(title)}
+    _notes = {}
+    for _t in _siblings:
+        for c, _cm, cm_en, src in book_notes(_t):
+            _notes.setdefault(c, (cm_en, src))
     page_url = make_en_book_url(t_en)
     ko_url   = make_book_url(title)
     n_celebs = len(binfo['celebs'])
@@ -6034,12 +6050,17 @@ for title, t_en in book_title_en.items():
     celeb_list = '\n'.join(celeb_items)
 
     def _en_book_links(ts):
+        _seen_slugs = set()
+        ts = [t for t in ts if not (safe_en_filename(book_title_en[t]) in _seen_slugs
+                                    or _seen_slugs.add(safe_en_filename(book_title_en[t])))]
         return '\n'.join(
             '    <li><a href="' + safe_en_filename(book_title_en[t]) + '.html">' + esc(book_title_en[t]) + '</a>'
             + ' <span class="by">(' + esc(t) + ') · ' + str(len(book_celebs[t]['celebs'])) + ' celebrities</span></li>'
             for t in ts)
-    _same = same_author_books(title, en_book_pool)
+    _own = set(_siblings)
+    _same = [t for t in same_author_books(title, en_book_pool) if t not in _own]
     _rel_g, _rel = related_books(title, en_book_pool)
+    _rel = [t for t in _rel if t not in _own]
     en_more_html = ''
     if _same:
         en_more_html += ('  <h2>More by the same author</h2>\n  <ul>\n' + _en_book_links(_same) + '\n  </ul>\n')
