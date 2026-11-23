@@ -752,11 +752,29 @@
     return text + '…';
   }
 
-  // 셀럽(묶음)별로 책을 모아 선반에 놓는다. 묶음 밑에 이름표를 붙이고, 한 줄에 안 들어가면 다음 줄로 이어 간다
-  var BLOCKGAP = 30, LABELFONT = '700 23px ' + SANS;
+  // 셀럽(묶음)별로 책을 모아 선반에 놓는다. 묶음 밑에 이름표를 가운데 맞춰 붙이고, 한 줄에 안 들어가면 다음 줄로 이어 간다
+  var BLOCKGAP = 34, LABELFONT = '700 23px ' + SANS, LABELMAX = 300, LABELLINE = 30;
+
+  // 이름표 줄 나누기 — 한 줄에 들어가면 그대로, 길면 '(' 앞에서 두 줄로, 그래도 길면 글자 수로 나누고 끝은 …로 줄인다
+  function labelLines(ctx, text) {
+    ctx.font = LABELFONT;
+    var wd = function (s) { return ctx.measureText(s).width; };
+    if (wd(text) <= LABELMAX) return [text];
+    var i = text.indexOf('(');
+    if (i > 0) {
+      var a = text.slice(0, i).trim(), b = text.slice(i);
+      if (wd(a) <= LABELMAX && wd(b) <= LABELMAX) return [a, b];
+    }
+    var first = '', rest = '', splitDone = false;
+    for (var ch of text) {
+      if (!splitDone && wd(first + ch) > LABELMAX) splitDone = true;
+      if (splitDone) rest += ch; else first += ch;
+    }
+    return [first.trim(), fitText(ctx, rest.trim(), LABELMAX)];
+  }
+
   function arrange(blocks, H, availW, ctx) {
     var rows = [], row = [], rw = 0;
-    ctx.font = LABELFONT;
     var place = function (chunk) {
       if (row.length && rw + BLOCKGAP + chunk.w > availW) { rows.push({ chunks: row, w: rw }); row = []; rw = 0; }
       rw += (row.length ? BLOCKGAP : 0) + chunk.w;
@@ -766,9 +784,10 @@
       var cur = [], cw = 0, first = true;
       var flush = function () {
         if (!cur.length) return;
-        var label = first ? b.label : b.label + T.cont;
-        var lw = Math.min(Math.ceil(ctx.measureText(label).width), availW);
-        place({ label: label, cont: !first, cells: cur, w: Math.max(cw, lw) });
+        var lines = labelLines(ctx, first ? b.label : b.label + T.cont);
+        ctx.font = LABELFONT;
+        var lw = Math.ceil(Math.max.apply(null, lines.map(function (s) { return ctx.measureText(s).width; })));
+        place({ lines: lines, cont: !first, cells: cur, bw: cw, w: Math.max(cw, lw) });
         cur = []; cw = 0; first = false;
       };
       b.items.forEach(function (it) {
@@ -780,11 +799,16 @@
       flush();
     });
     if (row.length) rows.push({ chunks: row, w: rw });
+    // 줄마다 이름표가 한 줄이면 낮게, 두 줄이면 높게 잡는다
+    rows.forEach(function (r) {
+      r.lines = Math.max.apply(null, r.chunks.map(function (c) { return c.lines.length; }));
+    });
     return rows;
   }
 
   function renderShelf(site, gs) {
-    var W = 1080, PAD = 72, HEAD = 270, FOOT = 140, BOARD = 12, LABELH = 52, ROWGAP = 92, MAXH = 1920, MINH = 820;
+    var W = 1080, PAD = 72, HEAD = 230, FOOT = 70, BOARD = 12, ROWGAP = 86, MAXH = 1920, MINH = 700;
+    var labelH = function (r) { return r.lines > 1 ? 86 : 54; };
     var groups = gs.list.filter(function (g) { return g.books.length; }).map(function (g) {
       return { label: celebLabel(site, g.name), books: g.books };
     });
@@ -807,7 +831,9 @@
       var cv = document.createElement('canvas');
       var ctx = cv.getContext('2d');
       var availW = W - PAD * 2, H = 360, rows, total;
-      var totalOf = function () { return rows.length * (H + BOARD + LABELH) + Math.max(rows.length - 1, 0) * ROWGAP; };
+      var totalOf = function () {
+        return rows.reduce(function (s, r) { return s + H + BOARD + labelH(r); }, 0) + Math.max(rows.length - 1, 0) * ROWGAP;
+      };
       for (; H >= 110; H -= 6) {
         rows = arrange(blocks, H, availW, ctx);
         total = totalOf();
@@ -821,30 +847,22 @@
       ctx.imageSmoothingEnabled = true; ctx.imageSmoothingQuality = 'high';
       // 배경은 칠하지 않는다 — 투명 PNG라 어디에 올려도 책장만 얹힌다
 
-      // 머리글: ♥ 내 책장 / 셀럽 n명 · 책 n권 / 셀럽 이름들
+      // 머리글: ♥ 내 책장 / 책 n권
       drawHeart(ctx, PAD, 78, 50, ACCENT);
       ctx.textBaseline = 'alphabetic'; ctx.textAlign = 'left';
       ctx.fillStyle = INK; ctx.font = '700 70px ' + SERIF;
       ctx.fillText(T.shelfTitle, PAD + 70, 130);
-      ctx.fillStyle = SOFT; ctx.font = '500 28px ' + SANS;
-      ctx.fillText(T.counts(c.celebs, c.books), PAD + 2, 186);
-      if (gs.list.length) {
-        ctx.font = '400 25px ' + SANS;
-        var names = gs.list.slice(0, 4).map(function (g) { return celebLabel(site, g.name); }).join(' · ')
-          + (gs.list.length > 4 ? (EN ? ' +' : ' 외 ') + (gs.list.length - 4) + (EN ? '' : '명') : '');
-        ctx.fillStyle = '#a0968a';
-        ctx.fillText(fitText(ctx, names, W - PAD * 2), PAD + 2, 226);
-      }
-      ctx.textAlign = 'right'; ctx.fillStyle = '#a0968a'; ctx.font = '500 25px ' + SANS;
-      ctx.fillText(today('.'), W - PAD, 130);
+      ctx.fillStyle = SOFT; ctx.font = '500 30px ' + SANS;
+      ctx.fillText(T.books(c.books), PAD + 2, 186);
 
-      // 선반: 책은 왼쪽부터 꽂고 줄마다 얇은 판자를 깐다. 책장 전체를 머리글과 바닥글 사이에 가운데 맞춘다
-      var top = HEAD + Math.max(0, (CH - HEAD - FOOT - total) / 2);
-      rows.forEach(function (row, ri) {
-        var y0 = top + ri * (H + BOARD + LABELH + ROWGAP), base = y0 + H;
-        var x = PAD;
+      // 선반: 줄마다 얇은 판자를 깔고, 묶음은 줄 안에서 가운데로 모은다. 묶음 안의 책과 이름표도 가운데 맞춘다.
+      // 책장 전체는 머리글과 바닥 사이에서 위아래 가운데 맞춘다
+      var y0 = HEAD + Math.max(0, (CH - HEAD - FOOT - total) / 2);
+      rows.forEach(function (row) {
+        var base = y0 + H, lh = labelH(row);
+        var x = PAD + (availW - row.w) / 2;
         row.chunks.forEach(function (chunk) {
-          var bx = x;
+          var bx = x + (chunk.w - chunk.bw) / 2;
           chunk.cells.forEach(function (cell) {
             drawSpine(ctx, cell, bx, base - cell.h);
             bx += cell.w + 4;
@@ -857,25 +875,19 @@
         sh.addColorStop(0, 'rgba(60,40,10,.14)'); sh.addColorStop(1, 'rgba(60,40,10,0)');
         ctx.fillStyle = sh; ctx.fillRect(PAD - 28, base + BOARD, W - PAD * 2 + 56, 14);
 
-        // 이름표: 묶음의 첫 책 아래에 왼쪽 맞춰 적고, 판자에서 이름표까지 짧은 선으로 이어 준다
-        x = PAD;
+        // 이름표: 묶음 가운데에 짧은 선과 이름을 적는다
+        x = PAD + (availW - row.w) / 2;
         row.chunks.forEach(function (chunk) {
+          var cx = x + chunk.w / 2;
           ctx.fillStyle = chunk.cont ? '#a0968a' : INK;
-          ctx.fillRect(x, base + BOARD + 10, Math.min(chunk.w, 44), 3);
-          ctx.textAlign = 'left'; ctx.textBaseline = 'alphabetic';
+          ctx.fillRect(cx - 22, base + BOARD + 10, 44, 3);
+          ctx.textAlign = 'center'; ctx.textBaseline = 'alphabetic';
           ctx.font = LABELFONT;
-          ctx.fillText(chunk.label, x, base + BOARD + 40);
+          chunk.lines.forEach(function (ln, li) { ctx.fillText(ln, cx, base + BOARD + 40 + li * LABELLINE); });
           x += chunk.w + BLOCKGAP;
         });
+        y0 += H + BOARD + lh + ROWGAP;
       });
-
-      // 바닥글
-      var fy = CH - 62;
-      drawHeart(ctx, PAD, fy - 26, 30, ACCENT);
-      ctx.textAlign = 'left'; ctx.fillStyle = INK; ctx.font = '700 30px ' + SERIF;
-      ctx.fillText(T.brand, PAD + 42, fy);
-      ctx.textAlign = 'right'; ctx.fillStyle = SOFT; ctx.font = '500 26px ' + SANS;
-      ctx.fillText(T.siteShort, W - PAD, fy);
       return cv;
     });
   }
