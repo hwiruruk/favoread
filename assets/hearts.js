@@ -274,15 +274,15 @@
 
   var T = EN ? {
     fab: 'My hearts', title: 'My hearts', close: 'Close', empty: 'No hearts yet. Tap ♡ on a celeb or a book to keep it here.',
-    note: 'Saved only in this browser.', copy: 'Copy list', copied: 'Copied!', loading: 'Loading…',
+    note: 'Saved only in this browser. It won’t show on other devices or browsers, and clearing this site’s data will delete it. Copy the list to keep a backup.', copy: 'Copy list', copied: 'Copied!', loading: 'Loading…',
     fail: 'Could not load the list. Please try again later.', shared: 'Books read by several celebs',
     del: 'Remove', delAll: 'Remove all', undo: 'Undo',
     removed: function (what) { return 'Removed “' + what + '”'; },
     books: function (n) { return n + (n === 1 ? ' book' : ' books'); },
     readBy: function (names, more) { return 'Read by ' + names.join(', ') + (more ? ' +' + more : ''); },
   } : {
-    fab: '내 하트', title: '내 하트', close: '닫기', empty: '아직 하트가 없어요. 셀럽이나 책의 ♡를 누르면 여기에 담겨요.',
-    note: '이 브라우저에만 저장돼요.', copy: '목록 복사', copied: '복사했어요', loading: '불러오는 중…',
+    fab: '내 책장', title: '내 책장', close: '닫기', empty: '아직 담긴 게 없어요. 셀럽이나 책의 ♡를 누르면 여기에 담겨요.',
+    note: '이 브라우저에만 저장돼요. 다른 기기나 다른 브라우저에서는 보이지 않고, 브라우저의 사이트 데이터(방문 기록·쿠키 등)를 지우면 사라져요. 중요한 목록은 ‘목록 복사’로 따로 보관해 두세요.', copy: '목록 복사', copied: '복사했어요', loading: '불러오는 중…',
     fail: '목록을 불러오지 못했어요. 잠시 후 다시 열어 주세요.', shared: '여러 셀럽이 읽은 책',
     del: '빼기', delAll: '모두 빼기', undo: '되돌리기',
     removed: function (what) { return '‘' + what + '’ 뺐어요'; },
