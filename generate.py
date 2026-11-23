@@ -7354,7 +7354,7 @@ en_index = (
     + en_hero_links +
     '  </header>\n'
     '\n'
-    + EN_SEARCH_SECTION +
+    + EN_SEARCH_SECTION
     + en_featured_html
     + '  <script type="application/json" id="en-search-books-data">' + json.dumps(en_search_books, ensure_ascii=False) + '</script>\n'
     '  <script type="application/json" id="en-search-people-data">' + json.dumps(en_search_people, ensure_ascii=False) + '</script>\n'
