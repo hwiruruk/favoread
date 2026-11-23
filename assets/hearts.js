@@ -606,7 +606,7 @@
   var PROXY = 'https://images.weserv.nl/?url=';
   var SERIF = '"KoPubWorld Batang","Noto Serif KR",Batang,serif';
   var SANS = '-apple-system,BlinkMacSystemFont,"Segoe UI","Noto Sans KR","Malgun Gothic",sans-serif';
-  var PAPER = '#faf6ee', INK = '#1c1a17', SOFT = '#7a7064', ACCENT = '#e11d48';
+  var INK = '#1c1a17', SOFT = '#7a7064', ACCENT = '#e11d48';
 
   function hashOf(s, mul) {
     var h = 0;
@@ -819,7 +819,7 @@
       cv.width = W; cv.height = CH;
       ctx = cv.getContext('2d');
       ctx.imageSmoothingEnabled = true; ctx.imageSmoothingQuality = 'high';
-      ctx.fillStyle = PAPER; ctx.fillRect(0, 0, W, CH);
+      // 배경은 칠하지 않는다 — 투명 PNG라 어디에 올려도 책장만 얹힌다
 
       // 머리글: ♥ 내 책장 / 셀럽 n명 · 책 n권 / 셀럽 이름들
       drawHeart(ctx, PAD, 78, 50, ACCENT);
