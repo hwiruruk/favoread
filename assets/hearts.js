@@ -273,8 +273,12 @@
   // 셀럽·책 정보는 서랍을 처음 열 때 /data.json에서 한 번 읽는다.
 
   var T = EN ? {
-    fab: 'My hearts', title: 'My hearts', close: 'Close', empty: 'No hearts yet. Tap ♡ on a celeb or a book to keep it here.',
-    note: 'Saved only in this browser. It won’t show on other devices or browsers, and clearing this site’s data will delete it. Copy the list to keep a backup.', copy: 'Copy list', copied: 'Copied!', loading: 'Loading…',
+    fab: 'My shelf', title: 'My shelf', close: 'Close', empty: 'Nothing here yet. Tap ♡ on a celeb or a book to keep it here.',
+    note: 'Saved only in this browser. It won’t show on other devices or browsers, and clearing this site’s data will delete it. Use Save image or Copy text to keep a backup.',
+    saveImg: 'Save image', making: 'Making…', savedImg: 'Saved!', copyTxt: 'Copy text', copyMd: 'Copy Markdown', copied: 'Copied!', loading: 'Loading…',
+    shelfTitle: 'My bookshelf', counts: function (c, b) { return (c ? c + (c === 1 ? ' celeb · ' : ' celebs · ') : '') + b + (b === 1 ? ' book' : ' books'); },
+    imgFail: 'Could not make the image. Please try again.', brand: 'Favorbook', site: 'https://favorbook.co.kr/en/', siteShort: 'favorbook.co.kr/en',
+    asOf: 'as of', sharedMd: 'Read by several celebs',
     fail: 'Could not load the list. Please try again later.', shared: 'Books read by several celebs',
     del: 'Remove', delAll: 'Remove all', undo: 'Undo',
     removed: function (what) { return 'Removed “' + what + '”'; },
@@ -282,7 +286,11 @@
     readBy: function (names, more) { return 'Read by ' + names.join(', ') + (more ? ' +' + more : ''); },
   } : {
     fab: '내 책장', title: '내 책장', close: '닫기', empty: '아직 담긴 게 없어요. 셀럽이나 책의 ♡를 누르면 여기에 담겨요.',
-    note: '이 브라우저에만 저장돼요. 다른 기기나 다른 브라우저에서는 보이지 않고, 브라우저의 사이트 데이터(방문 기록·쿠키 등)를 지우면 사라져요. 중요한 목록은 ‘목록 복사’로 따로 보관해 두세요.', copy: '목록 복사', copied: '복사했어요', loading: '불러오는 중…',
+    note: '이 브라우저에만 저장돼요. 다른 기기나 다른 브라우저에서는 보이지 않고, 브라우저의 사이트 데이터(방문 기록·쿠키 등)를 지우면 사라져요. 중요한 목록은 ‘이미지 저장’이나 ‘텍스트 복사’로 따로 보관해 두세요.',
+    saveImg: '이미지 저장', making: '만드는 중…', savedImg: '저장했어요', copyTxt: '텍스트 복사', copyMd: '마크다운 복사', copied: '복사했어요', loading: '불러오는 중…',
+    shelfTitle: '내 책장', counts: function (c, b) { return (c ? '셀럽 ' + c + '명 · ' : '') + '책 ' + b + '권'; },
+    imgFail: '이미지를 만들지 못했어요. 잠시 후 다시 시도해 주세요.', brand: '최애의 독서', site: 'https://favorbook.co.kr/', siteShort: 'favorbook.co.kr',
+    asOf: '기준', sharedMd: '여러 셀럽이 읽은 책',
     fail: '목록을 불러오지 못했어요. 잠시 후 다시 열어 주세요.', shared: '여러 셀럽이 읽은 책',
     del: '빼기', delAll: '모두 빼기', undo: '되돌리기',
     removed: function (what) { return '‘' + what + '’ 뺐어요'; },
@@ -314,6 +322,12 @@
     + 'font-weight:800;font-size:12px;line-height:1;font-family:inherit;cursor:pointer}'
     + '.mh-btn:hover{background:var(--hover,#fef08a)}'
     + '.mh-x{width:34px;height:34px;padding:0;font-size:18px}'
+    + '.mh-tools{display:flex;gap:6px;padding:10px 16px;border-bottom:1px solid var(--border,#000);background:var(--bg,#fff)}'
+    + '.mh-tools[hidden]{display:none}'
+    + '.mh-tools .mh-btn{flex:1;min-width:0;padding:10px 4px;font-size:13px;white-space:nowrap}'
+    + '.mh-tools .mh-primary{background:var(--ink,#000);color:var(--bg,#fff)}'
+    + '.mh-tools .mh-primary:hover{background:var(--ink,#000);opacity:.85}'
+    + '.mh-tools .mh-btn:disabled{opacity:.55;cursor:wait}'
     + '.mh-body{flex:1;overflow-y:auto;padding:14px 16px 24px;-webkit-overflow-scrolling:touch}'
     + '.mh-msg{margin:24px 0;color:var(--soft,#555);text-align:center}'
     + '.mh-note{margin:0;padding:8px 16px;border-top:1px solid var(--border,#000);font-size:12px;color:var(--soft,#555);background:var(--bg,#fff)}'
@@ -515,25 +529,62 @@
     return gs;
   }
 
-  // 목록 복사 — 셀럽별로 책 제목을 줄줄이 적고 맨 끝에 홈페이지 주소만 붙인다
-  function listText(site, gs) {
-    var lines = [];
-    var line = function (b) {
-      var a = enOr(b.info.author_en, b.info.author);
-      return '- ' + enOr(b.info.title_en, b.title) + (a ? ' (' + a + ')' : '');
+  // ── 내보내기: 텍스트 · 마크다운 · 책장 이미지 ───────────────────────────
+  // 세 가지 모두 buildGroups() 결과(셀럽별 묶음 + 여러 셀럽이 읽은 책)를 그대로 쓴다.
+  var SITE = 'https://favorbook.co.kr';
+
+  function pad2(n) { return (n < 10 ? '0' : '') + n; }
+  function today(sep) {
+    var d = new Date();
+    return d.getFullYear() + sep + pad2(d.getMonth() + 1) + sep + pad2(d.getDate());
+  }
+  function bookLine(b) {
+    var a = enOr(b.info.author_en, b.info.author);
+    return enOr(b.info.title_en, b.title) + (a ? ' - ' + a : '');
+  }
+  // 책 상세 주소. 셀럽 아래 책은 그 셀럽 페이지의 그 책 칸으로, 아니면 책 페이지로 간다
+  function bookHref(site, b, owner) {
+    if (owner) return SITE + celebUrl(site, owner) + '#h=' + encodeURIComponent(b.key);
+    return b.readers.length ? SITE + bookUrl(site, b.title) : '';
+  }
+  function countOf(gs) {
+    return { celebs: gs.list.length, books: gs.list.reduce(function (n, g) { return n + g.books.length; }, 0) + gs.shared.books.length };
+  }
+
+  // 일반 텍스트 — 카톡·메모·한글 어디에 붙여도 번호가 그대로 나오는 형식
+  function plainText(site, gs) {
+    var c = countOf(gs);
+    var out = ['♥ ' + T.shelfTitle + ' · ' + T.counts(c.celebs, c.books), today('.') + ' ' + T.asOf, ''];
+    var section = function (head, books) {
+      out.push('■ ' + head + (books.length ? ' (' + T.books(books.length) + ')' : ''));
+      books.forEach(function (b, i) { out.push((i + 1) + '. ' + bookLine(b)); });
+      out.push('');
     };
-    gs.list.forEach(function (g) {
-      lines.push(g.name);
-      g.books.forEach(function (b) { lines.push(line(b)); });
-      lines.push('');
-    });
-    if (gs.shared.books.length) {
-      lines.push(T.shared);
-      gs.shared.books.forEach(function (b) { lines.push(line(b)); });
-      lines.push('');
-    }
-    lines.push(EN ? 'Favorbook https://favorbook.co.kr/en/' : '최애의 독서 https://favorbook.co.kr/');
-    return lines.join('\n');
+    gs.list.forEach(function (g) { section(g.name, g.books); });
+    if (gs.shared.books.length) section(T.shared, gs.shared.books);
+    out.push(T.brand + ' ' + T.site);
+    return out.join('\n');
+  }
+
+  // 마크다운 — 노션·옵시디언·깃허브 등에 붙이면 제목·목록·링크가 살아난다
+  function markdownText(site, gs) {
+    var c = countOf(gs);
+    var esc = function (s) { return String(s).replace(/([\\\[\]*_`])/g, '\\$1'); };
+    var out = ['# ♥ ' + T.shelfTitle, '', T.counts(c.celebs, c.books) + ' · ' + today('-') + ' ' + T.asOf, ''];
+    var section = function (head, books, owner) {
+      out.push('## ' + esc(head) + (books.length ? ' · ' + T.books(books.length) : ''), '');
+      books.forEach(function (b) {
+        var href = bookHref(site, b, owner).replace(/\(/g, '%28').replace(/\)/g, '%29');
+        var title = esc(enOr(b.info.title_en, b.title));
+        var a = enOr(b.info.author_en, b.info.author);
+        out.push('- ' + (href ? '[' + title + '](' + href + ')' : title) + (a ? ' — ' + esc(a) : ''));
+      });
+      out.push('');
+    };
+    gs.list.forEach(function (g) { section(g.name, g.books, g.name); });
+    if (gs.shared.books.length) section(T.shared, gs.shared.books, '');
+    out.push('---', '[' + T.brand + '](' + T.site + ')');
+    return out.join('\n');
   }
 
   function copyText(text) {
@@ -546,6 +597,271 @@
       ta.select();
       try { document.execCommand('copy') ? ok() : no(); } catch (e) { no(e); }
       document.body.removeChild(ta);
+    });
+  }
+
+  // ── 책장 이미지 (PNG) ───────────────────────────────────────────────
+  // 책등 사진을 세워 선반에 꽂은 모양. 편집기(editor/shelf.js)와 같은 방식으로 canvas에 직접 그린다.
+  // 예스24 이미지는 CORS가 없어 canvas가 막히므로 images.weserv.nl을 거치고, 못 불러온 책은 색 책등으로 대신한다.
+  var PROXY = 'https://images.weserv.nl/?url=';
+  var SERIF = '"KoPubWorld Batang","Noto Serif KR",Batang,serif';
+  var SANS = '-apple-system,BlinkMacSystemFont,"Segoe UI","Noto Sans KR","Malgun Gothic",sans-serif';
+  var PAPER = '#faf6ee', INK = '#1c1a17', SOFT = '#7a7064', ACCENT = '#e11d48';
+
+  function hashOf(s, mul) {
+    var h = 0;
+    for (var ch of String(s || '')) h = (Math.imul(h, mul) + ch.codePointAt(0)) >>> 0;
+    return h;
+  }
+  function tint(title) {
+    var h = hashOf(title, 31);
+    return 'hsl(' + (h % 360) + ',' + (32 + (h >>> 9) % 26) + '%,' + (26 + (h >>> 17) % 22) + '%)';
+  }
+  function isLight(hex) {
+    var m = /^#([0-9a-f]{6})$/i.exec(hex || '');
+    if (!m) return false;
+    var lin = [0, 2, 4].map(function (i) {
+      var c = parseInt(m[1].slice(i, i + 2), 16) / 255;
+      return c <= 0.04045 ? c / 12.92 : Math.pow((c + 0.055) / 1.055, 2.4);
+    });
+    return 0.2126 * lin[0] + 0.7152 * lin[1] + 0.0722 * lin[2] > 0.4;
+  }
+  // 본제목만 — 부제와 끝의 판형 표기는 뗀다
+  function spineTitle(t) {
+    t = String(t || '').trim();
+    return t.split(/\s+[-–—]\s+/)[0].replace(/\s*[(\[][^)\]]*[)\]]\s*$/, '').trim() || t;
+  }
+  function yes24Spine(cover) {
+    var m = /image\.yes24\.com\/goods\/(?:detail\/)?(\d+)/i.exec(cover || '');
+    return m ? 'https://image.yes24.com/goods/' + m[1] + '/side' : '';
+  }
+  function loadImage(url) {
+    return new Promise(function (resolve) {
+      var im = new Image(), done = false;
+      var fin = function (v) { if (!done) { done = true; resolve(v); } };
+      im.crossOrigin = 'anonymous';
+      im.onload = function () { fin(im.naturalWidth && im.naturalHeight ? im : null); };
+      im.onerror = function () { fin(null); };
+      setTimeout(function () { fin(null); }, 10000);
+      im.src = PROXY + encodeURIComponent(url.replace(/^https?:\/\//i, '')) + '&output=png';
+    });
+  }
+
+  function prepareSpines(books) {
+    return Promise.all(books.map(function (b) {
+      var url = b.info.spineUrl || yes24Spine(b.info.coverUrl);
+      var title = spineTitle(enOr(b.info.title_en, b.title));
+      var color = b.info.spineColor || '';
+      var make = function (img) {
+        if (img && img.naturalWidth / img.naturalHeight > 0.4) img = null;   // 넙적하면 '이미지 준비중' 그림이므로 색 책등으로
+        return {
+          title: title, img: img, color: color || tint(b.title), light: !!color && isLight(color),
+          ratio: img ? img.naturalWidth / img.naturalHeight : (24 + hashOf(title, 13) % 10) / 310,
+          f: 0.88 + (hashOf(b.title, 17) % 13) / 100,   // 책마다 키가 조금씩 달라 진짜 책장처럼 보인다
+        };
+      };
+      return url ? loadImage(url).then(make) : Promise.resolve(make(null));
+    }));
+  }
+
+  function roundRect(ctx, x, y, w, h, r) {
+    ctx.beginPath();
+    ctx.moveTo(x + r, y); ctx.lineTo(x + w - r, y); ctx.quadraticCurveTo(x + w, y, x + w, y + r);
+    ctx.lineTo(x + w, y + h); ctx.lineTo(x, y + h); ctx.lineTo(x, y + r);
+    ctx.quadraticCurveTo(x, y, x + r, y); ctx.closePath();
+  }
+
+  // 세로 제목 — 한글은 똑바로 쌓고, 라틴·숫자 묶음은 시계 방향으로 눕힌다
+  function drawVertical(ctx, text, cx, top, maxLen, w, color) {
+    var runs = [];
+    for (var ch of text) {
+      var cjk = ch.codePointAt(0) > 0x2E7F, last = runs[runs.length - 1];
+      if (last && last.cjk === cjk && !cjk) last.s += ch; else runs.push({ cjk: cjk, s: ch });
+    }
+    var size = Math.max(11, Math.min(Math.round(w * 0.42), 34));
+    var lenAt = function (fs) {
+      ctx.font = '300 ' + fs + 'px ' + SERIF;
+      var n = 0;
+      runs.forEach(function (r) { n += r.cjk ? fs * 1.18 : (r.s.trim() ? ctx.measureText(r.s).width + fs * 0.2 : fs * 0.45); });
+      return n;
+    };
+    while (size > 9 && lenAt(size) > maxLen) size -= 1;
+    ctx.font = '300 ' + size + 'px ' + SERIF;
+    ctx.fillStyle = color;
+    ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+    var y = top;
+    runs.forEach(function (r) {
+      if (!r.cjk && !r.s.trim()) { y += size * 0.45; return; }
+      if (r.cjk) { ctx.fillText(r.s, cx, y + size * 0.59); y += size * 1.18; return; }
+      var len = ctx.measureText(r.s).width;
+      ctx.save();
+      ctx.translate(cx, y + len / 2);
+      ctx.rotate(Math.PI / 2);
+      ctx.fillText(r.s, 0, 0);
+      ctx.restore();
+      y += len + size * 0.2;
+    });
+  }
+
+  function drawSpine(ctx, c, x, y) {
+    var it = c.it, w = c.w, h = c.h;
+    // 책 밑에 옅은 그림자
+    ctx.save();
+    ctx.shadowColor = 'rgba(40,30,10,.22)'; ctx.shadowBlur = 8; ctx.shadowOffsetX = 2; ctx.shadowOffsetY = 1;
+    ctx.fillStyle = it.color;
+    roundRect(ctx, x, y, w, h, 3); ctx.fill();
+    ctx.restore();
+    ctx.save();
+    roundRect(ctx, x, y, w, h, 3);
+    ctx.clip();
+    if (it.img) {
+      ctx.drawImage(it.img, x, y, w, h);
+    } else {
+      ctx.fillStyle = it.color;
+      ctx.fillRect(x, y, w, h);
+      var g = ctx.createLinearGradient(x, 0, x + w, 0);
+      g.addColorStop(0, 'rgba(255,255,255,.10)'); g.addColorStop(.18, 'rgba(255,255,255,0)');
+      g.addColorStop(.82, 'rgba(0,0,0,0)'); g.addColorStop(1, 'rgba(0,0,0,.14)');
+      ctx.fillStyle = g;
+      ctx.fillRect(x, y, w, h);
+      drawVertical(ctx, it.title, x + w / 2, y + 16, h - 32, w, it.light ? '#111' : '#fff');
+    }
+    ctx.restore();
+  }
+
+  function drawHeart(ctx, x, y, s, color) {   // (x,y)가 왼쪽 위인 s×s 하트
+    ctx.save();
+    ctx.translate(x, y); ctx.scale(s / 32, s / 32);
+    ctx.beginPath();
+    ctx.moveTo(16, 29);
+    ctx.bezierCurveTo(-8, 13, 5, -4, 16, 8);
+    ctx.bezierCurveTo(27, -4, 40, 13, 16, 29);
+    ctx.fillStyle = color; ctx.fill();
+    ctx.restore();
+  }
+
+  function fitText(ctx, text, maxW) {
+    if (ctx.measureText(text).width <= maxW) return text;
+    while (text.length > 1 && ctx.measureText(text + '…').width > maxW) text = text.slice(0, -1);
+    return text + '…';
+  }
+
+  // 책등 높이를 키워 보며, 가로(1080)에 맞춰 줄을 나누고 한 줄에 선반 하나씩 놓는다
+  function arrange(items, H, availW) {
+    var rows = [], row = [], rw = 0;
+    items.forEach(function (it) {
+      var h = Math.round(H * it.f), w = Math.max(14, Math.round(it.ratio * h));
+      if (row.length && rw + 4 + w > availW) { rows.push({ cells: row, w: rw }); row = []; rw = 0; }
+      rw += (row.length ? 4 : 0) + w;
+      row.push({ it: it, w: w, h: h });
+    });
+    if (row.length) rows.push({ cells: row, w: rw });
+    return rows;
+  }
+
+  function renderShelf(site, gs) {
+    var W = 1080, PAD = 72, HEAD = 270, FOOT = 140, BOARD = 12, ROWGAP = 46, MAXH = 1920, MINH = 820;
+    var books = [];
+    gs.list.forEach(function (g) { books = books.concat(g.books); });
+    books = books.concat(gs.shared.books);
+    var c = countOf(gs);
+    var fonts = document.fonts && document.fonts.load ? Promise.all([
+      document.fonts.load('300 20px "KoPubWorld Batang"', '가나다abc'),
+      document.fonts.load('700 20px "KoPubWorld Batang"', '가나다abc'),
+    ]).catch(function () {}) : Promise.resolve();
+
+    return Promise.all([prepareSpines(books), fonts]).then(function (res) {
+      var items = res[0], availW = W - PAD * 2, H = 360, rows, total;
+      for (; H >= 110; H -= 6) {
+        rows = arrange(items, H, availW);
+        total = rows.length * (H + BOARD) + Math.max(rows.length - 1, 0) * ROWGAP;
+        if (HEAD + total + FOOT <= MAXH) break;
+      }
+      if (H < 110) { H = 110; rows = arrange(items, H, availW); total = rows.length * (H + BOARD) + Math.max(rows.length - 1, 0) * ROWGAP; }
+      var CH = Math.max(MINH, HEAD + total + FOOT);
+
+      var cv = document.createElement('canvas');
+      cv.width = W; cv.height = CH;
+      var ctx = cv.getContext('2d');
+      ctx.imageSmoothingEnabled = true; ctx.imageSmoothingQuality = 'high';
+      ctx.fillStyle = PAPER; ctx.fillRect(0, 0, W, CH);
+
+      // 머리글: ♥ 내 책장 / 셀럽 n명 · 책 n권 / 셀럽 이름들
+      drawHeart(ctx, PAD, 78, 50, ACCENT);
+      ctx.textBaseline = 'alphabetic'; ctx.textAlign = 'left';
+      ctx.fillStyle = INK; ctx.font = '700 70px ' + SERIF;
+      ctx.fillText(T.shelfTitle, PAD + 70, 130);
+      ctx.fillStyle = SOFT; ctx.font = '500 28px ' + SANS;
+      ctx.fillText(T.counts(c.celebs, c.books), PAD + 2, 186);
+      if (gs.list.length) {
+        ctx.font = '400 25px ' + SANS;
+        var names = gs.list.slice(0, 4).map(function (g) { return EN ? (site.celebs[g.name] && site.celebs[g.name].nameEn) || g.name : g.name; }).join(' · ')
+          + (gs.list.length > 4 ? (EN ? ' +' : ' 외 ') + (gs.list.length - 4) + (EN ? '' : '명') : '');
+        ctx.fillStyle = '#a0968a';
+        ctx.fillText(fitText(ctx, names, W - PAD * 2), PAD + 2, 226);
+      }
+      ctx.textAlign = 'right'; ctx.fillStyle = '#a0968a'; ctx.font = '500 25px ' + SANS;
+      ctx.fillText(today('.'), W - PAD, 130);
+
+      // 선반: 책은 왼쪽부터 꽂고 줄마다 얇은 판자를 깐다. 책장 전체를 머리글과 바닥글 사이에 가운데 맞춘다
+      var top = HEAD + Math.max(0, (CH - HEAD - FOOT - total) / 2);
+      rows.forEach(function (row, ri) {
+        var y0 = top + ri * (H + BOARD + ROWGAP), base = y0 + H;
+        var x = PAD;
+        row.cells.forEach(function (cell) {
+          drawSpine(ctx, cell, x, base - cell.h);
+          x += cell.w + 4;
+        });
+        ctx.fillStyle = INK;
+        roundRect(ctx, PAD - 28, base, W - PAD * 2 + 56, BOARD, 3); ctx.fill();
+        var sh = ctx.createLinearGradient(0, base + BOARD, 0, base + BOARD + 16);
+        sh.addColorStop(0, 'rgba(60,40,10,.14)'); sh.addColorStop(1, 'rgba(60,40,10,0)');
+        ctx.fillStyle = sh; ctx.fillRect(PAD - 28, base + BOARD, W - PAD * 2 + 56, 16);
+      });
+
+      // 바닥글
+      var fy = CH - 62;
+      drawHeart(ctx, PAD, fy - 26, 30, ACCENT);
+      ctx.textAlign = 'left'; ctx.fillStyle = INK; ctx.font = '700 30px ' + SERIF;
+      ctx.fillText(T.brand, PAD + 42, fy);
+      ctx.textAlign = 'right'; ctx.fillStyle = SOFT; ctx.font = '500 26px ' + SANS;
+      ctx.fillText(T.siteShort, W - PAD, fy);
+      return cv;
+    });
+  }
+
+  // 휴대폰에서는 공유 창(→ 사진에 저장), 컴퓨터에서는 바로 내려받는다
+  function deliverPng(blob, name) {
+    var file = null;
+    try { file = new File([blob], name, { type: 'image/png' }); } catch (e) {}
+    var touch = window.matchMedia && window.matchMedia('(pointer:coarse)').matches;
+    var download = function () {
+      var a = document.createElement('a');
+      a.href = URL.createObjectURL(blob);
+      a.download = name;
+      document.body.appendChild(a); a.click(); document.body.removeChild(a);
+      setTimeout(function () { URL.revokeObjectURL(a.href); }, 4000);
+    };
+    if (file && touch && navigator.canShare && navigator.canShare({ files: [file] })) {
+      return navigator.share({ files: [file], title: T.shelfTitle }).catch(function (e) {
+        if (e && e.name === 'AbortError') throw e;
+        download();   // 이미지를 만드는 동안 '누른 직후' 조건이 풀려 공유가 막히면 내려받기로
+      });
+    }
+    download();
+    return Promise.resolve();
+  }
+
+  function saveShelfImage(site, gs) {
+    return renderShelf(site, gs).then(function (cv) {
+      return new Promise(function (ok, no) {
+        cv.toBlob(function (b) { b ? ok(b) : no(new Error('toBlob')); }, 'image/png');
+      });
+    }).then(function (blob) {
+      if (typeof window.gtag === 'function') {
+        try { window.gtag('event', 'my_shelf_image', { n: countOf(gs).books }); } catch (e) {}
+      }
+      return deliverPng(blob, 'favorbook-shelf-' + today('') + '.png');
     });
   }
 
@@ -591,7 +907,7 @@
     var body = drawer.querySelector('.mh-body');
     if (!body.querySelector('.mh-g')) {
       body.innerHTML = '<p class="mh-msg">' + T.empty + '</p>';
-      drawer.querySelector('.mh-copy').hidden = true;
+      drawer.querySelector('.mh-tools').hidden = true;
     }
     if (!gone.length) return;
     lastRemoved = gone;
@@ -618,7 +934,7 @@
       if (back.some(function (x) { return pending[x[0]]; }) && tries++ < 30) { setTimeout(apply, 100); return; }
       back.forEach(function (x) { setHeart(x[0], true, x[1]); });
       var gs = renderDrawer(drawer.querySelector('.mh-body'), drawerSite);
-      drawer.querySelector('.mh-copy').hidden = !(gs.list.length || gs.shared.books.length);
+      drawer.querySelector('.mh-tools').hidden = !(gs.list.length || gs.shared.books.length);
     })();
   }
   function closeDrawer() {
@@ -635,8 +951,11 @@
       drawer.hidden = true;
       drawer.innerHTML = '<div class="mh-panel" role="dialog" aria-modal="true" aria-labelledby="mh-title">'
         + '<div class="mh-head"><h2 id="mh-title"><span aria-hidden="true">♥</span> ' + T.title + '</h2>'
-        + '<button type="button" class="mh-btn mh-copy">' + T.copy + '</button>'
         + '<button type="button" class="mh-btn mh-x" aria-label="' + T.close + '">✕</button></div>'
+        + '<div class="mh-tools" hidden>'
+        + '<button type="button" class="mh-btn mh-primary mh-img">' + T.saveImg + '</button>'
+        + '<button type="button" class="mh-btn mh-txt">' + T.copyTxt + '</button>'
+        + '<button type="button" class="mh-btn mh-md">' + T.copyMd + '</button></div>'
         + '<div class="mh-body"></div>'
         + '<p class="mh-undo" role="status" hidden><span></span><button type="button">' + T.undo + '</button></p>'
         + '<p class="mh-note">' + T.note + '</p></div>';
@@ -655,23 +974,43 @@
     drawer.hidden = false;
     document.documentElement.classList.add('mh-open');
     var body = drawer.querySelector('.mh-body');
-    var copy = drawer.querySelector('.mh-copy');
+    var tools = drawer.querySelector('.mh-tools');
     body.innerHTML = '<p class="mh-msg">' + T.loading + '</p>';
-    copy.hidden = true;
+    tools.hidden = true;
     drawer.querySelector('.mh-x').focus();
 
     hideUndo();
     loadSite().then(function (site) {
       drawerSite = site;
       var gs = renderDrawer(body, site);
-      copy.hidden = !(gs.list.length || gs.shared.books.length);
-      copy.textContent = T.copy;
-      copy.onclick = function () {
-        // 서랍을 연 뒤 뺀 하트는 목록에서도 뺀다
-        copyText(listText(site, buildGroups(site))).then(function () {
-          copy.textContent = T.copied;
-          setTimeout(function () { copy.textContent = T.copy; }, 1600);
-        }, function () {});
+      tools.hidden = !(gs.list.length || gs.shared.books.length);
+      // 서랍을 연 뒤 뺀 하트는 결과에서도 빠지도록 누를 때마다 목록을 새로 만든다
+      var flash = function (btn, label, orig) {
+        btn.textContent = label;
+        setTimeout(function () { btn.textContent = orig; }, 1600);
+      };
+      var bindCopy = function (sel, make, orig) {
+        var btn = tools.querySelector(sel);
+        btn.textContent = orig;
+        btn.onclick = function () {
+          copyText(make(site, buildGroups(site))).then(function () { flash(btn, T.copied, orig); }, function () {});
+        };
+      };
+      bindCopy('.mh-txt', plainText, T.copyTxt);
+      bindCopy('.mh-md', markdownText, T.copyMd);
+      var imgBtn = tools.querySelector('.mh-img');
+      imgBtn.textContent = T.saveImg;
+      imgBtn.onclick = function () {
+        if (imgBtn.disabled) return;
+        imgBtn.disabled = true;
+        imgBtn.textContent = T.making;
+        saveShelfImage(site, buildGroups(site)).then(function () {
+          flash(imgBtn, T.savedImg, T.saveImg);
+        }, function (e) {
+          if (e && e.name === 'AbortError') { imgBtn.textContent = T.saveImg; return; }   // 공유 창을 닫은 경우
+          imgBtn.textContent = T.saveImg;
+          alert(T.imgFail);
+        }).then(function () { imgBtn.disabled = false; });
       };
     }).catch(function () {
       body.innerHTML = '<p class="mh-msg">' + T.fail + '</p>';
