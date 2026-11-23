@@ -775,9 +775,16 @@
 
   function arrange(blocks, H, availW, ctx) {
     var rows = [], row = [], rw = 0;
+    // 책은 줄의 왼쪽부터 차례로 꽂는다. 이름이 책 묶음보다 길면 양옆으로 반씩 넘치므로 그만큼 자리를 비워 둔다
+    // (줄의 첫 묶음은 왼쪽으로 넘치는 부분을 여백에 두어 책이 왼쪽 끝에서 시작하게 한다)
     var place = function (chunk) {
-      if (row.length && rw + BLOCKGAP + chunk.w > availW) { rows.push({ chunks: row, w: rw }); row = []; rw = 0; }
-      rw += (row.length ? BLOCKGAP : 0) + chunk.w;
+      var need = row.length ? BLOCKGAP + chunk.lo * 2 + chunk.bw : chunk.bw + chunk.lo;
+      if (row.length && rw + need > availW) {
+        rows.push({ chunks: row, w: rw }); row = []; rw = 0;
+        need = chunk.bw + chunk.lo;
+      }
+      chunk.start = row.length ? rw + BLOCKGAP + chunk.lo : 0;   // 줄 왼쪽에서 이 묶음 첫 책까지
+      rw += need;
       row.push(chunk);
     };
     blocks.forEach(function (b) {
@@ -787,7 +794,7 @@
         var lines = labelLines(ctx, first ? b.label : b.label + T.cont);
         ctx.font = LABELFONT;
         var lw = Math.ceil(Math.max.apply(null, lines.map(function (s) { return ctx.measureText(s).width; })));
-        place({ lines: lines, cont: !first, cells: cur, bw: cw, w: Math.max(cw, lw) });
+        place({ lines: lines, cont: !first, cells: cur, bw: cw, lo: Math.max(0, (lw - cw) / 2) });
         cur = []; cw = 0; first = false;
       };
       b.items.forEach(function (it) {
@@ -855,19 +862,17 @@
       ctx.fillStyle = SOFT; ctx.font = '500 30px ' + SANS;
       ctx.fillText(T.books(c.books), PAD + 2, 186);
 
-      // 선반: 줄마다 얇은 판자를 깔고, 묶음은 줄 안에서 가운데로 모은다. 묶음 안의 책과 이름표도 가운데 맞춘다.
+      // 선반: 줄마다 얇은 판자를 깔고 책은 왼쪽부터 차례로 꽂는다. 이름표는 그 묶음 책들의 가운데 밑에 놓는다.
       // 책장 전체는 머리글과 바닥 사이에서 위아래 가운데 맞춘다
       var y0 = HEAD + Math.max(0, (CH - HEAD - FOOT - total) / 2);
       rows.forEach(function (row) {
         var base = y0 + H, lh = labelH(row);
-        var x = PAD + (availW - row.w) / 2;
         row.chunks.forEach(function (chunk) {
-          var bx = x + (chunk.w - chunk.bw) / 2;
+          var bx = PAD + chunk.start;
           chunk.cells.forEach(function (cell) {
             drawSpine(ctx, cell, bx, base - cell.h);
             bx += cell.w + 4;
           });
-          x += chunk.w + BLOCKGAP;
         });
         ctx.fillStyle = INK;
         roundRect(ctx, PAD - 28, base, W - PAD * 2 + 56, BOARD, 3); ctx.fill();
@@ -875,16 +880,16 @@
         sh.addColorStop(0, 'rgba(60,40,10,.14)'); sh.addColorStop(1, 'rgba(60,40,10,0)');
         ctx.fillStyle = sh; ctx.fillRect(PAD - 28, base + BOARD, W - PAD * 2 + 56, 14);
 
-        // 이름표: 묶음 가운데에 짧은 선과 이름을 적는다
-        x = PAD + (availW - row.w) / 2;
+        // 이름표: 묶음 책들의 가운데 밑에 짧은 선과 이름을 적는다 (화면 밖으로 나가지 않게 가장자리에서 24px 안쪽까지만)
         row.chunks.forEach(function (chunk) {
-          var cx = x + chunk.w / 2;
-          ctx.fillStyle = chunk.cont ? '#a0968a' : INK;
-          ctx.fillRect(cx - 22, base + BOARD + 10, 44, 3);
-          ctx.textAlign = 'center'; ctx.textBaseline = 'alphabetic';
+          var mid = PAD + chunk.start + chunk.bw / 2;
           ctx.font = LABELFONT;
+          var half = Math.max.apply(null, chunk.lines.map(function (l) { return ctx.measureText(l).width; })) / 2;
+          var cx = Math.min(Math.max(mid, 24 + half), W - 24 - half);
+          ctx.fillStyle = chunk.cont ? '#a0968a' : INK;
+          ctx.fillRect(mid - 22, base + BOARD + 10, 44, 3);
+          ctx.textAlign = 'center'; ctx.textBaseline = 'alphabetic';
           chunk.lines.forEach(function (ln, li) { ctx.fillText(ln, cx, base + BOARD + 40 + li * LABELLINE); });
-          x += chunk.w + BLOCKGAP;
         });
         y0 += H + BOARD + lh + ROWGAP;
       });
