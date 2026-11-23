@@ -753,18 +753,23 @@
   }
 
   // 셀럽(묶음)별로 책을 모아 선반에 놓는다. 묶음 밑에 이름표를 가운데 맞춰 붙이고, 한 줄에 안 들어가면 다음 줄로 이어 간다
-  var BLOCKGAP = 34, LABELFONT = '700 23px ' + SANS, LABELMAX = 300, LABELLINE = 30;
+  var BLOCKGAP = 34, LABELFONT = '700 23px ' + SANS, LABELFONT2 = '600 20px ' + SANS, LABELMAX = 300, LABELWRAP = 150, LABELLINE = 28;
 
-  // 이름표 줄 나누기 — 한 줄에 들어가면 그대로, 길면 '(' 앞에서 두 줄로, 그래도 길면 글자 수로 나누고 끝은 …로 줄인다
+  // 이름표 줄 나누기 — 이름이 길면(LABELWRAP 넘음) '(' 앞에서 잘라 괄호 부분을 아랫줄로 보낸다.
+  // 둘째 줄은 작은 글씨라 그 폭으로 잰다. 그래도 안 들어가면 글자 수로 나누고 끝은 …로 줄인다
   function labelLines(ctx, text) {
     ctx.font = LABELFONT;
     var wd = function (s) { return ctx.measureText(s).width; };
-    if (wd(text) <= LABELMAX) return [text];
+    if (wd(text) <= LABELWRAP) return [text];
     var i = text.indexOf('(');
     if (i > 0) {
       var a = text.slice(0, i).trim(), b = text.slice(i);
-      if (wd(a) <= LABELMAX && wd(b) <= LABELMAX) return [a, b];
+      ctx.font = LABELFONT2;
+      var bw2 = ctx.measureText(b).width;
+      ctx.font = LABELFONT;
+      if (wd(a) <= LABELMAX && bw2 <= LABELMAX) return [a, b];
     }
+    if (wd(text) <= LABELMAX) return [text];
     var first = '', rest = '', splitDone = false;
     for (var ch of text) {
       if (!splitDone && wd(first + ch) > LABELMAX) splitDone = true;
@@ -792,8 +797,7 @@
       var flush = function () {
         if (!cur.length) return;
         var lines = labelLines(ctx, first ? b.label : b.label + T.cont);
-        ctx.font = LABELFONT;
-        var lw = Math.ceil(Math.max.apply(null, lines.map(function (s) { return ctx.measureText(s).width; })));
+        var lw = Math.ceil(Math.max.apply(null, lines.map(function (s, k) { ctx.font = k ? LABELFONT2 : LABELFONT; return ctx.measureText(s).width; })));
         place({ lines: lines, cont: !first, cells: cur, bw: cw, lo: Math.max(0, (lw - cw) / 2) });
         cur = []; cw = 0; first = false;
       };
@@ -883,13 +887,16 @@
         // 이름표: 묶음 책들의 가운데 밑에 짧은 선과 이름을 적는다 (화면 밖으로 나가지 않게 가장자리에서 24px 안쪽까지만)
         row.chunks.forEach(function (chunk) {
           var mid = PAD + chunk.start + chunk.bw / 2;
-          ctx.font = LABELFONT;
-          var half = Math.max.apply(null, chunk.lines.map(function (l) { return ctx.measureText(l).width; })) / 2;
+          var half = Math.max.apply(null, chunk.lines.map(function (l, k) { ctx.font = k ? LABELFONT2 : LABELFONT; return ctx.measureText(l).width; })) / 2;
           var cx = Math.min(Math.max(mid, 24 + half), W - 24 - half);
           ctx.fillStyle = chunk.cont ? '#a0968a' : INK;
           ctx.fillRect(mid - 22, base + BOARD + 10, 44, 3);
           ctx.textAlign = 'center'; ctx.textBaseline = 'alphabetic';
-          chunk.lines.forEach(function (ln, li) { ctx.fillText(ln, cx, base + BOARD + 40 + li * LABELLINE); });
+          chunk.lines.forEach(function (ln, li) {
+            ctx.font = li ? LABELFONT2 : LABELFONT;
+            ctx.fillStyle = li ? (chunk.cont ? '#a0968a' : SOFT) : (chunk.cont ? '#a0968a' : INK);   // 괄호 줄은 한 단계 옅게
+            ctx.fillText(ln, cx, base + BOARD + 40 + li * LABELLINE);
+          });
         });
         y0 += H + BOARD + lh + ROWGAP;
       });
