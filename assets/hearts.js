@@ -784,7 +784,7 @@
   }
 
   function renderShelf(site, gs) {
-    var W = 1080, PAD = 72, HEAD = 270, FOOT = 140, BOARD = 12, LABELH = 52, ROWGAP = 34, MAXH = 1920, MINH = 820;
+    var W = 1080, PAD = 72, HEAD = 270, FOOT = 140, BOARD = 12, LABELH = 52, ROWGAP = 92, MAXH = 1920, MINH = 820;
     var groups = gs.list.filter(function (g) { return g.books.length; }).map(function (g) {
       return { label: celebLabel(site, g.name), books: g.books };
     });
