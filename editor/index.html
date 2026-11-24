@@ -33,6 +33,7 @@
     <button id="genresBtn" class="btn" title="도서관 분류로 소설·에세이 등을 정하지 못한 책을 직접 골라 줌 (독서 취향 통계에 쓰임)">🏷️ 분야 검수</button>
     <button id="unifyBtn" class="btn" title="같은 책인데 영문 제목이나 한국어 제목이 갈린 경우를 찾아 하나로 맞춤">📚 책 이름 통일</button>
     <button id="commentsBtn" class="btn" title="출처에서 자동으로 뽑은 추천 이유 초안을 검수 (승인한 것만 노출)">💬 코멘트 검수</button>
+    <button id="subsBtn" class="btn" title="구글 폼 제보(영문·해외 시트)를 읽어 책을 반영하고, 시트에 반영(파랑)·보류(노랑)·미반영(빨강)을 적음">📮 제보 반영</button>
     <button id="alaBtn" class="btn" title="알라딘 '저자의 추천' 페이지에서 모은 셀럽 추천사를 참고용으로 봄 (data/aladin_recommend.csv, 읽기 전용)">📖 알라딘 추천사</button>
     <a class="btn" href="hearts.html" target="_blank" rel="noopener" style="text-decoration:none;display:inline-flex;align-items:center" title="셀럽·책 하트 순위, 최근 기록, 페이지 조회수 (운영자 전용)">❤️ 하트·조회수 통계</a>
     <button id="saveBtn" class="btn" disabled title="GitHub 드래프트 브랜치에 보관합니다. 사이트에는 안 나갑니다 (Ctrl+S)">📝 드래프트 저장</button>
@@ -391,6 +392,72 @@
   </div>
   <footer class="modal-foot">
     <span id="alaStatus" class="status"></span>
+    <button type="button" class="btn" data-close>닫기</button>
+  </footer>
+</dialog>
+
+<!-- 구글 폼 제보 반영 (editor/submissions.js) -->
+<dialog id="subsDialog" class="modal" style="width: min(980px, 98vw);">
+  <header class="modal-head">
+    <h3>📮 제보 반영</h3>
+    <button type="button" class="x" data-close>✕</button>
+  </header>
+  <div class="modal-body" id="subsBody" style="max-height: calc(90vh - 130px);">
+    <p class="muted small">
+      구글 폼으로 들어온 <a href="https://docs.google.com/spreadsheets/d/1J4B0pa2Hv3l4nNfzMwghqWHdXT7cUbFZE3gPY1gCzvk/edit" target="_blank" rel="noopener">영문 제보</a>·<a href="https://docs.google.com/spreadsheets/d/186gKVna6LANvKkdvqJF7V3MTSZdDgI3xksmOgY4WtGM/edit" target="_blank" rel="noopener">해외 제보</a> 시트를 읽어,
+      셀럽에게 <b>같은 책</b>이 있고 <b>제보 주소와 출처가 같으면</b> 반영으로 봅니다(제보에 주소가 없으면 책만 맞으면 반영).
+      없는 책은 예스24에서 찾아 두니 <b>＋ 추가</b>를 누르면 책 정보·표지·영문이 채워지고, 주소 말고 적힌 설명은 💬 메모(AI 코멘트 재료)로 들어갑니다.
+      발행본에 들어가면 시트에 <span class="sub-dot done"></span>반영(체크+파랑)으로 적고, 손으로 <span class="sub-dot hold"></span>보류(노랑)·<span class="sub-dot todo"></span>미반영(빨강)도 적을 수 있어요.
+    </p>
+    <details id="subsCfg" class="sub-cfg">
+      <summary class="small">⚙️ 시트 연결 (Apps Script) — <span id="subsCfgState"></span></summary>
+      <p class="muted small">시트에 체크·색을 적으려면 <code>tools/submissions/Code.gs</code> 를 Apps Script 웹앱으로 배포하고 주소와 키를 넣으세요 (방법: <code>tools/submissions/README.md</code>). 없으면 읽기만 합니다. 이 브라우저에만 저장돼요.</p>
+      <div class="row" style="gap:6px">
+        <input id="subsCfgScript" placeholder="https://script.google.com/macros/s/…/exec" style="flex:2 1 auto;min-width:0">
+        <input id="subsCfgKey" type="password" placeholder="EDITOR_KEY" style="flex:1 1 auto;min-width:0">
+        <button type="button" id="subsCfgTest" class="btn small">연결 테스트</button>
+        <button type="button" id="subsCfgSave" class="btn small primary">저장</button>
+      </div>
+    </details>
+    <div class="row" style="gap:6px;flex-wrap:wrap;margin-top:8px">
+      <select id="subsSheet" title="시트" style="flex:0 0 auto;width:auto">
+        <option value="all">두 시트 모두</option>
+        <option value="en">영문 제보</option>
+        <option value="intl">해외 제보</option>
+      </select>
+      <select id="subsFilter" title="보기 범위" style="flex:0 0 auto;width:auto">
+        <option value="todo">할 일 (반영·보류 아닌 것)</option>
+        <option value="new">새 제보 (시트 상태 없음)</option>
+        <option value="edit">편집본에 반영 · 발행 대기</option>
+        <option value="mismatch">⚠ 시트엔 반영인데 데이터에 없음</option>
+        <option value="nobook">책 정보 없음 (수정 요청 등)</option>
+        <option value="pending">시트에 적을 판정</option>
+        <option value="hold">보류</option>
+        <option value="done">반영</option>
+        <option value="all">전체</option>
+      </select>
+      <input id="subsSearch" type="search" placeholder="이름·책·출처로 찾기…" style="flex:1 1 160px;min-width:0">
+      <button type="button" id="subsReloadBtn" class="btn small">↻ 시트 새로고침</button>
+      <label class="small sub-opt" title="창이 열려 있는 동안 1분마다 시트를 다시 읽어 판정"><input type="checkbox" id="subsAuto"> 1분마다 갱신</label>
+      <label class="small sub-opt" title="갱신할 때마다 판정을 시트에 바로 적음 (발행본에 들어간 제보 → 반영, 상태 없는 새 제보 → 미반영). 보류는 안 건드림"><input type="checkbox" id="subsAutoWrite"> 시트에 자동 기록</label>
+    </div>
+    <div class="row" style="gap:6px;margin-top:6px;flex-wrap:wrap">
+      <span id="subsCounts" class="small" style="flex:1 1 auto"></span>
+      <button type="button" id="subsWriteBtn" class="btn small" title="판정과 시트 상태가 다른 줄을 시트에 적음">시트에 판정 기록</button>
+      <button type="button" id="subsAiCopyBtn" class="btn small" title="지금 목록의 미반영 제보(최대 30건)를 Claude에게 정리시킬 요청으로 복사">✨ AI 정리 요청 복사</button>
+    </div>
+    <details id="subsAiBox" class="sub-cfg" style="margin-top:6px">
+      <summary class="small">AI 답 붙여넣기 — 형식이 복잡한 제보(여러 권, 영어 제목, 출처 수정 요청)를 책 단위로 나눠 줘요</summary>
+      <textarea id="subsAiPaste" rows="4" style="width:100%" placeholder='Claude 답을 그대로 붙여넣기: [{"key": "…", "kind": "books", "books": [...]}]'></textarea>
+      <button type="button" id="subsAiApplyBtn" class="btn small primary" style="margin-top:4px">붙여넣은 결과 적용</button>
+    </details>
+    <datalist id="subsCelebList"></datalist>
+    <ul id="subsList" class="sub-list"></ul>
+    <button type="button" id="subsMore" class="btn small hidden" style="margin-top:8px">더 보기</button>
+  </div>
+  <footer class="modal-foot">
+    <span id="subsStatus" class="status"></span>
+    <span id="subsStoreState" class="muted small"></span>
     <button type="button" class="btn" data-close>닫기</button>
   </footer>
 </dialog>
@@ -808,5 +875,7 @@
 
 <script src="app.js"></script>
 <script src="shelf.js"></script>
+<script src="submissions_core.js"></script>
+<script src="submissions.js"></script>
 </body>
 </html>
