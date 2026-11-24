@@ -181,12 +181,13 @@
     // 빈 항목은 지운다
     for (const [k, v] of Object.entries(S.store.rows)) {
       if (v.dec && !Object.keys(v.dec).length) delete v.dec;
+      if (v.src && !Object.keys(v.src).length) delete v.src;
       if (!v.wip) delete v.wip;
       if (!v.memo) { delete v.memo; if (!v.wip) delete v.memoAt; }
       if (!Object.keys(v).length) delete S.store.rows[k];
     }
     const doc = {
-      _comment: '편집기 📮 제보 반영 창의 기록. 시트 행(키: 시트|타임스탬프|이름)마다 고른 셀럽(celeb), AI 정리 결과(ai), 책별 결정(dec: 제외 skip / 이대로 OK ok), 내 조사 메모(memo, memoAt)와 조사 중 표시(wip). aliases 는 제보에 적힌 이름 → data.csv 셀럽 이름. notes/editor 브랜치에만 저장돼 사이트에는 안 나간다.',
+      _comment: '편집기 📮 제보 반영 창의 기록. 시트 행(키: 시트|타임스탬프|이름)마다 고른 셀럽(celeb), AI 정리 결과(ai), 책별 결정(dec: 제외 skip / 이대로 OK ok), 책별로 고른 출처 링크(src), 내 조사 메모(memo, memoAt)와 조사 중 표시(wip). aliases 는 제보에 적힌 이름 → data.csv 셀럽 이름. notes/editor 브랜치에만 저장돼 사이트에는 안 나간다.',
       _updated: new Date().toISOString().slice(0, 10),
       aliases: S.store.aliases,
       rows: S.store.rows,
@@ -239,17 +240,31 @@
     const c = State.celebs.get(r.celeb);
     const pc = publishedCelebs().get(r.celeb);
     const dec = st.dec || {};
+    const pick = st.src || {};
+    r.allUrls = p.allUrls || [];
     r.books = p.books.map((b0, i) => {
       // 'as:제목' — 이 후보를 그 제목의 책으로 추가했다 (AI 정리 제목과 예스24 제목이 다를 때)
       const d = dec[i] || '';
-      const b = d.startsWith('as:') ? Object.assign({}, b0, { segs: [...(b0.segs || []), d.slice(3)] }) : b0;
-      const now = C.checkBook(c, b);
-      const pub = C.checkBook(pc, b);
+      let b = d.startsWith('as:') ? Object.assign({}, b0, { segs: [...(b0.segs || []), d.slice(3)] }) : b0;
+      // 이 책의 출처 링크를 직접 골랐으면 그것 ('' = 링크 없음)
+      const picked = Object.prototype.hasOwnProperty.call(pick, i);
+      if (picked) b = Object.assign({}, b, { urls: pick[i] ? [pick[i]] : [] });
+      const check = (cel) => {
+        const x = C.checkBook(cel, b);
+        // 형식이 자유로워 자동으로 붙인 링크가 틀릴 수 있다 — 제보 칸의 다른 링크와 맞으면 반영으로 본다
+        if (x.state === 'src' && !picked && r.allUrls.length) {
+          const y = C.checkBook(cel, Object.assign({}, b, { urls: r.allUrls }));
+          if (y.state === 'ok') return Object.assign(y, { viaOther: true });
+        }
+        return x;
+      };
+      const now = check(c);
+      const pub = check(pc);
       let state = now.state;
       if (d === 'skip') state = 'skip';
       else if (d === 'ok' && state !== 'miss') state = 'ok';
       const live = d === 'skip' || (state === 'ok' && (pub.state === 'ok' || (d === 'ok' && pub.state !== 'miss')));
-      return Object.assign({}, b, { i, state, idx: now.idx, cur: now.book, live, dec: d });
+      return Object.assign({}, b, { i, state, idx: now.idx, cur: now.book, live, dec: d, picked, viaOther: !!now.viaOther });
     });
     if (!r.books.length) r.calc = '?';
     else if (r.books.every(b => b.state === 'ok' || b.state === 'skip')) r.calc = r.books.every(b => b.live) ? 'live' : 'edit';
@@ -337,7 +352,7 @@
 
   /* ---------------- 화면 ---------------- */
   const SHEET_BADGE = { '반영': '반영', '보류': '보류', '미반영': '미반영', '': '새 제보' };
-  const BOOK_LABEL = { ok: '✅ 등록됨', src: '⚠️ 책은 있음 · 출처 다름', miss: '✖ 없음', skip: '— 제외' };
+  const BOOK_LABEL = { ok: '✅ 등록됨', src: '⚠️ 책은 있음 · 출처 다름', miss: '✖ 아직 등록 안 됨', skip: '— 제외' };
 
   function counts() {
     const n = { all: S.rows.length, '반영': 0, '보류': 0, '미반영': 0, '': 0, mismatch: 0, edit: 0, pending: 0, wip: 0 };
@@ -395,6 +410,38 @@
     slice.forEach(r => r.books.forEach(b => { if (b.state === 'miss' && r.celeb) autoSearch(b); }));
   }
 
+  // 링크 고르기 칸에 쓰는 짧은 이름 — 서로 구별되는 부분(계정·글 번호 끝)을 남긴다
+  function chipLabel(u) {
+    let x;
+    try { x = new URL(u); } catch (e) { return u.slice(0, 30); }
+    const host = x.hostname.replace(/^(www|m|mobile)\./, '');
+    const p = x.pathname;
+    let m;
+    if (/^(x|twitter)\.com$/.test(host) && (m = /^\/([^/]+)\/status\/(\d+)/.exec(p))) return `X @${m[1]} …${m[2].slice(-6)}`;
+    if (host === 'youtu.be') return `YouTube ${p.slice(1, 12)}`;
+    if (/youtube\.com$/.test(host)) {
+      const v = x.searchParams.get('v') || (/\/(?:shorts|live)\/([^/?]+)/.exec(p) || [])[1];
+      if (v) return `YouTube ${/shorts/.test(p) ? '쇼츠 ' : ''}${v}`;
+    }
+    if (/instagram\.com$/.test(host) && (m = /\/(?:p|reel)\/([^/]+)/.exec(p))) return `인스타 ${m[1]}`;
+    if (/weverse\.io$/.test(host)) return `위버스 ${p.split('/').filter(Boolean).slice(-1)[0] || ''}`;
+    const tail = p.replace(/\/+$/, '');
+    return host + (tail.length > 22 ? '/…' + tail.slice(-18) : tail);
+  }
+
+  // 원문 그대로 보여 주되 링크는 누를 수 있게
+  function linkify(text) {
+    const t = String(text || '');
+    let out = '', at = 0;
+    for (const u of C.extractUrls(t)) {
+      const i = t.indexOf(u.raw, at);
+      if (i < 0) continue;
+      out += esc(t.slice(at, i)) + `<a href="${esc(u.url)}" target="_blank" rel="noopener noreferrer">${esc(u.raw)}</a>`;
+      at = i + u.raw.length;
+    }
+    return out + esc(t.slice(at));
+  }
+
   function urlLinks(urls) {
     return urls.map(u => `<a href="${esc(u)}" target="_blank" rel="noopener noreferrer" title="${esc(u)}">${esc(shortUrl(u))}</a>`).join(' ');
   }
@@ -435,8 +482,8 @@
         ${candOpts ? `<span class="muted small">후보</span> ${candOpts}` : ''}
       </div>
       <details class="sub-raw"><summary class="small muted">제보 원문</summary>
-        <div class="sub-raw-grid"><div><div class="muted small">내용</div><pre>${esc(r.text)}</pre></div>
-        <div><div class="muted small">출처</div><pre>${esc(r.source)}</pre></div></div>
+        <div class="sub-raw-grid"><div><div class="muted small">내용</div><pre>${linkify(r.text)}</pre></div>
+        <div><div class="muted small">출처</div><pre>${linkify(r.source)}</pre></div></div>
       </details>
       <div class="sub-mymemo${r.wip ? ' wip' : ''}">
         <div class="sub-mymemo-head">
@@ -462,23 +509,39 @@
     </li>`;
   }
 
+  /* 이 제보 칸(내용·출처)에 있는 링크 전부 — 눌러서 이 책의 출처로 고른다.
+   * 자동으로 붙인 링크는 파랗게, 고르면 그 링크로 반영 여부를 다시 본다. */
+  function linkPicker(r, b) {
+    if (!r.allUrls.length) return '<div class="sub-links muted small">이 제보에는 링크가 없어요 — 출처 없이 판정 (편집 창에서 직접 넣을 수 있어요)</div>';
+    const cur = b.urls[0] || '';
+    const chips = r.allUrls.map(u => `<span class="sub-link${u === cur ? ' on' : ''}">
+        <button type="button" class="sub-pickurl" data-u="${esc(u)}" title="이 링크를 이 책의 출처로 — ${esc(u)}">${esc(chipLabel(u))}</button><a href="${esc(u)}" target="_blank" rel="noopener noreferrer" title="${esc(u)} 열기">↗</a></span>`).join('');
+    return `<div class="sub-links"><span class="muted small">출처 링크${b.picked ? ' (직접 고름)' : r.allUrls.length > 1 ? ' (자동 — 맞는 걸 누르세요)' : ''}</span>
+      ${chips}
+      <button type="button" class="sub-pickurl sub-nolink${!cur ? ' on' : ''}" data-u="" title="이 책은 링크 없음">링크 없음</button>
+      ${r.books.length > 1 && cur ? '<button type="button" class="btn small ghost sub-urlall" title="이 링크를 이 제보의 모든 책 출처로">이 링크를 모든 책에</button>' : ''}
+      ${b.picked ? '<button type="button" class="btn small ghost sub-urlreset" title="자동으로 붙인 링크로 되돌리기">자동으로</button>' : ''}
+    </div>`;
+  }
+
   function renderBook(r, b) {
     const memo = [b.memo, r.parsed.memo].filter(Boolean).join(' / ');
     let body = '';
     if (b.state === 'ok') {
-      body = `<span class="small muted">${b.live ? '사이트에 나가 있음' : '편집본에만 있음 — 발행하면 시트에 반영으로 적혀요'}${b.dec === 'ok' ? ' · 이대로 OK 처리' : ''}</span>
+      body = `<span class="small muted">${b.live ? '사이트에 나가 있음' : '편집본에만 있음 — 발행하면 시트에 반영으로 적혀요'}${b.dec === 'ok' ? ' · 이대로 OK 처리' : ''}${b.viaOther ? ' · 출처가 제보의 다른 링크와 같음' : ''}</span>
         ${b.dec === 'ok' ? '<button type="button" class="btn small sub-undec">되돌리기</button>' : ''}`;
     } else if (b.state === 'src') {
-      body = `<div class="small">지금 출처: ${b.cur && b.cur.source ? urlLinks([b.cur.source]) : '<i>비어 있음</i>'} · 제보 출처: ${urlLinks(b.urls) || '-'}</div>
+      body = `<div class="small">지금 데이터의 출처: ${b.cur && b.cur.source ? urlLinks([b.cur.source]) : '<i>비어 있음</i>'}</div>
+        ${linkPicker(r, b)}
         <div class="row" style="gap:6px;margin-top:4px">
-          ${b.urls.length ? `<button type="button" class="btn small primary sub-src">출처를 제보 주소로 바꾸기</button>` : ''}
+          ${b.urls.length ? `<button type="button" class="btn small primary sub-src">출처를 고른 링크로 바꾸기</button>` : ''}
           <button type="button" class="btn small sub-ok">이대로 OK</button>
           <button type="button" class="btn small sub-skip">제외</button>
         </div>`;
     } else if (b.state === 'miss') {
       const res = S.search.get(b.query);
       const items = res ? res.slice(0, 3) : null;
-      body = `<div class="row sub-qrow">
+      body = `${linkPicker(r, b)}<div class="row sub-qrow">
           <input class="sub-q" value="${esc(b.query)}" style="flex:1 1 auto;min-width:0" title="예스24 검색어">
           <button type="button" class="btn small sub-search">🔎 찾기</button>
           <button type="button" class="btn small sub-edit" ${r.celeb ? '' : 'disabled'} title="책 편집 창에서 직접 고르고 고쳐서 추가">편집 창에서</button>
@@ -501,7 +564,7 @@
         <b>${esc(b.state === 'ok' && b.cur ? b.cur.title : b.title)}</b>
         <span class="muted small">${esc([b.author, b.publisher].filter(Boolean).join(' · '))}</span>
         ${b.ai ? '<span class="sub-tag">AI 정리</span>' : ''}
-        ${b.state !== 'src' && b.urls.length ? `<span class="small">· ${urlLinks(b.urls.slice(0, 3))}${b.urls.length > 3 ? ` 외 ${b.urls.length - 3}` : ''}</span>` : ''}
+        ${b.state === 'ok' && b.urls.length ? `<span class="small">· ${urlLinks(b.urls.slice(0, 2))}${b.urls.length > 2 ? ` 외 ${b.urls.length - 2}` : ''}</span>` : ''}
       </div>
       ${b.state === 'miss' ? `<textarea class="sub-memo" rows="${memo.length > 60 ? 2 : 1}" placeholder="💬 메모 (AI 코멘트 재료) — 주소 말고 제보에 적힌 설명">${esc(S.memo.get(r.key + '#' + b.i) ?? memo)}</textarea>` : ''}
       ${body}
@@ -609,6 +672,17 @@
     if (b && Config.yes24Proxy) { $('#yes24Query').value = b.query; runYes24Search(b.query); }
   }
 
+  // 책 i 의 출처 링크를 고른다 (undefined = 자동으로 되돌림, '' = 링크 없음)
+  function setSrc(r, idxs, url) {
+    const st = rowStore(r.key, true);
+    st.src = st.src || {};
+    for (const i of idxs) { if (url === undefined) delete st.src[i]; else st.src[i] = url; }
+    if (!Object.keys(st.src).length) delete st.src;
+    saveStoreSoon();
+    evaluate(r);
+    scheduleRender();
+  }
+
   function setDec(r, i, v) {
     const st = rowStore(r.key, true);
     st.dec = st.dec || {};
@@ -668,6 +742,9 @@
     }
     else if (t.classList.contains('sub-addmanual')) openEditFor(r, null, r.parsed.memo);
     else if (!b) return;
+    else if (t.classList.contains('sub-pickurl')) setSrc(r, [b.i], t.dataset.u);
+    else if (t.classList.contains('sub-urlall')) setSrc(r, r.books.map(x => x.i), b.urls[0] || '');
+    else if (t.classList.contains('sub-urlreset')) setSrc(r, [b.i], undefined);
     else if (t.classList.contains('sub-skip')) setDec(r, b.i, 'skip');
     else if (t.classList.contains('sub-ok')) setDec(r, b.i, 'ok');
     else if (t.classList.contains('sub-undec')) setDec(r, b.i, '');
