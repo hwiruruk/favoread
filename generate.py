@@ -1111,15 +1111,14 @@ SHELF_CAPTURE_JS_TEMPLATE = (
 )
 
 
-def cover_tile(title, cover_url, link, added, alt):
-    """표지 보기의 한 칸. 표지가 없으면 제목을 적은 빈 표지."""
+def cover_tile(title, cover_url, anchor, added, alt):
+    """표지 보기의 한 칸. 표지가 없으면 제목을 적은 빈 표지.
+    누르면 예스24로 나가지 않고 아래 본 목록의 같은 책(#b번호)으로 부드럽게 내려간다
+    (SHELF_VIEW_JS). 예스24 링크는 목록 카드의 표지·제목·'책 정보' 버튼에 그대로 있다."""
     inner = (('<img src="' + esc(cover_url) + '" alt="' + esc(alt) + '" loading="lazy">')
              if (cover_url or '').startswith('http')
              else '<span class="cv-no">' + esc(title) + '</span>')
-    if link:
-        return ('    <a class="cv" href="' + link + '" rel="nofollow noopener noreferrer" target="_blank" title="'
-                + esc(title) + '">' + inner + '</a>\n')
-    return '    <span class="cv" title="' + esc(title) + '">' + inner + '</span>\n'
+    return ('    <a class="cv" href="#' + anchor + '" title="' + esc(title) + '">' + inner + '</a>\n')
 
 
 def cover_shelf_html(tiles):
@@ -1169,6 +1168,35 @@ SHELF_VIEW_JS = (
     '    tabs.forEach(function (t) { t.addEventListener("click", function () { set(t.dataset.view, true); }); });\n'
     '    var more = document.getElementById("covers-more-btn");\n'
     '    if (more) more.addEventListener("click", function () { area.classList.remove("covers-collapsed"); });\n'
+    # 표지·책등·NEW 칸을 누르면 본 목록의 그 책(#b번호)으로 부드럽게 내려가 화면 가운데에 세운다
+    '    var sec = document.getElementById("shelf-sec") || area;\n'
+    '    var still = window.matchMedia && matchMedia("(prefers-reduced-motion: reduce)").matches;\n'
+    '    var flashT;\n'
+    '    sec.addEventListener("click", function (e) {\n'
+    '      if (e.defaultPrevented || e.button || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;\n'
+    '      var a = e.target.closest && e.target.closest("a[href^=\\"#b\\"]");\n'
+    '      if (!a) return;\n'
+    '      var id = a.getAttribute("href").slice(1);\n'
+    '      var el = document.getElementById(id);\n'
+    '      if (!el || !el.classList.contains("rl-item")) return;\n'
+    '      e.preventDefault();\n'
+    '      el.scrollIntoView({ behavior: still ? "auto" : "smooth", block: "center" });\n'
+    '      try { history.replaceState(null, "", "#" + id); } catch (err) {}\n'
+    '      var prev = sec.querySelector(".rl-item.rl-flash");\n'
+    '      if (prev) prev.classList.remove("rl-flash");\n'
+    '      clearTimeout(flashT);\n'
+    '      var done = false;\n'
+    '      function arrive() {\n'
+    '        if (done) return; done = true;\n'
+    '        window.removeEventListener("scrollend", arrive);\n'
+    '        el.classList.remove("rl-flash"); void el.offsetWidth; el.classList.add("rl-flash");\n'
+    '        el.setAttribute("tabindex", "-1");\n'
+    '        try { el.focus({ preventScroll: true }); } catch (err) {}\n'
+    '        flashT = setTimeout(function () { el.classList.remove("rl-flash"); }, 1900);\n'
+    '      }\n'
+    '      if (still) arrive();\n'
+    '      else { window.addEventListener("scrollend", arrive); setTimeout(arrive, 900); }\n'
+    '    });\n'
     '  })();\n'
     '  </script>\n'
 )
@@ -1237,6 +1265,12 @@ SHELF_CSS = (
     '    .new-sec[open] .new-sec-more::after { content: attr(data-hide) " ▴"; }\n'
     '    .rl-item { scroll-margin-top: 16px; }\n'
     '    .rl-item:target { outline: 3px solid #fde047; outline-offset: 2px; }\n'
+    '    .rl-item:focus { outline: none; }\n'
+    # 표지·책등을 눌러 내려온 카드 — 노란 테두리와 바탕이 잠깐 떴다가 서서히 사라진다
+    '    .rl-item.rl-flash { animation: rl-flash 1.8s ease-out; }\n'
+    '    @keyframes rl-flash { 0%, 30% { outline: 3px solid #fde047; outline-offset: 3px; background-color: #fffbe6; }\n'
+    '                          100% { outline: 3px solid rgba(253,224,71,0); outline-offset: 3px; background-color: #fff; } }\n'
+    '    @media (prefers-reduced-motion: reduce) { .rl-item.rl-flash { animation-duration: .01s; outline: 3px solid #fde047; outline-offset: 3px; } }\n'
     '    .new-tiles { display: flex; flex-wrap: wrap; gap: 12px; padding-bottom: 10px; }\n'
     '    .new-tile { width: 84px; color: #000; text-decoration: none; display: flex; flex-direction: column; gap: 5px; }\n'
     '    .new-tile:hover { text-decoration: none; transform: translateY(-2px); }\n'
@@ -3515,14 +3549,10 @@ for name, info in celebs.items():
                         + ';--w:' + str(spine_width(b['title'])) + 'px'
                         + ';--fs:' + str(spine_font_size(spine_title(b['title']))) + 'px')
         _sp_cls = ('sp' if _spine_url else 'sp no-img') + (' sp-light' if _sp_light else '')
-        if aladin_url:
-            spine_html += ('    <a class="' + _sp_cls + '" style="' + _spine_style + '" href="' + aladin_url
-                           + '" rel="nofollow noopener noreferrer" target="_blank" title="'
-                           + esc(b['title']) + '">' + _spine_inner + '</a>\n')
-        else:
-            spine_html += ('    <span class="' + _sp_cls + '" style="' + _spine_style + '" title="'
-                           + esc(b['title']) + '">' + _spine_inner + '</span>\n')
-        cover_tiles.append(cover_tile(b['title'], b['coverUrl'], aladin_url, _added, b['title'] + ' 표지'))
+        # 표지 보기와 마찬가지로 누르면 본 목록의 같은 책으로 내려간다
+        spine_html += ('    <a class="' + _sp_cls + '" style="' + _spine_style + '" href="#b' + str(i+1)
+                       + '" title="' + esc(b['title']) + '">' + _spine_inner + '</a>\n')
+        cover_tiles.append(cover_tile(b['title'], b['coverUrl'], 'b' + str(i+1), _added, b['title'] + ' 표지'))
         taste_refs[b['title']] = ('b' + str(i+1), b['title'], b['coverUrl'])
 
         _card = (
@@ -5501,14 +5531,9 @@ for name, info in celebs.items():
                      + ';--w:' + str(spine_width(b['title'])) + 'px'
                      + ';--fs:' + str(spine_font_size(spine_title(t_plain))) + 'px')
         _sp_cls = ('sp' if _sp_url else 'sp no-img') + (' sp-light' if _sp_light else '')
-        if aladin_url:
-            en_spine_html += ('    <a class="' + _sp_cls + '" style="' + _sp_style + '" href="' + aladin_url
-                              + '" rel="nofollow noopener noreferrer" target="_blank" title="'
-                              + esc(t_plain) + '">' + _sp_inner + '</a>\n')
-        else:
-            en_spine_html += ('    <span class="' + _sp_cls + '" style="' + _sp_style + '" title="'
-                              + esc(t_plain) + '">' + _sp_inner + '</span>\n')
-        en_cover_tiles.append(cover_tile(t_plain, b['coverUrl'], aladin_url, _added, alt_text))
+        en_spine_html += ('    <a class="' + _sp_cls + '" style="' + _sp_style + '" href="#b' + str(i+1)
+                          + '" title="' + esc(t_plain) + '">' + _sp_inner + '</a>\n')
+        en_cover_tiles.append(cover_tile(t_plain, b['coverUrl'], 'b' + str(i+1), _added, alt_text))
         en_taste_refs[b['title']] = ('b' + str(i+1), t_plain, b['coverUrl'])
 
         _card = (
