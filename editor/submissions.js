@@ -126,22 +126,34 @@
     if (!v && create) v = S.store.rows[key] = {};
     return v || {};
   }
-  function saveStoreSoon() {
+  function saveStoreSoon(delay = 2500) {
     clearTimeout(S.storeTimer);
+    S.storeDirty = true;
     $('#subsStoreState').textContent = '기록 저장 대기…';
-    S.storeTimer = setTimeout(() => {
-      S.storeQueue = S.storeQueue.then(saveStore).catch(err => toast('제보 기록 저장 실패: ' + err.message, 'err'));
-    }, 2500);
+    S.storeTimer = setTimeout(flushStore, delay);
+  }
+  // 기다리지 않고 바로 저장 (💾 버튼, 창 닫을 때)
+  function flushStore() {
+    clearTimeout(S.storeTimer);
+    if (!S.storeDirty) return S.storeQueue;
+    S.storeDirty = false;
+    S.storeQueue = S.storeQueue.then(saveStore).catch(err => {
+      S.storeDirty = true;
+      toast('제보 기록 저장 실패: ' + err.message, 'err');
+    });
+    return S.storeQueue;
   }
   async function saveStore() {
     if (!Config.token) { $('#subsStoreState').textContent = 'GitHub Token이 없어 기록을 저장하지 못했어요'; return; }
     // 빈 항목은 지운다
     for (const [k, v] of Object.entries(S.store.rows)) {
       if (v.dec && !Object.keys(v.dec).length) delete v.dec;
+      if (!v.wip) delete v.wip;
+      if (!v.memo) { delete v.memo; if (!v.wip) delete v.memoAt; }
       if (!Object.keys(v).length) delete S.store.rows[k];
     }
     const doc = {
-      _comment: '편집기 📮 제보 반영 창의 기록. 시트 행(키: 시트|타임스탬프|이름)마다 고른 셀럽(celeb), AI 정리 결과(ai), 책별 결정(dec: 제외 skip / 이대로 OK ok). aliases 는 제보에 적힌 이름 → data.csv 셀럽 이름. 사이트에는 안 나간다.',
+      _comment: '편집기 📮 제보 반영 창의 기록. 시트 행(키: 시트|타임스탬프|이름)마다 고른 셀럽(celeb), AI 정리 결과(ai), 책별 결정(dec: 제외 skip / 이대로 OK ok), 내 조사 메모(memo, memoAt)와 조사 중 표시(wip). aliases 는 제보에 적힌 이름 → data.csv 셀럽 이름. 사이트에는 안 나간다.',
       _updated: new Date().toISOString().slice(0, 10),
       aliases: S.store.aliases,
       rows: S.store.rows,
@@ -151,7 +163,8 @@
     try {
       const { sha } = await Gh.putFile({ content, sha: S.storeSha, path: STORE_PATH, message: '제보 반영 기록 갱신' });
       S.storeSha = sha;
-      $('#subsStoreState').textContent = '기록 저장됨';
+      $('#subsStoreState').textContent = `기록 저장됨 · ${new Date().toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit' })}`;
+      $$('.sub-memo-state.unsaved', dlg).forEach(el => { el.classList.remove('unsaved'); el.textContent = '저장됨'; });
     } catch (err) {
       // 다른 곳에서 먼저 저장했으면 최신 sha 로 한 번 더
       if (/변경|conflict|409|sha/i.test(err.message)) {
@@ -181,6 +194,8 @@
     r.parsed = p;
     r.kind = st.ai ? st.ai.kind : (p.books.length ? 'books' : 'other');
     r.aiNote = st.ai ? st.ai.note || '' : '';
+    r.memo = st.memo || '';
+    r.wip = !!st.wip;
     r.cands = C.matchCeleb(r.name, State.celebs, { aliases: S.store.aliases, realNames: S.realNames });
     r.celeb = st.celeb && State.celebs.has(st.celeb) ? st.celeb : C.autoCeleb(r.cands);
     r.celebPicked = !!st.celeb;
@@ -288,9 +303,10 @@
   const BOOK_LABEL = { ok: '✅ 등록됨', src: '⚠️ 책은 있음 · 출처 다름', miss: '✖ 없음', skip: '— 제외' };
 
   function counts() {
-    const n = { all: S.rows.length, '반영': 0, '보류': 0, '미반영': 0, '': 0, mismatch: 0, edit: 0, pending: 0 };
+    const n = { all: S.rows.length, '반영': 0, '보류': 0, '미반영': 0, '': 0, mismatch: 0, edit: 0, pending: 0, wip: 0 };
     for (const r of S.rows) {
       n[r.sheetStatus]++;
+      if (r.wip) n.wip++;
       if (r.mismatch) n.mismatch++;
       if (r.calc === 'edit') n.edit++;
     }
@@ -305,7 +321,7 @@
     const pend = new Set(f === 'pending' ? pendingWrites().map(u => u.row) : []);
     return S.rows.filter(r => {
       if (sh !== 'all' && r.sheet !== sh) return false;
-      if (q && !`${r.name} ${r.celeb} ${r.text} ${r.source}`.toLowerCase().includes(q)) return false;
+      if (q && !`${r.name} ${r.celeb} ${r.text} ${r.source} ${r.memo}`.toLowerCase().includes(q)) return false;
       switch (f) {
         case 'todo': return r.sheetStatus !== ST.done && r.sheetStatus !== ST.hold && r.calc !== 'live';
         case 'new': return r.sheetStatus === '';
@@ -314,6 +330,8 @@
         case 'edit': return r.calc === 'edit';
         case 'mismatch': return r.mismatch;
         case 'nobook': return r.calc === '?';
+        case 'wip': return r.wip;
+        case 'memo': return !!r.memo;
         case 'pending': return pend.has(r);
         default: return true;
       }
@@ -326,7 +344,7 @@
     $('#subsCounts').innerHTML = [
       `전체 ${n.all}`, `<span class="sub-dot done"></span>반영 ${n['반영']}`, `<span class="sub-dot hold"></span>보류 ${n['보류']}`,
       `<span class="sub-dot todo"></span>미반영 ${n['미반영']}`, `<span class="sub-dot new"></span>새 제보 ${n['']}`,
-      n.edit ? `발행 대기 ${n.edit}` : '', n.mismatch ? `⚠ 시트엔 반영인데 데이터에 없음 ${n.mismatch}` : '',
+      n.edit ? `발행 대기 ${n.edit}` : '', n.wip ? `🔍 조사 중 ${n.wip}` : '', n.mismatch ? `⚠ 시트엔 반영인데 데이터에 없음 ${n.mismatch}` : '',
     ].filter(Boolean).join(' · ');
     $('#subsWriteBtn').textContent = `시트에 판정 기록 (${n.pending}건)`;
     $('#subsWriteBtn').disabled = !n.pending;
@@ -363,6 +381,7 @@
         <span class="muted small">${esc(r.sheetLabel)} ${r.row}행 · ${esc(r.ts)}</span>
         ${calcBadge}
         ${r.kind === 'fix' ? '<span class="sub-tag hold">수정 요청</span>' : ''}
+        ${r.wip ? '<span class="sub-tag wip">🔍 조사 중</span>' : ''}
         ${r.mismatch ? '<span class="sub-tag todo">⚠ 시트엔 반영인데 데이터에 없음</span>' : ''}
       </div>
       <div class="sub-who">
@@ -375,6 +394,16 @@
         <div class="sub-raw-grid"><div><div class="muted small">내용</div><pre>${esc(r.text)}</pre></div>
         <div><div class="muted small">출처</div><pre>${esc(r.source)}</pre></div></div>
       </details>
+      <div class="sub-mymemo${r.wip ? ' wip' : ''}">
+        <div class="sub-mymemo-head">
+          <label class="small sub-opt" title="아직 덜 조사한 제보 — '🔍 조사 중' 보기에 모임"><input type="checkbox" class="sub-wip" ${r.wip ? 'checked' : ''}> 🔍 조사 중</label>
+          <span class="muted small">📝 내 메모 — 조사한 내용·할 일 (사이트엔 안 나가요)</span>
+          <span class="sub-memo-state muted small">${r.memo && rowStore(r.key).memoAt ? '저장됨 · ' + esc(rowStore(r.key).memoAt) : ''}</span>
+          <button type="button" class="btn small sub-mysave" title="지금 바로 저장 (쓰다 보면 자동으로도 저장돼요)">💾 저장</button>
+          <button type="button" class="btn small ghost sub-mysheet" title="이 메모를 시트의 '편집기 메모' 칸에도 적음 (상태·색은 그대로)">↗ 시트 메모 칸에도</button>
+        </div>
+        <textarea class="sub-mynote" rows="${r.memo ? Math.min(6, r.memo.split('\n').length + 1) : 1}" placeholder="예: 영상 23분쯤 확인 필요 / 한국어판 제목 못 찾음 / 팬 번역 원문 확인 중">${esc(r.memo)}</textarea>
+      </div>
       ${r.aiNote ? `<p class="small sub-ainote">✨ ${esc(r.aiNote)}</p>` : ''}
       ${r.parsed.memo && r.books.length !== 1 ? `<p class="small muted">💬 공통 메모: ${esc(r.parsed.memo)}</p>` : ''}
       ${books ? `<ol class="sub-books">${books}</ol>` : ''}
@@ -466,7 +495,7 @@
     renderTimer = setTimeout(() => {
       // 입력 중인 칸이 있으면 다시 그리지 않는다
       const a = document.activeElement;
-      if (a && dlg.contains(a) && /^(INPUT|TEXTAREA)$/.test(a.tagName) && !a.matches('#subsSearch')) { scheduleRender(); return; }
+      if (a && dlg.contains(a) && a.matches('textarea, input:not([type=checkbox]):not(#subsSearch)')) { scheduleRender(); return; }
       const y = $('#subsBody').scrollTop;
       render();
       $('#subsBody').scrollTop = y;
@@ -569,7 +598,12 @@
     const r = rowOf(t); if (!r) return;
     const b = bookOf(t, r);
     const memoOf = () => { const el = t.closest('.sub-book')?.querySelector('.sub-memo'); return el ? el.value.trim() : ''; };
-    if (t.classList.contains('sub-pick')) setCeleb(r, t.dataset.celeb);
+    if (t.classList.contains('sub-mysave')) { await flushStore(); toast('메모를 저장했어요', 'ok'); }
+    else if (t.classList.contains('sub-mysheet')) {
+      if (!r.memo.trim()) { toast('메모가 비어 있어요', 'err'); return; }
+      await writeRows([{ row: r, status: r.sheetStatus || ST.todo, note: r.memo.trim() }]);
+    }
+    else if (t.classList.contains('sub-pick')) setCeleb(r, t.dataset.celeb);
     else if (t.classList.contains('sub-open')) { dlg.close(); selectCeleb(r.celeb); }
     else if (t.classList.contains('sub-newceleb')) {
       const name = prompt('새 셀럽 이름 (data.csv 연예인 칸 형식, 예: 홍길동(그룹))', C.splitName(r.name)[0].trim());
@@ -584,7 +618,8 @@
     else if (t.classList.contains('sub-set')) {
       const st = t.dataset.st;
       let note;
-      if (st === ST.hold) { note = prompt('보류 이유 (시트의 "편집기 메모" 칸에 적혀요, 비워도 돼요)', r.sheetNote || ''); if (note === null) return; }
+      if (st === ST.hold) { note = prompt('보류 이유 (시트의 "편집기 메모" 칸에 적혀요, 비워도 돼요)', r.sheetNote || r.memo.trim()); if (note === null) return; }
+      if (st === ST.done && r.wip) { setMyMemo(r, { wip: false }); saveStoreSoon(800); }
       await writeRows([{ row: r, status: st, note }]);
     }
     else if (t.classList.contains('sub-addmanual')) openEditFor(r, null, r.parsed.memo);
@@ -623,13 +658,35 @@
     }
   });
   $('#subsList').addEventListener('change', (e) => {
+    if (e.target.classList.contains('sub-wip')) {
+      const r = rowOf(e.target); if (!r) return;
+      setMyMemo(r, { wip: e.target.checked });
+      saveStoreSoon(800);
+      scheduleRender();
+      return;
+    }
     if (!e.target.classList.contains('sub-celeb')) return;
     const r = rowOf(e.target); if (!r) return;
     const v = e.target.value.trim();
     if (v && !State.celebs.has(v)) { toast(`'${v}' — 편집기에 없는 셀럽이에요. 목록에서 고르거나 ＋ 새 셀럽`, 'err'); return; }
     setCeleb(r, v);
   });
+  function setMyMemo(r, patch) {
+    const st = rowStore(r.key, true);
+    Object.assign(st, patch);
+    st.memoAt = new Date().toLocaleString('ko-KR', { month: 'numeric', day: 'numeric', hour: '2-digit', minute: '2-digit' });
+    r.memo = st.memo || '';
+    r.wip = !!st.wip;
+  }
   $('#subsList').addEventListener('input', (e) => {
+    if (e.target.classList.contains('sub-mynote')) {
+      const r = rowOf(e.target); if (!r) return;
+      setMyMemo(r, { memo: e.target.value.trim() ? e.target.value : '' });
+      const stEl = e.target.closest('.sub-mymemo').querySelector('.sub-memo-state');
+      stEl.classList.add('unsaved'); stEl.textContent = '저장 대기…';
+      saveStoreSoon(4000);
+      return;
+    }
     if (!e.target.classList.contains('sub-memo')) return;
     const r = rowOf(e.target), b = bookOf(e.target, r);
     if (r && b) S.memo.set(r.key + '#' + b.i, e.target.value);
@@ -663,7 +720,9 @@
 
   // 책 편집 창에서 추가하고 닫으면 다시 판정
   bookDlg.addEventListener('close', () => { if (dlg.open) { evaluateAll(); scheduleRender(); } });
-  dlg.addEventListener('close', () => clearInterval(S.timer));
+  dlg.addEventListener('close', () => { clearInterval(S.timer); flushStore(); });
+  // 저장 전에 페이지를 닫으려 하면 붙잡는다
+  window.addEventListener('beforeunload', (e) => { if (S.storeDirty) { flushStore(); e.preventDefault(); e.returnValue = ''; } });
 
   /* ---------------- 시트 연결 설정 ---------------- */
   $('#subsCfgSave').addEventListener('click', () => {
