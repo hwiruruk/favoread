@@ -106,7 +106,8 @@
     if (S.store) return;
     S.store = { aliases: {}, rows: {} };
     try {
-      const { content, sha } = await Gh.getFile(STORE_PATH, { allowMissing: true });
+      // 기록은 사이트(main)가 아니라 notes/editor 브랜치에 둔다 (예전에 main 에 저장한 게 있으면 그걸로 시작)
+      const { content, sha } = await EditorNotes.get(STORE_PATH, { fallbackMain: true });
       S.storeSha = sha;
       if (content) {
         const j = JSON.parse(content);
@@ -115,6 +116,14 @@
       }
     } catch (err) {
       toast('제보 기록(data/submissions.json) 불러오기 실패: ' + err.message, 'err');
+    }
+    // 저장 못 하고 닫았던 변경 되살리기 (이 브라우저 보관분)
+    const bk = readBackup();
+    if (bk) {
+      mergeStore(S.store, bk);
+      S.storeDirty = true;
+      showStoreState();
+      toast('저장 안 된 제보 기록·메모를 되살렸어요', 'ok');
     }
     try {
       const r = await fetch('../data/real_names.json', { cache: 'no-cache' });
@@ -126,20 +135,43 @@
     if (!v && create) v = S.store.rows[key] = {};
     return v || {};
   }
-  function saveStoreSoon(delay = 2500) {
-    clearTimeout(S.storeTimer);
-    S.storeDirty = true;
-    $('#subsStoreState').textContent = '기록 저장 대기…';
-    S.storeTimer = setTimeout(flushStore, delay);
+  /* 저장은 손을 놓았을 때 한 번에 — 키보드·마우스 입력이 5분 동안 없으면 저장한다 (notepad.js 의 EditorIdle).
+   * 그 전까지 바뀐 기록은 이 브라우저에 보관해 두고, 창을 닫거나 💾 를 누르면 바로 저장한다. */
+  const BK = 'favoread.subsStoreBackup';
+  function readBackup() { try { return JSON.parse(localStorage.getItem(BK) || 'null'); } catch (e) { return null; } }
+  function writeBackup() {
+    try {
+      if (S.storeDirty) localStorage.setItem(BK, JSON.stringify({ aliases: S.store.aliases, rows: S.store.rows, at: Date.now() }));
+      else localStorage.removeItem(BK);
+    } catch (e) { /* 꽉 참 등 */ }
   }
+  // 다른 곳 기록에 내 기록을 얹는다 — 같은 행은 내 값이 이긴다
+  function mergeStore(base, mine) {
+    Object.assign(base.aliases, mine.aliases || {});
+    for (const [k, v] of Object.entries(mine.rows || {})) base.rows[k] = Object.assign({}, base.rows[k] || {}, v);
+    return base;
+  }
+  function showStoreState() {
+    const el = $('#subsStoreState');
+    if (!el || !S.storeDirty) return;
+    el.textContent = `기록 저장 안 됨 · 손 놓고 ${Math.ceil(EditorIdle.left() / 60000)}분 뒤 자동 저장`;
+    el.classList.add('unsaved');
+  }
+  setInterval(showStoreState, 15000);
+  function saveStoreSoon() {
+    S.storeDirty = true;
+    writeBackup();
+    showStoreState();
+  }
+  EditorIdle.register('submissions', { isDirty: () => !!S.store && S.storeDirty, save: () => flushStore() });
   // 기다리지 않고 바로 저장 (💾 버튼, 창 닫을 때)
   function flushStore() {
-    clearTimeout(S.storeTimer);
     if (!S.storeDirty) return S.storeQueue;
     S.storeDirty = false;
-    S.storeQueue = S.storeQueue.then(saveStore).catch(err => {
+    S.storeQueue = S.storeQueue.then(saveStore).then(() => { if (!S.storeDirty) writeBackup(); }).catch(err => {
       S.storeDirty = true;
-      toast('제보 기록 저장 실패: ' + err.message, 'err');
+      showStoreState();
+      toast('제보 기록 저장 실패 — 이 브라우저에는 보관돼 있어요: ' + err.message, 'err');
     });
     return S.storeQueue;
   }
@@ -153,30 +185,34 @@
       if (!Object.keys(v).length) delete S.store.rows[k];
     }
     const doc = {
-      _comment: '편집기 📮 제보 반영 창의 기록. 시트 행(키: 시트|타임스탬프|이름)마다 고른 셀럽(celeb), AI 정리 결과(ai), 책별 결정(dec: 제외 skip / 이대로 OK ok), 내 조사 메모(memo, memoAt)와 조사 중 표시(wip). aliases 는 제보에 적힌 이름 → data.csv 셀럽 이름. 사이트에는 안 나간다.',
+      _comment: '편집기 📮 제보 반영 창의 기록. 시트 행(키: 시트|타임스탬프|이름)마다 고른 셀럽(celeb), AI 정리 결과(ai), 책별 결정(dec: 제외 skip / 이대로 OK ok), 내 조사 메모(memo, memoAt)와 조사 중 표시(wip). aliases 는 제보에 적힌 이름 → data.csv 셀럽 이름. notes/editor 브랜치에만 저장돼 사이트에는 안 나간다.',
       _updated: new Date().toISOString().slice(0, 10),
       aliases: S.store.aliases,
       rows: S.store.rows,
     };
-    const content = JSON.stringify(doc, null, 1) + '\n';
-    $('#subsStoreState').textContent = '기록 저장 중…';
-    try {
-      const { sha } = await Gh.putFile({ content, sha: S.storeSha, path: STORE_PATH, message: '제보 반영 기록 갱신' });
-      S.storeSha = sha;
-      $('#subsStoreState').textContent = `기록 저장됨 · ${new Date().toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit' })}`;
+    const stateEl = $('#subsStoreState');
+    stateEl.textContent = '기록 저장 중…';
+    const done = () => {
+      stateEl.textContent = `기록 저장됨 · ${new Date().toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit' })}`;
+      stateEl.classList.remove('unsaved');
       $$('.sub-memo-state.unsaved', dlg).forEach(el => { el.classList.remove('unsaved'); el.textContent = '저장됨'; });
+    };
+    try {
+      const { sha } = await EditorNotes.put(STORE_PATH, JSON.stringify(doc, null, 1) + '\n', S.storeSha, '제보 반영 기록 갱신');
+      S.storeSha = sha;
+      done();
     } catch (err) {
-      // 다른 곳에서 먼저 저장했으면 최신 sha 로 한 번 더
-      if (/변경|conflict|409|sha/i.test(err.message)) {
-        const { sha } = await Gh.getFile(STORE_PATH, { allowMissing: true });
-        S.storeSha = sha;
-        const r = await Gh.putFile({ content, sha, path: STORE_PATH, message: '제보 반영 기록 갱신' });
-        S.storeSha = r.sha;
-        $('#subsStoreState').textContent = '기록 저장됨';
-        return;
-      }
-      $('#subsStoreState').textContent = '';
-      throw err;
+      if (!err.conflict && !/변경|conflict|409/i.test(err.message)) { stateEl.textContent = ''; throw err; }
+      // 다른 컴퓨터에서 먼저 저장했다 — 그쪽 기록에 내 기록을 얹어서 다시 저장
+      const remote = await EditorNotes.get(STORE_PATH);
+      const base = remote.content ? JSON.parse(remote.content) : {};
+      const merged = mergeStore({ aliases: base.aliases || {}, rows: base.rows || {} }, S.store);
+      S.store.aliases = merged.aliases; S.store.rows = merged.rows;
+      doc.aliases = merged.aliases; doc.rows = merged.rows;
+      const r = await EditorNotes.put(STORE_PATH, JSON.stringify(doc, null, 1) + '\n', remote.sha, '제보 반영 기록 갱신 (다른 곳 기록과 합침)');
+      S.storeSha = r.sha;
+      done();
+      evaluateAll(); scheduleRender();
     }
   }
 
@@ -399,7 +435,7 @@
           <label class="small sub-opt" title="아직 덜 조사한 제보 — '🔍 조사 중' 보기에 모임"><input type="checkbox" class="sub-wip" ${r.wip ? 'checked' : ''}> 🔍 조사 중</label>
           <span class="muted small">📝 내 메모 — 조사한 내용·할 일 (사이트엔 안 나가요)</span>
           <span class="sub-memo-state muted small">${r.memo && rowStore(r.key).memoAt ? '저장됨 · ' + esc(rowStore(r.key).memoAt) : ''}</span>
-          <button type="button" class="btn small sub-mysave" title="지금 바로 저장 (쓰다 보면 자동으로도 저장돼요)">💾 저장</button>
+          <button type="button" class="btn small sub-mysave" title="지금 바로 저장 (손 놓고 5분 지나면 자동으로도 저장돼요)">💾 저장</button>
           <button type="button" class="btn small ghost sub-mysheet" title="이 메모를 시트의 '편집기 메모' 칸에도 적음 (상태·색은 그대로)">↗ 시트 메모 칸에도</button>
         </div>
         <textarea class="sub-mynote" rows="${r.memo ? Math.min(6, r.memo.split('\n').length + 1) : 1}" placeholder="예: 영상 23분쯤 확인 필요 / 한국어판 제목 못 찾음 / 팬 번역 원문 확인 중">${esc(r.memo)}</textarea>
@@ -619,7 +655,7 @@
       const st = t.dataset.st;
       let note;
       if (st === ST.hold) { note = prompt('보류 이유 (시트의 "편집기 메모" 칸에 적혀요, 비워도 돼요)', r.sheetNote || r.memo.trim()); if (note === null) return; }
-      if (st === ST.done && r.wip) { setMyMemo(r, { wip: false }); saveStoreSoon(800); }
+      if (st === ST.done && r.wip) { setMyMemo(r, { wip: false }); saveStoreSoon(); }
       await writeRows([{ row: r, status: st, note }]);
     }
     else if (t.classList.contains('sub-addmanual')) openEditFor(r, null, r.parsed.memo);
@@ -661,7 +697,7 @@
     if (e.target.classList.contains('sub-wip')) {
       const r = rowOf(e.target); if (!r) return;
       setMyMemo(r, { wip: e.target.checked });
-      saveStoreSoon(800);
+      saveStoreSoon();
       scheduleRender();
       return;
     }
@@ -683,8 +719,8 @@
       const r = rowOf(e.target); if (!r) return;
       setMyMemo(r, { memo: e.target.value.trim() ? e.target.value : '' });
       const stEl = e.target.closest('.sub-mymemo').querySelector('.sub-memo-state');
-      stEl.classList.add('unsaved'); stEl.textContent = '저장 대기…';
-      saveStoreSoon(4000);
+      stEl.classList.add('unsaved'); stEl.textContent = '저장 안 됨 · 손 놓고 5분 뒤 자동';
+      saveStoreSoon();
       return;
     }
     if (!e.target.classList.contains('sub-memo')) return;
@@ -721,6 +757,11 @@
   // 책 편집 창에서 추가하고 닫으면 다시 판정
   bookDlg.addEventListener('close', () => { if (dlg.open) { evaluateAll(); scheduleRender(); } });
   dlg.addEventListener('close', () => { clearInterval(S.timer); flushStore(); });
+  $('#subsStoreSaveBtn').addEventListener('click', async () => {
+    if (!S.storeDirty) { toast('저장할 변경이 없어요', 'ok'); return; }
+    await flushStore();
+    if (!S.storeDirty) toast('제보 기록을 저장했어요', 'ok');
+  });
   // 저장 전에 페이지를 닫으려 하면 붙잡는다
   window.addEventListener('beforeunload', (e) => { if (S.storeDirty) { flushStore(); e.preventDefault(); e.returnValue = ''; } });
 
