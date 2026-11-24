@@ -1,11 +1,9 @@
-/* 📮 제보 반영 — 구글 폼 제보 시트(영문·해외) 두 개를 읽어 책을 반영하고, 시트에 처리 상태를 적는다.
+/* 📮 제보 반영 — 구글 폼 제보 시트(영문·해외) 두 개를 읽어 책을 반영한다. 시트는 읽기만 한다.
  *
  *  읽기  : 공개 시트의 CSV 내보내기 (로그인 불필요)
- *  쓰기  : 시트에 붙인 Apps Script 웹앱 (tools/submissions/Code.gs) — '반영' 체크 + 행 전체 색
- *          파랑 = 반영, 노랑 = 보류, 빨강 = 미반영
- *  판정  : 제보의 셀럽에게 같은 책이 있고, 제보에 적힌 주소가 그 책의 출처와 같으면 '반영'
- *          (제보에 주소가 없으면 책만 맞으면 '반영')
- *  기록  : 셀럽 매칭·AI 정리 결과·책별 결정(제외/이대로 OK)은 data/submissions.json 에 커밋
+ *  판정  : 제보의 셀럽에게 같은 책이 있고, 제보에 적힌 주소가 그 책의 출처와 같으면 '등록됨'
+ *          (제보에 주소가 없으면 책만 맞으면 '등록됨'). 등록된 제보는 기본 보기에서 빠진다.
+ *  기록  : 셀럽 매칭·AI 정리·책별 결정·내 메모·숨김은 notes/editor 브랜치의 data/submissions.json
  *
  * app.js 의 State·Gh·Yes24·toast 등을 쓰므로 app.js 뒤에, 순수 로직(submissions_core.js) 뒤에 불러온다.
  * 사용법은 editor/README.md '제보 반영' 절. */
@@ -19,20 +17,14 @@
     { id: 'intl', label: '해외 제보', sheetId: '186gKVna6LANvKkdvqJF7V3MTSZdDgI3xksmOgY4WtGM', gid: '1023767186' },
   ];
   const STORE_PATH = 'data/submissions.json';
-  // 기준일 — 이 날짜 전에 들어온 제보는 이미 다 반영했다고 보고 목록에서 뺀다 (시트는 그대로).
+  // 기준일 — 이 날짜 전에 들어온 제보는 이미 다 반영했다고 보고 목록에서 뺀다.
   // 창 위 📅 칸에서 바꾸면 기록 파일(since)에 남고, 비우면 전부 보인다.
   const DEFAULT_SINCE = '2026-11-24';
   const PAGE = 20;
-  const ST = { done: '반영', hold: '보류', todo: '미반영' };
-  const ST_CLASS = { '반영': 'done', '보류': 'hold', '미반영': 'todo', '': 'new' };
-  const SubCfg = {
-    get script() { return LS.get('subsScript'); },
-    get key() { return LS.get('subsKey'); },
-  };
 
   const dlg = $('#subsDialog');
   const S = {
-    rows: [],                 // [{ key, sheet, row, ts, name, text, source, sheetStatus, sheetNote }]
+    rows: [],                 // [{ key, sheet, row, ts, time, name, text, source }]
     loadedAt: null,
     store: null,              // { aliases, rows: { key: { celeb, ai, dec: { i: 'skip'|'ok' } } } }
     storeSha: null,
@@ -44,7 +36,6 @@
     search: new Map(),        // 예스24 검색 결과 캐시 (query → items)
     memo: new Map(),          // 화면에서 고친 메모 (행키#책번호 → 글)
     searching: new Set(),
-    writing: false,
     pubCelebs: null, pubFor: null,
   };
 
@@ -67,22 +58,15 @@
     if (!r.ok) throw new Error(`${sh.label} 시트를 못 읽었어요 (HTTP ${r.status}) — 링크 공유가 '링크가 있는 모든 사용자'인지 확인하세요`);
     const text = await r.text();
     const rows = Papa.parse(text, { skipEmptyLines: false }).data;
-    const head = (rows[0] || []).map(h => String(h || '').trim());
-    const ci = (name) => head.findIndex(h => h === name);
-    const cCheck = ci('반영'), cState = ci('상태'), cNote = ci('편집기 메모');
     const out = [];
     for (let i = 1; i < rows.length; i++) {
       const r0 = rows[i];
       if (!r0 || !r0.slice(0, 4).some(x => String(x || '').trim())) continue;
       const ts = String(r0[0] || '').trim();
-      let st = cState >= 0 ? String(r0[cState] || '').trim() : '';
-      if (!st && cCheck >= 0 && /^true$/i.test(String(r0[cCheck] || '').trim())) st = ST.done;
-      if (!(st in ST_CLASS)) st = '';
       out.push({
         key: `${sh.id}|${ts}|${C.norm(r0[1]).slice(0, 20)}`,
         sheet: sh.id, sheetLabel: sh.label, row: i + 1, ts,
         name: String(r0[1] || '').trim(), text: String(r0[2] || ''), source: String(r0[3] || ''),
-        sheetStatus: st, sheetNote: cNote >= 0 ? String(r0[cNote] || '') : '',
         time: parseTs(ts),
       });
     }
@@ -98,7 +82,6 @@
       evaluateAll();
       render();
       setStatus(`시트 ${S.rows.length}건 · ${S.loadedAt.toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit' })} 갱신`);
-      if ($('#subsAutoWrite').checked && SubCfg.script) await writePending({ quiet: true });
     } catch (err) {
       setStatus('');
       toast(err.message, 'err');
@@ -289,103 +272,25 @@
     else if (r.books.every(b => b.state === 'ok' || b.state === 'skip')) r.calc = r.books.every(b => b.live) ? 'live' : 'edit';
     else r.calc = 'todo';
     r.okCount = r.books.filter(b => b.state === 'ok').length;
-    // 시트에 적을 상태 — 발행본에 들어간 것만 '반영'
-    r.want = r.calc === 'live' ? ST.done : ST.todo;
-    r.mismatch = r.sheetStatus === ST.done && r.calc === 'todo' && r.books.length > 0;
+    r.done = r.calc === 'live' || r.calc === 'edit';   // 책이 다 들어갔다 (편집본 기준)
   }
   function evaluateAll() {
     if (!S.store) return;
     S.rows.forEach(evaluate);
   }
 
-  /* ---------------- 시트 쓰기 (Apps Script) ---------------- */
-  async function postScript(body) {
-    const url = SubCfg.script;
-    if (!url) throw new Error('시트 연결(Apps Script URL)이 설정되지 않았어요');
-    const payload = JSON.stringify(Object.assign({ key: SubCfg.key }, body));
-    try {
-      const r = await fetch(url, { method: 'POST', body: payload, redirect: 'follow' });
-      const j = await r.json();
-      if (!j.ok) throw new Error(j.error || '시트 기록 실패');
-      return j;
-    } catch (err) {
-      if (err instanceof TypeError) {
-        // CORS 로 응답을 못 읽는 환경 — 보내기만 하고, 다시 읽어서 확인한다
-        await fetch(url, { method: 'POST', body: payload, mode: 'no-cors' });
-        return { ok: true, blind: true };
-      }
-      throw err;
-    }
-  }
-
-  // updates: [{ row: r, status, note? }]
-  async function writeRows(updates, { quiet = false } = {}) {
-    if (!updates.length) return 0;
-    if (!SubCfg.script) { toast('시트에 적으려면 먼저 ⚙️ 시트 연결을 설정하세요', 'err'); $('#subsCfg').open = true; return 0; }
-    S.writing = true;
-    let done = 0, blind = false;
-    try {
-      for (const sh of SHEETS) {
-        const list = updates.filter(u => u.row.sheet === sh.id);
-        for (let i = 0; i < list.length; i += 40) {
-          const part = list.slice(i, i + 40);
-          if (!quiet) setStatus(`시트에 적는 중… ${done}/${updates.length}`);
-          const res = await postScript({
-            sheet: sh.id,
-            updates: part.map(u => ({ row: u.row.row, ts: u.row.ts, status: u.status, note: u.note })),
-          });
-          if (res.blind) blind = true;
-          const okRows = new Set((res.results || []).filter(x => x.ok).map(x => x.req));
-          part.forEach((u, j) => {
-            if (res.blind || okRows.has(j)) { u.row.sheetStatus = u.status; if (u.note != null) u.row.sheetNote = u.note; done++; }
-          });
-        }
-      }
-    } catch (err) {
-      toast('시트 기록 실패: ' + err.message, 'err');
-    } finally {
-      S.writing = false;
-    }
-    evaluateAll();
-    render();
-    setStatus(`시트 ${S.rows.length}건 · ${done}건 기록함`);
-    if (blind) setTimeout(() => loadSheets({ quiet: true }), 4000);
-    if (!quiet || done) toast(`시트에 ${done}건 기록했어요`, done ? 'ok' : 'err');
-    return done;
-  }
-
-  // 판정과 시트 상태가 다른 줄 — 보류는 건드리지 않고, '반영'을 자동으로 미반영으로 내리지도 않는다
-  function pendingWrites() {
-    return S.rows.filter(r => {
-      if (r.hidden || r.old) return false;   // 편집기에서 숨긴 제보·기준일 전 제보 — 시트는 건드리지 않는다
-      if (r.sheetStatus === ST.hold) return false;
-      if (r.want === ST.done) return r.sheetStatus !== ST.done;
-      return r.sheetStatus === '';
-    }).map(r => ({ row: r, status: r.want }));
-  }
-  async function writePending({ quiet = false } = {}) {
-    if (S.writing) return;
-    const ups = pendingWrites();
-    if (!ups.length) { if (!quiet) toast('시트에 새로 적을 것이 없어요', 'ok'); return; }
-    await writeRows(ups, { quiet });
-  }
-
   /* ---------------- 화면 ---------------- */
-  const SHEET_BADGE = { '반영': '반영', '보류': '보류', '미반영': '미반영', '': '새 제보' };
   const BOOK_LABEL = { ok: '✅ 등록됨', src: '⚠️ 책은 있음 · 출처 다름', miss: '✖ 아직 등록 안 됨', skip: '— 제외' };
 
   function counts() {
-    const n = { all: 0, '반영': 0, '보류': 0, '미반영': 0, '': 0, mismatch: 0, edit: 0, pending: 0, wip: 0, hidden: 0, old: 0 };
+    const n = { todo: 0, done: 0, edit: 0, wip: 0, hidden: 0, old: 0 };
     for (const r of S.rows) {
       if (r.old) { n.old++; continue; }
       if (r.hidden) { n.hidden++; continue; }
-      n.all++;
-      n[r.sheetStatus]++;
-      if (r.wip) n.wip++;
-      if (r.mismatch) n.mismatch++;
+      if (r.done) n.done++; else n.todo++;
       if (r.calc === 'edit') n.edit++;
+      if (r.wip) n.wip++;
     }
-    n.pending = pendingWrites().length;
     return n;
   }
 
@@ -393,7 +298,7 @@
     const f = $('#subsFilter').value;
     const sh = $('#subsSheet').value;
     const q = $('#subsSearch').value.trim().toLowerCase();
-    const pend = new Set(f === 'pending' ? pendingWrites().map(u => u.row) : []);
+    const asc = $('#subsSort').value === 'asc';
     return S.rows.filter(r => {
       if (sh !== 'all' && r.sheet !== sh) return false;
       if (q && !`${r.name} ${r.celeb} ${r.text} ${r.source} ${r.memo}`.toLowerCase().includes(q)) return false;
@@ -401,31 +306,23 @@
       if (f === 'hidden') return r.hidden && !r.old;
       if (r.hidden || r.old) return false;
       switch (f) {
-        case 'todo': return r.sheetStatus !== ST.done && r.sheetStatus !== ST.hold && r.calc !== 'live';
-        case 'new': return r.sheetStatus === '';
-        case 'hold': return r.sheetStatus === ST.hold;
-        case 'done': return r.sheetStatus === ST.done;
-        case 'edit': return r.calc === 'edit';
-        case 'mismatch': return r.mismatch;
-        case 'nobook': return r.calc === '?';
+        case 'todo': return !r.done;          // 기본 — 등록되면 빠진다
+        case 'done': return r.done;
         case 'wip': return r.wip;
         case 'memo': return !!r.memo;
-        case 'pending': return pend.has(r);
+        case 'nobook': return r.calc === '?';
         default: return true;
       }
-    }).sort((a, b) => b.time - a.time || b.row - a.row);
+    }).sort((a, b) => (asc ? 1 : -1) * ((a.time - b.time) || (a.row - b.row)));
   }
 
   function render() {
     if (!dlg.open || !S.store) return;
     const n = counts();
     $('#subsCounts').innerHTML = [
-      `전체 ${n.all}`, `<span class="sub-dot done"></span>반영 ${n['반영']}`, `<span class="sub-dot hold"></span>보류 ${n['보류']}`,
-      `<span class="sub-dot todo"></span>미반영 ${n['미반영']}`, `<span class="sub-dot new"></span>새 제보 ${n['']}`,
-      n.edit ? `발행 대기 ${n.edit}` : '', n.wip ? `🔍 조사 중 ${n.wip}` : '', n.hidden ? `🙈 숨김 ${n.hidden}` : '', n.old ? `📦 기준일 전 ${n.old}` : '', n.mismatch ? `⚠ 시트엔 반영인데 데이터에 없음 ${n.mismatch}` : '',
+      `<b>할 일 ${n.todo}</b>`, `등록됨 ${n.done}${n.edit ? ` (발행 대기 ${n.edit})` : ''}`,
+      n.wip ? `🔍 조사 중 ${n.wip}` : '', n.hidden ? `🙈 숨김 ${n.hidden}` : '', n.old ? `📦 기준일 전 ${n.old}` : '',
     ].filter(Boolean).join(' · ');
-    $('#subsWriteBtn').textContent = `시트에 판정 기록 (${n.pending}건)`;
-    $('#subsWriteBtn').disabled = !n.pending;
     const rows = visibleRows();
     const slice = rows.slice(0, S.shown);
     $('#subsList').innerHTML = slice.map(renderRow).join('') ||
@@ -483,24 +380,22 @@
   }
 
   function renderRow(r) {
-    const sc = ST_CLASS[r.sheetStatus];
-    const calcBadge = r.calc === 'live' ? '<span class="sub-tag done">데이터에 반영됨</span>'
-      : r.calc === 'edit' ? '<span class="sub-tag edit">편집본에 반영 · 발행 대기</span>'
+    const sc = r.done ? 'done' : 'todo';
+    const calcBadge = r.calc === 'live' ? '<span class="sub-tag done">등록됨</span>'
+      : r.calc === 'edit' ? '<span class="sub-tag edit">등록됨 · 발행 대기</span>'
       : r.calc === '?' ? '<span class="sub-tag">책 정보 없음 · 직접 확인</span>'
-      : `<span class="sub-tag todo">책 ${r.okCount}/${r.books.filter(b => b.state !== 'skip').length} 반영</span>`;
+      : `<span class="sub-tag todo">책 ${r.okCount}/${r.books.filter(b => b.state !== 'skip').length} 등록</span>`;
     const candOpts = r.cands.filter(c => c.name !== r.celeb).slice(0, 4)
       .map(c => `<button type="button" class="btn small sub-pick" data-celeb="${esc(c.name)}">${esc(c.name)}</button>`).join('');
     const books = r.books.map(b => renderBook(r, b)).join('');
-    return `<li class="sub-item st-${sc}${r.mismatch ? ' mismatch' : ''}" data-key="${esc(r.key)}">
+    return `<li class="sub-item st-${sc}" data-key="${esc(r.key)}">
       <div class="sub-head">
-        <span class="sub-tag st-${sc}">${SHEET_BADGE[r.sheetStatus]}</span>
         <a class="small sub-sheetlink" href="${esc(sheetRowUrl(r))}" target="_blank" rel="noopener" title="구글 시트에서 이 제보 줄을 선택한 채로 열기">📄 ${esc(r.sheetLabel)} ${r.row}행 ↗</a>
         <span class="muted small">${esc(r.ts)}</span>
         ${calcBadge}
         ${r.kind === 'fix' ? '<span class="sub-tag hold">수정 요청</span>' : ''}
         ${r.wip ? '<span class="sub-tag wip">🔍 조사 중</span>' : ''}
         ${r.hidden ? `<span class="sub-tag">🙈 숨김${rowStore(r.key).hiddenAt ? ' · ' + esc(rowStore(r.key).hiddenAt) : ''}</span>` : ''}
-        ${r.mismatch ? '<span class="sub-tag todo">⚠ 시트엔 반영인데 데이터에 없음</span>' : ''}
       </div>
       <div class="sub-who">
         <b>${esc(r.name)}</b> →
@@ -518,7 +413,6 @@
           <span class="muted small">📝 내 메모 — 조사한 내용·할 일 (사이트엔 안 나가요)</span>
           <span class="sub-memo-state muted small">${r.memo && rowStore(r.key).memoAt ? '저장됨 · ' + esc(rowStore(r.key).memoAt) : ''}</span>
           <button type="button" class="btn small sub-mysave" title="지금 바로 저장 (손 놓고 5분 지나면 자동으로도 저장돼요)">💾 저장</button>
-          <button type="button" class="btn small ghost sub-mysheet" title="이 메모를 시트의 '편집기 메모' 칸에도 적음 (상태·색은 그대로)">↗ 시트 메모 칸에도</button>
         </div>
         <textarea class="sub-mynote" rows="${r.memo ? Math.min(6, r.memo.split('\n').length + 1) : 1}" placeholder="예: 영상 23분쯤 확인 필요 / 한국어판 제목 못 찾음 / 팬 번역 원문 확인 중">${esc(r.memo)}</textarea>
       </div>
@@ -526,15 +420,11 @@
       ${r.parsed.memo && r.books.length !== 1 ? `<p class="small muted">💬 공통 메모: ${esc(r.parsed.memo)}</p>` : ''}
       ${books ? `<ol class="sub-books">${books}</ol>` : ''}
       <div class="sub-actions">
-        <button type="button" class="btn small sub-set" data-st="반영" title="시트에 체크하고 파란색으로">🟦 반영 완료</button>
-        <button type="button" class="btn small sub-set" data-st="보류" title="시트를 노란색으로">🟨 보류</button>
-        <button type="button" class="btn small sub-set" data-st="미반영" title="시트를 빨간색으로">🟥 미반영</button>
         <button type="button" class="btn small sub-addmanual" ${r.celeb ? '' : 'disabled'}>＋ 책 직접 추가</button>
         ${rowStore(r.key).ai ? '<button type="button" class="btn small ghost sub-aiclear" title="AI 정리를 버리고 자동 분석으로 되돌림">AI 정리 지우기</button>' : ''}
         ${r.hidden
           ? '<button type="button" class="btn small sub-unhide" title="다시 목록에 보이게">👁 다시 보이기</button>'
-          : '<button type="button" class="btn small ghost sub-hide" title="편집기 목록에서만 숨김 — 시트에는 그대로 남고 색·체크도 안 바뀜">🙈 숨기기</button>'}
-        ${r.sheetNote ? `<span class="muted small">시트 메모: ${esc(r.sheetNote)}</span>` : ''}
+          : '<button type="button" class="btn small ghost sub-hide" title="편집기 목록에서만 숨김 — 시트는 그대로">🙈 숨기기</button>'}
       </div>
     </li>`;
   }
@@ -558,7 +448,7 @@
     const memo = [b.memo, r.parsed.memo].filter(Boolean).join(' / ');
     let body = '';
     if (b.state === 'ok') {
-      body = `<span class="small muted">${b.live ? '사이트에 나가 있음' : '편집본에만 있음 — 발행하면 시트에 반영으로 적혀요'}${b.dec === 'ok' ? ' · 이대로 OK 처리' : ''}${b.viaOther ? ' · 출처가 제보의 다른 링크와 같음' : ''}</span>
+      body = `<span class="small muted">${b.live ? '사이트에 나가 있음' : '편집본에만 있음 — 드래프트 저장·발행하면 사이트에 나가요'}${b.dec === 'ok' ? ' · 이대로 OK 처리' : ''}${b.viaOther ? ' · 출처가 제보의 다른 링크와 같음' : ''}</span>
         ${b.dec === 'ok' ? '<button type="button" class="btn small sub-undec">되돌리기</button>' : ''}`;
     } else if (b.state === 'src') {
       body = `<div class="small">지금 데이터의 출처: ${b.cur && b.cur.source ? urlLinks([b.cur.source]) : '<i>비어 있음</i>'}</div>
@@ -663,7 +553,7 @@
     setDirty(true);
     renderSidebar();
     if (State.selected === name) renderDetail();
-    toast(`${name} · ${title} 추가됨${memo ? ' (메모 → 💬 코멘트)' : ''} — 드래프트 저장·발행하면 시트에 반영으로 적혀요`, 'ok');
+    toast(`${name} · ${title} 추가됨${memo ? ' (메모 → 💬 코멘트)' : ''} — 드래프트 저장·발행하면 사이트에 나가요`, 'ok');
     // AI 정리 결과의 제목이 예스24 제목과 다르면 다음 판정에서도 맞도록 결정을 남긴다
     if (!C.titleHit(book, b)) setDec(r, b.i, 'as:' + title); else { evaluate(r); scheduleRender(); }
     if (memo) await saveBookMemo(name, title, memo, book.source);
@@ -754,13 +644,9 @@
       r.hidden = hide;
       saveStoreSoon();
       scheduleRender();
-      toast(hide ? `${r.name} 제보를 숨겼어요 — 시트는 그대로예요. 보기 '🙈 숨긴 제보'에서 되살릴 수 있어요` : `${r.name} 제보를 다시 보이게 했어요`, 'ok');
+      toast(hide ? `${r.name} 제보를 숨겼어요 — 보기 '🙈 숨긴 제보'에서 되살릴 수 있어요` : `${r.name} 제보를 다시 보이게 했어요`, 'ok');
     }
     else if (t.classList.contains('sub-mysave')) { await flushStore(); toast('메모를 저장했어요', 'ok'); }
-    else if (t.classList.contains('sub-mysheet')) {
-      if (!r.memo.trim()) { toast('메모가 비어 있어요', 'err'); return; }
-      await writeRows([{ row: r, status: r.sheetStatus || ST.todo, note: r.memo.trim() }]);
-    }
     else if (t.classList.contains('sub-pick')) setCeleb(r, t.dataset.celeb);
     else if (t.classList.contains('sub-open')) { dlg.close(); selectCeleb(r.celeb); }
     else if (t.classList.contains('sub-newceleb')) {
@@ -772,13 +658,6 @@
         setDirty(true); renderSidebar();
       }
       setCeleb(r, name);
-    }
-    else if (t.classList.contains('sub-set')) {
-      const st = t.dataset.st;
-      let note;
-      if (st === ST.hold) { note = prompt('보류 이유 (시트의 "편집기 메모" 칸에 적혀요, 비워도 돼요)', r.sheetNote || r.memo.trim()); if (note === null) return; }
-      if (st === ST.done && r.wip) { setMyMemo(r, { wip: false }); saveStoreSoon(); }
-      await writeRows([{ row: r, status: st, note }]);
     }
     else if (t.classList.contains('sub-addmanual')) openEditFor(r, null, r.parsed.memo);
     else if (!b) return;
@@ -812,7 +691,7 @@
       setDirty(true);
       if (State.selected === r.celeb) renderDetail();
       evaluate(r); scheduleRender();
-      toast('출처를 바꿨어요 — 드래프트 저장·발행하면 시트에 반영으로 적혀요', 'ok');
+      toast('출처를 바꿨어요 — 드래프트 저장·발행하면 사이트에 나가요', 'ok');
       // 제보 설명은 메모가 비어 있을 때만 넣는다 (사람이 쓴 메모를 덮지 않게)
       const memo = [b.memo, r.parsed.memo].filter(Boolean).join(' / ');
       if (memo && await loadCmtFile() && !(Cmt.get(r.celeb, cur.title)?.memo)) await saveBookMemo(r.celeb, cur.title, memo, cur.source);
@@ -861,6 +740,7 @@
 
   $('#subsFilter').addEventListener('change', () => { S.shown = PAGE; render(); });
   $('#subsSheet').addEventListener('change', () => { S.shown = PAGE; render(); });
+  $('#subsSort').addEventListener('change', () => { LS.set('subsSort', $('#subsSort').value); S.shown = PAGE; render(); });
   $('#subsSearch').addEventListener('input', () => { S.shown = PAGE; render(); });
   $('#subsMore').addEventListener('click', () => { S.shown += PAGE; render(); });
   $('#subsSince').addEventListener('change', () => {
@@ -872,19 +752,12 @@
     toast(S.store.since ? `${S.store.since} 이후 제보만 보여요 — 그 전 제보는 보기 '📦 기준일 전 제보'에서` : '기준일을 비워 모든 제보를 보여요', 'ok');
   });
   $('#subsReloadBtn').addEventListener('click', () => loadSheets());
-  $('#subsWriteBtn').addEventListener('click', () => {
-    const ups = pendingWrites();
-    const toDone = ups.filter(u => u.status === ST.done).length;
-    if (!confirm(`시트에 판정을 적을까요?\n\n🟦 반영 ${toDone}건 (발행본에 책·출처가 들어간 제보)\n🟥 미반영 ${ups.length - toDone}건 (아직 상태가 없는 새 제보)\n\n보류(🟨)와 이미 적힌 상태는 건드리지 않아요.`)) return;
-    writePending();
-  });
   $('#subsAuto').addEventListener('change', setAutoTimer);
-  $('#subsAutoWrite').addEventListener('change', () => { LS.set('subsAutoWrite', $('#subsAutoWrite').checked ? '1' : ''); });
 
   function setAutoTimer() {
     clearInterval(S.timer);
     LS.set('subsAuto', $('#subsAuto').checked ? '1' : '');
-    if ($('#subsAuto').checked && dlg.open) S.timer = setInterval(() => { if (dlg.open && !S.writing) loadSheets({ quiet: true }); }, 60000);
+    if ($('#subsAuto').checked && dlg.open) S.timer = setInterval(() => { if (dlg.open) loadSheets({ quiet: true }); }, 60000);
   }
 
   // 책 편집 창에서 추가하고 닫으면 다시 판정
@@ -897,22 +770,6 @@
   });
   // 저장 전에 페이지를 닫으려 하면 붙잡는다
   window.addEventListener('beforeunload', (e) => { if (S.storeDirty) { flushStore(); e.preventDefault(); e.returnValue = ''; } });
-
-  /* ---------------- 시트 연결 설정 ---------------- */
-  $('#subsCfgSave').addEventListener('click', () => {
-    LS.set('subsScript', $('#subsCfgScript').value.trim());
-    LS.set('subsKey', $('#subsCfgKey').value.trim());
-    toast('시트 연결 저장됨', 'ok');
-    $('#subsCfgState').textContent = SubCfg.script ? '연결됨' : '미설정 (읽기만)';
-  });
-  $('#subsCfgTest').addEventListener('click', async () => {
-    LS.set('subsScript', $('#subsCfgScript').value.trim());
-    LS.set('subsKey', $('#subsCfgKey').value.trim());
-    try {
-      const j = await postScript({ action: 'ping' });
-      toast(j.blind ? '보냈어요 (응답은 브라우저가 막아 확인 못 함) — 상태 버튼을 한 번 눌러 시트에 적히는지 보세요' : `연결 OK — ${(j.sheets || []).join(', ')}`, 'ok');
-    } catch (err) { toast('연결 실패: ' + err.message, 'err'); }
-  });
 
   /* ---------------- AI 정리 (복사 → Claude → 붙여넣기) ---------------- */
   const AI_GUIDE = `셀럽이 읽은 책을 모아 보여주는 사이트 favorbook.co.kr 에 들어온 구글 폼 제보를 정리해 주세요.
@@ -936,8 +793,8 @@
 제보:
 `;
   $('#subsAiCopyBtn').addEventListener('click', async () => {
-    const rows = visibleRows().filter(r => !rowStore(r.key).ai && r.sheetStatus !== ST.done && r.calc !== 'live').slice(0, 30);
-    if (!rows.length) { toast('AI에 넘길 제보가 없어요 (지금 목록에서 AI 정리 안 된 미반영 제보)', 'err'); return; }
+    const rows = visibleRows().filter(r => !rowStore(r.key).ai && !r.done).slice(0, 30);
+    if (!rows.length) { toast('AI에 넘길 제보가 없어요 (지금 목록에서 AI 정리 안 된, 아직 등록 안 된 제보)', 'err'); return; }
     const items = rows.map(r => ({ key: r.key, name: r.name, text: r.text.trim(), source: r.source.trim() }));
     try { await copyToClipboard(AI_GUIDE + JSON.stringify(items, null, 1)); }
     catch (e) { toast('복사 실패: ' + e.message, 'err'); return; }
@@ -984,12 +841,8 @@
   async function openSubs() {
     if (!Config.token) { toast('GitHub Token을 먼저 설정하세요', 'err'); settingsDlg.showModal(); return; }
     if (!State.celebs.size) { toast('먼저 ↻ 불러오기로 CSV를 가져오세요', 'err'); return; }
-    $('#subsCfgScript').value = SubCfg.script;
-    $('#subsCfgKey').value = SubCfg.key;
-    $('#subsCfgState').textContent = SubCfg.script ? '연결됨' : '미설정 (읽기만)';
     $('#subsAuto').checked = LS.get('subsAuto', '1') === '1';
-    $('#subsAutoWrite').checked = LS.get('subsAutoWrite', '1') === '1';
-    if (!SubCfg.script) $('#subsCfg').open = true;
+    $('#subsSort').value = LS.get('subsSort', 'desc') === 'asc' ? 'asc' : 'desc';
     dlg.showModal();
     S.shown = PAGE;
     setStatus('기록 불러오는 중…');
