@@ -2803,7 +2803,7 @@ def _inject_pinned(html_text, title, subtitle, items):
             '      <a href="' + href + '" class="pinned-card flex flex-col border-2 border-ink '
             'bg-white shadow-neo p-4 no-underline text-ink">\n'
             '        <span class="font-black text-base">' + esc(it['book']) + '</span>\n'
-            '        <span class="text-xs text-muted mt-1">' + esc(it['celeb']) + '의 추천'
+            '        <span class="text-xs text-muted mt-1">' + esc(it['celeb']) + '의 책'
             + ((' · ' + esc(it['author'])) if it['author'] else '') + '</span>\n'
             '      </a>'
         )
@@ -3172,7 +3172,7 @@ def celeb_answer_html(name, books, updated):
     picks = sorted(books, key=lambda b: (-len(book_celebs.get(b['title'].strip(), {}).get('celebs', [])),
                                          title_sort_key(b['title'])))
     # 이름 끝이 'RM(BTS)'처럼 한글이 아니면 이/가를 고를 수 없어 '의'로 잇는다
-    who = esc(name) + '의 추천 책·읽은 책은'
+    who = esc(name) + '의 읽은 책은'
     if n == 1:
         out = who + ' 지금까지 ' + book_cite(books[0]) + ' 한 권이 확인됐어요.'
     else:
@@ -3566,7 +3566,7 @@ for name, info in celebs.items():
                          key=lambda x: (-x[1], x[0]))[:3]
     if top_authors and not (TASTE.get(name) or {}).get('authors'):
         author_summary = (
-            '추천 도서에 가장 자주 등장한 작가는 '
+            '읽은 책에 가장 자주 등장한 작가는 '
             + ', '.join(esc(a) + ' (' + str(c) + '권)' for a, c in top_authors)
             + ' 등이에요.'
         )
@@ -4264,7 +4264,7 @@ for _g in sorted(ko_groups.values(), key=lambda g: g['ko']):
         '</head>\n'
         '<body>\n'
         '  <nav><a href="' + BASE + '">← 최애의 독서</a> · <a href="' + BASE + '#groups">그룹 전체 보기</a>'
-        ' · <a href="' + BASE + 'recommend/idol.html">아이돌 추천책 모음</a></nav>\n'
+        ' · <a href="' + BASE + 'recommend/idol.html">아이돌 읽은 책 모음</a></nav>\n'
         '  <div class="hero"' + ((' style="' + style + '"') if style else '') + '>\n'
         '    <h1>' + esc(name) + ' 멤버들이 읽은 책</h1>\n'
         '    <p>' + esc(name) + ' 멤버 ' + str(n_members) + '명이 읽거나 추천한 책 <strong>'
@@ -4646,7 +4646,7 @@ def _hub_page(url, path, title, desc, h1, intro, ranked, list_title, people, peo
             groups_html += ('      <a class="grp" href="' + esc(make_group_url(g)) + '"'
                             + ((' style="' + style + '"') if style else '') + '><b>' + esc(g['ko']) + '</b>'
                             '<small>' + str(len(g['members'])) + '명 · ' + str(g['n_books']) + '권</small></a>\n')
-        sections.append(('', '그룹별 아이돌 추천 도서', '박스 색은 그룹 공식 색이에요.',
+        sections.append(('', '그룹별 아이돌 읽은 책', '박스 색은 그룹 공식 색이에요.',
                          '      <div class="grps">\n' + groups_html + '      </div>\n'))
     sections.append(('', people_title, '이름을 누르면 그 사람이 읽은 책을 모두 볼 수 있어요.', _v2_people(people)))
     sections.append(('', '자주 묻는 질문', '', ''.join(
@@ -4670,19 +4670,19 @@ _hub_page(
     '아이돌 추천책 한눈에 보기. K-POP 아이돌 ' + str(len(idol_names)) + '명이 읽고 추천한 책 '
     + str(len(_idol_ranked)) + '권' + ((' — ' + ', '.join(_idol_picks)) if _idol_picks else '')
     + '. 여러 아이돌이 함께 추천한 책부터 그룹별 추천 도서까지 출처와 함께 정리했어요.',
-    '아이돌 추천책 모음',
+    '아이돌 읽은 책 모음',
     ['K-POP 아이돌 <strong>' + str(len(idol_names)) + '명</strong>이 인터뷰·유튜브·SNS에서 읽었다고 밝히거나 '
-     '추천한 책 <strong>' + str(len(_idol_ranked)) + '권</strong>을 모았어요.',
-     '여러 아이돌이 함께 추천한 책부터 순서대로 보여드려요. 그룹별 추천 도서와 멤버별 인생책도 바로 찾아볼 수 있어요.'],
-    _idol_ranked, '아이돌이 가장 많이 추천한 책',
-    idol_names, '책을 추천한 아이돌 ' + str(len(idol_names)) + '명',
+     '언급한 책 <strong>' + str(len(_idol_ranked)) + '권</strong>을 모았어요.',
+     '여러 아이돌이 함께 읽은 책부터 순서대로 보여드려요. 그룹별 읽은 책과 멤버별 인생책도 바로 찾아볼 수 있어요.'],
+    _idol_ranked, '아이돌이 가장 많이 읽은 책',
+    idol_names, '책을 읽은 아이돌 ' + str(len(idol_names)) + '명',
     _idol_groups,
-    [('아이돌 추천책은 어떤 기준으로 모았나요?',
+    [('아이돌이 읽은 책은 어떤 기준으로 모았나요?',
       '아이돌이 직접 추천한 책은 물론, 방송·인터뷰·유튜브·위버스·인스타그램 등에서 읽었다고 말하거나 언급한 책, 화보나 일상 사진에 포착된 책까지 출처와 함께 모았어요. 본인이 쓴 책이나 출연작의 원작 도서는 넣지 않았어요. 책마다 인물 페이지에서 출처를 확인할 수 있어요.'),
-     ('아이돌이 가장 많이 추천한 책은 무엇인가요?',
+     ('아이돌이 가장 많이 읽은 책은 무엇인가요?',
       ('지금 기준으로 ' + ', '.join(_idol_picks) + ' 순으로 많이 언급됐어요.') if _idol_picks else '아직 집계 중이에요.'),
-     ('배우나 다른 연예인 추천책도 볼 수 있나요?',
-      '배우 추천책 모음, 가수 추천책 모음 페이지에서 배우·가수가 추천한 책을 따로 볼 수 있어요.')],
+     ('배우나 다른 연예인이 읽은 책도 볼 수 있나요?',
+      '배우 읽은 책 모음, 가수 읽은 책 모음 페이지에서 배우·가수가 읽은 책을 따로 볼 수 있어요.')],
 )
 
 # 연예인 추천책 (아이돌 포함 전체)
@@ -4694,19 +4694,19 @@ _hub_page(
     '연예인 추천책 한눈에 보기. 배우·가수·아이돌·방송인 ' + str(len(celebs)) + '명이 읽고 추천한 책 '
     + str(len(_all_ranked)) + '권' + ((' — ' + ', '.join(_all_picks)) if _all_picks else '')
     + '. 연예인 인생책과 추천 도서를 출처와 함께 정리했어요.',
-    '연예인 추천책 모음',
+    '연예인 읽은 책 모음',
     ['배우·가수·아이돌·방송인 등 연예인 <strong>' + str(len(celebs)) + '명</strong>이 읽었다고 밝히거나 '
-     '추천한 책 <strong>' + str(len(_all_ranked)) + '권</strong>을 모았어요.',
-     '여러 연예인이 함께 추천한 책부터 순서대로 보여드려요. 아이돌 추천책만 따로 보고 싶다면 '
-     '<a href="' + IDOL_HUB_URL + '">아이돌 추천책 모음</a>으로 가 보세요.'],
-    _all_ranked, '연예인이 가장 많이 추천한 책',
-    celeb_names, '책을 추천한 배우·가수·방송인 ' + str(len(celeb_names)) + '명',
+     '언급한 책 <strong>' + str(len(_all_ranked)) + '권</strong>을 모았어요.',
+     '여러 연예인이 함께 읽은 책부터 순서대로 보여드려요. 아이돌 읽은 책만 따로 보고 싶다면 '
+     '<a href="' + IDOL_HUB_URL + '">아이돌 읽은 책 모음</a>으로 가 보세요.'],
+    _all_ranked, '연예인이 가장 많이 읽은 책',
+    celeb_names, '책을 읽은 배우·가수·방송인 ' + str(len(celeb_names)) + '명',
     [],
-    [('연예인 추천책은 어떤 기준으로 모았나요?',
+    [('연예인이 읽은 책은 어떤 기준으로 모았나요?',
       '연예인이 직접 추천한 책은 물론, 방송·인터뷰·유튜브·SNS 등에서 읽었다고 말하거나 언급한 책, 화보나 일상 사진에 포착된 책까지 출처와 함께 모았어요. 본인이 쓴 책이나 출연작의 원작 도서는 넣지 않았어요. 책마다 인물 페이지에서 출처를 확인할 수 있어요.'),
-     ('연예인이 가장 많이 추천한 책은 무엇인가요?',
+     ('연예인이 가장 많이 읽은 책은 무엇인가요?',
       ('지금 기준으로 ' + ', '.join(_all_picks) + ' 순으로 많이 언급됐어요.') if _all_picks else '아직 집계 중이에요.'),
-     ('내가 아는 연예인 추천책이 없어요.',
+     ('내가 아는 연예인의 책이 없어요.',
       '출처 링크와 함께 제보해 주시면 확인 후 추가해 둘게요.')],
 )
 print(f"✅ /recommend/ 추천책 모음: 아이돌 {len(idol_names)}명, 연예인 {len(celebs)}명")
@@ -4769,8 +4769,8 @@ def _author_head(title, desc, url, ld, og_image):
         '  <style>\n' + AUTHOR_CSS + '  </style>\n'
         '</head>\n'
         '<body>\n'
-        '  <nav><a href="' + BASE + '">← 최애의 독서</a> · <a href="' + AUTHOR_HUB_URL + '">작가별 추천책</a>'
-        ' · <a href="' + IDOL_HUB_URL + '">아이돌 추천책</a>'
+        '  <nav><a href="' + BASE + '">← 최애의 독서</a> · <a href="' + AUTHOR_HUB_URL + '">작가별 읽은 책</a>'
+        ' · <a href="' + IDOL_HUB_URL + '">아이돌 읽은 책</a>'
         ' · <a href="' + BASE + 'share/ranking.html">셀럽 독서 랭킹</a></nav>\n'
     )
 
@@ -5299,18 +5299,18 @@ for _url, _path, _label, _names, _who, _example in (
         _label + ' 추천책 한눈에 보기. ' + _who + ' ' + str(len(_names)) + '명이 읽고 추천한 책 '
         + str(len(_ranked)) + '권' + ((' — ' + ', '.join(_picks)) if _picks else '')
         + '. 여러 ' + _label + '가 함께 추천한 책부터 출처와 함께 정리했어요.',
-        _label + ' 추천책 모음',
+        _label + ' 읽은 책 모음',
         [_who + ' <strong>' + str(len(_names)) + '명</strong>이 인터뷰·방송·SNS에서 읽었다고 밝히거나 '
-         '추천한 책 <strong>' + str(len(_ranked)) + '권</strong>을 모았어요.',
+         '언급한 책 <strong>' + str(len(_ranked)) + '권</strong>을 모았어요.',
          '지금 ' + _label + '들이 가장 많이 고른 책은 ' + ', '.join('『' + esc(t) + '』' for t in _picks)
          + ' 순이에요. ' + _example + '까지 출처 링크와 함께 볼 수 있어요.'],
-        _ranked, _label + '가 가장 많이 추천한 책',
-        _names, '책을 추천한 ' + _label + ' ' + str(len(_names)) + '명',
+        _ranked, _label + '가 가장 많이 읽은 책',
+        _names, '책을 읽은 ' + _label + ' ' + str(len(_names)) + '명',
         [],
-        [(_label + ' 추천책은 어떤 기준으로 모았나요?',
+        [(_label + '가 읽은 책은 어떤 기준으로 모았나요?',
           _label + '가 직접 추천한 책은 물론, 방송·인터뷰·유튜브·SNS에서 읽었다고 말하거나 언급한 책, '
           '화보나 일상 사진에 포착된 책까지 출처와 함께 모았어요. 본인이 쓴 책이나 출연작의 원작은 넣지 않아요.'),
-         (_label + '가 가장 많이 추천한 책은 무엇인가요?',
+         (_label + '가 가장 많이 읽은 책은 무엇인가요?',
           ('지금 기준으로 ' + ', '.join(_picks) + ' 순으로 많이 언급됐어요.') if _picks else '아직 집계 중이에요.')],
     )
 print(f"✅ /recommend/ 직업별 모음: 배우 {len(actor_names)}명, 가수 {len(musician_names)}명")
@@ -8209,12 +8209,12 @@ _llms = [
     '',
     '## 모음 페이지',
     '',
-    '- [아이돌 추천책 모음](' + IDOL_HUB_URL + '): K-pop 아이돌이 많이 읽은 책 순위',
-    '- [배우 추천책 모음](' + ACTOR_HUB_URL + '): 드라마·영화 배우가 많이 읽은 책 순위',
-    '- [가수 추천책 모음](' + MUSICIAN_HUB_URL + '): 가수·뮤지션이 많이 읽은 책 순위',
-    '- [연예인 추천책 모음](' + CELEB_HUB_URL + '): 전체 연예인이 많이 읽은 책 순위',
+    '- [아이돌 읽은 책 모음](' + IDOL_HUB_URL + '): K-pop 아이돌이 많이 읽은 책 순위',
+    '- [배우 읽은 책 모음](' + ACTOR_HUB_URL + '): 드라마·영화 배우가 많이 읽은 책 순위',
+    '- [가수 읽은 책 모음](' + MUSICIAN_HUB_URL + '): 가수·뮤지션이 많이 읽은 책 순위',
+    '- [연예인 읽은 책 모음](' + CELEB_HUB_URL + '): 전체 연예인이 많이 읽은 책 순위',
     '- [셀럽 독서 랭킹](' + BASE + 'share/ranking.html): 많이 읽힌 책과 책을 많이 읽은 셀럽',
-    '- [작가별 추천책](' + AUTHOR_HUB_URL + '): 셀럽이 많이 읽은 작가 목록',
+    '- [작가별 읽은 책](' + AUTHOR_HUB_URL + '): 셀럽이 많이 읽은 작가 목록',
     '',
     '## 작가별',
     '',
@@ -8302,7 +8302,7 @@ for title, binfo in top_books[:5]:
         '    <item>\n'
         '      <title>' + esc_xml(title) + ' - ' + str(len(binfo['celebs'])) + '명의 셀럽이 읽은 책</title>\n'
         '      <link>' + book_url + '</link>\n'
-        '      <description>' + esc_xml(', '.join(binfo['celebs'])) + '의 추천 도서입니다.</description>\n'
+        '      <description>' + '읽은 셀럽: ' + esc_xml(', '.join(binfo['celebs'])) + '</description>\n'
         '      <pubDate>' + pub_date + '</pubDate>\n'
         '      <guid isPermaLink="true">' + book_url + '</guid>\n'
         '    </item>'
@@ -8317,7 +8317,7 @@ for name, info in top_celeb_list:
         '    <item>\n'
         '      <title>' + esc_xml(name) + '의 독서 리스트 (' + str(len(info['books'])) + '권)</title>\n'
         '      <link>' + celeb_url + '</link>\n'
-        '      <description>' + esc_xml(name) + '의 인생책·추천 도서 ' + str(len(info['books'])) + '권을 확인해 보세요.</description>\n'
+        '      <description>' + esc_xml(name) + '의 인생책·읽은 책 ' + str(len(info['books'])) + '권을 확인해 보세요.</description>\n'
         '      <pubDate>' + pub_date + '</pubDate>\n'
         '      <guid isPermaLink="true">' + celeb_url + '</guid>\n'
         '    </item>'
@@ -8329,7 +8329,7 @@ feed_xml = (
     '<channel>\n'
     '  <title>최애의 독서 | 당신이 좋아하는, 그들이 읽은 책</title>\n'
     '  <link>' + BASE + '</link>\n'
-    '  <description>아이돌, 셀럽, 연예인 나의 최애가 읽은 책, 추천 책, 인생책을 한곳에 모은 아카이브입니다.</description>\n'
+    '  <description>아이돌, 셀럽, 연예인 나의 최애가 읽은 책, 인생책을 한곳에 모은 아카이브입니다.</description>\n'
     '  <language>ko-kr</language>\n'
     '  <lastBuildDate>' + pub_date + '</lastBuildDate>\n'
     '  <atom:link href="' + BASE + 'feed.xml" rel="self" type="application/rss+xml" />\n'
