@@ -5306,6 +5306,215 @@ for _url, _path, _label, _names, _who, _example in (
     )
 print(f"✅ /recommend/ 직업별 모음: 배우 {len(actor_names)}명, 가수 {len(musician_names)}명")
 
+# ── 5.47. /recommend/youthpass.html — 청년문화예술패스로 살 수 있는 최애의 책 (시안) ──
+# 대상 여부는 예스24 상품 페이지의 청년패스 표시(제목 옆 아이콘 · #청년패스 태그)로 정한다
+# (data/youthpass.json, tools/fetch_youthpass.py — 태그만 남고 판매가 끝난 책은 뺀다). 패스로 책을 살 수 있는 곳은 서점ON과 예스24 두 곳이라
+# 책마다 두 곳 링크를 같은 모양·같은 크기로 가나다순(서점ON → 예스24)으로 붙인다.
+# 서점ON은 ISBN으로 검색하면 그 판본 하나만 나온다. ISBN을 모르면 제목으로 검색한다.
+YOUTHPASS_URL = BASE + 'recommend/youthpass.html'
+YOUTHPASS_DRAFT = True   # 시안 — 검색 노출(noindex)·사이트맵에서 뺀다. 확정되면 False
+SEOJEOMON_SEARCH = 'https://bookshop.or.kr/home/search/all?searchKeyword='
+# 서점ON의 '청년문화예술패스 추천도서' 메뉴(/home/book/bookmastYpass.do)는 처음 들어온 사람이 바로 열면
+# 오류가 나서 홈으로 보낸다. 메뉴 위치는 단추 설명에 적는다.
+SEOJEOMON_HOME = 'https://bookshop.or.kr/'
+YES24_PASS_EVENT = 'https://event.yes24.com/youthculturepass/2026'
+PASS_SITE = 'https://youthculturepass.or.kr'
+try:
+    with open('data/youthpass.json', encoding='utf-8') as f:
+        _yp_db = json.load(f)
+except (FileNotFoundError, json.JSONDecodeError):
+    _yp_db = {}
+_yp_books = _yp_db.get('books') or {}
+_yp_checked = _yp_db.get('generated') or ''
+
+
+def _yp_info(t):
+    """책 제목 → (예스24 상품 번호, ISBN). 청년패스로 살 수 없으면 None."""
+    gid = yes24_goods_id((book_celebs.get(t) or {}).get('coverUrl'))
+    hit = _yp_books.get(gid or '')
+    if not hit or not hit.get('pass'):
+        return None
+    return gid, hit.get('isbn') or ''
+
+
+def _yp_buy(t, gid, isbn):
+    """판매처 두 곳 단추. 모양·크기는 같게, 순서는 가나다순."""
+    nm = esc(t)
+    return ('<div class="buy">'
+            '<a href="' + esc(SEOJEOMON_SEARCH + quote(isbn or t)) + '" target="_blank" rel="noopener" '
+            'aria-label="' + nm + ' 서점ON에서 보기">서점ON<small>동네서점</small></a>'
+            '<a href="https://www.yes24.com/product/goods/' + gid + '" target="_blank" rel="noopener" '
+            'aria-label="' + nm + ' 예스24에서 보기">예스24<small>온라인서점</small></a>'
+            '</div>')
+
+
+def _yp_rows(rows, start=1):
+    """rows: [(제목, 저자, [읽은 사람], 상품 번호, ISBN)] → 2단 목록"""
+    out = ''
+    for i, (t, author, rd, gid, isbn) in enumerate(rows, start=start):
+        more = ('<span class="av more">+' + str(len(rd) - 5) + '</span>') if len(rd) > 5 else ''
+        out += ('      <li>\n'
+                '        <span class="rk">' + str(i) + '</span>\n'
+                '        ' + _v2_book_link(t, _v2_cover_img(t), 'cv') + '\n'
+                '        <div class="tx">\n'
+                '          <h3>' + _v2_book_link(t, esc(t)) + '</h3>\n'
+                + (('          <p class="au">' + esc(author) + '</p>\n') if author else '')
+                + '          <div class="faces"><span class="cnt">' + str(len(rd)) + '명</span>'
+                + ''.join(_v2_face(r) for r in rd[:5]) + more + '</div>\n'
+                '          <p class="who">' + _v2_who(rd) + '</p>\n'
+                '          ' + _yp_buy(t, gid, isbn) + '\n'
+                '        </div>\n'
+                '      </li>\n')
+    return out
+
+
+_yp_ranked = []
+for _t, _bi in merge_title_variants(book_celebs.items()):
+    _hit = _yp_info(_t)
+    if _hit:
+        _yp_ranked.append((_t, _bi['author'], _bi['celebs'], _hit[0], _hit[1]))
+_yp_ranked.sort(key=lambda r: (-len(r[2]), title_sort_key(r[0])))
+_yp_readers = sorted({n for r in _yp_ranked for n in r[2]})
+
+if _yp_ranked:
+    YP_TOP = 60
+    YP_GENRE_MAX = 30
+    YP_GENRES = ['소설', '시', '에세이', '인문', '사회', '예술', '과학', '기타 문학']
+    _yp_by_genre = {}
+    for _r in _yp_ranked:
+        _g = _taste._genre_of(_subjects_db, _r[0])
+        if _g and _g[0] in YP_GENRES:
+            _yp_by_genre.setdefault(_g[0], []).append(_r)
+    _yp_genres = [g for g in YP_GENRES if len(_yp_by_genre.get(g, [])) >= 3]
+    _yp_picks = [r[0] for r in _yp_ranked[:3]]
+    _yp_title = '청년문화예술패스로 살 수 있는 최애의 책 ' + str(len(_yp_ranked)) + '권'
+    _yp_desc = ('청년문화예술패스(청년패스) 도서 구매 대상 중 연예인 ' + str(len(_yp_readers)) + '명이 읽은 책 '
+                + str(len(_yp_ranked)) + '권' + ((' — ' + ', '.join(_yp_picks)) if _yp_picks else '')
+                + '. 서점ON(동네서점)과 예스24 링크를 나란히 붙였어요.')
+    _yp_head = (
+        '<!DOCTYPE html>\n<html lang="ko">\n<head>\n' + GA_TAG +
+        '  <meta charset="utf-8">\n'
+        '  <meta name="viewport" content="width=device-width, initial-scale=1">\n'
+        '  <title>' + esc(_yp_title) + ' | 최애의 독서</title>\n'
+        '  <meta name="description" content="' + esc(_yp_desc) + '">\n'
+        '  <meta name="robots" content="' + ('noindex, follow' if YOUTHPASS_DRAFT else
+                                             'index, follow, max-image-preview:large, max-snippet:-1') + '">\n'
+        '  <meta property="og:title" content="' + esc(_yp_title) + '">\n'
+        '  <meta property="og:description" content="' + esc(_yp_desc) + '">\n'
+        '  <meta property="og:url" content="' + YOUTHPASS_URL + '">\n'
+        '  <meta property="og:type" content="website">\n'
+        '  <meta property="og:locale" content="ko_KR">\n'
+        '  <meta property="og:site_name" content="최애의 독서">\n'
+        '  <meta property="og:image" content="' + OG_SITE + '">\n'
+        '  <meta name="twitter:card" content="summary_large_image">\n'
+        '  <link rel="canonical" href="' + YOUTHPASS_URL + '">\n'
+        '  <link rel="icon" href="' + BASE + 'favicon.svg" type="image/svg+xml">\n'
+        '  <style>\n'
+        '    .yp-stores { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:10px; max-width:560px; margin:24px auto 0; }\n'
+        '    .yp-stores a { display:flex; flex-direction:column; gap:2px; padding:14px 16px; border:1px solid var(--border); border-radius:14px; text-align:left; transition:border-color .15s; }\n'
+        '    .yp-stores a:hover { border-color:var(--ink); }\n'
+        '    .yp-stores b { font-size:15px; }\n'
+        '    .yp-stores small { font-size:12px; color:var(--muted); }\n'
+        '    .yp-rules { display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:10px; margin:0; padding:0; list-style:none; }\n'
+        '    .yp-rules li { border:1px solid var(--border); border-radius:14px; padding:14px 16px; min-width:0; }\n'
+        '    .yp-rules b { display:block; font-size:12px; color:var(--muted); margin-bottom:4px; }\n'
+        '    .yp-rules strong { display:block; font-family:var(--serif); font-size:17px; line-height:1.4; }\n'
+        '    .yp-rules p { margin:6px 0 0; font-size:12px; color:var(--soft); }\n'
+        '    .yp-note { margin:14px 0 0; font-size:12px; color:var(--muted); }\n'
+        '    .buy { display:flex; gap:6px; margin-top:10px; }\n'
+        '    .buy a { flex:1 1 0; max-width:132px; display:flex; align-items:baseline; justify-content:center; gap:5px; padding:7px 10px; border:1px solid var(--border); border-radius:99px; font-size:12px; font-weight:700; white-space:nowrap; }\n'
+        '    .buy a:hover { border-color:var(--ink); background:var(--hover); }\n'
+        '    .buy small { font-size:10px; font-weight:400; color:var(--muted); }\n'
+        '    .yp-tabs { display:flex; gap:6px; flex-wrap:wrap; margin:0 0 4px; }\n'
+        '    .yp-tabs button { font:inherit; font-size:13px; font-weight:700; padding:8px 16px; border-radius:99px; border:1px solid var(--border); background:none; color:var(--ink); cursor:pointer; }\n'
+        '    .yp-tabs button:hover { border-color:var(--ink); }\n'
+        '    .yp-tabs button[aria-selected="true"] { background:var(--yellow); border-color:var(--yellow); color:var(--on-yellow); }\n'
+        '    .yp-tabs button small { font-weight:400; margin-left:4px; }\n'
+        '    .js .yp-pane[hidden] { display:none; }\n'
+        '    @media (max-width:860px) { .yp-rules { grid-template-columns:repeat(2,minmax(0,1fr)); } }\n'
+        '    @media (max-width:420px) { .yp-stores { grid-template-columns:1fr; } .buy a { max-width:none; } }\n'
+        '  </style>\n'
+    )
+    _yp_hero = (
+        '      <div class="yp-stores">\n'
+        '        <a href="' + SEOJEOMON_HOME + '" target="_blank" rel="noopener"><b>서점ON →</b>'
+        '<small>동네서점에서 받기 · 도서정보 › 청년문화예술패스 추천도서</small></a>\n'
+        '        <a href="' + YES24_PASS_EVENT + '" target="_blank" rel="noopener"><b>예스24 →</b>'
+        '<small>택배로 받기 · 청년문화예술패스 도서 안내</small></a>\n'
+        '      </div>\n')
+    _yp_rules = (
+        '      <ul class="yp-rules">\n'
+        '        <li><b>쓸 수 있는 곳</b><strong>서점ON · 예스24</strong><p>두 곳 모두 온라인으로 결제해요.</p></li>\n'
+        '        <li><b>도서 한도</b><strong>수도권 5만 원<br>비수도권 7만 원</strong><p>두 곳 사용액을 합쳐서 계산해요. (2026.9.1. 상향)</p></li>\n'
+        '        <li><b>주문 방법</b><strong>한 번에 한 권씩</strong><p>다른 상품과 함께 담을 수 없어요. 배송비도 결제돼요.</p></li>\n'
+        '        <li><b>사용 기한</b><strong>2026년 12월 31일까지</strong><p>학습참고서·실용서·아동·청소년 도서는 대상이 아니에요.</p></li>\n'
+        '      </ul>\n'
+        '      <p class="yp-note">한도와 조건은 바뀔 수 있어요. 결제 전에 '
+        '<a href="' + PASS_SITE + '" target="_blank" rel="noopener"><u>청년문화예술패스 누리집</u></a>과 '
+        '<a href="' + YES24_PASS_EVENT + '" target="_blank" rel="noopener"><u>예스24 안내</u></a>에서 한 번 더 확인해 주세요.</p>\n')
+    _yp_tabs = ('      <div class="yp-tabs" role="tablist">' + ''.join(
+        '<button type="button" role="tab" id="yp-t' + str(i) + '" aria-controls="yp-p' + str(i) + '" aria-selected="'
+        + ('true' if i == 0 else 'false') + '">' + esc(g) + '<small>' + str(len(_yp_by_genre[g])) + '</small></button>'
+        for i, g in enumerate(_yp_genres)) + '</div>\n')
+    _yp_panes = ''.join(
+        '      <div class="yp-pane" role="tabpanel" id="yp-p' + str(i) + '" aria-labelledby="yp-t' + str(i) + '"'
+        + ('' if i == 0 else ' hidden') + '>\n'
+        '      <ol class="list">\n' + _yp_rows(_yp_by_genre[g][:YP_GENRE_MAX]) + '      </ol>\n'
+        '      </div>\n' for i, g in enumerate(_yp_genres))
+    _yp_js = (
+        '      <script>\n'
+        '      (function () {\n'
+        '        document.documentElement.classList.add("js");\n'
+        '        var tabs = document.querySelectorAll(".yp-tabs button");\n'
+        '        [].forEach.call(tabs, function (b) {\n'
+        '          b.addEventListener("click", function () {\n'
+        '            [].forEach.call(tabs, function (o) {\n'
+        '              var on = o === b;\n'
+        '              o.setAttribute("aria-selected", on ? "true" : "false");\n'
+        '              document.getElementById(o.getAttribute("aria-controls")).hidden = !on;\n'
+        '            });\n'
+        '          });\n'
+        '        });\n'
+        '      })();\n'
+        '      </script>\n')
+    _yp_sections = [
+        ('rules', '청년패스로 책 살 때 알아둘 것', '', _yp_rules),
+        ('top', '최애들이 가장 많이 읽은 청년패스 도서',
+         '여러 명이 함께 읽은 책부터 ' + str(min(len(_yp_ranked), YP_TOP)) + '권을 보여드려요. '
+         '판매처는 가나다순으로 나란히 두었어요.',
+         '      <ol class="list" style="margin-top:0">\n' + _yp_rows(_yp_ranked[:YP_TOP]) + '      </ol>\n'),
+    ]
+    if _yp_genres:
+        _yp_sections.append(('genre', '분야별로 고르기', '분야마다 많이 읽은 순으로 ' + str(YP_GENRE_MAX) + '권까지 보여드려요.',
+                             _yp_tabs + _yp_panes + _yp_js))
+    _yp_sections.append(('', '자주 묻는 질문', '', ''.join(
+        '      <div class="qa"><h3>' + esc(q) + '</h3><p>' + a + '</p></div>\n' for q, a in [
+            ('어떤 책을 모았나요?',
+             '연예인이 읽었다고 밝히거나 추천한 책 가운데, 예스24에서 <b>#청년패스</b> 표시가 붙어 청년패스로 결제할 수 있는 책만 모았어요. '
+             + (('대상 여부는 ' + esc(date_ko(_yp_checked)) + '에 확인했어요. ') if _yp_checked else '')
+             + '같은 책이라도 판본에 따라 대상 여부가 다를 수 있어요.'),
+            ('왜 판매처 두 곳을 같이 보여 주나요?',
+             '청년문화예술패스로 책을 살 수 있는 곳이 서점ON과 예스24 두 곳이라서예요. 어느 한쪽으로 쏠리지 않도록 '
+             '두 단추를 같은 모양·같은 크기로, 가나다순으로 놓았어요. 최애의 독서는 두 곳 어디에서도 판매 수수료를 받지 않아요.'),
+            ('서점ON은 어떻게 쓰나요?',
+             '서점ON(bookshop.or.kr)은 전국 동네서점을 한데 모은 공공 플랫폼이에요. '
+             '단추를 누르면 ISBN으로 같은 판본을 찾아 보여 줘요. 온라인으로 결제한 뒤 고른 동네서점에서 책을 받을 수 있어요. '
+             '서점ON에서의 대상 여부는 결제 화면에서 한 번 더 확인해 주세요.'),
+            ('찾는 책이 목록에 없어요.',
+             '예스24에서 청년패스 대상이 아니거나, 아직 최애의 독서에 등록되지 않은 책이에요. 청년패스로 살 수 있는 '
+             '전체 도서는 서점ON의 \'청년문화예술패스 추천도서\' 메뉴나 예스24 검색창에 \'청년패스\'를 넣어 찾아볼 수 있어요.'),
+        ])))
+    write_if_changed('recommend/youthpass.html', _v2_page(
+        _yp_head, 'YOUTH CULTURE PASS', '청년패스로 사는<br>최애의 책',
+        ['연예인 <strong>' + str(len(_yp_readers)) + '명</strong>이 읽은 책 가운데 '
+         '청년문화예술패스로 살 수 있는 책 <strong>' + str(len(_yp_ranked)) + '권</strong>을 골랐어요.',
+         '책마다 <strong>서점ON</strong>(동네서점)과 <strong>예스24</strong> 링크를 나란히 붙였어요. 편한 곳에서 사세요.'],
+        _yp_hero, _yp_sections))
+    print(f"✅ /recommend/youthpass.html 청년패스 도서 {len(_yp_ranked)}권 · 읽은 사람 {len(_yp_readers)}명"
+          + (" (시안)" if YOUTHPASS_DRAFT else ""))
+else:
+    print("ℹ️ data/youthpass.json 이 없어 청년패스 페이지는 건너뜀")
+
 en_celeb_pages = []   # [(slug, name_en, name_ko)]
 en_book_pages  = []   # [(slug, title_en, title_ko)]
 
