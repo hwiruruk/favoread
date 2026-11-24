@@ -1676,6 +1676,15 @@ for _name, _info in celebs.items():
         _auto_comment_count += 1
 print(f"💬 검수 승인된 자동 코멘트 {_auto_comment_count}건 반영")
 
+# 코멘트 끝의 '(출처: X)' 같은 꼬리표는 떼어 낸다. 책 카드 아래 '출처' 버튼이
+# 같은 출처를 이미 보여 주므로 문장에 또 적을 필요가 없다.
+_SRC_TAIL_RE = re.compile(r'\s*\(출처:[^()]*\)\s*$')
+for _info in celebs.values():
+    for _b in _info['books']:
+        for _k in ('comment', 'comment_en'):
+            if _b.get(_k):
+                _b[_k] = _SRC_TAIL_RE.sub('', _b[_k]).rstrip()
+
 # ── 책 취향 통계 ─────────────────────────────────────────────────────
 # 책 정보(번역서·출간일·쪽수·시리즈)는 data/bookinfo.json(tools/fetch_bookinfo.py),
 # 분야는 data/categories.json(tools/fetch_categories.py — 예스24 카테고리),
