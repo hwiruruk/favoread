@@ -122,11 +122,12 @@
     const segs = [], parens = [];
     // 라벨 형식 — 책이름: A / 저자: B / 출판사: C, (Author: X / Publisher: Y)
     const lab = (re) => { const m = re.exec(s); return m ? cleanPiece(m[1]) : ''; };
-    if (/(?:책\s*이름|저자|출판사|author|publisher)\s*[:：]/i.test(s)) {
-      author = lab(/(?:저자|author)\s*[:：]\s*([^/|()（）]+)/i);
-      publisher = lab(/(?:출판사|publisher)\s*[:：]\s*([^/|()（）]+)/i);
-      title = lab(/(?:책\s*이름|제목|도서명|title)\s*[:：]\s*([^/|]+)/i) ||
-        cleanPiece(s.replace(/[(（]?\s*(?:저자|author|출판사|publisher)\s*[:：].*$/i, ''));
+    if (/(?:책\s*이름|저자|지은이|출판사|author|publisher)\s*[:：]/i.test(s)) {
+      const NEXT = '(?=\\s*(?:책\\s*이름|제목|도서명|title|저자|지은이|author|출판사|출판|publisher)\\s*[:：]|[/|()（）]|$)';
+      author = lab(new RegExp('(?:저자|지은이|author)\\s*[:：]\\s*([^/|()（）]+?)' + NEXT, 'i'));
+      publisher = lab(new RegExp('(?:출판사|출판|publisher)\\s*[:：]\\s*([^/|()（）]+?)' + NEXT, 'i'));
+      title = lab(new RegExp('(?:책\\s*이름|제목|도서명|title)\\s*[:：]\\s*([^/|]+?)' + NEXT, 'i')) ||
+        cleanPiece(s.replace(/[(（]?\s*(?:저자|지은이|author|출판사|출판|publisher)\s*[:：].*$/i, ''));
     }
     const bracket = /[<《『「〈]([^>》』」〉]+)[>》』」〉]/.exec(s);
     if (!title && bracket) {
@@ -206,16 +207,29 @@
     const kinds = lines.map(bulletKind);
     const cnt = (k) => kinds.filter(x => x === k).length;
     const lead = cnt('num') >= 2 ? 'num' : cnt('star') >= 2 ? 'star' : '';
+    /* 링크 줄은 '앞 링크 뒤로 이어 적은 책들' 모두의 출처로 본다.
+     *   책A / 책B / 책C / 링크1   → 링크1 은 A·B·C 셋 다
+     *   책D / 링크2 / 링크3       → 둘 다 D
+     * 책 줄에 링크가 같이 있으면 그 책 것이고, 묶음은 거기서 끊긴다. */
+    let group = 0;          // 아직 링크를 못 받은 책 묶음의 시작
+    let block = [];         // 바로 앞 링크가 붙은 책들 — 링크 줄이 이어지면 같은 묶음에 붙인다
+    const toBlock = (urls) => {
+      if (!urls.length) return;
+      const fresh = books.slice(group);
+      if (fresh.length) { block = fresh; group = books.length; }
+      if (block.length) block.forEach(b => addUrls(b.urls, urls));
+      else addUrls(rowUrls, urls);
+    };
     for (let li = 0; li < lines.length; li++) {
       const rawLine = lines[li];
       const urls = extractUrls(rawLine).map(u => u.url);
       let rest = stripUrls(rawLine).replace(/\s+/g, ' ').trim();
       rest = rest.replace(/(\s*[/|,]\s*)+$/, '').replace(/^(\s*[/|,]\s*)+/, '').trim();
       const last = books[books.length - 1];
-      if (!rest || /^[\s\p{P}\p{S}]*$/u.test(rest)) { addUrls(last ? last.urls : rowUrls, urls); continue; }
+      if (!rest || /^[\s\p{P}\p{S}]*$/u.test(rest)) { toBlock(urls); continue; }
       if (LABEL_SRC.test(rest)) {
         const note = rest.replace(LABEL_SRC, '').trim();
-        addUrls(last ? last.urls : rowUrls, urls);
+        toBlock(urls);
         addMemo(last, note ? '출처: ' + note : '');
         continue;
       }
@@ -224,13 +238,14 @@
         (lead && last && kinds[li] !== lead) ||
         (SENTENCE.test(plain.replace(/[(（][^)）]*[)）]/g, '').trim()) && !/\sby\s|[|/]|\s-\s|^\s*\d+[.)]/.test(rest)) ||
         (FIX.test(rest) && rest.length > 12 && !/\sby\s|[|/]|\s-\s/.test(rest));
-      if (isDesc) { addMemo(last, rest.replace(BULLET, '')); addUrls(last ? last.urls : rowUrls, urls); continue; }
+      if (isDesc) { addMemo(last, rest.replace(BULLET, '')); toBlock(urls); continue; }
       for (const piece of splitMulti(rest)) {
         const p = parseLine(piece);
         if (!p.title) continue;
         if (p.title.length > 80 || piece.replace(/["“”][^"“”]{12,}["“”]/g, '').length > 160) { addMemo(books[books.length - 1], piece); continue; }
         books.push(Object.assign(p, { line: piece.trim(), urls: urls.slice() }));
       }
+      if (urls.length) { block = books.slice(group); group = books.length; }
     }
 
     // 출처 칸: 책 제목이 적힌 줄 아래의 URL은 그 책 것, 나머지는 공통
@@ -248,11 +263,13 @@
       addUrls(cur ? cur.urls : rowUrls, urls);
     }
     const memo = rowMemo.join(' / ');
+    const all = [];
+    extractUrls(String(text || '') + '\n' + String(source || '')).forEach(u => { if (!all.includes(u.url)) all.push(u.url); });
     for (const b of books) {
       if (!b.urls.length) b.urls = rowUrls.slice();
       b.query = searchQuery(b);
     }
-    return { books, urls: rowUrls, memo };
+    return { books, urls: rowUrls, memo, allUrls: all };
   }
 
   /* AI 가 정리해 준 책 목록을 같은 모양으로 */
@@ -266,7 +283,7 @@
       b.query = x.query || searchQuery(b);
       return b;
     });
-    return { books, urls: parsed.urls, memo: ai.memo != null ? ai.memo : parsed.memo };
+    return { books, urls: parsed.urls, allUrls: parsed.allUrls, memo: ai.memo != null ? ai.memo : parsed.memo };
   }
 
   /* ---------------- 셀럽 찾기 ---------------- */
