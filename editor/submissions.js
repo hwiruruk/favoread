@@ -14,8 +14,9 @@
   const C = window.SubsCore;
 
   const SHEETS = [
-    { id: 'en', label: '영문 제보', sheetId: '1J4B0pa2Hv3l4nNfzMwghqWHdXT7cUbFZE3gPY1gCzvk' },
-    { id: 'intl', label: '해외 제보', sheetId: '186gKVna6LANvKkdvqJF7V3MTSZdDgI3xksmOgY4WtGM' },
+    // gid = 폼 응답 탭. 탭을 더 만들어도 이 탭을 읽고, 카드의 '시트에서 보기'도 이 탭의 그 줄로 간다
+    { id: 'en', label: '영문 제보', sheetId: '1J4B0pa2Hv3l4nNfzMwghqWHdXT7cUbFZE3gPY1gCzvk', gid: '1827106597' },
+    { id: 'intl', label: '해외 제보', sheetId: '186gKVna6LANvKkdvqJF7V3MTSZdDgI3xksmOgY4WtGM', gid: '1023767186' },
   ];
   const STORE_PATH = 'data/submissions.json';
   const PAGE = 20;
@@ -58,7 +59,7 @@
   }
 
   async function fetchSheet(sh) {
-    const u = `https://docs.google.com/spreadsheets/d/${sh.sheetId}/export?format=csv&_=${Date.now()}`;
+    const u = `https://docs.google.com/spreadsheets/d/${sh.sheetId}/export?format=csv&gid=${sh.gid}&_=${Date.now()}`;
     const r = await fetch(u, { cache: 'no-store' });
     if (!r.ok) throw new Error(`${sh.label} 시트를 못 읽었어요 (HTTP ${r.status}) — 링크 공유가 '링크가 있는 모든 사용자'인지 확인하세요`);
     const text = await r.text();
@@ -402,6 +403,12 @@
     catch (e) { return u.slice(0, 40); }
   }
 
+  // 시트에서 그 줄(행 전체)을 선택한 채로 연다
+  function sheetRowUrl(r) {
+    const sh = SHEETS.find(x => x.id === r.sheet);
+    return `https://docs.google.com/spreadsheets/d/${sh.sheetId}/edit#gid=${sh.gid}&range=${r.row}:${r.row}`;
+  }
+
   function renderRow(r) {
     const sc = ST_CLASS[r.sheetStatus];
     const calcBadge = r.calc === 'live' ? '<span class="sub-tag done">데이터에 반영됨</span>'
@@ -414,7 +421,8 @@
     return `<li class="sub-item st-${sc}${r.mismatch ? ' mismatch' : ''}" data-key="${esc(r.key)}">
       <div class="sub-head">
         <span class="sub-tag st-${sc}">${SHEET_BADGE[r.sheetStatus]}</span>
-        <span class="muted small">${esc(r.sheetLabel)} ${r.row}행 · ${esc(r.ts)}</span>
+        <a class="small sub-sheetlink" href="${esc(sheetRowUrl(r))}" target="_blank" rel="noopener" title="구글 시트에서 이 제보 줄을 선택한 채로 열기">📄 ${esc(r.sheetLabel)} ${r.row}행 ↗</a>
+        <span class="muted small">${esc(r.ts)}</span>
         ${calcBadge}
         ${r.kind === 'fix' ? '<span class="sub-tag hold">수정 요청</span>' : ''}
         ${r.wip ? '<span class="sub-tag wip">🔍 조사 중</span>' : ''}
