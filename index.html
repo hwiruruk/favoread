@@ -332,7 +332,7 @@
   <a href="#search" data-spy="search" class="spy-tab">검색</a>
   <a href="#match" data-spy="match" class="spy-tab spy-tab-match">취향</a>
   <a href="#featured" data-spy="featured" class="spy-tab spy-tab-featured">핫</a>
-  <a href="#pinned" data-spy="pinned" class="spy-tab spy-tab-pinned hidden">추천</a>
+  <a href="#pinned" data-spy="pinned" class="spy-tab spy-tab-pinned hidden">최근</a>
   <a href="#grid" data-spy="grid" class="spy-tab">셀럽</a>
   <a href="#seo-top-readers" data-spy="seo-top-readers" class="spy-tab">TOP</a>
   <a href="#common-books" data-spy="common-books" class="spy-tab">책</a>
@@ -348,7 +348,7 @@
     <a href="#search" data-spy="search" class="spy-tab">검색</a>
     <a href="#match" data-spy="match" class="spy-tab spy-tab-match">취향</a>
     <a href="#featured" data-spy="featured" class="spy-tab spy-tab-featured">핫</a>
-    <a href="#pinned" data-spy="pinned" class="spy-tab spy-tab-pinned hidden">추천</a>
+    <a href="#pinned" data-spy="pinned" class="spy-tab spy-tab-pinned hidden">최근</a>
     <a href="#grid" data-spy="grid" class="spy-tab">셀럽</a>
     <a href="#seo-top-readers" data-spy="seo-top-readers" class="spy-tab">TOP</a>
     <a href="#common-books" data-spy="common-books" class="spy-tab">책</a>
@@ -363,7 +363,7 @@
     <p class="eyebrow">Archive of their reads</p>
     <h1>최애의 독서</h1>
     <p class="tagline">당신이 좋아하는, 그들이 읽은 책</p>
-    <p class="text-muted text-sm sm:text-base mt-5 text-center max-w-xl mx-auto px-4 word-break-keep"><a href="/recommend/idol.html" class="underline hover:text-ink">아이돌 추천책</a> · 셀럽 인생책을 한곳에서 만나보세요</p>
+    <p class="text-muted text-sm sm:text-base mt-5 text-center max-w-xl mx-auto px-4 word-break-keep"><a href="/recommend/idol.html" class="underline hover:text-ink">아이돌 읽은 책</a> · 셀럽 인생책을 한곳에서 만나보세요</p>
     <div id="status-indicator" class="count flex items-center gap-2">
       <span id="status-dot" class="w-2 h-2 rounded-full bg-ink animate-pulse"></span>
       <span id="status-text">Loading...</span>
@@ -377,9 +377,9 @@
       BTS·아이브·세븐틴 같은 K-POP 아이돌부터 드라마 배우, 뮤지션까지, 좋아하는 스타가 읽고 추천하거나 언급한 책을 출처와 함께 찾아볼 수 있어요.
     </p>
     <p class="text-sm md:text-base font-bold leading-relaxed text-ink word-break-keep mb-3">
-      👉 <a href="/recommend/idol.html" class="underline decoration-2 hover:text-neo-pink">아이돌 추천책 모음</a> ·
-      <a href="/recommend/actor.html" class="underline decoration-2 hover:text-neo-pink">배우 추천책 모음</a> ·
-      <a href="/author/" class="underline decoration-2 hover:text-neo-pink">작가별 추천책</a>
+      👉 <a href="/recommend/idol.html" class="underline decoration-2 hover:text-neo-pink">아이돌 읽은 책 모음</a> ·
+      <a href="/recommend/actor.html" class="underline decoration-2 hover:text-neo-pink">배우 읽은 책 모음</a> ·
+      <a href="/author/" class="underline decoration-2 hover:text-neo-pink">작가별 읽은 책</a>
     </p>
     <p class="text-sm md:text-base font-bold leading-relaxed text-ink word-break-keep">
       최애의 책을 알고 계신다면 <a href="https://forms.gle/Sd3ZQTahZNbUjbdz7" target="_blank" rel="noopener" class="underline decoration-2 hover:text-neo-pink">여기로 제보</a>해 주세요. 확인 후 반영할게요😆
@@ -511,7 +511,7 @@
   <section id="pinned" class="w-full hidden">
     <div class="flex items-end justify-between gap-3 mb-4 md:mb-6">
       <div>
-        <h2 id="pinned-title" class="text-2xl md:text-3xl font-black word-break-keep">📌 셀럽이 최근 추천한 책</h2>
+        <h2 id="pinned-title" class="text-2xl md:text-3xl font-black word-break-keep">📌 셀럽이 최근 읽은 책</h2>
         <p id="pinned-subtitle" class="text-sm md:text-base font-bold text-muted word-break-keep mt-1"></p>
       </div>
       <span class="hidden sm:inline-block font-sans font-bold text-[10px] tracking-widest uppercase border-2 border-ink bg-neo-yellow shadow-neo-sm px-3 py-1 whitespace-nowrap">PINNED</span>
@@ -1925,7 +1925,7 @@
     } catch { return null; }
   }
 
-  /* data/pinned_books.json — '셀럽이 최근 추천한 책' 고정 목록. featured와 같은 이유로 실패하면 null. */
+  /* data/pinned_books.json — '셀럽이 최근 읽은 책' 고정 목록. featured와 같은 이유로 실패하면 null. */
   async function loadPinned() {
     try {
       const r = await fetch(PINNED_URL, { cache: 'no-cache' });
@@ -2634,7 +2634,7 @@
     tabs.forEach(t => t.classList.remove('hidden'));
   }
 
-  /* 에디터에서 직접 고른 '셀럽이 최근 추천한 책'. 책 표지 + 셀럽 사진을 한 카드에 겹쳐 보여준다.
+  /* 에디터에서 직접 고른 '셀럽이 최근 읽은 책'. 책 표지 + 셀럽 사진을 한 카드에 겹쳐 보여준다.
    * 고른 게 없거나 (셀럽, 책) 짝이 데이터에 없으면 그 칸은 빠지고, 하나도 안 남으면 섹션과 탭을 숨긴다. */
   function renderPinned() {
     const tabs = document.querySelectorAll('.spy-tab-pinned');
@@ -2686,7 +2686,7 @@
         </div>
         <div class="min-w-0 flex-1 flex flex-col justify-center">
           ${badgeHtml}
-          <p class="font-sans font-bold text-[10px] tracking-widest text-muted mb-1 truncate">${escHtml(name)}의 추천</p>
+          <p class="font-sans font-bold text-[10px] tracking-widest text-muted mb-1 truncate">${escHtml(name)}의 책</p>
           <p class="font-black text-base leading-snug word-break-keep line-clamp-2">${escHtml(book.title)}</p>
           <p class="text-xs text-muted mt-1 truncate">${escHtml(book.author || '')}</p>
           ${note ? `<p class="text-xs font-bold mt-2 word-break-keep line-clamp-3 border-l-4 border-ink pl-2">${escHtml(note)}</p>` : ''}

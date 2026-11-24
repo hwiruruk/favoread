@@ -3011,7 +3011,7 @@ $('#alaFilter').addEventListener('change', () => { _ala.shown = ALA_PAGE; render
 $('#alaMore').addEventListener('click', () => { _ala.shown += ALA_PAGE; renderAla(); });
 $('#alaBtn').addEventListener('click', openAlaDialog);
 
-/* -------------------- Pinned ("셀럽이 최근 추천한 책") --------------------
+/* -------------------- Pinned ("셀럽이 최근 읽은 책") --------------------
  * 메인에 책 표지 + 셀럽 사진 카드로 고정할 (셀럽, 책) 짝 목록.
  * featured.json과 같은 이유로 data.csv와 섞지 않고 data/pinned_books.json 에 따로 저장한다.
  * 하나도 고르지 않으면 메인에서 섹션이 통째로 숨겨진다. */
