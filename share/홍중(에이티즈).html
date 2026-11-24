@@ -362,6 +362,11 @@
     .new-sec[open] .new-sec-more::after { content: attr(data-hide) " ▴"; }
     .rl-item { scroll-margin-top: 16px; }
     .rl-item:target { outline: 3px solid #fde047; outline-offset: 2px; }
+    .rl-item:focus { outline: none; }
+    .rl-item.rl-flash { animation: rl-flash 1.8s ease-out; }
+    @keyframes rl-flash { 0%, 30% { outline: 3px solid #fde047; outline-offset: 3px; background-color: var(--hover); }
+                          100% { outline: 3px solid rgba(253,224,71,0); outline-offset: 3px; background-color: var(--bg); } }
+    @media (prefers-reduced-motion: reduce) { .rl-item.rl-flash { animation-duration: .01s; outline: 3px solid #fde047; outline-offset: 3px; } }
     .new-tiles { display: flex; flex-wrap: wrap; gap: 12px; padding-bottom: 10px; }
     .new-tile { width: 84px; color: var(--ink); text-decoration: none; display: flex; flex-direction: column; gap: 5px; }
     .new-tile:hover { text-decoration: none; transform: translateY(-2px); }
@@ -527,22 +532,22 @@
     <p class="muted">5권은 다른 셀럽도 읽은 책이에요. 아래 목록에서 이 책을 읽은 셀럽 이름을 볼 수 있어요.</p>
     <div id="shelf-area" class="show-covers">
     <div class="shelf" id="shelf">
-    <a class="sp" style="--c:hsl(40,34%,34%);--w:30px;--fs:10px" href="https://www.yes24.com/product/goods/106228269" rel="nofollow noopener noreferrer" target="_blank" title="구해줘"><span class="sp-t"><i>구해줘</i></span><img class="sp-i" src="https://image.yes24.com/goods/106228269/side" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.parentNode.classList.add('sp-fail');this.remove()" onload="if(this.naturalWidth/this.naturalHeight>0.4){this.parentNode.classList.add('sp-fail');this.remove()}"></a>
-    <a class="sp no-img sp-light" style="--c:#b7def3;--w:24px;--fs:10px" href="https://www.yes24.com/product/goods/43504934" rel="nofollow noopener noreferrer" target="_blank" title="델 문도"><span class="sp-t"><i>델 문도</i></span></a>
-    <a class="sp" style="--c:hsl(265,48%,38%);--w:29px;--fs:10px" href="https://www.yes24.com/product/goods/53559999" rel="nofollow noopener noreferrer" target="_blank" title="또다시 같은 꿈을 꾸었어"><span class="sp-t"><i>또다시 같은 꿈을 꾸었어</i></span><img class="sp-i" src="https://image.yes24.com/goods/53559999/side" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.parentNode.classList.add('sp-fail');this.remove()" onload="if(this.naturalWidth/this.naturalHeight>0.4){this.parentNode.classList.add('sp-fail');this.remove()}"></a>
-    <a class="sp" style="--c:hsl(109,33%,39%);--w:29px;--fs:10px" href="https://www.yes24.com/product/goods/2535237" rel="nofollow noopener noreferrer" target="_blank" title="생각의 탄생"><span class="sp-t"><i>생각의 탄생</i></span><img class="sp-i" src="https://image.yes24.com/goods/2535237/side" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.parentNode.classList.add('sp-fail');this.remove()" onload="if(this.naturalWidth/this.naturalHeight>0.4){this.parentNode.classList.add('sp-fail');this.remove()}"></a>
-    <a class="sp no-img" style="--c:#696647;--w:33px;--fs:9px" href="https://www.yes24.com/product/goods/90233309" rel="nofollow noopener noreferrer" target="_blank" title="슬픈 기억은 행복의 홍수 아래 가라앉게 해"><span class="sp-t"><i>슬픈 기억은 행복의 홍수 아래 가라앉게 해</i></span></a>
-    <a class="sp no-img sp-light" style="--c:#75ac81;--w:32px;--fs:10px" href="https://www.yes24.com/product/goods/1499615" rel="nofollow noopener noreferrer" target="_blank" title="젊은 베르테르의 기쁨"><span class="sp-t"><i>젊은 베르테르의 기쁨</i></span></a>
-    <a class="sp" style="--c:hsl(233,38%,39%);--w:27px;--fs:10px" href="https://www.yes24.com/product/goods/123860016" rel="nofollow noopener noreferrer" target="_blank" title="파피용"><span class="sp-t"><i>파피용</i></span><img class="sp-i" src="https://image.yes24.com/goods/123860016/side" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.parentNode.classList.add('sp-fail');this.remove()" onload="if(this.naturalWidth/this.naturalHeight>0.4){this.parentNode.classList.add('sp-fail');this.remove()}"></a>
+    <a class="sp" style="--c:hsl(40,34%,34%);--w:30px;--fs:10px" href="#b1" title="구해줘"><span class="sp-t"><i>구해줘</i></span><img class="sp-i" src="https://image.yes24.com/goods/106228269/side" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.parentNode.classList.add('sp-fail');this.remove()" onload="if(this.naturalWidth/this.naturalHeight>0.4){this.parentNode.classList.add('sp-fail');this.remove()}"></a>
+    <a class="sp no-img sp-light" style="--c:#b7def3;--w:24px;--fs:10px" href="#b2" title="델 문도"><span class="sp-t"><i>델 문도</i></span></a>
+    <a class="sp" style="--c:hsl(265,48%,38%);--w:29px;--fs:10px" href="#b3" title="또다시 같은 꿈을 꾸었어"><span class="sp-t"><i>또다시 같은 꿈을 꾸었어</i></span><img class="sp-i" src="https://image.yes24.com/goods/53559999/side" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.parentNode.classList.add('sp-fail');this.remove()" onload="if(this.naturalWidth/this.naturalHeight>0.4){this.parentNode.classList.add('sp-fail');this.remove()}"></a>
+    <a class="sp" style="--c:hsl(109,33%,39%);--w:29px;--fs:10px" href="#b4" title="생각의 탄생"><span class="sp-t"><i>생각의 탄생</i></span><img class="sp-i" src="https://image.yes24.com/goods/2535237/side" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.parentNode.classList.add('sp-fail');this.remove()" onload="if(this.naturalWidth/this.naturalHeight>0.4){this.parentNode.classList.add('sp-fail');this.remove()}"></a>
+    <a class="sp no-img" style="--c:#696647;--w:33px;--fs:9px" href="#b5" title="슬픈 기억은 행복의 홍수 아래 가라앉게 해"><span class="sp-t"><i>슬픈 기억은 행복의 홍수 아래 가라앉게 해</i></span></a>
+    <a class="sp no-img sp-light" style="--c:#75ac81;--w:32px;--fs:10px" href="#b6" title="젊은 베르테르의 기쁨"><span class="sp-t"><i>젊은 베르테르의 기쁨</i></span></a>
+    <a class="sp" style="--c:hsl(233,38%,39%);--w:27px;--fs:10px" href="#b7" title="파피용"><span class="sp-t"><i>파피용</i></span><img class="sp-i" src="https://image.yes24.com/goods/123860016/side" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.parentNode.classList.add('sp-fail');this.remove()" onload="if(this.naturalWidth/this.naturalHeight>0.4){this.parentNode.classList.add('sp-fail');this.remove()}"></a>
     </div>
     <div class="covers" id="covers">
-    <a class="cv" href="https://www.yes24.com/product/goods/106228269" rel="nofollow noopener noreferrer" target="_blank" title="구해줘"><img src="https://image.yes24.com/goods/106228269/L" alt="구해줘 표지" loading="lazy"></a>
-    <a class="cv" href="https://www.yes24.com/product/goods/43504934" rel="nofollow noopener noreferrer" target="_blank" title="델 문도"><img src="https://image.yes24.com/goods/43504934/L" alt="델 문도 표지" loading="lazy"></a>
-    <a class="cv" href="https://www.yes24.com/product/goods/53559999" rel="nofollow noopener noreferrer" target="_blank" title="또다시 같은 꿈을 꾸었어"><img src="https://image.yes24.com/goods/53559999/L" alt="또다시 같은 꿈을 꾸었어 표지" loading="lazy"></a>
-    <a class="cv" href="https://www.yes24.com/product/goods/2535237" rel="nofollow noopener noreferrer" target="_blank" title="생각의 탄생"><img src="https://image.yes24.com/goods/2535237/L" alt="생각의 탄생 표지" loading="lazy"></a>
-    <a class="cv" href="https://www.yes24.com/product/goods/90233309" rel="nofollow noopener noreferrer" target="_blank" title="슬픈 기억은 행복의 홍수 아래 가라앉게 해"><img src="https://image.yes24.com/goods/90233309/L" alt="슬픈 기억은 행복의 홍수 아래 가라앉게 해 표지" loading="lazy"></a>
-    <a class="cv" href="https://www.yes24.com/product/goods/1499615" rel="nofollow noopener noreferrer" target="_blank" title="젊은 베르테르의 기쁨"><img src="https://image.yes24.com/goods/1499615/L" alt="젊은 베르테르의 기쁨 표지" loading="lazy"></a>
-    <a class="cv" href="https://www.yes24.com/product/goods/123860016" rel="nofollow noopener noreferrer" target="_blank" title="파피용"><img src="https://image.yes24.com/goods/123860016/L" alt="파피용 표지" loading="lazy"></a>
+    <a class="cv" href="#b1" title="구해줘"><img src="https://image.yes24.com/goods/106228269/L" alt="구해줘 표지" loading="lazy"></a>
+    <a class="cv" href="#b2" title="델 문도"><img src="https://image.yes24.com/goods/43504934/L" alt="델 문도 표지" loading="lazy"></a>
+    <a class="cv" href="#b3" title="또다시 같은 꿈을 꾸었어"><img src="https://image.yes24.com/goods/53559999/L" alt="또다시 같은 꿈을 꾸었어 표지" loading="lazy"></a>
+    <a class="cv" href="#b4" title="생각의 탄생"><img src="https://image.yes24.com/goods/2535237/L" alt="생각의 탄생 표지" loading="lazy"></a>
+    <a class="cv" href="#b5" title="슬픈 기억은 행복의 홍수 아래 가라앉게 해"><img src="https://image.yes24.com/goods/90233309/L" alt="슬픈 기억은 행복의 홍수 아래 가라앉게 해 표지" loading="lazy"></a>
+    <a class="cv" href="#b6" title="젊은 베르테르의 기쁨"><img src="https://image.yes24.com/goods/1499615/L" alt="젊은 베르테르의 기쁨 표지" loading="lazy"></a>
+    <a class="cv" href="#b7" title="파피용"><img src="https://image.yes24.com/goods/123860016/L" alt="파피용 표지" loading="lazy"></a>
     </div>
   <details class="taste">
     <summary class="taste-head"><h2>📊 홍중의 독서 취향이 궁금하다면?</h2><span>책 7권 기준</span><b class="taste-open" aria-hidden="true" data-show="펼쳐 보기 ▾" data-hide="접기 ▴"></b></summary>
@@ -689,6 +694,34 @@
     tabs.forEach(function (t) { t.addEventListener("click", function () { set(t.dataset.view, true); }); });
     var more = document.getElementById("covers-more-btn");
     if (more) more.addEventListener("click", function () { area.classList.remove("covers-collapsed"); });
+    var sec = document.getElementById("shelf-sec") || area;
+    var still = window.matchMedia && matchMedia("(prefers-reduced-motion: reduce)").matches;
+    var flashT;
+    sec.addEventListener("click", function (e) {
+      if (e.defaultPrevented || e.button || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
+      var a = e.target.closest && e.target.closest("a[href^=\"#b\"]");
+      if (!a) return;
+      var id = a.getAttribute("href").slice(1);
+      var el = document.getElementById(id);
+      if (!el || !el.classList.contains("rl-item")) return;
+      e.preventDefault();
+      el.scrollIntoView({ behavior: still ? "auto" : "smooth", block: "center" });
+      try { history.replaceState(null, "", "#" + id); } catch (err) {}
+      var prev = sec.querySelector(".rl-item.rl-flash");
+      if (prev) prev.classList.remove("rl-flash");
+      clearTimeout(flashT);
+      var done = false;
+      function arrive() {
+        if (done) return; done = true;
+        window.removeEventListener("scrollend", arrive);
+        el.classList.remove("rl-flash"); void el.offsetWidth; el.classList.add("rl-flash");
+        el.setAttribute("tabindex", "-1");
+        try { el.focus({ preventScroll: true }); } catch (err) {}
+        flashT = setTimeout(function () { el.classList.remove("rl-flash"); }, 1900);
+      }
+      if (still) arrive();
+      else { window.addEventListener("scrollend", arrive); setTimeout(arrive, 900); }
+    });
   })();
   </script>
   <script>

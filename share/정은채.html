@@ -323,6 +323,11 @@
     .new-sec[open] .new-sec-more::after { content: attr(data-hide) " ▴"; }
     .rl-item { scroll-margin-top: 16px; }
     .rl-item:target { outline: 3px solid #fde047; outline-offset: 2px; }
+    .rl-item:focus { outline: none; }
+    .rl-item.rl-flash { animation: rl-flash 1.8s ease-out; }
+    @keyframes rl-flash { 0%, 30% { outline: 3px solid #fde047; outline-offset: 3px; background-color: var(--hover); }
+                          100% { outline: 3px solid rgba(253,224,71,0); outline-offset: 3px; background-color: var(--bg); } }
+    @media (prefers-reduced-motion: reduce) { .rl-item.rl-flash { animation-duration: .01s; outline: 3px solid #fde047; outline-offset: 3px; } }
     .new-tiles { display: flex; flex-wrap: wrap; gap: 12px; padding-bottom: 10px; }
     .new-tile { width: 84px; color: var(--ink); text-decoration: none; display: flex; flex-direction: column; gap: 5px; }
     .new-tile:hover { text-decoration: none; transform: translateY(-2px); }
@@ -482,18 +487,18 @@
     <p class="muted">5권은 다른 셀럽도 읽은 책이에요. 아래 목록에서 이 책을 읽은 셀럽 이름을 볼 수 있어요.</p>
     <div id="shelf-area" class="show-covers">
     <div class="shelf" id="shelf">
-    <a class="sp" style="--c:hsl(128,32%,40%);--w:28px;--fs:10px" href="https://www.yes24.com/product/goods/107653917" rel="nofollow noopener noreferrer" target="_blank" title="H마트에서 울다"><span class="sp-t"><i>H마트에서 울다</i></span><img class="sp-i" src="https://image.yes24.com/goods/107653917/side" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.parentNode.classList.add('sp-fail');this.remove()" onload="if(this.naturalWidth/this.naturalHeight>0.4){this.parentNode.classList.add('sp-fail');this.remove()}"></a>
-    <a class="sp" style="--c:hsl(311,41%,44%);--w:29px;--fs:10px" href="https://www.yes24.com/product/goods/7328528" rel="nofollow noopener noreferrer" target="_blank" title="비행운"><span class="sp-t"><i>비행운</i></span><img class="sp-i" src="https://image.yes24.com/goods/7328528/side" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.parentNode.classList.add('sp-fail');this.remove()" onload="if(this.naturalWidth/this.naturalHeight>0.4){this.parentNode.classList.add('sp-fail');this.remove()}"></a>
-    <a class="sp" style="--c:hsl(90,46%,38%);--w:28px;--fs:10px" href="https://www.yes24.com/product/goods/197687" rel="nofollow noopener noreferrer" target="_blank" title="아낌없이 주는 나무"><span class="sp-t"><i>아낌없이 주는 나무</i></span><img class="sp-i" src="https://image.yes24.com/goods/197687/side" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.parentNode.classList.add('sp-fail');this.remove()" onload="if(this.naturalWidth/this.naturalHeight>0.4){this.parentNode.classList.add('sp-fail');this.remove()}"></a>
-    <a class="sp" style="--c:hsl(165,52%,32%);--w:31px;--fs:10px" href="https://www.yes24.com/product/goods/104692009" rel="nofollow noopener noreferrer" target="_blank" title="이어령의 마지막 수업"><span class="sp-t"><i>이어령의 마지막 수업</i></span><img class="sp-i" src="https://image.yes24.com/goods/104692009/side" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.parentNode.classList.add('sp-fail');this.remove()" onload="if(this.naturalWidth/this.naturalHeight>0.4){this.parentNode.classList.add('sp-fail');this.remove()}"></a>
-    <a class="sp" style="--c:hsl(108,56%,36%);--w:24px;--fs:10px" href="https://www.yes24.com/product/goods/125676599" rel="nofollow noopener noreferrer" target="_blank" title="이 지랄맞음이 쌓여 축제가 되겠지"><span class="sp-t"><i>이 지랄맞음이 쌓여 축제가 되겠지</i></span><img class="sp-i" src="https://image.yes24.com/goods/125676599/side" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.parentNode.classList.add('sp-fail');this.remove()" onload="if(this.naturalWidth/this.naturalHeight>0.4){this.parentNode.classList.add('sp-fail');this.remove()}"></a>
+    <a class="sp" style="--c:hsl(128,32%,40%);--w:28px;--fs:10px" href="#b1" title="H마트에서 울다"><span class="sp-t"><i>H마트에서 울다</i></span><img class="sp-i" src="https://image.yes24.com/goods/107653917/side" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.parentNode.classList.add('sp-fail');this.remove()" onload="if(this.naturalWidth/this.naturalHeight>0.4){this.parentNode.classList.add('sp-fail');this.remove()}"></a>
+    <a class="sp" style="--c:hsl(311,41%,44%);--w:29px;--fs:10px" href="#b2" title="비행운"><span class="sp-t"><i>비행운</i></span><img class="sp-i" src="https://image.yes24.com/goods/7328528/side" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.parentNode.classList.add('sp-fail');this.remove()" onload="if(this.naturalWidth/this.naturalHeight>0.4){this.parentNode.classList.add('sp-fail');this.remove()}"></a>
+    <a class="sp" style="--c:hsl(90,46%,38%);--w:28px;--fs:10px" href="#b3" title="아낌없이 주는 나무"><span class="sp-t"><i>아낌없이 주는 나무</i></span><img class="sp-i" src="https://image.yes24.com/goods/197687/side" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.parentNode.classList.add('sp-fail');this.remove()" onload="if(this.naturalWidth/this.naturalHeight>0.4){this.parentNode.classList.add('sp-fail');this.remove()}"></a>
+    <a class="sp" style="--c:hsl(165,52%,32%);--w:31px;--fs:10px" href="#b4" title="이어령의 마지막 수업"><span class="sp-t"><i>이어령의 마지막 수업</i></span><img class="sp-i" src="https://image.yes24.com/goods/104692009/side" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.parentNode.classList.add('sp-fail');this.remove()" onload="if(this.naturalWidth/this.naturalHeight>0.4){this.parentNode.classList.add('sp-fail');this.remove()}"></a>
+    <a class="sp" style="--c:hsl(108,56%,36%);--w:24px;--fs:10px" href="#b5" title="이 지랄맞음이 쌓여 축제가 되겠지"><span class="sp-t"><i>이 지랄맞음이 쌓여 축제가 되겠지</i></span><img class="sp-i" src="https://image.yes24.com/goods/125676599/side" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.parentNode.classList.add('sp-fail');this.remove()" onload="if(this.naturalWidth/this.naturalHeight>0.4){this.parentNode.classList.add('sp-fail');this.remove()}"></a>
     </div>
     <div class="covers" id="covers">
-    <a class="cv" href="https://www.yes24.com/product/goods/107653917" rel="nofollow noopener noreferrer" target="_blank" title="H마트에서 울다"><img src="https://image.yes24.com/goods/107653917/L" alt="H마트에서 울다 표지" loading="lazy"></a>
-    <a class="cv" href="https://www.yes24.com/product/goods/7328528" rel="nofollow noopener noreferrer" target="_blank" title="비행운"><img src="https://image.yes24.com/goods/7328528/L" alt="비행운 표지" loading="lazy"></a>
-    <a class="cv" href="https://www.yes24.com/product/goods/197687" rel="nofollow noopener noreferrer" target="_blank" title="아낌없이 주는 나무"><img src="https://image.yes24.com/goods/197687/L" alt="아낌없이 주는 나무 표지" loading="lazy"></a>
-    <a class="cv" href="https://www.yes24.com/product/goods/104692009" rel="nofollow noopener noreferrer" target="_blank" title="이어령의 마지막 수업"><img src="https://image.yes24.com/goods/104692009/L" alt="이어령의 마지막 수업 표지" loading="lazy"></a>
-    <a class="cv" href="https://www.yes24.com/product/goods/125676599" rel="nofollow noopener noreferrer" target="_blank" title="이 지랄맞음이 쌓여 축제가 되겠지"><img src="https://image.yes24.com/goods/125676599/L" alt="이 지랄맞음이 쌓여 축제가 되겠지 표지" loading="lazy"></a>
+    <a class="cv" href="#b1" title="H마트에서 울다"><img src="https://image.yes24.com/goods/107653917/L" alt="H마트에서 울다 표지" loading="lazy"></a>
+    <a class="cv" href="#b2" title="비행운"><img src="https://image.yes24.com/goods/7328528/L" alt="비행운 표지" loading="lazy"></a>
+    <a class="cv" href="#b3" title="아낌없이 주는 나무"><img src="https://image.yes24.com/goods/197687/L" alt="아낌없이 주는 나무 표지" loading="lazy"></a>
+    <a class="cv" href="#b4" title="이어령의 마지막 수업"><img src="https://image.yes24.com/goods/104692009/L" alt="이어령의 마지막 수업 표지" loading="lazy"></a>
+    <a class="cv" href="#b5" title="이 지랄맞음이 쌓여 축제가 되겠지"><img src="https://image.yes24.com/goods/125676599/L" alt="이 지랄맞음이 쌓여 축제가 되겠지 표지" loading="lazy"></a>
     </div>
   <details class="taste">
     <summary class="taste-head"><h2>📊 정은채의 독서 취향이 궁금하다면?</h2><span>책 5권 기준</span><b class="taste-open" aria-hidden="true" data-show="펼쳐 보기 ▾" data-hide="접기 ▴"></b></summary>
@@ -619,6 +624,34 @@
     tabs.forEach(function (t) { t.addEventListener("click", function () { set(t.dataset.view, true); }); });
     var more = document.getElementById("covers-more-btn");
     if (more) more.addEventListener("click", function () { area.classList.remove("covers-collapsed"); });
+    var sec = document.getElementById("shelf-sec") || area;
+    var still = window.matchMedia && matchMedia("(prefers-reduced-motion: reduce)").matches;
+    var flashT;
+    sec.addEventListener("click", function (e) {
+      if (e.defaultPrevented || e.button || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
+      var a = e.target.closest && e.target.closest("a[href^=\"#b\"]");
+      if (!a) return;
+      var id = a.getAttribute("href").slice(1);
+      var el = document.getElementById(id);
+      if (!el || !el.classList.contains("rl-item")) return;
+      e.preventDefault();
+      el.scrollIntoView({ behavior: still ? "auto" : "smooth", block: "center" });
+      try { history.replaceState(null, "", "#" + id); } catch (err) {}
+      var prev = sec.querySelector(".rl-item.rl-flash");
+      if (prev) prev.classList.remove("rl-flash");
+      clearTimeout(flashT);
+      var done = false;
+      function arrive() {
+        if (done) return; done = true;
+        window.removeEventListener("scrollend", arrive);
+        el.classList.remove("rl-flash"); void el.offsetWidth; el.classList.add("rl-flash");
+        el.setAttribute("tabindex", "-1");
+        try { el.focus({ preventScroll: true }); } catch (err) {}
+        flashT = setTimeout(function () { el.classList.remove("rl-flash"); }, 1900);
+      }
+      if (still) arrive();
+      else { window.addEventListener("scrollend", arrive); setTimeout(arrive, 900); }
+    });
   })();
   </script>
   <script>
