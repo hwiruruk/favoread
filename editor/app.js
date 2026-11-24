@@ -3379,8 +3379,16 @@ async function saveBookMemo(celeb, title, memo, source) {
   renderDetail();
 }
 
+/* 코멘트 키(연예인|도서명)가 연예인·책 데이터(data.csv)에 실제로 있는 책인지 */
+function cmtInData(key) {
+  const [celeb, title] = splitCmtKey(key);
+  const c = State.celebs.get(celeb);
+  return !!(c && c.books.some(b => b.title === title));
+}
+
 function cmtRows() {
   const f = $('#cmtFilter').value;
+  const df = $('#cmtDataFilter').value;
   const q = $('#cmtSearch').value.trim().toLowerCase();
   const rows = [];
   for (const [k, v] of Cmt.items) {
@@ -3406,6 +3414,7 @@ function cmtRows() {
       if (!cmtIsAiDraft(v)) continue;
     } else if (f !== 'all' && status !== f) continue;
 
+    if (df && cmtInData(k) !== (df === 'in')) continue;
     if (q && !k.toLowerCase().includes(q)) continue;
     rows.push([k, v]);
   }
@@ -3416,8 +3425,9 @@ function cmtRows() {
 
 function renderCommentsList() {
   const n = cmtCounts();
-  let tidy = 0, ai = 0, pick = 0, write = 0;
-  for (const v of Cmt.items.values()) {
+  let tidy = 0, ai = 0, pick = 0, write = 0, outside = 0;
+  for (const [k, v] of Cmt.items) {
+    if (!cmtInData(k)) outside++;
     if (cmtNeedsPolish(v)) tidy++;
     if (cmtIsAiDraft(v)) ai++;
     if (cmtIsPickPending(v) && !cmtIsListType(v)) pick++;
@@ -3430,7 +3440,8 @@ function renderCommentsList() {
   $('#cmtStage2').textContent = `② 문장 검수 (${write})`;
   $('#cmtCount').textContent =
     `미검수 ${n.pending} · 승인 ${n.approved} · 반려 ${n.rejected} · 전체 ${n.total}` +
-    (tidy ? ` · ✨ AI가 쓸 차례 ${tidy}` : '');
+    (tidy ? ` · ✨ AI가 쓸 차례 ${tidy}` : '') +
+    (outside ? ` · 데이터에 없음 ${outside}` : '');
   if (Cmt.focus) {
     $('#cmtCount').innerHTML += ' · <button type="button" class="btn small" id="cmtUnfocusBtn">전체 목록으로</button>';
   }
@@ -3446,8 +3457,7 @@ function renderCommentsList() {
 
   box.innerHTML = rows.map(([k, v]) => {
     const [celeb, title] = splitCmtKey(k);
-    const c = State.celebs.get(celeb);
-    const known = !!(c && c.books.some(b => b.title === title));
+    const known = cmtInData(k);
     const status = v.status || 'pending';
     const gradeTip = v.grade === 'A' ? '출처 원문에 추천 이유가 적혀 있음'
                    : v.grade === 'B' ? '관계만 확인 · 원문에 이유는 없음' : '';
@@ -3776,6 +3786,7 @@ $('#cmtStage1').addEventListener('click', () => { $('#cmtFilter').value = 'pick'
 $('#cmtStage2').addEventListener('click', () => { $('#cmtFilter').value = 'write'; Cmt.focus = null; renderCommentsList(); });
 $('#cmtFilter').addEventListener('change', () => { Cmt.focus = null; renderCommentsList(); });
 $('#cmtSearch').addEventListener('input', () => { Cmt.focus = null; renderCommentsList(); });
+$('#cmtDataFilter').addEventListener('change', () => { Cmt.focus = null; renderCommentsList(); });
 $('#cmtCount').addEventListener('click', (e) => {
   if (e.target.id !== 'cmtUnfocusBtn') return;
   Cmt.focus = null;
