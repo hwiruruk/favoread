@@ -19,6 +19,9 @@
     { id: 'intl', label: '해외 제보', sheetId: '186gKVna6LANvKkdvqJF7V3MTSZdDgI3xksmOgY4WtGM', gid: '1023767186' },
   ];
   const STORE_PATH = 'data/submissions.json';
+  // 기준일 — 이 날짜 전에 들어온 제보는 이미 다 반영했다고 보고 목록에서 뺀다 (시트는 그대로).
+  // 창 위 📅 칸에서 바꾸면 기록 파일(since)에 남고, 비우면 전부 보인다.
+  const DEFAULT_SINCE = '2026-11-24';
   const PAGE = 20;
   const ST = { done: '반영', hold: '보류', todo: '미반영' };
   const ST_CLASS = { '반영': 'done', '보류': 'hold', '미반영': 'todo', '': 'new' };
@@ -114,6 +117,7 @@
         const j = JSON.parse(content);
         S.store.aliases = j.aliases || {};
         S.store.rows = j.rows || {};
+        if (typeof j.since === 'string') S.store.since = j.since;
       }
     } catch (err) {
       toast('제보 기록(data/submissions.json) 불러오기 실패: ' + err.message, 'err');
@@ -188,8 +192,9 @@
       if (!Object.keys(v).length) delete S.store.rows[k];
     }
     const doc = {
-      _comment: '편집기 📮 제보 반영 창의 기록. 시트 행(키: 시트|타임스탬프|이름)마다 고른 셀럽(celeb), AI 정리 결과(ai), 책별 결정(dec: 제외 skip / 이대로 OK ok), 책별로 고른 출처 링크(src), 편집기에서만 숨긴 제보(hidden, hiddenAt), 내 조사 메모(memo, memoAt)와 조사 중 표시(wip). aliases 는 제보에 적힌 이름 → data.csv 셀럽 이름. notes/editor 브랜치에만 저장돼 사이트에는 안 나간다.',
+      _comment: '편집기 📮 제보 반영 창의 기록. 시트 행(키: 시트|타임스탬프|이름)마다 고른 셀럽(celeb), AI 정리 결과(ai), 책별 결정(dec: 제외 skip / 이대로 OK ok), 책별로 고른 출처 링크(src), 편집기에서만 숨긴 제보(hidden, hiddenAt), 내 조사 메모(memo, memoAt)와 조사 중 표시(wip). since 는 기준일(이 날짜 전 제보는 목록에서 뺌, 빈 값이면 전부). aliases 는 제보에 적힌 이름 → data.csv 셀럽 이름. notes/editor 브랜치에만 저장돼 사이트에는 안 나간다.',
       _updated: new Date().toISOString().slice(0, 10),
+      since: sinceStr(),
       aliases: S.store.aliases,
       rows: S.store.rows,
     };
@@ -220,6 +225,16 @@
   }
 
   /* ---------------- 판정 ---------------- */
+  // 기준일 0시 (없으면 0 = 전부 보임)
+  function sinceStr() {
+    const v = S.store && S.store.since;
+    return v === undefined ? DEFAULT_SINCE : v;
+  }
+  function sinceTime() {
+    const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(sinceStr() || '');
+    return m ? new Date(+m[1], m[2] - 1, +m[3]).getTime() : 0;
+  }
+
   function publishedCelebs() {
     if (!State.published) return State.celebs;
     if (S.pubFor !== State.published) { S.pubFor = State.published; S.pubCelebs = State.published.celebs; }
@@ -236,6 +251,8 @@
     r.memo = st.memo || '';
     r.wip = !!st.wip;
     r.hidden = !!st.hidden;
+    const since = sinceTime();
+    r.old = !!since && !!r.time && r.time < since;
     r.cands = C.matchCeleb(r.name, State.celebs, { aliases: S.store.aliases, realNames: S.realNames });
     r.celeb = st.celeb && State.celebs.has(st.celeb) ? st.celeb : C.autoCeleb(r.cands);
     r.celebPicked = !!st.celeb;
@@ -340,7 +357,7 @@
   // 판정과 시트 상태가 다른 줄 — 보류는 건드리지 않고, '반영'을 자동으로 미반영으로 내리지도 않는다
   function pendingWrites() {
     return S.rows.filter(r => {
-      if (r.hidden) return false;   // 편집기에서 숨긴 제보 — 시트는 건드리지 않는다
+      if (r.hidden || r.old) return false;   // 편집기에서 숨긴 제보·기준일 전 제보 — 시트는 건드리지 않는다
       if (r.sheetStatus === ST.hold) return false;
       if (r.want === ST.done) return r.sheetStatus !== ST.done;
       return r.sheetStatus === '';
@@ -358,8 +375,9 @@
   const BOOK_LABEL = { ok: '✅ 등록됨', src: '⚠️ 책은 있음 · 출처 다름', miss: '✖ 아직 등록 안 됨', skip: '— 제외' };
 
   function counts() {
-    const n = { all: 0, '반영': 0, '보류': 0, '미반영': 0, '': 0, mismatch: 0, edit: 0, pending: 0, wip: 0, hidden: 0 };
+    const n = { all: 0, '반영': 0, '보류': 0, '미반영': 0, '': 0, mismatch: 0, edit: 0, pending: 0, wip: 0, hidden: 0, old: 0 };
     for (const r of S.rows) {
+      if (r.old) { n.old++; continue; }
       if (r.hidden) { n.hidden++; continue; }
       n.all++;
       n[r.sheetStatus]++;
@@ -379,8 +397,9 @@
     return S.rows.filter(r => {
       if (sh !== 'all' && r.sheet !== sh) return false;
       if (q && !`${r.name} ${r.celeb} ${r.text} ${r.source} ${r.memo}`.toLowerCase().includes(q)) return false;
-      if (f === 'hidden') return r.hidden;
-      if (r.hidden) return false;
+      if (f === 'old') return r.old;
+      if (f === 'hidden') return r.hidden && !r.old;
+      if (r.hidden || r.old) return false;
       switch (f) {
         case 'todo': return r.sheetStatus !== ST.done && r.sheetStatus !== ST.hold && r.calc !== 'live';
         case 'new': return r.sheetStatus === '';
@@ -403,7 +422,7 @@
     $('#subsCounts').innerHTML = [
       `전체 ${n.all}`, `<span class="sub-dot done"></span>반영 ${n['반영']}`, `<span class="sub-dot hold"></span>보류 ${n['보류']}`,
       `<span class="sub-dot todo"></span>미반영 ${n['미반영']}`, `<span class="sub-dot new"></span>새 제보 ${n['']}`,
-      n.edit ? `발행 대기 ${n.edit}` : '', n.wip ? `🔍 조사 중 ${n.wip}` : '', n.hidden ? `🙈 숨김 ${n.hidden}` : '', n.mismatch ? `⚠ 시트엔 반영인데 데이터에 없음 ${n.mismatch}` : '',
+      n.edit ? `발행 대기 ${n.edit}` : '', n.wip ? `🔍 조사 중 ${n.wip}` : '', n.hidden ? `🙈 숨김 ${n.hidden}` : '', n.old ? `📦 기준일 전 ${n.old}` : '', n.mismatch ? `⚠ 시트엔 반영인데 데이터에 없음 ${n.mismatch}` : '',
     ].filter(Boolean).join(' · ');
     $('#subsWriteBtn').textContent = `시트에 판정 기록 (${n.pending}건)`;
     $('#subsWriteBtn').disabled = !n.pending;
@@ -844,6 +863,14 @@
   $('#subsSheet').addEventListener('change', () => { S.shown = PAGE; render(); });
   $('#subsSearch').addEventListener('input', () => { S.shown = PAGE; render(); });
   $('#subsMore').addEventListener('click', () => { S.shown += PAGE; render(); });
+  $('#subsSince').addEventListener('change', () => {
+    S.store.since = $('#subsSince').value || '';
+    saveStoreSoon();
+    evaluateAll();
+    S.shown = PAGE;
+    render();
+    toast(S.store.since ? `${S.store.since} 이후 제보만 보여요 — 그 전 제보는 보기 '📦 기준일 전 제보'에서` : '기준일을 비워 모든 제보를 보여요', 'ok');
+  });
   $('#subsReloadBtn').addEventListener('click', () => loadSheets());
   $('#subsWriteBtn').addEventListener('click', () => {
     const ups = pendingWrites();
@@ -967,6 +994,7 @@
     S.shown = PAGE;
     setStatus('기록 불러오는 중…');
     await loadStore();
+    $('#subsSince').value = sinceStr();
     setAutoTimer();
     await loadSheets();
   }

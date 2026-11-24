@@ -122,12 +122,12 @@
     const segs = [], parens = [];
     // 라벨 형식 — 책이름: A / 저자: B / 출판사: C, (Author: X / Publisher: Y)
     const lab = (re) => { const m = re.exec(s); return m ? cleanPiece(m[1]) : ''; };
-    if (/(?:책\s*이름|저자|지은이|출판사|author|publisher)\s*[:：]/i.test(s)) {
-      const NEXT = '(?=\\s*(?:책\\s*이름|제목|도서명|title|저자|지은이|author|출판사|출판|publisher)\\s*[:：]|[/|()（）]|$)';
-      author = lab(new RegExp('(?:저자|지은이|author)\\s*[:：]\\s*([^/|()（）]+?)' + NEXT, 'i'));
+    if (/(?:책\s*이름|저자|저지|지은이|출판사|author|publisher)\s*[:：]/i.test(s)) {
+      const NEXT = '(?=\\s*(?:책\\s*이름|제목|도서명|title|저자|저지|지은이|author|출판사|출판|publisher)\\s*[:：]|[/|()（）]|$)';
+      author = lab(new RegExp('(?:저자|저지|지은이|author)\\s*[:：]\\s*([^/|()（）]+?)' + NEXT, 'i'));
       publisher = lab(new RegExp('(?:출판사|출판|publisher)\\s*[:：]\\s*([^/|()（）]+?)' + NEXT, 'i'));
       title = lab(new RegExp('(?:책\\s*이름|제목|도서명|title)\\s*[:：]\\s*([^/|]+?)' + NEXT, 'i')) ||
-        cleanPiece(s.replace(/[(（]?\s*(?:저자|지은이|author|출판사|출판|publisher)\s*[:：].*$/i, ''));
+        cleanPiece(s.replace(/[(（]?\s*(?:저자|저지|지은이|author|출판사|출판|publisher)\s*[:：].*$/i, ''));
     }
     const bracket = /[<《『「〈]([^>》』」〉]+)[>》』」〉]/.exec(s);
     if (!title && bracket) {
