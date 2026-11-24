@@ -33,6 +33,7 @@
     <button id="genresBtn" class="btn" title="도서관 분류로 소설·에세이 등을 정하지 못한 책을 직접 골라 줌 (독서 취향 통계에 쓰임)">🏷️ 분야 검수</button>
     <button id="unifyBtn" class="btn" title="같은 책인데 영문 제목이나 한국어 제목이 갈린 경우를 찾아 하나로 맞춤">📚 책 이름 통일</button>
     <button id="commentsBtn" class="btn" title="출처에서 자동으로 뽑은 추천 이유 초안을 검수 (승인한 것만 노출)">💬 코멘트 검수</button>
+    <button id="notepadBtn" class="btn" title="편집기 메모지 — 떠 있는 메모장. 할 일·조사 메모를 적어 두면 손 놓고 5분 뒤 자동 저장 (notes/editor 브랜치, 사이트엔 안 나감)">🗒️ 메모지</button>
     <button id="subsBtn" class="btn" title="구글 폼 제보(영문·해외 시트)를 읽어 책을 반영하고, 시트에 반영(파랑)·보류(노랑)·미반영(빨강)을 적음">📮 제보 반영</button>
     <button id="alaBtn" class="btn" title="알라딘 '저자의 추천' 페이지에서 모은 셀럽 추천사를 참고용으로 봄 (data/aladin_recommend.csv, 읽기 전용)">📖 알라딘 추천사</button>
     <a class="btn" href="hearts.html" target="_blank" rel="noopener" style="text-decoration:none;display:inline-flex;align-items:center" title="셀럽·책 하트 순위, 최근 기록, 페이지 조회수 (운영자 전용)">❤️ 하트·조회수 통계</a>
@@ -396,6 +397,18 @@
   </footer>
 </dialog>
 
+<!-- 🗒️ 메모지 (editor/notepad.js) — 모달이 아니라 떠 있는 창이라 편집하면서 옆에 둘 수 있다 -->
+<div id="notepad" class="notepad hidden" role="dialog" aria-label="메모지">
+  <div class="np-head" title="끌어서 옮기기">
+    <b>🗒️ 메모지</b>
+    <span id="notepadState" class="np-state"></span>
+    <button type="button" id="notepadDate" class="btn small ghost" title="커서 자리에 오늘 날짜 줄 넣기">📅</button>
+    <button type="button" id="notepadSave" class="btn small" title="지금 바로 저장 (Ctrl+S)">💾</button>
+    <button type="button" id="notepadClose" class="btn small ghost" title="닫기 (내용은 그대로)">✕</button>
+  </div>
+  <textarea id="notepadText" spellcheck="false" placeholder="자유롭게 적는 편집기 메모지예요.&#10;할 일, 조사할 것, 나중에 볼 링크…&#10;&#10;손 놓고 5분 지나면 자동 저장돼요 (💾·Ctrl+S 는 바로 저장).&#10;저장소가 공개라 GitHub 에서는 보일 수 있으니 비밀은 적지 마세요."></textarea>
+</div>
+
 <!-- 구글 폼 제보 반영 (editor/submissions.js) -->
 <dialog id="subsDialog" class="modal" style="width: min(980px, 98vw);">
   <header class="modal-head">
@@ -459,7 +472,8 @@
   </div>
   <footer class="modal-foot">
     <span id="subsStatus" class="status"></span>
-    <span id="subsStoreState" class="muted small"></span>
+    <span id="subsStoreState" class="muted small sub-store-state"></span>
+    <button type="button" id="subsStoreSaveBtn" class="btn" title="제보 기록·메모를 지금 바로 저장 (손 놓고 5분 지나면 자동 저장)">💾 기록 저장</button>
     <button type="button" class="btn" data-close>닫기</button>
   </footer>
 </dialog>
@@ -877,6 +891,7 @@
 
 <script src="app.js"></script>
 <script src="shelf.js"></script>
+<script src="notepad.js"></script>
 <script src="submissions_core.js"></script>
 <script src="submissions.js"></script>
 </body>
