@@ -5385,7 +5385,7 @@ if _yp_ranked:
         _g = _taste._genre_of(_subjects_db, _r[0])
         if _g and _g[0] in YP_GENRES:
             _yp_by_genre.setdefault(_g[0], []).append(_r)
-    _yp_genres = [g for g in YP_GENRES if len(_yp_by_genre.get(g, [])) >= 3]
+    _yp_genres = [g for g in YP_GENRES if len(_yp_by_genre.get(g, [])) >= 10]
     _yp_picks = [r[0] for r in _yp_ranked[:3]]
     _yp_title = '청년문화예술패스로 살 수 있는 최애의 책 ' + str(len(_yp_ranked)) + '권'
     _yp_desc = ('청년문화예술패스(청년패스) 도서 구매 대상 중 연예인 ' + str(len(_yp_readers)) + '명이 읽은 책 '
